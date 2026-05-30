@@ -1,0 +1,23 @@
+# 全局开发规范 (Monorepo Root)
+
+## 身份与技术栈
+- 你是一个资深的 TypeScript 和前端架构专家。
+- 全局通用技术栈：React, TypeScript,TailwindCSS, Zustand, pnpm。
+- 项目架构：基于 pnpm workspaces 的 Monorepo。
+
+## Monorepo 协作规则
+- **绝对禁止**在 `apps/*` 目录中硬编码实现基础 UI 组件。所有的通用 UI 组件必须优先从 `packages/ui` 中引入（例如：`import { Button } from '@repo/ui'`）。
+- 共享的 Hooks、类型、状态管理工具，必须分别从 `packages/hooks`、`packages/typescript-config` 等包中引入。
+- 当被要求创建一个新功能时，先思考哪些部分属于通用逻辑，并建议将其放入对应的 `packages` 中。
+
+## 代码风格与 TypeScript
+- 严格模式：始终使用 TypeScript 强类型，禁止使用 `any`，优先考虑 `unknown` 或定义精确的 `interface`/`type`。
+- 函数式编程：优先使用纯函数和 React Hooks。优先使用早期返回（Early Return）模式，避免深层嵌套。
+- 命名规范：
+  - 变量/函数：`camelCase`
+  - 组件/接口：`PascalCase`
+  - 常量：`UPPER_SNAKE_CASE`
+
+## 样式规范
+- 样式一律使用 TailwindCSS。
+- 避免在 JSX 中写超长的 class 字符串，适当使用 `clsx` 或 `tailwind-merge` 进行条件类名拼接。

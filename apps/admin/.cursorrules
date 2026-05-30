@@ -1,0 +1,10 @@
+# Admin 端规范 (Vite + React SPA)
+
+## 核心技术栈
+- Vite, React 18+, React Router (或其它客户端路由框架)。
+
+## 架构与约定
+- **纯客户端应用**：这是一个完全在浏览器中运行的单页应用（SPA），不涉及任何 SSR 或 Server Components。禁止生成 `'use client'` 或 `'use server'` 等 Next.js 特有的指令。
+- **数据获取**：优先使用 React Query (SWR) 等客户端获取方案，或者在 `useEffect` 中发起请求。
+- **状态管理**：大量依赖 `Zustand` 进行全局状态和权限管理。
+- **打包与构建**：注意 Vite 的特殊环境变量注入方式（`import.meta.env`），不要使用 `process.env`。

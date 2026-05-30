@@ -1,0 +1,10 @@
+# 通用 UI 组件库规范 (packages/ui)
+
+## 核心职责
+- 这里是整个 Monorepo 的基础 UI 资产库。
+- 必须基于 **Untitled UI** 的设计规范进行封装或复刻。
+
+## 开发约定
+- **框架无关性**：这里的组件必须是纯粹的 React 组件。绝对禁止引入 Next.js 的特有 API（如 `next/link`, `next/image`），也禁止引入 Vite 的特有 API。如果需要路由跳转，应暴露为 props 由宿主应用处理。
+- **Props 设计**：始终定义清晰的 TypeScript 接口（Interface）来描述组件的 Props。支持通过 `className` prop 透传自定义 Tailwind 样式。
+- **样式冲突处理**：所有的基础组件必须使用 `tailwind-merge` 以确保宿主应用传入的 class 可以正确覆盖默认样式。

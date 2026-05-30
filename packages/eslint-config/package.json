@@ -1,0 +1,11 @@
+{
+  "name": "@repo/eslint-config",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./base": "./src/base.js",
+    "./react": "./src/react.js",
+    "./next": "./src/next.js"
+  }
+}
