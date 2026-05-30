@@ -1,0 +1,6 @@
+@import "@repo/styles/base.css";
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+}

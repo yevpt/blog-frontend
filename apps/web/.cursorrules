@@ -1,0 +1,15 @@
+# Web 端规范 (Next.js 16 App Router)
+
+## 核心技术栈
+- Next.js 16 (App Router 模式), React Server Components (RSC), Server Actions。
+
+## 架构与约定
+- **默认服务端渲染**：所有位于 `app/` 目录下的组件默认视为 Server Components。
+- **客户端组件限制**：只有在必须使用 React Hooks（如 `useState`, `useEffect`, `useContext`）或浏览器 API 时，才在文件顶部添加 `'use client';` 指令。尽量将客户端组件推向组件树的叶子节点。
+- **数据获取**：优先在 Server Components 中直接使用 `fetch` 或数据库查询获取数据，不要用 `useEffect` 抓取数据。
+- **状态管理**：全局客户端状态使用 `Zustand`（且必须在 `'use client'` 组件中调用）。
+- **SEO 与元数据**：页面必须正确导出 `metadata` 或 `generateMetadata`。
+
+## 目录结构
+- `app/`: 仅包含路由文件 (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`)。
+- `components/`: 存放当前项目特有的业务组件（基础组件请从 `packages/ui` 引入）。

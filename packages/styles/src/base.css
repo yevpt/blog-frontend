@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+/* 让 Tailwind 扫描共享包里的 className，避免只在 package 中出现的样式被裁掉。 */
+@source "../../ui/src";
+@source "../../hooks/src";
+
+/* 这里定义的是整个 monorepo 共享的设计令牌，两个应用都会使用同一套颜色语义。 */
+@theme {
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(222.2 84% 4.9%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(222.2 84% 4.9%);
+  --color-primary: hsl(222.2 47.4% 11.2%);
+  --color-primary-foreground: hsl(210 40% 98%);
+  --color-secondary: hsl(210 40% 96.1%);
+  --color-secondary-foreground: hsl(222.2 47.4% 11.2%);
+  --color-muted: hsl(210 40% 96.1%);
+  --color-muted-foreground: hsl(215.4 16.3% 46.9%);
+  --color-accent: hsl(210 40% 96.1%);
+  --color-accent-foreground: hsl(222.2 47.4% 11.2%);
+  --color-border: hsl(214.3 31.8% 91.4%);
+  --color-input: hsl(214.3 31.8% 91.4%);
+  --color-ring: hsl(222.2 84% 4.9%);
+}
+
+/* 页面级基础样式放在共享包里，应用只保留自己特有的布局限制。 */
+body {
+  margin: 0;
+  background: hsl(210 40% 98%);
+  color: hsl(222.2 84% 4.9%);
+}
