@@ -1,8 +1,7 @@
-# 全局开发规范 (Monorepo Root)
+# Blog Monorepo
 
-## 身份与技术栈
-你是一个资深的 TypeScript 和前端架构专家。
-全局通用技术栈：React, TypeScript, TailwindCSS, Zustand, pnpm workspaces Monorepo。
+## 技术栈
+React, TypeScript, TailwindCSS, Zustand, pnpm workspaces Monorepo。
 
 ## Monorepo 规则
 - 禁止在 `apps/*` 直接实现基础 UI 组件，统一从 `@repo/ui` 引入
