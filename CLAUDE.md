@@ -16,6 +16,7 @@ React, TypeScript, TailwindCSS, Zustand, pnpm workspaces Monorepo。
 
 ## 样式
 - 只用 TailwindCSS；条件类名用 `clsx` 或 `tailwind-merge`
+- **响应式**：移动优先，断点顺序 `base → sm → md → lg → xl`；布局、字号、间距均需考虑各断点表现
 
 ## 自动化测试
 **每次新增或修改以下内容，必须同步创建或更新对应测试文件：**

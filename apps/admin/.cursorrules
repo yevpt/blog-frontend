@@ -7,6 +7,10 @@
 - 数据获取用 React Query 或 `useEffect`
 - 全局状态与权限管理用 Zustand
 
+## 响应式
+- 移动优先，断点顺序 `base → sm → md → lg → xl`
+- 表格、数据面板在小屏下可横向滚动（`overflow-x-auto`），禁止裁剪内容
+
 ## 环境变量
 - 用 `import.meta.env`，禁止用 `process.env`
 
