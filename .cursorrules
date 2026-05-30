@@ -18,6 +18,22 @@
 ## 样式
 - 只用 TailwindCSS；条件类名用 `clsx` 或 `tailwind-merge`
 
+## 自动化测试
+**每次新增或修改以下内容，必须同步创建或更新对应测试文件：**
+- Hook（`packages/hooks/` 或各 app 内部）→ 同目录 `*.test.ts`
+- UI 组件（`packages/ui/` 或各 app `components/`）→ 同目录 `*.test.tsx`
+- 页面（`apps/*/app/**/page.tsx`）→ 同目录 `page.test.tsx`
+
+**工具链**（框架已配置，直接使用）：
+- 测试框架：Vitest
+- 组件/Hook 测试：`@testing-library/react`（`render`、`renderHook`、`userEvent`）
+- 断言：Vitest 内置 `expect`
+
+**测试内容最低要求**：
+- 组件：① 渲染不崩溃 ② 关键 props 影响输出 ③ 用户交互触发正确回调
+- Hook：① 初始状态正确 ② 状态变更逻辑 ③ 边界条件（空值、错误）
+- 页面：① 核心内容渲染 ② loading/error 状态（若有）
+
 ## Git Commit 规范
 格式：`<type>(<scope>): <中文主题>`，正文用中文 bullet points，技术词保留英文。
 
