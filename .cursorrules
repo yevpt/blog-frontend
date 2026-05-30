@@ -9,6 +9,12 @@
 - 共享 Hooks/类型从 `packages/hooks`、`packages/typescript-config` 等包引入
 - 创建新功能前，先识别通用逻辑并建议提取到对应 `packages/`
 
+## SVG 图标
+- **禁止**安装 `lucide-react`、`react-icons` 等第三方图标库；**禁止**在 JSX 中内联 `<svg>`
+- 图标统一使用 `@repo/icons` 的 `<SvgIcon name="..." />`（`name` 有 TypeScript 类型约束）
+- 新增图标：将 `.svg` 文件放入 `packages/icons/svg/`，运行 `pnpm --filter @repo/icons build`，提交生成文件
+- `<SvgSprite />` 已在各 app 根组件注入，无需重复添加
+
 ## TypeScript & 代码风格
 - 禁止 `any`，用 `unknown` 或精确 `interface`/`type`
 - 优先纯函数、Hooks、Early Return，避免深层嵌套
