@@ -10,6 +10,8 @@
     }
   },
   "scripts": {
+    "test": "vitest --run",
+    "test:watch": "vitest",
     "check-types": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix"
