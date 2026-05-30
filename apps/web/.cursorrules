@@ -11,6 +11,11 @@
 ## SEO
 - 每个页面必须导出 `metadata` 或 `generateMetadata`
 
+## 响应式
+- 页面和组件均以移动端为基准，逐步增强至 `md`、`lg` 断点
+- 博客内容区域：`max-w-prose` 或 `max-w-2xl` + `mx-auto` 保证可读性
+- 导航、侧边栏等结构性布局在 `md` 以下折叠或隐藏
+
 ## 目录约定
 - `app/`：只放路由文件（`page.tsx`、`layout.tsx`、`loading.tsx`、`error.tsx`）
 - `components/`：当前应用的业务组件（基础组件从 `@repo/ui` 引入）
