@@ -1,0 +1,48 @@
+import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "fs";
+import { resolve, basename, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const svgDir = resolve(__dirname, "../svg");
+const generatedDir = resolve(__dirname, "../src/generated");
+
+mkdirSync(generatedDir, { recursive: true });
+
+const files = readdirSync(svgDir)
+  .filter((f) => f.endsWith(".svg"))
+  .sort();
+
+let symbols = "";
+const names = [];
+
+for (const file of files) {
+  const name = basename(file, ".svg");
+  names.push(name);
+
+  const content = readFileSync(resolve(svgDir, file), "utf-8");
+
+  const viewBox = content.match(/viewBox="([^"]+)"/)?.[1] ?? "0 0 24 24";
+
+  // 剥离 XML 声明和外层 <svg> 标签，只保留图形内容
+  const inner = content
+    .replace(/<\?xml[^?]*\?>/g, "")
+    .replace(/<svg[^>]*>/g, "")
+    .replace(/<\/svg>/g, "")
+    .trim();
+
+  symbols += `  <symbol id="icon-${name}" viewBox="${viewBox}">\n    ${inner}\n  </symbol>\n`;
+}
+
+const spriteContent = `<svg xmlns="http://www.w3.org/2000/svg" style="display:none">\n${symbols}</svg>`;
+
+writeFileSync(
+  resolve(generatedDir, "sprite.ts"),
+  `// 此文件由 scripts/build.mjs 自动生成，请勿手动修改\nexport const SPRITE_CONTENT = ${JSON.stringify(spriteContent)};\n`,
+);
+
+writeFileSync(
+  resolve(generatedDir, "types.ts"),
+  `// 此文件由 scripts/build.mjs 自动生成，请勿手动修改\nexport type IconName =\n${names.map((n) => `  | '${n}'`).join("\n")};\n`,
+);
+
+console.log(`✓ 生成雪碧图：${names.length} 个图标 [${names.join(", ")}]`);

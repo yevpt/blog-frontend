@@ -92,6 +92,9 @@ importers:
       '@repo/hooks':
         specifier: workspace:*
         version: link:../../packages/hooks
+      '@repo/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
       '@repo/styles':
         specifier: workspace:*
         version: link:../../packages/styles
@@ -123,6 +126,9 @@ importers:
       '@repo/hooks':
         specifier: workspace:*
         version: link:../../packages/hooks
+      '@repo/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
       '@repo/styles':
         specifier: workspace:*
         version: link:../../packages/styles
@@ -153,6 +159,22 @@ importers:
       react:
         specifier: '*'
         version: 19.2.6
+    devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+
+  packages/icons:
+    dependencies:
+      react:
+        specifier: '*'
+        version: 19.2.6
+      react-dom:
+        specifier: '*'
+        version: 19.2.6(react@19.2.6)
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*

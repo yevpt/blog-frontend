@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { SvgSprite } from "@repo/icons";
 
 import "./globals.css";
 
@@ -16,8 +17,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      {/* children 是当前路由页面内容，App Router 会自动把 page.tsx 放进这里。 */}
-      <body>{children}</body>
+      <body>
+        {/* SvgSprite 将雪碧图注入 DOM，必须在所有使用 SvgIcon 的组件之前渲染。 */}
+        <SvgSprite />
+        {children}
+      </body>
     </html>
   );
 }
