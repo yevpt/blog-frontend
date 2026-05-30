@@ -14,3 +14,9 @@
 ## 目录约定
 - `app/`：只放路由文件（`page.tsx`、`layout.tsx`、`loading.tsx`、`error.tsx`）
 - `components/`：当前应用的业务组件（基础组件从 `@repo/ui` 引入）
+
+## 测试
+- 测试环境：`jsdom`（`apps/web/**` 已在根 vitest.config.ts 配置）
+- 新增 `components/` 下的组件 → 同目录 `*.test.tsx`，用 `@testing-library/react`
+- 新增 `app/**/page.tsx` → 同目录 `page.test.tsx`，测试核心内容渲染
+- Server Components 中只测试输出的 HTML 结构，不测试服务端数据获取逻辑
