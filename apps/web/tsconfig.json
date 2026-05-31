@@ -2,7 +2,7 @@
   "extends": "@repo/typescript-config/next",
   "compilerOptions": {
     "incremental": true,
-    "types": ["node"],
+    "types": ["node", "@testing-library/jest-dom"],
     "paths": {
       "@/*": ["./*"]
     }
