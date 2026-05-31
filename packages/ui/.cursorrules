@@ -2,7 +2,7 @@
 
 ## 框架无关性
 - 禁止引入 `next/*`、Vite 特有 API；路由跳转能力通过 props 暴露给宿主应用
-- 基于 **Untitled UI** 设计规范封装组件
+- 基于 **react-aria** 设计规范封装组件
 
 ## 组件开发约定
 - 每个组件必须定义清晰的 TypeScript `interface` 描述 Props
