@@ -25,6 +25,7 @@
     "@repo/typescript-config": "workspace:*"
   },
   "dependencies": {
+    "@repo/icons": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.6.0"

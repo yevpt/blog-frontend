@@ -219,6 +219,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@repo/icons':
+        specifier: workspace:*
+        version: link:../icons
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
