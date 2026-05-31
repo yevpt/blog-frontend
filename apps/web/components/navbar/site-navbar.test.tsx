@@ -88,6 +88,13 @@ describe("SiteNavbar", () => {
     expect(document.querySelector("header")).toBeTruthy();
   });
 
+  it("初始渲染无 -translate-y-full 和 opacity-0（始终可见）", () => {
+    render(<SiteNavbar />);
+    const header = document.querySelector("header");
+    expect(header?.className).not.toContain("-translate-y-full");
+    expect(header?.className).not.toContain("opacity-0");
+  });
+
   it("导航链接全部存在（首页、碎语、留言、友邻、圈子）", () => {
     render(<SiteNavbar />);
     // 导航链接在 md+ 和移动端抽屉各出现一次，用 getAllByText

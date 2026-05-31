@@ -153,15 +153,14 @@ describe("LocaleProvider", () => {
     });
   });
 
-  it("messages 未加载完成时 t() 降级返回 key 本身", () => {
-    // 同步渲染后 messages 尚未加载完成，t() 应返回 key
+  it("默认 zh locale 时，t() 同步返回中文（无需等待异步加载）", () => {
     render(
       <LocaleProvider>
         <LocaleDisplay />
       </LocaleProvider>,
     );
 
-    // 刚渲染、messages 为 null，应降级返回 key
-    expect(screen.getByTestId("nav-home").textContent).toBe("nav.home");
+    // zh.json 静态导入，首屏即可用
+    expect(screen.getByTestId("nav-home").textContent).toBe("首页");
   });
 });

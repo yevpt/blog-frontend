@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { ReactNode } from "react";
+import zhMessages from "../../messages/zh.json";
 import {
   LocaleContext,
   getNestedValue,
@@ -25,20 +26,22 @@ async function loadMessages(locale: Locale): Promise<Messages> {
     const mod = await import("../../messages/en.json");
     return mod.default as Messages;
   }
-  // 默认加载中文
   const mod = await import("../../messages/zh.json");
   return mod.default as Messages;
 }
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(getInitialLocale);
-  // messages 加载完成前为 null，此时 t() 降级返回 key 本身
-  const [messages, setMessages] = useState<Messages | null>(null);
 
-  // locale 变化时重新加载对应 messages JSON
+  // zh.json 静态导入作为初始值：zh 用户首屏无闪烁；en 用户初始为空对象，等待动态加载
+  const [messages, setMessages] = useState<Messages>(() => {
+    const initialLocale = getInitialLocale();
+    return initialLocale === "zh" ? (zhMessages as Messages) : {};
+  });
+
+  // locale 变化时重新加载对应 messages
   useEffect(() => {
     let cancelled = false;
-    setMessages(null);
     loadMessages(locale).then((msgs) => {
       if (!cancelled) setMessages(msgs);
     });
@@ -52,7 +55,6 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     setLocaleState(newLocale);
   }, []);
 
-  // messages 加载完成前返回 key 本身（降级处理）
   const t = useCallback(
     (key: string): string => {
       if (!messages) return key;

@@ -8,20 +8,13 @@ import { NavbarActions } from "./navbar-actions";
 import { NavbarMobileDrawer } from "./navbar-mobile-drawer";
 
 export function SiteNavbar() {
-  // 入场动效：挂载后从 translate-y-[-100%] opacity-0 过渡到正常状态
-  const [mounted, setMounted] = useState(false);
   // 滚动缩小效果：scrollY > 10 时切换到紧凑样式
   const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
     };
-
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -30,11 +23,7 @@ export function SiteNavbar() {
     <header
       className={cn(
         "fixed top-0 left-0 right-0 z-50",
-        // 统一 transition 声明，避免多个 transition-* 类相互覆盖
-        "transition-[transform,opacity,padding,background-color,backdrop-filter,border-color] duration-300 ease-out",
-        // 入场动效
-        mounted ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0",
-        // 滚动后添加毛玻璃背景和边框
+        "transition-[padding,background-color,backdrop-filter,border-color] duration-300 ease-out",
         scrolled ? "py-2 backdrop-blur-md bg-background/80 border-b border-border" : "py-4",
       )}
     >
