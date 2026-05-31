@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { SvgIcon } from "@repo/icons";
+import { Tabs, TabsList, TabsItem, Input } from "@repo/ui";
 import { useLocale } from "@repo/hooks";
 
 interface ArticleListHeaderProps {
@@ -12,7 +12,8 @@ interface ArticleListHeaderProps {
   onSearchChange: (query: string) => void;
 }
 
-// 分类 Tabs + 搜索框，搜索框有 300ms 防抖和 focus 展开效果
+// 分类 Tabs（button-brand-horizontal）+ 搜索框（Input with iconName）
+// Input onChange 返回 string，防抖 300ms 后才触发 onSearchChange
 export function ArticleListHeader({
   categories,
   currentCategory,
@@ -21,7 +22,6 @@ export function ArticleListHeader({
   onSearchChange,
 }: ArticleListHeaderProps) {
   const { t } = useLocale();
-  // localQuery 即时响应输入，防抖 300ms 后才触发 onSearchChange
   const [localQuery, setLocalQuery] = useState(searchQuery);
 
   // 当外部 searchQuery 重置时同步本地状态（如 category 切换时）
@@ -39,41 +39,29 @@ export function ArticleListHeader({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
-      {/* 左侧分类 Tabs */}
-      <div className="flex gap-1 flex-wrap">
-        {categories.map((category) => {
-          const isActive = category === currentCategory;
-          return (
-            <button
-              key={category}
-              onClick={() => onCategoryChange(category)}
-              className={[
-                "px-4 py-2 rounded-full text-sm transition-colors duration-200",
-                isActive
-                  ? "bg-foreground text-background"
-                  : "text-muted-foreground hover:text-foreground",
-              ].join(" ")}
-              aria-pressed={isActive}
-            >
+      {/* 左侧分类 Tabs — button-brand-horizontal 变体（主色胶囊样式） */}
+      <Tabs
+        selectedKey={currentCategory}
+        onSelectionChange={(key) => onCategoryChange(String(key))}
+      >
+        <TabsList variant="button-brand-horizontal">
+          {categories.map((category) => (
+            <TabsItem key={category} id={category} variant="button-brand-horizontal">
               {category}
-            </button>
-          );
-        })}
-      </div>
+            </TabsItem>
+          ))}
+        </TabsList>
+      </Tabs>
 
-      {/* 右侧搜索框：focus 时从 w-48 展开到 w-64 */}
-      <div className="relative flex items-center">
-        <span className="absolute left-3 pointer-events-none text-muted-foreground">
-          <SvgIcon name="search" size={16} />
-        </span>
-        <input
-          type="text"
-          value={localQuery}
-          onChange={(e) => setLocalQuery(e.target.value)}
-          placeholder={t("article.searchPlaceholder")}
-          className="w-48 focus:w-64 transition-all duration-300 rounded-full border border-border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
-        />
-      </div>
+      {/* 右侧搜索框：Input 组件，iconName 自动左侧定位搜索图标 */}
+      <Input
+        iconName="search"
+        placeholder={t("article.searchPlaceholder")}
+        value={localQuery}
+        onChange={setLocalQuery}
+        size="sm"
+        inputClassName="w-48 focus:w-64 transition-all duration-300"
+      />
     </div>
   );
 }

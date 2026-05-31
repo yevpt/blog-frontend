@@ -47,7 +47,7 @@ vi.mock("@repo/icons", () => ({
   ),
 }));
 
-// Mock @repo/ui Pagination
+// Mock @repo/ui — Pagination + Tabs系列 + Input
 vi.mock("@repo/ui", () => ({
   Pagination: ({
     currentPage,
@@ -79,6 +79,53 @@ vi.mock("@repo/ui", () => ({
         下一页
       </button>
     </nav>
+  ),
+  // Tabs: 事件委托将点击传给 onSelectionChange（无 React context）
+  Tabs: ({
+    children,
+    onSelectionChange,
+  }: {
+    children: ReactNode;
+    selectedKey?: string;
+    onSelectionChange?: (key: string) => void;
+  }) => {
+    const handleSelect = (e: { target: EventTarget | null }) => {
+      const btn = (e.target as HTMLElement).closest("button[data-tab-id]");
+      if (btn && onSelectionChange) {
+        onSelectionChange(btn.getAttribute("data-tab-id") ?? "");
+      }
+    };
+    return (
+      // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+      <div onClick={handleSelect} onKeyDown={handleSelect}>
+        {children}
+      </div>
+    );
+  },
+  TabsList: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  TabsItem: ({ children, id }: { children: ReactNode; id?: string; variant?: string }) => (
+    // role 保持隐式 button，避免与 getByRole("button") 冲突
+    <button data-tab-id={id}>{children}</button>
+  ),
+  TabsPanel: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Input: ({
+    placeholder,
+    value,
+    onChange,
+  }: {
+    label?: string;
+    placeholder?: string;
+    value?: string;
+    onChange?: (val: string) => void;
+    iconName?: string;
+    size?: string;
+    inputClassName?: string;
+  }) => (
+    <input
+      placeholder={placeholder}
+      value={value ?? ""}
+      onChange={(e) => onChange?.(e.target.value)}
+    />
   ),
 }));
 

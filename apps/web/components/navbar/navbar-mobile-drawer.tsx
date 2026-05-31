@@ -28,7 +28,7 @@ export function NavbarMobileDrawer() {
   return (
     // 触发按钮仅在 md 以下显示
     <div className="md:hidden">
-      <Button variant="ghost" onClick={open} className="p-2 rounded-md" aria-label="打开导航菜单">
+      <Button variant="ghost" onPress={open} className="p-2 rounded-md" aria-label="打开导航菜单">
         <SvgIcon name="menu" size={24} className="text-foreground" />
       </Button>
 
@@ -59,7 +59,7 @@ export function NavbarMobileDrawer() {
           <NavbarLogo />
           <Button
             variant="ghost"
-            onClick={close}
+            onPress={close}
             className="p-2 rounded-md"
             aria-label="关闭导航菜单"
           >

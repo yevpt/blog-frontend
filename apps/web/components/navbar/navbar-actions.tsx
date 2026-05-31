@@ -24,16 +24,12 @@ export function NavbarActions() {
   const { theme, setTheme } = useTheme();
   const { t } = useLocale();
 
-  const handleThemeToggle = () => {
-    setTheme(THEME_CYCLE[theme]);
-  };
-
   return (
     <div className="flex items-center gap-2">
       {/* 主题切换按钮：所有端均显示 */}
       <Button
         variant="ghost"
-        onClick={handleThemeToggle}
+        onPress={() => setTheme(THEME_CYCLE[theme])}
         className="p-2 rounded-md"
         aria-label={`当前主题：${theme}，点击切换`}
       >
