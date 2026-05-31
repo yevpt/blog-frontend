@@ -5,7 +5,7 @@ import { SvgIcon } from "@repo/icons";
 import { Button } from "@repo/ui";
 import { NavbarLogo } from "./navbar-logo";
 import { NavbarLinks } from "./navbar-links";
-import { useLocale } from "@repo/hooks/locale";
+import { useLocale } from "@repo/hooks";
 import { cn } from "@repo/ui";
 
 export function NavbarMobileDrawer() {

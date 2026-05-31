@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useLocale } from "@repo/hooks/locale";
+import { useLocale } from "@repo/hooks";
 import { cn } from "@repo/ui";
 
 const NAV_ITEMS = [

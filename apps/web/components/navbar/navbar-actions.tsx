@@ -3,7 +3,7 @@
 import { SvgIcon } from "@repo/icons";
 import { Button } from "@repo/ui";
 import { useTheme } from "../../app/providers/theme-provider";
-import { useLocale } from "@repo/hooks/locale";
+import { useLocale } from "@repo/hooks";
 
 type ThemeMode = "system" | "light" | "dark";
 

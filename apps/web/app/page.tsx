@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* 全宽推荐轮播 */}
       <FeaturedCarousel posts={featuredPosts} />
 
@@ -35,6 +35,6 @@ export default function Home() {
           <TagsCloud tags={tags} />
         </aside>
       </div>
-    </main>
+    </div>
   );
 }

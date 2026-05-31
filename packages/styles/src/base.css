@@ -26,7 +26,8 @@
 /* 页面级基础样式放在共享包里，应用只保留自己特有的布局限制。 */
 body {
   margin: 0;
-  background: hsl(210 40% 98%);
+  /* 使用 CSS 变量确保与 Tailwind bg-background 保持一致 */
+  background: var(--color-background);
   color: hsl(222.2 84% 4.9%);
 }
 
