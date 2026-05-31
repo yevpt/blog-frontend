@@ -1,2 +1,12 @@
-// @repo/api — 占位文件，正式实现见 Task 3
-export {};
+// packages/api/src/index.ts
+export type {
+  SendCodeReq,
+  RegisterReq,
+  LoginReq,
+  RefreshReq,
+  UserResp,
+  LoginResp,
+  TokenResp,
+} from "./types/auth";
+export { ApiError } from "./errors";
+// createApiClient will be exported after Task 4
