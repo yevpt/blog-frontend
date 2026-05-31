@@ -5,7 +5,9 @@ export default defineConfig({
   plugins: [react()],
   test: {
     // apps/web 用 jsdom（Next.js 官方推荐）；其余用 happy-dom（更轻量）
+    globals: true,
     environment: "happy-dom",
     environmentMatchGlobs: [["apps/web/**", "jsdom"]],
+    setupFiles: ["./vitest.setup.ts"],
   },
 });
