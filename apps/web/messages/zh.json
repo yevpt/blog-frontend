@@ -1,0 +1,50 @@
+{
+  "nav": {
+    "home": "首页",
+    "snippets": "碎语",
+    "guestbook": "留言",
+    "friends": "友邻",
+    "circle": "圈子"
+  },
+  "auth": {
+    "login": "登录",
+    "register": "注册"
+  },
+  "home": {
+    "featured": "推荐文章",
+    "articles": "文章",
+    "snippets": "碎语",
+    "recentVisitors": "最近来访",
+    "tags": "标签",
+    "postSnippet": "发表碎语",
+    "viewMore": "查看更多",
+    "joinQQ": "入驻 QQ 群"
+  },
+  "article": {
+    "views": "浏览",
+    "likes": "喜欢",
+    "comments": "评论",
+    "readMore": "阅读全文",
+    "allCategories": "全部",
+    "searchPlaceholder": "搜索文章..."
+  },
+  "snippet": {
+    "expand": "展开",
+    "collapse": "收起",
+    "like": "喜欢",
+    "comment": "评论",
+    "share": "转发",
+    "postNew": "发表碎语",
+    "viewMore": "查看更多"
+  },
+  "sidebar": {
+    "recentVisitors": "最近来访",
+    "joinQQ": "入驻 QQ 群",
+    "viewMore": "查看更多",
+    "tags": "标签"
+  },
+  "pagination": {
+    "prev": "上一页",
+    "next": "下一页"
+  }
+}

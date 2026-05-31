@@ -15,6 +15,10 @@
     "./react": {
       "types": "./src/use-post-filter.ts",
       "import": "./src/use-post-filter.ts"
+    },
+    "./locale": {
+      "types": "./src/locale/use-locale.ts",
+      "import": "./src/locale/use-locale.ts"
     }
   },
   "scripts": {

@@ -1,0 +1,50 @@
+{
+  "nav": {
+    "home": "",
+    "snippets": "",
+    "guestbook": "",
+    "friends": "",
+    "circle": ""
+  },
+  "auth": {
+    "login": "",
+    "register": ""
+  },
+  "home": {
+    "featured": "",
+    "articles": "",
+    "snippets": "",
+    "recentVisitors": "",
+    "tags": "",
+    "postSnippet": "",
+    "viewMore": "",
+    "joinQQ": ""
+  },
+  "article": {
+    "views": "",
+    "likes": "",
+    "comments": "",
+    "readMore": "",
+    "allCategories": "",
+    "searchPlaceholder": ""
+  },
+  "snippet": {
+    "expand": "",
+    "collapse": "",
+    "like": "",
+    "comment": "",
+    "share": "",
+    "postNew": "",
+    "viewMore": ""
+  },
+  "sidebar": {
+    "recentVisitors": "",
+    "joinQQ": "",
+    "viewMore": "",
+    "tags": ""
+  },
+  "pagination": {
+    "prev": "",
+    "next": ""
+  }
+}
