@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import type { ReactNode } from "react";
 import { SvgSprite } from "@repo/icons";
+import { SiteFooter } from "@/components/footer";
+import { SiteNavbar } from "@/components/navbar";
+import { getSession } from "@/lib/session";
 import { ThemeProvider } from "./providers/theme-provider";
 import { LocaleProvider } from "./providers/locale-provider";
 import { SessionProvider } from "./providers/session-provider";
-import { SiteNavbar } from "../components/navbar";
-import { getSession } from "../lib/session";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -20,15 +22,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      <head>
-        {/* FOUC 防闪烁：在 React 水化前根据 localStorage 预设 dark class，避免主题切换闪烁 */}
-        <script
+      <body>
+        {/* FOUC 防闪烁：beforeInteractive 注入 head，在 React 水化前预设 dark class */}
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `(function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}})()`,
           }}
         />
-      </head>
-      <body>
         <ThemeProvider>
           <LocaleProvider>
             <SessionProvider user={session?.user ?? null}>
@@ -37,6 +39,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                 <SvgSprite />
                 <SiteNavbar />
                 <main className="flex-1 pt-16">{children}</main>
+                <SiteFooter />
               </div>
             </SessionProvider>
           </LocaleProvider>
