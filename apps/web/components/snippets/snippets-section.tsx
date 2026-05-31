@@ -19,7 +19,7 @@ export function SnippetsSection({ snippets }: SnippetsSectionProps) {
       <h2 className="text-lg font-semibold">{t("home.snippets")}</h2>
 
       {/* 卡片网格：移动端单列，md 以上双列 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+      <div className="grid grid-cols-1 gap-4 mt-4">
         {snippets.map((snippet) => (
           <SnippetCard key={snippet.id} snippet={snippet} />
         ))}

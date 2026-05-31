@@ -13,7 +13,7 @@ export function FeaturedCarouselSlide({ post, isActive }: FeaturedCarouselSlideP
   return (
     <div
       className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-        isActive ? "opacity-100" : "opacity-0"
+        isActive ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       }`}
       aria-hidden={!isActive}
     >

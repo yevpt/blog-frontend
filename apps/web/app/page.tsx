@@ -23,9 +23,8 @@ export default function Home() {
       {/* 双栏区域：主内容 + 右侧栏 */}
       <div className="mt-10 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 items-start">
         {/* 主内容区 */}
-        <div className="min-w-0 space-y-12">
+        <div className="min-w-0">
           <ArticleSection articles={articles} />
-          <SnippetsSection snippets={snippets} />
         </div>
 
         {/* 右侧栏（移动端排在后面，PC 端固定在右侧）*/}
@@ -33,6 +32,9 @@ export default function Home() {
         <aside className="lg:sticky lg:top-20">
           <RecentVisitors visitors={visitors} />
           <TagsCloud tags={tags} />
+          <div className="mt-4">
+            <SnippetsSection snippets={snippets} />
+          </div>
         </aside>
       </div>
     </div>
