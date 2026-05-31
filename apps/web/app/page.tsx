@@ -29,7 +29,8 @@ export default function Home() {
         </div>
 
         {/* 右侧栏（移动端排在后面，PC 端固定在右侧）*/}
-        <aside className="lg:sticky lg:top-20 space-y-0">
+        {/* lg:top-20 对应 80px 固定导航栏高度 */}
+        <aside className="lg:sticky lg:top-20">
           <RecentVisitors visitors={visitors} />
           <TagsCloud tags={tags} />
         </aside>
