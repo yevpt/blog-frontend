@@ -8,6 +8,12 @@
 - 禁止在 `apps/*` 直接实现基础 UI 组件，统一从 `@repo/ui` 引入
 - 共享 Hooks/类型从 `packages/hooks`、`packages/typescript-config` 等包引入
 - 创建新功能前，先识别通用逻辑并建议提取到对应 `packages/`
+- HTTP 请求统一通过 `@repo/api` 的 `createApiClient()` 初始化；**禁止**在 `apps/*` 中手写 fetch 封装或直接使用 axios
+- `packages/api` 只含：TypeScript 类型（对应后端 DTO）+ 框架无关工厂函数；**不含** token 存储、React Hooks、框架特定代码
+- Token 管理各 App 自行实现，通过配置注入工厂：
+  - `admin`：access token 存 Zustand 内存，refresh token 存 `localStorage`
+  - `web`：两种 token 均存 httpOnly Cookie，由 `middleware.ts` 和 Route Handler 管理，JS 不可读
+- 新增 API 接口：先在 `packages/api/src/types/` 补充类型，再在 `client.ts` 对应方法组（auth / posts / ...）添加调用方法
 
 ## SVG 图标
 - **禁止**安装 `lucide-react`、`react-icons` 等第三方图标库；**禁止**在 JSX 中内联 `<svg>`
