@@ -40,9 +40,11 @@ export interface Visitor {
   visitedAt: Date;
 }
 
+import type { IconName } from "@repo/icons";
+
 export interface Tag {
   id: string;
   name: string;
-  icon: string;
+  icon: IconName;
   count: number;
 }
