@@ -2,12 +2,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import { decodeJwt } from "jose";
 
 /**
- * 需要登录才能访问的路径前缀列表。
- * 未来新增保护路由时，在此处添加前缀。
- */
-const PROTECTED_PATHS = ["/profile", "/vip", "/dashboard"];
-
-/**
  * 解码 JWT payload，检查是否为有效的 access token（未过期且 type=access）。
  * 注意：此处只做过期检查，不验证签名，实际签名验证由 Go 后端负责。
  * Next.js Middleware 运行在 Edge Runtime（非 Node.js），使用 jose 是因为
@@ -27,10 +21,6 @@ function isAccessTokenValid(token: string): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 非保护路径直接放行
-  const isProtected = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
-  if (!isProtected) return NextResponse.next();
-
   const accessToken = request.cookies.get("access_token")?.value;
 
   // access token 有效，直接放行
@@ -46,10 +36,12 @@ export async function middleware(request: NextRequest) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh_token: refreshToken }),
+        // 3 秒超时，防止后端无响应时阻塞所有受保护路由的请求
+        signal: AbortSignal.timeout(3000),
       });
       const data = await res.json();
 
-      if (data.code === 0) {
+      if (data.code === 0 && data.data) {
         const { access_token, refresh_token: newRefreshToken, expires_in } = data.data;
         const response = NextResponse.next();
         const isProduction = process.env.NODE_ENV === "production";
