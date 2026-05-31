@@ -1,15 +1,21 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@repo/ui";
-import type { FeaturedPost } from "../../app/_mock/types";
+import type { FeaturedPost } from "@/app/_mock/types";
 
 interface FeaturedCarouselSlideProps {
   post: FeaturedPost;
   isActive: boolean;
+  /** 首屏 LCP 候选：首张幻灯片始终 eager 预加载，不随轮播切换 */
+  isLcpCandidate?: boolean;
 }
 
 // 单张幻灯片，纯展示组件，无需 'use client'
-export function FeaturedCarouselSlide({ post, isActive }: FeaturedCarouselSlideProps) {
+export function FeaturedCarouselSlide({
+  post,
+  isActive,
+  isLcpCandidate = false,
+}: FeaturedCarouselSlideProps) {
   return (
     <div
       className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
@@ -24,11 +30,12 @@ export function FeaturedCarouselSlide({ post, isActive }: FeaturedCarouselSlideP
           alt={post.title}
           fill
           className="object-cover"
-          priority={isActive}
+          priority={isLcpCandidate}
+          loading={isLcpCandidate ? "eager" : "lazy"}
         />
 
         {/* 底部渐变遮罩 */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-linear-t from-black/80 via-black/30 to-transparent" />
 
         {/* 文字内容区：绝对定位在底部 */}
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">

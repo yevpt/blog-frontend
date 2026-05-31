@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import type { FeaturedPost } from "../../app/_mock/types";
+import type { FeaturedPost } from "@/app/_mock/types";
 import { FeaturedCarouselSlide } from "./featured-carousel-slide";
 import { FeaturedCarouselIndicators } from "./featured-carousel-indicators";
 
@@ -52,7 +52,12 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
     >
       {/* 幻灯片层：绝对定位，opacity fade 切换 */}
       {posts.map((post, index) => (
-        <FeaturedCarouselSlide key={post.id} post={post} isActive={index === currentIndex} />
+        <FeaturedCarouselSlide
+          key={post.id}
+          post={post}
+          isActive={index === currentIndex}
+          isLcpCandidate={index === 0}
+        />
       ))}
 
       {/* 指示器：覆盖在图片上方底部居中 */}

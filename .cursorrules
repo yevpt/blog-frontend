@@ -12,7 +12,7 @@
 - `packages/api` 只含：TypeScript 类型（对应后端 DTO）+ 框架无关工厂函数；**不含** token 存储、React Hooks、框架特定代码
 - Token 管理各 App 自行实现，通过配置注入工厂：
   - `admin`：access token 存 Zustand 内存，refresh token 存 `localStorage`
-  - `web`：两种 token 均存 httpOnly Cookie，由 `middleware.ts` 和 Route Handler 管理，JS 不可读
+  - `web`：两种 token 均存 httpOnly Cookie，由 `proxy.ts` 和 Route Handler 管理，JS 不可读
 - 新增 API 接口：先在 `packages/api/src/types/` 补充类型，再在 `client.ts` 对应方法组（auth / posts / ...）添加调用方法
 
 ## SVG 图标
