@@ -30,10 +30,10 @@ export function SiteNavbar() {
     <header
       className={cn(
         "fixed top-0 left-0 right-0 z-50",
-        "transition-all duration-300",
+        // 统一 transition 声明，避免多个 transition-* 类相互覆盖
+        "transition-[transform,opacity,padding,background-color,backdrop-filter,border-color] duration-300 ease-out",
         // 入场动效
         mounted ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0",
-        "transition-transform transition-opacity duration-500 ease-out",
         // 滚动后添加毛玻璃背景和边框
         scrolled ? "py-2 backdrop-blur-md bg-background/80 border-b border-border" : "py-4",
       )}

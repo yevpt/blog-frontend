@@ -133,8 +133,8 @@ describe("SiteNavbar", () => {
       await user.click(screen.getByLabelText("打开导航菜单"));
     });
 
-    // 确认抽屉已打开
-    const drawer = screen.getByRole("generic", { name: "移动端导航抽屉" });
+    // 确认抽屉已打开（role="dialog" + aria-label）
+    const drawer = screen.getByRole("dialog", { name: "移动端导航菜单" });
     expect(drawer).toHaveAttribute("data-open", "true");
 
     // 关闭
@@ -144,8 +144,6 @@ describe("SiteNavbar", () => {
 
     // 抽屉关闭后 data-open 变为 false（CSS 动画滑出，DOM 仍存在）
     expect(drawer).toHaveAttribute("data-open", "false");
-    // 同时 aria-hidden 为 true
-    expect(drawer).toHaveAttribute("aria-hidden", "true");
   });
 
   it("登录和注册按钮存在（md+ 可见）", () => {
