@@ -1,50 +1,50 @@
 {
   "nav": {
-    "home": "",
-    "snippets": "",
-    "guestbook": "",
-    "friends": "",
-    "circle": ""
+    "home": "Home",
+    "snippets": "Snippets",
+    "guestbook": "Guestbook",
+    "friends": "Friends",
+    "circle": "Circle"
   },
   "auth": {
-    "login": "",
-    "register": ""
+    "login": "Sign in",
+    "register": "Sign up"
   },
   "home": {
-    "featured": "",
-    "articles": "",
-    "snippets": "",
-    "recentVisitors": "",
-    "tags": "",
-    "postSnippet": "",
-    "viewMore": "",
-    "joinQQ": ""
+    "featured": "Featured",
+    "articles": "Articles",
+    "snippets": "Snippets",
+    "recentVisitors": "Recent Visitors",
+    "tags": "Tags",
+    "postSnippet": "Post Snippet",
+    "viewMore": "View More",
+    "joinQQ": "Join QQ Group"
   },
   "article": {
-    "views": "",
-    "likes": "",
-    "comments": "",
-    "readMore": "",
-    "allCategories": "",
-    "searchPlaceholder": ""
+    "views": "Views",
+    "likes": "Likes",
+    "comments": "Comments",
+    "readMore": "Read More",
+    "allCategories": "All",
+    "searchPlaceholder": "Search articles..."
   },
   "snippet": {
-    "expand": "",
-    "collapse": "",
-    "like": "",
-    "comment": "",
-    "share": "",
-    "postNew": "",
-    "viewMore": ""
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "like": "Like",
+    "comment": "Comment",
+    "share": "Share",
+    "postNew": "Post Snippet",
+    "viewMore": "View More"
   },
   "sidebar": {
-    "recentVisitors": "",
-    "joinQQ": "",
-    "viewMore": "",
-    "tags": ""
+    "recentVisitors": "Recent Visitors",
+    "joinQQ": "Join QQ Group",
+    "viewMore": "View More",
+    "tags": "Tags"
   },
   "pagination": {
-    "prev": "",
-    "next": ""
+    "prev": "Previous",
+    "next": "Next"
   }
 }

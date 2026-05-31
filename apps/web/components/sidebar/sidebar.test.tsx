@@ -29,7 +29,7 @@ vi.mock("@repo/icons", () => ({
   ),
 }));
 
-// Mock @repo/ui（Button 组件）
+// Mock @repo/ui（Button + TagGroup 系列）
 vi.mock("@repo/ui", () => ({
   Button: ({
     children,
@@ -42,6 +42,36 @@ vi.mock("@repo/ui", () => ({
   }) => (
     <button data-variant={variant} {...props}>
       {children}
+    </button>
+  ),
+  TagGroup: ({
+    children,
+    label,
+  }: {
+    children: ReactNode;
+    label?: string;
+    selectionMode?: string;
+    [key: string]: unknown;
+  }) => (
+    <div>
+      {label && <span>{label}</span>}
+      {children}
+    </div>
+  ),
+  TagList: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  TagItem: ({
+    children,
+    count,
+    id,
+  }: {
+    children: ReactNode;
+    count?: number;
+    id?: string;
+    [key: string]: unknown;
+  }) => (
+    <button data-id={id}>
+      {children}
+      {count !== undefined && <span data-testid="tag-count">{count}</span>}
     </button>
   ),
 }));
@@ -155,10 +185,10 @@ describe("TagsCloud", () => {
     expect(buttons).toHaveLength(0);
   });
 
-  it("每个标签都有对应图标", () => {
+  it("每个标签都显示计数", () => {
     render(<TagsCloud tags={mockTags} />);
-    // 每个 tag 的 icon 是 'tag'，渲染 3 个图标
-    const icons = screen.getAllByTestId("icon-tag");
-    expect(icons).toHaveLength(mockTags.length);
+    // makeTag(id) 的 count 是 id * 3：3, 6, 9
+    const counts = screen.getAllByTestId("tag-count");
+    expect(counts).toHaveLength(mockTags.length);
   });
 });
