@@ -1,17 +1,20 @@
-import * as React from "react";
+import type React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "./lib/utils";
 
-// Badge 只有少量视觉状态，用 cva 统一维护后，业务代码不需要关心具体颜色类名。
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors",
+  "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground",
-        secondary: "border-transparent bg-secondary text-secondary-foreground",
-        outline: "text-foreground",
+        default: "bg-primary text-primary-foreground",
+        secondary: "bg-secondary text-secondary-foreground",
+        outline: "border border-border text-foreground",
+        brand: "bg-primary/10 text-primary border border-primary/20",
+        success: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+        warning: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+        error: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
       },
     },
     defaultVariants: {
@@ -20,9 +23,8 @@ const badgeVariants = cva(
   },
 );
 
-export type BadgeProps = React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof badgeVariants>;
+export type BadgeProps = React.HTMLAttributes<HTMLSpanElement> & VariantProps<typeof badgeVariants>;
 
 export function Badge({ className, variant, ...props }: BadgeProps) {
-  // cn 会把组件默认样式和调用方传入的 className 合并，调用方仍然可以局部微调。
-  return <div className={cn(badgeVariants({ variant, className }))} {...props} />;
+  return <span className={cn(badgeVariants({ variant, className }))} {...props} />;
 }
