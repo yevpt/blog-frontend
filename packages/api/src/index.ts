@@ -9,4 +9,5 @@ export type {
   TokenResp,
 } from "./types/auth";
 export { ApiError } from "./errors";
-// createApiClient will be exported after Task 4
+export { createApiClient } from "./client";
+export type { ApiClientConfig } from "./client";
