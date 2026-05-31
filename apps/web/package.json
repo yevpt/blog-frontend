@@ -13,6 +13,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@repo/api": "workspace:*",
     "@repo/hooks": "workspace:*",
     "@repo/icons": "workspace:*",
     "@repo/styles": "workspace:*",

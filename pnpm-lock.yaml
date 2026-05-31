@@ -95,6 +95,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@repo/api':
+        specifier: workspace:*
+        version: link:../../packages/api
       '@repo/hooks':
         specifier: workspace:*
         version: link:../../packages/hooks
@@ -129,6 +132,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@repo/api':
+        specifier: workspace:*
+        version: link:../../packages/api
       '@repo/hooks':
         specifier: workspace:*
         version: link:../../packages/hooks
@@ -157,6 +163,15 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
+
+  packages/api:
+    devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
 
   packages/eslint-config: {}
 
