@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { Pagination } from "./pagination";
 
-// Mock @repo/icons：happy-dom 环境无 SVG sprite，用轻量替代
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name, size }: { name: string; size?: number }) => (
     <span data-testid={`icon-${name}`} data-size={size} />
@@ -14,6 +14,12 @@ describe("Pagination", () => {
   it("渲染不崩溃", () => {
     render(<Pagination currentPage={1} totalPages={5} onPageChange={vi.fn()} />);
     expect(screen.getByRole("navigation", { name: "分页导航" })).toBeTruthy();
+  });
+
+  it("移动端显示页码摘要", () => {
+    render(<Pagination currentPage={3} totalPages={10} onPageChange={vi.fn()} />);
+    expect(screen.getByTestId("pagination-mobile-summary").textContent).toContain("3");
+    expect(screen.getByTestId("pagination-mobile-summary").textContent).toContain("10");
   });
 
   it("上一页按钮在第 1 页时 disabled", () => {
@@ -67,18 +73,47 @@ describe("Pagination", () => {
     expect(onPageChange).toHaveBeenCalledWith(3);
   });
 
+  it("来回点击上一页/下一页，页码高亮与摘要保持同步", async () => {
+    const user = userEvent.setup();
+
+    function ControlledPagination() {
+      const [page, setPage] = useState(5);
+      return <Pagination currentPage={page} totalPages={10} onPageChange={setPage} />;
+    }
+
+    render(<ControlledPagination />);
+
+    expect(screen.getByRole("button", { name: "第 5 页" })).toHaveAttribute("aria-current", "page");
+
+    await user.click(screen.getByRole("button", { name: "下一页" }));
+    expect(screen.getByRole("button", { name: "第 6 页" })).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByRole("button", { name: "第 5 页" })).not.toHaveAttribute("aria-current");
+
+    await user.click(screen.getByRole("button", { name: "上一页" }));
+    expect(screen.getByRole("button", { name: "第 5 页" })).toHaveAttribute("aria-current", "page");
+
+    await user.click(screen.getByRole("button", { name: "第 1 页" }));
+    expect(screen.getByRole("button", { name: "第 1 页" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "上一页" })).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: "第 10 页" }));
+    expect(screen.getByRole("button", { name: "第 10 页" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("button", { name: "下一页" })).toBeDisabled();
+  });
+
   it("总页数 ≤ 7 时显示全部页码", () => {
     render(<Pagination currentPage={1} totalPages={7} onPageChange={vi.fn()} />);
     for (let i = 1; i <= 7; i++) {
       expect(screen.getByRole("button", { name: `第 ${i} 页` })).toBeTruthy();
     }
-    // 不应出现省略号
     expect(screen.queryByText("…")).toBeNull();
   });
 
   it("总页数 > 7 时出现省略号", () => {
     render(<Pagination currentPage={5} totalPages={10} onPageChange={vi.fn()} />);
-    // 省略号应该出现
     const ellipses = screen.getAllByText("…");
     expect(ellipses.length).toBeGreaterThan(0);
   });
@@ -89,10 +124,11 @@ describe("Pagination", () => {
     expect(screen.getByRole("button", { name: "第 10 页" })).toBeTruthy();
   });
 
-  it('当前页按钮具有 aria-current="page" 属性', () => {
+  it('当前页按钮具有 aria-current="page" 属性且不禁用', () => {
     render(<Pagination currentPage={3} totalPages={5} onPageChange={vi.fn()} />);
     const currentBtn = screen.getByRole("button", { name: "第 3 页" });
     expect(currentBtn).toHaveAttribute("aria-current", "page");
+    expect(currentBtn).not.toBeDisabled();
   });
 
   it("支持自定义 className", () => {

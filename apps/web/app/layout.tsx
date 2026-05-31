@@ -19,7 +19,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const session = await getSession();
 
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" suppressHydrationWarning>
       <head>
         {/* FOUC 防闪烁：在 React 水化前根据 localStorage 预设 dark class，避免主题切换闪烁 */}
         <script

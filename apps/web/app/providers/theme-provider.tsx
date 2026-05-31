@@ -36,21 +36,16 @@ function applyTheme(resolved: ResolvedTheme) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>(() => {
-    // 服务端渲染时无法访问 localStorage，默认返回 system
-    if (typeof window === "undefined") return "system";
-    const stored = localStorage.getItem("theme");
-    if (stored === "light" || stored === "dark" || stored === "system") return stored;
-    return "system";
-  });
+  // 固定初始值为 system/light，挂载后再读 localStorage，避免 SSR 与 hydration 不一致
+  const [theme, setThemeState] = useState<ThemeMode>("system");
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
 
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => {
-    if (typeof window === "undefined") return "light";
+  useEffect(() => {
     const stored = localStorage.getItem("theme");
-    if (stored === "light") return "light";
-    if (stored === "dark") return "dark";
-    return getSystemTheme();
-  });
+    if (stored === "light" || stored === "dark" || stored === "system") {
+      setThemeState(stored);
+    }
+  }, []);
 
   // 监听系统主题变化（仅在 system 模式下响应）
   useEffect(() => {

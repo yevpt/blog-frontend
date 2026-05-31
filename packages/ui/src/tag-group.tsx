@@ -57,11 +57,24 @@ export interface TagItemProps extends Omit<TagProps, "className" | "style" | "ch
   count?: number;
   className?: string;
   children?: ReactNode;
+  /** 无障碍朗读文本；含 count 等非纯文本子节点时自动推导 */
+  textValue?: string;
 }
 
-export function TagItem({ count, className, children, ...props }: TagItemProps) {
+function resolveTagTextValue(children: ReactNode, count: number | undefined, textValue?: string) {
+  if (textValue) return textValue;
+  const label = typeof children === "string" ? children : "";
+  return count !== undefined ? `${label} ${count}` : label;
+}
+
+export function TagItem({ count, className, children, textValue, ...props }: TagItemProps) {
+  const accessibleLabel = resolveTagTextValue(children, count, textValue);
+
   return (
     <AriaTag
+      {...props}
+      textValue={accessibleLabel}
+      aria-label={accessibleLabel}
       className={({ isSelected, isFocusVisible }) =>
         cn(
           "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium",

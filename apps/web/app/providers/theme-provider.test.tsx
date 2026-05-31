@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, waitFor } from "@testing-library/react";
 import { ThemeProvider, useTheme } from "./theme-provider";
 
 // 辅助组件：渲染当前 theme 状态供测试断言
@@ -56,24 +56,28 @@ describe("ThemeProvider", () => {
     expect(screen.getByTestId("theme").textContent).toBe("system");
   });
 
-  it("localStorage 已存储 dark 时，初始 theme 为 dark", () => {
+  it("localStorage 已存储 dark 时，挂载后 theme 恢复为 dark", async () => {
     localStorage.setItem("theme", "dark");
     render(
       <ThemeProvider>
         <ThemeDisplay />
       </ThemeProvider>,
     );
-    expect(screen.getByTestId("theme").textContent).toBe("dark");
+    await waitFor(() => {
+      expect(screen.getByTestId("theme").textContent).toBe("dark");
+    });
   });
 
-  it("localStorage 已存储 light 时，初始 theme 为 light", () => {
+  it("localStorage 已存储 light 时，挂载后 theme 恢复为 light", async () => {
     localStorage.setItem("theme", "light");
     render(
       <ThemeProvider>
         <ThemeDisplay />
       </ThemeProvider>,
     );
-    expect(screen.getByTestId("theme").textContent).toBe("light");
+    await waitFor(() => {
+      expect(screen.getByTestId("theme").textContent).toBe("light");
+    });
   });
 
   it("setTheme('dark') 后 theme 状态变为 dark，并写入 localStorage", async () => {
@@ -163,7 +167,7 @@ describe("ThemeProvider", () => {
     expect(screen.getByTestId("resolved-theme").textContent).toBe("light");
   });
 
-  it("system 模式且系统为暗色时，resolvedTheme 为 dark", () => {
+  it("system 模式且系统为暗色时，resolvedTheme 为 dark", async () => {
     // mock 系统偏好为暗色
     Object.defineProperty(window, "matchMedia", {
       writable: true,
@@ -186,6 +190,8 @@ describe("ThemeProvider", () => {
     );
 
     // system 模式 + 系统暗色 → resolvedTheme 应为 dark
-    expect(screen.getByTestId("resolved-theme").textContent).toBe("dark");
+    await waitFor(() => {
+      expect(screen.getByTestId("resolved-theme").textContent).toBe("dark");
+    });
   });
 });

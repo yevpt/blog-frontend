@@ -36,13 +36,18 @@ export function Input({
   className,
   inputClassName,
   isInvalid,
+  "aria-label": ariaLabel,
   ...props
 }: InputProps) {
+  // 无可见 label 时，用 placeholder 或 aria-label 满足无障碍要求
+  const resolvedAriaLabel = ariaLabel ?? (!label ? placeholder : undefined);
+
   return (
     <TextField
       className={cn("flex flex-col gap-1.5 w-full", className)}
       isInvalid={isInvalid}
       {...props}
+      aria-label={resolvedAriaLabel}
     >
       {label ? <Label className="text-sm font-medium text-foreground">{label}</Label> : null}
 
