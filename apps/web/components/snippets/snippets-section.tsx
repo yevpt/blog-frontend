@@ -9,26 +9,32 @@ interface SnippetsSectionProps {
   snippets: Snippet[];
 }
 
+/** 右侧栏最多展示的碎语条数 */
+const MAX_SNIPPETS = 3;
+
 // 碎语区块容器：标题 + 卡片网格 + 操作按钮
 // 因为使用了 useLocale 需要标记 'use client'
 export function SnippetsSection({ snippets }: SnippetsSectionProps) {
   const { t } = useLocale();
+  const visibleSnippets = snippets.slice(0, MAX_SNIPPETS);
 
   return (
-    <section>
-      <h2 className="text-lg font-semibold">{t("home.snippets")}</h2>
+    <section className="rounded-xl border border-border/50 p-4">
+      <h3 className="text-sm font-semibold mb-3">{t("home.snippets")}</h3>
 
-      {/* 卡片网格：移动端单列，md 以上双列 */}
-      <div className="grid grid-cols-1 gap-4 mt-4">
-        {snippets.map((snippet) => (
+      <div className="flex flex-col gap-6">
+        {visibleSnippets.map((snippet) => (
           <SnippetCard key={snippet.id} snippet={snippet} />
         ))}
       </div>
 
-      {/* 底部操作按钮 */}
-      <div className="flex gap-3 mt-6 justify-center">
-        <Button variant="outline">{t("snippet.postNew")}</Button>
-        <Button variant="ghost">{t("snippet.viewMore")}</Button>
+      <div className="flex gap-2 mt-4">
+        <Button variant="outline" size="sm" className="flex-1 text-xs">
+          {t("snippet.postNew")}
+        </Button>
+        <Button variant="ghost" size="sm" className="flex-1 text-xs">
+          {t("snippet.viewMore")}
+        </Button>
       </div>
     </section>
   );

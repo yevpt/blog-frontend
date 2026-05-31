@@ -7,12 +7,12 @@ interface SnippetCardProps {
   snippet: Snippet;
 }
 
-// 单条碎语卡片，不需要 'use client'（子组件处理所有交互）
+// 单条碎语，无边框，通过间距分隔（与 ArticleCard 一致）
 export function SnippetCard({ snippet }: SnippetCardProps) {
   const relativeTime = formatRelativeTime(snippet.publishedAt);
 
   return (
-    <article className="rounded-xl p-4 bg-card border border-border/50">
+    <article>
       {/* 头部：头像 + 作者信息 */}
       <div className="flex items-start gap-3">
         <img

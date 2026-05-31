@@ -188,4 +188,18 @@ describe("SnippetsSection", () => {
     expect(screen.getByText("发表碎语")).toBeTruthy();
     expect(screen.getByText("查看更多")).toBeTruthy();
   });
+
+  it("最多只显示 3 条碎语", () => {
+    const manySnippets = Array.from({ length: 6 }, (_, i) =>
+      makeSnippet(String(i + 1), `${SHORT_CONTENT} #${i + 1}`),
+    );
+    render(<SnippetsSection snippets={manySnippets} />);
+
+    expect(screen.getByText(`${SHORT_CONTENT} #1`)).toBeTruthy();
+    expect(screen.getByText(`${SHORT_CONTENT} #2`)).toBeTruthy();
+    expect(screen.getByText(`${SHORT_CONTENT} #3`)).toBeTruthy();
+    expect(screen.queryByText(`${SHORT_CONTENT} #4`)).toBeNull();
+    expect(screen.queryByText(`${SHORT_CONTENT} #5`)).toBeNull();
+    expect(screen.queryByText(`${SHORT_CONTENT} #6`)).toBeNull();
+  });
 });

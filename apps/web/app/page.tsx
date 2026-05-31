@@ -30,11 +30,11 @@ export default function Home() {
         {/* 右侧栏（移动端排在后面，PC 端固定在右侧）*/}
         {/* lg:top-20 对应 80px 固定导航栏高度 */}
         <aside className="lg:sticky lg:top-20">
-          <RecentVisitors visitors={visitors} />
-          <TagsCloud tags={tags} />
+          <SnippetsSection snippets={snippets} />
           <div className="mt-4">
-            <SnippetsSection snippets={snippets} />
+            <RecentVisitors visitors={visitors} />
           </div>
+          <TagsCloud tags={tags} />
         </aside>
       </div>
     </div>
