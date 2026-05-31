@@ -82,12 +82,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   return (
     <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>
-      {/* 闪烁防御：在 React 水化前根据 localStorage 预设 dark class，防止 FOUC */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `(function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}})();`,
-        }}
-      />
       {children}
     </ThemeContext.Provider>
   );
