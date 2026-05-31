@@ -20,29 +20,15 @@ function getPageNumbers(currentPage: number, totalPages: number): (number | "...
     return Array.from({ length: totalPages }, (_, i) => i + 1);
   }
 
-  const pages: (number | "...")[] = [];
+  const pages: (number | "...")[] = [1];
 
-  // 始终显示第 1 页
-  pages.push(1);
+  if (currentPage > 3) pages.push("...");
 
-  // 当前页左侧省略号：当前页距第 1 页超过 3 格时出现
-  if (currentPage > 3) {
-    pages.push("...");
-  }
-
-  // 当前页附近的页码（当前页 -1、当前页、当前页 +1），去掉首尾已有的
   const start = Math.max(2, currentPage - 1);
   const end = Math.min(totalPages - 1, currentPage + 1);
-  for (let i = start; i <= end; i++) {
-    pages.push(i);
-  }
+  for (let i = start; i <= end; i++) pages.push(i);
 
-  // 当前页右侧省略号：当前页距最后页超过 3 格时出现
-  if (currentPage < totalPages - 2) {
-    pages.push("...");
-  }
-
-  // 始终显示最后一页
+  if (currentPage < totalPages - 2) pages.push("...");
   pages.push(totalPages);
 
   return pages;
@@ -63,8 +49,8 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={isPrevDisabled}
+        onPress={() => onPageChange(currentPage - 1)}
+        isDisabled={isPrevDisabled}
         aria-label="上一页"
       >
         <SvgIcon name="chevron-left" size={16} />
@@ -73,7 +59,6 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
       {/* 页码列表 */}
       {pageNumbers.map((page, index) =>
         page === "..." ? (
-          // 省略号占位，key 用 index 因为省略号本身无唯一标识
           <span
             key={`ellipsis-${index}`}
             className="px-2 text-sm text-muted-foreground select-none"
@@ -85,7 +70,7 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
             key={page}
             variant={page === currentPage ? "default" : "ghost"}
             size="sm"
-            onClick={() => onPageChange(page)}
+            onPress={() => onPageChange(page)}
             aria-label={`第 ${page} 页`}
             aria-current={page === currentPage ? "page" : undefined}
           >
@@ -98,8 +83,8 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={isNextDisabled}
+        onPress={() => onPageChange(currentPage + 1)}
+        isDisabled={isNextDisabled}
         aria-label="下一页"
       >
         <SvgIcon name="chevron-right" size={16} />
