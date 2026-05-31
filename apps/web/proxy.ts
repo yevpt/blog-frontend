@@ -4,7 +4,7 @@ import { decodeJwt } from "jose";
 /**
  * 解码 JWT payload，检查是否为有效的 access token（未过期且 type=access）。
  * 注意：此处只做过期检查，不验证签名，实际签名验证由 Go 后端负责。
- * Next.js Middleware 运行在 Edge Runtime（非 Node.js），使用 jose 是因为
+ * Next.js Proxy 运行在 Edge Runtime（非 Node.js），使用 jose 是因为
  * 它兼容 Edge Runtime，而 jsonwebtoken 等依赖 Node.js 内置模块的库不可用。
  */
 function isAccessTokenValid(token: string): boolean {
@@ -18,7 +18,7 @@ function isAccessTokenValid(token: string): boolean {
   }
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const accessToken = request.cookies.get("access_token")?.value;
@@ -74,7 +74,7 @@ export async function middleware(request: NextRequest) {
   return NextResponse.redirect(loginUrl);
 }
 
-// 只在需要保护的路径上触发 middleware，减少无效执行
+// 只在需要保护的路径上触发 proxy，减少无效执行
 export const config = {
   matcher: ["/profile/:path*", "/vip/:path*", "/dashboard/:path*"],
 };
