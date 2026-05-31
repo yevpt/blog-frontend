@@ -3,7 +3,7 @@ import { render, screen, act, waitFor, fireEvent } from "@testing-library/react"
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { ArticleSection } from "./article-section";
-import type { Article } from "../../app/_mock/types";
+import type { Article } from "@/app/_mock/types";
 
 // Mock next/image：渲染为普通 <img>
 vi.mock("next/image", () => ({
@@ -32,7 +32,7 @@ vi.mock("next/link", () => ({
   }: {
     href: string;
     children: ReactNode;
-    [key: string]: unknown;
+    [_: string]: unknown;
   }) => (
     <a href={href} {...props}>
       {children}
@@ -47,7 +47,7 @@ vi.mock("@repo/icons", () => ({
   ),
 }));
 
-// Mock @repo/ui — Pagination + Tabs系列 + Input
+// Mock @repo/ui — Pagination + Tabs系列 + SearchField
 vi.mock("@repo/ui", () => ({
   Pagination: ({
     currentPage,
@@ -108,7 +108,7 @@ vi.mock("@repo/ui", () => ({
     <button data-tab-id={id}>{children}</button>
   ),
   TabsPanel: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  Input: ({
+  SearchField: ({
     placeholder,
     value,
     onChange,
@@ -117,7 +117,6 @@ vi.mock("@repo/ui", () => ({
     placeholder?: string;
     value?: string;
     onChange?: (val: string) => void;
-    iconName?: string;
     size?: string;
     inputClassName?: string;
   }) => (

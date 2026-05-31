@@ -5,13 +5,16 @@ import { SvgSprite } from "@repo/icons";
 import { SiteFooter } from "@/components/footer";
 import { SiteNavbar } from "@/components/navbar";
 import { getSession } from "@/lib/session";
+import { THEME_INIT_SCRIPT } from "@/lib/theme-init";
 import { ThemeProvider } from "./providers/theme-provider";
 import { LocaleProvider } from "./providers/locale-provider";
 import { SessionProvider } from "./providers/session-provider";
 import "./globals.css";
 
+const SITE_TITLE = "Yevpt's Blog";
+
 export const metadata: Metadata = {
-  title: "Yevpt's Blog",
+  title: SITE_TITLE,
   description: "分享编程、工具、文学的个人博客",
 };
 
@@ -23,13 +26,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <body>
-        {/* FOUC 防闪烁：beforeInteractive 注入 head，在 React 水化前预设 dark class */}
+        {/* beforeInteractive 由 Next.js 注入 head，避免在 JSX 中手写 head/script/style */}
         <Script
           id="theme-init"
           strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `(function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}})()`,
-          }}
+          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
         />
         <ThemeProvider>
           <LocaleProvider>

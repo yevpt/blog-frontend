@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 type ThemeMode = "system" | "light" | "dark";
@@ -35,17 +35,27 @@ function applyTheme(resolved: ResolvedTheme) {
   }
 }
 
+/** 从 localStorage 读取用户保存的主题偏好 */
+function readStoredTheme(): ThemeMode {
+  const stored = localStorage.getItem("theme");
+  if (stored === "light" || stored === "dark" || stored === "system") {
+    return stored;
+  }
+  return "system";
+}
+
+/** 将 theme 模式解析为实际应用的 light / dark */
+function resolveThemeMode(mode: ThemeMode): ResolvedTheme {
+  if (mode === "dark") return "dark";
+  if (mode === "light") return "light";
+  return getSystemTheme();
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   // 固定初始值为 system/light，挂载后再读 localStorage，避免 SSR 与 hydration 不一致
   const [theme, setThemeState] = useState<ThemeMode>("system");
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
-
-  useEffect(() => {
-    const stored = localStorage.getItem("theme");
-    if (stored === "light" || stored === "dark" || stored === "system") {
-      setThemeState(stored);
-    }
-  }, []);
+  const isInitialMount = useRef(true);
 
   // 监听系统主题变化（仅在 system 模式下响应）
   useEffect(() => {
@@ -63,9 +73,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => media.removeEventListener("change", handleChange);
   }, [theme]);
 
-  // theme 变化时同步 resolvedTheme 并应用到 DOM
+  // 首帧先读 localStorage 再应用，避免默认 system 覆盖 layout 阻塞脚本已设置的 dark
   useEffect(() => {
-    const resolved: ResolvedTheme = theme === "system" ? getSystemTheme() : theme;
+    const mode = isInitialMount.current ? readStoredTheme() : theme;
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      if (mode !== theme) {
+        setThemeState(mode);
+      }
+    }
+
+    const resolved = resolveThemeMode(mode);
     setResolvedTheme(resolved);
     applyTheme(resolved);
   }, [theme]);

@@ -24,6 +24,15 @@
 }
 
 /* 页面级基础样式放在共享包里，应用只保留自己特有的布局限制。 */
+html {
+  background-color: var(--color-background);
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
   /* 使用 CSS 变量确保与 Tailwind bg-background 保持一致 */

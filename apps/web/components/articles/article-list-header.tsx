@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Tabs, TabsList, TabsItem, Input } from "@repo/ui";
+import { Tabs, TabsList, TabsItem, SearchField } from "@repo/ui";
 import { useLocale } from "@repo/hooks";
 
 interface ArticleListHeaderProps {
@@ -12,8 +12,8 @@ interface ArticleListHeaderProps {
   onSearchChange: (query: string) => void;
 }
 
-// 分类 Tabs（button-brand-horizontal）+ 搜索框（Input with iconName）
-// Input onChange 返回 string，防抖 300ms 后才触发 onSearchChange
+// 分类 Tabs（button-brand-horizontal）+ 搜索框
+// SearchField onChange 返回 string，防抖 300ms 后才触发 onSearchChange
 export function ArticleListHeader({
   categories,
   currentCategory,
@@ -53,9 +53,7 @@ export function ArticleListHeader({
         </TabsList>
       </Tabs>
 
-      {/* 右侧搜索框：Input 组件，iconName 自动左侧定位搜索图标 */}
-      <Input
-        iconName="search"
+      <SearchField
         placeholder={t("article.searchPlaceholder")}
         value={localQuery}
         onChange={setLocalQuery}

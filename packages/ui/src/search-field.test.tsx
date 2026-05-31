@@ -1,0 +1,47 @@
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { SearchField } from "./search-field";
+
+vi.mock("@repo/icons", () => ({
+  SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
+}));
+
+describe("SearchField", () => {
+  it("渲染不崩溃", () => {
+    render(<SearchField placeholder="搜索文章" />);
+    expect(screen.getByRole("searchbox", { name: "搜索文章" })).toBeTruthy();
+  });
+
+  it("label 渲染", () => {
+    render(<SearchField label="站内搜索" placeholder="搜索文章" />);
+    expect(screen.getByText("站内搜索")).toBeTruthy();
+    expect(screen.getByRole("searchbox", { name: "站内搜索" })).toBeTruthy();
+  });
+
+  it("onChange 返回 string 值", () => {
+    const onChange = vi.fn();
+    render(<SearchField placeholder="搜索文章" onChange={onChange} />);
+
+    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "React" } });
+
+    expect(onChange).toHaveBeenCalledWith("React");
+  });
+
+  it("点击清除按钮清空输入并触发 onChange", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<SearchField placeholder="搜索文章" defaultValue="React" onChange={onChange} />);
+
+    await user.click(screen.getByRole("button", { name: "清除搜索" }));
+
+    expect(screen.getByRole("searchbox")).toHaveValue("");
+    expect(onChange).toHaveBeenCalledWith("");
+  });
+
+  it("显示搜索和清除图标", () => {
+    render(<SearchField placeholder="搜索文章" defaultValue="React" />);
+    expect(screen.getByTestId("icon-search")).toBeTruthy();
+    expect(screen.getByTestId("icon-close")).toBeTruthy();
+  });
+});

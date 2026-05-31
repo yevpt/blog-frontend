@@ -167,6 +167,22 @@ describe("ThemeProvider", () => {
     expect(screen.getByTestId("resolved-theme").textContent).toBe("light");
   });
 
+  it("localStorage 为 dark 且系统为亮色时，挂载后仍保持 dark class", async () => {
+    localStorage.setItem("theme", "dark");
+    document.documentElement.classList.add("dark");
+
+    render(
+      <ThemeProvider>
+        <ThemeDisplay />
+      </ThemeProvider>,
+    );
+
+    await waitFor(() => {
+      expect(document.documentElement.classList.contains("dark")).toBe(true);
+      expect(screen.getByTestId("resolved-theme").textContent).toBe("dark");
+    });
+  });
+
   it("system 模式且系统为暗色时，resolvedTheme 为 dark", async () => {
     // mock 系统偏好为暗色
     Object.defineProperty(window, "matchMedia", {
