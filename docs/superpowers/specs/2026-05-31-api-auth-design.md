@@ -350,9 +350,15 @@ export async function createServerApiClient() {
 
 ## 七、后端 CORS 配置（需同步修改）
 
-Go 后端 `router.go` 目前没有 CORS 中间件，浏览器发起的跨域请求会被拦截。需要在实现阶段补充：
+Go 后端 `router.go` 目前没有 CORS 中间件，浏览器发起的跨域请求会被拦截。需要在实现阶段补充。
 
-- 允许来源：`http://localhost:3000`（web dev）、`http://localhost:5173`（admin dev）
+**允许 `*` 的原因分析：**
+- `web` 的认证请求经由 Next.js Route Handler 转发（服务器间通信），CORS 规则不适用
+- `admin` 直接请求 Go，使用 `Authorization: Bearer` header，不使用 `credentials: 'include'`（Cookie 模式），`*` 无浏览器限制
+- 生产环境由 Nginx 在前，Go 层的 `*` 不直接对外暴露
+
+**配置方式：**
+- 允许来源：通过环境变量 `CORS_ALLOWED_ORIGINS` 控制，默认值 `*`
 - 允许方法：`GET, POST, PUT, DELETE, OPTIONS`
 - 允许 Headers：`Content-Type, Authorization`
 - 建议使用 `github.com/gin-contrib/cors`
