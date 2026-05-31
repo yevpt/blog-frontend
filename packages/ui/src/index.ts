@@ -3,3 +3,22 @@ export { Button, type ButtonProps } from "./button";
 export { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./card";
 export { cn } from "./lib/utils";
 export { Pagination, type PaginationProps } from "./pagination";
+export {
+  Tabs,
+  TabsList,
+  TabsItem,
+  TabsPanel,
+  type TabsProps,
+  type TabsListProps,
+  type TabsItemProps,
+  type TabsPanelProps,
+  type TabsVariant,
+} from "./tabs";
+export { Input, type InputProps } from "./input";
+export {
+  TagGroup,
+  TagList,
+  TagItem,
+  type TagGroupWrapperProps,
+  type TagItemProps,
+} from "./tag-group";
