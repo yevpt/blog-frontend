@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { Pagination } from "@repo/ui";
 import type { ArticlePageResp, CategoryTabItem } from "@repo/api";
 import { ArticleListHeader } from "./article-list-header";
@@ -35,6 +35,16 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
 
   const abortRef = useRef<AbortController | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
+  // 记录上一次的 isLoading 值，用于检测加载完成时机
+  const wasLoadingRef = useRef(false);
+
+  // 数据加载完成（isLoading true → false）后再滚动，避免布局偏移打断平滑滚动
+  useEffect(() => {
+    if (wasLoadingRef.current && !isLoading) {
+      sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    wasLoadingRef.current = isLoading;
+  }, [isLoading]);
 
   const fetchPage = useCallback(async (categoryId: number, page: number) => {
     abortRef.current?.abort();
@@ -74,7 +84,7 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
       setFetchError(false);
       setCurrentPage(page);
       void fetchPage(currentCategoryId, page);
-      sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      // 滚动由 useEffect 在 isLoading 变为 false 后触发，布局稳定时再执行
     },
     [currentCategoryId, fetchPage],
   );
