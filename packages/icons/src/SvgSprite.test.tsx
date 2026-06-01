@@ -21,6 +21,17 @@ describe("SvgSprite", () => {
     }
   });
 
+  it("保留原始 svg 外层的描边渲染属性", () => {
+    const { container } = render(<SvgSprite />);
+    const homeSymbol = container.querySelector("#icon-home");
+
+    expect(homeSymbol?.getAttribute("fill")).toBe("none");
+    expect(homeSymbol?.getAttribute("stroke")).toBe("currentColor");
+    expect(homeSymbol?.getAttribute("stroke-width")).toBe("2");
+    expect(homeSymbol?.getAttribute("stroke-linecap")).toBe("round");
+    expect(homeSymbol?.getAttribute("stroke-linejoin")).toBe("round");
+  });
+
   it("设置 aria-hidden 隐藏装饰性内容", () => {
     const { container } = render(<SvgSprite />);
     const wrapper = container.firstElementChild;

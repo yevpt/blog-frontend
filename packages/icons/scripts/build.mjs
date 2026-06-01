@@ -5,6 +5,27 @@ import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const svgDir = resolve(__dirname, "../svg");
 const generatedDir = resolve(__dirname, "../src/generated");
+const omittedSvgAttributes = new Set([
+  "xmlns",
+  "viewBox",
+  "width",
+  "height",
+  "id",
+  "class",
+  "style",
+  "role",
+  "aria-hidden",
+  "focusable",
+]);
+
+function getSvgAttributes(content) {
+  const svgAttributes = content.match(/<svg\b([^>]*)>/i)?.[1] ?? "";
+
+  return [...svgAttributes.matchAll(/\s+([\w:-]+)="([^"]*)"/g)]
+    .filter(([, key]) => !omittedSvgAttributes.has(key))
+    .map(([, key, value]) => `${key}="${value}"`)
+    .join(" ");
+}
 
 mkdirSync(generatedDir, { recursive: true });
 
@@ -22,6 +43,8 @@ for (const file of files) {
   const content = readFileSync(resolve(svgDir, file), "utf-8");
 
   const viewBox = content.match(/viewBox="([^"]+)"/)?.[1] ?? "0 0 24 24";
+  const svgAttributes = getSvgAttributes(content);
+  const symbolAttributes = svgAttributes ? ` ${svgAttributes}` : "";
 
   // 剥离 XML 声明和外层 <svg> 标签，只保留图形内容
   const inner = content
@@ -30,7 +53,7 @@ for (const file of files) {
     .replace(/<\/svg>/g, "")
     .trim();
 
-  symbols += `  <symbol id="icon-${name}" viewBox="${viewBox}">\n    ${inner}\n  </symbol>\n`;
+  symbols += `  <symbol id="icon-${name}" viewBox="${viewBox}"${symbolAttributes}>\n    ${inner}\n  </symbol>\n`;
 }
 
 const spriteContent = `<svg xmlns="http://www.w3.org/2000/svg" style="display:none">\n${symbols}</svg>`;
