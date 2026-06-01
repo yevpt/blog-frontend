@@ -24,9 +24,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      <body>
-        {/* 主题初始化脚本：必须在 body 首行同步执行，防止 FOUC */}
+      <head>
+        {/* 主题初始化脚本放在 head 内，React 19 不对 head 中的 script 报 hydration 警告 */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
+      <body>
         <ThemeProvider>
           <LocaleProvider>
             <SessionProvider user={session?.user ?? null}>
