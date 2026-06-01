@@ -98,4 +98,23 @@ describe("ArticleCard", () => {
     render(<ArticleCard article={baseArticle} />);
     expect(screen.getByText("100")).toBeTruthy();
   });
+
+  it("外链图标按钮指向相同文章路径", () => {
+    render(<ArticleCard article={baseArticle} />);
+    const iconLink = screen.getByRole("link", { name: "阅读文章" });
+    expect(iconLink.getAttribute("href")).toBe("/articles/1");
+  });
+
+  it("分类标签在 DOM 中位于标题之后", () => {
+    render(<ArticleCard article={baseArticle} />);
+    const title = screen.getByText("测试文章标题");
+    const category = screen.getByText("编程");
+    // DOCUMENT_POSITION_FOLLOWING (4): category 在 title 之后
+    expect(title.compareDocumentPosition(category) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("显示 arrow-up-right 图标", () => {
+    render(<ArticleCard article={baseArticle} />);
+    expect(screen.getByTestId("icon-arrow-up-right")).toBeTruthy();
+  });
 });
