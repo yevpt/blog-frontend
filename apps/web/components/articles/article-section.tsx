@@ -5,6 +5,7 @@ import { Pagination } from "@repo/ui";
 import type { ArticlePageResp, CategoryTabItem } from "@repo/api";
 import { ArticleListHeader } from "./article-list-header";
 import { ArticleCard } from "./article-card";
+import { ArticleCardSkeleton } from "./article-card-skeleton";
 
 const ALL_CATEGORY_ID = 0;
 
@@ -33,6 +34,7 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
   const allCategories = useMemo(() => [ALL_CATEGORY, ...categories], [categories]);
 
   const abortRef = useRef<AbortController | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
 
   const fetchPage = useCallback(async (categoryId: number, page: number) => {
     abortRef.current?.abort();
@@ -72,12 +74,15 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
       setFetchError(false);
       setCurrentPage(page);
       void fetchPage(currentCategoryId, page);
+      sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     },
     [currentCategoryId, fetchPage],
   );
 
+  const skeletonCount = pageData.list.length || 6;
+
   return (
-    <section>
+    <section ref={sectionRef}>
       <ArticleListHeader
         categories={allCategories}
         currentCategoryId={currentCategoryId}
@@ -86,15 +91,10 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
         onSearchChange={setSearchQuery}
       />
 
-      {/* 换页/换分类时淡出，保留已有数据防止布局抖动 */}
-      <div
-        className={`grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 transition-opacity duration-200 ${
-          isLoading ? "opacity-50 pointer-events-none" : ""
-        }`}
-      >
-        {pageData.list.map((article) => (
-          <ArticleCard key={article.id} article={article} />
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        {isLoading
+          ? Array.from({ length: skeletonCount }, (_, i) => <ArticleCardSkeleton key={i} />)
+          : pageData.list.map((article) => <ArticleCard key={article.id} article={article} />)}
       </div>
 
       {fetchError && (

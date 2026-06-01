@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, act, waitFor } from "@testing-library/react";
+import { render, screen, act, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import type { ArticlePageResp, CategoryTabItem } from "@repo/api";
@@ -156,6 +156,7 @@ const mockCategories: CategoryTabItem[] = [
 
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn());
+  window.HTMLElement.prototype.scrollIntoView = vi.fn();
 });
 
 afterEach(() => {
@@ -277,6 +278,71 @@ describe("ArticleSection", () => {
       const url = new URL(secondCall, "http://localhost");
       expect(url.searchParams.get("page")).toBe("1");
       expect(url.searchParams.get("category_id")).toBe("1");
+    });
+  });
+
+  it("翻页后调用 scrollIntoView 平滑滚动到文章区顶部", async () => {
+    const scrollIntoView = vi.fn();
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
+
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => makePageResp({ page: 2, list: [makeArticle(11, "第二页文章")] }),
+    } as Response);
+
+    const user = userEvent.setup();
+    render(
+      <ArticleSection
+        initialPage={makePageResp({ total: 25, pages: 3 })}
+        categories={mockCategories}
+      />,
+    );
+
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "下一页" }));
+    });
+
+    await waitFor(() => {
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  it("加载中显示骨架屏，加载完成后显示文章", async () => {
+    let resolveResponse!: (val: Response) => void;
+    vi.mocked(fetch).mockImplementationOnce(
+      () =>
+        new Promise<Response>((r) => {
+          resolveResponse = r;
+        }),
+    );
+
+    render(
+      <ArticleSection
+        initialPage={makePageResp({ total: 25, pages: 3 })}
+        categories={mockCategories}
+      />,
+    );
+
+    act(() => {
+      fireEvent.click(screen.getByRole("button", { name: "下一页" }));
+    });
+
+    // 加载中：原文章文字消失（骨架屏无文字内容）
+    await waitFor(() => {
+      expect(screen.queryByText("文章一")).toBeNull();
+      expect(screen.queryByText("文章二")).toBeNull();
+    });
+
+    // 解决 fetch，文章出现
+    await act(async () => {
+      resolveResponse({
+        ok: true,
+        json: async () => makePageResp({ page: 2, list: [makeArticle(11, "骨架屏测试文章")] }),
+      } as Response);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("骨架屏测试文章")).toBeTruthy();
     });
   });
 });
