@@ -5,7 +5,6 @@ import type { ReactNode } from "react";
 import { FeaturedCarousel } from "./featured-carousel";
 import type { FeaturedPost } from "../../app/_mock/types";
 
-// Mock next/image：渲染为普通 <img>
 vi.mock("next/image", () => ({
   default: ({
     src,
@@ -22,7 +21,6 @@ vi.mock("next/image", () => ({
   }) => <img src={src} alt={alt} className={className} />,
 }));
 
-// Mock next/link：渲染为普通 <a>
 vi.mock("next/link", () => ({
   default: ({
     href,
@@ -39,14 +37,38 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-// Mock @repo/icons
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name, size }: { name: string; size?: number }) => (
     <span data-testid={`icon-${name}`} data-size={size} />
   ),
 }));
 
-// 测试用 mock 数据
+// @repo/ui Button mock: href → <a>, no href → <button>
+vi.mock("@repo/ui", () => ({
+  Button: ({
+    href,
+    children,
+    tabIndex,
+    className,
+  }: {
+    href?: string;
+    children: ReactNode;
+    tabIndex?: number;
+    className?: string;
+    variant?: string;
+    size?: string;
+  }) =>
+    href ? (
+      <a href={href} tabIndex={tabIndex} className={className}>
+        {children}
+      </a>
+    ) : (
+      <button type="button" tabIndex={tabIndex} className={className}>
+        {children}
+      </button>
+    ),
+}));
+
 const mockPosts: FeaturedPost[] = [
   {
     id: "1",
@@ -80,22 +102,23 @@ afterEach(() => {
 });
 
 describe("FeaturedCarousel", () => {
-  it("渲染不崩溃，显示第一张幻灯片标题", () => {
+  it("渲染不崩溃，DOM 中存在第一张幻灯片标题", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    // 第一张幻灯片的标题存在于 DOM 中
-    expect(screen.getByText("第一篇文章标题")).toBeTruthy();
+    // 移动端区域 + 桌面端覆盖层都渲染当前幻灯片标题，至少出现一次
+    expect(screen.getAllByText("第一篇文章标题").length).toBeGreaterThan(0);
   });
 
-  it("渲染所有幻灯片（DOM 中存在所有标题）", () => {
+  it("DOM 中存在所有幻灯片标题", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    expect(screen.getByText("第一篇文章标题")).toBeTruthy();
+    // 当前幻灯片（index 0）：移动端 + 桌面端各一处
+    expect(screen.getAllByText("第一篇文章标题").length).toBeGreaterThan(0);
+    // 非激活幻灯片：仅桌面端覆盖层（opacity-0 但在 DOM 中）
     expect(screen.getByText("第二篇文章标题")).toBeTruthy();
     expect(screen.getByText("第三篇文章标题")).toBeTruthy();
   });
 
   it("渲染正确数量的指示器按钮", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    // 每个幻灯片对应一个 droplet-filled 图标
     const indicators = screen.getAllByTestId("icon-droplet-filled");
     expect(indicators).toHaveLength(mockPosts.length);
   });
@@ -107,17 +130,18 @@ describe("FeaturedCarousel", () => {
     expect(screen.getByLabelText("第 3 张，共 3 张")).toBeTruthy();
   });
 
-  it("轮播容器具有正确的无障碍 role 和 aria-label", () => {
+  it("轮播容器具有正确的 region aria-label", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
     expect(screen.getByRole("region", { name: "推荐文章" })).toBeTruthy();
   });
 
-  it("阅读全文 CTA 渲染为单一链接，不嵌套 button", () => {
+  it("阅读全文链接包含正确 href，不嵌套 button", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    const link = screen.getByRole("link", { name: "阅读全文" });
-
-    expect(link).toHaveAttribute("href", "/articles/first");
-    expect(link.querySelector("button")).toBeNull();
+    // 激活幻灯片：移动端文字区 + 桌面端覆盖层各有一个"阅读全文"链接
+    const links = screen.getAllByRole("link", { name: "阅读全文" });
+    expect(links.length).toBeGreaterThanOrEqual(1);
+    expect(links.some((l) => l.getAttribute("href") === "/articles/first")).toBe(true);
+    links.forEach((l) => expect(l.querySelector("button")).toBeNull());
   });
 
   it("posts 为空时不渲染", () => {
@@ -125,139 +149,91 @@ describe("FeaturedCarousel", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("初始状态：第一个指示器为 current，其余不是", () => {
+  it("初始状态：第一个指示器为 current", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    const btn1 = screen.getByLabelText("第 1 张，共 3 张");
-    const btn2 = screen.getByLabelText("第 2 张，共 3 张");
-    const btn3 = screen.getByLabelText("第 3 张，共 3 张");
-    expect(btn1).toHaveAttribute("aria-current", "true");
-    expect(btn2).not.toHaveAttribute("aria-current");
-    expect(btn3).not.toHaveAttribute("aria-current");
+    expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
+    expect(screen.getByLabelText("第 2 张，共 3 张")).not.toHaveAttribute("aria-current");
+    expect(screen.getByLabelText("第 3 张，共 3 张")).not.toHaveAttribute("aria-current");
   });
 
   it("点击第二个指示器切换到第二张幻灯片", async () => {
     const user = userEvent.setup();
     render(<FeaturedCarousel posts={mockPosts} />);
-
-    const btn2 = screen.getByLabelText("第 2 张，共 3 张");
-
     await act(async () => {
-      await user.click(btn2);
+      await user.click(screen.getByLabelText("第 2 张，共 3 张"));
     });
-
-    // 第二个指示器变为 current
-    expect(btn2).toHaveAttribute("aria-current", "true");
-    const btn1 = screen.getByLabelText("第 1 张，共 3 张");
-    expect(btn1).not.toHaveAttribute("aria-current");
+    expect(screen.getByLabelText("第 2 张，共 3 张")).toHaveAttribute("aria-current", "true");
+    expect(screen.getByLabelText("第 1 张，共 3 张")).not.toHaveAttribute("aria-current");
   });
 
-  it("点击第三个指示器切换到第三张幻灯片", async () => {
+  it("切换到第二张后，移动端文字区显示第二篇标题", async () => {
     const user = userEvent.setup();
     render(<FeaturedCarousel posts={mockPosts} />);
-
-    const btn3 = screen.getByLabelText("第 3 张，共 3 张");
-
     await act(async () => {
-      await user.click(btn3);
+      await user.click(screen.getByLabelText("第 2 张，共 3 张"));
     });
-
-    expect(btn3).toHaveAttribute("aria-current", "true");
+    // 移动端文字区直接读 activePost，切换后应出现第二篇文章标题
+    expect(screen.getAllByText("第二篇文章标题").length).toBeGreaterThan(0);
   });
 });
 
 describe("FeaturedCarousel 自动轮播（fake timers）", () => {
-  it("自动轮播：4 秒后切换到第二张幻灯片", () => {
+  it("自动轮播：4 秒后切换到第二张", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
-
-    const btn1 = screen.getByLabelText("第 1 张，共 3 张");
-    expect(btn1).toHaveAttribute("aria-current", "true");
-
-    // 推进 4 秒，触发自动切换
     act(() => {
       vi.advanceTimersByTime(4000);
     });
-
-    const btn2 = screen.getByLabelText("第 2 张，共 3 张");
-    expect(btn2).toHaveAttribute("aria-current", "true");
-    expect(btn1).not.toHaveAttribute("aria-current");
+    expect(screen.getByLabelText("第 2 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 
-  it("自动轮播：8 秒后切换到第三张幻灯片", () => {
+  it("自动轮播：8 秒后切换到第三张", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
-
     act(() => {
       vi.advanceTimersByTime(8000);
     });
-
-    const btn3 = screen.getByLabelText("第 3 张，共 3 张");
-    expect(btn3).toHaveAttribute("aria-current", "true");
+    expect(screen.getByLabelText("第 3 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 
   it("自动轮播：12 秒后循环回到第一张", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
-
     act(() => {
       vi.advanceTimersByTime(12000);
     });
-
-    const btn1 = screen.getByLabelText("第 1 张，共 3 张");
-    expect(btn1).toHaveAttribute("aria-current", "true");
+    expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 
   it("悬停时暂停自动轮播", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
-
-    const carousel = screen.getByRole("region", { name: "推荐文章" });
-    const btn1 = screen.getByLabelText("第 1 张，共 3 张");
-
-    // 模拟鼠标悬停
     act(() => {
-      fireEvent.mouseEnter(carousel);
+      fireEvent.mouseEnter(screen.getByRole("region", { name: "推荐文章" }));
     });
-
-    // 推进 4 秒（正常情况下会切换，但悬停应暂停）
     act(() => {
       vi.advanceTimersByTime(4000);
     });
-
-    // 悬停期间不切换，仍为第一张
-    expect(btn1).toHaveAttribute("aria-current", "true");
+    expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 
   it("悬停结束后恢复自动轮播", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
-
     const carousel = screen.getByRole("region", { name: "推荐文章" });
-
-    // 先悬停，让 React 提交 hover 状态
     act(() => {
       fireEvent.mouseEnter(carousel);
     });
-
-    // 悬停期间推进 5 秒（应不切换）
     act(() => {
       vi.advanceTimersByTime(5000);
     });
-
-    const btn1 = screen.getByLabelText("第 1 张，共 3 张");
-    expect(btn1).toHaveAttribute("aria-current", "true");
-
-    // 离开悬停，让 React 提交状态（启动新 interval）
+    expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
     act(() => {
       fireEvent.mouseLeave(carousel);
     });
-
-    // 再推进 4 秒，interval 应触发切换
     act(() => {
       vi.advanceTimersByTime(4000);
     });
-
-    const btn2 = screen.getByLabelText("第 2 张，共 3 张");
-    expect(btn2).toHaveAttribute("aria-current", "true");
+    expect(screen.getByLabelText("第 2 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 });

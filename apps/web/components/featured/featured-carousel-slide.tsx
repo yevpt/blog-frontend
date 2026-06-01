@@ -5,11 +5,10 @@ import type { FeaturedPost } from "@/app/_mock/types";
 interface FeaturedCarouselSlideProps {
   post: FeaturedPost;
   isActive: boolean;
-  /** 首屏 LCP 候选：首张幻灯片始终 eager 预加载，不随轮播切换 */
+  /** 首屏 LCP 候选：首张幻灯片始终 eager 预加载 */
   isLcpCandidate?: boolean;
 }
 
-// 单张幻灯片，纯展示组件，无需 'use client'
 export function FeaturedCarouselSlide({
   post,
   isActive,
@@ -22,7 +21,6 @@ export function FeaturedCarouselSlide({
       }`}
       aria-hidden={!isActive}
     >
-      {/* 封面图：相对定位容器，fill 模式 */}
       <div className="relative w-full h-full">
         <Image
           src={post.coverImage}
@@ -33,25 +31,16 @@ export function FeaturedCarouselSlide({
           loading={isLcpCandidate ? "eager" : "lazy"}
         />
 
-        {/* 底部渐变遮罩 */}
-        <div className="absolute inset-0 bg-linear-t from-black/80 via-black/30 to-transparent" />
-
-        {/* 文字内容区：绝对定位在底部 */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-          {/* 分类标签 */}
+        {/* 桌面端：渐变遮罩 + 文字覆盖层 */}
+        <div className="hidden md:block absolute inset-0 bg-linear-t from-black/80 via-black/30 to-transparent" />
+        <div className="hidden md:block absolute bottom-0 left-0 right-0 p-6 lg:p-8">
           <span className="inline-block mb-3 px-3 py-1 text-xs font-medium text-white bg-white/20 rounded-full backdrop-blur-sm">
             {post.category}
           </span>
-
-          {/* 文章标题 */}
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 line-clamp-2">
+          <h2 className="text-2xl lg:text-3xl font-bold text-white mb-2 line-clamp-2">
             {post.title}
           </h2>
-
-          {/* 文章摘要 */}
-          <p className="text-sm md:text-base text-white/80 mb-4 line-clamp-2">{post.excerpt}</p>
-
-          {/* 阅读全文按钮：使用 outline variant，白色边框 */}
+          <p className="text-sm lg:text-base text-white/80 mb-4 line-clamp-2">{post.excerpt}</p>
           <Button
             href={post.href}
             tabIndex={isActive ? 0 : -1}
