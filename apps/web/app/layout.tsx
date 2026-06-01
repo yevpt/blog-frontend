@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { cookies } from "next/headers";
 import { SvgSprite } from "@repo/icons";
 import { SiteFooter } from "@/components/footer";
 import { SiteNavbar } from "@/components/navbar";
 import { getSession } from "@/lib/session";
-import { THEME_INIT_SCRIPT } from "@/lib/theme-init";
+import { THEME_CRITICAL_CSS } from "@/lib/theme-init";
 import { ThemeProvider } from "./providers/theme-provider";
 import { LocaleProvider } from "./providers/locale-provider";
 import { SessionProvider } from "./providers/session-provider";
+import type { Metadata } from "next";
 import "./globals.css";
 
 const SITE_TITLE = "Yevpt's Blog";
@@ -18,15 +19,21 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
-  // Server Component 在此读取 httpOnly Cookie，解析用户信息后传入 SessionProvider，
-  // 使 Client Component 能通过 useSession() 获取当前用户而不接触 token
   const session = await getSession();
 
+  // 读取主题 Cookie，决定 <html> 的初始 class：
+  //   "dark"   → class="dark"    强制深色
+  //   "light"  → class="light"   强制浅色（CSS 媒体查询不会覆盖）
+  //   其他/无   → 无 class        CSS 媒体查询跟随系统偏好
+  const cookieStore = await cookies();
+  const themePref = cookieStore.get("theme")?.value;
+  const themeClass = themePref === "dark" ? "dark" : themePref === "light" ? "light" : undefined;
+
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
+    <html lang="zh-CN" className={themeClass} suppressHydrationWarning>
       <head>
-        {/* 主题初始化脚本放在 head 内，React 19 不对 head 中的 script 报 hydration 警告 */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* 关键内联样式：外部 CSS 加载前防止背景闪烁 */}
+        <style dangerouslySetInnerHTML={{ __html: THEME_CRITICAL_CSS }} />
       </head>
       <body>
         <ThemeProvider>
