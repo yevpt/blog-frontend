@@ -1,80 +1,94 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Pagination } from "@repo/ui";
-import type { ArticleListItemResp, CategoryTabItem } from "@repo/api";
-import type { Article } from "../../app/_mock/types";
-import { fetchMockArticles, MOCK_ARTICLE_PAGE_SIZE } from "../../app/_mock/generate-articles";
+import type { ArticlePageResp, CategoryTabItem } from "@repo/api";
 import { ArticleListHeader } from "./article-list-header";
 import { ArticleCard } from "./article-card";
 
-interface ArticleSectionProps {
-  articles: Article[];
-}
+const ALL_CATEGORY_ID = 0;
 
-// 所有分类（含"全部"虚拟分类，id=0）
-const CATEGORIES: CategoryTabItem[] = [
-  { id: 0, name: "全部", seq: -1, article_count: 0 },
-  { id: 1, name: "编程", seq: 0, article_count: 0 },
-  { id: 2, name: "工具", seq: 1, article_count: 0 },
-  { id: 3, name: "文学", seq: 2, article_count: 0 },
-];
-
-// id → name 映射，供过滤使用
-const CATEGORY_NAME_MAP: Record<number, string> = {
-  0: "全部",
-  1: "编程",
-  2: "工具",
-  3: "文学",
+// 虚拟"全部"Tab，对应不带 category_id 的请求
+const ALL_CATEGORY: CategoryTabItem = {
+  id: ALL_CATEGORY_ID,
+  name: "全部",
+  seq: -1,
+  article_count: 0,
 };
 
-// 文章列表区块：含分类 Tabs、搜索框、文章网格和分页
-export function ArticleSection({ articles }: ArticleSectionProps) {
-  const [currentCategoryId, setCurrentCategoryId] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
+interface ArticleSectionProps {
+  initialPage: ArticlePageResp;
+  categories: CategoryTabItem[];
+}
+
+export function ArticleSection({ initialPage, categories }: ArticleSectionProps) {
+  const [currentCategoryId, setCurrentCategoryId] = useState(ALL_CATEGORY_ID);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageData, setPageData] = useState(initialPage);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // category 或 search 变化时重置分页到第 1 页
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [currentCategoryId, searchQuery]);
+  const allCategories = useMemo(() => [ALL_CATEGORY, ...categories], [categories]);
 
-  // 模拟后端分页：过滤 + slice
-  const pageResult = useMemo(
-    () =>
-      fetchMockArticles(articles, {
-        page: currentPage,
-        pageSize: MOCK_ARTICLE_PAGE_SIZE,
-        category: CATEGORY_NAME_MAP[currentCategoryId] ?? "全部",
-        search: searchQuery,
-      }),
-    [articles, currentPage, currentCategoryId, searchQuery],
+  const fetchPage = useCallback(async (categoryId: number, page: number) => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams({ page: String(page) });
+      if (categoryId !== ALL_CATEGORY_ID) params.set("category_id", String(categoryId));
+      const res = await fetch(`/api/articles?${params.toString()}`);
+      if (!res.ok) throw new Error("fetch failed");
+      const data: ArticlePageResp = await res.json();
+      setPageData(data);
+    } catch {
+      // 保留已有数据，不显示错误
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleCategoryChange = useCallback(
+    (id: number) => {
+      setCurrentCategoryId(id);
+      setCurrentPage(1);
+      void fetchPage(id, 1);
+    },
+    [fetchPage],
+  );
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      setCurrentPage(page);
+      void fetchPage(currentCategoryId, page);
+    },
+    [currentCategoryId, fetchPage],
   );
 
   return (
     <section>
       <ArticleListHeader
-        categories={CATEGORIES}
+        categories={allCategories}
         currentCategoryId={currentCategoryId}
-        onCategoryChange={setCurrentCategoryId}
+        onCategoryChange={handleCategoryChange}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
 
-      {/* 文章网格：移动端单列，md 以上双列 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        {pageResult.items.map((article) => (
-          // TODO(Task 7): ArticleSection 将迁移到 ArticleListItemResp，此处暂时类型断言
-          <ArticleCard key={article.id} article={article as unknown as ArticleListItemResp} />
+      {/* 换页/换分类时淡出，保留已有数据防止布局抖动 */}
+      <div
+        className={`grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 transition-opacity duration-200 ${
+          isLoading ? "opacity-50 pointer-events-none" : ""
+        }`}
+      >
+        {pageData.list.map((article) => (
+          <ArticleCard key={article.id} article={article} />
         ))}
       </div>
 
-      {/* 分页：总页数 > 1 时显示 */}
-      {pageResult.totalPages > 1 && (
+      {pageData.pages > 1 && (
         <Pagination
           currentPage={currentPage}
-          totalPages={pageResult.totalPages}
-          onPageChange={setCurrentPage}
+          totalPages={pageData.pages}
+          onPageChange={handlePageChange}
           className="mt-8"
         />
       )}
