@@ -6,6 +6,7 @@ export interface CategoryTabItem {
   description?: string;
   cover_img_url?: string;
   seq: number;
+  /** Go int64 — safe as JS number for blog-scale counts */
   article_count: number;
 }
 
