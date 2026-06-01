@@ -82,7 +82,7 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
   const skeletonCount = pageData.list.length || 6;
 
   return (
-    <section ref={sectionRef}>
+    <section ref={sectionRef} className="scroll-mt-20">
       <ArticleListHeader
         categories={allCategories}
         currentCategoryId={currentCategoryId}

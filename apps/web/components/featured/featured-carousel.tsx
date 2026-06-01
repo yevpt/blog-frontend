@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Button } from "@repo/ui";
+import Link from "next/link";
+import { SvgIcon } from "@repo/icons";
 import type { FeaturedPost } from "@/app/_mock/types";
 import { FeaturedCarouselSlide } from "./featured-carousel-slide";
 import { FeaturedCarouselIndicators } from "./featured-carousel-indicators";
@@ -36,8 +37,6 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
 
   if (posts.length === 0) return null;
 
-  const activePost = posts[currentIndex];
-
   return (
     <div
       role="region"
@@ -65,16 +64,34 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
         </div>
       </div>
 
-      {/* 移动端文字区：图片下方，直接读当前幻灯片数据，无淡入淡出 */}
-      <div className="md:hidden p-4 bg-card">
-        <span className="inline-block mb-2 px-3 py-1 text-xs font-medium text-secondary-foreground bg-secondary rounded-full">
-          {activePost.category}
-        </span>
-        <h2 className="text-lg font-bold text-foreground mb-2 line-clamp-2">{activePost.title}</h2>
-        <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{activePost.excerpt}</p>
-        <Button href={activePost.href} variant="outline" size="sm">
-          阅读全文
-        </Button>
+      {/* 移动端文字区：固定高度 + 各幻灯片内容叠层淡入淡出，防止高度跳动 */}
+      <div className="md:hidden relative h-44 overflow-hidden bg-card rounded-b-2xl">
+        {posts.map((post, index) => (
+          <div
+            key={post.id}
+            className={`absolute inset-0 p-4 transition-opacity duration-500 ${
+              index === currentIndex
+                ? "opacity-100 pointer-events-auto"
+                : "opacity-0 pointer-events-none"
+            }`}
+            aria-hidden={index !== currentIndex}
+          >
+            <div className="flex items-start gap-2">
+              <h2 className="flex-1 text-lg font-bold text-foreground line-clamp-2">
+                {post.title}
+              </h2>
+              <Link
+                href={post.href}
+                aria-label="阅读文章"
+                tabIndex={index === currentIndex ? 0 : -1}
+                className="shrink-0 mt-0.5 text-muted-foreground hover:text-foreground transition-colors duration-200"
+              >
+                <SvgIcon name="arrow-up-right" size={20} />
+              </Link>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground line-clamp-3">{post.excerpt}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

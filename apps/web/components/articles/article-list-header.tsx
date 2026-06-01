@@ -87,7 +87,7 @@ export function ArticleListHeader({
 
       {/* 正常态：Tabs + 桌面搜索框 + 移动搜索图标 */}
       <div
-        className={clsx("flex flex-1 items-center gap-2 min-w-0", isSearchOpen && "hidden md:flex")}
+        className={clsx("flex flex-1 items-end gap-4 min-w-0", isSearchOpen && "hidden md:flex")}
       >
         <Tabs
           selectedKey={String(currentCategoryId)}
@@ -107,7 +107,7 @@ export function ArticleListHeader({
         </Tabs>
 
         {/* 桌面端：展开式搜索框 */}
-        <div className="hidden md:block shrink-0">
+        <div className="hidden md:flex md:items-end shrink-0">
           <SearchField
             placeholder={t("article.searchPlaceholder")}
             value={localQuery}

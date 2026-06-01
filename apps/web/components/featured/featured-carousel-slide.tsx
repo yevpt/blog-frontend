@@ -31,6 +31,11 @@ export function FeaturedCarouselSlide({
           loading={isLcpCandidate ? "eager" : "lazy"}
         />
 
+        {/* 移动端：分类标签叠加在图片左下角 */}
+        <span className="md:hidden absolute bottom-4 left-4 z-10 inline-block px-3 py-1 text-xs font-medium text-white bg-black/40 rounded-full backdrop-blur-sm">
+          {post.category}
+        </span>
+
         {/* 桌面端：渐变遮罩 + 文字覆盖层 */}
         <div className="hidden md:block absolute inset-0 bg-linear-t from-black/80 via-black/30 to-transparent" />
         <div className="hidden md:block absolute bottom-0 left-0 right-0 p-6 lg:p-8">

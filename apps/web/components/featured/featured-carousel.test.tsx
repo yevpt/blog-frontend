@@ -104,17 +104,16 @@ afterEach(() => {
 describe("FeaturedCarousel", () => {
   it("渲染不崩溃，DOM 中存在第一张幻灯片标题", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    // 移动端区域 + 桌面端覆盖层都渲染当前幻灯片标题，至少出现一次
+    // 叠层方案：移动端文字区 + 桌面端覆盖层都渲染所有幻灯片标题
     expect(screen.getAllByText("第一篇文章标题").length).toBeGreaterThan(0);
   });
 
   it("DOM 中存在所有幻灯片标题", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    // 当前幻灯片（index 0）：移动端 + 桌面端各一处
+    // 叠层方案使所有幻灯片内容同时存在于 DOM（非激活者 opacity-0 但不移除）
     expect(screen.getAllByText("第一篇文章标题").length).toBeGreaterThan(0);
-    // 非激活幻灯片：仅桌面端覆盖层（opacity-0 但在 DOM 中）
-    expect(screen.getByText("第二篇文章标题")).toBeTruthy();
-    expect(screen.getByText("第三篇文章标题")).toBeTruthy();
+    expect(screen.getAllByText("第二篇文章标题").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("第三篇文章标题").length).toBeGreaterThan(0);
   });
 
   it("渲染正确数量的指示器按钮", () => {
@@ -135,13 +134,12 @@ describe("FeaturedCarousel", () => {
     expect(screen.getByRole("region", { name: "推荐文章" })).toBeTruthy();
   });
 
-  it("阅读全文链接包含正确 href，不嵌套 button", () => {
+  it("移动端文字区的阅读文章图标链接 href 正确", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    // 激活幻灯片：移动端文字区 + 桌面端覆盖层各有一个"阅读全文"链接
-    const links = screen.getAllByRole("link", { name: "阅读全文" });
+    // 激活幻灯片（index 0）aria-hidden=false，图标链接可被无障碍树访问
+    const links = screen.getAllByRole("link", { name: "阅读文章" });
     expect(links.length).toBeGreaterThanOrEqual(1);
     expect(links.some((l) => l.getAttribute("href") === "/articles/first")).toBe(true);
-    links.forEach((l) => expect(l.querySelector("button")).toBeNull());
   });
 
   it("posts 为空时不渲染", () => {
@@ -166,14 +164,14 @@ describe("FeaturedCarousel", () => {
     expect(screen.getByLabelText("第 1 张，共 3 张")).not.toHaveAttribute("aria-current");
   });
 
-  it("切换到第二张后，移动端文字区显示第二篇标题", async () => {
+  it("切换到第二张后，激活幻灯片的图标链接 href 更新", async () => {
     const user = userEvent.setup();
     render(<FeaturedCarousel posts={mockPosts} />);
     await act(async () => {
       await user.click(screen.getByLabelText("第 2 张，共 3 张"));
     });
-    // 移动端文字区直接读 activePost，切换后应出现第二篇文章标题
-    expect(screen.getAllByText("第二篇文章标题").length).toBeGreaterThan(0);
+    const links = screen.getAllByRole("link", { name: "阅读文章" });
+    expect(links.some((l) => l.getAttribute("href") === "/articles/second")).toBe(true);
   });
 });
 
