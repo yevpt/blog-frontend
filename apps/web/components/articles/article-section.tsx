@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Pagination } from "@repo/ui";
+import type { ArticleListItemResp } from "@repo/api";
 import type { Article } from "../../app/_mock/types";
 import { fetchMockArticles, MOCK_ARTICLE_PAGE_SIZE } from "../../app/_mock/generate-articles";
 import { ArticleListHeader } from "./article-list-header";
@@ -50,7 +51,8 @@ export function ArticleSection({ articles }: ArticleSectionProps) {
       {/* 文章网格：移动端单列，md 以上双列 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         {pageResult.items.map((article) => (
-          <ArticleCard key={article.id} article={article} />
+          // TODO(Task 7): ArticleSection 将迁移到 ArticleListItemResp，此处暂时类型断言
+          <ArticleCard key={article.id} article={article as unknown as ArticleListItemResp} />
         ))}
       </div>
 

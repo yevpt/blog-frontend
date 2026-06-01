@@ -128,6 +128,13 @@ vi.mock("@repo/ui", () => ({
   ),
 }));
 
+// Mock ArticleCard：避免依赖真实组件的类型约束（ArticleCard 已迁移到 ArticleListItemResp）
+vi.mock("./article-card", () => ({
+  ArticleCard: ({ article }: { article: { title: string } }) => (
+    <div data-testid="article-card">{article.title}</div>
+  ),
+}));
+
 // Mock @repo/hooks useLocale
 vi.mock("@repo/hooks", () => ({
   useLocale: () => ({
