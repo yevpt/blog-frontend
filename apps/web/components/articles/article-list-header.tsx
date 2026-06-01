@@ -41,7 +41,10 @@ export function ArticleListHeader({
       {/* 左侧分类 Tabs — button-brand-horizontal 变体（主色胶囊样式） */}
       <Tabs
         selectedKey={String(currentCategoryId)}
-        onSelectionChange={(key) => onCategoryChange(Number(key))}
+        onSelectionChange={(key) => {
+          const id = Number(key);
+          if (!Number.isNaN(id)) onCategoryChange(id);
+        }}
       >
         <TabsList variant="button-brand-horizontal">
           {categories.map((category) => (
