@@ -3,6 +3,7 @@ import { featuredPosts } from "./_mock/featured-posts";
 import { snippets } from "./_mock/snippets";
 import { visitors } from "./_mock/visitors";
 import { tags } from "./_mock/tags";
+import type { ArticlePageResp, CategoryTabsResp } from "@repo/api";
 import { createServerApiClient } from "../lib/server-api";
 import { FeaturedCarousel } from "../components/featured";
 import { ArticleSection } from "../components/articles";
@@ -14,11 +15,14 @@ export const metadata: Metadata = {
   description: "分享编程、工具与文学的个人博客",
 };
 
+const EMPTY_PAGE: ArticlePageResp = { total: 0, pages: 0, page: 1, page_size: 10, list: [] };
+const EMPTY_CATEGORIES: CategoryTabsResp = { list: [] };
+
 export default async function Home() {
   const api = await createServerApiClient();
   const [categoriesResp, initialPage] = await Promise.all([
-    api.categories.listTabs(),
-    api.articles.listPublic({ page: 1 }),
+    api.categories.listTabs().catch(() => EMPTY_CATEGORIES),
+    api.articles.listPublic({ page: 1 }).catch(() => EMPTY_PAGE),
   ]);
 
   return (
