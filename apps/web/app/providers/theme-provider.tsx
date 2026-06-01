@@ -25,47 +25,65 @@ function getSystemTheme(): ResolvedTheme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-/** 将 resolved theme 应用到 documentElement（添加/移除 dark class） */
-function applyTheme(resolved: ResolvedTheme) {
-  if (typeof document === "undefined") return;
-  if (resolved === "dark") {
-    document.documentElement.classList.add("dark");
-  } else {
-    document.documentElement.classList.remove("dark");
-  }
-}
-
-/** 从 localStorage 读取用户保存的主题偏好 */
-function readStoredTheme(): ThemeMode {
-  const stored = localStorage.getItem("theme");
-  if (stored === "light" || stored === "dark" || stored === "system") {
-    return stored;
-  }
-  return "system";
-}
-
-/** 将 theme 模式解析为实际应用的 light / dark */
+/** 将 theme 模式解析为实际可见的 light / dark（供 UI 组件读取） */
 function resolveThemeMode(mode: ThemeMode): ResolvedTheme {
   if (mode === "dark") return "dark";
   if (mode === "light") return "light";
   return getSystemTheme();
 }
 
+/**
+ * 将 ThemeMode 写入浏览器 Cookie。
+ * 开发环境不加 Secure 标志（本地 HTTP），生产环境加 Secure（仅 HTTPS）。
+ */
+function writeThemeCookie(value: ThemeMode) {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  document.cookie = `theme=${value}; path=/; SameSite=Lax${secure}; Max-Age=${365 * 24 * 3600}`;
+}
+
+/** 从 document.cookie 读取主题偏好 */
+function readThemeCookie(): ThemeMode {
+  if (typeof document === "undefined") return "system";
+  const match = document.cookie.match(/(?:^|;\s*)theme=([^;]*)/);
+  const value = match?.[1];
+  if (value === "light" || value === "dark" || value === "system") return value;
+  return "system";
+}
+
+/**
+ * 将选择的 ThemeMode 应用到 documentElement class。
+ *   "dark"   → 添加 dark，移除 light
+ *   "light"  → 添加 light，移除 dark
+ *   "system" → 移除 dark 和 light，由 CSS 媒体查询自动处理
+ */
+function applyTheme(mode: ThemeMode) {
+  if (typeof document === "undefined") return;
+  const { classList } = document.documentElement;
+  if (mode === "dark") {
+    classList.add("dark");
+    classList.remove("light");
+  } else if (mode === "light") {
+    classList.add("light");
+    classList.remove("dark");
+  } else {
+    classList.remove("dark");
+    classList.remove("light");
+  }
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // 固定初始值为 system/light，挂载后再读 localStorage，避免 SSR 与 hydration 不一致
   const [theme, setThemeState] = useState<ThemeMode>("system");
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
   const isInitialMount = useRef(true);
 
-  // 监听系统主题变化（仅在 system 模式下响应）
+  // 监听系统主题变化（仅在 system 模式下更新 resolvedTheme，不操作 class）
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
 
     const handleChange = () => {
       if (theme === "system") {
-        const resolved = media.matches ? "dark" : "light";
-        setResolvedTheme(resolved);
-        applyTheme(resolved);
+        setResolvedTheme(media.matches ? "dark" : "light");
+        // system 模式下 CSS 媒体查询已处理样式，无需操作 class
       }
     };
 
@@ -73,23 +91,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => media.removeEventListener("change", handleChange);
   }, [theme]);
 
-  // 首帧先读 localStorage 再应用，避免默认 system 覆盖 layout 阻塞脚本已设置的 dark
+  // 首帧读 Cookie 并应用，后续由 setTheme 驱动
   useEffect(() => {
-    const mode = isInitialMount.current ? readStoredTheme() : theme;
+    const mode = isInitialMount.current ? readThemeCookie() : theme;
     if (isInitialMount.current) {
       isInitialMount.current = false;
       if (mode !== theme) {
         setThemeState(mode);
       }
     }
-
-    const resolved = resolveThemeMode(mode);
-    setResolvedTheme(resolved);
-    applyTheme(resolved);
+    applyTheme(mode);
+    setResolvedTheme(resolveThemeMode(mode));
   }, [theme]);
 
   const setTheme = (mode: ThemeMode) => {
-    localStorage.setItem("theme", mode);
+    writeThemeCookie(mode);
     setThemeState(mode);
   };
 
