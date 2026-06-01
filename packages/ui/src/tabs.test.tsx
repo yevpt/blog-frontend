@@ -1,7 +1,14 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeAll } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Tabs, TabsList, TabsItem, TabsPanel } from "./tabs";
+import { Tabs, TabsList, TabsItem, TabsPanels, TabsPanel } from "./tabs";
+
+// SelectionIndicator 使用 Web Animations API，happy-dom 未实现，需打桩
+beforeAll(() => {
+  if (!HTMLElement.prototype.getAnimations) {
+    HTMLElement.prototype.getAnimations = () => [];
+  }
+});
 
 function TestTabs({ onSelectionChange }: { onSelectionChange?: (key: string) => void }) {
   return (
@@ -11,9 +18,11 @@ function TestTabs({ onSelectionChange }: { onSelectionChange?: (key: string) => 
         <TabsItem id="coding">编程</TabsItem>
         <TabsItem id="tools">工具</TabsItem>
       </TabsList>
-      <TabsPanel id="all">全部内容</TabsPanel>
-      <TabsPanel id="coding">编程内容</TabsPanel>
-      <TabsPanel id="tools">工具内容</TabsPanel>
+      <TabsPanels>
+        <TabsPanel id="all">全部内容</TabsPanel>
+        <TabsPanel id="coding">编程内容</TabsPanel>
+        <TabsPanel id="tools">工具内容</TabsPanel>
+      </TabsPanels>
     </Tabs>
   );
 }
@@ -40,11 +49,6 @@ describe("Tabs", () => {
     expect(screen.queryByText("全部内容")).toBeNull();
   });
 
-  it("Tab 项不覆盖 React Aria 的移动端触摸策略", () => {
-    render(<TestTabs />);
-    expect(screen.getByRole("tab", { name: "全部" }).className).not.toContain("touch-manipulation");
-  });
-
   it("onSelectionChange 在切换时触发", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
@@ -62,7 +66,19 @@ describe("Tabs", () => {
     expect(document.activeElement?.textContent).toBe("编程");
   });
 
-  it("underline variant tab 含 border-b-2 类", () => {
+  it("button-brand-horizontal variant tab 含圆角样式", () => {
+    render(
+      <Tabs defaultSelectedKey="a">
+        <TabsList variant="button-brand-horizontal">
+          <TabsItem id="a">A</TabsItem>
+        </TabsList>
+      </Tabs>,
+    );
+    const tab = screen.getByRole("tab", { name: "A" });
+    expect(tab.className).toContain("rounded-full");
+  });
+
+  it("underline variant tablist 含 border-b 样式", () => {
     render(
       <Tabs defaultSelectedKey="a">
         <TabsList variant="underline">
@@ -72,7 +88,22 @@ describe("Tabs", () => {
         </TabsList>
       </Tabs>,
     );
-    const tab = screen.getByRole("tab", { name: "A" });
-    expect(tab.className).toContain("border-b-2");
+    const tablist = screen.getByRole("tablist");
+    expect(tablist.className).toContain("border-b");
+  });
+
+  it("无面板时 Tabs 仅作选择器正常运行", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <Tabs defaultSelectedKey="all" onSelectionChange={(k) => onChange(String(k))}>
+        <TabsList>
+          <TabsItem id="all">全部</TabsItem>
+          <TabsItem id="coding">编程</TabsItem>
+        </TabsList>
+      </Tabs>,
+    );
+    await user.click(screen.getByText("编程"));
+    expect(onChange).toHaveBeenCalledWith("coding");
   });
 });

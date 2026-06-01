@@ -3,6 +3,7 @@
 import {
   Button as AriaButton,
   FieldError,
+  Group,
   Input as AriaInput,
   Label,
   SearchField as AriaSearchField,
@@ -56,39 +57,43 @@ export function SearchField({
     >
       {label ? <Label className="text-sm font-medium text-foreground">{label}</Label> : null}
 
-      <div className="relative flex items-center">
-        <span className="absolute left-3 pointer-events-none text-muted-foreground z-10">
+      <Group
+        className={cn(
+          "flex items-center rounded-md border border-input bg-background",
+          "transition-colors",
+          "focus-within:ring-2 focus-within:ring-ring focus-within:border-transparent",
+          "group-data-[invalid]:border-destructive",
+          "group-data-[disabled]:opacity-50 group-data-[disabled]:cursor-not-allowed",
+          size === "sm" ? "h-9" : "h-10",
+        )}
+      >
+        <span className="pl-3 text-muted-foreground pointer-events-none shrink-0">
           <SvgIcon name="search" size={16} />
         </span>
         <AriaInput
           placeholder={placeholder}
           className={cn(
-            "w-full rounded-md border border-input bg-background text-sm",
-            "transition-colors outline-none",
-            "focus:ring-2 focus:ring-ring focus:border-transparent",
+            "flex-1 min-w-0 bg-transparent text-sm px-2 h-full outline-none",
             "placeholder:text-muted-foreground",
-            "disabled:opacity-50 disabled:cursor-not-allowed",
             "[&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden",
-            size === "sm" ? "h-9 py-2" : "h-10 py-2.5",
-            "pl-9 pr-9",
             inputClassName,
           )}
         />
         <AriaButton
           aria-label={clearLabel}
           className={cn(
-            "absolute right-1 inline-flex items-center justify-center rounded-md",
+            "mr-1 shrink-0 inline-flex items-center justify-center rounded-md",
             "text-muted-foreground transition-colors outline-none",
             "hover:bg-accent hover:text-foreground",
             "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-            "disabled:pointer-events-none disabled:opacity-50",
+            "disabled:pointer-events-none",
             "group-data-[empty]:invisible",
             size === "sm" ? "size-7" : "size-8",
           )}
         >
           <SvgIcon name="close" size={14} />
         </AriaButton>
-      </div>
+      </Group>
 
       {hint && !isInvalid ? (
         <Text slot="description" className="text-xs text-muted-foreground">

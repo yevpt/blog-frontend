@@ -46,22 +46,23 @@ export function ArticleListHeader({
           if (!Number.isNaN(id)) onCategoryChange(id);
         }}
       >
-        <TabsList variant="button-brand-horizontal">
-          {categories.map((category) => (
-            <TabsItem key={category.id} id={String(category.id)} variant="button-brand-horizontal">
-              {category.name}
-            </TabsItem>
-          ))}
-        </TabsList>
+        <div style={{ display: "flex" }}>
+          <TabsList variant="underline" className="flex-1">
+            {categories.map((category) => (
+              <TabsItem key={category.id} id={String(category.id)} variant="underline">
+                {category.name}
+              </TabsItem>
+            ))}
+          </TabsList>
+          <SearchField
+            placeholder={t("article.searchPlaceholder")}
+            value={localQuery}
+            onChange={setLocalQuery}
+            size="sm"
+            className="w-48 focus-within:w-64 transition-all duration-300"
+          />
+        </div>
       </Tabs>
-
-      <SearchField
-        placeholder={t("article.searchPlaceholder")}
-        value={localQuery}
-        onChange={setLocalQuery}
-        size="sm"
-        inputClassName="w-48 focus:w-64 transition-all duration-300"
-      />
     </div>
   );
 }

@@ -7,10 +7,12 @@ export {
   Tabs,
   TabsList,
   TabsItem,
+  TabsPanels,
   TabsPanel,
   type TabsProps,
   type TabsListProps,
   type TabsItemProps,
+  type TabsPanelsProps,
   type TabsPanelProps,
   type TabsVariant,
 } from "./tabs";

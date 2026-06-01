@@ -55,7 +55,7 @@ vi.mock("@repo/ui", () => ({
     value?: string;
     onChange?: (val: string) => void;
     size?: string;
-    inputClassName?: string;
+    className?: string;
   }) => (
     <input
       placeholder={placeholder}
