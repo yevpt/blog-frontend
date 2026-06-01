@@ -44,13 +44,14 @@ button-utility/
 toggle/
   toggle.tsx
   toggle.test.tsx
-avatar/                   ← Dropdown/Select 内部依赖，不对外导出
+avatar/                   ← 完整迁移，对外导出
   avatar.tsx
+  base-components/        ← AvatarOnlineIndicator、VerifiedTick、AvatarCount 等子组件
   avatar.test.tsx
-checkbox/                 ← Dropdown 内部依赖，不对外导出
+checkbox/                 ← 完整迁移，对外导出
   checkbox.tsx
   checkbox.test.tsx
-radio-buttons/            ← Dropdown 内部依赖，不对外导出
+radio-buttons/            ← 完整迁移，对外导出
   radio-buttons.tsx
   radio-buttons.test.tsx
 ```
@@ -123,6 +124,7 @@ components/featured/
 | `<ChevronDown className="size-4 ...">` | `<SvgIcon name="chevron-down" size={16} />` |
 | `<ChevronRight className="size-4 ...">` | `<SvgIcon name="chevron-right" size={16} />` |
 | `<DotsVertical className="size-4 ...">` | `<SvgIcon name="dots-vertical" size={16} />` |
+| `<User01 className="...">` | `<SvgIcon name="user" size={16} />`（已存在，Avatar fallback） |
 
 ### 图标作为 Props 的公开 API
 
@@ -233,7 +235,12 @@ export { Input, type InputProps }                from "./input";
 export { Pagination, PaginationBase, type PaginationProps } from "./pagination";
 ```
 
-Avatar、CheckboxBase、RadioButtonBase 为 Dropdown 内部依赖，**不对外导出**。
+```ts
+// 完整迁移，对外导出
+export { Avatar, type AvatarProps }                           from "./avatar/avatar";
+export { CheckboxBase, type CheckboxBaseProps }               from "./checkbox/checkbox";
+export { RadioButtonBase, RadioGroupBase, type RadioButtonBaseProps } from "./radio-buttons/radio-buttons";
+```
 
 ---
 
@@ -248,9 +255,9 @@ Avatar、CheckboxBase、RadioButtonBase 为 Dropdown 内部依赖，**不对外�
 | `packages/ui/src/tooltip/tooltip.test.tsx` | 新建 | 渲染 children；hover 显示提示文字 |
 | `packages/ui/src/button-utility/button-utility.test.tsx` | 新建 | 渲染；点击回调 |
 | `packages/ui/src/toggle/toggle.test.tsx` | 新建 | 渲染；onChange 触发；受控状态 |
-| `packages/ui/src/avatar/avatar.test.tsx` | 新建 | 渲染不崩溃；alt 文字 |
-| `packages/ui/src/checkbox/checkbox.test.tsx` | 新建 | 渲染；选中/取消 |
-| `packages/ui/src/radio-buttons/radio-buttons.test.tsx` | 新建 | 渲染；选项切换 |
+| `packages/ui/src/avatar/avatar.test.tsx` | 新建 | 渲染不崩溃；alt 文字；fallback 显示；size 变体 |
+| `packages/ui/src/checkbox/checkbox.test.tsx` | 新建 | 渲染；选中/取消；disabled 状态；indeterminate 状态 |
+| `packages/ui/src/radio-buttons/radio-buttons.test.tsx` | 新建 | 渲染；选项切换；disabled 选项 |
 | `packages/ui/src/pagination/pagination.test.tsx` | 更新 | 原有测试通过；验证 useMemo 同步更新 |
 | `apps/web/components/featured/featured-carousel.test.tsx` | 更新 | 渲染全部幻灯片；指示器数量；auto-play mock |
 
@@ -281,6 +288,5 @@ Avatar、CheckboxBase、RadioButtonBase 为 Dropdown 内部依赖，**不对外�
 
 ## 不在本次范围内
 
-- Avatar、CheckboxBase、RadioButtonBase 的样式定制（仅作为 Dropdown 依赖安装）
 - Untitled UI 其他未列出组件
 - 主题/颜色系统迁移到 Untitled UI 变量
