@@ -1,6 +1,6 @@
 export function ArticleCardSkeleton() {
   return (
-    <div className="animate-pulse">
+    <div className="animate-pulse" aria-hidden="true">
       {/* 封面图占位 */}
       <div className="aspect-video rounded-xl bg-muted" />
 
