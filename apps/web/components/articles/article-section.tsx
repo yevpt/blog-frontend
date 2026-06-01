@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Pagination } from "@repo/ui";
-import type { ArticleListItemResp } from "@repo/api";
+import type { ArticleListItemResp, CategoryTabItem } from "@repo/api";
 import type { Article } from "../../app/_mock/types";
 import { fetchMockArticles, MOCK_ARTICLE_PAGE_SIZE } from "../../app/_mock/generate-articles";
 import { ArticleListHeader } from "./article-list-header";
@@ -12,19 +12,32 @@ interface ArticleSectionProps {
   articles: Article[];
 }
 
-// 所有分类（含"全部"）
-const CATEGORIES = ["全部", "编程", "工具", "文学"];
+// 所有分类（含"全部"虚拟分类，id=0）
+const CATEGORIES: CategoryTabItem[] = [
+  { id: 0, name: "全部", seq: -1, article_count: 0 },
+  { id: 1, name: "编程", seq: 0, article_count: 0 },
+  { id: 2, name: "工具", seq: 1, article_count: 0 },
+  { id: 3, name: "文学", seq: 2, article_count: 0 },
+];
+
+// id → name 映射，供过滤使用
+const CATEGORY_NAME_MAP: Record<number, string> = {
+  0: "全部",
+  1: "编程",
+  2: "工具",
+  3: "文学",
+};
 
 // 文章列表区块：含分类 Tabs、搜索框、文章网格和分页
 export function ArticleSection({ articles }: ArticleSectionProps) {
-  const [currentCategory, setCurrentCategory] = useState("全部");
+  const [currentCategoryId, setCurrentCategoryId] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
   // category 或 search 变化时重置分页到第 1 页
   useEffect(() => {
     setCurrentPage(1);
-  }, [currentCategory, searchQuery]);
+  }, [currentCategoryId, searchQuery]);
 
   // 模拟后端分页：过滤 + slice
   const pageResult = useMemo(
@@ -32,18 +45,18 @@ export function ArticleSection({ articles }: ArticleSectionProps) {
       fetchMockArticles(articles, {
         page: currentPage,
         pageSize: MOCK_ARTICLE_PAGE_SIZE,
-        category: currentCategory,
+        category: CATEGORY_NAME_MAP[currentCategoryId] ?? "全部",
         search: searchQuery,
       }),
-    [articles, currentPage, currentCategory, searchQuery],
+    [articles, currentPage, currentCategoryId, searchQuery],
   );
 
   return (
     <section>
       <ArticleListHeader
         categories={CATEGORIES}
-        currentCategory={currentCategory}
-        onCategoryChange={setCurrentCategory}
+        currentCategoryId={currentCategoryId}
+        onCategoryChange={setCurrentCategoryId}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />

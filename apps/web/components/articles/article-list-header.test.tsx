@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { act, render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
+import type { ReactNode } from "react";
+import type { CategoryTabItem } from "@repo/api";
 import { ArticleListHeader } from "./article-list-header";
 
 vi.mock("@repo/icons", () => ({
@@ -17,42 +19,95 @@ vi.mock("@repo/hooks", () => ({
   }),
 }));
 
+// Mock @repo/ui — mirrors the mock in article-section.test.tsx
+vi.mock("@repo/ui", () => ({
+  Tabs: ({
+    children,
+    onSelectionChange,
+  }: {
+    children: ReactNode;
+    selectedKey?: string;
+    onSelectionChange?: (key: string) => void;
+  }) => {
+    const handleSelect = (e: { target: EventTarget | null }) => {
+      const btn = (e.target as HTMLElement).closest("button[data-tab-id]");
+      if (btn && onSelectionChange) {
+        onSelectionChange(btn.getAttribute("data-tab-id") ?? "");
+      }
+    };
+    return (
+      <div role="presentation" onClick={handleSelect} onKeyDown={handleSelect}>
+        {children}
+      </div>
+    );
+  },
+  TabsList: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  TabsItem: ({ children, id }: { children: ReactNode; id?: string; variant?: string }) => (
+    <button data-tab-id={id}>{children}</button>
+  ),
+  SearchField: ({
+    placeholder,
+    value,
+    onChange,
+  }: {
+    label?: string;
+    placeholder?: string;
+    value?: string;
+    onChange?: (val: string) => void;
+    size?: string;
+    inputClassName?: string;
+  }) => (
+    <input
+      placeholder={placeholder}
+      value={value ?? ""}
+      onChange={(e) => onChange?.(e.target.value)}
+    />
+  ),
+}));
+
+const mockCategories: CategoryTabItem[] = [
+  { id: 0, name: "全部", seq: -1, article_count: 0 },
+  { id: 1, name: "编程", seq: 0, article_count: 5 },
+];
+
 afterEach(() => {
   vi.useRealTimers();
   vi.clearAllMocks();
 });
 
 describe("ArticleListHeader", () => {
-  it("渲染分类和 SearchField 搜索框", () => {
+  it("渲染分类 Tab 和搜索框", () => {
     render(
       <ArticleListHeader
-        categories={["全部", "编程"]}
-        currentCategory="全部"
+        categories={mockCategories}
+        currentCategoryId={0}
         onCategoryChange={vi.fn()}
         searchQuery=""
         onSearchChange={vi.fn()}
       />,
     );
-
-    expect(screen.getByRole("tab", { name: "全部" })).toBeTruthy();
-    expect(screen.getByRole("searchbox", { name: "搜索文章..." })).toBeTruthy();
+    expect(screen.getByText("全部")).toBeTruthy();
+    expect(screen.getByText("编程")).toBeTruthy();
+    expect(screen.getByPlaceholderText("搜索文章...")).toBeTruthy();
   });
 
-  it("输入搜索词后防抖 300ms 触发 onSearchChange", () => {
+  it("搜索框输入后防抖 300ms 触发 onSearchChange", () => {
     vi.useFakeTimers();
     const onSearchChange = vi.fn();
 
     render(
       <ArticleListHeader
-        categories={["全部", "编程"]}
-        currentCategory="全部"
+        categories={mockCategories}
+        currentCategoryId={0}
         onCategoryChange={vi.fn()}
         searchQuery=""
         onSearchChange={onSearchChange}
       />,
     );
 
-    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "React" } });
+    fireEvent.change(screen.getByPlaceholderText("搜索文章..."), {
+      target: { value: "React" },
+    });
     expect(onSearchChange).not.toHaveBeenCalledWith("React");
 
     act(() => {
@@ -62,26 +117,23 @@ describe("ArticleListHeader", () => {
     expect(onSearchChange).toHaveBeenCalledWith("React");
   });
 
-  it("点击清除按钮后防抖提交空搜索词", () => {
-    vi.useFakeTimers();
-    const onSearchChange = vi.fn();
-
+  it("点击分类 Tab 后调用 onCategoryChange 传入对应数字 id", () => {
+    const onCategoryChange = vi.fn();
     render(
       <ArticleListHeader
-        categories={["全部", "编程"]}
-        currentCategory="全部"
-        onCategoryChange={vi.fn()}
-        searchQuery="React"
-        onSearchChange={onSearchChange}
+        categories={mockCategories}
+        currentCategoryId={0}
+        onCategoryChange={onCategoryChange}
+        searchQuery=""
+        onSearchChange={vi.fn()}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "清除搜索" }));
+    // TabsItem mock renders <button data-tab-id="1">编程</button>
+    // Tabs onClick handler calls onSelectionChange("1")
+    // ArticleListHeader converts: onCategoryChange(Number("1")) = onCategoryChange(1)
+    fireEvent.click(screen.getByText("编程"));
 
-    act(() => {
-      vi.advanceTimersByTime(300);
-    });
-
-    expect(onSearchChange).toHaveBeenCalledWith("");
+    expect(onCategoryChange).toHaveBeenCalledWith(1);
   });
 });

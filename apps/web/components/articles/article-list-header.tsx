@@ -3,20 +3,19 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsItem, SearchField } from "@repo/ui";
 import { useLocale } from "@repo/hooks";
+import type { CategoryTabItem } from "@repo/api";
 
 interface ArticleListHeaderProps {
-  categories: string[];
-  currentCategory: string;
-  onCategoryChange: (category: string) => void;
+  categories: CategoryTabItem[];
+  currentCategoryId: number;
+  onCategoryChange: (id: number) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }
 
-// 分类 Tabs（button-brand-horizontal）+ 搜索框
-// SearchField onChange 返回 string，防抖 300ms 后才触发 onSearchChange
 export function ArticleListHeader({
   categories,
-  currentCategory,
+  currentCategoryId,
   onCategoryChange,
   searchQuery,
   onSearchChange,
@@ -41,13 +40,13 @@ export function ArticleListHeader({
     <div className="flex flex-wrap items-center justify-between gap-4">
       {/* 左侧分类 Tabs — button-brand-horizontal 变体（主色胶囊样式） */}
       <Tabs
-        selectedKey={currentCategory}
-        onSelectionChange={(key) => onCategoryChange(String(key))}
+        selectedKey={String(currentCategoryId)}
+        onSelectionChange={(key) => onCategoryChange(Number(key))}
       >
         <TabsList variant="button-brand-horizontal">
           {categories.map((category) => (
-            <TabsItem key={category} id={category} variant="button-brand-horizontal">
-              {category}
+            <TabsItem key={category.id} id={String(category.id)} variant="button-brand-horizontal">
+              {category.name}
             </TabsItem>
           ))}
         </TabsList>
