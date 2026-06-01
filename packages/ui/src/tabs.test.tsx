@@ -106,4 +106,32 @@ describe("Tabs", () => {
     await user.click(screen.getByText("编程"));
     expect(onChange).toHaveBeenCalledWith("coding");
   });
+
+  it("underline variant tablist 含 overflow-x-auto 横向滚动样式", () => {
+    render(
+      <Tabs defaultSelectedKey="a">
+        <TabsList variant="underline">
+          <TabsItem id="a" variant="underline">
+            A
+          </TabsItem>
+        </TabsList>
+      </Tabs>,
+    );
+    const tablist = screen.getByRole("tablist");
+    expect(tablist.className).toContain("overflow-x-auto");
+  });
+
+  it("underline variant tab 含 whitespace-nowrap 防止文字折行", () => {
+    render(
+      <Tabs defaultSelectedKey="a">
+        <TabsList variant="underline">
+          <TabsItem id="a" variant="underline">
+            A
+          </TabsItem>
+        </TabsList>
+      </Tabs>,
+    );
+    const tab = screen.getByRole("tab", { name: "A" });
+    expect(tab.className).toContain("whitespace-nowrap");
+  });
 });

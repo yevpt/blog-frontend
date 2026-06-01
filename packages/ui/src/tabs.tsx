@@ -31,7 +31,8 @@ export function Tabs({ className, ...props }: TabsProps) {
 
 const tabListVariantClasses = {
   "button-brand-horizontal": "inline-flex flex-wrap gap-1 p-1 bg-muted rounded-full",
-  underline: "flex gap-4 border-b border-border",
+  underline:
+    "flex gap-4 border-b border-border overflow-x-auto flex-nowrap [&::-webkit-scrollbar]:hidden [scrollbar-width:none]",
 } as const;
 
 export type TabsVariant = keyof typeof tabListVariantClasses;
@@ -63,6 +64,7 @@ const tabItemBaseClasses: Record<TabsVariant, string> = {
     "text-sm font-medium outline-none [-webkit-tap-highlight-color:transparent]",
     "focus-visible:ring-2 focus-visible:ring-ring",
     "data-[disabled]:opacity-50",
+    "whitespace-nowrap shrink-0",
   ].join(" "),
 };
 
