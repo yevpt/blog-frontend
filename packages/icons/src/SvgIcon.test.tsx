@@ -14,6 +14,11 @@ describe("SvgIcon", () => {
     expect(use?.getAttribute("href")).toBe("#icon-home");
   });
 
+  it("默认不拦截外层交互元素的点击", () => {
+    const { container } = render(<SvgIcon name="home" />);
+    expect(container.querySelector("svg")?.getAttribute("class")).toContain("pointer-events-none");
+  });
+
   it("应用自定义 size", () => {
     const { container } = render(<SvgIcon name="user" size={32} />);
     const svg = container.querySelector("svg");

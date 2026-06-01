@@ -112,6 +112,14 @@ describe("FeaturedCarousel", () => {
     expect(screen.getByRole("region", { name: "推荐文章" })).toBeTruthy();
   });
 
+  it("阅读全文 CTA 渲染为单一链接，不嵌套 button", () => {
+    render(<FeaturedCarousel posts={mockPosts} />);
+    const link = screen.getByRole("link", { name: "阅读全文" });
+
+    expect(link).toHaveAttribute("href", "/articles/first");
+    expect(link.querySelector("button")).toBeNull();
+  });
+
   it("posts 为空时不渲染", () => {
     const { container } = render(<FeaturedCarousel posts={[]} />);
     expect(container.firstChild).toBeNull();

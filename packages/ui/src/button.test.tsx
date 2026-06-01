@@ -18,6 +18,11 @@ describe("Button", () => {
     }
   });
 
+  it("不覆盖 React Aria 的移动端触摸策略", () => {
+    const { container } = render(<Button>移动端按钮</Button>);
+    expect(container.querySelector("button")?.className).not.toContain("touch-manipulation");
+  });
+
   it("outline variant 含 border 类", () => {
     const { container } = render(<Button variant="outline">边框</Button>);
     expect(container.querySelector("button")?.className).toContain("border");

@@ -40,7 +40,10 @@ const buttonVariants = cva(
   },
 );
 
-type ButtonBaseProps = VariantProps<typeof buttonVariants> & { className?: string };
+type ButtonBaseProps = VariantProps<typeof buttonVariants> & {
+  className?: string;
+  tabIndex?: number;
+};
 
 /** 带 href：渲染为 React Aria Link（锚点语义） */
 type ButtonAsLink = ButtonBaseProps & Omit<AriaLinkProps, "className" | "style"> & { href: string };

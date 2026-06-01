@@ -40,6 +40,11 @@ describe("Tabs", () => {
     expect(screen.queryByText("全部内容")).toBeNull();
   });
 
+  it("Tab 项不覆盖 React Aria 的移动端触摸策略", () => {
+    render(<TestTabs />);
+    expect(screen.getByRole("tab", { name: "全部" }).className).not.toContain("touch-manipulation");
+  });
+
   it("onSelectionChange 在切换时触发", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();

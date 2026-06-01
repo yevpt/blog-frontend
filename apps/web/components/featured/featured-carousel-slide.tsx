@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { Button } from "@repo/ui";
 import type { FeaturedPost } from "@/app/_mock/types";
 
@@ -53,15 +52,15 @@ export function FeaturedCarouselSlide({
           <p className="text-sm md:text-base text-white/80 mb-4 line-clamp-2">{post.excerpt}</p>
 
           {/* 阅读全文按钮：使用 outline variant，白色边框 */}
-          <Link href={post.href} tabIndex={isActive ? 0 : -1}>
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-white/60 text-white bg-transparent hover:bg-white/20 hover:text-white hover:border-white"
-            >
-              阅读全文
-            </Button>
-          </Link>
+          <Button
+            href={post.href}
+            tabIndex={isActive ? 0 : -1}
+            variant="outline"
+            size="sm"
+            className="border-white/60 text-white bg-transparent hover:bg-white/20 hover:text-white hover:border-white"
+          >
+            阅读全文
+          </Button>
         </div>
       </div>
     </div>
