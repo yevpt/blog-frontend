@@ -138,4 +138,57 @@ describe("createApiClient", () => {
     expect(onRefreshFailed).toHaveBeenCalledOnce();
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
+
+  // ── 文章与分类接口（公开，无需登录）────────────────────────────────
+
+  it("articles.listPublic 无参数时调用 /articles", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { total: 0, pages: 0, page: 1, page_size: 10, list: [] },
+      }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    await client.articles.listPublic();
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/articles",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("articles.listPublic 带 category_id 和 page 时构造正确 query string", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { total: 0, pages: 0, page: 2, page_size: 10, list: [] },
+      }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    await client.articles.listPublic({ page: 2, category_id: 3 });
+
+    const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
+    const url = new URL(calledUrl);
+    expect(url.pathname).toBe("/articles");
+    expect(url.searchParams.get("page")).toBe("2");
+    expect(url.searchParams.get("category_id")).toBe("3");
+  });
+
+  it("categories.listTabs 调用 /categories", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: { list: [] } }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    await client.categories.listTabs();
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/categories",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
 });

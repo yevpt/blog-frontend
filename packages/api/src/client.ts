@@ -8,6 +8,8 @@ import type {
   LoginResp,
   TokenResp,
 } from "./types/auth";
+import type { ArticleListReq, ArticlePageResp } from "./types/article";
+import type { CategoryTabsResp } from "./types/category";
 
 /** createApiClient 的注入配置接口 */
 export interface ApiClientConfig {
@@ -115,6 +117,23 @@ export function createApiClient(config: ApiClientConfig) {
       /** 换发新 token（不走 fetchAuthed 避免递归） */
       refresh: (req: RefreshReq) =>
         fetchPublic<TokenResp>("/auth/refresh", { method: "POST", body: JSON.stringify(req) }),
+    },
+    articles: {
+      /** 分页查询公开文章，支持分类/标签/推荐过滤 */
+      listPublic: (req: ArticleListReq = {}) => {
+        const params = new URLSearchParams();
+        if (req.page !== undefined) params.set("page", String(req.page));
+        if (req.page_size !== undefined) params.set("page_size", String(req.page_size));
+        if (req.recommend !== undefined) params.set("recommend", String(req.recommend));
+        if (req.category_id !== undefined) params.set("category_id", String(req.category_id));
+        if (req.tag_id !== undefined) params.set("tag_id", String(req.tag_id));
+        const qs = params.toString();
+        return fetchPublic<ArticlePageResp>(`/articles${qs ? `?${qs}` : ""}`, { method: "GET" });
+      },
+    },
+    categories: {
+      /** 查询分类 Tab 列表（含文章数量，按 seq/count 排序） */
+      listTabs: () => fetchPublic<CategoryTabsResp>("/categories", { method: "GET" }),
     },
     /**
      * 测试用端点，与后端 /test/* 路由对应。
