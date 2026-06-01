@@ -22,7 +22,12 @@ export function ArticleCard({ article }: ArticleCardProps) {
     <article>
       {/* 封面图：16:9 比例，overflow-hidden，hover 时内部图片放大 */}
       {article.cover_img_url && (
-        <Link href={href} className="block overflow-hidden rounded-xl group">
+        <Link
+          href={href}
+          className="block overflow-hidden rounded-xl group"
+          aria-hidden
+          tabIndex={-1}
+        >
           <div className="relative aspect-video">
             <Image
               src={article.cover_img_url}
