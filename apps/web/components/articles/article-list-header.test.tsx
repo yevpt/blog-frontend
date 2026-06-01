@@ -182,4 +182,33 @@ describe("ArticleListHeader", () => {
     await user.click(screen.getByRole("button", { name: "关闭搜索" }));
     expect(onSearchChange).toHaveBeenCalledWith("");
   });
+
+  it("点击关闭搜索后 onSearchChange 只被调用一次", () => {
+    vi.useFakeTimers();
+    const onSearchChange = vi.fn();
+    render(
+      <ArticleListHeader
+        categories={mockCategories}
+        currentCategoryId={0}
+        onCategoryChange={vi.fn()}
+        searchQuery=""
+        onSearchChange={onSearchChange}
+      />,
+    );
+    // 展开搜索
+    act(() => {
+      fireEvent.click(screen.getByRole("button", { name: "搜索" }));
+    });
+    // 关闭搜索
+    act(() => {
+      fireEvent.click(screen.getByRole("button", { name: "关闭搜索" }));
+    });
+    // 推进时间：防抖不应再次触发
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(onSearchChange).toHaveBeenCalledTimes(1);
+    expect(onSearchChange).toHaveBeenCalledWith("");
+    vi.useRealTimers();
+  });
 });

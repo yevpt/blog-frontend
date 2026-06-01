@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import clsx from "clsx";
 import { Tabs, TabsList, TabsItem, SearchField } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import { useLocale } from "@repo/hooks";
@@ -24,19 +25,38 @@ export function ArticleListHeader({
   const { t } = useLocale();
   const [localQuery, setLocalQuery] = useState(searchQuery);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const mobileSearchContainerRef = useRef<HTMLDivElement>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // 当外部 searchQuery 重置时同步本地状态（如 category 切换时）
   useEffect(() => {
     setLocalQuery(searchQuery);
   }, [searchQuery]);
 
+  // 防抖：localQuery 变化后 300ms 才通知外层
   useEffect(() => {
-    const timer = setTimeout(() => {
+    debounceTimerRef.current = setTimeout(() => {
       onSearchChange(localQuery);
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
   }, [localQuery, onSearchChange]);
 
+  // 搜索展开时自动聚焦输入框（用 ref 方式避开 jsx-a11y/no-autofocus 规则）
+  useEffect(() => {
+    if (isSearchOpen && mobileSearchContainerRef.current) {
+      const input = mobileSearchContainerRef.current.querySelector("input");
+      input?.focus();
+    }
+  }, [isSearchOpen]);
+
   const handleCloseSearch = () => {
+    // 取消防抖计时器，防止关闭时 onSearchChange 被触发两次
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
     setIsSearchOpen(false);
     setLocalQuery("");
     onSearchChange("");
@@ -46,7 +66,7 @@ export function ArticleListHeader({
     <div className="flex items-center gap-2 min-w-0">
       {/* 移动端展开搜索态：整行替换为搜索框 + 关闭按钮 */}
       {isSearchOpen && (
-        <div className="flex flex-1 items-center gap-2 md:hidden">
+        <div ref={mobileSearchContainerRef} className="flex flex-1 items-center gap-2 md:hidden">
           <SearchField
             placeholder={t("article.searchPlaceholder")}
             value={localQuery}
@@ -67,7 +87,7 @@ export function ArticleListHeader({
 
       {/* 正常态：Tabs + 桌面搜索框 + 移动搜索图标 */}
       <div
-        className={`flex flex-1 items-center gap-2 min-w-0 ${isSearchOpen ? "hidden md:flex" : ""}`}
+        className={clsx("flex flex-1 items-center gap-2 min-w-0", isSearchOpen && "hidden md:flex")}
       >
         <Tabs
           selectedKey={String(currentCategoryId)}
