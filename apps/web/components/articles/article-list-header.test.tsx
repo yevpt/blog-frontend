@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import type { CategoryTabItem } from "@repo/api";
 import { ArticleListHeader } from "./article-list-header";
@@ -135,5 +136,50 @@ describe("ArticleListHeader", () => {
     fireEvent.click(screen.getByText("编程"));
 
     expect(onCategoryChange).toHaveBeenCalledWith(1);
+  });
+
+  it("渲染移动端搜索图标按钮", () => {
+    render(
+      <ArticleListHeader
+        categories={mockCategories}
+        currentCategoryId={0}
+        onCategoryChange={vi.fn()}
+        searchQuery=""
+        onSearchChange={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "搜索" })).toBeTruthy();
+  });
+
+  it("点击搜索图标后显示关闭按钮", async () => {
+    const user = userEvent.setup();
+    render(
+      <ArticleListHeader
+        categories={mockCategories}
+        currentCategoryId={0}
+        onCategoryChange={vi.fn()}
+        searchQuery=""
+        onSearchChange={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "搜索" }));
+    expect(screen.getByRole("button", { name: "关闭搜索" })).toBeTruthy();
+  });
+
+  it("点击关闭搜索后立即调用 onSearchChange('')", async () => {
+    const user = userEvent.setup();
+    const onSearchChange = vi.fn();
+    render(
+      <ArticleListHeader
+        categories={mockCategories}
+        currentCategoryId={0}
+        onCategoryChange={vi.fn()}
+        searchQuery=""
+        onSearchChange={onSearchChange}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "搜索" }));
+    await user.click(screen.getByRole("button", { name: "关闭搜索" }));
+    expect(onSearchChange).toHaveBeenCalledWith("");
   });
 });
