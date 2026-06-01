@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import type { ReactNode } from "react";
 import { SvgSprite } from "@repo/icons";
 import { SiteFooter } from "@/components/footer";
@@ -26,12 +25,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <body>
-        {/* beforeInteractive 由 Next.js 注入 head，避免在 JSX 中手写 head/script/style */}
-        <Script
-          id="theme-init"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
-        />
+        {/* 主题初始化脚本：必须在 body 首行同步执行，防止 FOUC */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <ThemeProvider>
           <LocaleProvider>
             <SessionProvider user={session?.user ?? null}>
