@@ -4,6 +4,22 @@
 @source "../../ui/src";
 @source "../../hooks/src";
 
+/*
+  dark 变体：匹配 .dark 类（显式深色）或媒体查询（系统深色，且未被 .light 覆盖）。
+  Tailwind 编译时会为所有使用 dark: 前缀的工具类以及 @variant dark { } 块
+  分别生成这两条规则，深色配置只需在源码写一次。
+*/
+@custom-variant dark {
+  &.dark {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:not(.light) {
+      @slot;
+    }
+  }
+}
+
 /* 这里定义的是整个 monorepo 共享的设计令牌，两个应用都会使用同一套颜色语义。 */
 @theme {
   --color-background: hsl(0 0% 100%);
@@ -29,39 +45,39 @@ html {
   color-scheme: light;
 }
 
-html.dark {
-  color-scheme: dark;
-}
-
 body {
   margin: 0;
   /* 使用 CSS 变量确保与 Tailwind bg-background 保持一致 */
   background: var(--color-background);
-  color: hsl(222.2 84% 4.9%);
+  color: var(--color-foreground);
 }
 
-/* 暗色主题令牌覆盖：当 documentElement 上有 .dark 类时生效 */
-.dark {
-  --color-background: hsl(222.2 84% 4.9%);
-  --color-foreground: hsl(210 40% 98%);
-  --color-card: hsl(222.2 84% 4.9%);
-  --color-card-foreground: hsl(210 40% 98%);
-  --color-primary: hsl(210 40% 98%);
-  --color-primary-foreground: hsl(222.2 47.4% 11.2%);
-  --color-secondary: hsl(217.2 32.6% 17.5%);
-  --color-secondary-foreground: hsl(210 40% 98%);
-  --color-muted: hsl(217.2 32.6% 17.5%);
-  --color-muted-foreground: hsl(215 20.2% 65.1%);
-  --color-accent: hsl(217.2 32.6% 17.5%);
-  --color-accent-foreground: hsl(210 40% 98%);
-  --color-border: hsl(217.2 32.6% 17.5%);
-  --color-input: hsl(217.2 32.6% 17.5%);
-  --color-ring: hsl(212.7 26.8% 83.9%);
-}
-
-.dark body {
-  background: hsl(222.2 84% 4.9%);
-  color: hsl(210 40% 98%);
+/*
+  深色主题令牌：通过 @custom-variant dark 同时覆盖 .dark 类和系统媒体查询。
+  Tailwind 编译输出：
+    :root.dark { ... }
+    @media (prefers-color-scheme: dark) { :root:not(.light) { ... } }
+  深色颜色值仅在此处定义一次。
+*/
+:root {
+  @variant dark {
+    --color-background: hsl(222.2 84% 4.9%);
+    --color-foreground: hsl(210 40% 98%);
+    --color-card: hsl(222.2 84% 4.9%);
+    --color-card-foreground: hsl(210 40% 98%);
+    --color-primary: hsl(210 40% 98%);
+    --color-primary-foreground: hsl(222.2 47.4% 11.2%);
+    --color-secondary: hsl(217.2 32.6% 17.5%);
+    --color-secondary-foreground: hsl(210 40% 98%);
+    --color-muted: hsl(217.2 32.6% 17.5%);
+    --color-muted-foreground: hsl(215 20.2% 65.1%);
+    --color-accent: hsl(217.2 32.6% 17.5%);
+    --color-accent-foreground: hsl(210 40% 98%);
+    --color-border: hsl(217.2 32.6% 17.5%);
+    --color-input: hsl(217.2 32.6% 17.5%);
+    --color-ring: hsl(212.7 26.8% 83.9%);
+    color-scheme: dark;
+  }
 }
 
 /* 心形点赞跳动动效，用于 ArticleCardStats 的 heart 图标 */
