@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { Pagination } from "@repo/ui";
 import type { ArticlePageResp, CategoryTabItem } from "@repo/api";
 import { ArticleListHeader } from "./article-list-header";
@@ -26,28 +26,40 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
   const [currentPage, setCurrentPage] = useState(1);
   const [pageData, setPageData] = useState(initialPage);
   const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
+  // TODO: 待后端支持文字搜索接口后，在 fetchPage 中加入 search 参数
   const [searchQuery, setSearchQuery] = useState("");
 
   const allCategories = useMemo(() => [ALL_CATEGORY, ...categories], [categories]);
 
+  const abortRef = useRef<AbortController | null>(null);
+
   const fetchPage = useCallback(async (categoryId: number, page: number) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setIsLoading(true);
     try {
       const params = new URLSearchParams({ page: String(page) });
       if (categoryId !== ALL_CATEGORY_ID) params.set("category_id", String(categoryId));
-      const res = await fetch(`/api/articles?${params.toString()}`);
+      const res = await fetch(`/api/articles?${params.toString()}`, {
+        signal: controller.signal,
+      });
       if (!res.ok) throw new Error("fetch failed");
       const data: ArticlePageResp = await res.json();
       setPageData(data);
-    } catch {
-      // 保留已有数据，不显示错误
+    } catch (err) {
+      if ((err as { name?: string }).name !== "AbortError") {
+        setFetchError(true);
+      }
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) setIsLoading(false);
     }
   }, []);
 
   const handleCategoryChange = useCallback(
     (id: number) => {
+      setFetchError(false);
       setCurrentCategoryId(id);
       setCurrentPage(1);
       void fetchPage(id, 1);
@@ -57,6 +69,7 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
 
   const handlePageChange = useCallback(
     (page: number) => {
+      setFetchError(false);
       setCurrentPage(page);
       void fetchPage(currentCategoryId, page);
     },
@@ -83,6 +96,10 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
           <ArticleCard key={article.id} article={article} />
         ))}
       </div>
+
+      {fetchError && (
+        <p className="mt-4 text-center text-sm text-muted-foreground">加载失败，请稍后重试</p>
+      )}
 
       {pageData.pages > 1 && (
         <Pagination

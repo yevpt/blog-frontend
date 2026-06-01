@@ -49,6 +49,8 @@ function buildMockInitialPage(): ArticlePageResp {
   };
 }
 
+const MOCK_INITIAL_PAGE = buildMockInitialPage();
+
 export default function Home() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -59,7 +61,7 @@ export default function Home() {
       <div className="mt-10 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 items-start">
         {/* 主内容区 */}
         <div className="min-w-0">
-          <ArticleSection initialPage={buildMockInitialPage()} categories={MOCK_CATEGORIES} />
+          <ArticleSection initialPage={MOCK_INITIAL_PAGE} categories={MOCK_CATEGORIES} />
         </div>
 
         {/* 右侧栏（移动端排在后面，PC 端固定在右侧）*/}
