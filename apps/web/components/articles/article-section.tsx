@@ -6,6 +6,7 @@ import type { ArticlePageResp, CategoryTabItem } from "@repo/api";
 import { ArticleListHeader } from "./article-list-header";
 import { ArticleCard } from "./article-card";
 import { ArticleCardSkeleton } from "./article-card-skeleton";
+import { CommentModal } from "@/components/comments";
 
 const ALL_CATEGORY_ID = 0;
 
@@ -30,6 +31,11 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
   const [fetchError, setFetchError] = useState(false);
   // TODO: 待后端支持文字搜索接口后，在 fetchPage 中加入 search 参数
   const [searchQuery, setSearchQuery] = useState("");
+  const [commentModal, setCommentModal] = useState<{ open: boolean; title: string; type: string }>({
+    open: false,
+    title: "",
+    type: "",
+  });
 
   const allCategories = useMemo(() => [ALL_CATEGORY, ...categories], [categories]);
 
@@ -111,7 +117,13 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
       >
         {isLoading
           ? Array.from({ length: skeletonCount }, (_, i) => <ArticleCardSkeleton key={i} />)
-          : pageData.list.map((article) => <ArticleCard key={article.id} article={article} />)}
+          : pageData.list.map((article) => (
+              <ArticleCard
+                key={article.id}
+                article={article}
+                onCommentClick={(meta) => setCommentModal({ open: true, ...meta })}
+              />
+            ))}
       </div>
 
       {fetchError && (
@@ -126,6 +138,13 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
           className="mt-8"
         />
       )}
+
+      <CommentModal
+        open={commentModal.open}
+        title={commentModal.title}
+        type={commentModal.type}
+        onClose={() => setCommentModal((s) => ({ ...s, open: false }))}
+      />
     </section>
   );
 }
