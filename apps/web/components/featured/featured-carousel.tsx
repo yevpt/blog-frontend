@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
 import { Carousel } from "@repo/ui";
-import { SvgIcon } from "@repo/icons";
+import { cn } from "@repo/ui";
 import type { FeaturedPost } from "@/app/_mock/types";
 import { FeaturedCarouselSlide } from "./featured-carousel-slide";
 
-// CarouselApi：从 Carousel.Root 的 setApi prop 类型中推导，避免直接依赖 embla-carousel-react
+const AUTO_PLAY_INTERVAL = 5000;
+
+// CarouselApi 类型从 Carousel.Root setApi prop 推导
 type CarouselApi = Parameters<NonNullable<React.ComponentProps<typeof Carousel.Root>["setApi"]>>[0];
 
 interface FeaturedCarouselProps {
@@ -19,18 +20,23 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // 用于重置进度条动画的 key（每次切换 +1）
+  const [animKey, setAnimKey] = useState(0);
 
   // Embla select 事件同步 currentIndex
   useEffect(() => {
     if (!api) return;
-    const onSelect = () => setCurrentIndex(api.selectedScrollSnap());
+    const onSelect = () => {
+      setCurrentIndex(api.selectedScrollSnap());
+      setAnimKey((k) => k + 1);
+    };
     api.on("select", onSelect);
     return () => {
       api.off("select", onSelect);
     };
   }, [api]);
 
-  // 自动播放（api 不可用时用 state fallback）
+  // 自动播放
   useEffect(() => {
     if (isHovered) {
       if (intervalRef.current) {
@@ -43,9 +49,13 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
       if (api) {
         api.scrollNext();
       } else {
-        setCurrentIndex((prev) => (prev + 1) % posts.length);
+        setCurrentIndex((prev) => {
+          const next = (prev + 1) % posts.length;
+          setAnimKey((k) => k + 1);
+          return next;
+        });
       }
-    }, 4000);
+    }, AUTO_PLAY_INTERVAL);
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -57,6 +67,7 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
   const handleIndicatorClick = useCallback(
     (index: number) => {
       setCurrentIndex(index);
+      setAnimKey((k) => k + 1);
       api?.scrollTo(index);
     },
     [api],
@@ -69,66 +80,47 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
       opts={{ loop: true }}
       setApi={setApi}
       aria-label="推荐文章"
-      className="overflow-hidden rounded-2xl"
+      className="relative w-full overflow-hidden"
+      style={{ height: "100vh", minHeight: "520px" }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* 图片区：Embla 控制横向滑动 */}
-      <div className="relative aspect-video w-full">
-        <Carousel.Content className="h-full">
-          {posts.map((post, index) => (
-            <Carousel.Item key={post.id}>
-              <FeaturedCarouselSlide post={post} isLcpCandidate={index === 0} />
-            </Carousel.Item>
-          ))}
-        </Carousel.Content>
+      <Carousel.Content className="h-full">
+        {posts.map((post, index) => (
+          <Carousel.Item key={post.id} className="h-full">
+            <FeaturedCarouselSlide post={post} isLcpCandidate={index === 0} />
+          </Carousel.Item>
+        ))}
+      </Carousel.Content>
 
-        {/* 指示器叠层 */}
-        <div className="absolute bottom-4 left-0 right-0 z-10 flex items-center justify-center gap-2">
-          {posts.map((post, index) => (
+      {/* 进度条指示器（替换原点状指示器） */}
+      <div className="absolute bottom-4 left-6 right-6 z-20 flex items-center gap-2">
+        {posts.map((post, index) => {
+          const isActive = index === currentIndex;
+          const isDone = index < currentIndex;
+          return (
             <button
               key={post.id}
               onClick={() => handleIndicatorClick(index)}
               aria-label={`第 ${index + 1} 张，共 ${posts.length} 张`}
-              aria-current={index === currentIndex ? "true" : undefined}
-              className={`transition-colors duration-200 ${
-                index === currentIndex ? "text-white" : "text-white/40 hover:text-white/80"
-              }`}
+              aria-current={isActive ? "true" : undefined}
+              className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/25 cursor-pointer relative"
             >
-              <SvgIcon name="droplet-filled" size={12} />
+              <span
+                key={`${animKey}-${index}`}
+                className={cn("absolute inset-y-0 left-0 rounded-full bg-white")}
+                style={
+                  isActive
+                    ? {
+                        animation: `progFill ${AUTO_PLAY_INTERVAL}ms linear forwards`,
+                        animationPlayState: isHovered ? "paused" : "running",
+                      }
+                    : { width: isDone ? "100%" : "0%" }
+                }
+              />
             </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 移动端文字区：cross-fade 由 currentIndex state 驱动 */}
-      <div className="md:hidden relative h-44 overflow-hidden bg-card rounded-b-2xl">
-        {posts.map((post, index) => (
-          <div
-            key={post.id}
-            className={`absolute inset-0 p-4 transition-opacity duration-500 ${
-              index === currentIndex
-                ? "opacity-100 pointer-events-auto"
-                : "opacity-0 pointer-events-none"
-            }`}
-            aria-hidden={index !== currentIndex}
-          >
-            <div className="flex items-start gap-2">
-              <h2 className="flex-1 text-lg font-bold text-foreground line-clamp-2">
-                {post.title}
-              </h2>
-              <Link
-                href={post.href}
-                aria-label="阅读文章"
-                tabIndex={index === currentIndex ? 0 : -1}
-                className="shrink-0 mt-0.5 text-muted-foreground hover:text-foreground transition-colors duration-200"
-              >
-                <SvgIcon name="arrow-up-right" size={20} />
-              </Link>
-            </div>
-            <p className="mt-1 text-sm text-muted-foreground line-clamp-3">{post.excerpt}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </Carousel.Root>
   );

@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, act, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -44,6 +45,7 @@ vi.mock("@repo/icons", () => ({
 }));
 
 vi.mock("@repo/ui", () => ({
+  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   Button: ({
     href,
     children,
@@ -72,32 +74,34 @@ vi.mock("@repo/ui", () => ({
       onMouseLeave,
       setApi: _setApi,
       "aria-label": ariaLabel,
+      style,
     }: {
       children: ReactNode;
       className?: string;
+      style?: CSSProperties;
       onMouseEnter?: () => void;
       onMouseLeave?: () => void;
       setApi?: (api: null) => void;
       "aria-label"?: string;
       opts?: object;
-    }) => {
-      // 模拟 setApi(null)：jsdom 中 Embla 不初始化，故不调用 setApi
-      return (
-        <div
-          role="region"
-          aria-label={ariaLabel}
-          className={className}
-          onMouseEnter={onMouseEnter}
-          onMouseLeave={onMouseLeave}
-        >
-          {children}
-        </div>
-      );
-    },
+    }) => (
+      <div
+        role="region"
+        aria-label={ariaLabel}
+        className={className}
+        style={style}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
+        {children}
+      </div>
+    ),
     Content: ({ children, className }: { children: ReactNode; className?: string }) => (
       <div className={className}>{children}</div>
     ),
-    Item: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+    Item: ({ children, className }: { children: ReactNode; className?: string }) => (
+      <div className={className}>{children}</div>
+    ),
   },
 }));
 
@@ -146,9 +150,9 @@ describe("FeaturedCarousel", () => {
     expect(screen.getAllByText("第三篇文章标题").length).toBeGreaterThan(0);
   });
 
-  it("渲染正确数量的指示器按钮", () => {
+  it("渲染正确数量的进度条指示器按钮", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    const indicators = screen.getAllByTestId("icon-droplet-filled");
+    const indicators = screen.getAllByRole("button", { name: /第 \d+ 张，共/ });
     expect(indicators).toHaveLength(mockPosts.length);
   });
 
@@ -162,13 +166,6 @@ describe("FeaturedCarousel", () => {
   it("轮播容器具有正确的 region aria-label", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
     expect(screen.getByRole("region", { name: "推荐文章" })).toBeTruthy();
-  });
-
-  it("移动端文字区的阅读文章图标链接 href 正确", () => {
-    render(<FeaturedCarousel posts={mockPosts} />);
-    const links = screen.getAllByRole("link", { name: "阅读文章" });
-    expect(links.length).toBeGreaterThanOrEqual(1);
-    expect(links.some((l) => l.getAttribute("href") === "/articles/first")).toBe(true);
   });
 
   it("posts 为空时不渲染", () => {
@@ -194,29 +191,29 @@ describe("FeaturedCarousel", () => {
 });
 
 describe("FeaturedCarousel 自动轮播（fake timers）", () => {
-  it("自动轮播：4 秒后切换到第二张", () => {
+  it("自动轮播：5 秒后切换到第二张", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
     act(() => {
-      vi.advanceTimersByTime(4000);
+      vi.advanceTimersByTime(5000);
     });
     expect(screen.getByLabelText("第 2 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 
-  it("自动轮播：8 秒后切换到第三张", () => {
+  it("自动轮播：10 秒后切换到第三张", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
     act(() => {
-      vi.advanceTimersByTime(8000);
+      vi.advanceTimersByTime(10000);
     });
     expect(screen.getByLabelText("第 3 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 
-  it("自动轮播：12 秒后循环回到第一张", () => {
+  it("自动轮播：15 秒后循环回到第一张", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
     act(() => {
-      vi.advanceTimersByTime(12000);
+      vi.advanceTimersByTime(15000);
     });
     expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
@@ -228,7 +225,7 @@ describe("FeaturedCarousel 自动轮播（fake timers）", () => {
       fireEvent.mouseEnter(screen.getByRole("region", { name: "推荐文章" }));
     });
     act(() => {
-      vi.advanceTimersByTime(4000);
+      vi.advanceTimersByTime(5000);
     });
     expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
@@ -241,14 +238,14 @@ describe("FeaturedCarousel 自动轮播（fake timers）", () => {
       fireEvent.mouseEnter(carousel);
     });
     act(() => {
-      vi.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(6000);
     });
     expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
     act(() => {
       fireEvent.mouseLeave(carousel);
     });
     act(() => {
-      vi.advanceTimersByTime(4000);
+      vi.advanceTimersByTime(5000);
     });
     expect(screen.getByLabelText("第 2 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });

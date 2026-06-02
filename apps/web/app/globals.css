@@ -1,1 +1,11 @@
 @import "@repo/styles/base.css";
+
+/* 轮播进度条填充动画 */
+@keyframes progFill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
