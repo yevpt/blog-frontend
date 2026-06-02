@@ -1,21 +1,36 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { Carousel } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import type { FeaturedPost } from "@/app/_mock/types";
 import { FeaturedCarouselSlide } from "./featured-carousel-slide";
-import { FeaturedCarouselIndicators } from "./featured-carousel-indicators";
+
+// CarouselApi：从 Carousel.Root 的 setApi prop 类型中推导，避免直接依赖 embla-carousel-react
+type CarouselApi = Parameters<NonNullable<React.ComponentProps<typeof Carousel.Root>["setApi"]>>[0];
 
 interface FeaturedCarouselProps {
   posts: FeaturedPost[];
 }
 
 export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
+  const [api, setApi] = useState<CarouselApi | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Embla select 事件同步 currentIndex
+  useEffect(() => {
+    if (!api) return;
+    const onSelect = () => setCurrentIndex(api.selectedScrollSnap());
+    api.on("select", onSelect);
+    return () => {
+      api.off("select", onSelect);
+    };
+  }, [api]);
+
+  // 自动播放（api 不可用时用 state fallback）
   useEffect(() => {
     if (isHovered) {
       if (intervalRef.current) {
@@ -25,7 +40,11 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
       return;
     }
     intervalRef.current = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % posts.length);
+      if (api) {
+        api.scrollNext();
+      } else {
+        setCurrentIndex((prev) => (prev + 1) % posts.length);
+      }
     }, 4000);
     return () => {
       if (intervalRef.current) {
@@ -33,38 +52,56 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
         intervalRef.current = null;
       }
     };
-  }, [isHovered, posts.length]);
+  }, [api, isHovered, posts.length]);
+
+  const handleIndicatorClick = useCallback(
+    (index: number) => {
+      setCurrentIndex(index);
+      api?.scrollTo(index);
+    },
+    [api],
+  );
 
   if (posts.length === 0) return null;
 
   return (
-    <div
-      role="region"
+    <Carousel.Root
+      opts={{ loop: true }}
+      setApi={setApi}
       aria-label="推荐文章"
       className="overflow-hidden rounded-2xl"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* 图片区：固定 16:9，各幻灯片在此叠层切换 */}
+      {/* 图片区：Embla 控制横向滑动 */}
       <div className="relative aspect-video w-full">
-        {posts.map((post, index) => (
-          <FeaturedCarouselSlide
-            key={post.id}
-            post={post}
-            isActive={index === currentIndex}
-            isLcpCandidate={index === 0}
-          />
-        ))}
-        <div className="absolute bottom-4 left-0 right-0 z-10">
-          <FeaturedCarouselIndicators
-            count={posts.length}
-            currentIndex={currentIndex}
-            onSelect={setCurrentIndex}
-          />
+        <Carousel.Content className="h-full">
+          {posts.map((post, index) => (
+            <Carousel.Item key={post.id}>
+              <FeaturedCarouselSlide post={post} isLcpCandidate={index === 0} />
+            </Carousel.Item>
+          ))}
+        </Carousel.Content>
+
+        {/* 指示器叠层 */}
+        <div className="absolute bottom-4 left-0 right-0 z-10 flex items-center justify-center gap-2">
+          {posts.map((post, index) => (
+            <button
+              key={post.id}
+              onClick={() => handleIndicatorClick(index)}
+              aria-label={`第 ${index + 1} 张，共 ${posts.length} 张`}
+              aria-current={index === currentIndex ? "true" : undefined}
+              className={`transition-colors duration-200 ${
+                index === currentIndex ? "text-white" : "text-white/40 hover:text-white/80"
+              }`}
+            >
+              <SvgIcon name="droplet-filled" size={12} />
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* 移动端文字区：固定高度 + 各幻灯片内容叠层淡入淡出，防止高度跳动 */}
+      {/* 移动端文字区：cross-fade 由 currentIndex state 驱动 */}
       <div className="md:hidden relative h-44 overflow-hidden bg-card rounded-b-2xl">
         {posts.map((post, index) => (
           <div
@@ -93,6 +130,6 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
           </div>
         ))}
       </div>
-    </div>
+    </Carousel.Root>
   );
 }

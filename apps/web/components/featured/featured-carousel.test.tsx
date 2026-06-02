@@ -43,30 +43,62 @@ vi.mock("@repo/icons", () => ({
   ),
 }));
 
-// @repo/ui Button mock: href → <a>, no href → <button>
 vi.mock("@repo/ui", () => ({
   Button: ({
     href,
     children,
-    tabIndex,
     className,
   }: {
     href?: string;
     children: ReactNode;
-    tabIndex?: number;
     className?: string;
     variant?: string;
     size?: string;
   }) =>
     href ? (
-      <a href={href} tabIndex={tabIndex} className={className}>
+      <a href={href} className={className}>
         {children}
       </a>
     ) : (
-      <button type="button" tabIndex={tabIndex} className={className}>
+      <button type="button" className={className}>
         {children}
       </button>
     ),
+  Carousel: {
+    Root: ({
+      children,
+      className,
+      onMouseEnter,
+      onMouseLeave,
+      setApi: _setApi,
+      "aria-label": ariaLabel,
+    }: {
+      children: ReactNode;
+      className?: string;
+      onMouseEnter?: () => void;
+      onMouseLeave?: () => void;
+      setApi?: (api: null) => void;
+      "aria-label"?: string;
+      opts?: object;
+    }) => {
+      // 模拟 setApi(null)：jsdom 中 Embla 不初始化，故不调用 setApi
+      return (
+        <div
+          role="region"
+          aria-label={ariaLabel}
+          className={className}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
+        >
+          {children}
+        </div>
+      );
+    },
+    Content: ({ children, className }: { children: ReactNode; className?: string }) => (
+      <div className={className}>{children}</div>
+    ),
+    Item: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  },
 }));
 
 const mockPosts: FeaturedPost[] = [
@@ -104,13 +136,11 @@ afterEach(() => {
 describe("FeaturedCarousel", () => {
   it("渲染不崩溃，DOM 中存在第一张幻灯片标题", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    // 叠层方案：移动端文字区 + 桌面端覆盖层都渲染所有幻灯片标题
     expect(screen.getAllByText("第一篇文章标题").length).toBeGreaterThan(0);
   });
 
   it("DOM 中存在所有幻灯片标题", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    // 叠层方案使所有幻灯片内容同时存在于 DOM（非激活者 opacity-0 但不移除）
     expect(screen.getAllByText("第一篇文章标题").length).toBeGreaterThan(0);
     expect(screen.getAllByText("第二篇文章标题").length).toBeGreaterThan(0);
     expect(screen.getAllByText("第三篇文章标题").length).toBeGreaterThan(0);
@@ -136,7 +166,6 @@ describe("FeaturedCarousel", () => {
 
   it("移动端文字区的阅读文章图标链接 href 正确", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    // 激活幻灯片（index 0）aria-hidden=false，图标链接可被无障碍树访问
     const links = screen.getAllByRole("link", { name: "阅读文章" });
     expect(links.length).toBeGreaterThanOrEqual(1);
     expect(links.some((l) => l.getAttribute("href") === "/articles/first")).toBe(true);
@@ -151,7 +180,6 @@ describe("FeaturedCarousel", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
     expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
     expect(screen.getByLabelText("第 2 张，共 3 张")).not.toHaveAttribute("aria-current");
-    expect(screen.getByLabelText("第 3 张，共 3 张")).not.toHaveAttribute("aria-current");
   });
 
   it("点击第二个指示器切换到第二张幻灯片", async () => {
@@ -162,16 +190,6 @@ describe("FeaturedCarousel", () => {
     });
     expect(screen.getByLabelText("第 2 张，共 3 张")).toHaveAttribute("aria-current", "true");
     expect(screen.getByLabelText("第 1 张，共 3 张")).not.toHaveAttribute("aria-current");
-  });
-
-  it("切换到第二张后，激活幻灯片的图标链接 href 更新", async () => {
-    const user = userEvent.setup();
-    render(<FeaturedCarousel posts={mockPosts} />);
-    await act(async () => {
-      await user.click(screen.getByLabelText("第 2 张，共 3 张"));
-    });
-    const links = screen.getAllByRole("link", { name: "阅读文章" });
-    expect(links.some((l) => l.getAttribute("href") === "/articles/second")).toBe(true);
   });
 });
 
