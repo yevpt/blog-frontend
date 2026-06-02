@@ -16,7 +16,7 @@ export {
   type TabsPanelProps,
   type TabsVariant,
 } from "./tabs";
-export { Input, type InputProps } from "./input";
+export { Input, type InputProps, Label, HintText } from "./input";
 export { SearchField, type SearchFieldProps } from "./search-field";
 export {
   TagGroup,
