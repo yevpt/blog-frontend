@@ -1,0 +1,108 @@
+"use client";
+
+import type { ReactNode } from "react";
+import type {
+  ButtonProps as AriaButtonProps,
+  TooltipProps as AriaTooltipProps,
+  TooltipTriggerComponentProps as AriaTooltipTriggerComponentProps,
+} from "react-aria-components";
+import {
+  Button as AriaButton,
+  OverlayArrow as AriaOverlayArrow,
+  Tooltip as AriaTooltip,
+  TooltipTrigger as AriaTooltipTrigger,
+} from "react-aria-components";
+import { cn } from "../lib/utils";
+
+interface TooltipProps
+  extends AriaTooltipTriggerComponentProps, Omit<AriaTooltipProps, "children"> {
+  title: ReactNode;
+  description?: ReactNode;
+  arrow?: boolean;
+  delay?: number;
+}
+
+export const Tooltip = ({
+  title,
+  description,
+  children,
+  arrow = false,
+  delay = 300,
+  closeDelay = 0,
+  trigger,
+  isDisabled,
+  isOpen,
+  defaultOpen,
+  offset = 6,
+  crossOffset,
+  placement = "top",
+  onOpenChange,
+  ...tooltipProps
+}: TooltipProps) => {
+  const isTopOrBottomLeft = ["top left", "top end", "bottom left", "bottom end"].includes(
+    placement as string,
+  );
+  const isTopOrBottomRight = ["top right", "top start", "bottom right", "bottom start"].includes(
+    placement as string,
+  );
+  const calculatedCrossOffset = isTopOrBottomLeft ? -12 : isTopOrBottomRight ? 12 : 0;
+
+  return (
+    <AriaTooltipTrigger
+      {...{ trigger, delay, closeDelay, isDisabled, isOpen, defaultOpen, onOpenChange }}
+    >
+      {children}
+      <AriaTooltip
+        {...tooltipProps}
+        offset={offset}
+        placement={placement}
+        crossOffset={crossOffset ?? calculatedCrossOffset}
+        className={({ isEntering, isExiting }) =>
+          cn(isEntering && "ease-out animate-in", isExiting && "ease-in animate-out")
+        }
+      >
+        {({ isEntering, isExiting }) => (
+          <div
+            className={cn(
+              "z-50 flex max-w-xs flex-col items-start gap-1 rounded-lg bg-gray-900 px-3 shadow-lg",
+              description ? "py-3" : "py-2",
+              isEntering &&
+                "ease-out animate-in fade-in zoom-in-95 in-placement-top:slide-in-from-bottom-0.5 in-placement-bottom:slide-in-from-top-0.5",
+              isExiting &&
+                "ease-in animate-out fade-out zoom-out-95 in-placement-top:slide-out-to-bottom-0.5 in-placement-bottom:slide-out-to-top-0.5",
+            )}
+          >
+            <span className="text-xs font-semibold text-white">{title}</span>
+            {description && (
+              <span className="text-xs font-medium text-gray-300">{description}</span>
+            )}
+            {arrow && (
+              <AriaOverlayArrow>
+                <svg
+                  viewBox="0 0 100 100"
+                  className="size-2.5 fill-gray-900 in-placement-bottom:rotate-180"
+                >
+                  <path d="M0,0 L35.858,35.858 Q50,50 64.142,35.858 L100,0 Z" />
+                </svg>
+              </AriaOverlayArrow>
+            )}
+          </div>
+        )}
+      </AriaTooltip>
+    </AriaTooltipTrigger>
+  );
+};
+
+export const TooltipTrigger = ({ children, className, ...buttonProps }: AriaButtonProps) => (
+  <AriaButton
+    {...buttonProps}
+    className={(values) =>
+      cn(
+        "h-max w-max outline-hidden",
+        typeof className === "function" ? className(values) : className,
+      )
+    }
+  >
+    {children}
+  </AriaButton>
+);
