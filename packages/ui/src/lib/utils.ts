@@ -5,3 +5,10 @@ import { twMerge } from "tailwind-merge";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/**
+ * no-op：供 Tailwind IntelliSense 对样式对象排序，不影响运行时。
+ */
+export function sortCx<T>(classes: T): T {
+  return classes;
+}
