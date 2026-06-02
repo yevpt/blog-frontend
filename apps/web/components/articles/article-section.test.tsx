@@ -34,6 +34,7 @@ vi.mock("@repo/icons", () => ({
 }));
 
 vi.mock("@repo/ui", () => ({
+  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   Pagination: ({
     currentPage,
     totalPages,

@@ -101,7 +101,14 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
         onSearchChange={setSearchQuery}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      <div
+        className="mt-6"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          gap: "20px",
+        }}
+      >
         {isLoading
           ? Array.from({ length: skeletonCount }, (_, i) => <ArticleCardSkeleton key={i} />)
           : pageData.list.map((article) => <ArticleCard key={article.id} article={article} />)}

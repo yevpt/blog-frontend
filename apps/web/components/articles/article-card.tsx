@@ -1,14 +1,19 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { SvgIcon } from "@repo/icons";
 import type { ArticleListItemResp } from "@repo/api";
 import { ArticleCardStats } from "./article-card-stats";
 
 interface ArticleCardProps {
   article: ArticleListItemResp;
+  onCommentClick?: (meta: { title: string; type: string }) => void;
 }
 
-export function ArticleCard({ article }: ArticleCardProps) {
+export function ArticleCard({ article, onCommentClick }: ArticleCardProps) {
+  const [liked, setLiked] = useState(false);
+
   const formattedDate = new Intl.DateTimeFormat("zh-CN", {
     year: "numeric",
     month: "long",
@@ -17,68 +22,69 @@ export function ArticleCard({ article }: ArticleCardProps) {
 
   const href = `/articles/${article.id}`;
 
+  const handleCommentClick = () => {
+    onCommentClick?.({
+      title: article.title,
+      type: article.category?.name ?? "文章",
+    });
+  };
+
   return (
-    <article>
-      {/* 封面图：hover 时内部图片放大 */}
+    <article className="flex flex-col bg-card rounded-xl overflow-hidden max-sm:rounded-none max-sm:shadow-none max-sm:border-0 max-sm:border-b max-sm:border-border">
+      {/* 封面图：hover 时图片放大 */}
       {article.cover_img_url && (
-        <Link
-          href={href}
-          className="block overflow-hidden rounded-xl group"
-          aria-hidden
-          tabIndex={-1}
-        >
+        <Link href={href} className="block overflow-hidden" aria-hidden tabIndex={-1}>
           <div className="relative aspect-video">
             <Image
               src={article.cover_img_url}
               alt={article.title}
               fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              className="object-cover transition-transform duration-300 hover:scale-[1.06]"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
           </div>
         </Link>
       )}
 
-      {/* 标题行：左侧标题 + 右侧外链图标，与标题第一行垂直对齐 */}
-      <div className="mt-3 flex items-start gap-2">
-        <h3 className="flex-1 font-semibold text-base md:text-lg line-clamp-2">
-          <Link href={href} className="hover:text-muted-foreground transition-colors duration-200">
+      {/* 卡片体 */}
+      <div className="flex flex-col flex-1 p-4 gap-2">
+        {/* 分类（标题上方） */}
+        {article.category && (
+          <span className="text-[11px] font-bold uppercase tracking-widest text-accent">
+            {article.category.name}
+          </span>
+        )}
+
+        {/* 标题 */}
+        <h3 className="text-base font-bold leading-snug line-clamp-2">
+          <Link href={href} className="hover:text-accent transition-colors duration-200">
             {article.title}
           </Link>
         </h3>
-        <Link
-          href={href}
-          aria-label="阅读文章"
-          className="shrink-0 mt-0.5 text-muted-foreground hover:text-foreground transition-colors duration-200"
-        >
-          <SvgIcon name="arrow-up-right" size={20} />
-        </Link>
-      </div>
 
-      {/* 分类标签（移至标题下方）*/}
-      {article.category && (
-        <div className="mt-2">
-          <span className="inline-block bg-secondary text-secondary-foreground rounded-full px-3 py-1 text-xs">
-            {article.category.name}
-          </span>
+        {/* 摘要（3 行截断） */}
+        {article.short_content && (
+          <p
+            className="text-[13px] text-muted-foreground line-clamp-3"
+            style={{ lineHeight: "1.72" }}
+          >
+            {article.short_content}
+          </p>
+        )}
+
+        {/* 底部行：日期（左）+ 统计（右） */}
+        <div className="mt-auto pt-2 flex items-center justify-between">
+          <time dateTime={article.created_at} className="text-xs text-muted-foreground">
+            {formattedDate}
+          </time>
+          <ArticleCardStats
+            likes={article.like_count}
+            comments={article.comment_count}
+            liked={liked}
+            onLikeToggle={() => setLiked((v) => !v)}
+            onCommentClick={handleCommentClick}
+          />
         </div>
-      )}
-
-      {/* 文章摘要 */}
-      {article.short_content && (
-        <p className="mt-1 text-sm text-muted-foreground line-clamp-3">{article.short_content}</p>
-      )}
-
-      {/* 底部：发布日期 + 统计数据 */}
-      <div className="mt-3 flex justify-between items-center">
-        <time dateTime={article.created_at} className="text-xs text-muted-foreground">
-          {formattedDate}
-        </time>
-        <ArticleCardStats
-          views={article.read_count}
-          likes={article.like_count}
-          comments={article.comment_count}
-        />
       </div>
     </article>
   );
