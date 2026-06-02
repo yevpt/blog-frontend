@@ -5,10 +5,11 @@ import { SnippetActions } from "./snippet-actions";
 
 interface SnippetCardProps {
   snippet: Snippet;
+  onCommentClick?: () => void;
 }
 
 // 单条碎语，无边框，通过间距分隔（与 ArticleCard 一致）
-export function SnippetCard({ snippet }: SnippetCardProps) {
+export function SnippetCard({ snippet, onCommentClick }: SnippetCardProps) {
   const relativeTime = formatRelativeTime(snippet.publishedAt);
 
   return (
@@ -40,7 +41,7 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
           <span>{snippet.likes} 喜欢</span>
           <span>{snippet.comments} 评论</span>
         </div>
-        <SnippetActions />
+        <SnippetActions onCommentClick={onCommentClick} />
       </div>
     </article>
   );

@@ -17,13 +17,15 @@ vi.mock("@repo/ui", () => ({
   Button: ({
     children,
     variant,
+    onPress,
     ...props
   }: {
     children: ReactNode;
     variant?: string;
+    onPress?: () => void;
     [key: string]: unknown;
   }) => (
-    <button data-variant={variant} {...props}>
+    <button data-variant={variant} onClick={onPress} {...props}>
       {children}
     </button>
   ),
@@ -169,17 +171,16 @@ describe("SnippetsSection", () => {
     const user = userEvent.setup();
     render(<SnippetsSection snippets={[makeSnippet("1", SHORT_CONTENT)]} />);
 
-    // 获取第一个喜欢 aria-label 按钮
+    // 初始状态：喜欢按钮存在，aria-pressed=false
     const likeBtn = screen.getByLabelText("喜欢");
-    // 初始状态应带 text-muted-foreground 类（未激活）
-    expect(likeBtn.className).toContain("text-muted-foreground");
+    expect(likeBtn).toHaveAttribute("aria-pressed", "false");
 
     await act(async () => {
       await user.click(likeBtn);
     });
 
-    // 点击后变为红色（激活）
-    expect(likeBtn.className).toContain("text-red-500");
+    // 点击后：aria-label 变为"取消喜欢"，aria-pressed=true
+    expect(screen.getByLabelText("取消喜欢")).toHaveAttribute("aria-pressed", "true");
   });
 
   it("snippets 为空时仍渲染区块标题和操作按钮", () => {

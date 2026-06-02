@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@repo/ui";
 import { useLocale } from "@repo/hooks";
 import { Button } from "@repo/ui";
 import type { Visitor } from "../../app/_mock/types";
@@ -16,25 +17,30 @@ export function RecentVisitors({ visitors }: RecentVisitorsProps) {
     <section className="rounded-xl border border-border/50 p-4">
       <h3 className="text-sm font-semibold mb-3">{t("sidebar.recentVisitors")}</h3>
 
-      {/* 3×3 头像网格，最多显示 9 人 */}
-      <div className="grid grid-cols-3 gap-2">
-        {visitors.slice(0, 9).map((visitor) => (
-          <div key={visitor.id} className="relative group">
+      {/* 2 列访客网格，最多 10 人 */}
+      <div className="grid grid-cols-2 gap-1">
+        {visitors.slice(0, 10).map((visitor) => (
+          <div
+            key={visitor.id}
+            className="flex items-center gap-2 p-1.5 rounded-xl cursor-pointer hover:bg-accent/10 active:scale-95 transition-all"
+          >
             <img
               src={visitor.avatar}
               alt={visitor.name}
-              className="w-full aspect-square rounded-lg object-cover"
+              className="w-9 h-9 rounded-full object-cover flex-shrink-0"
             />
-            {/* Tooltip：hover 时显示昵称 + 来访时间 */}
-            <div
-              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1
-                          bg-foreground text-background text-xs rounded whitespace-nowrap
-                          opacity-0 group-hover:opacity-100 transition-opacity duration-200
-                          pointer-events-none z-10"
-            >
-              {visitor.name}
-              <br />
-              <span className="opacity-70">{formatRelativeTime(visitor.visitedAt)}</span>
+            <div className="min-w-0">
+              <span className="text-xs font-semibold text-foreground truncate block">
+                {visitor.name}
+              </span>
+              <span
+                className={cn(
+                  "text-[10px] block truncate",
+                  visitor.isOnline ? "text-emerald-500 font-semibold" : "text-muted-foreground",
+                )}
+              >
+                {visitor.isOnline ? "在线" : `${formatRelativeTime(visitor.visitedAt)}来过`}
+              </span>
             </div>
           </div>
         ))}
