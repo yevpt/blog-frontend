@@ -62,4 +62,9 @@ describe("Home page", () => {
     render(await Page());
     expect(screen.getByTestId("tags-cloud")).toBeInTheDocument();
   });
+
+  it("包含文章区标题", async () => {
+    render(await Page());
+    expect(screen.getByText("近期在写什么")).toBeInTheDocument();
+  });
 });

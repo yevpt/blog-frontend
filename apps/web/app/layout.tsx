@@ -49,7 +49,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                 {/* SvgSprite 将雪碧图注入 DOM，必须在所有使用 SvgIcon 的组件之前渲染 */}
                 <SvgSprite />
                 <SiteNavbar />
-                <main className="flex-1 pt-16">{children}</main>
+                <main className="flex-1 pt-0">{children}</main>
                 <SiteFooter />
               </div>
             </SessionProvider>

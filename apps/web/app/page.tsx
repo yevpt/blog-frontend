@@ -26,27 +26,33 @@ export default async function Home() {
   ]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* 全宽推荐轮播 */}
+    <>
+      {/* 全宽精选轮播 Hero（从顶部开始，覆盖 Navbar） */}
       <FeaturedCarousel posts={featuredPosts} />
 
-      {/* 双栏区域：主内容 + 右侧栏 */}
-      <div className="mt-10 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 items-start">
-        {/* 主内容区 */}
-        <div className="min-w-0">
-          <ArticleSection initialPage={initialPage} categories={categoriesResp.list} />
+      <div className="max-w-[960px] mx-auto px-5 py-9 pb-20">
+        {/* 全宽文章区标题（两列上方） */}
+        <div className="mb-6">
+          <p className="text-xs font-bold tracking-widest uppercase text-accent mb-1">最新文章</p>
+          <h2 className="text-[22px] font-extrabold tracking-tight text-foreground mb-5">
+            近期在写什么
+          </h2>
         </div>
 
-        {/* 右侧栏（移动端排在后面，PC 端固定在右侧）*/}
-        {/* lg:top-20 对应 80px 固定导航栏高度 */}
-        <aside className="lg:sticky lg:top-20">
-          <SnippetsSection snippets={snippets} />
-          <div className="mt-4">
-            <RecentVisitors visitors={visitors} />
-          </div>
-          <TagsCloud tags={tags} />
-        </aside>
+        {/* 两列区域：文章区（含 Tabs）+ 侧边栏 */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_268px] gap-6 items-start">
+          <main className="min-w-0">
+            <ArticleSection initialPage={initialPage} categories={categoriesResp.list} />
+          </main>
+          <aside className="lg:sticky lg:top-[88px]" id="sidebar">
+            <SnippetsSection snippets={snippets} />
+            <div className="mt-4">
+              <RecentVisitors visitors={visitors} />
+            </div>
+            <TagsCloud tags={tags} />
+          </aside>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
