@@ -23,10 +23,10 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   const session = await getSession();
 
-  // 读取主题 Cookie，决定 <html> 的初始 class：
-  //   "dark"   → class="dark"    强制深色
-  //   "light"  → class="light"   强制浅色（CSS 媒体查询不会覆盖）
-  //   其他/无   → 无 class        CSS 媒体查询跟随系统偏好
+  // 读取主题 Cookie，决定 <html> 的首屏 class，避免 hydration 前主题闪烁。
+  // 主题策略与 ThemeProvider 保持一致：
+  //   theme=dark/light → 用户 6 小时内的显式覆盖，服务端直接输出对应 class
+  //   无 cookie/过期/其他值 → 没有用户覆盖，不输出 class，由 CSS 媒体查询跟随系统偏好
   const cookieStore = await cookies();
   const themePref = cookieStore.get("theme")?.value;
   const themeClass = themePref === "dark" ? "dark" : themePref === "light" ? "light" : undefined;

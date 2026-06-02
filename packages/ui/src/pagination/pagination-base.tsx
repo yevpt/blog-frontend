@@ -258,7 +258,6 @@ const Trigger: FC<TriggerProps> = ({
     return cloneElement(children, {
       onClick: handleClick,
       disabled: isDisabled,
-      isDisabled,
       "aria-label": ariaLabel || defaultAriaLabel,
       style: { ...(children.props as HTMLAttributes<HTMLElement>).style, ...style },
       className:

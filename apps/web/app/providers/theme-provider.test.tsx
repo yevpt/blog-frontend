@@ -88,7 +88,8 @@ describe("ThemeProvider", () => {
     });
   });
 
-  it("setTheme('dark') 后 theme 状态变为 dark，并写入 cookie", async () => {
+  it("setTheme('dark') 后 theme 状态变为 dark，并写入 6 小时 cookie", async () => {
+    const cookieSetter = vi.spyOn(document, "cookie", "set");
     render(
       <ThemeProvider>
         <ThemeDisplay />
@@ -101,9 +102,13 @@ describe("ThemeProvider", () => {
 
     expect(screen.getByTestId("theme").textContent).toBe("dark");
     expect(document.cookie).toContain("theme=dark");
+    expect(cookieSetter).toHaveBeenLastCalledWith(
+      expect.stringContaining("theme=dark; path=/; SameSite=Lax; Max-Age=21600"),
+    );
   });
 
-  it("setTheme('light') 后 theme 状态变为 light，并写入 cookie", async () => {
+  it("setTheme('light') 后 theme 状态变为 light，并写入 6 小时 cookie", async () => {
+    const cookieSetter = vi.spyOn(document, "cookie", "set");
     render(
       <ThemeProvider>
         <ThemeDisplay />
@@ -116,6 +121,9 @@ describe("ThemeProvider", () => {
 
     expect(screen.getByTestId("theme").textContent).toBe("light");
     expect(document.cookie).toContain("theme=light");
+    expect(cookieSetter).toHaveBeenLastCalledWith(
+      expect.stringContaining("theme=light; path=/; SameSite=Lax; Max-Age=21600"),
+    );
   });
 
   it("theme 为 dark 时，html 有 dark class，无 light class", async () => {
@@ -235,7 +243,8 @@ describe("ThemeProvider", () => {
     });
   });
 
-  it("setTheme('system') 后写入 cookie theme=system", async () => {
+  it("setTheme('system') 后清除 cookie，回到无用户覆盖的系统模式", async () => {
+    const cookieSetter = vi.spyOn(document, "cookie", "set");
     setThemeCookie("dark");
     render(
       <ThemeProvider>
@@ -247,6 +256,9 @@ describe("ThemeProvider", () => {
       screen.getByText("set system").click();
     });
 
-    expect(document.cookie).toContain("theme=system");
+    expect(document.cookie).not.toContain("theme=");
+    expect(cookieSetter).toHaveBeenLastCalledWith(
+      expect.stringContaining("theme=; path=/; SameSite=Lax; Max-Age=0"),
+    );
   });
 });

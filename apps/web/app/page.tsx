@@ -4,11 +4,11 @@ import { snippets } from "./_mock/snippets";
 import { visitors } from "./_mock/visitors";
 import { tags } from "./_mock/tags";
 import type { ArticlePageResp, CategoryTabsResp } from "@repo/api";
-import { createServerApiClient } from "../lib/server-api";
-import { FeaturedCarousel } from "../components/featured";
-import { ArticleSection } from "../components/articles";
-import { SnippetsSection } from "../components/snippets";
-import { RecentVisitors, TagsCloud } from "../components/sidebar";
+import { createServerApiClient } from "@/lib/server-api";
+import { FeaturedCarousel } from "@/components/featured";
+import { ArticleSection } from "@/components/articles";
+import { SnippetsSection } from "@/components/snippets";
+import { RecentVisitors, TagsCloud } from "@/components/sidebar";
 
 export const metadata: Metadata = {
   title: "首页 | Yevpt's Blog",

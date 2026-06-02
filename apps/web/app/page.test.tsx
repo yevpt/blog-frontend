@@ -2,16 +2,16 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import Page from "./page";
 
-vi.mock("../components/featured", () => ({
+vi.mock("@/components/featured", () => ({
   FeaturedCarousel: () => <div data-testid="featured-carousel">FeaturedCarousel</div>,
 }));
-vi.mock("../components/articles", () => ({
+vi.mock("@/components/articles", () => ({
   ArticleSection: () => <div data-testid="article-section">ArticleSection</div>,
 }));
-vi.mock("../components/snippets", () => ({
+vi.mock("@/components/snippets", () => ({
   SnippetsSection: () => <div data-testid="snippets-section">SnippetsSection</div>,
 }));
-vi.mock("../components/sidebar", () => ({
+vi.mock("@/components/sidebar", () => ({
   RecentVisitors: () => <div data-testid="recent-visitors">RecentVisitors</div>,
   TagsCloud: () => <div data-testid="tags-cloud">TagsCloud</div>,
 }));

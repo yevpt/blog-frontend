@@ -105,10 +105,11 @@ describe("SiteNavbar", () => {
     expect(screen.getAllByText("圈子").length).toBeGreaterThan(0);
   });
 
-  it("主题切换按钮存在（monitor 图标）", () => {
+  it("主题切换按钮存在（system 状态下展示当前生效主题图标）", () => {
     render(<SiteNavbar />);
-    // theme 为 system，对应 monitor 图标
-    expect(screen.getByTestId("icon-monitor")).toBeTruthy();
+    // theme 为 system 但 resolvedTheme 为 light，因此展示当前生效的 sun 图标。
+    expect(screen.getByTestId("icon-sun")).toBeTruthy();
+    expect(screen.queryByTestId("icon-monitor")).toBeNull();
   });
 
   it("移动端 menu 按钮存在", () => {

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 type ThemeMode = "system" | "light" | "dark";
 type ResolvedTheme = "light" | "dark";
+const THEME_COOKIE_MAX_AGE_SECONDS = 6 * 60 * 60;
 
 interface ThemeContextValue {
   /** 用户选择的主题模式（system / light / dark） */
@@ -33,20 +34,35 @@ function resolveThemeMode(mode: ThemeMode): ResolvedTheme {
 }
 
 /**
- * 将 ThemeMode 写入浏览器 Cookie。
+ * 同步主题 Cookie。
+ *
+ * 这套主题策略把 system 视为“没有用户覆盖”，而不是一个需要长期保存的选择：
+ * - 无 theme cookie：服务端首屏不加 .dark/.light，由 CSS 媒体查询跟随系统主题；
+ * - theme=light/dark：用户短期显式覆盖系统主题，服务端首屏直接渲染对应 class；
+ * - 6 小时后 cookie 自然过期：恢复到“无用户覆盖”，重新跟随系统主题。
+ *
+ * 因此只有 light/dark 会写入 cookie；显式 setTheme("system") 会清除 cookie，
+ * 方便未来如果有“回到系统”入口时，行为与 cookie 过期后的状态完全一致。
+ *
  * 开发环境不加 Secure 标志（本地 HTTP），生产环境加 Secure（仅 HTTPS）。
  */
 function writeThemeCookie(value: ThemeMode) {
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
-  document.cookie = `theme=${value}; path=/; SameSite=Lax${secure}; Max-Age=${365 * 24 * 3600}`;
+
+  if (value === "system") {
+    document.cookie = `theme=; path=/; SameSite=Lax${secure}; Max-Age=0`;
+    return;
+  }
+
+  document.cookie = `theme=${value}; path=/; SameSite=Lax${secure}; Max-Age=${THEME_COOKIE_MAX_AGE_SECONDS}`;
 }
 
-/** 从 document.cookie 读取主题偏好 */
+/** 从 document.cookie 读取主题偏好；除 light/dark 外都回落为 system（无用户覆盖）。 */
 function readThemeCookie(): ThemeMode {
   if (typeof document === "undefined") return "system";
   const match = document.cookie.match(/(?:^|;\s*)theme=([^;]*)/);
   const value = match?.[1];
-  if (value === "light" || value === "dark" || value === "system") return value;
+  if (value === "light" || value === "dark") return value;
   return "system";
 }
 

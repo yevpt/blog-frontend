@@ -5,35 +5,33 @@ import { Button } from "@repo/ui";
 import { useTheme } from "../../app/providers/theme-provider";
 import { useLocale } from "@repo/hooks";
 
-type ThemeMode = "system" | "light" | "dark";
+type ResolvedTheme = "light" | "dark";
 
-/** 三态循环顺序：system → light → dark → system */
-const THEME_CYCLE: Record<ThemeMode, ThemeMode> = {
-  system: "light",
-  light: "dark",
-  dark: "system",
-};
-
-const THEME_ICONS: Record<ThemeMode, "monitor" | "sun" | "moon"> = {
-  system: "monitor",
+const THEME_ICONS: Record<ResolvedTheme, "sun" | "moon"> = {
   light: "sun",
   dark: "moon",
 };
 
+/** 主题按钮永远切到“当前实际生效主题”的对立面，system 只影响当前生效值如何解析。 */
+function getOppositeTheme(theme: ResolvedTheme): ResolvedTheme {
+  return theme === "dark" ? "light" : "dark";
+}
+
 export function NavbarActions() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const { t } = useLocale();
+  const nextTheme = getOppositeTheme(resolvedTheme);
 
   return (
     <div className="flex items-center gap-2">
-      {/* 主题切换按钮：所有端均显示 */}
+      {/* 主题切换按钮：所有端均显示。按钮只在 light/dark 间切换，不再写入 system。 */}
       <Button
         variant="ghost"
-        onPress={() => setTheme(THEME_CYCLE[theme])}
+        onPress={() => setTheme(nextTheme)}
         className="p-2 rounded-md"
-        aria-label={`当前主题：${theme}，点击切换`}
+        aria-label={`当前生效主题：${resolvedTheme}，点击切换到 ${nextTheme}`}
       >
-        <SvgIcon name={THEME_ICONS[theme]} size={20} className="text-foreground" />
+        <SvgIcon name={THEME_ICONS[resolvedTheme]} size={20} className="text-foreground" />
       </Button>
 
       {/* 登录/注册按钮：仅 md+ 显示（mobile 在抽屉里） */}
