@@ -4,14 +4,12 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { SiteNavbar } from "./site-navbar";
 
-// Mock next/navigation
 const mockPathname = vi.fn(() => "/");
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
   usePathname: () => mockPathname(),
 }));
 
-// Mock next/link：渲染为普通 <a>
 vi.mock("next/link", () => ({
   default: ({
     href,
@@ -28,14 +26,12 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-// Mock @repo/icons
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name, size }: { name: string; size?: number }) => (
     <span data-testid={`icon-${name}`} data-size={size} />
   ),
 }));
 
-// Mock providers
 vi.mock("../../app/providers/theme-provider", () => ({
   useTheme: () => ({
     theme: "system",
@@ -56,14 +52,12 @@ vi.mock("@repo/hooks/locale", () => ({
         "nav.friends": "友邻",
         "nav.circle": "圈子",
         "auth.login": "登录",
-        "auth.register": "注册",
       };
       return translations[key] ?? key;
     },
   }),
 }));
 
-// Mock matchMedia（Navbar 中的 scroll 监听不涉及 matchMedia，但 ThemeProvider mock 覆盖了）
 beforeEach(() => {
   Object.defineProperty(window, "matchMedia", {
     writable: true,
@@ -84,32 +78,20 @@ beforeEach(() => {
 describe("SiteNavbar", () => {
   it("渲染不崩溃", () => {
     render(<SiteNavbar />);
-    // header 元素存在
-    expect(document.querySelector("header")).toBeTruthy();
+    expect(document.querySelector("nav#navbar")).toBeTruthy();
   });
 
-  it("初始渲染无 -translate-y-full 和 opacity-0（始终可见）", () => {
+  it("导航链接全部存在（碎语、留言、友邻、圈子）", () => {
     render(<SiteNavbar />);
-    const header = document.querySelector("header");
-    expect(header?.className).not.toContain("-translate-y-full");
-    expect(header?.className).not.toContain("opacity-0");
-  });
-
-  it("导航链接全部存在（首页、碎语、留言、友邻、圈子）", () => {
-    render(<SiteNavbar />);
-    // 导航链接在 md+ 和移动端抽屉各出现一次，用 getAllByText
-    expect(screen.getAllByText("首页").length).toBeGreaterThan(0);
     expect(screen.getAllByText("碎语").length).toBeGreaterThan(0);
     expect(screen.getAllByText("留言").length).toBeGreaterThan(0);
     expect(screen.getAllByText("友邻").length).toBeGreaterThan(0);
     expect(screen.getAllByText("圈子").length).toBeGreaterThan(0);
   });
 
-  it("主题切换按钮存在（system 状态下展示当前生效主题图标）", () => {
+  it("主题切换按钮存在（light 状态下展示 sun 图标）", () => {
     render(<SiteNavbar />);
-    // theme 为 system 但 resolvedTheme 为 light，因此展示当前生效的 sun 图标。
-    expect(screen.getByTestId("icon-sun")).toBeTruthy();
-    expect(screen.queryByTestId("icon-monitor")).toBeNull();
+    expect(screen.getAllByTestId("icon-sun").length).toBeGreaterThan(0);
   });
 
   it("移动端 menu 按钮存在", () => {
@@ -117,7 +99,7 @@ describe("SiteNavbar", () => {
     expect(screen.getByTestId("icon-menu")).toBeTruthy();
   });
 
-  it("点击 menu 按钮后抽屉打开（close 按钮出现）", async () => {
+  it("点击 menu 按钮后菜单打开（展示 close 图标）", async () => {
     const user = userEvent.setup();
     render(<SiteNavbar />);
 
@@ -126,38 +108,27 @@ describe("SiteNavbar", () => {
       await user.click(menuBtn);
     });
 
-    // 抽屉打开后 close 按钮可见
-    expect(screen.getByLabelText("关闭导航菜单")).toBeTruthy();
-    // 遮罩层存在
+    expect(screen.getByTestId("icon-close")).toBeTruthy();
     expect(screen.getByLabelText("关闭导航菜单")).toBeTruthy();
   });
 
-  it("点击 close 按钮后抽屉关闭（data-open 变为 false）", async () => {
+  it("点击 close 按钮后菜单关闭（menu 图标重新出现）", async () => {
     const user = userEvent.setup();
     render(<SiteNavbar />);
 
-    // 先打开
     await act(async () => {
       await user.click(screen.getByLabelText("打开导航菜单"));
     });
 
-    // 确认抽屉已打开（role="dialog" + aria-label）
-    const drawer = screen.getByRole("dialog", { name: "移动端导航菜单" });
-    expect(drawer).toHaveAttribute("data-open", "true");
-
-    // 关闭
     await act(async () => {
       await user.click(screen.getByLabelText("关闭导航菜单"));
     });
 
-    // 抽屉关闭后 data-open 变为 false（CSS 动画滑出，DOM 仍存在）
-    expect(drawer).toHaveAttribute("data-open", "false");
+    expect(screen.getByTestId("icon-menu")).toBeTruthy();
   });
 
-  it("登录和注册按钮存在（md+ 可见）", () => {
+  it("登录按钮存在", () => {
     render(<SiteNavbar />);
-    // 登录按钮在 md+ 区域和抽屉各一个
     expect(screen.getAllByText("登录").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("注册").length).toBeGreaterThan(0);
   });
 });

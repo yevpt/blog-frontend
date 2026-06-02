@@ -2,6 +2,7 @@
 
 import { SvgIcon } from "@repo/icons";
 import { Button } from "@repo/ui";
+import { cn } from "@repo/ui";
 import { useTheme } from "../../app/providers/theme-provider";
 import { useLocale } from "@repo/hooks";
 
@@ -12,37 +13,53 @@ const THEME_ICONS: Record<ResolvedTheme, "sun" | "moon"> = {
   dark: "moon",
 };
 
-/** 主题按钮永远切到“当前实际生效主题”的对立面，system 只影响当前生效值如何解析。 */
 function getOppositeTheme(theme: ResolvedTheme): ResolvedTheme {
   return theme === "dark" ? "light" : "dark";
 }
 
-export function NavbarActions() {
+interface NavbarActionsProps {
+  isGlass?: boolean;
+}
+
+export function NavbarActions({ isGlass = false }: NavbarActionsProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const { t } = useLocale();
   const nextTheme = getOppositeTheme(resolvedTheme);
 
   return (
     <div className="flex items-center gap-2">
-      {/* 主题切换按钮：所有端均显示。按钮只在 light/dark 间切换，不再写入 system。 */}
+      {/* 主题切换按钮 */}
       <Button
         variant="ghost"
         onPress={() => setTheme(nextTheme)}
-        className="p-2 rounded-md"
+        className={cn(
+          "p-2 rounded-md transition-colors duration-300",
+          !isGlass && "hover:bg-white/20",
+        )}
         aria-label={`当前生效主题：${resolvedTheme}，点击切换到 ${nextTheme}`}
       >
-        <SvgIcon name={THEME_ICONS[resolvedTheme]} size={20} className="text-foreground" />
+        <SvgIcon
+          name={THEME_ICONS[resolvedTheme]}
+          size={20}
+          className={cn(
+            "transition-colors duration-300",
+            isGlass ? "text-foreground" : "text-white/85",
+          )}
+        />
       </Button>
 
-      {/* 登录/注册按钮：仅 md+ 显示（mobile 在抽屉里） */}
-      <div className="hidden md:flex items-center gap-2">
-        <Button variant="outline" size="sm">
-          {t("auth.login")}
-        </Button>
-        <Button variant="default" size="sm">
-          {t("auth.register")}
-        </Button>
-      </div>
+      {/* 登录按钮（仅 md+，注册按钮已移除） */}
+      <Button
+        variant="outline"
+        size="sm"
+        className={cn(
+          "transition-colors duration-300",
+          !isGlass &&
+            "border-white/60 text-white bg-transparent hover:bg-white/20 hover:text-white hover:border-white",
+        )}
+      >
+        {t("auth.login")}
+      </Button>
     </div>
   );
 }

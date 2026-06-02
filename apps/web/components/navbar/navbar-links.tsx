@@ -14,13 +14,15 @@ const NAV_ITEMS = [
 ] as const;
 
 interface NavbarLinksProps {
-  /** 竖向排列（用于移动端抽屉），默认 false（横向排列） */
+  /** 竖向排列（用于移动端菜单），默认 false */
   vertical?: boolean;
-  /** 点击链接后的回调（用于关闭抽屉） */
+  /** 点击链接后的回调（用于关闭菜单） */
   onLinkClick?: () => void;
+  /** 是否处于玻璃态（影响文字颜色） */
+  isGlass?: boolean;
 }
 
-export function NavbarLinks({ vertical = false, onLinkClick }: NavbarLinksProps) {
+export function NavbarLinks({ vertical = false, onLinkClick, isGlass = false }: NavbarLinksProps) {
   const { t } = useLocale();
   const pathname = usePathname();
 
@@ -29,12 +31,11 @@ export function NavbarLinks({ vertical = false, onLinkClick }: NavbarLinksProps)
       className={cn(
         "flex gap-6",
         vertical && "flex-col gap-4",
-        // 横向模式默认只在 md+ 显示（移动端由抽屉负责）
+        // 横向模式只在 md+ 显示
         !vertical && "hidden md:flex",
       )}
     >
       {NAV_ITEMS.map(({ key, href }) => {
-        // 首页精确匹配，其余页面前缀匹配
         const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
 
         return (
@@ -43,9 +44,15 @@ export function NavbarLinks({ vertical = false, onLinkClick }: NavbarLinksProps)
             href={href}
             onClick={onLinkClick}
             className={cn(
-              "text-sm font-medium transition-colors",
+              "text-sm font-medium transition-colors duration-300",
               vertical && "text-base",
-              isActive ? "text-foreground" : "text-foreground/70 hover:text-foreground",
+              isGlass
+                ? isActive
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+                : isActive
+                  ? "text-white"
+                  : "text-white/70 hover:text-white",
             )}
           >
             {t(`nav.${key}`)}
