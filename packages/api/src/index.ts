@@ -25,3 +25,12 @@ export type {
   MomentItemResp,
   MomentPageResp,
 } from "./types/moment";
+export type {
+  CommentUserResp,
+  CommentReplyResp,
+  CommentItemResp,
+  CommentPageResp,
+  CommentListReq,
+  CommentCreateReq,
+  CommentReplyCreateReq,
+} from "./types/comment";
