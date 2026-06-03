@@ -228,14 +228,41 @@ describe("SiteNavbar", () => {
     expect(navbar?.className).toContain("opacity-100");
   });
 
-  it("滚动超过阈值后进入玻璃态，回到顶部恢复非玻璃态", () => {
+  it("滚动超过阈值后进入玻璃态，回到顶部（防抖 80ms 后）恢复非玻璃态", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     render(<SiteNavbar />);
 
-    fireIntersection(false); // 哨兵离开视口 = 已滚动
+    fireIntersection(false); // 初始化调用：哨兵离开视口 = 已滚动，立即生效
     expect(document.querySelector("nav#navbar")).toHaveAttribute("data-glass", "true");
 
-    fireIntersection(true); // 哨兵回到视口 = 回到顶部
+    fireIntersection(true); // 后续调用：哨兵进入视口，防抖 80ms
+    // 防抖期内仍为玻璃态
+    expect(document.querySelector("nav#navbar")).toHaveAttribute("data-glass", "true");
+
+    act(() => vi.advanceTimersByTime(80)); // 推进时钟，触发防抖回调
     expect(document.querySelector("nav#navbar")).toHaveAttribute("data-glass", "false");
+
+    vi.useRealTimers();
+  });
+
+  it("iOS 橡皮筋效果：哨兵快速进出时防抖被取消，玻璃态不闪烁", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    render(<SiteNavbar />);
+
+    fireIntersection(false); // 初始化：已滚动，玻璃态 true
+    expect(document.querySelector("nav#navbar")).toHaveAttribute("data-glass", "true");
+
+    fireIntersection(true); // 哨兵进入视口（橡皮筋弹出）→ 启动防抖
+    act(() => vi.advanceTimersByTime(40)); // 40ms 内…
+    fireIntersection(false); // 哨兵又离开（弹回）→ 取消防抖，立即恢复 true
+
+    // 玻璃态仍为 true（防抖被取消）
+    expect(document.querySelector("nav#navbar")).toHaveAttribute("data-glass", "true");
+
+    act(() => vi.advanceTimersByTime(100)); // 再等再久也不会变
+    expect(document.querySelector("nav#navbar")).toHaveAttribute("data-glass", "true");
+
+    vi.useRealTimers();
   });
 
   it("卸载时断开 IntersectionObserver", () => {

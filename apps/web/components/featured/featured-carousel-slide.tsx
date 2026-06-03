@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { Button } from "@repo/ui";
+import { cn, Button } from "@repo/ui";
 import { useLocale } from "@repo/hooks/locale";
 import type { FeaturedPost } from "@/app/_mock/types";
 import { formatDate } from "../../lib/format-time";
@@ -22,7 +22,6 @@ interface FeaturedCarouselSlideProps {
  * - Desktop (md+): two-column flex — left image, right text panel; moved vertically by CSS translateY.
  *
  * Text enters with staggered opacity + translateX transitions driven by `isActive`.
- * A dynamic `key` on the text wrapper resets the animation when the slide re-enters.
  */
 export function FeaturedCarouselSlide({
   post,
@@ -43,8 +42,14 @@ export function FeaturedCarouselSlide({
           src={post.coverImage}
           alt={post.title}
           fill
-          className="object-cover transition-transform duration-[6000ms] ease-out"
-          style={{ transform: isActive ? "scale(1.05)" : "scale(1)" }}
+          className={cn(
+            "object-cover",
+            isActive && "transition-transform duration-[6000ms] ease-out",
+          )}
+          style={{
+            transform: isActive ? "scale(1.05)" : "scale(1)",
+            willChange: isActive ? "transform" : "auto",
+          }}
           priority={isLcpCandidate}
           loading={isLcpCandidate ? "eager" : "lazy"}
           unoptimized
@@ -62,12 +67,19 @@ export function FeaturedCarouselSlide({
       </div>
 
       {/* ── 文字区：移动端绝对定位于底部，桌面端作为 flex 子项 ── */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 md:relative md:inset-auto md:z-auto md:h-full md:w-[42%] md:flex-none">
+      {/*
+        pointer-events-none on mobile: touch events in this wrapper fall through to the image
+        behind it, so the entire visible image area (including the transparent gap above the
+        text) stays draggable. pointer-events-auto is restored on md+ for desktop interaction.
+      */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none md:pointer-events-auto md:relative md:inset-auto md:z-auto md:h-full md:w-[42%] md:flex-none">
+        {/* Mobile-only visual gap above text content — replaces pt-12 on the inner div.
+            pointer-events-none (inherited from parent) lets swipe gestures pass through. */}
+        <div className="h-12 md:hidden" aria-hidden="true" />
         <div
-          key={isActive ? "active" : "idle"}
           data-carousel-no-drag="true"
           onPointerDownCapture={(e) => e.stopPropagation()}
-          className="flex flex-col gap-3.5 px-5 pt-12 pb-24 cursor-auto select-text sm:px-8 sm:pb-28 md:h-full md:justify-between md:gap-0 md:px-12 md:py-8 lg:px-16"
+          className="pointer-events-auto flex flex-col gap-3.5 px-5 pb-24 cursor-auto select-text sm:px-8 sm:pb-28 md:h-full md:justify-between md:gap-0 md:px-12 md:py-8 lg:px-16"
         >
           {/* 日期 + 分类 */}
           <div

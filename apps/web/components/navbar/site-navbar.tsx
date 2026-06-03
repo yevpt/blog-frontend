@@ -22,14 +22,32 @@ export function SiteNavbar() {
 
     let initialized = false;
     let raf = 0;
+    // iOS 橡皮筋效果会让哨兵在视口内快速进出，导致玻璃态闪烁。
+    // 对"哨兵进入视口（回到顶部）"方向加防抖：若短时间内哨兵又离开（弹回），则取消本次更新。
+    let enterTimer: ReturnType<typeof setTimeout> | null = null;
+
     const observer = new IntersectionObserver(([entry]) => {
-      // 每次回调同步更新玻璃态（负责后续滚动的实时响应）
-      setScrolled(!entry.isIntersecting);
       if (!initialized) {
+        // 首次回调：立即确定初始玻璃态，下一帧显示导航
         initialized = true;
-        // 首次回调已包含正确的初始滚动位置，下一帧再显示导航，
-        // 确保 React 已将正确的玻璃态渲染到 DOM 后再触发入场动效。
+        setScrolled(!entry.isIntersecting);
         raf = requestAnimationFrame(() => setMounted(true));
+        return;
+      }
+
+      if (entry.isIntersecting) {
+        // 哨兵进入视口（回到顶部）：防抖 80ms，过滤橡皮筋引起的瞬间触发
+        enterTimer = setTimeout(() => {
+          enterTimer = null;
+          setScrolled(false);
+        }, 80);
+      } else {
+        // 哨兵离开视口（向下滚动）：立即响应，并取消挂起的回到顶部更新
+        if (enterTimer !== null) {
+          clearTimeout(enterTimer);
+          enterTimer = null;
+        }
+        setScrolled(true);
       }
     });
     observer.observe(sentinel);
@@ -37,6 +55,7 @@ export function SiteNavbar() {
     return () => {
       observer.disconnect();
       cancelAnimationFrame(raf);
+      if (enterTimer !== null) clearTimeout(enterTimer);
     };
   }, []);
 

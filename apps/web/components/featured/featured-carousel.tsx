@@ -162,11 +162,14 @@ function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
             className="flex h-5 w-5 items-center justify-center rounded-full"
           >
             <span
-              className="block rounded-full bg-white transition-all duration-500"
+              className="block rounded-full bg-white"
               style={{
                 opacity: index === currentIndex ? 1 : 0.5,
                 width: index === currentIndex ? 18 : 6,
                 height: 6,
+                // 仅激活时播放扩展动画；失活立即归位，杜绝两端同时出现宽点的视觉问题
+                transition:
+                  index === currentIndex ? "width 300ms ease-out, opacity 200ms ease" : "none",
               }}
             />
           </button>

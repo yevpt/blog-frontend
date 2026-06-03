@@ -166,6 +166,7 @@ describe("Home page", () => {
     expect(homePageMockState.listMomentsPublic).toHaveBeenCalledWith({
       page: 1,
       page_size: 3,
+      user_id: 1,
     });
   });
 

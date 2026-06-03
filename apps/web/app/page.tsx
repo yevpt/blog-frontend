@@ -52,7 +52,9 @@ export default async function Home() {
     api.articles
       .listPublic({ page: 1, page_size: 5, recommend: true })
       .catch(() => EMPTY_RECOMMENDED_PAGE),
-    api.moments.listPublic({ page: 1, page_size: 3 }).catch(() => EMPTY_MOMENTS),
+    api.moments
+      .listPublic({ page: 1, page_size: 3, user_id: Number(process.env.BLOG_USER_ID) })
+      .catch(() => EMPTY_MOMENTS),
   ]);
   const recommendedPosts = recommendedPage.list
     .map(toFeaturedPost)

@@ -72,6 +72,7 @@ vi.mock("@repo/icons", () => ({
 }));
 
 vi.mock("@repo/ui", () => ({
+  cn: (...inputs: (string | false | null | undefined)[]) => inputs.filter(Boolean).join(" "),
   Button: ({
     href,
     children,
