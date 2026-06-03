@@ -2,11 +2,11 @@
 
 import { useLocale } from "@repo/hooks";
 import { Button } from "@repo/ui";
-import type { Snippet } from "../../app/_mock/types";
+import type { MomentItemResp } from "@repo/api";
 import { SnippetCard } from "./snippet-card";
 
 interface SnippetsSectionProps {
-  snippets: Snippet[];
+  snippets: MomentItemResp[];
 }
 
 /** 右侧栏最多展示的碎语条数 */

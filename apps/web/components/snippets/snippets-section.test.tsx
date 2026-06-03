@@ -3,7 +3,7 @@ import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { SnippetsSection } from "./snippets-section";
-import type { Snippet } from "../../app/_mock/types";
+import type { MomentItemResp } from "@repo/api";
 
 // Mock @repo/icons
 vi.mock("@repo/icons", () => ({
@@ -50,19 +50,33 @@ vi.mock("@repo/hooks", () => ({
   }),
 }));
 
-// 生成测试用 Snippet 数据
-function makeSnippet(id: string, content: string, overrides: Partial<Snippet> = {}): Snippet {
+// 生成测试用 MomentItemResp 数据
+function makeMoment(
+  id: number,
+  content: string,
+  overrides: Partial<MomentItemResp> = {},
+): MomentItemResp {
   return {
     id,
-    author: {
-      name: `作者${id}`,
-      avatar: `https://example.com/avatar${id}.jpg`,
-      badge: "博主",
-    },
+    user_id: 1,
     content,
-    publishedAt: new Date("2026-05-30T09:00:00"),
-    likes: 10,
-    comments: 3,
+    status: 1,
+    comment_status: 1,
+    read_count: 0,
+    is_top: false,
+    like_count: 10,
+    comment_count: 3,
+    is_liked: false,
+    user: {
+      id: 1,
+      username: `author${id}`,
+      nickname: `作者${id}`,
+      mark: "博主",
+      avatar_url: `https://example.com/avatar${id}.jpg`,
+    },
+    images: [],
+    created_at: "2026-05-30T09:00:00Z",
+    updated_at: "2026-05-30T09:00:00Z",
     ...overrides,
   };
 }
@@ -71,17 +85,16 @@ function makeSnippet(id: string, content: string, overrides: Partial<Snippet> = 
 const SHORT_CONTENT = "这是一条短碎语，不超过120字符的限制。";
 
 // 长内容（> 120 字符），确保触发截断（JS 字符串 length 按 UTF-16 单元计算，中文每字1单元）
-// 需要超过 120 个字符
 const LONG_CONTENT =
   "这是一条很长的碎语内容，超过了一百二十个字符的限制，需要显示展开按钮。" +
   "这部分内容在默认状态下应该被隐藏，只有点击展开按钮后才能看到全部内容。" +
   "这里是更多的补充内容，确保文本足够长。继续增加内容直到超过一百二十个字符为止，包括这段额外的说明文字。";
 
-const mockSnippets: Snippet[] = [makeSnippet("1", SHORT_CONTENT), makeSnippet("2", LONG_CONTENT)];
+const mockMoments: MomentItemResp[] = [makeMoment(1, SHORT_CONTENT), makeMoment(2, LONG_CONTENT)];
 
 describe("SnippetsSection", () => {
   it("渲染不崩溃，显示碎语内容", () => {
-    render(<SnippetsSection snippets={mockSnippets} />);
+    render(<SnippetsSection snippets={mockMoments} />);
     // 区块标题
     expect(screen.getByText("碎语")).toBeTruthy();
     // 短内容完整显示
@@ -89,84 +102,72 @@ describe("SnippetsSection", () => {
   });
 
   it("长内容默认截断，显示展开按钮", () => {
-    render(<SnippetsSection snippets={mockSnippets} />);
-    // 长内容应该有展开按钮
+    render(<SnippetsSection snippets={mockMoments} />);
     const expandBtns = screen.getAllByText("展开");
     expect(expandBtns.length).toBeGreaterThan(0);
-    // 截断后的文本（前 120 字符 + "..."）存在
     const truncated = LONG_CONTENT.slice(0, 120) + "...";
     expect(screen.getByText(truncated)).toBeTruthy();
-    // 完整内容不可见
     expect(screen.queryByText(LONG_CONTENT)).toBeNull();
   });
 
   it("点击展开后显示全部内容", async () => {
     const user = userEvent.setup();
-    render(<SnippetsSection snippets={mockSnippets} />);
+    render(<SnippetsSection snippets={mockMoments} />);
 
     const expandBtn = screen.getAllByText("展开")[0];
     await act(async () => {
       await user.click(expandBtn);
     });
 
-    // 全部内容应可见
     expect(screen.getByText(LONG_CONTENT)).toBeTruthy();
-    // 按钮变为收起
     expect(screen.getByText("收起")).toBeTruthy();
   });
 
   it("点击收起后重新截断", async () => {
     const user = userEvent.setup();
-    render(<SnippetsSection snippets={mockSnippets} />);
+    render(<SnippetsSection snippets={mockMoments} />);
 
-    // 先展开
     const expandBtn = screen.getAllByText("展开")[0];
     await act(async () => {
       await user.click(expandBtn);
     });
 
-    // 再收起
     const collapseBtn = screen.getByText("收起");
     await act(async () => {
       await user.click(collapseBtn);
     });
 
-    // 重新截断：完整内容不可见
     expect(screen.queryByText(LONG_CONTENT)).toBeNull();
-    // 展开按钮重新出现
     expect(screen.getAllByText("展开").length).toBeGreaterThan(0);
   });
 
   it("发表碎语和查看更多按钮存在", () => {
-    render(<SnippetsSection snippets={mockSnippets} />);
+    render(<SnippetsSection snippets={mockMoments} />);
     expect(screen.getByText("发表碎语")).toBeTruthy();
     expect(screen.getByText("查看更多")).toBeTruthy();
   });
 
   it("短内容不显示展开按钮", () => {
-    const singleShortSnippet: Snippet[] = [makeSnippet("only-short", SHORT_CONTENT)];
-    render(<SnippetsSection snippets={singleShortSnippet} />);
-    // 没有展开按钮
+    render(<SnippetsSection snippets={[makeMoment(99, SHORT_CONTENT)]} />);
     expect(screen.queryByText("展开")).toBeNull();
   });
 
   it("显示作者名和徽章", () => {
-    render(<SnippetsSection snippets={mockSnippets} />);
+    render(<SnippetsSection snippets={mockMoments} />);
     expect(screen.getByText("作者1")).toBeTruthy();
-    expect(screen.getAllByText("博主").length).toBe(mockSnippets.length);
+    expect(screen.getAllByText("博主").length).toBe(mockMoments.length);
   });
 
   it("显示点赞和评论统计数字", () => {
-    render(<SnippetsSection snippets={mockSnippets} />);
-    // 每张卡片都有 "10 喜欢" 和 "3 评论"
+    render(<SnippetsSection snippets={mockMoments} />);
     const likeLabels = screen.getAllByText("10 喜欢");
     const commentLabels = screen.getAllByText("3 评论");
-    expect(likeLabels).toHaveLength(mockSnippets.length);
-    expect(commentLabels).toHaveLength(mockSnippets.length);
+    expect(likeLabels).toHaveLength(mockMoments.length);
+    expect(commentLabels).toHaveLength(mockMoments.length);
   });
 
   it("碎语之间使用紧凑分隔线和合理内边距", () => {
-    render(<SnippetsSection snippets={mockSnippets} />);
+    render(<SnippetsSection snippets={mockMoments} />);
     const cards = screen.getAllByTestId("snippet-card");
     expect(cards[0].className).toContain("border-b");
     expect(cards[0].className).toContain("py-3");
@@ -174,9 +175,8 @@ describe("SnippetsSection", () => {
 
   it("喜欢按钮点击后变为激活状态（liked）", async () => {
     const user = userEvent.setup();
-    render(<SnippetsSection snippets={[makeSnippet("1", SHORT_CONTENT)]} />);
+    render(<SnippetsSection snippets={[makeMoment(1, SHORT_CONTENT)]} />);
 
-    // 获取第一个喜欢 aria-label 按钮
     const likeBtn = screen.getByLabelText("喜欢");
     expect(likeBtn.className).not.toContain("text-red-500");
 
@@ -184,7 +184,6 @@ describe("SnippetsSection", () => {
       await user.click(likeBtn);
     });
 
-    // 点击后变为红色（激活）
     expect(likeBtn.className).toContain("text-red-500");
   });
 
@@ -196,10 +195,10 @@ describe("SnippetsSection", () => {
   });
 
   it("最多只显示 3 条碎语", () => {
-    const manySnippets = Array.from({ length: 6 }, (_, i) =>
-      makeSnippet(String(i + 1), `${SHORT_CONTENT} #${i + 1}`),
+    const manyMoments = Array.from({ length: 6 }, (_, i) =>
+      makeMoment(i + 1, `${SHORT_CONTENT} #${i + 1}`),
     );
-    render(<SnippetsSection snippets={manySnippets} />);
+    render(<SnippetsSection snippets={manyMoments} />);
 
     expect(screen.getByText(`${SHORT_CONTENT} #1`)).toBeTruthy();
     expect(screen.getByText(`${SHORT_CONTENT} #2`)).toBeTruthy();
