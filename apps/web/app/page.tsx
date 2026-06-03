@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
-import { snippets } from "./_mock/snippets";
 import { visitors } from "./_mock/visitors";
 import { tags } from "./_mock/tags";
-import type { ArticleListItemResp, ArticlePageResp, CategoryTabsResp } from "@repo/api";
+import type {
+  ArticleListItemResp,
+  ArticlePageResp,
+  CategoryTabsResp,
+  MomentPageResp,
+} from "@repo/api";
 import type { FeaturedPost } from "./_mock/types";
 import { createServerApiClient } from "@/lib/server-api";
 import { FeaturedCarousel } from "@/components/featured";
@@ -24,6 +28,7 @@ const EMPTY_RECOMMENDED_PAGE: ArticlePageResp = {
   list: [],
 };
 const EMPTY_CATEGORIES: CategoryTabsResp = { list: [] };
+const EMPTY_MOMENTS: MomentPageResp = { total: 0, pages: 0, page: 1, page_size: 3, list: [] };
 
 function toFeaturedPost(article: ArticleListItemResp): FeaturedPost | null {
   if (!article.cover_img_url) return null;
@@ -41,12 +46,13 @@ function toFeaturedPost(article: ArticleListItemResp): FeaturedPost | null {
 
 export default async function Home() {
   const api = await createServerApiClient();
-  const [categoriesResp, initialPage, recommendedPage] = await Promise.all([
+  const [categoriesResp, initialPage, recommendedPage, momentsPage] = await Promise.all([
     api.categories.listTabs().catch(() => EMPTY_CATEGORIES),
     api.articles.listPublic({ page: 1 }).catch(() => EMPTY_PAGE),
     api.articles
       .listPublic({ page: 1, page_size: 5, recommend: true })
       .catch(() => EMPTY_RECOMMENDED_PAGE),
+    api.moments.listPublic({ page: 1, page_size: 3 }).catch(() => EMPTY_MOMENTS),
   ]);
   const recommendedPosts = recommendedPage.list
     .map(toFeaturedPost)
@@ -62,7 +68,7 @@ export default async function Home() {
           categories={categoriesResp.list}
           sidebar={
             <>
-              <SnippetsSection snippets={snippets} />
+              <SnippetsSection snippets={momentsPage.list} />
               <RecentVisitors visitors={visitors} />
               <TagsCloud tags={tags} />
             </>

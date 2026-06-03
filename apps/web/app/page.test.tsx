@@ -7,11 +7,13 @@ const homePageMockState = vi.hoisted(() => {
   const listPublic = vi.fn();
   const listTabs = vi.fn();
   const featuredCarousel = vi.fn();
+  const listMomentsPublic = vi.fn();
 
   return {
     listPublic,
     listTabs,
     featuredCarousel,
+    listMomentsPublic,
   };
 });
 
@@ -54,6 +56,9 @@ vi.mock("@/lib/server-api", () => ({
     categories: {
       listTabs: homePageMockState.listTabs,
     },
+    moments: {
+      listPublic: homePageMockState.listMomentsPublic,
+    },
   }),
 }));
 
@@ -61,6 +66,7 @@ describe("Home page", () => {
   beforeEach(() => {
     homePageMockState.listPublic.mockReset();
     homePageMockState.listTabs.mockReset();
+    homePageMockState.listMomentsPublic.mockReset();
     homePageMockState.featuredCarousel.mockReset();
 
     homePageMockState.listPublic.mockResolvedValue({
@@ -71,6 +77,13 @@ describe("Home page", () => {
       list: [],
     });
     homePageMockState.listTabs.mockResolvedValue({ list: [] });
+    homePageMockState.listMomentsPublic.mockResolvedValue({
+      total: 0,
+      pages: 0,
+      page: 1,
+      page_size: 3,
+      list: [],
+    });
   });
 
   it("渲染不崩溃", async () => {
@@ -140,7 +153,7 @@ describe("Home page", () => {
     ]);
   });
 
-  it("同时请求分类、最新文章和推荐文章", async () => {
+  it("同时请求分类、最新文章、推荐文章和碎语", async () => {
     render(await Page());
 
     expect(homePageMockState.listTabs).toHaveBeenCalledOnce();
@@ -149,6 +162,10 @@ describe("Home page", () => {
       page: 1,
       page_size: 5,
       recommend: true,
+    });
+    expect(homePageMockState.listMomentsPublic).toHaveBeenCalledWith({
+      page: 1,
+      page_size: 3,
     });
   });
 
