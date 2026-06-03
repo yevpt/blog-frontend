@@ -1,5 +1,3 @@
-// packages/api/src/types/moment.ts
-
 export interface MomentListReq {
   user_id?: number;
   role_id?: number;
