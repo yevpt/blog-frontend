@@ -1,51 +1,67 @@
-import { cn } from "@repo/ui";
+import { SvgIcon } from "@repo/icons";
 
-interface CommentItemData {
+export interface CommentThread {
   id: string;
   author: string;
   avatar: string;
   time: string;
   text: string;
-  replyTo?: string;
-  replies?: CommentItemData[];
+  likes: number;
+  mention?: string;
+  replies?: CommentThread[];
 }
 
 interface CommentItemProps {
-  comment: CommentItemData;
-  level?: number;
+  comment: CommentThread;
+  isReply?: boolean;
 }
 
-export function CommentItem({ comment, level = 0 }: CommentItemProps) {
+export function CommentItem({ comment, isReply = false }: CommentItemProps) {
   return (
-    <div className={cn("flex gap-3", level > 0 && "pl-8 border-l border-border/30 mt-2")}>
-      <img
-        src={comment.avatar}
-        alt={comment.author}
-        className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-0.5"
-      />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-semibold text-foreground">{comment.author}</span>
-          <span className="text-[10px] text-muted-foreground">{comment.time}</span>
+    <div className={isReply ? "reply-item" : "comment-item"}>
+      <div className="flex gap-2.5">
+        <img
+          src={comment.avatar}
+          alt={comment.author}
+          className={isReply ? "h-[22px] w-[22px] rounded-full" : "h-7 w-7 rounded-full"}
+        />
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center gap-2">
+            <span className="text-xs font-bold text-foreground">{comment.author}</span>
+            <span className="text-[11px] text-[var(--fg3)]">{comment.time}</span>
+          </div>
+          <p className="text-[13px] leading-[1.65] text-[var(--fg2)]">
+            {comment.mention && (
+              <span className="mr-1 text-[11px] font-semibold text-primary">
+                @{comment.mention}
+              </span>
+            )}
+            {comment.text}
+          </p>
+          <div className="mt-1.5 flex gap-0.5">
+            <button
+              type="button"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-[var(--fg3)] transition-colors hover:bg-primary/10 hover:text-primary"
+            >
+              <SvgIcon name="heart" size={12} />
+              {comment.likes}
+            </button>
+            <button
+              type="button"
+              className="cursor-pointer rounded-md px-2 py-1 text-[11px] font-medium text-[var(--fg3)] transition-colors hover:bg-primary/10 hover:text-primary"
+            >
+              回复
+            </button>
+          </div>
+          {comment.replies && comment.replies.length > 0 && (
+            <div className="mt-3 flex flex-col gap-3 border-l-2 border-border pl-3.5">
+              {comment.replies.map((reply) => (
+                <CommentItem key={reply.id} comment={reply} isReply />
+              ))}
+            </div>
+          )}
         </div>
-        {comment.replyTo && <span className="text-xs text-accent mr-1">@{comment.replyTo}</span>}
-        <p className="text-sm text-foreground/80 leading-relaxed">{comment.text}</p>
-        <div className="flex gap-3 mt-2">
-          <button
-            type="button"
-            className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-          >
-            ❤ 回复
-          </button>
-        </div>
-
-        {/* 嵌套回复 */}
-        {comment.replies?.map((reply) => (
-          <CommentItem key={reply.id} comment={reply} level={level + 1} />
-        ))}
       </div>
     </div>
   );
 }
-
-export type { CommentItemData };

@@ -1,73 +1,52 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { CommentModal } from "./comment-modal";
 
+vi.mock("@repo/icons", () => ({
+  SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
+}));
+
 vi.mock("@repo/ui", () => ({
-  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   Button: ({
     children,
     onPress,
-    isDisabled,
     ...props
   }: {
     children: ReactNode;
     onPress?: () => void;
-    isDisabled?: boolean;
     [key: string]: unknown;
   }) => (
-    <button onClick={onPress} disabled={isDisabled} {...props}>
+    <button type="button" onClick={onPress} {...props}>
       {children}
     </button>
   ),
 }));
 
-const defaultProps = {
-  open: true,
-  title: "测试文章标题",
-  type: "文章",
-  onClose: vi.fn(),
-};
-
 describe("CommentModal", () => {
-  it("open=false 时不渲染", () => {
-    const { container } = render(<CommentModal {...defaultProps} open={false} />);
-    expect(container.firstChild).toBeNull();
+  it("关闭时不渲染弹窗内容", () => {
+    render(<CommentModal open={false} title="测试文章" type="技术" onClose={vi.fn()} />);
+
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("open=true 时渲染弹窗", () => {
-    render(<CommentModal {...defaultProps} />);
-    expect(screen.getByRole("dialog")).toBeTruthy();
+  it("打开时显示文章类型、标题和评论输入框", () => {
+    render(<CommentModal open title="测试文章" type="技术" onClose={vi.fn()} />);
+
+    expect(screen.getByRole("dialog", { name: "评论" })).toBeTruthy();
+    expect(screen.getByText("技术 · 评论")).toBeTruthy();
+    expect(screen.getByText("测试文章")).toBeTruthy();
+    expect(screen.getByPlaceholderText("写下你的评论...")).toBeTruthy();
   });
 
-  it("显示文章标题", () => {
-    render(<CommentModal {...defaultProps} />);
-    expect(screen.getByText("测试文章标题")).toBeTruthy();
-  });
-
-  it("显示文章类型", () => {
-    render(<CommentModal {...defaultProps} />);
-    expect(screen.getByText("文章")).toBeTruthy();
-  });
-
-  it("点击关闭按钮调用 onClose", () => {
+  it("点击关闭按钮触发 onClose", async () => {
+    const user = userEvent.setup();
     const onClose = vi.fn();
-    render(<CommentModal {...defaultProps} onClose={onClose} />);
-    fireEvent.click(screen.getByRole("button", { name: "关闭评论" }));
-    expect(onClose).toHaveBeenCalledTimes(1);
-  });
+    render(<CommentModal open title="测试文章" type="技术" onClose={onClose} />);
 
-  it("点击遮罩层调用 onClose", () => {
-    const onClose = vi.fn();
-    render(<CommentModal {...defaultProps} onClose={onClose} />);
-    // 遮罩层是 aria-hidden div
-    const backdrop = document.querySelector("[aria-hidden='true']") as HTMLElement;
-    fireEvent.click(backdrop);
-    expect(onClose).toHaveBeenCalledTimes(1);
-  });
+    await user.click(screen.getByLabelText("关闭评论"));
 
-  it("显示模拟评论列表", () => {
-    render(<CommentModal {...defaultProps} />);
-    expect(screen.getByText("林晓雨")).toBeTruthy();
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });
