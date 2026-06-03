@@ -23,6 +23,7 @@ vi.mock("@repo/hooks", () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {
         "auth.login": "登录",
+        "auth.register": "注册",
       };
       return translations[key] ?? key;
     },
@@ -44,33 +45,42 @@ describe("NavbarActions", () => {
 
   it("渲染不崩溃，显示主题切换和登录入口", () => {
     render(<NavbarActions />);
+
     expect(
       screen.getByRole("button", { name: "当前生效主题：light，点击切换到 dark" }),
     ).toBeTruthy();
     expect(screen.getByText("登录")).toBeTruthy();
-    // 不再有注册按钮
     expect(screen.queryByText("注册")).toBeNull();
   });
 
   it("当前生效主题为 light 时，点击切换到 dark", async () => {
     const user = userEvent.setup();
+    mockTheme = "system";
     mockResolvedTheme = "light";
+
     render(<NavbarActions />);
     await user.click(screen.getByRole("button", { name: "当前生效主题：light，点击切换到 dark" }));
+
     expect(mockSetTheme).toHaveBeenCalledWith("dark");
   });
 
   it("当前生效主题为 dark 时，点击切换到 light", async () => {
     const user = userEvent.setup();
+    mockTheme = "system";
     mockResolvedTheme = "dark";
+
     render(<NavbarActions />);
     await user.click(screen.getByRole("button", { name: "当前生效主题：dark，点击切换到 light" }));
+
     expect(mockSetTheme).toHaveBeenCalledWith("light");
   });
 
-  it("按钮图标展示当前生效主题", () => {
+  it("按钮图标展示当前生效主题，而不是 system 状态", () => {
+    mockTheme = "system";
     mockResolvedTheme = "dark";
+
     render(<NavbarActions />);
+
     expect(screen.getByTestId("icon-moon")).toBeTruthy();
     expect(screen.queryByTestId("icon-monitor")).toBeNull();
   });

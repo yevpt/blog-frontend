@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { SvgIcon } from "@repo/icons";
 import { cn } from "@repo/ui";
 
 interface NavbarLogoProps {
@@ -8,28 +7,17 @@ interface NavbarLogoProps {
 
 export function NavbarLogo({ isGlass = false }: NavbarLogoProps) {
   return (
-    <Link href="/" className="flex items-center gap-2 shrink-0">
-      {isGlass ? (
-        // 玻璃态：跟随主题切换 logo
-        <>
-          <SvgIcon name="logo-frequencii-light" size={120} className="h-8 w-auto dark:hidden" />
-          <SvgIcon
-            name="logo-frequencii-dark"
-            size={120}
-            className="hidden h-8 w-auto dark:block"
-          />
-        </>
-      ) : (
-        // over-hero：统一显示白色 logo（dark 版本在深色背景上天然显白）
-        <SvgIcon name="logo-frequencii-dark" size={120} className="h-8 w-auto opacity-85" />
-      )}
+    <Link
+      href="/"
+      className="inline-flex h-8 min-w-[82px] shrink-0 -translate-y-px items-center justify-start rounded-full px-1 transition-colors"
+    >
       <span
         className={cn(
-          "hidden md:block text-sm font-medium transition-colors duration-300",
-          isGlass ? "text-foreground" : "text-white/85",
+          "font-serif text-[15px] font-medium leading-none tracking-[0.08em] antialiased transition-colors",
+          isGlass ? "text-[var(--fg2)]" : "text-foreground",
         )}
       >
-        Yevpt&apos;s Blog
+        YEVPT
       </span>
     </Link>
   );

@@ -6,19 +6,16 @@ import { useLocale } from "@repo/hooks";
 import { cn } from "@repo/ui";
 
 const NAV_ITEMS = [
-  { key: "home", href: "/" },
-  { key: "snippets", href: "/snippets" },
-  { key: "guestbook", href: "/guestbook" },
-  { key: "friends", href: "/friends" },
-  { key: "circle", href: "/circle" },
+  { key: "articles", label: "文章", href: "#articles" },
+  { key: "snippets", label: "碎语", href: "/snippets" },
+  { key: "about", label: "关于", href: "/about" },
 ] as const;
 
 interface NavbarLinksProps {
-  /** 竖向排列（用于移动端菜单），默认 false */
+  /** 竖向排列（用于移动端抽屉），默认 false（横向排列） */
   vertical?: boolean;
-  /** 点击链接后的回调（用于关闭菜单） */
+  /** 点击链接后的回调（用于关闭抽屉） */
   onLinkClick?: () => void;
-  /** 是否处于玻璃态（影响文字颜色） */
   isGlass?: boolean;
 }
 
@@ -31,12 +28,12 @@ export function NavbarLinks({ vertical = false, onLinkClick, isGlass = false }: 
       className={cn(
         "flex gap-6",
         vertical && "flex-col gap-4",
-        // 横向模式只在 md+ 显示
+        // 横向模式默认只在 md+ 显示（移动端由抽屉负责）
         !vertical && "hidden md:flex",
       )}
     >
-      {NAV_ITEMS.map(({ key, href }) => {
-        const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
+      {NAV_ITEMS.map(({ key, label, href }) => {
+        const isActive = href.startsWith("#") ? pathname === "/" : pathname.startsWith(href);
 
         return (
           <Link
@@ -44,18 +41,20 @@ export function NavbarLinks({ vertical = false, onLinkClick, isGlass = false }: 
             href={href}
             onClick={onLinkClick}
             className={cn(
-              "text-sm font-medium transition-colors duration-300",
+              "text-sm font-medium transition-colors",
               vertical && "text-base",
-              isGlass
-                ? isActive
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-                : isActive
-                  ? "text-white"
-                  : "text-white/70 hover:text-white",
+              !vertical &&
+                (isGlass
+                  ? isActive
+                    ? "text-foreground"
+                    : "text-[var(--fg2)] hover:text-foreground"
+                  : isActive
+                    ? "text-foreground"
+                    : "text-[var(--fg2)] hover:text-foreground"),
+              vertical && "text-foreground hover:text-primary",
             )}
           >
-            {t(`nav.${key}`)}
+            {label ?? t(`nav.${key}`)}
           </Link>
         );
       })}
