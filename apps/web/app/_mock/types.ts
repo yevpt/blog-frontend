@@ -4,6 +4,7 @@ export interface FeaturedPost {
   excerpt: string;
   coverImage: string;
   category: string;
+  date: string;
   href: string;
 }
 

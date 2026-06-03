@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { featuredPosts } from "./_mock/featured-posts";
 import { snippets } from "./_mock/snippets";
 import { visitors } from "./_mock/visitors";
 import { tags } from "./_mock/tags";
-import type { ArticlePageResp, CategoryTabsResp } from "@repo/api";
+import type { ArticleListItemResp, ArticlePageResp, CategoryTabsResp } from "@repo/api";
+import type { FeaturedPost } from "./_mock/types";
 import { createServerApiClient } from "@/lib/server-api";
 import { FeaturedCarousel } from "@/components/featured";
 import { ArticleSection } from "@/components/articles";
@@ -16,42 +16,58 @@ export const metadata: Metadata = {
 };
 
 const EMPTY_PAGE: ArticlePageResp = { total: 0, pages: 0, page: 1, page_size: 10, list: [] };
+const EMPTY_RECOMMENDED_PAGE: ArticlePageResp = {
+  total: 0,
+  pages: 0,
+  page: 1,
+  page_size: 5,
+  list: [],
+};
 const EMPTY_CATEGORIES: CategoryTabsResp = { list: [] };
+
+function toFeaturedPost(article: ArticleListItemResp): FeaturedPost | null {
+  if (!article.cover_img_url) return null;
+
+  return {
+    id: String(article.id),
+    title: article.title,
+    excerpt: article.short_content ?? "",
+    coverImage: article.cover_img_url,
+    category: article.category?.name ?? "未分类",
+    date: article.created_at,
+    href: `/articles/${article.id}`,
+  };
+}
 
 export default async function Home() {
   const api = await createServerApiClient();
-  const [categoriesResp, initialPage] = await Promise.all([
+  const [categoriesResp, initialPage, recommendedPage] = await Promise.all([
     api.categories.listTabs().catch(() => EMPTY_CATEGORIES),
     api.articles.listPublic({ page: 1 }).catch(() => EMPTY_PAGE),
+    api.articles
+      .listPublic({ page: 1, page_size: 5, recommend: true })
+      .catch(() => EMPTY_RECOMMENDED_PAGE),
   ]);
+  const recommendedPosts = recommendedPage.list
+    .map(toFeaturedPost)
+    .filter((post): post is FeaturedPost => post !== null);
 
   return (
     <>
-      {/* 全宽精选轮播 Hero（从顶部开始，覆盖 Navbar） */}
-      <FeaturedCarousel posts={featuredPosts} />
+      <FeaturedCarousel posts={recommendedPosts} />
 
-      <div className="max-w-[960px] mx-auto px-5 py-9 pb-20">
-        {/* 全宽文章区标题（两列上方） */}
-        <div className="mb-6">
-          <p className="text-xs font-bold tracking-widest uppercase text-accent mb-1">最新文章</p>
-          <h2 className="text-[22px] font-extrabold tracking-tight text-foreground mb-5">
-            近期在写什么
-          </h2>
-        </div>
-
-        {/* 两列区域：文章区（含 Tabs）+ 侧边栏 */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_268px] gap-6 items-start">
-          <main className="min-w-0">
-            <ArticleSection initialPage={initialPage} categories={categoriesResp.list} />
-          </main>
-          <aside className="lg:sticky lg:top-[88px]" id="sidebar">
-            <SnippetsSection snippets={snippets} />
-            <div className="mt-4">
+      <div data-testid="home-page-body" className="mx-auto max-w-[1120px] px-5 py-9 pb-20">
+        <ArticleSection
+          initialPage={initialPage}
+          categories={categoriesResp.list}
+          sidebar={
+            <>
+              <SnippetsSection snippets={snippets} />
               <RecentVisitors visitors={visitors} />
-            </div>
-            <TagsCloud tags={tags} />
-          </aside>
-        </div>
+              <TagsCloud tags={tags} />
+            </>
+          }
+        />
       </div>
     </>
   );
