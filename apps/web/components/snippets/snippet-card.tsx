@@ -20,11 +20,17 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
       className="border-b border-border py-3 last:border-b-0 last:pb-0"
     >
       <div className="flex items-center gap-2">
-        <img
-          src={authorAvatar}
-          alt={authorName}
-          className="h-5 w-5 shrink-0 rounded-full object-cover"
-        />
+        {authorAvatar ? (
+          <img
+            src={authorAvatar}
+            alt={authorName}
+            className="h-5 w-5 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-secondary text-[9px] font-semibold text-secondary-foreground">
+            {authorName.charAt(0)}
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate text-[11px] font-semibold text-foreground">{authorName}</span>

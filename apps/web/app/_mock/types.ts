@@ -21,19 +21,6 @@ export interface Article {
   href: string;
 }
 
-export interface Snippet {
-  id: string;
-  author: {
-    name: string;
-    avatar: string;
-    badge: string;
-  };
-  content: string;
-  publishedAt: Date;
-  likes: number;
-  comments: number;
-}
-
 export interface Visitor {
   id: string;
   name: string;
