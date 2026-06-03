@@ -268,4 +268,91 @@ describe("createApiClient", () => {
     expect(url.pathname).toBe("/moments");
     expect(url.searchParams.get("user_id")).toBe("2");
   });
+
+  // ── 评论接口 ─────────────────────────────────────────────────────
+
+  describe("comments", () => {
+    it("listPublic 拼接正确的查询参数", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({
+          code: 0,
+          message: "ok",
+          data: { total: 1, pages: 1, page: 1, page_size: 10, list: [] },
+        }),
+      );
+      const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+      await client.comments.listPublic({ target_type: "article", target_id: 5, page: 2 });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/comments?target_type=article&target_id=5&page=2",
+        expect.objectContaining({ method: "GET" }),
+      );
+    });
+
+    it("create 使用 fetchAuthed 并发送正确 body", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({
+          code: 0,
+          message: "ok",
+          data: {
+            id: 1,
+            target_type: "article",
+            target_id: 5,
+            user_id: 1,
+            content: "hi",
+            replies: [],
+            created_at: "",
+            updated_at: "",
+          },
+        }),
+      );
+      const client = createApiClient({
+        baseUrl: "http://api",
+        getAccessToken: () => "token123",
+      });
+
+      await client.comments.create({ target_type: "article", target_id: 5, content: "hi" });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/comments",
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ target_type: "article", target_id: 5, content: "hi" }),
+          headers: expect.objectContaining({ Authorization: "Bearer token123" }),
+        }),
+      );
+    });
+
+    it("reply 调用 /comments/{id}/replies", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({
+          code: 0,
+          message: "ok",
+          data: {
+            id: 2,
+            target_type: "article",
+            comment_id: 1,
+            from_user_id: 2,
+            to_user_id: 1,
+            parent_reply_id: 0,
+            content: "ok",
+            created_at: "",
+            updated_at: "",
+          },
+        }),
+      );
+      const client = createApiClient({
+        baseUrl: "http://api",
+        getAccessToken: () => "token123",
+      });
+
+      await client.comments.reply(1, { target_type: "article", content: "ok" });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/comments/1/replies",
+        expect.objectContaining({ method: "POST" }),
+      );
+    });
+  });
 });

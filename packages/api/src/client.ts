@@ -11,6 +11,14 @@ import type {
 import type { ArticleListReq, ArticlePageResp } from "./types/article";
 import type { CategoryTabsResp } from "./types/category";
 import type { MomentListReq, MomentPageResp } from "./types/moment";
+import type {
+  CommentCreateReq,
+  CommentItemResp,
+  CommentListReq,
+  CommentPageResp,
+  CommentReplyCreateReq,
+  CommentReplyResp,
+} from "./types/comment";
 
 /** createApiClient 的注入配置接口 */
 export interface ApiClientConfig {
@@ -147,6 +155,29 @@ export function createApiClient(config: ApiClientConfig) {
         const qs = params.toString();
         return fetchPublic<MomentPageResp>(`/moments${qs ? `?${qs}` : ""}`, { method: "GET" });
       },
+    },
+    comments: {
+      /** 分页查询评论，支持 article / moment / guestbook */
+      listPublic: (req: CommentListReq) => {
+        const params = new URLSearchParams();
+        params.set("target_type", req.target_type);
+        params.set("target_id", String(req.target_id));
+        if (req.page !== undefined) params.set("page", String(req.page));
+        if (req.page_size !== undefined) params.set("page_size", String(req.page_size));
+        return fetchPublic<CommentPageResp>(`/comments?${params.toString()}`, { method: "GET" });
+      },
+      /** 新增一级评论（需登录） */
+      create: (req: CommentCreateReq) =>
+        fetchAuthed<CommentItemResp>("/comments", {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 回复一级评论（需登录） */
+      reply: (commentId: number, req: CommentReplyCreateReq) =>
+        fetchAuthed<CommentReplyResp>(`/comments/${commentId}/replies`, {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
     },
     /**
      * 测试用端点，与后端 /test/* 路由对应。
