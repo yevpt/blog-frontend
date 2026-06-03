@@ -1,3 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 32">
-  <text x="0" y="24" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="600" fill="#0f172a">Frequencii</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-linecap="round">
+  <!-- Center dot -->
+  <circle cx="6" cy="26" r="2.5" fill="currentColor" stroke="none"/>
+  <!-- Frequency arcs radiating outward -->
+  <path d="M 6 18 A 8 8 0 0 0 14 26" stroke-width="3"/>
+  <path d="M 6 12 A 14 14 0 0 0 20 26" stroke-width="2.2"/>
+  <path d="M 6 6 A 20 20 0 0 0 26 26" stroke-width="1.5"/>
 </svg>
