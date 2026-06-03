@@ -4,8 +4,7 @@ dist
 .turbo
 .DS_Store
 *.tsbuildinfo
-.env*
-!.env.example
+.env.*local
 
 # Superpowers brainstorming artifacts
 .superpowers/
