@@ -1,5 +1,5 @@
 {
   "permissions": {
-    "allow": ["Bash(pnpm --version)"]
+    "allow": ["Bash(pnpm --version)", "mcp__houtini-lm__list_models", "Bash(claude mcp *)"]
   }
 }

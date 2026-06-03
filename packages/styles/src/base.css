@@ -90,13 +90,29 @@ body {
   --glass-mob: rgba(250, 250, 249, 0.85);
   --glass-ring: rgba(0, 0, 0, 0.06);
 }
+/*
+ * 深色模式文字令牌：
+ *   --fg2 (#b8b8c4)：正文次级文字，用于文章摘要、碎语内容；≥12px 小字对比度约 9:1
+ *   --fg3 (#9c9ca8)：辅助提示文字，用于时间戳、统计数字；较原 #71717a（4.3:1）大幅提升至约 6.4:1
+ *   同时补充 @media prefers-color-scheme 覆盖，避免系统深色用户看到浅色值
+ */
 :root.dark {
-  --fg2: #a1a1aa;
-  --fg3: #71717a;
+  --fg2: #b8b8c4;
+  --fg3: #9c9ca8;
   --glass-bg: rgba(9, 9, 11, 0.78);
   --glass-bdr: rgba(255, 255, 255, 0.09);
   --glass-mob: rgba(24, 24, 27, 0.85);
   --glass-ring: rgba(255, 255, 255, 0.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --fg2: #b8b8c4;
+    --fg3: #9c9ca8;
+    --glass-bg: rgba(9, 9, 11, 0.78);
+    --glass-bdr: rgba(255, 255, 255, 0.09);
+    --glass-mob: rgba(24, 24, 27, 0.85);
+    --glass-ring: rgba(255, 255, 255, 0.04);
+  }
 }
 
 /* 心形点赞跳动动效，用于 ArticleCardStats 的 heart 图标 */

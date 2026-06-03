@@ -4,9 +4,9 @@
     {
       "name": "web",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "web", "dev"],
+      "runtimeArgs": ["dev:web"],
       "port": 3000,
-      "autoPort": false
+      "autoPort": true
     }
   ]
 }

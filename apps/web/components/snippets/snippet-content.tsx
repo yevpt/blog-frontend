@@ -21,7 +21,9 @@ export function SnippetContent({ content }: SnippetContentProps) {
 
   return (
     <div className="mt-1">
-      <p className="whitespace-pre-line text-xs leading-[1.6] text-[var(--fg2)]">{displayText}</p>
+      <p className="whitespace-pre-line text-[13px] leading-relaxed text-[var(--fg2)]">
+        {displayText}
+      </p>
       {isLong && (
         <button
           onClick={() => setExpanded((prev) => !prev)}

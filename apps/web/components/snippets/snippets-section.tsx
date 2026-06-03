@@ -19,7 +19,7 @@ export function SnippetsSection({ snippets }: SnippetsSectionProps) {
   const visibleSnippets = snippets.slice(0, MAX_SNIPPETS);
 
   return (
-    <section className="rounded-[14px] border border-border bg-card p-[15px] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.04)]">
+    <section className="rounded-[14px] border border-border bg-card px-[10px] py-[15px] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.04)]">
       <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.09em] text-[var(--fg3)]">
         {t("home.snippets")}
       </h3>

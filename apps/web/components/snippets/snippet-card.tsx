@@ -33,23 +33,23 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate text-[11px] font-semibold text-foreground">{authorName}</span>
+            <span className="truncate text-xs font-semibold text-foreground">{authorName}</span>
             {authorBadge && (
               <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[10px] text-secondary-foreground">
                 {authorBadge}
               </span>
             )}
-            <time className="ml-auto shrink-0 text-[10px] text-[var(--fg3)]">{relativeTime}</time>
+            <time className="ml-auto shrink-0 text-[11px] text-[var(--fg3)]">{relativeTime}</time>
           </div>
         </div>
       </div>
 
-      <div className="pl-[27px]">
+      <div>
         <SnippetContent content={snippet.content} />
       </div>
 
-      <div className="mt-1.5 flex items-center justify-between pl-[27px]">
-        <div className="flex gap-3 text-[11px] text-[var(--fg3)]">
+      <div className="mt-1.5 flex items-center justify-between">
+        <div className="flex gap-3 text-xs text-[var(--fg3)]">
           <span>{snippet.like_count} 喜欢</span>
           <span>{snippet.comment_count} 评论</span>
         </div>
