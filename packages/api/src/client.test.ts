@@ -178,6 +178,26 @@ describe("createApiClient", () => {
     expect(url.searchParams.get("category_id")).toBe("3");
   });
 
+  it("articles.listPublic 带 recommend 和 page_size 时构造正确 query string", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { total: 0, pages: 0, page: 1, page_size: 5, list: [] },
+      }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    await client.articles.listPublic({ page: 1, page_size: 5, recommend: true });
+
+    const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
+    const url = new URL(calledUrl);
+    expect(url.pathname).toBe("/articles");
+    expect(url.searchParams.get("page")).toBe("1");
+    expect(url.searchParams.get("page_size")).toBe("5");
+    expect(url.searchParams.get("recommend")).toBe("true");
+  });
+
   it("categories.listTabs 调用 /categories", async () => {
     vi.mocked(global.fetch).mockResolvedValue(
       mockResponse({ code: 0, message: "ok", data: { list: [] } }),

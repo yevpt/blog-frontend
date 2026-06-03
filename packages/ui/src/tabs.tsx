@@ -54,13 +54,13 @@ export function TabsList({
 
 const tabItemBaseClasses: Record<TabsVariant, string> = {
   "button-brand-horizontal": [
-    "group relative flex items-center cursor-default rounded-full px-4 py-1.5",
+    "group relative flex items-center cursor-pointer rounded-full px-4 py-1.5",
     "text-sm font-medium outline-none [-webkit-tap-highlight-color:transparent]",
     "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
     "data-[disabled]:opacity-50",
   ].join(" "),
   underline: [
-    "group relative pb-3 cursor-default",
+    "group relative pb-3 cursor-pointer",
     "text-sm font-medium outline-none [-webkit-tap-highlight-color:transparent]",
     "focus-visible:ring-2 focus-visible:ring-ring",
     "data-[disabled]:opacity-50",
