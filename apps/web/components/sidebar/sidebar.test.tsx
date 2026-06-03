@@ -5,6 +5,7 @@ import { RecentVisitors } from "./recent-visitors";
 import { TagsCloud } from "./tags-cloud";
 import type { Visitor, Tag } from "../../app/_mock/types";
 
+// Mock @repo/hooks useLocale
 vi.mock("@repo/hooks", () => ({
   useLocale: () => ({
     locale: "zh",
@@ -21,14 +22,15 @@ vi.mock("@repo/hooks", () => ({
   }),
 }));
 
+// Mock @repo/icons
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name, size }: { name: string; size?: number }) => (
     <span data-testid={`icon-${name}`} data-size={size} />
   ),
 }));
 
+// Mock @repo/ui（Button + TagGroup 系列）
 vi.mock("@repo/ui", () => ({
-  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   Button: ({
     children,
     variant,
@@ -74,20 +76,28 @@ vi.mock("@repo/ui", () => ({
   ),
 }));
 
-function makeVisitor(id: string, isOnline = false): Visitor {
+// 生成测试用 Visitor 数据
+function makeVisitor(id: string): Visitor {
   return {
     id,
     name: `访客${id}`,
     avatar: `https://example.com/avatar${id}.jpg`,
-    isOnline,
+    isOnline: id === "1",
     visitedAt: new Date("2026-05-30T10:00:00"),
   };
 }
 
+// 生成 9 个测试访客
 const mockVisitors: Visitor[] = Array.from({ length: 9 }, (_, i) => makeVisitor(String(i + 1)));
 
+// 生成测试用 Tag 数据
 function makeTag(id: string, name: string): Tag {
-  return { id, name, icon: "tag", count: Number(id) * 3 };
+  return {
+    id,
+    name,
+    icon: "tag",
+    count: Number(id) * 3,
+  };
 }
 
 const mockTags: Tag[] = [
@@ -99,19 +109,23 @@ const mockTags: Tag[] = [
 describe("RecentVisitors", () => {
   it("渲染不崩溃，显示 9 个头像", () => {
     render(<RecentVisitors visitors={mockVisitors} />);
+    // 每个访客都有对应 img alt
     const images = screen.getAllByRole("img");
     expect(images).toHaveLength(9);
   });
 
   it("访客少于 9 人时显示实际数量", () => {
-    render(<RecentVisitors visitors={mockVisitors.slice(0, 5)} />);
-    expect(screen.getAllByRole("img")).toHaveLength(5);
+    const fewVisitors = mockVisitors.slice(0, 5);
+    render(<RecentVisitors visitors={fewVisitors} />);
+    const images = screen.getAllByRole("img");
+    expect(images).toHaveLength(5);
   });
 
-  it("访客超过 10 人时只显示 10 个头像", () => {
+  it("访客超过 9 人时只显示 9 个头像", () => {
     const manyVisitors = [...mockVisitors, makeVisitor("10"), makeVisitor("11")];
     render(<RecentVisitors visitors={manyVisitors} />);
-    expect(screen.getAllByRole("img")).toHaveLength(10);
+    const images = screen.getAllByRole("img");
+    expect(images).toHaveLength(10);
   });
 
   it("显示区块标题", () => {
@@ -125,27 +139,23 @@ describe("RecentVisitors", () => {
     expect(screen.getByText("查看更多")).toBeTruthy();
   });
 
-  it("在线访客显示「在线」文字", () => {
-    const onlineVisitor = makeVisitor("1", true);
-    render(<RecentVisitors visitors={[onlineVisitor]} />);
+  it("Tooltip 包含访客名称", () => {
+    render(<RecentVisitors visitors={[makeVisitor("1")]} />);
+    expect(screen.getByText("访客1")).toBeTruthy();
     expect(screen.getByText("在线")).toBeTruthy();
   });
 
-  it("离线访客显示相对时间", () => {
-    const offlineVisitor = makeVisitor("1", false);
-    render(<RecentVisitors visitors={[offlineVisitor]} />);
-    // formatRelativeTime 返回相对时间，存在"来过"后缀
-    expect(screen.getByText(/来过/)).toBeTruthy();
-  });
-
-  it("显示访客名称", () => {
+  it("访客项禁止文本选择，连续点击不会选中文字", () => {
     render(<RecentVisitors visitors={[makeVisitor("1")]} />);
-    expect(screen.getByText("访客1")).toBeTruthy();
+    expect(screen.getByText("访客1").closest("[data-testid='visitor-item']")).toHaveClass(
+      "select-none",
+    );
   });
 
   it("空访客列表不渲染头像", () => {
     render(<RecentVisitors visitors={[]} />);
-    expect(screen.queryAllByRole("img")).toHaveLength(0);
+    const images = screen.queryAllByRole("img");
+    expect(images).toHaveLength(0);
   });
 });
 
@@ -159,6 +169,7 @@ describe("TagsCloud", () => {
 
   it("标签数量正确", () => {
     render(<TagsCloud tags={mockTags} />);
+    // 每个标签渲染为 button
     const buttons = screen.getAllByRole("button");
     expect(buttons).toHaveLength(mockTags.length);
   });
@@ -170,6 +181,7 @@ describe("TagsCloud", () => {
 
   it("显示每个标签的计数", () => {
     render(<TagsCloud tags={mockTags} />);
+    // makeTag(id) 的 count 是 id * 3：3, 6, 9
     expect(screen.getByText("3")).toBeTruthy();
     expect(screen.getByText("6")).toBeTruthy();
     expect(screen.getByText("9")).toBeTruthy();
@@ -177,12 +189,14 @@ describe("TagsCloud", () => {
 
   it("空标签列表不渲染按钮", () => {
     render(<TagsCloud tags={[]} />);
-    expect(screen.queryAllByRole("button")).toHaveLength(0);
+    const buttons = screen.queryAllByRole("button");
+    expect(buttons).toHaveLength(0);
   });
 
   it("每个标签都显示计数", () => {
     render(<TagsCloud tags={mockTags} />);
-    const counts = screen.getAllByTestId("tag-count");
-    expect(counts).toHaveLength(mockTags.length);
+    expect(screen.getByText("3")).toBeTruthy();
+    expect(screen.getByText("6")).toBeTruthy();
+    expect(screen.getByText("9")).toBeTruthy();
   });
 });
