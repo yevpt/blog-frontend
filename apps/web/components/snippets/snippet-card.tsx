@@ -5,43 +5,46 @@ import { SnippetActions } from "./snippet-actions";
 
 interface SnippetCardProps {
   snippet: Snippet;
-  onCommentClick?: () => void;
 }
 
 // 单条碎语，无边框，通过间距分隔（与 ArticleCard 一致）
-export function SnippetCard({ snippet, onCommentClick }: SnippetCardProps) {
+export function SnippetCard({ snippet }: SnippetCardProps) {
   const relativeTime = formatRelativeTime(snippet.publishedAt);
 
   return (
-    <article>
-      {/* 头部：头像 + 作者信息 */}
-      <div className="flex items-start gap-3">
+    <article
+      data-testid="snippet-card"
+      className="border-b border-border py-3 last:border-b-0 last:pb-0"
+    >
+      <div className="flex items-center gap-2">
         <img
           src={snippet.author.avatar}
           alt={snippet.author.name}
-          className="w-10 h-10 rounded-full flex-shrink-0 object-cover"
+          className="h-5 w-5 shrink-0 rounded-full object-cover"
         />
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-sm">{snippet.author.name}</span>
-            <span className="text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full">
+            <span className="truncate text-[11px] font-semibold text-foreground">
+              {snippet.author.name}
+            </span>
+            <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[10px] text-secondary-foreground">
               {snippet.author.badge}
             </span>
+            <time className="ml-auto shrink-0 text-[10px] text-[var(--fg3)]">{relativeTime}</time>
           </div>
-          <time className="text-xs text-muted-foreground">{relativeTime}</time>
         </div>
       </div>
 
-      {/* 正文：截断+展开 */}
-      <SnippetContent content={snippet.content} />
+      <div className="pl-[27px]">
+        <SnippetContent content={snippet.content} />
+      </div>
 
-      {/* 统计数据 + 操作按钮 */}
-      <div className="mt-3 flex items-center justify-between">
-        <div className="flex gap-4 text-xs text-muted-foreground">
+      <div className="mt-1.5 flex items-center justify-between pl-[27px]">
+        <div className="flex gap-3 text-[11px] text-[var(--fg3)]">
           <span>{snippet.likes} 喜欢</span>
           <span>{snippet.comments} 评论</span>
         </div>
-        <SnippetActions onCommentClick={onCommentClick} />
+        <SnippetActions />
       </div>
     </article>
   );

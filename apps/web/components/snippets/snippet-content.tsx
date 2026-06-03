@@ -20,12 +20,12 @@ export function SnippetContent({ content }: SnippetContentProps) {
   const displayText = isLong && !expanded ? content.slice(0, MAX_CHARS) + "..." : content;
 
   return (
-    <div className="mt-3">
-      <p className="text-sm leading-relaxed whitespace-pre-line">{displayText}</p>
+    <div className="mt-1">
+      <p className="whitespace-pre-line text-xs leading-[1.6] text-[var(--fg2)]">{displayText}</p>
       {isLong && (
         <button
           onClick={() => setExpanded((prev) => !prev)}
-          className="mt-1 text-xs text-primary/70 hover:text-primary transition-colors"
+          className="mt-1 cursor-pointer text-xs text-primary/70 transition-colors hover:text-primary"
         >
           {expanded ? t("snippet.collapse") : t("snippet.expand")}
         </button>

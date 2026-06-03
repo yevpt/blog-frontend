@@ -17,15 +17,13 @@ vi.mock("@repo/ui", () => ({
   Button: ({
     children,
     variant,
-    onPress,
     ...props
   }: {
     children: ReactNode;
     variant?: string;
-    onPress?: () => void;
     [key: string]: unknown;
   }) => (
-    <button data-variant={variant} onClick={onPress} {...props}>
+    <button data-variant={variant} {...props}>
       {children}
     </button>
   ),
@@ -167,20 +165,27 @@ describe("SnippetsSection", () => {
     expect(commentLabels).toHaveLength(mockSnippets.length);
   });
 
+  it("碎语之间使用紧凑分隔线和合理内边距", () => {
+    render(<SnippetsSection snippets={mockSnippets} />);
+    const cards = screen.getAllByTestId("snippet-card");
+    expect(cards[0].className).toContain("border-b");
+    expect(cards[0].className).toContain("py-3");
+  });
+
   it("喜欢按钮点击后变为激活状态（liked）", async () => {
     const user = userEvent.setup();
     render(<SnippetsSection snippets={[makeSnippet("1", SHORT_CONTENT)]} />);
 
-    // 初始状态：喜欢按钮存在，aria-pressed=false
+    // 获取第一个喜欢 aria-label 按钮
     const likeBtn = screen.getByLabelText("喜欢");
-    expect(likeBtn).toHaveAttribute("aria-pressed", "false");
+    expect(likeBtn.className).not.toContain("text-red-500");
 
     await act(async () => {
       await user.click(likeBtn);
     });
 
-    // 点击后：aria-label 变为"取消喜欢"，aria-pressed=true
-    expect(screen.getByLabelText("取消喜欢")).toHaveAttribute("aria-pressed", "true");
+    // 点击后变为红色（激活）
+    expect(likeBtn.className).toContain("text-red-500");
   });
 
   it("snippets 为空时仍渲染区块标题和操作按钮", () => {

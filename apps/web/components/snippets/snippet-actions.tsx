@@ -2,39 +2,33 @@
 
 import { useState } from "react";
 import { SvgIcon } from "@repo/icons";
-import { Button } from "@repo/ui";
+import { useLocale } from "@repo/hooks";
 
-interface SnippetActionsProps {
-  onCommentClick?: () => void;
-}
-
-export function SnippetActions({ onCommentClick }: SnippetActionsProps) {
+// 操作按钮：喜欢、评论（当前为静态 mock 交互）
+export function SnippetActions() {
+  const { t } = useLocale();
   const [liked, setLiked] = useState(false);
 
   return (
-    <div className="flex gap-1">
-      {/* 喜欢：本地 toggle */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onPress={() => setLiked((prev) => !prev)}
-        aria-label={liked ? "取消喜欢" : "喜欢"}
-        aria-pressed={liked}
-        className={liked ? "text-red-500" : "text-muted-foreground"}
+    <div className="flex gap-0.5">
+      <button
+        onClick={() => setLiked((prev) => !prev)}
+        className={`flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
+          liked ? "text-red-500" : "text-[var(--fg3)] hover:bg-primary/10 hover:text-primary"
+        }`}
+        aria-label={t("snippet.like")}
       >
-        <SvgIcon name="heart" size={14} className={liked ? "[&_svg]:fill-red-500" : ""} />
-      </Button>
+        <SvgIcon name="heart" size={14} />
+        {t("snippet.like")}
+      </button>
 
-      {/* 评论：触发 CommentModal */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onPress={onCommentClick}
-        aria-label="评论"
-        className="text-muted-foreground"
+      <button
+        className="flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs text-[var(--fg3)] transition-colors hover:bg-primary/10 hover:text-primary"
+        aria-label={t("snippet.comment")}
       >
         <SvgIcon name="message-circle" size={14} />
-      </Button>
+        {t("snippet.comment")}
+      </button>
     </div>
   );
 }
