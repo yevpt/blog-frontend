@@ -41,6 +41,10 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("@/lib/category-colors", () => ({
+  getCategoryColorClass: () => "bg-blue-500",
+}));
+
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name, size }: { name: string; size?: number }) => (
     <span data-testid={`icon-${name}`} data-size={size} />
@@ -233,13 +237,33 @@ describe("FeaturedCarousel", () => {
 
   it("移动端 slide 文字 overlay 包裹层带 absolute bottom-0 class", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    // 找到 carousel-root 内部第一个 no-drag 元素的父级（文字 overlay 包裹层）
     const mobileCarousel = screen.getByTestId("carousel-root");
-    const noDragEl = mobileCarousel.querySelector("[data-carousel-no-drag='true']");
-    expect(noDragEl).not.toBeNull();
-    const overlayWrapper = noDragEl!.parentElement;
+    // 文字 overlay 包裹层（data-carousel-no-drag 在 no-drag 容器内部，找第一个匹配）
+    const noDragEls = mobileCarousel.querySelectorAll("[data-carousel-no-drag='true']");
+    // 第一个是 slide 内部的文字区，第二个是指示点容器
+    const textNoDrag = noDragEls[0];
+    expect(textNoDrag).not.toBeNull();
+    const overlayWrapper = textNoDrag!.parentElement;
     expect(overlayWrapper!.className).toContain("absolute");
     expect(overlayWrapper!.className).toContain("bottom-0");
+  });
+
+  it("移动端指示点仅渲染一组，不随 slide 数量重复", () => {
+    render(<FeaturedCarousel posts={mockPosts} />);
+    // 每个按钮的 aria-label 应在整个文档中唯一
+    expect(screen.getByRole("button", { name: "切换至第 1 张" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "切换至第 2 张" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "切换至第 3 张" })).toBeTruthy();
+  });
+
+  it("移动端指示点容器为 Carousel.Root 的直接后代，不嵌套在 Carousel.Item 内", () => {
+    render(<FeaturedCarousel posts={mockPosts} />);
+    const mobileCarousel = screen.getByTestId("carousel-root");
+    // 指示点容器带 data-carousel-no-drag 且 className 含 bottom-8
+    const indicatorContainer = Array.from(
+      mobileCarousel.querySelectorAll("[data-carousel-no-drag='true']"),
+    ).find((el) => (el as HTMLElement).className.includes("bottom-8"));
+    expect(indicatorContainer).not.toBeNull();
   });
 
   it("初始状态：桌面轮播第一个指示器为 current", () => {

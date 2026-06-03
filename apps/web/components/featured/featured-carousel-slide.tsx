@@ -14,8 +14,6 @@ interface FeaturedCarouselSlideProps {
   isActive: boolean;
   /** First-slide LCP candidate: always eager-load the image. */
   isLcpCandidate?: boolean;
-  /** Mobile indicator dots rendered inside the image area. */
-  mobileIndicators?: React.ReactNode;
 }
 
 /**
@@ -30,7 +28,6 @@ export function FeaturedCarouselSlide({
   post,
   isActive,
   isLcpCandidate = false,
-  mobileIndicators,
 }: FeaturedCarouselSlideProps) {
   const { locale } = useLocale();
   const formattedDate = formatDate(post.date, locale);
@@ -133,11 +130,6 @@ export function FeaturedCarouselSlide({
               阅读全文 →
             </Button>
           </div>
-
-          {/* 移动端指示点：CTA 下方居中 */}
-          {mobileIndicators && (
-            <div className="flex justify-center md:hidden">{mobileIndicators}</div>
-          )}
         </div>
       </div>
     </div>

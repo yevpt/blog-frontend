@@ -65,7 +65,6 @@ function FeaturedCarouselDesktop({ posts }: { posts: FeaturedPost[] }) {
             post={post}
             isActive={index === currentIndex}
             isLcpCandidate={index === 0}
-            mobileIndicators={null}
           />
         </div>
       ))}
@@ -198,11 +197,18 @@ function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
                 post={post}
                 isActive={index === currentIndex}
                 isLcpCandidate={index === 0}
-                mobileIndicators={mobileIndicators}
               />
             </Carousel.Item>
           ))}
         </Carousel.Content>
+        {mobileIndicators && (
+          <div
+            className="absolute bottom-8 left-0 right-0 z-20 flex justify-center md:hidden"
+            data-carousel-no-drag="true"
+          >
+            {mobileIndicators}
+          </div>
+        )}
       </div>
     </Carousel.Root>
   );
