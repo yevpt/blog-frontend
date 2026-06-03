@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import type { ReactNode } from "react";
 import { Pagination } from "@repo/ui";
-import type { ArticlePageResp, CategoryTabItem } from "@repo/api";
+import type { ArticleListItemResp, ArticlePageResp, CategoryTabItem } from "@repo/api";
 import { ArticleListHeader } from "./article-list-header";
 import { ArticleCard } from "./article-card";
 import { ArticleCardSkeleton } from "./article-card-skeleton";
@@ -20,22 +21,34 @@ const ALL_CATEGORY: CategoryTabItem = {
 
 interface ArticleSectionProps {
   initialPage: ArticlePageResp;
-  categories: CategoryTabItem[];
+  categories?: CategoryTabItem[];
+  sidebar?: ReactNode;
+  /** 受控模式：由父组件控制当前分类，不渲染内部 Tabs */
+  currentCategoryId?: number;
 }
 
-export function ArticleSection({ initialPage, categories }: ArticleSectionProps) {
-  const [currentCategoryId, setCurrentCategoryId] = useState(ALL_CATEGORY_ID);
+interface ActiveComment {
+  title: string;
+  type: string;
+}
+
+export function ArticleSection({
+  initialPage,
+  categories = [],
+  sidebar,
+  currentCategoryId: controlledCategoryId,
+}: ArticleSectionProps) {
+  const [internalCategoryId, setInternalCategoryId] = useState(ALL_CATEGORY_ID);
+  const isControlled = controlledCategoryId !== undefined;
+  const currentCategoryId = isControlled ? controlledCategoryId : internalCategoryId;
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageData, setPageData] = useState(initialPage);
   const [isLoading, setIsLoading] = useState(false);
   const [fetchError, setFetchError] = useState(false);
   // TODO: 待后端支持文字搜索接口后，在 fetchPage 中加入 search 参数
   const [searchQuery, setSearchQuery] = useState("");
-  const [commentModal, setCommentModal] = useState<{ open: boolean; title: string; type: string }>({
-    open: false,
-    title: "",
-    type: "",
-  });
+  const [activeComment, setActiveComment] = useState<ActiveComment | null>(null);
 
   const allCategories = useMemo(() => [ALL_CATEGORY, ...categories], [categories]);
 
@@ -78,7 +91,7 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
   const handleCategoryChange = useCallback(
     (id: number) => {
       setFetchError(false);
-      setCurrentCategoryId(id);
+      setInternalCategoryId(id);
       setCurrentPage(1);
       void fetchPage(id, 1);
     },
@@ -96,33 +109,20 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
   );
 
   const skeletonCount = pageData.list.length || 6;
+  const openComment = (article: ArticleListItemResp) => {
+    setActiveComment({
+      title: article.title,
+      type: article.category?.name ?? "文章",
+    });
+  };
 
-  return (
-    <section ref={sectionRef} className="scroll-mt-20">
-      <ArticleListHeader
-        categories={allCategories}
-        currentCategoryId={currentCategoryId}
-        onCategoryChange={handleCategoryChange}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
-
-      <div
-        className="mt-6"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-          gap: "20px",
-        }}
-      >
+  const articleGrid = (
+    <>
+      <div className="mt-6 grid grid-cols-1 gap-0 md:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:gap-5">
         {isLoading
           ? Array.from({ length: skeletonCount }, (_, i) => <ArticleCardSkeleton key={i} />)
           : pageData.list.map((article) => (
-              <ArticleCard
-                key={article.id}
-                article={article}
-                onCommentClick={(meta) => setCommentModal({ open: true, ...meta })}
-              />
+              <ArticleCard key={article.id} article={article} onComment={openComment} />
             ))}
       </div>
 
@@ -138,12 +138,43 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
           className="mt-8"
         />
       )}
+    </>
+  );
+
+  return (
+    <section id="articles" ref={sectionRef} className="scroll-mt-20">
+      <div data-testid="home-articles-header" className="mb-6">
+        <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-primary">
+          最新文章
+        </p>
+        <h2 className="mb-5 text-[22px] font-extrabold tracking-[-0.03em] text-foreground">
+          近期在写什么
+        </h2>
+        <ArticleListHeader
+          categories={allCategories}
+          currentCategoryId={currentCategoryId}
+          onCategoryChange={handleCategoryChange}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
+      </div>
+
+      {sidebar ? (
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_268px]">
+          <main className="min-w-0">{articleGrid}</main>
+          <aside className="mt-10 flex flex-col gap-3.5 lg:sticky lg:top-[88px] lg:mt-6">
+            {sidebar}
+          </aside>
+        </div>
+      ) : (
+        articleGrid
+      )}
 
       <CommentModal
-        open={commentModal.open}
-        title={commentModal.title}
-        type={commentModal.type}
-        onClose={() => setCommentModal((s) => ({ ...s, open: false }))}
+        open={activeComment !== null}
+        title={activeComment?.title ?? ""}
+        type={activeComment?.type ?? "文章"}
+        onClose={() => setActiveComment(null)}
       />
     </section>
   );

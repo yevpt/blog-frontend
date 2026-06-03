@@ -1,10 +1,13 @@
-import type { CSSProperties } from "react";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, act, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { FeaturedCarousel } from "./featured-carousel";
 import type { FeaturedPost } from "../../app/_mock/types";
+
+vi.mock("@repo/hooks/locale", () => ({
+  useLocale: () => ({ locale: "zh", setLocale: vi.fn(), t: (k: string) => k }),
+}));
 
 vi.mock("next/image", () => ({
   default: ({
@@ -45,7 +48,6 @@ vi.mock("@repo/icons", () => ({
 }));
 
 vi.mock("@repo/ui", () => ({
-  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   Button: ({
     href,
     children,
@@ -74,36 +76,46 @@ vi.mock("@repo/ui", () => ({
       onMouseLeave,
       setApi: _setApi,
       "aria-label": ariaLabel,
-      style,
+      opts,
+      orientation,
     }: {
       children: ReactNode;
       className?: string;
-      style?: CSSProperties;
       onMouseEnter?: () => void;
       onMouseLeave?: () => void;
-      setApi?: (api: null) => void;
+      setApi?: (api: MockCarouselApi | null) => void;
       "aria-label"?: string;
-      opts?: object;
-    }) => (
-      <div
-        role="region"
-        aria-label={ariaLabel}
-        className={className}
-        style={style}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-      >
-        {children}
-      </div>
-    ),
+      opts?: { watchDrag?: unknown };
+      orientation?: string;
+    }) => {
+      return (
+        <div
+          role="region"
+          aria-label={ariaLabel}
+          className={className}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
+          data-has-watch-drag={typeof opts?.watchDrag === "function"}
+          data-orientation={orientation ?? "horizontal"}
+          data-testid="carousel-root"
+        >
+          {children}
+        </div>
+      );
+    },
     Content: ({ children, className }: { children: ReactNode; className?: string }) => (
       <div className={className}>{children}</div>
     ),
-    Item: ({ children, className }: { children: ReactNode; className?: string }) => (
-      <div className={className}>{children}</div>
-    ),
+    Item: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   },
 }));
+
+interface MockCarouselApi {
+  selectedScrollSnap: () => number;
+  scrollTo: (index: number) => void;
+  on: (event: string, handler: () => void) => void;
+  off: (event: string, handler: () => void) => void;
+}
 
 const mockPosts: FeaturedPost[] = [
   {
@@ -112,6 +124,7 @@ const mockPosts: FeaturedPost[] = [
     excerpt: "第一篇文章摘要内容",
     coverImage: "https://example.com/image1.jpg",
     category: "编程",
+    date: "2026-01-15",
     href: "/articles/first",
   },
   {
@@ -120,6 +133,7 @@ const mockPosts: FeaturedPost[] = [
     excerpt: "第二篇文章摘要内容",
     coverImage: "https://example.com/image2.jpg",
     category: "工具",
+    date: "2026-02-20",
     href: "/articles/second",
   },
   {
@@ -128,9 +142,15 @@ const mockPosts: FeaturedPost[] = [
     excerpt: "第三篇文章摘要内容",
     coverImage: "https://example.com/image3.jpg",
     category: "文学",
+    date: "2026-03-10",
     href: "/articles/third",
   },
 ];
+
+// 桌面垂直轮播（第一个 region = FeaturedCarouselDesktop，无 Embla）
+function getDesktopCarousel() {
+  return screen.getAllByRole("region", { name: "推荐文章" })[0];
+}
 
 afterEach(() => {
   vi.useRealTimers();
@@ -150,22 +170,53 @@ describe("FeaturedCarousel", () => {
     expect(screen.getAllByText("第三篇文章标题").length).toBeGreaterThan(0);
   });
 
-  it("渲染正确数量的进度条指示器按钮", () => {
+  it("渲染正确数量的桌面指示器按钮（仅桌面垂直轮播有 hero-progress-button）", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    const indicators = screen.getAllByRole("button", { name: /第 \d+ 张，共/ });
+    const indicators = screen.getAllByTestId("hero-progress-button");
     expect(indicators).toHaveLength(mockPosts.length);
   });
 
-  it("指示器按钮具有正确的 aria-label", () => {
+  it("移动端使用 Embla carousel-root，桌面端用纯 CSS region", () => {
+    render(<FeaturedCarousel posts={mockPosts} />);
+    // 桌面端是纯 CSS（FeaturedCarouselDesktop），移动端是 Embla（有 data-testid=carousel-root）
+    expect(screen.getByTestId("carousel-root")).toBeTruthy();
+    expect(screen.getAllByRole("region", { name: "推荐文章" })).toHaveLength(2);
+  });
+
+  it("桌面轮播容器具有圆角且无全屏高度", () => {
+    render(<FeaturedCarousel posts={mockPosts} />);
+    const desktopCarousel = getDesktopCarousel();
+    expect(desktopCarousel.className).toContain("min-h-[380px]");
+    expect(desktopCarousel.className).toContain("max-h-[520px]");
+    expect(desktopCarousel.className).toContain("rounded-2xl");
+    expect(desktopCarousel.className).not.toContain("h-[100vh]");
+    expect(desktopCarousel.className).not.toContain("bg-[#0d0b2e]");
+  });
+
+  it("移动端文字区域标记为非拖拽区", () => {
+    render(<FeaturedCarousel posts={mockPosts} />);
+    expect(screen.getByTestId("carousel-root")).toHaveAttribute("data-has-watch-drag", "true");
+    const noDragElements = document.querySelectorAll("[data-carousel-no-drag='true']");
+    expect(noDragElements.length).toBeGreaterThan(0);
+  });
+
+  it("桌面指示器按钮具有正确的 aria-label", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
     expect(screen.getByLabelText("第 1 张，共 3 张")).toBeTruthy();
     expect(screen.getByLabelText("第 2 张，共 3 张")).toBeTruthy();
     expect(screen.getByLabelText("第 3 张，共 3 张")).toBeTruthy();
   });
 
-  it("轮播容器具有正确的 region aria-label", () => {
+  it("渲染两个轮播实例（桌面 + 移动端）", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    expect(screen.getByRole("region", { name: "推荐文章" })).toBeTruthy();
+    expect(screen.getAllByRole("region", { name: "推荐文章" })).toHaveLength(2);
+  });
+
+  it("阅读全文链接 href 正确", () => {
+    render(<FeaturedCarousel posts={mockPosts} />);
+    const links = screen.getAllByRole("link", { name: /阅读全文/ });
+    expect(links.length).toBeGreaterThanOrEqual(1);
+    expect(links.some((l) => l.getAttribute("href") === "/articles/first")).toBe(true);
   });
 
   it("posts 为空时不渲染", () => {
@@ -173,13 +224,13 @@ describe("FeaturedCarousel", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("初始状态：第一个指示器为 current", () => {
+  it("初始状态：桌面轮播第一个指示器为 current", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
     expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
     expect(screen.getByLabelText("第 2 张，共 3 张")).not.toHaveAttribute("aria-current");
   });
 
-  it("点击第二个指示器切换到第二张幻灯片", async () => {
+  it("点击第二个桌面指示器切换到第二张幻灯片", async () => {
     const user = userEvent.setup();
     render(<FeaturedCarousel posts={mockPosts} />);
     await act(async () => {
@@ -191,7 +242,7 @@ describe("FeaturedCarousel", () => {
 });
 
 describe("FeaturedCarousel 自动轮播（fake timers）", () => {
-  it("自动轮播：5 秒后切换到第二张", () => {
+  it("自动轮播：5 秒后桌面切换到第二张", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
     act(() => {
@@ -204,7 +255,10 @@ describe("FeaturedCarousel 自动轮播（fake timers）", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
     act(() => {
-      vi.advanceTimersByTime(10000);
+      vi.advanceTimersByTime(5000);
+    });
+    act(() => {
+      vi.advanceTimersByTime(5000);
     });
     expect(screen.getByLabelText("第 3 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
@@ -213,16 +267,10 @@ describe("FeaturedCarousel 自动轮播（fake timers）", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
     act(() => {
-      vi.advanceTimersByTime(15000);
+      vi.advanceTimersByTime(5000);
     });
-    expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
-  });
-
-  it("悬停时暂停自动轮播", () => {
-    vi.useFakeTimers();
-    render(<FeaturedCarousel posts={mockPosts} />);
     act(() => {
-      fireEvent.mouseEnter(screen.getByRole("region", { name: "推荐文章" }));
+      vi.advanceTimersByTime(5000);
     });
     act(() => {
       vi.advanceTimersByTime(5000);
@@ -230,15 +278,27 @@ describe("FeaturedCarousel 自动轮播（fake timers）", () => {
     expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 
-  it("悬停结束后恢复自动轮播", () => {
+  it("悬停时暂停桌面轮播", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
-    const carousel = screen.getByRole("region", { name: "推荐文章" });
+    act(() => {
+      fireEvent.mouseEnter(getDesktopCarousel());
+    });
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
+  });
+
+  it("悬停结束后恢复桌面轮播", () => {
+    vi.useFakeTimers();
+    render(<FeaturedCarousel posts={mockPosts} />);
+    const carousel = getDesktopCarousel();
     act(() => {
       fireEvent.mouseEnter(carousel);
     });
     act(() => {
-      vi.advanceTimersByTime(6000);
+      vi.advanceTimersByTime(5000);
     });
     expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
     act(() => {
