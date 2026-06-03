@@ -18,3 +18,10 @@ export type {
   ArticlePageResp,
 } from "./types/article";
 export type { CategoryTabItem, CategoryTabsResp } from "./types/category";
+export type {
+  MomentListReq,
+  MomentUserResp,
+  MomentMediaResp,
+  MomentItemResp,
+  MomentPageResp,
+} from "./types/moment";
