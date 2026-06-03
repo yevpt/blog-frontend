@@ -1,91 +1,89 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import type { ArticleListItemResp } from "@repo/api";
+import { useLocale } from "@repo/hooks/locale";
+import { formatDate } from "../../lib/format-time";
+import { getCategoryColorClass } from "../../lib/category-colors";
 import { ArticleCardStats } from "./article-card-stats";
 
 interface ArticleCardProps {
   article: ArticleListItemResp;
-  onCommentClick?: (meta: { title: string; type: string }) => void;
+  onComment?: (article: ArticleListItemResp) => void;
 }
 
-export function ArticleCard({ article, onCommentClick }: ArticleCardProps) {
+export function ArticleCard({ article, onComment }: ArticleCardProps) {
   const [liked, setLiked] = useState(false);
-
-  const formattedDate = new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }).format(new Date(article.created_at));
+  const { locale } = useLocale();
+  const formattedDate = formatDate(article.created_at, locale);
 
   const href = `/articles/${article.id}`;
 
-  const handleCommentClick = () => {
-    onCommentClick?.({
-      title: article.title,
-      type: article.category?.name ?? "文章",
-    });
-  };
-
   return (
-    <article className="flex flex-col bg-card rounded-xl overflow-hidden max-sm:rounded-none max-sm:shadow-none max-sm:border-0 max-sm:border-b max-sm:border-border">
-      {/* 封面图：hover 时图片放大 */}
-      {article.cover_img_url && (
-        <Link href={href} className="block overflow-hidden" aria-hidden tabIndex={-1}>
-          <div className="relative aspect-video">
-            <Image
-              src={article.cover_img_url}
-              alt={article.title}
-              fill
-              className="object-cover transition-transform duration-300 hover:scale-[1.06]"
-              sizes="(max-width: 768px) 100vw, 50vw"
+    // 外层 div 作为稳定的 hover 触发区，自身不位移，避免卡片上移后鼠标脱离触发区导致抖动
+    <div className="group border-b border-border last:border-b-0 md:border-b-0">
+      <article className="flex h-full flex-col overflow-hidden bg-transparent transition-shadow md:rounded-2xl md:border md:border-border md:bg-card md:shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.04)] md:group-hover:shadow-[0_4px_8px_rgba(0,0,0,0.07),0_14px_36px_rgba(0,0,0,0.08)]">
+        {article.cover_img_url && (
+          <Link
+            href={href}
+            className="block overflow-hidden md:rounded-none"
+            aria-hidden
+            tabIndex={-1}
+          >
+            <div className="relative aspect-video overflow-hidden rounded-xl md:rounded-none">
+              <Image
+                src={article.cover_img_url}
+                alt={article.title}
+                fill
+                className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </div>
+          </Link>
+        )}
+
+        <div className="flex flex-1 flex-col px-0 py-3 pb-5 md:p-4">
+          <h3 className="mb-2 text-base font-bold leading-[1.45] tracking-[-0.02em] text-foreground line-clamp-2">
+            <Link
+              href={href}
+              className="hover:text-muted-foreground transition-colors duration-200"
+            >
+              {article.title}
+            </Link>
+          </h3>
+
+          {/* Date + Category */}
+          <div className="mb-3 flex items-center gap-2.5 text-xs text-muted-foreground">
+            <time dateTime={article.created_at}>{formattedDate}</time>
+            {article.category && (
+              <span className="flex items-center gap-1.5">
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-full ${getCategoryColorClass(article.category.name)}`}
+                />
+                {article.category.name}
+              </span>
+            )}
+          </div>
+
+          {article.short_content && (
+            <p className="mb-3.5 text-[13px] leading-[1.72] text-[var(--fg2)] line-clamp-3">
+              {article.short_content}
+            </p>
+          )}
+
+          <div className="mt-auto flex justify-end">
+            <ArticleCardStats
+              likes={article.like_count + (liked ? 1 : 0)}
+              comments={article.comment_count}
+              liked={liked}
+              onLike={() => setLiked((value) => !value)}
+              onComment={() => onComment?.(article)}
             />
           </div>
-        </Link>
-      )}
-
-      {/* 卡片体 */}
-      <div className="flex flex-col flex-1 p-4 gap-2">
-        {/* 分类（标题上方） */}
-        {article.category && (
-          <span className="text-[11px] font-bold uppercase tracking-widest text-accent">
-            {article.category.name}
-          </span>
-        )}
-
-        {/* 标题 */}
-        <h3 className="text-base font-bold leading-snug line-clamp-2">
-          <Link href={href} className="hover:text-accent transition-colors duration-200">
-            {article.title}
-          </Link>
-        </h3>
-
-        {/* 摘要（3 行截断） */}
-        {article.short_content && (
-          <p
-            className="text-[13px] text-muted-foreground line-clamp-3"
-            style={{ lineHeight: "1.72" }}
-          >
-            {article.short_content}
-          </p>
-        )}
-
-        {/* 底部行：日期（左）+ 统计（右） */}
-        <div className="mt-auto pt-2 flex items-center justify-between">
-          <time dateTime={article.created_at} className="text-xs text-muted-foreground">
-            {formattedDate}
-          </time>
-          <ArticleCardStats
-            likes={article.like_count}
-            comments={article.comment_count}
-            liked={liked}
-            onLikeToggle={() => setLiked((v) => !v)}
-            onCommentClick={handleCommentClick}
-          />
         </div>
-      </div>
-    </article>
+      </article>
+    </div>
   );
 }

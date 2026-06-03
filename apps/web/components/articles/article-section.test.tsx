@@ -34,7 +34,6 @@ vi.mock("@repo/icons", () => ({
 }));
 
 vi.mock("@repo/ui", () => ({
-  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
   Pagination: ({
     currentPage,
     totalPages,
@@ -171,6 +170,12 @@ describe("ArticleSection", () => {
     expect(screen.getByText("文章一")).toBeTruthy();
     expect(screen.getByText("文章二")).toBeTruthy();
     expect(vi.mocked(fetch)).not.toHaveBeenCalled();
+  });
+
+  it("文章网格使用更宽的卡片最小宽度", () => {
+    render(<ArticleSection initialPage={makePageResp()} categories={mockCategories} />);
+    const grid = screen.getByText("文章一").closest(".grid");
+    expect(grid?.className).toContain("minmax(320px,1fr)");
   });
 
   it("pages <= 1 时不显示分页", () => {

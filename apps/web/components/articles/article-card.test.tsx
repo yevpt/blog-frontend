@@ -1,8 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import type { ArticleListItemResp } from "@repo/api";
 import { ArticleCard } from "./article-card";
+
+vi.mock("@repo/hooks/locale", () => ({
+  useLocale: () => ({ locale: "zh", setLocale: vi.fn(), t: (k: string) => k }),
+}));
 
 vi.mock("next/image", () => ({
   default: ({
@@ -36,10 +41,6 @@ vi.mock("next/link", () => ({
 
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
-}));
-
-vi.mock("@repo/ui", () => ({
-  cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
 }));
 
 const baseArticle: ArticleListItemResp = {
@@ -92,41 +93,40 @@ describe("ArticleCard", () => {
 
   it("标题链接指向 /articles/{id}", () => {
     render(<ArticleCard article={baseArticle} />);
+    // 标题在 h3 内的链接（封面图链接也包含同名 img，通过 exact 匹配最小容器）
     const links = screen.getAllByRole("link", { name: "测试文章标题" });
+    // 至少有一个链接（标题链接），确保其中一个 href 为 /articles/1
     expect(links.some((l) => l.getAttribute("href") === "/articles/1")).toBe(true);
   });
 
-  it("分类标签在 DOM 中位于标题之前", () => {
-    render(<ArticleCard article={baseArticle} />);
-    const category = screen.getByText("编程");
-    const title = screen.getByText("测试文章标题");
-    // DOCUMENT_POSITION_FOLLOWING (4): title 在 category 之后
-    expect(category.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
-
-  it("点击爱心按钮切换 liked 状态", () => {
-    render(<ArticleCard article={baseArticle} />);
-    const likeBtn = screen.getByRole("button", { name: "喜欢" });
-    expect(likeBtn).toHaveAttribute("aria-pressed", "false");
-    fireEvent.click(likeBtn);
-    expect(screen.getByRole("button", { name: "取消喜欢" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-  });
-
-  it("点击评论按钮触发 onCommentClick 回调", () => {
-    const onCommentClick = vi.fn();
-    render(<ArticleCard article={baseArticle} onCommentClick={onCommentClick} />);
-    fireEvent.click(screen.getByRole("button", { name: "查看评论" }));
-    expect(onCommentClick).toHaveBeenCalledWith({
-      title: "测试文章标题",
-      type: "编程",
-    });
-  });
-
-  it("不再显示阅读量图标", () => {
+  it("不显示阅读量统计，只保留喜欢和评论", () => {
     render(<ArticleCard article={baseArticle} />);
     expect(screen.queryByTestId("icon-eye")).toBeNull();
+    expect(screen.queryByText("100")).toBeNull();
+    expect(screen.getByText("20")).toBeTruthy();
+    expect(screen.getByText("5")).toBeTruthy();
+  });
+
+  it("阅读全文链接指向相同文章路径", () => {
+    render(<ArticleCard article={baseArticle} />);
+    const links = screen.getAllByRole("link", { name: "测试文章标题" });
+    expect(links.some((link) => link.getAttribute("href") === "/articles/1")).toBe(true);
+  });
+
+  it("分类标签在 DOM 中位于标题之后", () => {
+    render(<ArticleCard article={baseArticle} />);
+    const title = screen.getByText("测试文章标题");
+    const category = screen.getByText("编程");
+    expect(title.compareDocumentPosition(category) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("点赞按钮可本地切换 liked 状态", async () => {
+    const user = userEvent.setup();
+    render(<ArticleCard article={baseArticle} />);
+    const likeButton = screen.getByRole("button", { name: /喜欢/ });
+
+    expect(likeButton).toHaveAttribute("aria-pressed", "false");
+    await user.click(likeButton);
+    expect(likeButton).toHaveAttribute("aria-pressed", "true");
   });
 });

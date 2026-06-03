@@ -1,3 +1,41 @@
+import type { Locale } from "@repo/hooks/locale";
+
+/** 中文月份名，索引 0 对应 1 月 */
+const ZH_MONTHS = [
+  "一月",
+  "二月",
+  "三月",
+  "四月",
+  "五月",
+  "六月",
+  "七月",
+  "八月",
+  "九月",
+  "十月",
+  "十一月",
+  "十二月",
+];
+
+/**
+ * 将日期格式化为指定语言的绝对日期字符串。
+ * 中文：六月 24, 2021
+ * 英文：December 26, 2025
+ */
+export function formatDate(date: Date | string, locale: Locale): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (locale === "en") {
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(d);
+  }
+  const month = ZH_MONTHS[d.getMonth()];
+  const day = d.getDate();
+  const year = d.getFullYear();
+  return `${month} ${day}, ${year}`;
+}
+
 /**
  * 将日期转换为相对时间字符串（中文）
  * 例如：刚刚、5 分钟前、2 小时前、3 天前、1 个月前、2 年前
