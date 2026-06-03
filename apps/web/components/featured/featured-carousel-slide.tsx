@@ -63,16 +63,16 @@ export function FeaturedCarouselSlide({
       </div>
 
       {/* ── 文字区：移动端绝对定位于底部，桌面端作为 flex 子项 ── */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 md:relative md:inset-auto md:z-auto md:w-[42%] md:flex-none">
+      <div className="absolute bottom-0 left-0 right-0 z-10 md:relative md:inset-auto md:z-auto md:h-full md:w-[42%] md:flex-none">
         <div
           key={isActive ? "active" : "idle"}
           data-carousel-no-drag="true"
           onPointerDownCapture={(e) => e.stopPropagation()}
-          className="flex flex-col gap-3 px-5 pb-8 cursor-auto select-text md:h-full md:justify-between md:gap-0 md:px-12 md:py-8 lg:px-16"
+          className="flex flex-col gap-3 px-5 pt-12 pb-8 cursor-auto select-text md:h-full md:justify-between md:gap-0 md:px-12 md:py-8 lg:px-16"
         >
           {/* 日期 + 分类 */}
           <div
-            className="flex items-center gap-2.5 text-[13px] font-medium tracking-wide text-white/65 transition-all md:text-muted-foreground"
+            className="flex items-center gap-2.5 text-[13px] font-medium tracking-wide text-white/65 transition-[opacity,transform] md:text-muted-foreground"
             style={{
               opacity: isActive ? 1 : 0,
               transform: isActive ? "translateX(0)" : "translateX(20px)",
@@ -91,7 +91,7 @@ export function FeaturedCarouselSlide({
 
           {/* 标题 */}
           <h2
-            className="line-clamp-2 text-[20px] font-bold leading-[1.2] tracking-tight text-white transition-all md:line-clamp-none md:text-[clamp(22px,2.4vw,36px)] md:text-foreground"
+            className="line-clamp-2 text-[20px] font-bold leading-[1.2] tracking-tight text-white transition-[opacity,transform] md:line-clamp-none md:text-[clamp(22px,2.4vw,36px)] md:text-foreground"
             style={{
               opacity: isActive ? 1 : 0,
               transform: isActive ? "translateX(0)" : "translateX(24px)",
@@ -104,7 +104,7 @@ export function FeaturedCarouselSlide({
 
           {/* 摘要 */}
           <p
-            className="line-clamp-3 text-[13px] leading-relaxed text-white/65 transition-all md:line-clamp-none md:max-w-[400px] md:text-[14px] md:leading-[1.75] md:text-muted-foreground"
+            className="line-clamp-3 text-[13px] leading-relaxed text-white/65 transition-[opacity,transform] md:line-clamp-none md:max-w-[400px] md:text-[14px] md:leading-[1.75] md:text-muted-foreground"
             style={{
               opacity: isActive ? 1 : 0,
               transform: isActive ? "translateX(0)" : "translateX(24px)",
@@ -117,7 +117,7 @@ export function FeaturedCarouselSlide({
 
           {/* CTA */}
           <div
-            className="transition-all"
+            className="transition-[opacity,transform]"
             style={{
               opacity: isActive ? 1 : 0,
               transform: isActive ? "translateX(0)" : "translateX(24px)",
@@ -129,7 +129,7 @@ export function FeaturedCarouselSlide({
               href={post.href}
               variant="outline"
               size="sm"
-              aria-label="阅读全文"
+              aria-label={`阅读全文：${post.title}`}
               className="h-10 rounded-full border-white/45 bg-transparent px-6 text-[13px] font-semibold text-white shadow-sm transition-colors md:border-border md:bg-card md:text-foreground md:hover:border-primary md:hover:bg-primary/10 md:hover:text-primary"
             >
               阅读全文 →
