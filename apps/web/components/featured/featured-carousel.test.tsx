@@ -147,9 +147,9 @@ const mockPosts: FeaturedPost[] = [
   },
 ];
 
-// 桌面垂直轮播（第一个 region = FeaturedCarouselDesktop，无 Embla）
+// 桌面垂直轮播（第二个 region = FeaturedCarouselDesktop，移动端先渲染故取 [1]）
 function getDesktopCarousel() {
-  return screen.getAllByRole("region", { name: "推荐文章" })[0];
+  return screen.getAllByRole("region", { name: "推荐文章" })[1];
 }
 
 afterEach(() => {
@@ -222,6 +222,13 @@ describe("FeaturedCarousel", () => {
   it("posts 为空时不渲染", () => {
     const { container } = render(<FeaturedCarousel posts={[]} />);
     expect(container.firstChild).toBeNull();
+  });
+
+  it("移动端轮播容器高度为 100svh、无圆角", () => {
+    render(<FeaturedCarousel posts={mockPosts} />);
+    const mobileCarousel = screen.getByTestId("carousel-root");
+    expect(mobileCarousel.className).toContain("h-[100svh]");
+    expect(mobileCarousel.className).not.toContain("rounded-2xl");
   });
 
   it("初始状态：桌面轮播第一个指示器为 current", () => {
