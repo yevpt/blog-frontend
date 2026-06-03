@@ -24,26 +24,38 @@ vi.mock("@repo/ui", () => ({
   ),
 }));
 
+vi.mock("./comment-section", () => ({
+  CommentSection: ({ targetType, targetId }: { targetType: string; targetId: number }) => (
+    <div data-testid="comment-section" data-target-type={targetType} data-target-id={targetId} />
+  ),
+}));
+
 describe("CommentModal", () => {
   it("关闭时不渲染弹窗内容", () => {
-    render(<CommentModal open={false} title="测试文章" type="技术" onClose={vi.fn()} />);
-
+    render(
+      <CommentModal open={false} title="测试文章" type="技术" targetId={5} onClose={vi.fn()} />,
+    );
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("打开时显示文章类型、标题和评论输入框", () => {
-    render(<CommentModal open title="测试文章" type="技术" onClose={vi.fn()} />);
-
+  it("打开时显示文章类型和标题", () => {
+    render(<CommentModal open title="测试文章" type="技术" targetId={5} onClose={vi.fn()} />);
     expect(screen.getByRole("dialog", { name: "评论" })).toBeTruthy();
     expect(screen.getByText("技术 · 评论")).toBeTruthy();
     expect(screen.getByText("测试文章")).toBeTruthy();
-    expect(screen.getByPlaceholderText("写下你的评论...")).toBeTruthy();
+  });
+
+  it("将正确的 targetType 和 targetId 传给 CommentSection", () => {
+    render(<CommentModal open title="测试文章" type="技术" targetId={42} onClose={vi.fn()} />);
+    const section = screen.getByTestId("comment-section");
+    expect(section.dataset.targetType).toBe("article");
+    expect(section.dataset.targetId).toBe("42");
   });
 
   it("点击关闭按钮触发 onClose", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    render(<CommentModal open title="测试文章" type="技术" onClose={onClose} />);
+    render(<CommentModal open title="测试文章" type="技术" targetId={5} onClose={onClose} />);
 
     await user.click(screen.getByLabelText("关闭评论"));
 

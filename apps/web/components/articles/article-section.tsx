@@ -28,6 +28,7 @@ interface ArticleSectionProps {
 }
 
 interface ActiveComment {
+  articleId: number;
   title: string;
   type: string;
 }
@@ -111,6 +112,7 @@ export function ArticleSection({
   const skeletonCount = pageData.list.length || 6;
   const openComment = (article: ArticleListItemResp) => {
     setActiveComment({
+      articleId: article.id,
       title: article.title,
       type: article.category?.name ?? "文章",
     });
@@ -174,6 +176,7 @@ export function ArticleSection({
         open={activeComment !== null}
         title={activeComment?.title ?? ""}
         type={activeComment?.type ?? "文章"}
+        targetId={activeComment?.articleId ?? 0}
         onClose={() => setActiveComment(null)}
       />
     </section>

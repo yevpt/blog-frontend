@@ -122,6 +122,19 @@ vi.mock("@repo/hooks", () => ({
   }),
 }));
 
+vi.mock("@/components/comments", () => ({
+  CommentModal: ({
+    open,
+    targetId,
+  }: {
+    open: boolean;
+    targetId: number;
+    title: string;
+    type: string;
+    onClose: () => void;
+  }) => (open ? <div data-testid="comment-modal" data-target-id={String(targetId)} /> : null),
+}));
+
 function makeArticle(id: number, title: string) {
   return {
     id,
@@ -350,5 +363,21 @@ describe("ArticleSection", () => {
     await waitFor(() => {
       expect(screen.getByText("骨架屏测试文章")).toBeTruthy();
     });
+  });
+
+  it("点击评论按钮后弹窗接收到正确的 articleId", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ArticleSection
+        initialPage={makePageResp({ list: [makeArticle(7, "目标文章")] })}
+        categories={mockCategories}
+      />,
+    );
+
+    await user.click(screen.getByLabelText("评论"));
+
+    const modal = screen.getByTestId("comment-modal");
+    expect(modal.dataset.targetId).toBe("7");
   });
 });
