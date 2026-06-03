@@ -231,6 +231,17 @@ describe("FeaturedCarousel", () => {
     expect(mobileCarousel.className).not.toContain("rounded-2xl");
   });
 
+  it("移动端 slide 文字 overlay 包裹层带 absolute bottom-0 class", () => {
+    render(<FeaturedCarousel posts={mockPosts} />);
+    // 找到 carousel-root 内部第一个 no-drag 元素的父级（文字 overlay 包裹层）
+    const mobileCarousel = screen.getByTestId("carousel-root");
+    const noDragEl = mobileCarousel.querySelector("[data-carousel-no-drag='true']");
+    expect(noDragEl).not.toBeNull();
+    const overlayWrapper = noDragEl!.parentElement;
+    expect(overlayWrapper!.className).toContain("absolute");
+    expect(overlayWrapper!.className).toContain("bottom-0");
+  });
+
   it("初始状态：桌面轮播第一个指示器为 current", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
     expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");

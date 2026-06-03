@@ -1,91 +1,147 @@
+"use client";
+
+import React from "react";
 import Image from "next/image";
 import { Button } from "@repo/ui";
+import { useLocale } from "@repo/hooks/locale";
 import type { FeaturedPost } from "@/app/_mock/types";
+import { formatDate } from "../../lib/format-time";
+import { getCategoryColorClass } from "@/lib/category-colors";
 
 interface FeaturedCarouselSlideProps {
   post: FeaturedPost;
-  /** 首屏 LCP 候选：首张幻灯片始终 eager 预加载 */
+  /** Whether this slide is currently visible (for staggered text animation). */
+  isActive: boolean;
+  /** First-slide LCP candidate: always eager-load the image. */
   isLcpCandidate?: boolean;
+  /** Mobile indicator dots rendered inside the image area. */
+  mobileIndicators?: React.ReactNode;
 }
 
+/**
+ * Two-panel slide: left image + right text.
+ *
+ * Animation strategy for the vertical carousel:
+ * - The slide itself is moved vertically by Embla (natural scroll).
+ * - The image has a slow Ken-Burns zoom while the slide is active.
+ * - Text elements enter with staggered opacity + translateX transitions
+ *   triggered by the `isActive` flag. A dynamic `key` on the text wrapper
+ *   resets the animation when the slide re-enters.
+ */
 export function FeaturedCarouselSlide({
   post,
+  isActive,
   isLcpCandidate = false,
+  mobileIndicators,
 }: FeaturedCarouselSlideProps) {
+  const { locale } = useLocale();
+  const formattedDate = formatDate(post.date, locale);
+
   return (
-    <div className="relative w-full h-full">
-      {/* 图片层 */}
-      <Image
-        src={post.coverImage}
-        alt={post.title}
-        fill
-        className="object-cover"
-        priority={isLcpCandidate}
-        loading={isLcpCandidate ? "eager" : "lazy"}
-      />
-
-      {/* 顶部遮罩：保护 Navbar 可读性 */}
-      <div className="absolute inset-x-0 top-0 h-[130px] bg-gradient-to-b from-black/40 to-transparent z-[1]" />
-
-      {/* 底部遮罩：内容区可读性 */}
-      <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-black/88 via-black/50 to-transparent z-[1]" />
-
-      {/* 紫色斜向色调 */}
-      <div
-        className="absolute inset-0 z-[2] opacity-[0.22]"
-        style={{
-          background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, transparent 100%)",
-        }}
-      />
-
-      {/* 内容层 */}
-      <div className="absolute inset-x-0 bottom-[64px] z-10 px-6 pb-8 md:px-12 md:pb-10">
-        {/* pill 标签 */}
-        <span className="inline-flex items-center mb-4 px-3 py-1 text-xs font-bold tracking-widest text-accent bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
-          ✦ 精选推荐
-        </span>
-
-        {/* 标题 */}
-        <h2
-          className="font-black text-white leading-tight mb-3 line-clamp-2 max-sm:line-clamp-2"
+    <div className="relative h-full w-full md:flex md:flex-row md:gap-4 md:p-4">
+      {/* ── 图片：移动端绝对定位铺满，桌面端作为 flex 子项 ── */}
+      <div className="absolute inset-0 overflow-hidden md:relative md:inset-auto md:h-full md:w-auto md:flex-1 md:shrink-0 md:rounded-xl md:shadow-md">
+        <Image
+          src={post.coverImage}
+          alt={post.title}
+          fill
+          className="object-cover transition-transform duration-[6000ms] ease-out"
+          style={{ transform: isActive ? "scale(1.05)" : "scale(1)" }}
+          priority={isLcpCandidate}
+          loading={isLcpCandidate ? "eager" : "lazy"}
+          sizes="(max-width: 768px) 100vw, 55vw"
+        />
+        <div className="absolute inset-0 bg-black/10" />
+        {/* 移动端底部渐变叠加层 */}
+        <div
+          className="absolute inset-0 md:hidden"
           style={{
-            fontSize: "clamp(20px, 3vw, 40px)",
-            letterSpacing: "-0.04em",
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.30) 42%, transparent 68%)",
           }}
-        >
-          {post.title}
-        </h2>
-
-        {/* 摘要 */}
-        <p
-          className="text-[14px] leading-[1.7] mb-5 line-clamp-3 max-sm:line-clamp-2"
-          style={{ color: "rgba(255,255,255,0.52)" }}
-        >
-          {post.excerpt}
-        </p>
-
-        {/* CTA 按钮 */}
-        <Button
-          href={post.href}
-          variant="outline"
-          size="sm"
-          className="border-white/60 text-white bg-white/10 backdrop-blur-sm hover:bg-white/25 hover:border-white hover:text-white"
-        >
-          阅读全文
-        </Button>
+        />
       </div>
 
-      {/* 底部液态玻璃渐变（覆盖进度条区域下方，过渡到页面背景） */}
-      <div
-        className="absolute inset-x-0 bottom-0 h-[64px] z-[4] pointer-events-none"
-        style={{
-          background: "transparent",
-          backdropFilter: "blur(14px) saturate(140%)",
-          WebkitBackdropFilter: "blur(14px) saturate(140%)",
-          maskImage: "linear-gradient(to top, black 60%, transparent 100%)",
-          WebkitMaskImage: "linear-gradient(to top, black 60%, transparent 100%)",
-        }}
-      />
+      {/* ── 文字区：移动端绝对定位于底部，桌面端作为 flex 子项 ── */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 md:relative md:inset-auto md:z-auto md:w-[42%] md:flex-none">
+        <div
+          key={isActive ? "active" : "idle"}
+          data-carousel-no-drag="true"
+          onPointerDownCapture={(e) => e.stopPropagation()}
+          className="flex flex-col gap-3 px-5 pb-8 cursor-auto select-text md:h-full md:justify-between md:gap-0 md:px-12 md:py-8 lg:px-16"
+        >
+          {/* 日期 + 分类 */}
+          <div
+            className="flex items-center gap-2.5 text-[13px] font-medium tracking-wide text-white/65 transition-all md:text-muted-foreground"
+            style={{
+              opacity: isActive ? 1 : 0,
+              transform: isActive ? "translateX(0)" : "translateX(20px)",
+              transitionDuration: isActive ? "600ms" : "250ms",
+              transitionDelay: isActive ? "0ms" : "0ms",
+            }}
+          >
+            <span>{formattedDate}</span>
+            <span className="flex items-center gap-1.5">
+              <span
+                className={`h-2 w-2 shrink-0 rounded-full ${getCategoryColorClass(post.category)}`}
+              />
+              {post.category}
+            </span>
+          </div>
+
+          {/* 标题 */}
+          <h2
+            className="line-clamp-2 text-[20px] font-bold leading-[1.2] tracking-tight text-white transition-all md:line-clamp-none md:text-[clamp(22px,2.4vw,36px)] md:text-foreground"
+            style={{
+              opacity: isActive ? 1 : 0,
+              transform: isActive ? "translateX(0)" : "translateX(24px)",
+              transitionDuration: isActive ? "700ms" : "250ms",
+              transitionDelay: isActive ? "160ms" : "0ms",
+            }}
+          >
+            {post.title}
+          </h2>
+
+          {/* 摘要 */}
+          <p
+            className="line-clamp-3 text-[13px] leading-relaxed text-white/65 transition-all md:line-clamp-none md:max-w-[400px] md:text-[14px] md:leading-[1.75] md:text-muted-foreground"
+            style={{
+              opacity: isActive ? 1 : 0,
+              transform: isActive ? "translateX(0)" : "translateX(24px)",
+              transitionDuration: isActive ? "700ms" : "250ms",
+              transitionDelay: isActive ? "280ms" : "0ms",
+            }}
+          >
+            {post.excerpt}
+          </p>
+
+          {/* CTA */}
+          <div
+            className="transition-all"
+            style={{
+              opacity: isActive ? 1 : 0,
+              transform: isActive ? "translateX(0)" : "translateX(24px)",
+              transitionDuration: isActive ? "700ms" : "250ms",
+              transitionDelay: isActive ? "400ms" : "0ms",
+            }}
+          >
+            <Button
+              href={post.href}
+              variant="outline"
+              size="sm"
+              aria-label="阅读全文"
+              className="h-10 rounded-full border-white/45 bg-transparent px-6 text-[13px] font-semibold text-white shadow-sm transition-colors md:border-border md:bg-card md:text-foreground md:hover:border-primary md:hover:bg-primary/10 md:hover:text-primary"
+            >
+              阅读全文 →
+            </Button>
+          </div>
+
+          {/* 移动端指示点：CTA 下方居中 */}
+          {mobileIndicators && (
+            <div className="flex justify-center md:hidden">{mobileIndicators}</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
