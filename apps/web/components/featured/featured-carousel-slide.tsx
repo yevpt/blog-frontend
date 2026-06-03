@@ -35,7 +35,10 @@ export function FeaturedCarouselSlide({
   return (
     <div className="relative h-full w-full md:flex md:flex-row md:gap-4 md:p-4">
       {/* ── 图片：移动端绝对定位铺满，桌面端作为 flex 子项 ── */}
-      <div className="absolute inset-0 overflow-hidden md:relative md:inset-auto md:h-full md:w-auto md:flex-1 md:shrink-0 md:rounded-xl md:shadow-md">
+      <div
+        data-carousel-background-drag="true"
+        className="absolute inset-0 overflow-hidden md:relative md:inset-auto md:h-full md:w-auto md:flex-1 md:shrink-0 md:rounded-xl md:shadow-md"
+      >
         <Image
           src={post.coverImage}
           alt={post.title}
@@ -44,6 +47,7 @@ export function FeaturedCarouselSlide({
           style={{ transform: isActive ? "scale(1.05)" : "scale(1)" }}
           priority={isLcpCandidate}
           loading={isLcpCandidate ? "eager" : "lazy"}
+          unoptimized
           sizes="(max-width: 768px) 100vw, 55vw"
         />
         <div className="absolute inset-0 bg-black/10" />
@@ -63,7 +67,7 @@ export function FeaturedCarouselSlide({
           key={isActive ? "active" : "idle"}
           data-carousel-no-drag="true"
           onPointerDownCapture={(e) => e.stopPropagation()}
-          className="flex flex-col gap-3 px-5 pt-12 pb-8 cursor-auto select-text md:h-full md:justify-between md:gap-0 md:px-12 md:py-8 lg:px-16"
+          className="flex flex-col gap-3.5 px-5 pt-12 pb-24 cursor-auto select-text sm:px-8 sm:pb-28 md:h-full md:justify-between md:gap-0 md:px-12 md:py-8 lg:px-16"
         >
           {/* 日期 + 分类 */}
           <div

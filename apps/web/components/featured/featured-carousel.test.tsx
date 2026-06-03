@@ -5,6 +5,14 @@ import type { ReactNode } from "react";
 import { FeaturedCarousel } from "./featured-carousel";
 import type { FeaturedPost } from "../../app/_mock/types";
 
+type MockWatchDrag = (_emblaApi: unknown, event: { target: EventTarget | null }) => boolean;
+
+const carouselMockState = vi.hoisted(
+  (): {
+    watchDrag?: MockWatchDrag;
+  } => ({}),
+);
+
 vi.mock("@repo/hooks/locale", () => ({
   useLocale: () => ({ locale: "zh", setLocale: vi.fn(), t: (k: string) => k }),
 }));
@@ -15,14 +23,26 @@ vi.mock("next/image", () => ({
     alt,
     fill: _fill,
     priority: _priority,
+    quality,
+    unoptimized,
     className,
   }: {
     src: string;
     alt: string;
     fill?: boolean;
     priority?: boolean;
+    quality?: number;
+    unoptimized?: boolean;
     className?: string;
-  }) => <img src={src} alt={alt} className={className} />,
+  }) => (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      data-quality={quality}
+      data-unoptimized={unoptimized}
+    />
+  ),
 }));
 
 vi.mock("next/link", () => ({
@@ -89,9 +109,10 @@ vi.mock("@repo/ui", () => ({
       onMouseLeave?: () => void;
       setApi?: (api: MockCarouselApi | null) => void;
       "aria-label"?: string;
-      opts?: { watchDrag?: unknown };
+      opts?: { watchDrag?: MockWatchDrag };
       orientation?: string;
     }) => {
+      carouselMockState.watchDrag = opts?.watchDrag;
       return (
         <div
           role="region"
@@ -159,6 +180,7 @@ function getDesktopCarousel() {
 afterEach(() => {
   vi.useRealTimers();
   vi.clearAllMocks();
+  carouselMockState.watchDrag = undefined;
 });
 
 describe("FeaturedCarousel", () => {
@@ -172,6 +194,15 @@ describe("FeaturedCarousel", () => {
     expect(screen.getAllByText("第一篇文章标题").length).toBeGreaterThan(0);
     expect(screen.getAllByText("第二篇文章标题").length).toBeGreaterThan(0);
     expect(screen.getAllByText("第三篇文章标题").length).toBeGreaterThan(0);
+  });
+
+  it("轮播封面不经过 Next 图片优化压缩", () => {
+    render(<FeaturedCarousel posts={mockPosts} />);
+    const images = screen.getAllByRole("img");
+
+    expect(images.length).toBeGreaterThan(0);
+    expect(images.every((image) => image.getAttribute("data-unoptimized") === "true")).toBe(true);
+    expect(images.every((image) => image.getAttribute("data-quality") === null)).toBe(true);
   });
 
   it("渲染正确数量的桌面指示器按钮（仅桌面垂直轮播有 hero-progress-button）", () => {
@@ -248,6 +279,14 @@ describe("FeaturedCarousel", () => {
     expect(overlayWrapper!.className).toContain("bottom-0");
   });
 
+  it("移动端文字区为底部指示器预留空间，避免两者挤在一起", () => {
+    render(<FeaturedCarousel posts={mockPosts} />);
+    const mobileCarousel = screen.getByTestId("carousel-root");
+    const textNoDrag = mobileCarousel.querySelector("[data-carousel-no-drag='true']");
+    expect(textNoDrag).not.toBeNull();
+    expect((textNoDrag as HTMLElement).className).toContain("pb-24");
+  });
+
   it("移动端指示点仅渲染一组，不随 slide 数量重复", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
     // 每个按钮的 aria-label 应在整个文档中唯一
@@ -259,11 +298,24 @@ describe("FeaturedCarousel", () => {
   it("移动端指示点容器为 Carousel.Root 的直接后代，不嵌套在 Carousel.Item 内", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
     const mobileCarousel = screen.getByTestId("carousel-root");
-    // 指示点容器带 data-carousel-no-drag 且 className 含 bottom-8
+    // 指示点容器带 data-carousel-no-drag 且 className 含 bottom-5
     const indicatorContainer = Array.from(
       mobileCarousel.querySelectorAll("[data-carousel-no-drag='true']"),
-    ).find((el) => (el as HTMLElement).className.includes("bottom-8"));
+    ).find((el) => (el as HTMLElement).className.includes("bottom-5"));
     expect(indicatorContainer).not.toBeNull();
+  });
+
+  it("移动端仅允许从背景图层拖动翻页", () => {
+    render(<FeaturedCarousel posts={mockPosts} />);
+    const mobileCarousel = screen.getByTestId("carousel-root");
+    const background = mobileCarousel.querySelector("[data-carousel-background-drag='true']");
+    const textNoDrag = mobileCarousel.querySelector("[data-carousel-no-drag='true']");
+
+    expect(background).not.toBeNull();
+    expect(textNoDrag).not.toBeNull();
+    expect(carouselMockState.watchDrag?.(null, { target: background })).toBe(true);
+    expect(carouselMockState.watchDrag?.(null, { target: textNoDrag })).toBe(false);
+    expect(carouselMockState.watchDrag?.(null, { target: mobileCarousel })).toBe(false);
   });
 
   it("初始状态：桌面轮播第一个指示器为 current", () => {

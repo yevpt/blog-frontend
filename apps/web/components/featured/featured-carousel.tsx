@@ -152,20 +152,20 @@ function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
 
   const mobileIndicators =
     posts.length > 1 ? (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 rounded-full border border-white/15 bg-black/20 px-2.5 py-1.5 shadow-[0_8px_28px_rgba(0,0,0,0.24)] backdrop-blur-md">
         {posts.map((post, index) => (
           <button
             key={post.id}
             onClick={() => handleIndicatorClick(index)}
             aria-label={`切换至第 ${index + 1} 张`}
             aria-current={index === currentIndex ? "true" : undefined}
-            className="flex h-5 w-5 items-center justify-center"
+            className="flex h-5 w-5 items-center justify-center rounded-full"
           >
             <span
               className="block rounded-full bg-white transition-all duration-500"
               style={{
                 opacity: index === currentIndex ? 1 : 0.5,
-                width: index === currentIndex ? 16 : 6,
+                width: index === currentIndex ? 18 : 6,
                 height: 6,
               }}
             />
@@ -180,7 +180,10 @@ function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
         loop: true,
         watchDrag: (_emblaApi, event) => {
           const target = event.target;
-          return !(target instanceof Element && target.closest("[data-carousel-no-drag='true']"));
+          return (
+            target instanceof Element &&
+            target.closest("[data-carousel-background-drag='true']") !== null
+          );
         },
       }}
       setApi={setApi}
@@ -203,7 +206,7 @@ function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
         </Carousel.Content>
         {mobileIndicators && (
           <div
-            className="absolute bottom-8 left-0 right-0 z-20 flex justify-center md:hidden"
+            className="absolute bottom-5 left-0 right-0 z-20 flex justify-center md:hidden"
             data-carousel-no-drag="true"
           >
             {mobileIndicators}
