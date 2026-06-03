@@ -121,7 +121,6 @@ function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
     if (api) {
       const nextIndex = (api.selectedScrollSnap() + 1) % posts.length;
       api.scrollTo(nextIndex);
-      setCurrentIndex(nextIndex);
       return;
     }
     setCurrentIndex((prev) => (prev + 1) % posts.length);
@@ -155,9 +154,9 @@ function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
   const mobileIndicators =
     posts.length > 1 ? (
       <div className="flex items-center gap-2">
-        {posts.map((_, index) => (
+        {posts.map((post, index) => (
           <button
-            key={index}
+            key={post.id}
             onClick={() => handleIndicatorClick(index)}
             aria-label={`切换至第 ${index + 1} 张`}
             aria-current={index === currentIndex ? "true" : undefined}
