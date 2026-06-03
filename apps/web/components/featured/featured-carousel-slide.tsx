@@ -19,14 +19,12 @@ interface FeaturedCarouselSlideProps {
 }
 
 /**
- * Two-panel slide: left image + right text.
+ * Dual-mode slide:
+ * - Mobile: full-screen overlay — image fills viewport, bottom gradient, text floats at bottom.
+ * - Desktop (md+): two-column flex — left image, right text panel; moved vertically by CSS translateY.
  *
- * Animation strategy for the vertical carousel:
- * - The slide itself is moved vertically by Embla (natural scroll).
- * - The image has a slow Ken-Burns zoom while the slide is active.
- * - Text elements enter with staggered opacity + translateX transitions
- *   triggered by the `isActive` flag. A dynamic `key` on the text wrapper
- *   resets the animation when the slide re-enters.
+ * Text enters with staggered opacity + translateX transitions driven by `isActive`.
+ * A dynamic `key` on the text wrapper resets the animation when the slide re-enters.
  */
 export function FeaturedCarouselSlide({
   post,
