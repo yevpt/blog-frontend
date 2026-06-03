@@ -211,4 +211,61 @@ describe("createApiClient", () => {
       expect.objectContaining({ method: "GET" }),
     );
   });
+
+  // ── 碎语接口（公开，无需登录）────────────────────────────────────────
+
+  it("moments.listPublic 无参数时调用 /moments", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { total: 0, pages: 0, page: 1, page_size: 10, list: [] },
+      }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    await client.moments.listPublic();
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/moments",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("moments.listPublic 带 page 和 page_size 时构造正确 query string", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { total: 0, pages: 0, page: 1, page_size: 3, list: [] },
+      }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    await client.moments.listPublic({ page: 1, page_size: 3 });
+
+    const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
+    const url = new URL(calledUrl);
+    expect(url.pathname).toBe("/moments");
+    expect(url.searchParams.get("page")).toBe("1");
+    expect(url.searchParams.get("page_size")).toBe("3");
+  });
+
+  it("moments.listPublic 带 user_id 时构造正确 query string", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { total: 0, pages: 0, page: 1, page_size: 10, list: [] },
+      }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    await client.moments.listPublic({ user_id: 2 });
+
+    const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
+    const url = new URL(calledUrl);
+    expect(url.pathname).toBe("/moments");
+    expect(url.searchParams.get("user_id")).toBe("2");
+  });
 });

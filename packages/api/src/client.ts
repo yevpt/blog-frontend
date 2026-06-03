@@ -10,6 +10,7 @@ import type {
 } from "./types/auth";
 import type { ArticleListReq, ArticlePageResp } from "./types/article";
 import type { CategoryTabsResp } from "./types/category";
+import type { MomentListReq, MomentPageResp } from "./types/moment";
 
 /** createApiClient 的注入配置接口 */
 export interface ApiClientConfig {
@@ -134,6 +135,18 @@ export function createApiClient(config: ApiClientConfig) {
     categories: {
       /** 查询分类 Tab 列表（含文章数量，按 seq/count 排序） */
       listTabs: () => fetchPublic<CategoryTabsResp>("/categories", { method: "GET" }),
+    },
+    moments: {
+      /** 分页查询公开碎语，支持用户/角色过滤 */
+      listPublic: (req: MomentListReq = {}) => {
+        const params = new URLSearchParams();
+        if (req.page !== undefined) params.set("page", String(req.page));
+        if (req.page_size !== undefined) params.set("page_size", String(req.page_size));
+        if (req.user_id !== undefined) params.set("user_id", String(req.user_id));
+        if (req.role_id !== undefined) params.set("role_id", String(req.role_id));
+        const qs = params.toString();
+        return fetchPublic<MomentPageResp>(`/moments${qs ? `?${qs}` : ""}`, { method: "GET" });
+      },
     },
     /**
      * 测试用端点，与后端 /test/* 路由对应。
