@@ -1,32 +1,85 @@
 @import "@repo/styles/base.css";
 
-/* 轮播进度条填充动画 */
-@keyframes progFill {
-  from {
-    width: 0%;
+/*
+ * 素雅背景：温暖米白底色 + 极淡的色彩漂移
+ *
+ * 整体效果像宣纸上微微晕开的薄色——看得出有颜色，但不抢眼。
+ * 两层超低饱和度渐变以极慢速度漂移，让页面有微妙的"活"感。
+ */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: -15%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 50% at 25% 20%, rgba(160, 140, 180, 0.1), transparent 60%),
+    radial-gradient(ellipse 60% 45% at 75% 70%, rgba(180, 155, 165, 0.08), transparent 55%);
+  animation: meshA 35s ease-in-out infinite;
+  will-change: transform;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: -15%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 50% 40% at 60% 15%, rgba(165, 175, 190, 0.06), transparent 50%),
+    radial-gradient(ellipse 55% 40% at 15% 75%, rgba(175, 165, 155, 0.05), transparent 50%);
+  animation: meshB 40s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* ── 深色主题：稍深一点的冷色光晕 ── */
+:root.dark body::before {
+  background:
+    radial-gradient(ellipse 70% 50% at 25% 20%, rgba(120, 110, 150, 0.14), transparent 60%),
+    radial-gradient(ellipse 60% 45% at 75% 70%, rgba(140, 120, 135, 0.1), transparent 55%);
+}
+:root.dark body::after {
+  background:
+    radial-gradient(ellipse 50% 40% at 60% 15%, rgba(110, 120, 140, 0.08), transparent 50%),
+    radial-gradient(ellipse 55% 40% at 15% 75%, rgba(130, 120, 110, 0.07), transparent 50%);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) body::before {
+    background:
+      radial-gradient(ellipse 70% 50% at 25% 20%, rgba(120, 110, 150, 0.14), transparent 60%),
+      radial-gradient(ellipse 60% 45% at 75% 70%, rgba(140, 120, 135, 0.1), transparent 55%);
   }
-  to {
-    width: 100%;
+  :root:not(.light) body::after {
+    background:
+      radial-gradient(ellipse 50% 40% at 60% 15%, rgba(110, 120, 140, 0.08), transparent 50%),
+      radial-gradient(ellipse 55% 40% at 15% 75%, rgba(130, 120, 110, 0.07), transparent 50%);
   }
 }
 
-/* 评论弹窗入场动画 */
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translate(-50%, calc(-50% + 20px));
+/* ── 极慢漂移，只有轻微位移 ── */
+@keyframes meshA {
+  0%,
+  100% {
+    transform: translate(0, 0);
   }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%);
+  50% {
+    transform: translate(2%, -1.5%);
+  }
+}
+@keyframes meshB {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-1.5%, 2%);
   }
 }
 
-@keyframes slideUpFull {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after {
+    animation: none;
   }
 }

@@ -23,7 +23,7 @@
 /* 这里定义的是整个 monorepo 共享的设计令牌，两个应用都会使用同一套颜色语义。 */
 @theme {
   /* Light mode */
-  --color-background: #f7f7f9;
+  --color-background: #fafaf9;
   --color-foreground: #18181b;
   --color-card: #ffffff;
   --color-card-foreground: #18181b;
@@ -35,8 +35,8 @@
   --color-muted-foreground: #71717a;
   --color-accent: #7c3aed;
   --color-accent-foreground: #ffffff;
-  --color-border: rgba(0, 0, 0, 0.07);
-  --color-input: rgba(0, 0, 0, 0.07);
+  --color-border: rgba(0, 0, 0, 0.06);
+  --color-input: rgba(0, 0, 0, 0.06);
   --color-ring: #7c3aed;
 }
 
@@ -48,8 +48,7 @@ html {
 
 body {
   margin: 0;
-  /* 使用 CSS 变量确保与 Tailwind bg-background 保持一致 */
-  background: var(--color-background);
+  /* body 背景透明，让 html 底色 + body::before mesh gradient 装饰层可见 */
   color: var(--color-foreground);
 }
 
@@ -63,18 +62,18 @@ body {
 /* Dark mode overrides */
 :root {
   @variant dark {
-    --color-background: #0c0c0f;
-    --color-foreground: #f4f4f5;
+    --color-background: #09090b;
+    --color-foreground: #fafafa;
     --color-card: #18181b;
-    --color-card-foreground: #f4f4f5;
+    --color-card-foreground: #fafafa;
     --color-primary: #a78bfa;
-    --color-primary-foreground: #0c0c0f;
+    --color-primary-foreground: #09090b;
     --color-secondary: #27272a;
-    --color-secondary-foreground: #f4f4f5;
+    --color-secondary-foreground: #fafafa;
     --color-muted: #27272a;
-    --color-muted-foreground: #71717a;
+    --color-muted-foreground: #a1a1aa;
     --color-accent: #a78bfa;
-    --color-accent-foreground: #0c0c0f;
+    --color-accent-foreground: #09090b;
     --color-border: rgba(255, 255, 255, 0.08);
     --color-input: rgba(255, 255, 255, 0.08);
     --color-ring: #a78bfa;
@@ -86,17 +85,17 @@ body {
 :root {
   --fg2: #52525b;
   --fg3: #a1a1aa;
-  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-bg: rgba(255, 255, 255, 0.78);
   --glass-bdr: rgba(255, 255, 255, 0.9);
-  --glass-mob: rgba(246, 246, 250, 0.82);
-  --glass-ring: rgba(0, 0, 0, 0.08);
+  --glass-mob: rgba(250, 250, 249, 0.85);
+  --glass-ring: rgba(0, 0, 0, 0.06);
 }
 :root.dark {
   --fg2: #a1a1aa;
   --fg3: #71717a;
-  --glass-bg: rgba(12, 12, 15, 0.75);
+  --glass-bg: rgba(9, 9, 11, 0.78);
   --glass-bdr: rgba(255, 255, 255, 0.09);
-  --glass-mob: rgba(18, 18, 22, 0.82);
+  --glass-mob: rgba(24, 24, 27, 0.85);
   --glass-ring: rgba(255, 255, 255, 0.04);
 }
 
@@ -117,5 +116,34 @@ body {
   }
   70% {
     transform: scale(1);
+  }
+}
+
+@keyframes heroProgress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes slideUpCard {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUpFull {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
   }
 }

@@ -21,12 +21,12 @@ describe("shouldUseDarkTheme", () => {
 });
 
 describe("THEME_CRITICAL_CSS", () => {
-  it("包含默认浅色背景（新 Violet-Indigo token）和 color-scheme", () => {
+  it("包含默认浅色背景和 color-scheme", () => {
     expect(THEME_CRITICAL_CSS).toContain("#f7f7f9");
     expect(THEME_CRITICAL_CSS).toContain("color-scheme:light");
   });
 
-  it("包含 .dark 的深色背景（新 token）", () => {
+  it("包含 .dark 的深色背景", () => {
     expect(THEME_CRITICAL_CSS).toContain("html.dark");
     expect(THEME_CRITICAL_CSS).toContain("#0c0c0f");
     expect(THEME_CRITICAL_CSS).toContain("color-scheme:dark");
