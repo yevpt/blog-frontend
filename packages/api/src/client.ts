@@ -19,6 +19,7 @@ import type {
   CommentReplyCreateReq,
   CommentReplyResp,
 } from "./types/comment";
+import type { UserDetailResp } from "./types/user";
 
 /** createApiClient 的注入配置接口 */
 export interface ApiClientConfig {
@@ -155,6 +156,10 @@ export function createApiClient(config: ApiClientConfig) {
         const qs = params.toString();
         return fetchPublic<MomentPageResp>(`/moments${qs ? `?${qs}` : ""}`, { method: "GET" });
       },
+    },
+    users: {
+      /** 获取当前登录用户详情（需登录） */
+      getMe: () => fetchAuthed<UserDetailResp>("/users/me", { method: "GET" }),
     },
     comments: {
       /** 分页查询评论，支持 article / moment / guestbook */

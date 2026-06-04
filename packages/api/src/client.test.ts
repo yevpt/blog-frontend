@@ -273,6 +273,39 @@ describe("createApiClient", () => {
     expect(url.searchParams.get("user_id")).toBe("2");
   });
 
+  // ── 用户接口 ─────────────────────────────────────────────────────
+
+  describe("users", () => {
+    it("getMe 使用 fetchAuthed 调用 /users/me", async () => {
+      const userDetail = {
+        id: 1,
+        username: "vpt",
+        nickname: "VPT",
+        email: "vpt@example.com",
+        roles: ["admin"],
+        status: 1,
+      };
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({ code: 0, message: "ok", data: userDetail }),
+      );
+      const client = createApiClient({
+        baseUrl: "http://api",
+        getAccessToken: () => "token123",
+      });
+
+      const result = await client.users.getMe();
+
+      expect(result).toEqual(userDetail);
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/users/me",
+        expect.objectContaining({
+          method: "GET",
+          headers: expect.objectContaining({ Authorization: "Bearer token123" }),
+        }),
+      );
+    });
+  });
+
   // ── 评论接口 ─────────────────────────────────────────────────────
 
   describe("comments", () => {

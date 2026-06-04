@@ -37,3 +37,9 @@ export type {
   CommentCreateReq,
   CommentReplyCreateReq,
 } from "./types/comment";
+export type {
+  UserDetailResp,
+  UserMetaResp,
+  UserSettingResp,
+  UserSocialLinkResp,
+} from "./types/user";
