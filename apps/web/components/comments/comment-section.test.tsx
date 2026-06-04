@@ -25,6 +25,7 @@ vi.mock("@repo/ui", () => ({
       {children}
     </button>
   ),
+  cn: (...classes: string[]) => classes.filter(Boolean).join(" "),
 }));
 
 vi.mock("@/app/providers/session-provider", () => ({

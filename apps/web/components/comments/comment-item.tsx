@@ -1,5 +1,6 @@
 import type { CommentItemResp, CommentReplyResp } from "@repo/api";
 import { formatRelativeTime } from "@/lib/format-time";
+import { UserAvatar } from "@/components/common/user-avatar";
 
 export interface ReplyTarget {
   commentId: number;
@@ -17,21 +18,6 @@ function getDisplayName(user: { username: string; nickname?: string } | undefine
   return user.nickname ?? user.username;
 }
 
-function Avatar({ url, name, size }: { url?: string; name: string; size: "sm" | "md" }) {
-  const className =
-    size === "md" ? "h-7 w-7 shrink-0 rounded-full" : "h-[22px] w-[22px] shrink-0 rounded-full";
-  const textClassName = size === "md" ? "text-xs" : "text-[10px]";
-
-  if (url) return <img src={url} alt={name} className={className} />;
-  return (
-    <div
-      className={`${className} flex items-center justify-center bg-border font-bold text-[var(--fg2)] ${textClassName}`}
-    >
-      {name[0]?.toUpperCase() ?? "?"}
-    </div>
-  );
-}
-
 interface ReplyItemProps {
   reply: CommentReplyResp;
   commentId: number;
@@ -45,7 +31,7 @@ function ReplyItem({ reply, commentId, onReply }: ReplyItemProps) {
 
   return (
     <div className="flex gap-2">
-      <Avatar url={reply.from_user?.avatar_url} name={fromName} size="sm" />
+      <UserAvatar src={reply.from_user?.avatar_url} name={fromName} size="sm" />
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-2">
           <span className="text-xs font-bold text-foreground">{fromName}</span>
@@ -74,7 +60,7 @@ export function CommentItem({ comment, onReply }: CommentItemProps) {
   return (
     <div className="comment-item">
       <div className="flex gap-2.5">
-        <Avatar url={comment.user?.avatar_url} name={displayName} size="md" />
+        <UserAvatar src={comment.user?.avatar_url} name={displayName} size="md" />
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-center gap-2">
             <span className="text-xs font-bold text-foreground">{displayName}</span>
