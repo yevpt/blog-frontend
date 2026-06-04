@@ -1,12 +1,39 @@
 "use client";
 
-import { useState, useRef, type ChangeEvent, type FormEvent, type MouseEvent } from "react";
+import {
+  type PointerEvent,
+  useState,
+  useRef,
+  useEffect,
+  type ChangeEvent,
+  type FormEvent,
+  type MouseEvent,
+} from "react";
+import { createPortal } from "react-dom";
 import { SvgIcon } from "@repo/icons";
-import { Button } from "@repo/ui";
+import { Button, cn } from "@repo/ui";
 import { OAuthGrid } from "./oauth-grid";
 
-const inputCls =
-  "w-full px-4 py-[13px] text-sm rounded-xl bg-foreground/5 border border-border placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 focus:bg-primary/[0.06] transition-colors";
+function inputCls(hasError?: boolean) {
+  return cn(
+    "w-full px-4 py-[9px] text-sm rounded-xl bg-foreground/5 border placeholder:text-muted-foreground/50 focus:outline-none transition-colors",
+    hasError
+      ? "border-destructive/50 bg-destructive/[0.03] focus:border-destructive/60"
+      : "border-border focus:border-primary/50 focus:bg-primary/[0.06]",
+  );
+}
+
+function isValidEmail(v: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+}
+
+function validatePassword(v: string): string | null {
+  if (!v) return "请设置密码";
+  if (v.length < 8) return "密码不能少于 8 位";
+  if (!/[a-zA-Z]/.test(v)) return "密码需包含英文字母";
+  if (!/[0-9]/.test(v)) return "密码需包含数字";
+  return null;
+}
 
 interface RegisterViewProps {
   onSwitchToLogin: () => void;
@@ -34,6 +61,109 @@ interface CaptchaVerifyResp {
   captcha_token: string;
 }
 
+// ── 自定义拼图滑块 ─────────────────────────────────────────────
+const THUMB_W = 44;
+
+interface SliderProps {
+  value: number;
+  max: number;
+  disabled?: boolean;
+  onChange: (x: number) => void;
+  onRelease: (x: number) => void;
+}
+
+function CaptchaSlider({ value, max, disabled, onChange, onRelease }: SliderProps) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+
+  function calcValue(clientX: number) {
+    const track = trackRef.current;
+    if (!track) return 0;
+    const rect = track.getBoundingClientRect();
+    const usable = rect.width - THUMB_W;
+    if (usable <= 0) return 0;
+    const raw = (clientX - rect.left - THUMB_W / 2) / usable;
+    return Math.max(0, Math.min(max, Math.round(raw * max)));
+  }
+
+  function handlePointerDown(e: PointerEvent<HTMLDivElement>) {
+    if (disabled) return;
+    isDragging.current = true;
+    if (e.currentTarget.setPointerCapture) {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+    onChange(calcValue(e.clientX));
+  }
+
+  function handlePointerMove(e: PointerEvent<HTMLDivElement>) {
+    if (!isDragging.current || disabled) return;
+    onChange(calcValue(e.clientX));
+  }
+
+  function handlePointerUp(e: PointerEvent<HTMLDivElement>) {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    if (e.currentTarget.releasePointerCapture) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    const x = calcValue(e.clientX);
+    onChange(x);
+    onRelease(x);
+  }
+
+  const fraction = max > 0 ? value / max : 0;
+  const fillW = `calc(${fraction * 100}% + ${THUMB_W * (1 - fraction)}px)`;
+  const thumbLeft = `calc(${fraction * 100}% - ${fraction * THUMB_W}px)`;
+
+  return (
+    <div
+      ref={trackRef}
+      data-testid="captcha-track"
+      className={cn(
+        "relative w-full h-[48px] rounded-xl select-none touch-none overflow-hidden",
+        "bg-foreground/[0.05] border border-border",
+        disabled ? "opacity-50 cursor-not-allowed" : "cursor-grab active:cursor-grabbing",
+      )}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+    >
+      {/* 进度填充 */}
+      <div
+        className="absolute inset-y-0 left-0 bg-primary/[0.12] pointer-events-none"
+        style={{ width: fillW }}
+      />
+      {/* 提示文字 */}
+      {fraction < 0.08 && !disabled && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <span className="text-[12px] text-muted-foreground/40 pl-14 select-none">
+            向右拖动完成验证
+          </span>
+        </div>
+      )}
+      {/* 滑块手柄 */}
+      <div
+        className={cn(
+          "absolute top-[4px] bottom-[4px] flex items-center justify-center pointer-events-none",
+          "rounded-[9px] bg-white dark:bg-zinc-100 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.18)]",
+        )}
+        style={{ width: THUMB_W, left: thumbLeft }}
+      >
+        {disabled ? (
+          <div className="w-[18px] h-[18px] border-[2.5px] border-gray-200 border-t-primary rounded-full animate-spin" />
+        ) : (
+          <div className="flex items-center gap-[3px]">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="w-[3px] h-[13px] rounded-full bg-gray-300" />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── 主组件 ────────────────────────────────────────────────────
 export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -41,30 +171,59 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
-  const [status, setStatus] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // 验证码发送状态
+  const [codeSent, setCodeSent] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+
+  // 字段级错误（onBlur 或提交后显示）
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  // 图形验证码
   const [captchaOpen, setCaptchaOpen] = useState(false);
   const [captchaChallenge, setCaptchaChallenge] = useState<CaptchaChallenge | null>(null);
   const [captchaX, setCaptchaX] = useState(0);
+  const [captchaLoading, setCaptchaLoading] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 倒计时
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [countdown]);
+
+  const emailError =
+    emailTouched || submitAttempted
+      ? !email.trim()
+        ? "请输入邮箱地址"
+        : !isValidEmail(email)
+          ? "邮箱格式不正确"
+          : null
+      : null;
+
+  const passwordError = passwordTouched || submitAttempted ? validatePassword(password) : null;
+
+  const codeError = submitAttempted && !code.trim() ? "请输入验证码" : null;
+
+  const canSendCode = isValidEmail(email) && !loading && countdown === 0;
 
   async function requestJSON<T>(url: string, init: Parameters<typeof fetch>[1]): Promise<T> {
     const res = await fetch(url, init);
     const json = (await res.json()) as ApiResponse<T>;
-    if (json.code !== 0) {
-      throw new Error(json.message || "请求失败");
-    }
+    if (json.code !== 0) throw new Error(json.message || "请求失败");
     return json.data as T;
   }
 
   async function openCaptcha() {
-    if (!email.trim()) {
-      setStatus("请先填写邮箱地址");
-      return;
-    }
-
+    if (!isValidEmail(email)) return;
     setLoading(true);
-    setStatus(null);
+    setApiError(null);
     try {
       const challenge = await requestJSON<CaptchaChallenge>("/api/captcha/register/challenge", {
         method: "POST",
@@ -73,7 +232,7 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
       setCaptchaX(challenge.tile_x);
       setCaptchaOpen(true);
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : "图形验证码加载失败");
+      setApiError(err instanceof Error ? err.message : "图形验证码加载失败");
     } finally {
       setLoading(false);
     }
@@ -83,43 +242,55 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
     await requestJSON<void>("/api/auth/send-code", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email,
-        captcha_token: captchaToken,
-      }),
+      body: JSON.stringify({ email, captcha_token: captchaToken }),
     });
-    setStatus("验证码已发送");
+    setCodeSent(true);
+    setCountdown(60);
   }
 
-  async function handleCaptchaVerify() {
+  async function handleCaptchaVerify(x: number) {
     if (!captchaChallenge) return;
-
-    setLoading(true);
-    setStatus(null);
+    setCaptchaLoading(true);
     try {
       const result = await requestJSON<CaptchaVerifyResp>("/api/captcha/register/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           challenge_id: captchaChallenge.challenge_id,
-          x: captchaX,
+          x,
           y: captchaChallenge.tile_y,
         }),
       });
       await sendEmailCode(result.captcha_token);
       setCaptchaOpen(false);
       setCaptchaChallenge(null);
-    } catch (err) {
-      setStatus(err instanceof Error ? err.message : "验证失败，请重试");
+    } catch {
+      // 验证失败：自动刷新新一轮拼图
+      try {
+        const challenge = await requestJSON<CaptchaChallenge>("/api/captcha/register/challenge", {
+          method: "POST",
+        });
+        setCaptchaChallenge(challenge);
+        setCaptchaX(challenge.tile_x);
+      } catch {
+        setCaptchaOpen(false);
+        setCaptchaChallenge(null);
+      }
     } finally {
-      setLoading(false);
+      setCaptchaLoading(false);
     }
   }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setSubmitAttempted(true);
+    setApiError(null);
+
+    if (!isValidEmail(email) || validatePassword(password) !== null || !code.trim()) {
+      return;
+    }
+
     setLoading(true);
-    setStatus(null);
     try {
       await requestJSON("/api/auth/register", {
         method: "POST",
@@ -133,7 +304,7 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
       });
       onSwitchToLogin();
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : "注册失败，请稍后重试");
+      setApiError(err instanceof Error ? err.message : "注册失败，请稍后重试");
     } finally {
       setLoading(false);
     }
@@ -154,6 +325,14 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
+  const sendBtnLabel = loading
+    ? "处理中"
+    : countdown > 0
+      ? `重新发送 (${countdown}s)`
+      : codeSent
+        ? "重新发送"
+        : "获取验证码";
+
   return (
     <div className="flex flex-col">
       {/* 标题行 */}
@@ -163,7 +342,7 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
           <button
             type="button"
             onClick={onSwitchToLogin}
-            className="inline-flex items-center gap-[3px] rounded-full px-[11px] py-[5px] text-[11.5px] font-semibold text-muted-foreground bg-foreground/[0.04] border border-foreground/[0.07] transition-colors hover:text-primary hover:bg-primary/10 hover:border-primary/25 whitespace-nowrap flex-shrink-0"
+            className="inline-flex items-center gap-[3px] rounded-full px-[11px] py-[5px] text-[11.5px] font-semibold text-muted-foreground bg-foreground/[0.04] border border-foreground/[0.07] transition-colors hover:text-primary hover:bg-primary/10 hover:border-primary/25 whitespace-nowrap flex-shrink-0 cursor-pointer"
           >
             <SvgIcon name="chevron-left" size={9} />
             登录
@@ -175,70 +354,89 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
       {/* 表单 */}
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-[10px]">
-          <input
-            type="email"
-            placeholder="邮箱地址"
-            autoComplete="email"
-            className={inputCls}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-
-          {/* 验证码行 */}
-          <div className="flex gap-2">
+          {/* 邮箱 */}
+          <div>
             <input
-              type="text"
-              placeholder="验证码"
-              inputMode="numeric"
-              maxLength={6}
-              className={`${inputCls} flex-1`}
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
+              type="email"
+              placeholder="邮箱地址"
+              autoComplete="email"
+              className={inputCls(!!emailError)}
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+              }}
+              onBlur={() => setEmailTouched(true)}
             />
-            <button
-              type="button"
-              onClick={openCaptcha}
-              disabled={loading}
-              className="flex-shrink-0 px-[15px] rounded-xl bg-primary/12 border border-primary/25 text-primary text-[12.5px] font-semibold transition-colors hover:bg-primary/20 whitespace-nowrap"
-            >
-              {loading ? "处理中" : "获取验证码"}
-            </button>
+            {emailError && (
+              <p className="mt-1.5 text-[11.5px] text-destructive/80 px-1">{emailError}</p>
+            )}
+          </div>
+
+          {/* 验证码行：输入框内嵌发送按钮 */}
+          <div>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="验证码"
+                inputMode="numeric"
+                maxLength={6}
+                className={cn(inputCls(!!codeError), "pr-[108px]")}
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={openCaptcha}
+                disabled={!canSendCode}
+                className={cn(
+                  "absolute right-[5px] top-1/2 -translate-y-1/2",
+                  "px-[10px] py-[5px] rounded-lg text-[12px] font-semibold transition-colors whitespace-nowrap",
+                  canSendCode
+                    ? "text-primary hover:bg-primary/10 cursor-pointer"
+                    : "text-muted-foreground/40 cursor-not-allowed",
+                )}
+              >
+                {sendBtnLabel}
+              </button>
+            </div>
+            {codeError && (
+              <p className="mt-1.5 text-[11.5px] text-destructive/80 px-1">{codeError}</p>
+            )}
           </div>
 
           {/* 密码 */}
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="设置密码"
-              autoComplete="new-password"
-              className={`${inputCls} pr-[46px]`}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? "隐藏密码" : "显示密码"}
-              className="absolute right-[10px] top-1/2 -translate-y-1/2 w-[30px] h-[30px] rounded-lg flex items-center justify-center text-muted-foreground/60 transition-colors hover:bg-foreground/[0.07] hover:text-muted-foreground"
-            >
-              <SvgIcon name={showPassword ? "eye-off" : "eye"} size={15} />
-            </button>
+          <div>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="设置密码"
+                autoComplete="new-password"
+                className={cn(inputCls(!!passwordError), "pr-[46px]")}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onBlur={() => setPasswordTouched(true)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "隐藏密码" : "显示密码"}
+                className="absolute right-[10px] top-1/2 -translate-y-1/2 w-[30px] h-[30px] rounded-lg flex items-center justify-center text-muted-foreground/60 transition-colors hover:bg-foreground/[0.07] hover:text-muted-foreground"
+              >
+                <SvgIcon name={showPassword ? "eye-off" : "eye"} size={15} />
+              </button>
+            </div>
+            {passwordError && (
+              <p className="mt-1.5 text-[11.5px] text-destructive/80 px-1">{passwordError}</p>
+            )}
           </div>
 
           <input
             type="text"
             placeholder="昵称（可选）"
             autoComplete="nickname"
-            className={inputCls}
+            className={inputCls()}
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
-          />
-
-          <input
-            type="url"
-            placeholder="个人网站（可选）"
-            autoComplete="url"
-            className={inputCls}
           />
 
           {/* 头像上传 */}
@@ -280,9 +478,9 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
           </label>
         </div>
 
-        {status && (
-          <p role="status" className="mt-3 text-[12px] leading-relaxed text-muted-foreground">
-            {status}
+        {apiError && (
+          <p role="alert" className="mt-3 text-[12px] leading-relaxed text-destructive/80">
+            {apiError}
           </p>
         )}
 
@@ -308,97 +506,83 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
       {/* OAuth 图标 */}
       <OAuthGrid />
 
-      {/* 协议 */}
-      <p className="text-[11.5px] text-muted-foreground mt-[14px] px-[14px] py-[10px] rounded-[10px] bg-primary/[0.06] border border-primary/12 leading-relaxed">
-        注册即表示同意《用户协议》和《隐私政策》
-      </p>
-
-      {captchaOpen && captchaChallenge && (
-        <div className="fixed inset-0 z-[520] flex items-center justify-center bg-black/45 px-4 backdrop-blur-md">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="图形验证码"
-            className="w-full max-w-[360px] rounded-2xl border border-border bg-card p-4 shadow-2xl"
-          >
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div>
-                <h3 className="text-[15px] font-bold text-foreground">完成安全验证</h3>
-                <p className="mt-1 text-[11.5px] text-muted-foreground">拖动滑块对齐缺口</p>
-              </div>
-              <button
-                type="button"
-                aria-label="关闭图形验证码"
-                onClick={() => setCaptchaOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
-              >
-                <SvgIcon name="close" size={14} />
-              </button>
-            </div>
-
+      {/* 图形验证码弹层 — 挂载到 document.body 以脱离父级 stacking context */}
+      {captchaOpen &&
+        captchaChallenge &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div className="fixed inset-0 z-[520] flex items-center justify-center bg-black/45 px-4 backdrop-blur-md">
             <div
-              className="relative mx-auto overflow-hidden rounded-xl border border-border bg-foreground/[0.03]"
-              style={{
-                width: captchaChallenge.image_width,
-                height: captchaChallenge.image_height,
-                maxWidth: "100%",
-              }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="图形验证码"
+              className="w-full max-w-[360px] rounded-2xl border border-border bg-card p-5 shadow-2xl"
             >
-              <img
-                src={captchaChallenge.master_image}
-                alt=""
-                className="h-full w-full select-none object-cover"
-                draggable={false}
-              />
-              <img
-                src={captchaChallenge.tile_image}
-                alt=""
-                className="absolute select-none drop-shadow-lg"
-                draggable={false}
+              {/* 头部 */}
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h3 className="text-[15px] font-bold text-foreground">请拖动滑块完成拼图</h3>
+                <button
+                  type="button"
+                  aria-label="关闭图形验证码"
+                  onClick={() => {
+                    setCaptchaOpen(false);
+                    setCaptchaChallenge(null);
+                  }}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
+                >
+                  <SvgIcon name="close" size={14} />
+                </button>
+              </div>
+
+              {/* 拼图区域 */}
+              <div
+                className="relative mx-auto overflow-hidden rounded-xl border border-border bg-foreground/[0.03]"
                 style={{
-                  width: captchaChallenge.tile_width,
-                  height: captchaChallenge.tile_height,
-                  left: captchaX,
-                  top: captchaChallenge.tile_y,
+                  width: captchaChallenge.image_width,
+                  height: captchaChallenge.image_height,
+                  maxWidth: "100%",
                 }}
-              />
-            </div>
-
-            <label className="sr-only" htmlFor="captcha-slider">
-              滑块位置
-            </label>
-            <input
-              id="captcha-slider"
-              aria-label="滑块位置"
-              type="range"
-              min={0}
-              max={Math.max(0, captchaChallenge.image_width - captchaChallenge.tile_width)}
-              value={captchaX}
-              onChange={(e) => setCaptchaX(Number(e.target.value))}
-              className="mt-4 w-full accent-primary"
-            />
-
-            <div className="mt-4 grid grid-cols-[1fr_1.4fr] gap-2">
-              <button
-                type="button"
-                onClick={openCaptcha}
-                disabled={loading}
-                className="rounded-xl border border-border bg-foreground/[0.04] px-3 py-2 text-[12.5px] font-semibold text-muted-foreground transition-colors hover:bg-foreground/[0.08]"
               >
-                换一张
-              </button>
-              <button
-                type="button"
-                onClick={handleCaptchaVerify}
-                disabled={loading}
-                className="rounded-xl border border-primary/25 bg-primary px-3 py-2 text-[12.5px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-              >
-                验证
-              </button>
+                <img
+                  src={captchaChallenge.master_image}
+                  alt=""
+                  className="h-full w-full select-none object-cover"
+                  draggable={false}
+                />
+                <img
+                  src={captchaChallenge.tile_image}
+                  alt=""
+                  className="absolute select-none drop-shadow-lg"
+                  draggable={false}
+                  style={{
+                    width: captchaChallenge.tile_width,
+                    height: captchaChallenge.tile_height,
+                    left: captchaX,
+                    top: captchaChallenge.tile_y,
+                  }}
+                />
+                {/* 加载遮罩 */}
+                {captchaLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                    <div className="w-6 h-6 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+
+              {/* 滑块 */}
+              <div className="mt-4">
+                <CaptchaSlider
+                  value={captchaX}
+                  max={Math.max(0, captchaChallenge.image_width - captchaChallenge.tile_width)}
+                  disabled={captchaLoading}
+                  onChange={(x) => setCaptchaX(x)}
+                  onRelease={(x) => handleCaptchaVerify(x)}
+                />
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
