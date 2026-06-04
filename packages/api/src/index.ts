@@ -7,6 +7,9 @@ export type {
   UserResp,
   LoginResp,
   TokenResp,
+  CaptchaChallengeResp,
+  CaptchaVerifyReq,
+  CaptchaVerifyResp,
 } from "./types/auth";
 export { ApiError } from "./errors";
 export { createApiClient } from "./client";

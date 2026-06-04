@@ -23,13 +23,13 @@ describe("createApiClient", () => {
     vi.mocked(global.fetch).mockResolvedValue(mockResponse({ code: 0, message: "ok", data: null }));
     const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
 
-    await client.auth.sendCode({ email: "a@b.com" });
+    await client.auth.sendCode({ email: "a@b.com", captcha_token: "captcha-token" });
 
     expect(global.fetch).toHaveBeenCalledWith(
       "http://api/auth/send-code",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ email: "a@b.com" }),
+        body: JSON.stringify({ email: "a@b.com", captcha_token: "captcha-token" }),
       }),
     );
   });
@@ -54,8 +54,12 @@ describe("createApiClient", () => {
     vi.mocked(global.fetch).mockResolvedValue(mockResponse({ code: 400, message: "参数错误" }));
     const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
 
-    await expect(client.auth.sendCode({ email: "bad" })).rejects.toThrow(ApiError);
-    await expect(client.auth.sendCode({ email: "bad" })).rejects.toMatchObject({
+    await expect(
+      client.auth.sendCode({ email: "bad", captcha_token: "captcha-token" }),
+    ).rejects.toThrow(ApiError);
+    await expect(
+      client.auth.sendCode({ email: "bad", captcha_token: "captcha-token" }),
+    ).rejects.toMatchObject({
       code: 400,
       message: "参数错误",
     });

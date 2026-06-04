@@ -3,6 +3,7 @@
 /** 发送邮箱验证码 */
 export interface SendCodeReq {
   email: string;
+  captcha_token: string;
 }
 
 /** 邮箱注册 */
@@ -46,4 +47,29 @@ export interface TokenResp {
   access_token: string;
   refresh_token: string;
   expires_in: number;
+}
+
+/** GoCaptcha 注册挑战 */
+export interface CaptchaChallengeResp {
+  challenge_id: string;
+  master_image: string;
+  tile_image: string;
+  tile_x: number;
+  tile_y: number;
+  tile_width: number;
+  tile_height: number;
+  image_width: number;
+  image_height: number;
+}
+
+/** GoCaptcha 注册校验 */
+export interface CaptchaVerifyReq {
+  challenge_id: string;
+  x: number;
+  y: number;
+}
+
+/** GoCaptcha 校验通过票据 */
+export interface CaptchaVerifyResp {
+  captcha_token: string;
 }
