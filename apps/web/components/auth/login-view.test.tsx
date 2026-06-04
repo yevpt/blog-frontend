@@ -1,10 +1,14 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LoginView } from "./login-view";
 
 describe("LoginView", () => {
   const mockSwitch = vi.fn();
+
+  beforeEach(() => {
+    mockSwitch.mockClear();
+  });
 
   it("渲染账号、密码输入框和继续按钮", () => {
     render(<LoginView onSwitchToRegister={mockSwitch} />);

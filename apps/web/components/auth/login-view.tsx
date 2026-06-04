@@ -33,45 +33,50 @@ export function LoginView({ onSwitchToRegister }: LoginViewProps) {
         <p className="text-[12.5px] text-muted-foreground">请填写以下信息进行登录</p>
       </div>
 
-      {/* 表单字段 */}
-      <div className="flex flex-col gap-[10px]">
-        <input
-          type="text"
-          placeholder="账号 / 邮箱 / 手机号"
-          autoComplete="username"
-          className={inputCls}
-        />
-        <div className="relative">
+      {/* 表单字段 + CTA */}
+      <form onSubmit={(e) => e.preventDefault()}>
+        <div className="flex flex-col gap-[10px]">
           <input
-            type={showPassword ? "text" : "password"}
-            placeholder="密码"
-            autoComplete="current-password"
-            className={`${inputCls} pr-[46px]`}
+            type="text"
+            placeholder="账号 / 邮箱 / 手机号"
+            autoComplete="username"
+            className={inputCls}
           />
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            aria-label={showPassword ? "隐藏密码" : "显示密码"}
-            className="absolute right-[10px] top-1/2 -translate-y-1/2 w-[30px] h-[30px] rounded-lg flex items-center justify-center text-muted-foreground/60 transition-colors hover:bg-foreground/7 hover:text-muted-foreground"
-          >
-            <SvgIcon name={showPassword ? "eye-off" : "eye"} size={15} />
-          </button>
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="密码"
+              autoComplete="current-password"
+              className={`${inputCls} pr-[46px]`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "隐藏密码" : "显示密码"}
+              className="absolute right-[10px] top-1/2 -translate-y-1/2 w-[30px] h-[30px] rounded-lg flex items-center justify-center text-muted-foreground/60 transition-colors hover:bg-foreground/[0.07] hover:text-muted-foreground"
+            >
+              <SvgIcon name={showPassword ? "eye-off" : "eye"} size={15} />
+            </button>
+          </div>
+          <div className="text-right">
+            <button
+              type="button"
+              className="text-[11.5px] text-muted-foreground/60 transition-colors hover:text-primary"
+            >
+              忘记密码？
+            </button>
+          </div>
         </div>
-        <div className="text-right">
-          <button
-            type="button"
-            className="text-[11.5px] text-muted-foreground/60 transition-colors hover:text-primary"
-          >
-            忘记密码？
-          </button>
-        </div>
-      </div>
 
-      {/* 继续按钮 */}
-      <Button variant="default" className="w-full mt-5 h-[46px] rounded-xl text-[14.5px] gap-1.5">
-        继续
-        <SvgIcon name="chevron-right" size={16} />
-      </Button>
+        <Button
+          type="submit"
+          variant="default"
+          className="w-full mt-5 h-[46px] rounded-xl text-[14.5px] gap-1.5"
+        >
+          继续
+          <SvgIcon name="chevron-right" size={16} />
+        </Button>
+      </form>
 
       {/* 分割线 */}
       <div className="flex items-center gap-3 my-[22px] text-[11.5px]">
