@@ -17,7 +17,8 @@
     "prepare": "simple-git-hooks"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm exec lint-staged && pnpm run check-types && pnpm run lint"
+    "pre-commit": "pnpm exec lint-staged && pnpm run check-types && pnpm run lint",
+    "pre-push": "pnpm run test:run"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
