@@ -18,6 +18,7 @@ export type IconName =
   | "help-circle"
   | "home"
   | "info-circle"
+  | "log-out"
   | "logo-frequencii-dark"
   | "logo-frequencii-light"
   | "menu"
