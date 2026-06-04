@@ -1,6 +1,7 @@
 // 此文件由 scripts/build.mjs 自动生成，请勿手动修改
 export type IconName =
   | "arrow-up-right"
+  | "baidu"
   | "check"
   | "chevron-down"
   | "chevron-left"
@@ -10,6 +11,9 @@ export type IconName =
   | "droplet-filled"
   | "eye-off"
   | "eye"
+  | "gitee"
+  | "github"
+  | "google"
   | "heart"
   | "help-circle"
   | "home"
@@ -21,8 +25,11 @@ export type IconName =
   | "monitor"
   | "moon"
   | "plus"
+  | "qq"
   | "search"
   | "share"
   | "sun"
   | "tag"
-  | "user";
+  | "user"
+  | "wechat"
+  | "weibo";
