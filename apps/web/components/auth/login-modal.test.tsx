@@ -1,57 +1,61 @@
-import { describe, expect, it, beforeEach, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, beforeEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ReactNode } from "react";
 import { LoginModal } from "./login-modal";
 import { useLoginModal } from "@/store/use-login-modal";
 
-vi.mock("@repo/icons", () => ({
-  SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
-}));
-
-vi.mock("@repo/ui", () => ({
-  Button: ({
-    children,
-    onPress,
-    ...props
-  }: {
-    children: ReactNode;
-    onPress?: () => void;
-    [key: string]: unknown;
-  }) => (
-    <button type="button" onClick={onPress} {...props}>
-      {children}
-    </button>
-  ),
-}));
+beforeEach(() => {
+  useLoginModal.setState({ isOpen: false, view: "login" });
+});
 
 describe("LoginModal", () => {
-  beforeEach(() => {
-    useLoginModal.setState({ isOpen: false });
-  });
-
-  it("关闭时不渲染弹窗", () => {
+  it("isOpen=false 时不渲染 dialog", () => {
     render(<LoginModal />);
-
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("打开时显示占位登录内容", () => {
-    useLoginModal.setState({ isOpen: true });
-
+  it("isOpen=true 时渲染弹窗并显示登录视图", () => {
+    useLoginModal.setState({ isOpen: true, view: "login" });
     render(<LoginModal />);
-
-    expect(screen.getByRole("dialog", { name: "登录" })).toBeTruthy();
-    expect(screen.getByText("登录功能即将上线，敬请期待。")).toBeTruthy();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText("欢迎回来")).toBeInTheDocument();
   });
 
-  it("点击关闭按钮关闭弹窗", async () => {
+  it("isOpen=true, view=register 时显示注册视图", () => {
+    useLoginModal.setState({ isOpen: true, view: "register" });
+    render(<LoginModal />);
+    expect(screen.getByText("创建账号")).toBeInTheDocument();
+  });
+
+  it("登录视图：返回按钮点击关闭弹窗", async () => {
     const user = userEvent.setup();
-    useLoginModal.setState({ isOpen: true });
-
+    useLoginModal.setState({ isOpen: true, view: "login" });
     render(<LoginModal />);
     await user.click(screen.getByLabelText("关闭登录弹窗"));
-
     expect(useLoginModal.getState().isOpen).toBe(false);
+  });
+
+  it("注册视图：返回按钮点击切回登录视图", async () => {
+    const user = userEvent.setup();
+    useLoginModal.setState({ isOpen: true, view: "register" });
+    render(<LoginModal />);
+    await user.click(screen.getByLabelText("返回登录视图"));
+    expect(useLoginModal.getState().view).toBe("login");
+    expect(useLoginModal.getState().isOpen).toBe(true);
+  });
+
+  it("点击遮罩不关闭弹窗", () => {
+    useLoginModal.setState({ isOpen: true, view: "login" });
+    const { container } = render(<LoginModal />);
+    fireEvent.click(container.firstChild as HTMLElement);
+    expect(useLoginModal.getState().isOpen).toBe(true);
+  });
+
+  it("点击「注册」标签切换到注册视图", async () => {
+    const user = userEvent.setup();
+    useLoginModal.setState({ isOpen: true, view: "login" });
+    render(<LoginModal />);
+    await user.click(screen.getByRole("button", { name: "注册" }));
+    expect(useLoginModal.getState().view).toBe("register");
   });
 });

@@ -1,43 +1,79 @@
 "use client";
 
+import { useRef, type MouseEvent } from "react";
 import { SvgIcon } from "@repo/icons";
-import { Button } from "@repo/ui";
+import { cn } from "@repo/ui";
 import { useLoginModal } from "@/store/use-login-modal";
+import { LoginView } from "./login-view";
+import { RegisterView } from "./register-view";
 
 export function LoginModal() {
-  const { isOpen, close } = useLoginModal();
+  const { isOpen, view, close, setView } = useLoginModal();
+  const modalRef = useRef<HTMLDivElement>(null);
+
   if (!isOpen) return null;
+
+  function handleOverlayClick(e: MouseEvent<HTMLDivElement>) {
+    if (e.target !== e.currentTarget) return;
+    const el = modalRef.current;
+    if (!el) return;
+    el.classList.remove("animate-modal-pulse");
+    // reflow 强制重新触发动画
+    void el.offsetWidth;
+    el.classList.add("animate-modal-pulse");
+    el.addEventListener("animationend", () => el.classList.remove("animate-modal-pulse"), {
+      once: true,
+    });
+  }
+
+  function handleBack() {
+    if (view === "register") {
+      setView("login");
+    } else {
+      close();
+    }
+  }
 
   return (
     <div
-      role="button"
-      tabIndex={-1}
-      className="fixed inset-0 z-[400] flex items-center justify-center bg-black/45 backdrop-blur-md"
-      onClick={(event) => {
-        if (event.currentTarget === event.target) close();
-      }}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") close();
-      }}
+      role="presentation"
+      className="fixed inset-0 z-[400] flex items-end justify-center md:items-center md:px-4 bg-black/45 backdrop-blur-md"
+      onClick={handleOverlayClick}
     >
       <div
+        ref={modalRef}
         role="dialog"
         aria-modal="true"
-        aria-label="登录"
-        className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl"
+        aria-label={view === "login" ? "登录" : "注册"}
+        className={cn(
+          "relative flex flex-col w-full bg-card border-t border-border shadow-2xl",
+          "animate-[slideUpCard_250ms_ease-out]",
+          // 移动端：铺满全屏，无圆角
+          "max-md:h-dvh max-md:rounded-none max-md:overflow-y-auto max-md:border-x-0 max-md:border-b-0",
+          // 桌面端：最大宽度，圆角，最大高度可滚动
+          "md:max-w-[400px] md:rounded-2xl md:border md:max-h-[90vh] md:overflow-y-auto",
+        )}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-bold text-foreground">登录</h2>
-          <Button
-            variant="ghost"
-            onPress={close}
-            aria-label="关闭登录弹窗"
-            className="h-7 w-7 rounded-lg bg-border p-0"
+        {/* 返回/关闭按钮 — sticky 吸顶，遮住滚动内容 */}
+        <div className="sticky top-0 z-10 flex px-8 pt-6 pb-2 bg-card">
+          <button
+            type="button"
+            onClick={handleBack}
+            aria-label={view === "register" ? "返回登录视图" : "关闭登录弹窗"}
+            className="w-9 h-9 rounded-[11px] bg-foreground/5 border border-border flex items-center justify-center text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
           >
-            <SvgIcon name="close" size={16} />
-          </Button>
+            <SvgIcon name="chevron-left" size={16} />
+          </button>
         </div>
-        <p className="text-sm text-[var(--fg2)]">登录功能即将上线，敬请期待。</p>
+
+        {/* 视图内容 — key 变化时 React 重新挂载触发入场动画 */}
+        <div key={view} className="px-8 pb-8 pt-2 animate-view-enter">
+          {view === "login" ? (
+            <LoginView onSwitchToRegister={() => setView("register")} />
+          ) : (
+            <RegisterView onSwitchToLogin={() => setView("login")} />
+          )}
+        </div>
       </div>
     </div>
   );
