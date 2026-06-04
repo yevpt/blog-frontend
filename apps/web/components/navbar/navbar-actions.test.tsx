@@ -2,6 +2,17 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NavbarActions } from "./navbar-actions";
+import { useSession } from "@/app/providers/session-provider";
+
+vi.mock("@/app/providers/session-provider", () => ({
+  useSession: vi.fn(() => ({ user: null })),
+}));
+
+vi.mock("./navbar-user-menu", () => ({
+  NavbarUserMenu: ({ user }: { user: { nickname?: string; username: string } }) => (
+    <span data-testid="user-menu">{user.nickname ?? user.username}</span>
+  ),
+}));
 
 type ThemeMode = "system" | "light" | "dark";
 type ResolvedTheme = "light" | "dark";
@@ -47,6 +58,7 @@ describe("NavbarActions", () => {
     mockOpenLoginModal.mockClear();
     mockTheme = "system";
     mockResolvedTheme = "light";
+    vi.mocked(useSession).mockReturnValue({ user: null });
   });
 
   it("渲染不崩溃，显示主题切换和登录入口", () => {
@@ -96,5 +108,21 @@ describe("NavbarActions", () => {
     render(<NavbarActions />);
     await user.click(screen.getByText("登录"));
     expect(mockOpenLoginModal).toHaveBeenCalledOnce();
+  });
+
+  it("已登录：显示 NavbarUserMenu，不显示登录按钮", () => {
+    vi.mocked(useSession).mockReturnValue({
+      user: { id: 1, username: "alice", nickname: "小A" },
+    });
+    render(<NavbarActions />);
+    expect(screen.getByTestId("user-menu")).toBeInTheDocument();
+    expect(screen.getByText("小A")).toBeInTheDocument();
+    expect(screen.queryByText("登录")).not.toBeInTheDocument();
+  });
+
+  it("未登录：显示登录按钮，不显示 UserMenu", () => {
+    render(<NavbarActions />);
+    expect(screen.getByText("登录")).toBeInTheDocument();
+    expect(screen.queryByTestId("user-menu")).not.toBeInTheDocument();
   });
 });

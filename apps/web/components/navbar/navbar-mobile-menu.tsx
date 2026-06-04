@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button, cn } from "@repo/ui";
+import { SvgIcon } from "@repo/icons";
 import { useTheme } from "../../app/providers/theme-provider";
 import { useLocale } from "@repo/hooks";
 import { useLoginModal } from "@/store/use-login-modal";
+import { useSession } from "@/app/providers/session-provider";
+import { UserAvatar } from "@/components/common/user-avatar";
 
 const MOBILE_ITEMS = [
   { label: "碎语", href: "/snippets" },
@@ -22,7 +26,43 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const { t } = useLocale();
   const { open: openLoginModal } = useLoginModal();
+  const { user } = useSession();
+  const router = useRouter();
   const nextTheme = resolvedTheme === "dark" ? "light" : "dark";
+  const displayName = user ? (user.nickname ?? user.username) : "";
+
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // 忽略网络错误
+    }
+    router.refresh();
+    onClose();
+  }
+
+  const themeToggle = (
+    <button
+      type="button"
+      onClick={() => setTheme(nextTheme)}
+      className="flex cursor-pointer items-center gap-2 text-[13px] font-medium text-[var(--fg2)]"
+    >
+      <span
+        className={cn(
+          "relative h-[22px] w-10 rounded-full border transition-colors",
+          resolvedTheme === "dark" ? "border-primary bg-primary" : "border-border bg-border",
+        )}
+      >
+        <span
+          className={cn(
+            "absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform",
+            resolvedTheme === "dark" && "translate-x-[18px]",
+          )}
+        />
+      </span>
+      深色模式
+    </button>
+  );
 
   return (
     <div
@@ -48,41 +88,59 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
               </Link>
             ))}
           </div>
-          <div className="flex items-center justify-between px-0.5 pt-0.5">
-            <button
-              type="button"
-              onClick={() => setTheme(nextTheme)}
-              className="flex cursor-pointer items-center gap-2 text-[13px] font-medium text-[var(--fg2)]"
-            >
-              <span
-                className={cn(
-                  "relative h-[22px] w-10 rounded-full border transition-colors",
-                  resolvedTheme === "dark"
-                    ? "border-primary bg-primary"
-                    : "border-border bg-border",
-                )}
+
+          {user ? (
+            <>
+              {/* 用户信息行：头像+名字 → /profile，右侧消息+退出图标 */}
+              <div className="mb-1 flex items-center justify-between px-0.5">
+                <Link
+                  href="/profile"
+                  onClick={onClose}
+                  className="flex min-w-0 flex-1 items-center gap-2.5"
+                >
+                  <UserAvatar name={displayName} size="xs" />
+                  <span className="truncate text-[14px] font-semibold text-foreground">
+                    {displayName}
+                  </span>
+                </Link>
+                <div className="ml-2 flex shrink-0 items-center gap-0.5">
+                  <Link
+                    href="/messages"
+                    onClick={onClose}
+                    aria-label="消息"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--fg2)] transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                  >
+                    <SvgIcon name="message-circle" size={16} />
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    aria-label="退出登录"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-destructive/70 transition-colors hover:bg-destructive/[0.08]"
+                  >
+                    <SvgIcon name="log-out" size={16} />
+                  </button>
+                </div>
+              </div>
+              {/* 主题行 */}
+              <div className="flex items-center px-0.5 pt-1">{themeToggle}</div>
+            </>
+          ) : (
+            <div className="flex items-center justify-between px-0.5 pt-0.5">
+              {themeToggle}
+              <Button
+                variant="default"
+                size="sm"
+                onPress={() => {
+                  openLoginModal();
+                  onClose();
+                }}
+                className="h-8 rounded-full bg-foreground px-5 text-[13px] font-bold text-background hover:bg-foreground/85"
               >
-                <span
-                  className={cn(
-                    "absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform",
-                    resolvedTheme === "dark" && "translate-x-[18px]",
-                  )}
-                />
-              </span>
-              深色模式
-            </button>
-            <Button
-              variant="default"
-              size="sm"
-              onPress={() => {
-                openLoginModal();
-                onClose();
-              }}
-              className="h-8 rounded-full bg-foreground px-5 text-[13px] font-bold text-background hover:bg-foreground/85"
-            >
-              {t("auth.login")}
-            </Button>
-          </div>
+                {t("auth.login")}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
