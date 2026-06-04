@@ -22,6 +22,7 @@
 | 高度 | 自适应内容 | `h-dvh`（铺满视口，兼容移动端虚拟键盘） |
 | 圆角 | `rounded-2xl` | `rounded-none` |
 | 留缝 | `mx-4` | `mx-0`，铺满全屏 |
+| 滚动 | 内容超出时可滚动（`overflow-y-auto`），返回按钮 **sticky top-0** 不随内容滚动 | 同左 |
 | 背景 | `bg-card` + `border border-border` + `shadow-xl` | 同左 |
 | 内边距 | `px-8 pt-6 pb-8` | `px-6 pt-5 pb-8` |
 
@@ -122,13 +123,17 @@
 [ 邮箱地址                          ]
 [ 验证码         ] [ 获取验证码 ]
 [ 设置密码                    [👁] ]
-[ 昵称                              ]
+[ 昵称（可选）                      ]
 [ 个人网站（可选）                  ]
 [ 👤 上传头像   可选 · JPG/PNG ≤2MB ]
 
 [ 创建账号 →                        ]
 
 注册即表示同意《用户协议》和《隐私政策》
+
+────────── 其他方式注册 ──────────
+
+[ 微 ] [ Q ] [ G ] [ G ] [ +3 ]
 ```
 
 ### 各元素规格
@@ -143,7 +148,7 @@
 
 **密码**：同登录视图密码框
 
-**昵称、网站**：同账号框，网站 placeholder 含「可选」字样，`text-muted-foreground/40`
+**昵称、网站**：同账号框，placeholder 均含「可选」字样，`text-muted-foreground/40`
 
 **头像上传区**：
 - `flex items-center gap-[14px] p-[12px_16px] rounded-xl`
@@ -158,6 +163,10 @@
 - `text-[11.5px] text-muted-foreground mt-[14px] px-[14px] py-[10px] rounded-[10px]`
 - `bg-primary/[0.06] border border-primary/12`
 
+**OAuth（注册视图底部）**：
+- 分割线文字改为「其他方式注册」，其余规格与登录视图 OAuth 网格完全一致
+- 复用 `<OAuthGrid />` 组件，无需重复实现
+
 ---
 
 ## 五、动效
@@ -165,7 +174,7 @@
 | 触发 | 效果 | 规格 |
 |------|------|------|
 | 弹窗入场 | `slideUpCard`（已有 keyframes） | `translateY(32px)→0, opacity 0→1, 250ms ease-out` |
-| 遮罩点击 | shake | 横向抖动 7px→-5px→3px，420ms |
+| 遮罩点击 | pulse | 轻微放大再复原：`scale(1) → scale(1.018) → scale(1)`，280ms ease-in-out |
 | 登录→注册切换 | 表单内容 slide + fade | 登录离场 `translateX(-16px) opacity→0`，注册入场 `translateX(16px)→0 opacity→1`，各 180ms |
 | 注册→登录切换 | 表单内容 slide + fade | 注册离场 `translateX(16px) opacity→0`，登录入场 `translateX(-16px)→0 opacity→1`，各 180ms |
 | 按钮 press | scale | `scale(0.98)` via `data-[pressed]` |
