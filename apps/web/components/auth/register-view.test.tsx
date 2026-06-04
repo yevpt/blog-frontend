@@ -8,6 +8,8 @@ describe("RegisterView", () => {
 
   beforeEach(() => {
     mockSwitch.mockClear();
+    URL.createObjectURL = vi.fn(() => "blob:mock-url");
+    URL.revokeObjectURL = vi.fn();
   });
 
   it("渲染注册所有必填和可选字段", () => {
@@ -49,5 +51,21 @@ describe("RegisterView", () => {
   it("渲染协议提示文字", () => {
     render(<RegisterView onSwitchToLogin={mockSwitch} />);
     expect(screen.getByText(/注册即表示同意/)).toBeInTheDocument();
+  });
+
+  it("上传头像后显示删除按钮，点击删除后恢复初始状态", async () => {
+    const user = userEvent.setup();
+    render(<RegisterView onSwitchToLogin={mockSwitch} />);
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(["avatar"], "avatar.png", { type: "image/png" });
+    await user.upload(fileInput, file);
+
+    expect(screen.getByLabelText("删除头像")).toBeInTheDocument();
+    expect(screen.getByText("更换头像")).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText("删除头像"));
+    expect(screen.queryByLabelText("删除头像")).not.toBeInTheDocument();
+    expect(screen.getByText("上传头像")).toBeInTheDocument();
   });
 });

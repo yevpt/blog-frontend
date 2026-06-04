@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button, cn } from "@repo/ui";
 import { useTheme } from "../../app/providers/theme-provider";
 import { useLocale } from "@repo/hooks";
+import { useLoginModal } from "@/store/use-login-modal";
 
 const MOBILE_ITEMS = [
   { label: "碎语", href: "/snippets" },
@@ -20,6 +21,7 @@ interface NavbarMobileMenuProps {
 export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const { t } = useLocale();
+  const { open: openLoginModal } = useLoginModal();
   const nextTheme = resolvedTheme === "dark" ? "light" : "dark";
 
   return (
@@ -72,6 +74,7 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
             <Button
               variant="default"
               size="sm"
+              onPress={() => openLoginModal()}
               className="h-8 rounded-full bg-foreground px-5 text-[13px] font-bold text-background hover:bg-foreground/85"
             >
               {t("auth.login")}

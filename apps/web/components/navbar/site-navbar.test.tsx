@@ -35,6 +35,11 @@ vi.mock("@repo/icons", () => ({
   ),
 }));
 
+// Mock login modal store
+vi.mock("../../store/use-login-modal", () => ({
+  useLoginModal: () => ({ open: vi.fn(), close: vi.fn(), isOpen: false, view: "login" }),
+}));
+
 // Mock providers
 vi.mock("../../app/providers/theme-provider", () => ({
   useTheme: () => ({

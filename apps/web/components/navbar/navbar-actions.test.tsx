@@ -7,6 +7,7 @@ type ThemeMode = "system" | "light" | "dark";
 type ResolvedTheme = "light" | "dark";
 
 const mockSetTheme = vi.fn();
+const mockOpenLoginModal = vi.fn();
 let mockTheme: ThemeMode = "system";
 let mockResolvedTheme: ResolvedTheme = "light";
 
@@ -36,9 +37,14 @@ vi.mock("@repo/icons", () => ({
   ),
 }));
 
+vi.mock("@/store/use-login-modal", () => ({
+  useLoginModal: () => ({ open: mockOpenLoginModal }),
+}));
+
 describe("NavbarActions", () => {
   beforeEach(() => {
     mockSetTheme.mockClear();
+    mockOpenLoginModal.mockClear();
     mockTheme = "system";
     mockResolvedTheme = "light";
   });
@@ -83,5 +89,12 @@ describe("NavbarActions", () => {
 
     expect(screen.getByTestId("icon-moon")).toBeTruthy();
     expect(screen.queryByTestId("icon-monitor")).toBeNull();
+  });
+
+  it("点击登录按钮打开登录弹窗", async () => {
+    const user = userEvent.setup();
+    render(<NavbarActions />);
+    await user.click(screen.getByText("登录"));
+    expect(mockOpenLoginModal).toHaveBeenCalledOnce();
   });
 });

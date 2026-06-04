@@ -4,6 +4,7 @@ import { SvgIcon } from "@repo/icons";
 import { Button, cn } from "@repo/ui";
 import { useTheme } from "../../app/providers/theme-provider";
 import { useLocale } from "@repo/hooks";
+import { useLoginModal } from "@/store/use-login-modal";
 
 type ResolvedTheme = "light" | "dark";
 
@@ -24,6 +25,7 @@ interface NavbarActionsProps {
 export function NavbarActions({ isGlass = false }: NavbarActionsProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const { t } = useLocale();
+  const { open: openLoginModal } = useLoginModal();
   const nextTheme = getOppositeTheme(resolvedTheme);
 
   return (
@@ -44,6 +46,7 @@ export function NavbarActions({ isGlass = false }: NavbarActionsProps) {
         <Button
           variant="outline"
           size="sm"
+          onPress={() => openLoginModal()}
           className={cn(
             "h-8 rounded-full border-border bg-foreground/5 px-4 text-xs font-semibold text-foreground hover:bg-foreground/10 hover:text-foreground",
             "data-[glass=true]:border-border data-[glass=true]:bg-transparent data-[glass=true]:text-[var(--fg2)] data-[glass=true]:hover:border-primary data-[glass=true]:hover:bg-primary/10 data-[glass=true]:hover:text-primary",

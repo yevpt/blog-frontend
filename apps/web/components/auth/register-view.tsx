@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useState, useRef, type ChangeEvent, type MouseEvent } from "react";
 import { SvgIcon } from "@repo/icons";
 import { Button } from "@repo/ui";
 import { OAuthGrid } from "./oauth-grid";
@@ -15,12 +15,21 @@ interface RegisterViewProps {
 export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setAvatarPreview(url);
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setAvatarPreview(URL.createObjectURL(file));
+  }
+
+  function handleAvatarRemove(e: MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setAvatarPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   return (
@@ -97,24 +106,35 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
 
           {/* 头像上传 */}
           <label className="flex items-center gap-[14px] p-[12px_16px] rounded-xl bg-foreground/[0.03] border-[1.5px] border-dashed border-foreground/[0.09] cursor-pointer transition-colors hover:bg-primary/5 hover:border-primary/25">
-            <div className="w-[38px] h-[38px] rounded-full bg-primary/12 border-[1.5px] border-dashed border-primary/25 flex items-center justify-center flex-shrink-0 overflow-hidden">
-              {avatarPreview ? (
-                <img
-                  src={avatarPreview}
-                  alt="头像预览"
-                  className="w-full h-full object-cover rounded-full"
-                />
-              ) : (
-                <SvgIcon name="user" size={16} className="text-primary/60" />
+            <div className="relative w-[38px] h-[38px] flex-shrink-0">
+              <div className="w-full h-full rounded-full bg-primary/12 border-[1.5px] border-dashed border-primary/25 flex items-center justify-center overflow-hidden">
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="头像预览" className="w-full h-full object-cover" />
+                ) : (
+                  <SvgIcon name="user" size={16} className="text-primary/60" />
+                )}
+              </div>
+              {avatarPreview && (
+                <button
+                  type="button"
+                  onClick={handleAvatarRemove}
+                  aria-label="删除头像"
+                  className="absolute -top-[5px] -right-[5px] w-[16px] h-[16px] rounded-full bg-destructive flex items-center justify-center shadow-sm"
+                >
+                  <SvgIcon name="close" size={8} className="text-white" />
+                </button>
               )}
             </div>
             <div>
-              <div className="text-[13px] text-muted-foreground">上传头像</div>
+              <div className="text-[13px] text-muted-foreground">
+                {avatarPreview ? "更换头像" : "上传头像"}
+              </div>
               <div className="text-[11px] text-muted-foreground/40 mt-[2px]">
-                可选 · JPG / PNG，最大 2MB
+                {avatarPreview ? "点击更换，× 删除" : "可选 · JPG / PNG，最大 2MB"}
               </div>
             </div>
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp"
               className="sr-only"
@@ -134,11 +154,6 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
         </Button>
       </form>
 
-      {/* 协议 */}
-      <p className="text-[11.5px] text-muted-foreground mt-[14px] px-[14px] py-[10px] rounded-[10px] bg-primary/[0.06] border border-primary/12 leading-relaxed">
-        注册即表示同意《用户协议》和《隐私政策》
-      </p>
-
       {/* 分割线 */}
       <div className="flex items-center gap-3 my-[22px] text-[11.5px]">
         <div className="flex-1 h-px bg-border" />
@@ -148,6 +163,11 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
 
       {/* OAuth 图标 */}
       <OAuthGrid />
+
+      {/* 协议 */}
+      <p className="text-[11.5px] text-muted-foreground mt-[14px] px-[14px] py-[10px] rounded-[10px] bg-primary/[0.06] border border-primary/12 leading-relaxed">
+        注册即表示同意《用户协议》和《隐私政策》
+      </p>
     </div>
   );
 }
