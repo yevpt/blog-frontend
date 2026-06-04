@@ -21,7 +21,10 @@ export function LoginModal() {
     // reflow 强制重新触发动画
     void el.offsetWidth;
     el.classList.add("animate-modal-pulse");
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const prefersReducedMotion =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!prefersReducedMotion) {
       el.addEventListener("animationend", () => el.classList.remove("animate-modal-pulse"), {
         once: true,
       });
