@@ -39,16 +39,15 @@ describe("LoginModal", () => {
     useLoginModal.setState({ isOpen: true, view: "login" });
     render(<LoginModal />);
     await user.click(screen.getByLabelText("关闭登录弹窗"));
-    expect(useLoginModal.getState().isOpen).toBe(false);
+    await waitFor(() => expect(useLoginModal.getState().isOpen).toBe(false));
   });
 
-  it("注册视图：返回按钮点击切回登录视图", async () => {
+  it("注册视图：返回按钮点击关闭弹窗", async () => {
     const user = userEvent.setup();
     useLoginModal.setState({ isOpen: true, view: "register" });
     render(<LoginModal />);
-    await user.click(screen.getByLabelText("返回登录视图"));
-    expect(useLoginModal.getState().view).toBe("login");
-    expect(useLoginModal.getState().isOpen).toBe(true);
+    await user.click(screen.getByLabelText("关闭登录弹窗"));
+    await waitFor(() => expect(useLoginModal.getState().isOpen).toBe(false));
   });
 
   it("点击遮罩不关闭弹窗", () => {

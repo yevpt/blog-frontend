@@ -2,12 +2,18 @@
 
 import { useState, type FormEvent } from "react";
 import { SvgIcon } from "@repo/icons";
-import { Button } from "@repo/ui";
+import { Button, cn } from "@repo/ui";
 import type { UserResp } from "@repo/api";
 import { OAuthGrid } from "./oauth-grid";
 
-const inputCls =
-  "w-full px-4 py-[13px] text-sm rounded-xl bg-foreground/5 border border-border placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 focus:bg-primary/[0.06] transition-colors";
+function inputCls(hasError?: boolean) {
+  return cn(
+    "w-full px-4 py-[9px] text-sm rounded-xl bg-foreground/5 border placeholder:text-muted-foreground/50 focus:outline-none transition-colors",
+    hasError
+      ? "border-destructive/50 bg-destructive/[0.03] focus:border-destructive/60"
+      : "border-border focus:border-primary/50 focus:bg-primary/[0.06]",
+  );
+}
 
 interface LoginViewProps {
   onSwitchToRegister: () => void;
@@ -20,18 +26,26 @@ export function LoginView({ onSwitchToRegister, onSuccess }: LoginViewProps) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [identifierError, setIdentifierError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  function validateFields(): boolean {
+    if (!identifier.trim()) {
+      setIdentifierError("请输入账号 / 邮箱 / 手机号");
+      return false;
+    }
+    setIdentifierError(null);
+    if (!password) {
+      setPasswordError("请输入密码");
+      return false;
+    }
+    setPasswordError(null);
+    return true;
+  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-
-    if (!identifier.trim()) {
-      setError("请输入账号 / 邮箱 / 手机号");
-      return;
-    }
-    if (!password) {
-      setError("请输入密码");
-      return;
-    }
+    if (!validateFields()) return;
 
     setLoading(true);
     setError(null);
@@ -80,32 +94,60 @@ export function LoginView({ onSwitchToRegister, onSuccess }: LoginViewProps) {
       {/* 表单 */}
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-[10px]">
-          <input
-            type="text"
-            placeholder="账号 / 邮箱 / 手机号"
-            autoComplete="username"
-            className={inputCls}
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-          />
-          <div className="relative">
+          <div>
             <input
-              type={showPassword ? "text" : "password"}
-              placeholder="密码"
-              autoComplete="current-password"
-              className={`${inputCls} pr-[46px]`}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              type="text"
+              placeholder="账号 / 邮箱 / 手机号"
+              autoComplete="username"
+              className={inputCls(!!identifierError)}
+              value={identifier}
+              onChange={(e) => {
+                setIdentifier(e.target.value);
+                if (identifierError) setIdentifierError(null);
+              }}
+              onBlur={() => {
+                if (!identifier.trim()) setIdentifierError("请输入账号 / 邮箱 / 手机号");
+              }}
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? "隐藏密码" : "显示密码"}
-              className="absolute right-[10px] top-1/2 -translate-y-1/2 w-[30px] h-[30px] rounded-lg flex items-center justify-center text-muted-foreground/60 transition-colors hover:bg-foreground/[0.07] hover:text-muted-foreground"
-            >
-              <SvgIcon name={showPassword ? "eye-off" : "eye"} size={15} />
-            </button>
+            {identifierError && (
+              <p role="alert" className="mt-1.5 text-[11.5px] text-destructive/80 px-1">
+                {identifierError}
+              </p>
+            )}
           </div>
+
+          <div>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="密码"
+                autoComplete="current-password"
+                className={cn(inputCls(!!passwordError), "pr-[46px]")}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (passwordError) setPasswordError(null);
+                }}
+                onBlur={() => {
+                  if (!password) setPasswordError("请输入密码");
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "隐藏密码" : "显示密码"}
+                className="absolute right-[10px] top-1/2 -translate-y-1/2 w-[30px] h-[30px] rounded-lg flex items-center justify-center text-muted-foreground/60 transition-colors hover:bg-foreground/[0.07] hover:text-muted-foreground"
+              >
+                <SvgIcon name={showPassword ? "eye-off" : "eye"} size={15} />
+              </button>
+            </div>
+            {passwordError && (
+              <p role="alert" className="mt-1.5 text-[11.5px] text-destructive/80 px-1">
+                {passwordError}
+              </p>
+            )}
+          </div>
+
           <div className="text-right">
             <button
               type="button"

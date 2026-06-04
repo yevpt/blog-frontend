@@ -81,8 +81,30 @@ body::after {
   body::before,
   body::after,
   .animate-modal-pulse,
+  .animate-modal-enter,
+  .animate-modal-leave,
   .animate-view-enter {
     animation: none;
+  }
+}
+
+@keyframes slideDownCard {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+}
+
+@keyframes slideDownFull {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
   }
 }
 
@@ -109,6 +131,23 @@ body::after {
 
 .animate-modal-pulse {
   animation: modalPulse 280ms ease-in-out;
+}
+
+.animate-modal-enter {
+  animation: slideUpCard 280ms ease-out both;
+}
+
+.animate-modal-leave {
+  animation: slideDownCard 220ms ease-in both;
+}
+
+@media (max-width: 767px) {
+  .animate-modal-enter {
+    animation: slideUpFull 280ms ease-out both;
+  }
+  .animate-modal-leave {
+    animation: slideDownFull 220ms ease-in both;
+  }
 }
 
 .animate-view-enter {

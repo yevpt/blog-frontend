@@ -9,13 +9,14 @@ interface OAuthProvider {
   label: string;
   icon: IconName;
   color: string | null;
+  textClass?: string;
 }
 
 const PRIMARY_PROVIDERS: OAuthProvider[] = [
   { id: "wechat", label: "微信", icon: "wechat", color: "#07C160" },
   { id: "qq", label: "QQ", icon: "qq", color: "#1299EF" },
-  { id: "github", label: "GitHub", icon: "github", color: null },
-  { id: "google", label: "Google", icon: "google", color: "#4285F4" },
+  { id: "github", label: "GitHub", icon: "github", color: null, textClass: "text-foreground" },
+  { id: "google", label: "Google", icon: "google", color: null },
 ];
 
 const EXTRA_PROVIDERS: OAuthProvider[] = [
@@ -35,13 +36,16 @@ export function OAuthGrid({ className }: OAuthGridProps) {
 
   return (
     <div className={cn("flex justify-center gap-3 flex-wrap", className)}>
-      {providers.map(({ id, label, icon, color }) => (
+      {providers.map(({ id, label, icon, color, textClass }) => (
         <button
           key={id}
           type="button"
           title={label}
           style={color ? { color } : undefined}
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground transition-all hover:scale-110 hover:opacity-75"
+          className={cn(
+            "w-9 h-9 rounded-lg flex items-center justify-center transition-colors hover:bg-foreground/[0.08] active:bg-foreground/[0.14] cursor-pointer",
+            textClass ?? "text-muted-foreground",
+          )}
         >
           <SvgIcon name={icon} size={22} />
         </button>
@@ -51,7 +55,7 @@ export function OAuthGrid({ className }: OAuthGridProps) {
           type="button"
           aria-label="收起登录方式"
           onClick={() => setExpanded(false)}
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground/40 transition-all hover:scale-110 hover:opacity-75"
+          className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground/40 transition-colors hover:bg-foreground/[0.08] active:bg-foreground/[0.14] cursor-pointer"
         >
           <SvgIcon name="chevron-down" size={14} className="rotate-180" />
         </button>
@@ -60,7 +64,7 @@ export function OAuthGrid({ className }: OAuthGridProps) {
           type="button"
           aria-label="展开更多登录方式"
           onClick={() => setExpanded(true)}
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground/40 text-[11px] font-semibold transition-all hover:scale-110 hover:opacity-75"
+          className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground/40 text-[11px] font-semibold transition-colors hover:bg-foreground/[0.08] active:bg-foreground/[0.14] cursor-pointer"
         >
           +{EXTRA_PROVIDERS.length}
         </button>

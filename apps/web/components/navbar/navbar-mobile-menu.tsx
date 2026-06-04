@@ -74,7 +74,10 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
             <Button
               variant="default"
               size="sm"
-              onPress={() => openLoginModal()}
+              onPress={() => {
+                openLoginModal();
+                onClose();
+              }}
               className="h-8 rounded-full bg-foreground px-5 text-[13px] font-bold text-background hover:bg-foreground/85"
             >
               {t("auth.login")}
