@@ -83,3 +83,32 @@ body::after {
     animation: none;
   }
 }
+
+@keyframes modalPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.018);
+  }
+}
+
+@keyframes viewEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-modal-pulse {
+  animation: modalPulse 280ms ease-in-out;
+}
+
+.animate-view-enter {
+  animation: viewEnter 200ms ease-out;
+}
