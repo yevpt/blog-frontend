@@ -77,7 +77,13 @@ export function LoginModal() {
         {/* 视图内容 — key 变化时 React 重新挂载触发入场动画 */}
         <div key={view} className="px-8 pb-8 pt-2 animate-view-enter">
           {view === "login" ? (
-            <LoginView onSwitchToRegister={() => setView("register")} />
+            <LoginView
+              onSwitchToRegister={() => setView("register")}
+              onSuccess={() => {
+                // TODO(Task 5): 登录成功后更新全局用户状态并关闭弹窗
+                close();
+              }}
+            />
           ) : (
             <RegisterView onSwitchToLogin={() => setView("login")} />
           )}

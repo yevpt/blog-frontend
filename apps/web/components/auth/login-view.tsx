@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { SvgIcon } from "@repo/icons";
 import { Button } from "@repo/ui";
+import type { UserResp } from "@repo/api";
 import { OAuthGrid } from "./oauth-grid";
 
 const inputCls =
@@ -10,10 +11,49 @@ const inputCls =
 
 interface LoginViewProps {
   onSwitchToRegister: () => void;
+  onSuccess: (user: UserResp) => void;
 }
 
-export function LoginView({ onSwitchToRegister }: LoginViewProps) {
+export function LoginView({ onSwitchToRegister, onSuccess }: LoginViewProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    if (!identifier.trim()) {
+      setError("请输入账号 / 邮箱 / 手机号");
+      return;
+    }
+    if (!password) {
+      setError("请输入密码");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: identifier.trim(), password }),
+      });
+      const json = await res.json();
+      if (json.code !== 0) {
+        setError(json.message || "登录失败，请稍后重试");
+        return;
+      }
+      onSuccess(json.data.user as UserResp);
+    } catch {
+      setError("网络异常，请稍后重试");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="flex flex-col">
@@ -33,14 +73,16 @@ export function LoginView({ onSwitchToRegister }: LoginViewProps) {
         <p className="text-[12.5px] text-muted-foreground">请填写以下信息进行登录</p>
       </div>
 
-      {/* 表单字段 + CTA */}
-      <form onSubmit={(e) => e.preventDefault()}>
+      {/* 表单 */}
+      <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-[10px]">
           <input
             type="text"
             placeholder="账号 / 邮箱 / 手机号"
             autoComplete="username"
             className={inputCls}
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
           />
           <div className="relative">
             <input
@@ -48,6 +90,8 @@ export function LoginView({ onSwitchToRegister }: LoginViewProps) {
               placeholder="密码"
               autoComplete="current-password"
               className={`${inputCls} pr-[46px]`}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             <button
               type="button"
@@ -68,13 +112,26 @@ export function LoginView({ onSwitchToRegister }: LoginViewProps) {
           </div>
         </div>
 
+        {error && (
+          <p role="alert" className="mt-3 text-[12px] leading-relaxed text-destructive/80">
+            {error}
+          </p>
+        )}
+
         <Button
           type="submit"
           variant="default"
           className="w-full mt-5 h-[46px] rounded-xl text-[14.5px] gap-1.5"
+          isDisabled={loading}
         >
-          继续
-          <SvgIcon name="chevron-right" size={16} />
+          {loading ? (
+            "登录中…"
+          ) : (
+            <>
+              继续
+              <SvgIcon name="chevron-right" size={16} />
+            </>
+          )}
         </Button>
       </form>
 
