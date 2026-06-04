@@ -1,11 +1,18 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LoginModal } from "./login-modal";
 import { useLoginModal } from "@/store/use-login-modal";
 
+// next/navigation 的 useRouter 在 jsdom 测试环境中不可用，需要 mock
+const mockRefresh = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: mockRefresh }),
+}));
+
 beforeEach(() => {
   useLoginModal.setState({ isOpen: false, view: "login" });
+  mockRefresh.mockClear();
 });
 
 describe("LoginModal", () => {

@@ -1,15 +1,19 @@
 "use client";
 
 import { useRef, type MouseEvent } from "react";
+import { useRouter } from "next/navigation";
 import { SvgIcon } from "@repo/icons";
 import { cn } from "@repo/ui";
+import type { UserResp } from "@repo/api";
 import { useLoginModal } from "@/store/use-login-modal";
+import { addToast } from "@/lib/toast";
 import { LoginView } from "./login-view";
 import { RegisterView } from "./register-view";
 
 export function LoginModal() {
   const { isOpen, view, close, setView } = useLoginModal();
   const modalRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   if (!isOpen) return null;
 
@@ -40,6 +44,12 @@ export function LoginModal() {
     } else {
       close();
     }
+  }
+
+  function handleLoginSuccess(user: UserResp) {
+    close();
+    addToast(`欢迎回来，${user.nickname ?? user.username}`, "success");
+    router.refresh();
   }
 
   return (
@@ -79,10 +89,7 @@ export function LoginModal() {
           {view === "login" ? (
             <LoginView
               onSwitchToRegister={() => setView("register")}
-              onSuccess={() => {
-                // TODO(Task 5): 登录成功后更新全局用户状态并关闭弹窗
-                close();
-              }}
+              onSuccess={handleLoginSuccess}
             />
           ) : (
             <RegisterView onSwitchToLogin={() => setView("login")} />
