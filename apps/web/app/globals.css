@@ -79,7 +79,9 @@ body::after {
 
 @media (prefers-reduced-motion: reduce) {
   body::before,
-  body::after {
+  body::after,
+  .animate-modal-pulse,
+  .animate-view-enter {
     animation: none;
   }
 }
@@ -110,5 +112,5 @@ body::after {
 }
 
 .animate-view-enter {
-  animation: viewEnter 200ms ease-out;
+  animation: viewEnter 200ms ease-out both;
 }
