@@ -24,7 +24,7 @@ describe("LoginModal", () => {
   it("isOpen=true, view=register 时显示注册视图", () => {
     useLoginModal.setState({ isOpen: true, view: "register" });
     render(<LoginModal />);
-    expect(screen.getByText("创建账号")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "创建账号" })).toBeInTheDocument();
   });
 
   it("登录视图：返回按钮点击关闭弹窗", async () => {

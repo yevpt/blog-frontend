@@ -129,7 +129,7 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
           variant="default"
           className="w-full mt-5 h-[46px] rounded-xl text-[14.5px] gap-1.5"
         >
-          立即注册
+          创建账号
           <SvgIcon name="chevron-right" size={16} />
         </Button>
       </form>
