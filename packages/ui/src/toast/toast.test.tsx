@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { UNSTABLE_ToastQueue as ToastQueue } from "react-aria-components/Toast";
+import { ToastQueue } from "./toast";
 import { ToastRegion, type ToastContent } from "./toast";
 
 function makeQueue(...items: ToastContent[]) {
@@ -14,7 +14,7 @@ describe("ToastRegion", () => {
   it("没有 toast 时不渲染任何消息文字", () => {
     const queue = makeQueue();
     render(<ToastRegion queue={queue} />);
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   });
 
   it("渲染 success toast 消息文字", () => {

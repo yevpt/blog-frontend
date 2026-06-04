@@ -28,13 +28,14 @@ const typeStyles: Record<ToastType, string> = {
 
 interface ToastRegionProps {
   queue: UNSTABLE_ToastQueue<ToastContent>;
+  className?: string;
 }
 
-export function ToastRegion({ queue }: ToastRegionProps) {
+export function ToastRegion({ queue, className }: ToastRegionProps) {
   return (
     <AriaToastRegion
       queue={queue}
-      className="fixed bottom-4 right-4 z-[600] flex flex-col gap-2 outline-none"
+      className={cn("fixed bottom-4 right-4 z-[600] flex flex-col gap-2 outline-none", className)}
     >
       {({ toast }) => (
         <AriaToast
