@@ -21,9 +21,14 @@ export function LoginModal() {
     // reflow 强制重新触发动画
     void el.offsetWidth;
     el.classList.add("animate-modal-pulse");
-    el.addEventListener("animationend", () => el.classList.remove("animate-modal-pulse"), {
-      once: true,
-    });
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      el.addEventListener("animationend", () => el.classList.remove("animate-modal-pulse"), {
+        once: true,
+      });
+    } else {
+      // 动画不会播放，立即移除 class 保持状态干净
+      el.classList.remove("animate-modal-pulse");
+    }
   }
 
   function handleBack() {
