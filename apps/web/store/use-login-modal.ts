@@ -15,5 +15,6 @@ export const useLoginModal = create<LoginModalStore>((set) => ({
   view: "login",
   open: (view = "login") => set({ isOpen: true, view }),
   close: () => set({ isOpen: false, view: "login" }),
+  // 仅在弹窗已打开时调用（供登录↔注册视图切换使用）
   setView: (view) => set({ view }),
 }));
