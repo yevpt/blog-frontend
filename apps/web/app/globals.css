@@ -83,7 +83,8 @@ body::after {
   .animate-modal-pulse,
   .animate-modal-enter,
   .animate-modal-leave,
-  .animate-view-enter {
+  .animate-view-enter,
+  .animate-dropdown-enter {
     animation: none;
   }
 }
@@ -152,4 +153,19 @@ body::after {
 
 .animate-view-enter {
   animation: viewEnter 200ms ease-out both;
+}
+
+@keyframes dropdownEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-dropdown-enter {
+  animation: dropdownEnter 150ms ease-out both;
 }
