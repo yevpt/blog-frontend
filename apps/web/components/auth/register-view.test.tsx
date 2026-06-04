@@ -3,11 +3,19 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RegisterView } from "./register-view";
 
+const mockAddToast = vi.fn();
+vi.mock("@/lib/toast", () => ({
+  addToast: vi
+    .fn()
+    .mockImplementation((...args: Parameters<typeof mockAddToast>) => mockAddToast(...args)),
+}));
+
 describe("RegisterView", () => {
   const mockSwitch = vi.fn();
 
   beforeEach(() => {
     mockSwitch.mockClear();
+    mockAddToast.mockClear();
     URL.createObjectURL = vi.fn(() => "blob:mock-url");
     URL.revokeObjectURL = vi.fn();
     global.fetch = vi.fn();
@@ -172,5 +180,62 @@ describe("RegisterView", () => {
       );
     });
     expect(screen.getByRole("button", { name: /重新发送/ })).toBeInTheDocument();
+  });
+
+  it("send-code 返回 429 时关闭验证码弹层并 toast 通知，不重试拼图", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch)
+      .mockResolvedValueOnce({
+        json: async () => ({
+          code: 0,
+          message: "ok",
+          data: {
+            challenge_id: "c1",
+            master_image: "data:image/jpeg;base64,m",
+            tile_image: "data:image/png;base64,t",
+            tile_x: 10,
+            tile_y: 80,
+            tile_width: 60,
+            tile_height: 60,
+            image_width: 300,
+            image_height: 220,
+          },
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        json: async () => ({ code: 0, message: "ok", data: { captcha_token: "tok" } }),
+      } as Response)
+      .mockResolvedValueOnce({
+        json: async () => ({ code: 429, message: "IP 已被封禁，请稍后再试", data: null }),
+      } as Response);
+
+    render(<RegisterView onSwitchToLogin={mockSwitch} />);
+    await user.type(screen.getByPlaceholderText("邮箱地址"), "user@example.com");
+    await user.click(screen.getByRole("button", { name: "获取验证码" }));
+
+    const track = await screen.findByTestId("captcha-track");
+    Object.defineProperty(track, "getBoundingClientRect", {
+      value: () => ({
+        left: 0,
+        top: 0,
+        right: 300,
+        bottom: 52,
+        width: 300,
+        height: 52,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      }),
+      configurable: true,
+    });
+    fireEvent.pointerDown(track, { clientX: 10, pointerId: 1 });
+    fireEvent.pointerMove(track, { clientX: 162 });
+    fireEvent.pointerUp(track, { clientX: 162, pointerId: 1 });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("captcha-track")).not.toBeInTheDocument();
+    });
+    expect(mockAddToast).toHaveBeenCalledWith("IP 已被封禁，请稍后再试", "error");
+    expect(global.fetch).toHaveBeenCalledTimes(3);
   });
 });

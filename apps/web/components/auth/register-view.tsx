@@ -13,6 +13,7 @@ import { createPortal } from "react-dom";
 import { SvgIcon } from "@repo/icons";
 import { Button, cn } from "@repo/ui";
 import { OAuthGrid } from "./oauth-grid";
+import { addToast } from "@/lib/toast";
 
 function inputCls(hasError?: boolean) {
   return cn(
@@ -62,6 +63,16 @@ interface CaptchaVerifyResp {
 }
 
 // ── 自定义拼图滑块 ─────────────────────────────────────────────
+class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly code: number,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 const THUMB_W = 44;
 
 interface SliderProps {
@@ -120,8 +131,8 @@ function CaptchaSlider({ value, max, disabled, onChange, onRelease }: SliderProp
       ref={trackRef}
       data-testid="captcha-track"
       className={cn(
-        "relative w-full h-[48px] rounded-xl select-none touch-none overflow-hidden",
-        "bg-foreground/[0.05] border border-border",
+        "relative w-full h-[44px] rounded-lg select-none touch-none overflow-hidden",
+        "bg-foreground/[0.06]",
         disabled ? "opacity-50 cursor-not-allowed" : "cursor-grab active:cursor-grabbing",
       )}
       onPointerDown={handlePointerDown}
@@ -216,7 +227,7 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
   async function requestJSON<T>(url: string, init: Parameters<typeof fetch>[1]): Promise<T> {
     const res = await fetch(url, init);
     const json = (await res.json()) as ApiResponse<T>;
-    if (json.code !== 0) throw new Error(json.message || "请求失败");
+    if (json.code !== 0) throw new ApiError(json.message || "请求失败", json.code);
     return json.data as T;
   }
 
@@ -264,7 +275,13 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
       await sendEmailCode(result.captcha_token);
       setCaptchaOpen(false);
       setCaptchaChallenge(null);
-    } catch {
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 429) {
+        setCaptchaOpen(false);
+        setCaptchaChallenge(null);
+        addToast(err.message, "error");
+        return;
+      }
       // 验证失败：自动刷新新一轮拼图
       try {
         const challenge = await requestJSON<CaptchaChallenge>("/api/captcha/register/challenge", {
@@ -353,7 +370,7 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
 
       {/* 表单 */}
       <form onSubmit={handleSubmit}>
-        <div className="flex flex-col gap-[10px]">
+        <div className="flex flex-col gap-[14px]">
           {/* 邮箱 */}
           <div>
             <input
@@ -534,50 +551,51 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
                 </button>
               </div>
 
-              {/* 拼图区域 */}
-              <div
-                className="relative mx-auto overflow-hidden rounded-xl border border-border bg-foreground/[0.03]"
-                style={{
-                  width: captchaChallenge.image_width,
-                  height: captchaChallenge.image_height,
-                  maxWidth: "100%",
-                }}
-              >
-                <img
-                  src={captchaChallenge.master_image}
-                  alt=""
-                  className="h-full w-full select-none object-cover"
-                  draggable={false}
-                />
-                <img
-                  src={captchaChallenge.tile_image}
-                  alt=""
-                  className="absolute select-none drop-shadow-lg"
-                  draggable={false}
+              {/* 验证码统一容器（拼图 + 滑块无缝整合） */}
+              <div className="overflow-hidden rounded-xl border border-border">
+                {/* 拼图区域 */}
+                <div
+                  className="relative mx-auto overflow-hidden bg-foreground/[0.03]"
                   style={{
-                    width: captchaChallenge.tile_width,
-                    height: captchaChallenge.tile_height,
-                    left: captchaX,
-                    top: captchaChallenge.tile_y,
+                    width: captchaChallenge.image_width,
+                    height: captchaChallenge.image_height,
+                    maxWidth: "100%",
                   }}
-                />
-                {/* 加载遮罩 */}
-                {captchaLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-                    <div className="w-6 h-6 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  </div>
-                )}
-              </div>
-
-              {/* 滑块 */}
-              <div className="mt-4">
-                <CaptchaSlider
-                  value={captchaX}
-                  max={Math.max(0, captchaChallenge.image_width - captchaChallenge.tile_width)}
-                  disabled={captchaLoading}
-                  onChange={(x) => setCaptchaX(x)}
-                  onRelease={(x) => handleCaptchaVerify(x)}
-                />
+                >
+                  <img
+                    src={captchaChallenge.master_image}
+                    alt=""
+                    className="h-full w-full select-none object-cover"
+                    draggable={false}
+                  />
+                  <img
+                    src={captchaChallenge.tile_image}
+                    alt=""
+                    className="absolute select-none drop-shadow-lg"
+                    draggable={false}
+                    style={{
+                      width: captchaChallenge.tile_width,
+                      height: captchaChallenge.tile_height,
+                      left: captchaX,
+                      top: captchaChallenge.tile_y,
+                    }}
+                  />
+                  {captchaLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                      <div className="w-6 h-6 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    </div>
+                  )}
+                </div>
+                {/* 滑块底栏 */}
+                <div className="border-t border-border/50 p-3">
+                  <CaptchaSlider
+                    value={captchaX}
+                    max={Math.max(0, captchaChallenge.image_width - captchaChallenge.tile_width)}
+                    disabled={captchaLoading}
+                    onChange={(x) => setCaptchaX(x)}
+                    onRelease={(x) => handleCaptchaVerify(x)}
+                  />
+                </div>
               </div>
             </div>
           </div>,

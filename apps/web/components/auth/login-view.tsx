@@ -93,7 +93,7 @@ export function LoginView({ onSwitchToRegister, onSuccess }: LoginViewProps) {
 
       {/* 表单 */}
       <form onSubmit={handleSubmit}>
-        <div className="flex flex-col gap-[10px]">
+        <div className="flex flex-col gap-[14px]">
           <div>
             <input
               type="text"
