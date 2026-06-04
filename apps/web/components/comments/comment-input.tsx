@@ -66,7 +66,7 @@ export function CommentInput({
             <Button
               variant="default"
               size="sm"
-              onPress={openLogin}
+              onPress={() => openLogin()}
               className="h-8 rounded-full bg-primary px-[18px] text-xs font-bold text-white hover:bg-primary/85"
             >
               请先登录
