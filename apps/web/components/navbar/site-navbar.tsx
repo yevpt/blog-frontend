@@ -85,25 +85,24 @@ export function SiteNavbar() {
         className={cn(
           "fixed left-0 right-0 top-0 z-50 flex justify-center pointer-events-none",
           // 入场前隐藏；入场后开启过渡（opacity 入场 + 后续 padding/glass 过渡共用同一 transition）
-          "transition-[opacity,padding,background,backdrop-filter,border-color,box-shadow] duration-300 ease-out",
+          // backdrop-filter 不参与过渡：动画 backdrop-filter 在 Chrome/Safari 中会触发合成层竞争导致闪烁
+          "transition-[opacity,padding,background,border-color,box-shadow] duration-300 ease-out",
           mounted ? "opacity-100" : "opacity-0",
-          scrolled ? "lg:px-0 px-5 py-2.5" : "lg:px-0 px-5 py-[18px]",
-          "max-md:pointer-events-auto max-md:p-0",
-          isGlass
-            ? "max-md:border-b max-md:border-black/5 max-md:[background:var(--glass-mob)] max-md:backdrop-blur-[22px] max-md:[backdrop-filter:blur(22px)_saturate(200%)] dark:max-md:border-white/10"
-            : "max-md:bg-transparent",
+          scrolled ? "px-5 py-2.5" : "px-5 py-[18px]",
         )}
       >
         <div
           className={cn(
-            "pointer-events-auto flex w-full max-w-[1120px] flex-col overflow-hidden rounded-full border border-transparent",
-            // mounted 后才开启内层过渡，避免玻璃态初始化时触发不必要动画
-            mounted &&
-              "transition-[background,border-color,box-shadow,backdrop-filter,border-radius] duration-300 ease-out",
+            // 移动端固定 rounded-[24px]，桌面端固定 rounded-full。
+            // 不做响应式以外的 border-radius 过渡，避免 overflow-hidden 在过渡中
+            // 把内容剪切成椭圆形，产生"四周内陷"的视觉抖动。
+            // [transform:translateZ(0)]：始终持有独立 GPU 合成层，防止 backdrop-filter
+            // 在 glass 态切换期间动态创建合成层，与 Tabs SelectionIndicator 等子层产生 z-order 竞争
+            "pointer-events-auto flex w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-transparent md:rounded-full [transform:translateZ(0)]",
+            // mounted 后才开启内层过渡；backdrop-filter 不参与过渡，避免合成层振荡
+            mounted && "transition-[background,border-color,box-shadow] duration-300 ease-out",
             isGlass &&
               "border-[var(--glass-bdr)] bg-[var(--glass-bg)] shadow-[0_0_0_1px_var(--glass-ring),0_4px_32px_rgba(0,0,0,0.12)] backdrop-blur-2xl [backdrop-filter:blur(24px)_saturate(180%)]",
-            menuOpen && "rounded-[24px]",
-            "max-md:max-w-none max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:shadow-none max-md:backdrop-blur-none max-md:[backdrop-filter:none]",
           )}
         >
           <div className="flex min-h-[52px] items-center justify-between px-4 md:min-h-0 md:px-4 md:py-[9px]">

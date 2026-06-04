@@ -21,7 +21,7 @@ export interface ToastContent {
 export { UNSTABLE_ToastQueue as ToastQueue } from "react-aria-components/Toast";
 
 const typeStyles: Record<ToastType, string> = {
-  success: "bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-400",
+  success: "bg-emerald-500 border-emerald-600 text-white",
   error: "bg-destructive/10 border-destructive/25 text-destructive",
   info: "bg-primary/10 border-primary/25 text-primary",
 };
@@ -35,13 +35,15 @@ export function ToastRegion({ queue, className }: ToastRegionProps) {
   return (
     <AriaToastRegion
       queue={queue}
-      className={cn("fixed bottom-4 right-4 z-[600] flex flex-col gap-2 outline-none", className)}
+      className={cn("fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 outline-none", className)}
     >
       {({ toast }) => (
         <AriaToast
           toast={toast}
           className={cn(
-            "flex w-[320px] max-w-[calc(100vw-2rem)] items-center gap-3 rounded-xl border px-4 py-3 shadow-lg",
+            // [will-change:transform]：给每条 toast 独立 GPU 合成层，
+            // 防止 hover 触发的 opacity 过渡污染 nav backdrop-filter 的合成上下文
+            "flex w-[320px] max-w-[calc(100vw-2rem)] items-center gap-3 rounded-xl border px-4 py-3 shadow-lg [will-change:transform]",
             typeStyles[toast.content.type ?? "info"],
           )}
         >
