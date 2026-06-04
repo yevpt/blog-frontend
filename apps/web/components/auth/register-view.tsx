@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, type ChangeEvent, type MouseEvent } from "react";
+import { useState, useRef, type ChangeEvent, type FormEvent, type MouseEvent } from "react";
 import { SvgIcon } from "@repo/icons";
 import { Button } from "@repo/ui";
 import { OAuthGrid } from "./oauth-grid";
@@ -12,10 +12,132 @@ interface RegisterViewProps {
   onSwitchToLogin: () => void;
 }
 
+interface ApiResponse<T> {
+  code: number;
+  message: string;
+  data?: T;
+}
+
+interface CaptchaChallenge {
+  challenge_id: string;
+  master_image: string;
+  tile_image: string;
+  tile_x: number;
+  tile_y: number;
+  tile_width: number;
+  tile_height: number;
+  image_width: number;
+  image_height: number;
+}
+
+interface CaptchaVerifyResp {
+  captcha_token: string;
+}
+
 export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [status, setStatus] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [captchaOpen, setCaptchaOpen] = useState(false);
+  const [captchaChallenge, setCaptchaChallenge] = useState<CaptchaChallenge | null>(null);
+  const [captchaX, setCaptchaX] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function requestJSON<T>(url: string, init: Parameters<typeof fetch>[1]): Promise<T> {
+    const res = await fetch(url, init);
+    const json = (await res.json()) as ApiResponse<T>;
+    if (json.code !== 0) {
+      throw new Error(json.message || "请求失败");
+    }
+    return json.data as T;
+  }
+
+  async function openCaptcha() {
+    if (!email.trim()) {
+      setStatus("请先填写邮箱地址");
+      return;
+    }
+
+    setLoading(true);
+    setStatus(null);
+    try {
+      const challenge = await requestJSON<CaptchaChallenge>("/api/captcha/register/challenge", {
+        method: "POST",
+      });
+      setCaptchaChallenge(challenge);
+      setCaptchaX(challenge.tile_x);
+      setCaptchaOpen(true);
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "图形验证码加载失败");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function sendEmailCode(captchaToken: string) {
+    await requestJSON<void>("/api/auth/send-code", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        captcha_token: captchaToken,
+      }),
+    });
+    setStatus("验证码已发送");
+  }
+
+  async function handleCaptchaVerify() {
+    if (!captchaChallenge) return;
+
+    setLoading(true);
+    setStatus(null);
+    try {
+      const result = await requestJSON<CaptchaVerifyResp>("/api/captcha/register/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          challenge_id: captchaChallenge.challenge_id,
+          x: captchaX,
+          y: captchaChallenge.tile_y,
+        }),
+      });
+      await sendEmailCode(result.captcha_token);
+      setCaptchaOpen(false);
+      setCaptchaChallenge(null);
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "验证失败，请重试");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    setStatus(null);
+    try {
+      await requestJSON("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password,
+          code,
+          ...(nickname.trim() ? { nickname: nickname.trim() } : {}),
+        }),
+      });
+      onSwitchToLogin();
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "注册失败，请稍后重试");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -51,9 +173,16 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
       </div>
 
       {/* 表单 */}
-      <form onSubmit={(e) => e.preventDefault()}>
+      <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-[10px]">
-          <input type="email" placeholder="邮箱地址" autoComplete="email" className={inputCls} />
+          <input
+            type="email"
+            placeholder="邮箱地址"
+            autoComplete="email"
+            className={inputCls}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
           {/* 验证码行 */}
           <div className="flex gap-2">
@@ -63,12 +192,16 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
               inputMode="numeric"
               maxLength={6}
               className={`${inputCls} flex-1`}
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
             />
             <button
               type="button"
+              onClick={openCaptcha}
+              disabled={loading}
               className="flex-shrink-0 px-[15px] rounded-xl bg-primary/12 border border-primary/25 text-primary text-[12.5px] font-semibold transition-colors hover:bg-primary/20 whitespace-nowrap"
             >
-              获取验证码
+              {loading ? "处理中" : "获取验证码"}
             </button>
           </div>
 
@@ -79,6 +212,8 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
               placeholder="设置密码"
               autoComplete="new-password"
               className={`${inputCls} pr-[46px]`}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             <button
               type="button"
@@ -95,6 +230,8 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
             placeholder="昵称（可选）"
             autoComplete="nickname"
             className={inputCls}
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
           />
 
           <input
@@ -143,11 +280,18 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
           </label>
         </div>
 
+        {status && (
+          <p role="status" className="mt-3 text-[12px] leading-relaxed text-muted-foreground">
+            {status}
+          </p>
+        )}
+
         {/* 创建账号按钮 */}
         <Button
           type="submit"
           variant="default"
           className="w-full mt-5 h-[46px] rounded-xl text-[14.5px] gap-1.5"
+          isDisabled={loading}
         >
           创建账号
           <SvgIcon name="chevron-right" size={16} />
@@ -168,6 +312,93 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
       <p className="text-[11.5px] text-muted-foreground mt-[14px] px-[14px] py-[10px] rounded-[10px] bg-primary/[0.06] border border-primary/12 leading-relaxed">
         注册即表示同意《用户协议》和《隐私政策》
       </p>
+
+      {captchaOpen && captchaChallenge && (
+        <div className="fixed inset-0 z-[520] flex items-center justify-center bg-black/45 px-4 backdrop-blur-md">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="图形验证码"
+            className="w-full max-w-[360px] rounded-2xl border border-border bg-card p-4 shadow-2xl"
+          >
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-[15px] font-bold text-foreground">完成安全验证</h3>
+                <p className="mt-1 text-[11.5px] text-muted-foreground">拖动滑块对齐缺口</p>
+              </div>
+              <button
+                type="button"
+                aria-label="关闭图形验证码"
+                onClick={() => setCaptchaOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
+              >
+                <SvgIcon name="close" size={14} />
+              </button>
+            </div>
+
+            <div
+              className="relative mx-auto overflow-hidden rounded-xl border border-border bg-foreground/[0.03]"
+              style={{
+                width: captchaChallenge.image_width,
+                height: captchaChallenge.image_height,
+                maxWidth: "100%",
+              }}
+            >
+              <img
+                src={captchaChallenge.master_image}
+                alt=""
+                className="h-full w-full select-none object-cover"
+                draggable={false}
+              />
+              <img
+                src={captchaChallenge.tile_image}
+                alt=""
+                className="absolute select-none drop-shadow-lg"
+                draggable={false}
+                style={{
+                  width: captchaChallenge.tile_width,
+                  height: captchaChallenge.tile_height,
+                  left: captchaX,
+                  top: captchaChallenge.tile_y,
+                }}
+              />
+            </div>
+
+            <label className="sr-only" htmlFor="captcha-slider">
+              滑块位置
+            </label>
+            <input
+              id="captcha-slider"
+              aria-label="滑块位置"
+              type="range"
+              min={0}
+              max={Math.max(0, captchaChallenge.image_width - captchaChallenge.tile_width)}
+              value={captchaX}
+              onChange={(e) => setCaptchaX(Number(e.target.value))}
+              className="mt-4 w-full accent-primary"
+            />
+
+            <div className="mt-4 grid grid-cols-[1fr_1.4fr] gap-2">
+              <button
+                type="button"
+                onClick={openCaptcha}
+                disabled={loading}
+                className="rounded-xl border border-border bg-foreground/[0.04] px-3 py-2 text-[12.5px] font-semibold text-muted-foreground transition-colors hover:bg-foreground/[0.08]"
+              >
+                换一张
+              </button>
+              <button
+                type="button"
+                onClick={handleCaptchaVerify}
+                disabled={loading}
+                className="rounded-xl border border-primary/25 bg-primary px-3 py-2 text-[12.5px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                验证
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
