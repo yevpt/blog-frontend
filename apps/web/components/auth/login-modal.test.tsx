@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LoginModal } from "./login-modal";
 import { useLoginModal } from "@/store/use-login-modal";
@@ -64,5 +64,29 @@ describe("LoginModal", () => {
     render(<LoginModal />);
     await user.click(screen.getByRole("button", { name: "注册" }));
     expect(useLoginModal.getState().view).toBe("register");
+  });
+
+  it("登录成功后关闭弹窗并触发 router.refresh", async () => {
+    const user = userEvent.setup();
+    const mockFetch = vi.fn().mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          code: 0,
+          data: { user: { id: 1, username: "alice", nickname: "Alice" } },
+        }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    useLoginModal.setState({ isOpen: true, view: "login" });
+    render(<LoginModal />);
+
+    await user.type(screen.getByPlaceholderText("账号 / 邮箱 / 手机号"), "test@example.com");
+    await user.type(screen.getByPlaceholderText("密码"), "password123");
+    await user.click(screen.getByRole("button", { name: /继续/ }));
+
+    await waitFor(() => expect(useLoginModal.getState().isOpen).toBe(false));
+    expect(mockRefresh).toHaveBeenCalledOnce();
+
+    vi.unstubAllGlobals();
   });
 });

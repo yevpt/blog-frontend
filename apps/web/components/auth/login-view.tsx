@@ -47,6 +47,10 @@ export function LoginView({ onSwitchToRegister, onSuccess }: LoginViewProps) {
         setError(json.message || "登录失败，请稍后重试");
         return;
       }
+      if (!json.data?.user) {
+        setError("登录失败，请稍后重试");
+        return;
+      }
       onSuccess(json.data.user as UserResp);
     } catch {
       setError("网络异常，请稍后重试");
