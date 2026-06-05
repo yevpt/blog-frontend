@@ -16,6 +16,20 @@ describe("matchNavbarRoute", () => {
     });
   });
 
+  it("非数字文章路径回退到 default", () => {
+    expect(matchNavbarRoute("/articles/abc")).toEqual({
+      mobileVariant: "default",
+      title: undefined,
+    });
+  });
+
+  it("文章子路径回退到 default", () => {
+    expect(matchNavbarRoute("/articles/42/comments")).toEqual({
+      mobileVariant: "default",
+      title: undefined,
+    });
+  });
+
   it("snippets 命中 default，并返回碎语标题", () => {
     expect(matchNavbarRoute("/snippets")).toEqual({
       mobileVariant: "default",
