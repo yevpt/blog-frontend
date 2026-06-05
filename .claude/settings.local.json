@@ -6,7 +6,9 @@
       "Bash(claude mcp *)",
       "Bash(bash /Users/vpt/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/brainstorming/scripts/start-server.sh --project-dir /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(pnpm *)",
+      "Bash(git checkout *)"
     ]
   }
 }
