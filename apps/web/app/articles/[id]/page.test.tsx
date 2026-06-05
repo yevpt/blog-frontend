@@ -3,6 +3,15 @@ import { render, screen } from "@testing-library/react";
 import ArticleDetailPage from "./page";
 import type { ArticleDetailResp } from "@repo/api";
 
+interface ArticleNavbarSyncProps {
+  articleId: number;
+  likeCount: number;
+  commentCount: number;
+  isLiked: boolean;
+}
+
+const mockArticleNavbarSync = vi.fn<(props: ArticleNavbarSyncProps) => null>(() => null);
+
 const mockArticle: ArticleDetailResp = {
   id: 1,
   title: "Rust Web 框架实战",
@@ -31,6 +40,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/components/article-detail", () => ({
+  ArticleNavbarSync: (props: ArticleNavbarSyncProps) => mockArticleNavbarSync(props),
   ArticleHero: ({ article }: { article: ArticleDetailResp }) => <h1>{article.title}</h1>,
   ArticleContent: ({ contentHtml }: { contentHtml: string }) => (
     <div data-testid="content" dangerouslySetInnerHTML={{ __html: contentHtml }} />
@@ -41,6 +51,20 @@ vi.mock("@/components/article-detail", () => ({
 }));
 
 describe("ArticleDetailPage", () => {
+  it("把当前文章信息传给 ArticleNavbarSync", async () => {
+    mockArticleNavbarSync.mockClear();
+
+    const jsx = await ArticleDetailPage({ params: Promise.resolve({ id: "1" }) });
+    render(jsx);
+
+    expect(mockArticleNavbarSync).toHaveBeenCalledWith({
+      articleId: mockArticle.id,
+      likeCount: mockArticle.like_count,
+      commentCount: mockArticle.comment_count,
+      isLiked: mockArticle.is_liked ?? false,
+    });
+  });
+
   it("渲染文章标题", async () => {
     const jsx = await ArticleDetailPage({ params: Promise.resolve({ id: "1" }) });
     render(jsx);
