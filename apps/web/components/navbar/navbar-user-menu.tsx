@@ -3,18 +3,18 @@
 import { useState, useRef, useEffect, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import type { UserResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
 import { cn } from "@repo/ui";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { useSnippetModal } from "@/store/use-snippet-modal";
 
 interface NavbarUserMenuProps {
-  user: UserResp;
+  /** 当前登录用户 ID，用于后续获取 profile */
+  userId: number;
   isGlass?: boolean;
 }
 
-export function NavbarUserMenu({ user, isGlass = false }: NavbarUserMenuProps) {
+export function NavbarUserMenu({ isGlass = false }: NavbarUserMenuProps) {
   const [open, setOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState<CSSProperties>({});
   const containerRef = useRef<HTMLDivElement>(null);
@@ -22,7 +22,9 @@ export function NavbarUserMenu({ user, isGlass = false }: NavbarUserMenuProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { open: openSnippetModal } = useSnippetModal();
-  const displayName = user.nickname ?? user.username;
+
+  // TODO(Task 7): 通过 userId 调用 GET /users/me 获取 profile（username、nickname、avatar 等）
+  const displayName = "我";
 
   useEffect(() => {
     if (!open) return;
@@ -78,9 +80,6 @@ export function NavbarUserMenu({ user, isGlass = false }: NavbarUserMenuProps) {
         <p className="truncate text-[13px] font-semibold leading-tight text-foreground">
           {displayName}
         </p>
-        {user.email && (
-          <p className="mt-0.5 truncate text-[11px] text-muted-foreground/60">{user.email}</p>
-        )}
       </div>
       {/* 菜单项 */}
       <div className="flex flex-col gap-0.5 px-1.5 py-1.5">

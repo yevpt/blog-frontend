@@ -45,7 +45,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body>
         <ThemeProvider>
           <LocaleProvider>
-            <SessionProvider user={session?.user ?? null}>
+            <SessionProvider userId={session?.userId ?? null}>
               <div className="flex flex-col min-h-screen">
                 {/* SvgSprite 将雪碧图注入 DOM，必须在所有使用 SvgIcon 的组件之前渲染 */}
                 <SvgSprite />

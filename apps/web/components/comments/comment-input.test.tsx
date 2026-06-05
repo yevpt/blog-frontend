@@ -23,7 +23,7 @@ vi.mock("@repo/ui", () => ({
 }));
 
 vi.mock("@/app/providers/session-provider", () => ({
-  useSession: () => ({ user: { id: 1, username: "alice" } }),
+  useSession: () => ({ userId: 1 }),
 }));
 
 vi.mock("@/store/use-login-modal", () => ({

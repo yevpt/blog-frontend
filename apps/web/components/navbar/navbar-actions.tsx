@@ -27,7 +27,7 @@ export function NavbarActions({ isGlass = false }: NavbarActionsProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const { t } = useLocale();
   const { open: openLoginModal } = useLoginModal();
-  const { user } = useSession();
+  const { userId } = useSession();
   const nextTheme = getOppositeTheme(resolvedTheme);
 
   return (
@@ -43,8 +43,8 @@ export function NavbarActions({ isGlass = false }: NavbarActionsProps) {
       </Button>
 
       <div className="hidden md:flex items-center gap-2">
-        {user ? (
-          <NavbarUserMenu user={user} isGlass={isGlass} />
+        {userId != null ? (
+          <NavbarUserMenu userId={userId} isGlass={isGlass} />
         ) : (
           <Button
             variant="outline"

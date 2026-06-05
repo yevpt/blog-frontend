@@ -1,77 +1,63 @@
-import { describe, it, expect, vi } from "vitest";
-import { getSession } from "./session";
+// @vitest-environment node
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { SignJWT } from "jose";
 
-// mock next/headers：模拟 Server Component 的 cookie 读取
+// mock next/headers
 vi.mock("next/headers", () => ({
   cookies: vi.fn(),
 }));
 
 import { cookies } from "next/headers";
+import { getSession } from "./session";
 
-// CookieStore 是 cookies() 的 resolve 类型，用于让 mock 类型对齐
-type CookieStore = Awaited<ReturnType<typeof cookies>>;
+const SECRET = new TextEncoder().encode("test-secret");
 
-// 生成一个合法结构的 JWT（不含真实签名，仅用于测试 decode 逻辑）
-// 格式：base64url(header).base64url(payload).signature
-function makeToken(payload: Record<string, unknown>): string {
-  const b64url = (obj: unknown) =>
-    btoa(JSON.stringify(obj)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
-  return `${b64url({ alg: "HS256", typ: "JWT" })}.${b64url(payload)}.fake-sig`;
+async function makeAccessToken(uid: number, expOffsetSec = 3600) {
+  return new SignJWT({ uid, type: "access" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime(Math.floor(Date.now() / 1000) + expOffsetSec)
+    .sign(SECRET);
 }
 
-// 构造最简 CookieStore mock，只实现测试用到的 get 方法
-function mockCookies(tokenValue?: string): CookieStore {
-  return {
-    get: (name: string) =>
-      name === "access_token" && tokenValue
-        ? { name: "access_token", value: tokenValue }
-        : undefined,
-  } as unknown as CookieStore;
+async function makeRefreshToken(uid: number) {
+  return new SignJWT({ uid, type: "refresh" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime(Math.floor(Date.now() / 1000) + 3600)
+    .sign(SECRET);
+}
+
+function mockCookies(tokenValue: string | undefined) {
+  (cookies as ReturnType<typeof vi.fn>).mockResolvedValue({
+    get: (name: string) => (name === "access_token" ? { value: tokenValue } : undefined),
+  });
 }
 
 describe("getSession", () => {
-  it("无 access_token cookie 时返回 null", async () => {
-    vi.mocked(cookies).mockResolvedValue(mockCookies());
-    expect(await getSession()).toBeNull();
-  });
+  beforeEach(() => vi.clearAllMocks());
 
-  it("token 已过期时返回 null", async () => {
-    const expiredToken = makeToken({
-      uid: 1,
-      username: "vpt",
-      roles: ["admin"],
-      type: "access",
-      exp: Math.floor(Date.now() / 1000) - 100, // 100 秒前已过期
-    });
-    vi.mocked(cookies).mockResolvedValue(mockCookies(expiredToken));
-    expect(await getSession()).toBeNull();
-  });
-
-  it("有效 token 返回正确的 Session", async () => {
-    const validToken = makeToken({
-      uid: 1,
-      username: "vpt",
-      roles: ["admin"],
-      type: "access",
-      exp: Math.floor(Date.now() / 1000) + 7200,
-    });
-    vi.mocked(cookies).mockResolvedValue(mockCookies(validToken));
-
+  it("有效 access token 返回 { userId }", async () => {
+    mockCookies(await makeAccessToken(42));
     const session = await getSession();
-    expect(session).not.toBeNull();
-    expect(session?.user.id).toBe(1);
-    expect(session?.user.username).toBe("vpt");
-    expect(session?.user.roles).toEqual(["admin"]);
+    expect(session).toEqual({ userId: 42 });
   });
 
-  it("type 为 refresh 的 token 返回 null", async () => {
-    const refreshToken = makeToken({
-      uid: 1,
-      username: "vpt",
-      type: "refresh",
-      exp: Math.floor(Date.now() / 1000) + 7200,
-    });
-    vi.mocked(cookies).mockResolvedValue(mockCookies(refreshToken));
+  it("无 access_token cookie 返回 null", async () => {
+    mockCookies(undefined);
+    expect(await getSession()).toBeNull();
+  });
+
+  it("过期 token 返回 null", async () => {
+    mockCookies(await makeAccessToken(1, -10));
+    expect(await getSession()).toBeNull();
+  });
+
+  it("refresh token 不可用于 session，返回 null", async () => {
+    mockCookies(await makeRefreshToken(1));
+    expect(await getSession()).toBeNull();
+  });
+
+  it("格式非法的 token 返回 null", async () => {
+    mockCookies("not.a.jwt");
     expect(await getSession()).toBeNull();
   });
 });

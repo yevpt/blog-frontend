@@ -26,10 +26,11 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const { t } = useLocale();
   const { open: openLoginModal } = useLoginModal();
-  const { user } = useSession();
+  const { userId } = useSession();
   const router = useRouter();
   const nextTheme = resolvedTheme === "dark" ? "light" : "dark";
-  const displayName = user ? (user.nickname ?? user.username) : "";
+  // TODO(Task 7): 通过 userId 调用 GET /users/me 获取 profile
+  const displayName = userId != null ? "我" : "";
 
   async function handleLogout() {
     try {
@@ -89,7 +90,7 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
             ))}
           </div>
 
-          {user ? (
+          {userId != null ? (
             <>
               {/* 用户信息行：头像+名字 → /profile，右侧消息+退出图标 */}
               <div className="mb-1 flex items-center justify-between px-0.5">

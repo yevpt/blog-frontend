@@ -40,7 +40,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/app/providers/session-provider", () => ({
-  useSession: vi.fn(() => ({ user: null })),
+  useSession: vi.fn(() => ({ userId: null })),
 }));
 
 vi.mock("@/components/common/user-avatar", () => ({
@@ -53,7 +53,7 @@ const mockOnClose = vi.fn();
 
 describe("NavbarMobileMenu", () => {
   beforeEach(() => {
-    vi.mocked(useSession).mockReturnValue({ user: null });
+    vi.mocked(useSession).mockReturnValue({ userId: null });
     mockRefresh.mockClear();
     mockOnClose.mockClear();
     global.fetch = vi.fn().mockResolvedValue({ json: async () => ({}) });
@@ -65,29 +65,16 @@ describe("NavbarMobileMenu", () => {
     expect(screen.queryByTestId("user-avatar")).not.toBeInTheDocument();
   });
 
-  it("已登录：显示用户昵称和头像，不显示登录按钮", () => {
-    vi.mocked(useSession).mockReturnValue({
-      user: { id: 1, username: "alice", nickname: "小A" },
-    });
+  it("已登录：显示用户区域和头像，不显示登录按钮", () => {
+    vi.mocked(useSession).mockReturnValue({ userId: 1 });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
-    expect(screen.getByText("小A")).toBeInTheDocument();
     expect(screen.getByTestId("user-avatar")).toBeInTheDocument();
     expect(screen.queryByText("登录")).not.toBeInTheDocument();
   });
 
-  it("已登录：无昵称时显示 username", () => {
-    vi.mocked(useSession).mockReturnValue({
-      user: { id: 2, username: "bob" },
-    });
-    render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
-    expect(screen.getByText("bob")).toBeInTheDocument();
-  });
-
   it("已登录：点击退出登录调用 /api/auth/logout 并 refresh 和 onClose", async () => {
     const user = userEvent.setup();
-    vi.mocked(useSession).mockReturnValue({
-      user: { id: 1, username: "alice", nickname: "小A" },
-    });
+    vi.mocked(useSession).mockReturnValue({ userId: 1 });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
     await user.click(screen.getByLabelText("退出登录"));
     await waitFor(() => {

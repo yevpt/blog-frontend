@@ -24,7 +24,7 @@ export function CommentInput({
   isSubmitting = false,
   submitError,
 }: CommentInputProps) {
-  const { user } = useSession();
+  const { userId } = useSession();
   const { open: openLogin } = useLoginModal();
 
   return (
@@ -45,14 +45,14 @@ export function CommentInput({
         <textarea
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          placeholder={user ? "写下你的评论..." : "请先登录才能发表评论"}
-          disabled={!user || isSubmitting}
+          placeholder={userId != null ? "写下你的评论..." : "请先登录才能发表评论"}
+          disabled={userId == null || isSubmitting}
           rows={3}
           className="min-h-[72px] w-full resize-none rounded-xl border border-input bg-background px-3 py-2.5 text-[13px] leading-normal text-foreground outline-none transition-colors placeholder:text-[var(--fg3)] focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
         />
         {submitError && <p className="text-xs text-red-500">{submitError}</p>}
         <div className="flex justify-end">
-          {user ? (
+          {userId != null ? (
             <Button
               variant="default"
               size="sm"
