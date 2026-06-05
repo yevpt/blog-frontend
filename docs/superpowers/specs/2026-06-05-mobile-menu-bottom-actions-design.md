@@ -69,31 +69,33 @@ interface NavbarMobileMenuProps {
 
 **无箭头**（右侧不放 chevron-right，与主题行右侧对齐）。
 
-#### 主题行
+#### 主题行（新设计，登录 / 未登录统一）
 
-与**未登录态完全一致**，复用相同 className：
+**登录态和未登录态都改为此设计**，移除旧的未登录态样式。
 
 ```
 button（全宽）
-  <div className="flex items-center gap-2.5">
-    SvgIcon sun/moon  size={15}  className="text-[var(--fg2)] opacity-75"
-    span "浅色模式" / "深色模式"
-  </div>
-  <div toggle-track>
-    <div toggle-thumb />
-  </div>
+  [icon-box amber]  SvgIcon sun/moon  size={14}  className="text-amber-500"
+  span "浅色模式" / "深色模式"   text-[13px] font-medium text-foreground
+  [toggle-track + toggle-thumb]
 ```
 
-Toggle 样式（已有，直接复用）：
-- Track: `h-5 w-9 rounded-full transition-colors duration-200`，开 `bg-primary/80`，关 `bg-foreground/20`
-- Thumb: `absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200`，开 `translate-x-4`，关 `translate-x-0.5`
-- Row hover: `hover:bg-foreground/[0.04]`
+图标色块规格（与消息行 icon-box 保持一致）：
+- `h-7 w-7 shrink-0 rounded-lg bg-amber-500/[0.10]` + `flex items-center justify-content`
+
+Toggle 规格（不变）：
+- Track: `relative flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200`
+- Track 开：`bg-primary/80`；关：`bg-foreground/20`
+- Thumb: `absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200`
+- Thumb 开：`translate-x-4`；关：`translate-x-0.5`
+
+Row：`flex w-full cursor-pointer items-center gap-2.5 rounded-[10px] px-2.5 py-[9px] transition-colors hover:bg-foreground/[0.04]`
 
 ---
 
 ### 3. 未登录态主题切换
 
-保持现有样式不变（已是正确的列表行风格），只需确保与登录态主题行 className 完全相同。
+**同步更新**为与登录态相同的新设计（图标色块 + 文字 + toggle），替换当前旧样式。
 
 ---
 
