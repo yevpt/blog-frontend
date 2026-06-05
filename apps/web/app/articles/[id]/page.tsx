@@ -52,11 +52,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
       <ArticleHero article={article} />
 
       <div className="mx-auto max-w-[1100px] px-5 py-8">
-        <div
-          className={
-            hasToc ? "grid grid-cols-1 items-start gap-8 xl:grid-cols-[1fr_200px]" : undefined
-          }
-        >
+        <div className={hasToc ? "grid grid-cols-1 gap-8 xl:grid-cols-[1fr_200px]" : undefined}>
           <div className="min-w-0">
             <ArticleContent contentHtml={contentHtml} />
           </div>

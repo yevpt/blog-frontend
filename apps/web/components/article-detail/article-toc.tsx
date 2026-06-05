@@ -54,7 +54,7 @@ export function ArticleToc({ items, variant }: ArticleTocProps) {
             <button
               onClick={() => setCollapsed((v) => !v)}
               aria-label={collapsed ? "展开目录" : "收起目录"}
-              className="rounded p-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="cursor-pointer rounded p-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               {collapsed ? "▶" : "▼"}
             </button>
