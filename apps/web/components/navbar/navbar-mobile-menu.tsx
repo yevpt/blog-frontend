@@ -59,7 +59,7 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
           className="text-amber-500"
         />
       </div>
-      <span className="flex-1 text-[13px] font-medium text-foreground">
+      <span className="flex-1 text-left text-[13px] font-medium text-foreground">
         {resolvedTheme === "dark" ? "深色模式" : "浅色模式"}
       </span>
       <div
@@ -116,7 +116,7 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
                   type="button"
                   onClick={handleLogout}
                   aria-label="退出登录"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] text-foreground/[0.28] transition-all duration-150 hover:bg-destructive/[0.10] hover:text-destructive/70 active:scale-90 dark:text-foreground/[0.45] dark:hover:bg-destructive/[0.15] dark:hover:text-destructive/80"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground/[0.28] transition-all duration-150 hover:bg-destructive/10 hover:text-destructive/70 active:scale-90 dark:text-foreground/[0.45] dark:hover:bg-destructive/15 dark:hover:text-destructive/80 cursor-pointer"
                 >
                   <SvgIcon name="log-out" size={16} />
                 </button>

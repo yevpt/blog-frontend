@@ -149,6 +149,7 @@ describe("NavbarMobileMenu", () => {
     expect(logoutBtn).toBeInTheDocument();
     // 退出按钮不在底部三列网格中，不含独立的 bg-destructive 背景类
     expect(logoutBtn.className).not.toMatch(/(?:^|\s)bg-destructive(?:[\s/]|$)/);
+    expect(logoutBtn.className).toContain("dark:text-foreground/[0.45]");
   });
 
   it("已登录：unreadCount 未传时不渲染徽标", () => {

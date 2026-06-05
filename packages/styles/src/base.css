@@ -1,117 +1,152 @@
 @import "tailwindcss";
 
-/* 让 Tailwind 扫描共享包里的 className，避免只在 package 中出现的样式被裁掉。 */
+/* -------------------------------------------------------------------------- */
+/* Tailwind 扫描范围                                                            */
+/* -------------------------------------------------------------------------- */
+
+/* 扫描 monorepo 共享包中的 className，避免共享组件里的样式被裁剪。 */
 @source "../../ui/src";
 @source "../../hooks/src";
 
+/* -------------------------------------------------------------------------- */
+/* 主题变体                                                                     */
+/* -------------------------------------------------------------------------- */
+
 /*
-  dark 变体：匹配 .dark 类（显式深色）或媒体查询（系统深色，且未被 .light 覆盖）。
-  Tailwind 编译时会为所有使用 dark: 前缀的工具类以及 @variant dark { } 块
-  分别生成这两条规则，深色配置只需在源码写一次。
+  dark 变体规则：
+
+  1. 当 html / :root 显式带有 .dark 时，启用深色模式；
+  2. 当系统处于深色模式，且 html / :root 没有显式 .light 时，启用深色模式；
+  3. 使用祖先选择器，确保 dark:* 工具类可以作用于后代元素。
 */
 @custom-variant dark {
-  &.dark {
+  &:where(:root.dark, :root.dark *) {
     @slot;
   }
+
   @media (prefers-color-scheme: dark) {
-    &:not(.light) {
+    &:where(:root:not(.light), :root:not(.light) *) {
       @slot;
     }
   }
 }
 
-/* 这里定义的是整个 monorepo 共享的设计令牌，两个应用都会使用同一套颜色语义。 */
+/* -------------------------------------------------------------------------- */
+/* Tailwind 设计令牌                                                            */
+/* -------------------------------------------------------------------------- */
+
+/*
+  这里定义 Tailwind 可识别的共享设计令牌。
+
+  这些变量会生成对应的 Tailwind 工具能力，例如：
+  - bg-background
+  - text-foreground
+  - border-border
+  - ring-ring
+
+  浅色模式作为默认值。
+*/
 @theme {
-  /* Light mode */
   --color-background: #fafaf9;
   --color-foreground: #18181b;
+
   --color-card: #ffffff;
   --color-card-foreground: #18181b;
+
   --color-primary: #7c3aed;
   --color-primary-foreground: #ffffff;
+
   --color-secondary: #f4f4f5;
   --color-secondary-foreground: #18181b;
+
   --color-muted: #f4f4f5;
   --color-muted-foreground: #71717a;
+
   --color-accent: #7c3aed;
   --color-accent-foreground: #ffffff;
+
   --color-border: rgba(0, 0, 0, 0.06);
   --color-input: rgba(0, 0, 0, 0.06);
   --color-ring: #7c3aed;
+
   --color-destructive: #ef4444;
   --color-destructive-foreground: #fafafa;
 }
 
-/* 页面级基础样式放在共享包里，应用只保留自己特有的布局限制。 */
-html {
-  background-color: var(--color-background);
-  color-scheme: light;
-}
-
-body {
-  margin: 0;
-  /* body 背景透明，让 html 底色 + body::before mesh gradient 装饰层可见 */
-  color: var(--color-foreground);
-}
-
 /*
-  深色主题令牌：通过 @custom-variant dark 同时覆盖 .dark 类和系统媒体查询。
-  Tailwind 编译输出：
-    :root.dark { ... }
-    @media (prefers-color-scheme: dark) { :root:not(.light) { ... } }
-  深色颜色值仅在此处定义一次。
+  深色模式下的 Tailwind 设计令牌覆盖。
+
+  注意：
+  这里复用上方定义的 dark 变体，因此不需要手写两套选择器：
+  - :root.dark
+  - @media (prefers-color-scheme: dark) { :root:not(.light) }
 */
-/* Dark mode overrides */
 :root {
   @variant dark {
     --color-background: #09090b;
     --color-foreground: #fafafa;
+
     --color-card: #18181b;
     --color-card-foreground: #fafafa;
+
     --color-primary: #a78bfa;
     --color-primary-foreground: #09090b;
+
     --color-secondary: #27272a;
     --color-secondary-foreground: #fafafa;
+
     --color-muted: #27272a;
     --color-muted-foreground: #a1a1aa;
+
     --color-accent: #a78bfa;
     --color-accent-foreground: #09090b;
+
     --color-border: rgba(255, 255, 255, 0.08);
     --color-input: rgba(255, 255, 255, 0.08);
     --color-ring: #a78bfa;
+
     --color-destructive: #f87171;
     --color-destructive-foreground: #09090b;
-    color-scheme: dark;
   }
 }
 
-/* 全局工具变量：次要文字色、玻璃态背景/边框（不在 @theme 中，直接写 CSS 变量） */
+/* -------------------------------------------------------------------------- */
+/* 应用级 CSS 变量                                                              */
+/* -------------------------------------------------------------------------- */
+
+/*
+  这里放不需要暴露成 Tailwind 工具类的应用变量。
+
+  适合放：
+  - 普通 CSS 中直接使用的文字层级变量；
+  - 玻璃态背景、边框、遮罩变量；
+  - 组件内部共享但不需要成为 Tailwind token 的变量。
+*/
 :root {
+  color-scheme: light;
+
+  /* 文字层级 */
   --fg2: #52525b;
   --fg3: #a1a1aa;
+
+  /* 玻璃态效果 */
   --glass-bg: rgba(255, 255, 255, 0.78);
   --glass-bdr: rgba(255, 255, 255, 0.9);
   --glass-mob: rgba(250, 250, 249, 0.85);
   --glass-ring: rgba(0, 0, 0, 0.06);
-}
-/*
- * 深色模式文字令牌：
- *   --fg2 (#b8b8c4)：正文次级文字，用于文章摘要、碎语内容；≥12px 小字对比度约 9:1
- *   --fg3 (#9c9ca8)：辅助提示文字，用于时间戳、统计数字；较原 #71717a（4.3:1）大幅提升至约 6.4:1
- *   同时补充 @media prefers-color-scheme 覆盖，避免系统深色用户看到浅色值
- */
-:root.dark {
-  --fg2: #b8b8c4;
-  --fg3: #9c9ca8;
-  --glass-bg: rgba(9, 9, 11, 0.78);
-  --glass-bdr: rgba(255, 255, 255, 0.09);
-  --glass-mob: rgba(24, 24, 27, 0.85);
-  --glass-ring: rgba(255, 255, 255, 0.04);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
+
+  @variant dark {
+    color-scheme: dark;
+
+    /*
+          深色模式文字层级：
+
+          --fg2：正文次级文字，用于文章摘要、碎语内容；
+          --fg3：辅助提示文字，用于时间戳、统计数字。
+        */
     --fg2: #b8b8c4;
     --fg3: #9c9ca8;
+
     --glass-bg: rgba(9, 9, 11, 0.78);
     --glass-bdr: rgba(255, 255, 255, 0.09);
     --glass-mob: rgba(24, 24, 27, 0.85);
@@ -119,50 +154,86 @@ body {
   }
 }
 
-/* 心形点赞跳动动效，用于 ArticleCardStats 的 heart 图标 */
+/* -------------------------------------------------------------------------- */
+/* 页面基础样式                                                                 */
+/* -------------------------------------------------------------------------- */
+
+/*
+  页面级基础样式放在共享包里。
+
+  应用自身只保留：
+  - 页面最大宽度；
+  - 路由布局；
+  - 业务特有容器样式。
+*/
+html {
+  background-color: var(--color-background);
+}
+
+body {
+  margin: 0;
+  color: var(--color-foreground);
+
+  /*
+      不给 body 设置背景色。
+
+      这样可以让 html 的底色，以及 body::before 之类的 mesh gradient
+      页面装饰层正常透出。
+    */
+}
+
+/* -------------------------------------------------------------------------- */
+/* 全局动画                                                                     */
+/* -------------------------------------------------------------------------- */
+
+/* 心形点赞跳动动效，用于 ArticleCardStats 的 heart 图标。 */
 @keyframes heartbeat {
   0%,
   100% {
     transform: scale(1);
   }
-  14% {
-    transform: scale(1.3);
-  }
-  28% {
-    transform: scale(1);
-  }
+
+  14%,
   42% {
     transform: scale(1.3);
   }
+
+  28%,
   70% {
     transform: scale(1);
   }
 }
 
+/* 首页 Hero 进度条动画。 */
 @keyframes heroProgress {
   from {
     transform: scaleX(0);
   }
+
   to {
     transform: scaleX(1);
   }
 }
 
+/* 卡片从下方轻微浮入。 */
 @keyframes slideUpCard {
   from {
     opacity: 0;
     transform: translateY(32px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
+/* 全屏面板从底部滑入。 */
 @keyframes slideUpFull {
   from {
     transform: translateY(100%);
   }
+
   to {
     transform: translateY(0);
   }

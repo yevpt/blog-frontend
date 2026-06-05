@@ -12,7 +12,9 @@
       "Bash(timeout 30 npx next dev --port 3000)",
       "Bash(git -C /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend ls-files apps/web/next-env.d.ts)",
       "Bash(git -C /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend status --short apps/web/next-env.d.ts)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(find /Users/vpt/.claude/plugins/cache/claude-plugins-official/superpowers -name \"start-server.sh\" 2>/dev/null | head -5)",
+      "Bash(/Users/vpt/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/brainstorming/scripts/start-server.sh --project-dir /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend)"
     ]
   }
 }
