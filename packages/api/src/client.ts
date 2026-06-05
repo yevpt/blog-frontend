@@ -8,7 +8,12 @@ import type {
   LoginResp,
   TokenResp,
 } from "./types/auth";
-import type { ArticleLikeResp, ArticleListReq, ArticlePageResp } from "./types/article";
+import type {
+  ArticleDetailResp,
+  ArticleLikeResp,
+  ArticleListReq,
+  ArticlePageResp,
+} from "./types/article";
 import type { CategoryTabsResp } from "./types/category";
 import type { MomentListReq, MomentPageResp } from "./types/moment";
 import type {
@@ -156,6 +161,11 @@ export function createApiClient(config: ApiClientConfig) {
         fetchAuthed<ArticleLikeResp>(`/articles/${id}/like`, {
           method: "POST",
         }),
+      /** 获取文章详情（公开接口，携带可选登录态以返回 is_liked） */
+      getDetail: (id: number) =>
+        fetchOptionalAuth<ArticleDetailResp>(`/articles/${id}`, { method: "GET" }),
+      /** 上报一次文章阅读（触发即可，不等待返回值） */
+      view: (id: number) => fetchPublic<void>(`/articles/${id}/view`, { method: "POST" }),
     },
     categories: {
       /** 查询分类 Tab 列表（含文章数量，按 seq/count 排序） */

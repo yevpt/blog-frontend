@@ -440,4 +440,45 @@ describe("createApiClient", () => {
       );
     });
   });
+
+  it("articles.getDetail 调用正确的端点", async () => {
+    const detail = {
+      id: 1,
+      title: "Test",
+      content: "# Hello",
+      user_id: 1,
+      status: 1,
+      comment_status: 1,
+      read_count: 0,
+      like_count: 0,
+      comment_count: 0,
+      is_recommended: false,
+      created_at: "2026-01-01",
+      updated_at: "2026-01-01",
+    };
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: detail }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    const result = await client.articles.getDetail(1);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/articles/1",
+      expect.objectContaining({ method: "GET" }),
+    );
+    expect(result.title).toBe("Test");
+  });
+
+  it("articles.view 调用正确的端点", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(mockResponse({ code: 0, message: "ok", data: null }));
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    await client.articles.view(42);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/articles/42/view",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
 });
