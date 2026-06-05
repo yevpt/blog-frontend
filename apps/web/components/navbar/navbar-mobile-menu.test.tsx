@@ -144,4 +144,20 @@ describe("NavbarMobileMenu", () => {
     ).toContain("h-10");
     expect(screen.getByRole("button", { name: "退出登录" }).className).toContain("h-10");
   });
+
+  it("已登录：主题切换按钮有 cursor-pointer 样式", () => {
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+    render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
+    const themeBtn = screen.getByRole("button", {
+      name: "当前生效主题：light，点击切换到 dark",
+    });
+    expect(themeBtn.className).toContain("cursor-pointer");
+  });
+
+  it("已登录：退出按钮 class 包含 bg-destructive", () => {
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+    render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
+    const logoutBtn = screen.getByRole("button", { name: "退出登录" });
+    expect(logoutBtn.className).toMatch(/bg-destructive/);
+  });
 });

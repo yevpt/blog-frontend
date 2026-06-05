@@ -38,7 +38,7 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
   const navLinkClass =
     "flex min-h-10 items-center justify-between rounded-[14px] px-3 text-[14px] font-semibold text-foreground transition-colors hover:bg-foreground/[0.05] dark:hover:bg-white/10";
   const actionClass =
-    "flex h-10 items-center justify-center gap-1.5 rounded-[13px] bg-foreground/[0.04] px-3 text-[12px] font-semibold text-[var(--fg2)] transition-colors hover:bg-primary/[0.10] hover:text-primary dark:bg-white/[0.06]";
+    "flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-[13px] bg-foreground/[0.04] px-3 text-[12px] font-semibold text-[var(--fg2)] transition-colors hover:bg-primary/[0.10] hover:text-primary dark:bg-white/[0.06]";
   const themeLabel = resolvedTheme === "dark" ? "深色" : "浅色";
 
   const themeToggle = (
@@ -134,7 +134,7 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
                   aria-label="退出登录"
                   className={cn(
                     actionClass,
-                    "bg-destructive/[0.07] text-destructive/80 hover:bg-destructive/[0.10] hover:text-destructive",
+                    "bg-destructive/[0.10] text-destructive/80 hover:bg-destructive/[0.14] hover:text-destructive",
                   )}
                 >
                   <SvgIcon name="log-out" size={18} />
