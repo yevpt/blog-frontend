@@ -41,6 +41,20 @@ export function NavbarUserMenu({ isGlass = false }: NavbarUserMenuProps) {
     return () => document.removeEventListener("mousedown", handleMouseDown);
   }, [open]);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    function handleBreakpointChange(event: MediaQueryListEvent) {
+      if (event.matches) setOpen(false);
+    }
+
+    if (mediaQuery.matches) setOpen(false);
+
+    mediaQuery.addEventListener("change", handleBreakpointChange);
+    return () => mediaQuery.removeEventListener("change", handleBreakpointChange);
+  }, []);
+
   function handleToggle() {
     if (!open && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
@@ -72,27 +86,30 @@ export function NavbarUserMenu({ isGlass = false }: NavbarUserMenuProps) {
     <div
       ref={dropdownRef}
       style={dropdownStyle}
-      className="animate-dropdown-enter z-[200] min-w-[168px] overflow-hidden rounded-xl border border-border bg-card shadow-xl"
+      className="animate-dropdown-enter z-[200] min-w-[190px] overflow-hidden rounded-xl border border-border bg-card shadow-xl"
     >
-      {/* 用户信息头 */}
-      <div className="border-b border-border/60 px-3.5 py-2.5">
-        <p className="truncate text-[13px] font-semibold leading-tight text-foreground">
-          {displayName}
-        </p>
-        {profile?.email && (
-          <p className="mt-0.5 truncate text-[11px] text-muted-foreground/60">{profile.email}</p>
-        )}
-      </div>
-      {/* 菜单项 */}
-      <div className="flex flex-col gap-0.5 px-1.5 py-1.5">
-        <button
-          type="button"
-          onClick={() => navigate("/profile")}
-          className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-foreground/[0.05]"
-        >
-          <SvgIcon name="user" size={14} className="shrink-0 text-muted-foreground/60" />
-          我的账号
-        </button>
+      <button
+        type="button"
+        onClick={() => navigate("/profile")}
+        className="m-1.5 flex w-[calc(100%-12px)] min-w-0 items-center justify-between gap-3 rounded-[14px] bg-gradient-to-br from-primary/[0.10] to-amber-500/[0.13] px-3 py-2.5 text-left transition-colors hover:from-primary/[0.14] hover:to-amber-500/[0.18]"
+      >
+        <span className="min-w-0">
+          <span className="block truncate text-[13px] font-bold leading-tight text-foreground">
+            {displayName || "我的账号"}
+          </span>
+          {profile?.email ? (
+            <span className="mt-1 block truncate text-[11px] font-medium text-[var(--fg3)]">
+              {profile.email}
+            </span>
+          ) : (
+            <span className="mt-1 block truncate text-[11px] font-medium text-[var(--fg3)]">
+              查看个人主页
+            </span>
+          )}
+        </span>
+        <SvgIcon name="chevron-right" size={14} className="shrink-0 text-[var(--fg3)]" />
+      </button>
+      <div className="flex flex-col gap-0.5 border-t border-border/60 px-1.5 py-1.5">
         <button
           type="button"
           onClick={() => {

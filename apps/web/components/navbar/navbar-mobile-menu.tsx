@@ -9,13 +9,7 @@ import { useLocale } from "@repo/hooks";
 import { useLoginModal } from "@/store/use-login-modal";
 import { useSession } from "@/app/providers/session-provider";
 import { UserAvatar } from "@/components/common/user-avatar";
-
-const MOBILE_ITEMS = [
-  { label: "碎语", href: "/snippets" },
-  { label: "留言", href: "/guestbook" },
-  { label: "友邻", href: "/friends" },
-  { label: "圈子", href: "/circle" },
-] as const;
+import { NAV_ITEMS } from "./nav-items";
 
 interface NavbarMobileMenuProps {
   isOpen: boolean;
@@ -29,7 +23,7 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
   const { userId, profile } = useSession();
   const router = useRouter();
   const nextTheme = resolvedTheme === "dark" ? "light" : "dark";
-  const displayName = profile?.nickname ?? profile?.username ?? "";
+  const displayName = profile?.nickname ?? profile?.username ?? "我的账号";
 
   async function handleLogout() {
     try {
@@ -41,26 +35,21 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
     onClose();
   }
 
+  const navLinkClass =
+    "flex min-h-10 items-center justify-between rounded-[14px] px-3 text-[14px] font-semibold text-foreground transition-colors hover:bg-foreground/[0.05] dark:hover:bg-white/10";
+  const actionClass =
+    "flex h-10 items-center justify-center gap-1.5 rounded-[13px] bg-foreground/[0.04] px-3 text-[12px] font-semibold text-[var(--fg2)] transition-colors hover:bg-primary/[0.10] hover:text-primary dark:bg-white/[0.06]";
+  const themeLabel = resolvedTheme === "dark" ? "深色" : "浅色";
+
   const themeToggle = (
     <button
       type="button"
       onClick={() => setTheme(nextTheme)}
-      className="flex cursor-pointer items-center gap-2 text-[13px] font-medium text-[var(--fg2)]"
+      className={actionClass}
+      aria-label={`当前生效主题：${resolvedTheme}，点击切换到 ${nextTheme}`}
     >
-      <span
-        className={cn(
-          "relative h-[22px] w-10 rounded-full border transition-colors",
-          resolvedTheme === "dark" ? "border-primary bg-primary" : "border-border bg-border",
-        )}
-      >
-        <span
-          className={cn(
-            "absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform",
-            resolvedTheme === "dark" && "translate-x-[18px]",
-          )}
-        />
-      </span>
-      深色模式
+      <SvgIcon name={resolvedTheme === "dark" ? "moon" : "sun"} size={18} />
+      <span>{themeLabel}</span>
     </button>
   );
 
@@ -73,78 +62,89 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
       )}
     >
       <div className="min-h-0 overflow-hidden">
-        <div className="px-4 pb-[18px]">
-          <div className="mb-2 h-px bg-border" />
-          <div className="mb-4 flex flex-col gap-0.5">
-            {MOBILE_ITEMS.map((item) => (
+        <div className="px-3 pb-3">
+          <div className="border-t border-border/60 pt-3">
+            {userId != null ? (
               <Link
-                key={item.href}
-                href={item.href}
+                href="/profile"
                 onClick={onClose}
-                className="flex items-center justify-between rounded-[10px] px-2.5 py-3 text-[15px] font-semibold text-foreground transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                className="flex min-w-0 items-center gap-3 rounded-[18px] bg-gradient-to-br from-primary/[0.10] to-amber-500/[0.13] px-3 py-3 transition-colors hover:from-primary/[0.14] hover:to-amber-500/[0.18]"
               >
-                <span>{item.label}</span>
-                <span className="text-[15px] text-[var(--fg3)]">›</span>
-              </Link>
-            ))}
-          </div>
-
-          {userId != null ? (
-            <>
-              {/* 用户信息行：头像+名字 → /profile，右侧消息+退出图标 */}
-              <div className="mb-1 flex items-center justify-between px-0.5">
-                <Link
-                  href="/profile"
-                  onClick={onClose}
-                  className="flex min-w-0 flex-1 items-center gap-2.5"
-                >
-                  <UserAvatar
-                    src={profile?.avatar_url ?? undefined}
-                    name={displayName || "?"}
-                    size="xs"
-                  />
-                  <span className="truncate text-[14px] font-semibold text-foreground">
+                <UserAvatar
+                  src={profile?.avatar_url ?? undefined}
+                  name={displayName}
+                  size="md"
+                  className="h-9 w-9 text-[13px]"
+                />
+                <span className="min-w-0">
+                  <span className="block truncate text-[14px] font-bold leading-tight text-foreground">
                     {displayName}
                   </span>
-                </Link>
-                <div className="ml-2 flex shrink-0 items-center gap-0.5">
-                  <Link
-                    href="/messages"
-                    onClick={onClose}
-                    aria-label="消息"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--fg2)] transition-colors hover:bg-black/5 dark:hover:bg-white/10"
-                  >
-                    <SvgIcon name="message-circle" size={16} />
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    aria-label="退出登录"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-destructive/70 transition-colors hover:bg-destructive/[0.08]"
-                  >
-                    <SvgIcon name="log-out" size={16} />
-                  </button>
+                  <span className="mt-1 block truncate text-[11px] font-medium text-[var(--fg3)]">
+                    查看个人主页
+                  </span>
+                </span>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-3 rounded-[18px] bg-gradient-to-br from-primary/[0.10] to-amber-500/[0.13] px-3 py-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/[0.14] text-primary">
+                  <SvgIcon name="user" size={18} />
                 </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[14px] font-bold leading-tight text-foreground">
+                    欢迎回来
+                  </p>
+                  <p className="mt-1 truncate text-[11px] font-medium text-[var(--fg3)]">
+                    登录后可查看消息与个人主页
+                  </p>
+                </div>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onPress={() => {
+                    openLoginModal();
+                    onClose();
+                  }}
+                  className="h-8 shrink-0 rounded-full bg-foreground px-4 text-[12px] font-bold text-background hover:bg-foreground/85"
+                >
+                  {t("auth.login")}
+                </Button>
               </div>
-              {/* 主题行 */}
-              <div className="flex items-center px-0.5 pt-1">{themeToggle}</div>
-            </>
-          ) : (
-            <div className="flex items-center justify-between px-0.5 pt-0.5">
-              {themeToggle}
-              <Button
-                variant="default"
-                size="sm"
-                onPress={() => {
-                  openLoginModal();
-                  onClose();
-                }}
-                className="h-8 rounded-full bg-foreground px-5 text-[13px] font-bold text-background hover:bg-foreground/85"
-              >
-                {t("auth.login")}
-              </Button>
+            )}
+
+            <div className="mt-3 flex flex-col gap-1">
+              {NAV_ITEMS.map((item) => (
+                <Link key={item.href} href={item.href} onClick={onClose} className={navLinkClass}>
+                  <span>{item.label}</span>
+                  <SvgIcon name="chevron-right" size={15} className="text-[var(--fg3)]" />
+                </Link>
+              ))}
             </div>
-          )}
+
+            {userId != null ? (
+              <div className="mt-3 grid grid-cols-3 gap-1.5">
+                <Link href="/messages" onClick={onClose} aria-label="消息" className={actionClass}>
+                  <SvgIcon name="message-circle" size={18} />
+                  <span>消息</span>
+                </Link>
+                {themeToggle}
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  aria-label="退出登录"
+                  className={cn(
+                    actionClass,
+                    "bg-destructive/[0.07] text-destructive/80 hover:bg-destructive/[0.10] hover:text-destructive",
+                  )}
+                >
+                  <SvgIcon name="log-out" size={18} />
+                  <span>退出</span>
+                </button>
+              </div>
+            ) : (
+              <div className="mt-3 flex">{themeToggle}</div>
+            )}
+          </div>
         </div>
       </div>
     </div>

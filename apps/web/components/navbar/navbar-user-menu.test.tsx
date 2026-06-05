@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { UserDetailResp } from "@repo/api";
 import { NavbarUserMenu } from "./navbar-user-menu";
@@ -34,6 +34,8 @@ vi.mock("@/app/providers/session-provider", () => ({
   useSession: () => mockUseSession(),
 }));
 
+let mobileMediaListener: ((event: MediaQueryListEvent) => void) | null = null;
+
 /** 构造最小化 profile 对象 */
 function makeProfile(overrides: Partial<UserDetailResp> = {}): UserDetailResp {
   return {
@@ -51,6 +53,24 @@ describe("NavbarUserMenu", () => {
     mockRefresh.mockClear();
     mockOpenSnippetModal.mockClear();
     global.fetch = vi.fn().mockResolvedValue({ json: async () => ({}) });
+    mobileMediaListener = null;
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn((event: string, listener: (event: MediaQueryListEvent) => void) => {
+          if (event === "change" && query === "(max-width: 767px)") {
+            mobileMediaListener = listener;
+          }
+        }),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
     // 默认：已登录，无头像，无 nickname
     mockUseSession.mockReturnValue({ userId: 1, profile: makeProfile() });
   });
@@ -65,11 +85,12 @@ describe("NavbarUserMenu", () => {
     expect(screen.queryByText("我的账号")).not.toBeInTheDocument();
   });
 
-  it("点击头像按钮展开下拉，显示所有菜单项", async () => {
+  it("点击头像按钮展开下拉，显示用户信息头和账号操作，不显示我的账号按钮", async () => {
     const user = userEvent.setup();
     render(<NavbarUserMenu />);
     await user.click(screen.getByRole("button", { name: /账号菜单/ }));
-    expect(screen.getByText("我的账号")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /查看个人主页/ })).toBeInTheDocument();
+    expect(screen.queryByText("我的账号")).not.toBeInTheDocument();
     expect(screen.getByText("发表碎语")).toBeInTheDocument();
     expect(screen.getByText("消息")).toBeInTheDocument();
     expect(screen.getByText("退出登录")).toBeInTheDocument();
@@ -79,18 +100,18 @@ describe("NavbarUserMenu", () => {
     const user = userEvent.setup();
     render(<NavbarUserMenu />);
     await user.click(screen.getByRole("button", { name: /账号菜单/ }));
-    expect(screen.getByText("我的账号")).toBeInTheDocument();
+    expect(screen.getByText("发表碎语")).toBeInTheDocument();
     fireEvent.mouseDown(document.body);
-    expect(screen.queryByText("我的账号")).not.toBeInTheDocument();
+    expect(screen.queryByText("发表碎语")).not.toBeInTheDocument();
   });
 
-  it("点击「我的账号」跳转 /profile 并关闭下拉", async () => {
+  it("点击用户信息头跳转 /profile 并关闭下拉", async () => {
     const user = userEvent.setup();
     render(<NavbarUserMenu />);
     await user.click(screen.getByRole("button", { name: /账号菜单/ }));
-    await user.click(screen.getByText("我的账号"));
+    await user.click(screen.getByRole("button", { name: /查看个人主页/ }));
     expect(mockPush).toHaveBeenCalledWith("/profile");
-    expect(screen.queryByText("我的账号")).not.toBeInTheDocument();
+    expect(screen.queryByText("发表碎语")).not.toBeInTheDocument();
   });
 
   it("点击「发表碎语」调用 openSnippetModal 并关闭下拉", async () => {
@@ -187,5 +208,18 @@ describe("NavbarUserMenu", () => {
     render(<NavbarUserMenu />);
     await user.click(screen.getByRole("button", { name: /账号菜单/ }));
     expect(screen.queryByText(/@/)).not.toBeInTheDocument();
+  });
+
+  it("下拉展开后切换到移动端断点时自动关闭 portal 菜单", async () => {
+    const user = userEvent.setup();
+    render(<NavbarUserMenu />);
+    await user.click(screen.getByRole("button", { name: /账号菜单/ }));
+    expect(screen.getByText("发表碎语")).toBeInTheDocument();
+
+    act(() => {
+      mobileMediaListener?.({ matches: true } as MediaQueryListEvent);
+    });
+
+    expect(screen.queryByText("发表碎语")).not.toBeInTheDocument();
   });
 });

@@ -78,6 +78,15 @@ export function SiteNavbar() {
         aria-hidden
         className="pointer-events-none absolute left-0 top-0 h-[60px] w-px"
       />
+      {menuOpen && (
+        <button
+          type="button"
+          aria-label="关闭导航遮罩"
+          data-testid="mobile-nav-overlay"
+          onClick={() => setMenuOpen(false)}
+          className="fixed inset-0 z-40 bg-background/55 backdrop-blur-sm transition-opacity md:hidden"
+        />
+      )}
       <nav
         id="navbar"
         data-glass={isGlass}

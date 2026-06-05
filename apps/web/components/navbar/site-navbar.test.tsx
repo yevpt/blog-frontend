@@ -155,17 +155,21 @@ describe("SiteNavbar", () => {
     expect(navbarInner?.className).toContain("max-w-[1120px]");
   });
 
-  it("桌面导航链接为文章、碎语、关于", () => {
+  it("桌面导航链接为主页、碎语、留言、友邻、圈子", () => {
     render(<SiteNavbar />);
-    expect(screen.getByText("文章")).toBeTruthy();
+    expect(screen.getAllByText("主页").length).toBeGreaterThan(0);
     expect(screen.getAllByText("碎语").length).toBeGreaterThan(0);
-    expect(screen.getByText("关于")).toBeTruthy();
+    expect(screen.getAllByText("留言").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("友邻").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("圈子").length).toBeGreaterThan(0);
+    expect(screen.queryByText("文章")).toBeNull();
+    expect(screen.queryByText("关于")).toBeNull();
   });
 
   it("主题切换按钮存在（system 状态下展示当前生效主题图标）", () => {
     render(<SiteNavbar />);
     // theme 为 system 但 resolvedTheme 为 light，因此展示当前生效的 sun 图标。
-    expect(screen.getByTestId("icon-sun")).toBeTruthy();
+    expect(screen.getAllByTestId("icon-sun").length).toBeGreaterThan(0);
     expect(screen.queryByTestId("icon-monitor")).toBeNull();
   });
 
@@ -187,6 +191,22 @@ describe("SiteNavbar", () => {
     const mobileMenu = screen.getByTestId("mobile-nav-menu");
     expect(navbar).toHaveAttribute("data-menu-open", "true");
     expect(navbar?.contains(mobileMenu)).toBe(true);
+    expect(screen.getByTestId("mobile-nav-overlay")).toBeInTheDocument();
+  });
+
+  it("移动菜单展开时点击遮罩关闭菜单", async () => {
+    const user = userEvent.setup();
+    render(<SiteNavbar />);
+
+    await act(async () => {
+      await user.click(screen.getByLabelText("打开导航菜单"));
+    });
+    await act(async () => {
+      await user.click(screen.getByTestId("mobile-nav-overlay"));
+    });
+
+    expect(document.querySelector("nav#navbar")).toHaveAttribute("data-menu-open", "false");
+    expect(screen.queryByTestId("mobile-nav-overlay")).not.toBeInTheDocument();
   });
 
   it("再次点击 hamburger 后关闭移动菜单", async () => {
