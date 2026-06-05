@@ -70,24 +70,23 @@ describe("NavbarMobileMenu", () => {
     expect(screen.queryByTestId("user-avatar")).not.toBeInTheDocument();
   });
 
-  it("未登录：底部主题切换紧凑显示当前浅色主题", () => {
+  it("未登录：底部主题切换行渲染，显示「浅色模式」文字", () => {
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
-    const themeButton = screen.getByRole("button", {
+    const themeBtn = screen.getByRole("button", {
       name: "当前生效主题：light，点击切换到 dark",
     });
-
-    expect(themeButton).toHaveTextContent("浅色");
-    expect(themeButton.className).toContain("h-10");
-    expect(themeButton.className).not.toContain("min-h-[54px]");
+    expect(themeBtn).toBeInTheDocument();
+    expect(themeBtn).toHaveTextContent("浅色模式");
   });
 
-  it("深色主题下显示当前深色主题", () => {
+  it("深色主题下底部切换行显示「深色模式」", () => {
     mockResolvedTheme = "dark";
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
-
-    expect(
-      screen.getByRole("button", { name: "当前生效主题：dark，点击切换到 light" }),
-    ).toHaveTextContent("深色");
+    const themeBtn = screen.getByRole("button", {
+      name: "当前生效主题：dark，点击切换到 light",
+    });
+    expect(themeBtn).toBeInTheDocument();
+    expect(themeBtn).toHaveTextContent("深色模式");
   });
 
   it("已登录：显示用户区域和头像，不显示登录提示", () => {

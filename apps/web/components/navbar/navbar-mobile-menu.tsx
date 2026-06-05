@@ -142,7 +142,38 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
                 </button>
               </div>
             ) : (
-              <div className="mt-3 flex">{themeToggle}</div>
+              <div className="mt-3 border-t border-border/60 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setTheme(nextTheme)}
+                  className="flex w-full cursor-pointer items-center justify-between rounded-lg px-2 py-2.5 transition-colors hover:bg-foreground/[0.04]"
+                  aria-label={`当前生效主题：${resolvedTheme}，点击切换到 ${nextTheme}`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <SvgIcon
+                      name={resolvedTheme === "dark" ? "moon" : "sun"}
+                      size={15}
+                      className="text-[var(--fg2)] opacity-75"
+                    />
+                    <span className="text-[13px] font-medium text-[var(--fg2)]">
+                      {resolvedTheme === "dark" ? "深色模式" : "浅色模式"}
+                    </span>
+                  </div>
+                  <div
+                    className={cn(
+                      "relative flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200",
+                      resolvedTheme === "dark" ? "bg-primary/80" : "bg-foreground/20",
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200",
+                        resolvedTheme === "dark" ? "translate-x-4" : "translate-x-0.5",
+                      )}
+                    />
+                  </div>
+                </button>
+              </div>
             )}
           </div>
         </div>
