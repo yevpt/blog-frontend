@@ -11,9 +11,10 @@ import { useSession } from "@/app/providers/session-provider";
 
 interface NavbarUserMenuProps {
   isGlass?: boolean;
+  unreadCount?: number;
 }
 
-export function NavbarUserMenu({ isGlass = false }: NavbarUserMenuProps) {
+export function NavbarUserMenu({ isGlass = false, unreadCount = 0 }: NavbarUserMenuProps) {
   const [open, setOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState<CSSProperties>({});
   const containerRef = useRef<HTMLDivElement>(null);
@@ -88,27 +89,28 @@ export function NavbarUserMenu({ isGlass = false }: NavbarUserMenuProps) {
       style={dropdownStyle}
       className="animate-dropdown-enter z-[200] min-w-[190px] overflow-hidden rounded-xl border border-border bg-card shadow-xl"
     >
-      <button
-        type="button"
-        onClick={() => navigate("/profile")}
-        className="m-1.5 flex w-[calc(100%-12px)] min-w-0 items-center justify-between gap-3 rounded-[14px] bg-gradient-to-br from-primary/[0.10] to-amber-500/[0.13] px-3 py-2.5 text-left transition-colors hover:from-primary/[0.14] hover:to-amber-500/[0.18]"
-      >
-        <span className="min-w-0">
-          <span className="block truncate text-[13px] font-bold leading-tight text-foreground">
-            {displayName || "我的账号"}
+      {/* 昵称行：点击跳主页/设置 */}
+      <div className="px-1.5 pt-1.5 pb-1">
+        <button
+          type="button"
+          onClick={() => navigate("/profile")}
+          className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl bg-primary/[0.07] px-3 py-2 text-left transition-colors hover:bg-primary/[0.10]"
+        >
+          <span className="min-w-0">
+            <span className="block truncate text-[13px] font-bold leading-tight text-foreground">
+              {displayName || "我的账号"}
+            </span>
+            <span className="mt-0.5 block text-[11px] font-medium text-primary/70">管理账号 →</span>
           </span>
-          {profile?.email ? (
-            <span className="mt-1 block truncate text-[11px] font-medium text-[var(--fg3)]">
-              {profile.email}
-            </span>
-          ) : (
-            <span className="mt-1 block truncate text-[11px] font-medium text-[var(--fg3)]">
-              查看个人主页
-            </span>
-          )}
-        </span>
-        <SvgIcon name="chevron-right" size={14} className="shrink-0 text-[var(--fg3)]" />
-      </button>
+          <SvgIcon
+            name="chevron-right"
+            size={13}
+            className="shrink-0 text-[var(--fg3)] opacity-50"
+          />
+        </button>
+      </div>
+
+      {/* 功能区 */}
       <div className="flex flex-col gap-0.5 border-t border-border/60 px-1.5 py-1.5">
         <button
           type="button"
@@ -116,7 +118,7 @@ export function NavbarUserMenu({ isGlass = false }: NavbarUserMenuProps) {
             setOpen(false);
             openSnippetModal();
           }}
-          className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-foreground/[0.05]"
+          className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-foreground/[0.05]"
         >
           <SvgIcon name="plus" size={14} className="shrink-0 text-muted-foreground/60" />
           发表碎语
@@ -124,16 +126,27 @@ export function NavbarUserMenu({ isGlass = false }: NavbarUserMenuProps) {
         <button
           type="button"
           onClick={() => navigate("/messages")}
-          className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-foreground/[0.05]"
+          className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-foreground/[0.05]"
         >
-          <SvgIcon name="message-circle" size={14} className="shrink-0 text-muted-foreground/60" />
-          消息
+          <SvgIcon name="bell" size={14} className="shrink-0 text-muted-foreground/60" />
+          <span className="flex-1">我的消息</span>
+          {unreadCount > 0 && (
+            <span
+              data-testid="unread-badge"
+              className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-white"
+            >
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
         </button>
-        <div className="my-1 h-px bg-border/60" />
+      </div>
+
+      {/* 退出区（G2：普通分割线隔离） */}
+      <div className="border-t border-border/60 px-1.5 pb-1.5 pt-1">
         <button
           type="button"
           onClick={handleLogout}
-          className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] text-destructive/80 transition-colors hover:bg-destructive/[0.06] hover:text-destructive"
+          className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] text-destructive/80 transition-colors hover:bg-destructive/[0.07] hover:text-destructive"
         >
           <SvgIcon name="log-out" size={14} className="shrink-0" />
           退出登录
@@ -151,7 +164,7 @@ export function NavbarUserMenu({ isGlass = false }: NavbarUserMenuProps) {
         aria-expanded={open}
         onClick={handleToggle}
         className={cn(
-          "relative overflow-hidden rounded-full ring-2 ring-transparent transition-shadow",
+          "relative cursor-pointer overflow-hidden rounded-full ring-2 ring-transparent transition-shadow",
           "hover:ring-primary/30 focus:outline-none focus:ring-primary/40",
           isGlass && "hover:ring-white/30",
         )}
