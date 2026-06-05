@@ -190,6 +190,7 @@ describe("SiteNavbar", () => {
     expect(screen.getByLabelText("返回首页")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /点赞/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /评论/ })).toBeInTheDocument();
+    expect(screen.getByLabelText("打开导航菜单")).toBeInTheDocument();
   });
 
   it("普通内页移动端头部显示返回首页、标题、menu", () => {
@@ -197,6 +198,7 @@ describe("SiteNavbar", () => {
     render(<SiteNavbar />);
     expect(screen.getByLabelText("返回首页")).toBeInTheDocument();
     expect(screen.getAllByText("碎语").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("打开导航菜单")).toBeInTheDocument();
   });
 
   it("点击 hamburger 后在 nav 内部展开移动菜单", async () => {
