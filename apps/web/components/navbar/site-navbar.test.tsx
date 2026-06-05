@@ -196,8 +196,12 @@ describe("SiteNavbar", () => {
   it("普通内页移动端头部显示返回首页、标题、menu", () => {
     mockPathname.mockReturnValue("/snippets");
     render(<SiteNavbar />);
-    expect(screen.getByLabelText("返回首页")).toBeInTheDocument();
-    expect(screen.getAllByText("碎语").length).toBeGreaterThan(0);
+    const backButton = screen.getByLabelText("返回首页");
+    const mobileHeader = backButton.parentElement;
+
+    expect(backButton).toBeInTheDocument();
+    expect(mobileHeader).not.toBeNull();
+    expect(mobileHeader).toHaveTextContent("碎语");
     expect(screen.getByLabelText("打开导航菜单")).toBeInTheDocument();
   });
 
