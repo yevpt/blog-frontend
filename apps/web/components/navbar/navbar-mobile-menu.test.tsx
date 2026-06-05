@@ -137,7 +137,7 @@ describe("NavbarMobileMenu", () => {
     vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
 
-    expect(screen.getByRole("link", { name: "消息" }).className).toContain("h-10");
+    expect(screen.getByRole("link", { name: "我的消息" }).className).toContain("h-10");
     expect(
       screen.getByRole("button", { name: "当前生效主题：light，点击切换到 dark" }).className,
     ).toContain("h-10");

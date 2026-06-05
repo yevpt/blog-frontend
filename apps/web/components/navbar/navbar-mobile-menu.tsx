@@ -123,9 +123,14 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
 
             {userId != null ? (
               <div className="mt-3 grid grid-cols-3 gap-1.5">
-                <Link href="/messages" onClick={onClose} aria-label="消息" className={actionClass}>
-                  <SvgIcon name="message-circle" size={18} />
-                  <span>消息</span>
+                <Link
+                  href="/messages"
+                  onClick={onClose}
+                  aria-label="我的消息"
+                  className={actionClass}
+                >
+                  <SvgIcon name="bell" size={18} />
+                  <span>我的消息</span>
                 </Link>
                 {themeToggle}
                 <button
