@@ -26,6 +26,7 @@ export type IconName =
   | "message-circle"
   | "monitor"
   | "moon"
+  | "music"
   | "plus"
   | "qq"
   | "search"
