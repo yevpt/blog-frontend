@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { createServerApiClient } from "@/lib/server-api";
 import { markdownToHtml, extractTocFromHtml } from "@/lib/markdown";
 import {
+  ArticleNavbarSync,
   ArticleHero,
   ArticleContent,
   ArticleToc,
@@ -49,6 +50,13 @@ export default async function ArticleDetailPage({ params }: PageProps) {
 
   return (
     <>
+      <ArticleNavbarSync
+        articleId={article.id}
+        likeCount={article.like_count}
+        commentCount={article.comment_count}
+        isLiked={article.is_liked ?? false}
+      />
+
       <ArticleHero article={article} />
 
       <div className="mx-auto max-w-[1100px] px-5 py-8">
