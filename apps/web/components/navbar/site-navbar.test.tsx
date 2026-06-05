@@ -155,6 +155,12 @@ describe("SiteNavbar", () => {
     expect(navbarInner?.className).toContain("max-w-[1120px]");
   });
 
+  it("顶部滚动哨兵默认高度为 24px", () => {
+    render(<SiteNavbar />);
+    const sentinel = document.querySelector('div[aria-hidden="true"]') as HTMLElement;
+    expect(sentinel.style.height).toBe("24px");
+  });
+
   it("桌面导航链接为主页、碎语、留言、友邻、圈子", () => {
     render(<SiteNavbar />);
     expect(screen.getAllByText("主页").length).toBeGreaterThan(0);
@@ -176,6 +182,21 @@ describe("SiteNavbar", () => {
   it("移动端 hamburger 按钮存在", () => {
     render(<SiteNavbar />);
     expect(screen.getByLabelText("打开导航菜单")).toBeTruthy();
+  });
+
+  it("文章详情页移动端头部显示返回首页、点赞、评论、menu", () => {
+    mockPathname.mockReturnValue("/articles/18");
+    render(<SiteNavbar />);
+    expect(screen.getByLabelText("返回首页")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /点赞/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /评论/ })).toBeInTheDocument();
+  });
+
+  it("普通内页移动端头部显示返回首页、标题、menu", () => {
+    mockPathname.mockReturnValue("/snippets");
+    render(<SiteNavbar />);
+    expect(screen.getByLabelText("返回首页")).toBeInTheDocument();
+    expect(screen.getAllByText("碎语").length).toBeGreaterThan(0);
   });
 
   it("点击 hamburger 后在 nav 内部展开移动菜单", async () => {
