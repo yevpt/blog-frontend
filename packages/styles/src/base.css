@@ -38,6 +38,8 @@
   --color-border: rgba(0, 0, 0, 0.06);
   --color-input: rgba(0, 0, 0, 0.06);
   --color-ring: #7c3aed;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #fafafa;
 }
 
 /* 页面级基础样式放在共享包里，应用只保留自己特有的布局限制。 */
@@ -77,6 +79,8 @@ body {
     --color-border: rgba(255, 255, 255, 0.08);
     --color-input: rgba(255, 255, 255, 0.08);
     --color-ring: #a78bfa;
+    --color-destructive: #f87171;
+    --color-destructive-foreground: #09090b;
     color-scheme: dark;
   }
 }
