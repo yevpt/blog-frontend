@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { useActiveArticle } from "@/store/use-active-article";
 
 interface ArticleNavbarSyncProps {
@@ -19,7 +19,8 @@ export function ArticleNavbarSync({
   const syncArticle = useActiveArticle((state) => state.syncArticle);
   const clearArticle = useActiveArticle((state) => state.clearArticle);
 
-  useEffect(() => {
+  // 必须在首屏绘制前把文章信息写入 store，避免移动端头部先闪出默认的 0/0。
+  useLayoutEffect(() => {
     syncArticle({ articleId, likeCount, commentCount, isLiked });
 
     return () => {
