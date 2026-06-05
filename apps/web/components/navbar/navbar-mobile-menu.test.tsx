@@ -133,17 +133,6 @@ describe("NavbarMobileMenu", () => {
     expect(mockOnClose).toHaveBeenCalledOnce();
   });
 
-  it("已登录：底部消息、主题、退出区域使用紧凑高度", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
-    render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
-
-    expect(screen.getByRole("link", { name: "我的消息" }).className).toContain("h-10");
-    expect(
-      screen.getByRole("button", { name: "当前生效主题：light，点击切换到 dark" }).className,
-    ).toContain("h-10");
-    expect(screen.getByRole("button", { name: "退出登录" }).className).toContain("h-10");
-  });
-
   it("已登录：主题切换按钮有 cursor-pointer 样式", () => {
     vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
@@ -153,10 +142,42 @@ describe("NavbarMobileMenu", () => {
     expect(themeBtn.className).toContain("cursor-pointer");
   });
 
-  it("已登录：退出按钮 class 包含 bg-destructive", () => {
+  it("已登录：退出按钮在用户卡片区，aria-label 为「退出登录」", () => {
     vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
     const logoutBtn = screen.getByRole("button", { name: "退出登录" });
-    expect(logoutBtn.className).toMatch(/bg-destructive/);
+    expect(logoutBtn).toBeInTheDocument();
+    // 退出按钮不在底部三列网格中，不含独立的 bg-destructive 背景类
+    expect(logoutBtn.className).not.toMatch(/(?:^|\s)bg-destructive(?:[\s/]|$)/);
+  });
+
+  it("已登录：unreadCount 未传时不渲染徽标", () => {
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+    render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
+    expect(screen.queryByText(/^\d+$|^99\+$/)).not.toBeInTheDocument();
+  });
+
+  it("已登录：unreadCount=5 时消息行渲染 '5'", () => {
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+    render(<NavbarMobileMenu isOpen onClose={mockOnClose} unreadCount={5} />);
+    expect(screen.getByText("5")).toBeInTheDocument();
+  });
+
+  it("已登录：unreadCount=100 时消息行渲染 '99+'", () => {
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+    render(<NavbarMobileMenu isOpen onClose={mockOnClose} unreadCount={100} />);
+    expect(screen.getByText("99+")).toBeInTheDocument();
+  });
+
+  it("已登录：主题行含 amber 图标（icon-sun 或 icon-moon）", () => {
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+    render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
+    // 浅色模式下显示 sun 图标（表示可切换到 dark）
+    expect(screen.getByTestId("icon-sun")).toBeInTheDocument();
+  });
+
+  it("未登录：主题行含 amber 图标（icon-sun）", () => {
+    render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
+    expect(screen.getByTestId("icon-sun")).toBeInTheDocument();
   });
 });
