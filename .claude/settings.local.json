@@ -8,7 +8,11 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(pnpm *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(timeout 30 npx next dev --port 3000)",
+      "Bash(git -C /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend ls-files apps/web/next-env.d.ts)",
+      "Bash(git -C /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend status --short apps/web/next-env.d.ts)",
+      "Bash(git *)"
     ]
   }
 }
