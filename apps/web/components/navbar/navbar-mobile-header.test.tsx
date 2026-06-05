@@ -7,6 +7,16 @@ const mockPush = vi.fn();
 const mockToggleMenu = vi.fn();
 const mockToggleLike = vi.fn();
 const mockScrollIntoView = vi.fn();
+const mockUseArticleEngagement = vi.fn();
+
+const defaultArticleEngagementState = {
+  articleId: 1,
+  likeCount: 120,
+  commentCount: 8,
+  isLiked: true,
+  isLiking: false,
+  toggleLike: mockToggleLike,
+};
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
@@ -17,14 +27,7 @@ vi.mock("@repo/icons", () => ({
 }));
 
 vi.mock("@/hooks/use-article-engagement", () => ({
-  useArticleEngagement: () => ({
-    articleId: 1,
-    likeCount: 120,
-    commentCount: 8,
-    isLiked: true,
-    isLiking: false,
-    toggleLike: mockToggleLike,
-  }),
+  useArticleEngagement: () => mockUseArticleEngagement(),
 }));
 
 describe("NavbarMobileHeader", () => {
@@ -33,6 +36,8 @@ describe("NavbarMobileHeader", () => {
     mockToggleMenu.mockReset();
     mockToggleLike.mockReset();
     mockScrollIntoView.mockReset();
+    mockUseArticleEngagement.mockReset();
+    mockUseArticleEngagement.mockReturnValue(defaultArticleEngagementState);
     document.body.innerHTML = "";
   });
 
@@ -49,6 +54,30 @@ describe("NavbarMobileHeader", () => {
 
     expect(screen.getByLabelText("打开导航菜单")).toBeInTheDocument();
     expect(screen.queryByLabelText("返回首页")).not.toBeInTheDocument();
+  });
+
+  it("非 article 变体不调用文章互动 hook", () => {
+    render(
+      <NavbarMobileHeader
+        mobileVariant="home"
+        title={undefined}
+        isGlass={false}
+        menuOpen={false}
+        onToggleMenu={mockToggleMenu}
+      />,
+    );
+
+    render(
+      <NavbarMobileHeader
+        mobileVariant="default"
+        title="碎语"
+        isGlass={true}
+        menuOpen={false}
+        onToggleMenu={mockToggleMenu}
+      />,
+    );
+
+    expect(mockUseArticleEngagement).not.toHaveBeenCalled();
   });
 
   it("article 变体渲染返回首页、点赞数字按钮、评论数字按钮、menu", () => {
@@ -98,6 +127,72 @@ describe("NavbarMobileHeader", () => {
 
     await user.click(screen.getByLabelText("返回首页"));
     expect(mockPush).toHaveBeenCalledWith("/");
+  });
+
+  it("点击菜单按钮调用 onToggleMenu", async () => {
+    const user = userEvent.setup();
+    render(
+      <NavbarMobileHeader
+        mobileVariant="default"
+        title="留言"
+        isGlass={true}
+        menuOpen={false}
+        onToggleMenu={mockToggleMenu}
+      />,
+    );
+
+    await user.click(screen.getByLabelText("打开导航菜单"));
+    expect(mockToggleMenu).toHaveBeenCalledOnce();
+  });
+
+  it("menuOpen=true 时菜单按钮 aria-label 为关闭导航菜单", () => {
+    render(
+      <NavbarMobileHeader
+        mobileVariant="default"
+        title="留言"
+        isGlass={true}
+        menuOpen={true}
+        onToggleMenu={mockToggleMenu}
+      />,
+    );
+
+    expect(screen.getByLabelText("关闭导航菜单")).toBeInTheDocument();
+    expect(screen.queryByLabelText("打开导航菜单")).not.toBeInTheDocument();
+  });
+
+  it("article 变体点击点赞按钮时调用 toggleLike", async () => {
+    const user = userEvent.setup();
+    render(
+      <NavbarMobileHeader
+        mobileVariant="article"
+        title={undefined}
+        isGlass={true}
+        menuOpen={false}
+        onToggleMenu={mockToggleMenu}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "点赞 99+" }));
+    expect(mockToggleLike).toHaveBeenCalledOnce();
+  });
+
+  it("article 变体在 isLiking=true 时禁用点赞按钮", () => {
+    mockUseArticleEngagement.mockReturnValue({
+      ...defaultArticleEngagementState,
+      isLiking: true,
+    });
+
+    render(
+      <NavbarMobileHeader
+        mobileVariant="article"
+        title={undefined}
+        isGlass={true}
+        menuOpen={false}
+        onToggleMenu={mockToggleMenu}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "点赞 99+" })).toBeDisabled();
   });
 
   it("article 变体点击评论按钮时滚动到评论区锚点", async () => {

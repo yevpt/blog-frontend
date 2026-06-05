@@ -19,17 +19,14 @@ function formatCount(count: number) {
   return count > 99 ? "99+" : String(count);
 }
 
-export function NavbarMobileHeader({
-  mobileVariant,
-  title,
-  isGlass,
-  menuOpen,
-  onToggleMenu,
-}: NavbarMobileHeaderProps) {
-  const router = useRouter();
-  const { likeCount, commentCount, isLiked, isLiking, toggleLike } = useArticleEngagement();
+interface NavbarMobileMenuButtonProps {
+  isGlass: boolean;
+  menuOpen: boolean;
+  onToggleMenu: () => void;
+}
 
-  const menuButton = (
+function NavbarMobileMenuButton({ isGlass, menuOpen, onToggleMenu }: NavbarMobileMenuButtonProps) {
+  return (
     <button
       type="button"
       onClick={onToggleMenu}
@@ -59,18 +56,61 @@ export function NavbarMobileHeader({
       />
     </button>
   );
+}
+
+function NavbarMobileArticleActions() {
+  const { likeCount, commentCount, isLiked, isLiking, toggleLike } = useArticleEngagement();
+
+  const actionButtonClass =
+    "flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground/5";
+
+  return (
+    <>
+      <button
+        type="button"
+        aria-label={`点赞 ${formatCount(likeCount)}`}
+        disabled={isLiking}
+        onClick={() => void toggleLike()}
+        className={cn(actionButtonClass, isLiked && "text-primary")}
+      >
+        <SvgIcon name="heart" size={16} />
+        <span>{formatCount(likeCount)}</span>
+      </button>
+      <button
+        type="button"
+        aria-label={`评论 ${formatCount(commentCount)}`}
+        onClick={() => {
+          document.getElementById("article-comments")?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }}
+        className={actionButtonClass}
+      >
+        <SvgIcon name="message-circle" size={16} />
+        <span>{formatCount(commentCount)}</span>
+      </button>
+    </>
+  );
+}
+
+export function NavbarMobileHeader({
+  mobileVariant,
+  title,
+  isGlass,
+  menuOpen,
+  onToggleMenu,
+}: NavbarMobileHeaderProps) {
+  const router = useRouter();
 
   if (mobileVariant === "home") {
     return (
       <div className="flex min-h-[52px] items-center justify-between px-4 md:hidden">
         <NavbarLogo isGlass={isGlass} />
-        {menuButton}
+        <NavbarMobileMenuButton isGlass={isGlass} menuOpen={menuOpen} onToggleMenu={onToggleMenu} />
       </div>
     );
   }
-
-  const actionButtonClass =
-    "flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground/5";
 
   return (
     <div className="flex min-h-[52px] items-center justify-between gap-2 px-4 md:hidden">
@@ -90,36 +130,8 @@ export function NavbarMobileHeader({
       </div>
 
       <div className="flex items-center gap-1">
-        {mobileVariant === "article" ? (
-          <>
-            <button
-              type="button"
-              aria-label={`点赞 ${formatCount(likeCount)}`}
-              disabled={isLiking}
-              onClick={() => void toggleLike()}
-              className={cn(actionButtonClass, isLiked && "text-primary")}
-            >
-              <SvgIcon name="heart" size={16} />
-              <span>{formatCount(likeCount)}</span>
-            </button>
-            <button
-              type="button"
-              aria-label={`评论 ${formatCount(commentCount)}`}
-              onClick={() => {
-                document.getElementById("article-comments")?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                });
-              }}
-              className={actionButtonClass}
-            >
-              <SvgIcon name="message-circle" size={16} />
-              <span>{formatCount(commentCount)}</span>
-            </button>
-          </>
-        ) : null}
-
-        {menuButton}
+        {mobileVariant === "article" ? <NavbarMobileArticleActions /> : null}
+        <NavbarMobileMenuButton isGlass={isGlass} menuOpen={menuOpen} onToggleMenu={onToggleMenu} />
       </div>
     </div>
   );
