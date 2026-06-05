@@ -3,12 +3,16 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ArticleFloatActions } from "./article-float-actions";
 
-const mockOpenLoginModal = vi.fn();
-vi.mock("@/store/use-login-modal", () => ({
-  useLoginModal: () => ({ open: mockOpenLoginModal }),
-}));
-vi.mock("@/app/providers/session-provider", () => ({
-  useSession: () => ({ userId: null }),
+const mockToggleLike = vi.fn();
+vi.mock("@/hooks/use-article-engagement", () => ({
+  useArticleEngagement: () => ({
+    articleId: 1,
+    likeCount: 10,
+    commentCount: 5,
+    isLiked: false,
+    isLiking: false,
+    toggleLike: mockToggleLike,
+  }),
 }));
 vi.mock("./music-player", () => ({
   MusicPlayer: () => <div data-testid="music-player" />,
@@ -20,8 +24,6 @@ vi.stubGlobal("fetch", mockFetch);
 
 const defaultProps = {
   articleId: 1,
-  initialLikeCount: 10,
-  initialIsLiked: false,
   musicUrl: undefined,
   musicName: undefined,
 };
@@ -35,10 +37,10 @@ describe("ArticleFloatActions", () => {
     expect(screen.getByRole("button", { name: /回到顶部/ })).toBeInTheDocument();
   });
 
-  it("未登录点赞时触发登录 Modal", async () => {
+  it("点击点赞时调用共享 toggleLike", async () => {
     render(<ArticleFloatActions {...defaultProps} />);
     await userEvent.click(screen.getByRole("button", { name: /点赞/ }));
-    expect(mockOpenLoginModal).toHaveBeenCalled();
+    expect(mockToggleLike).toHaveBeenCalledOnce();
   });
 
   it("渲染 MusicPlayer 子组件", () => {

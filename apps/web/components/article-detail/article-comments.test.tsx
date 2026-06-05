@@ -19,6 +19,11 @@ describe("ArticleComments", () => {
     expect(screen.getByText(/7/)).toBeInTheDocument();
   });
 
+  it("评论区根节点带稳定锚点 id", () => {
+    const { container } = render(<ArticleComments articleId={42} commentCount={7} />);
+    expect(container.querySelector("#article-comments")).toBeInTheDocument();
+  });
+
   it("向 CommentSection 传入正确的 targetId 和 targetType", () => {
     render(<ArticleComments articleId={42} commentCount={7} />);
     const section = screen.getByTestId("comment-section");
