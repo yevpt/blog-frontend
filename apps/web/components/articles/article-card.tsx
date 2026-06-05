@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
 import type { ArticleListItemResp } from "@repo/api";
 import { useLocale } from "@repo/hooks/locale";
 import { formatDate } from "../../lib/format-time";
@@ -11,11 +10,17 @@ import { ArticleCardStats } from "./article-card-stats";
 
 interface ArticleCardProps {
   article: ArticleListItemResp;
+  onLike?: (article: ArticleListItemResp) => void;
+  likeDisabled?: boolean;
   onComment?: (article: ArticleListItemResp) => void;
 }
 
-export function ArticleCard({ article, onComment }: ArticleCardProps) {
-  const [liked, setLiked] = useState(false);
+export function ArticleCard({
+  article,
+  onLike,
+  likeDisabled = false,
+  onComment,
+}: ArticleCardProps) {
   const { locale } = useLocale();
   const formattedDate = formatDate(article.created_at, locale);
 
@@ -75,10 +80,11 @@ export function ArticleCard({ article, onComment }: ArticleCardProps) {
 
           <div className="mt-auto flex justify-end">
             <ArticleCardStats
-              likes={article.like_count + (liked ? 1 : 0)}
+              likes={article.like_count}
               comments={article.comment_count}
-              liked={liked}
-              onLike={() => setLiked((value) => !value)}
+              liked={article.is_liked}
+              likeDisabled={likeDisabled}
+              onLike={() => onLike?.(article)}
               onComment={() => onComment?.(article)}
             />
           </div>

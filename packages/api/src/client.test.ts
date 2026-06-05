@@ -202,6 +202,54 @@ describe("createApiClient", () => {
     expect(url.searchParams.get("recommend")).toBe("true");
   });
 
+  it("articles.listPublic 在存在 access token 时附带 Authorization header", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { total: 0, pages: 0, page: 1, page_size: 10, list: [] },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "token123",
+    });
+
+    await client.articles.listPublic({ page: 1 });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/articles?page=1",
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer token123" }),
+      }),
+    );
+  });
+
+  it("articles.toggleLike 使用 fetchAuthed 调用 /articles/{id}/like", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { is_liked: true, like_count: 9 },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "token123",
+    });
+
+    const result = await client.articles.toggleLike(7);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/articles/7/like",
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({ Authorization: "Bearer token123" }),
+      }),
+    );
+    expect(result).toEqual({ is_liked: true, like_count: 9 });
+  });
+
   it("categories.listTabs 调用 /categories", async () => {
     vi.mocked(global.fetch).mockResolvedValue(
       mockResponse({ code: 0, message: "ok", data: { list: [] } }),

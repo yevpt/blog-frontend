@@ -18,6 +18,7 @@ export type {
   ArticleRelationResp,
   ArticleListReq,
   ArticleListItemResp,
+  ArticleLikeResp,
   ArticlePageResp,
 } from "./types/article";
 export type { CategoryTabItem, CategoryTabsResp } from "./types/category";

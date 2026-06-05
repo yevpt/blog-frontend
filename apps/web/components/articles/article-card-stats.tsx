@@ -4,6 +4,7 @@ interface ArticleCardStatsProps {
   likes: number;
   comments: number;
   liked: boolean;
+  likeDisabled?: boolean;
   onLike: () => void;
   onComment: () => void;
 }
@@ -26,6 +27,7 @@ export function ArticleCardStats({
   likes,
   comments,
   liked,
+  likeDisabled = false,
   onLike,
   onComment,
 }: ArticleCardStatsProps) {
@@ -35,12 +37,13 @@ export function ArticleCardStats({
         type="button"
         aria-label="喜欢"
         aria-pressed={liked}
+        disabled={likeDisabled}
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
           onLike();
         }}
-        className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 font-medium transition-colors hover:bg-primary/10 hover:text-primary ${
+        className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 font-medium transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 ${
           liked ? "text-red-500 hover:text-red-500" : ""
         }`}
       >
