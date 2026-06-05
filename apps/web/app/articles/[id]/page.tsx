@@ -70,8 +70,8 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         articleId={article.id}
         initialLikeCount={article.like_count}
         initialIsLiked={article.is_liked ?? false}
-        musicUrl={article.music_url}
-        musicName={article.music_name}
+        musicUrl={article.music?.[0]?.url}
+        musicName={article.music?.[0]?.name}
       />
     </>
   );

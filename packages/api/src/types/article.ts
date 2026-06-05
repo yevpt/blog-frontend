@@ -52,6 +52,15 @@ export interface ArticlePageResp {
   list: ArticleListItemResp[];
 }
 
+export interface MusicItem {
+  id: number;
+  name: string;
+  singer: string;
+  album: string;
+  url: string;
+  duration: number;
+}
+
 export interface ArticleDetailResp {
   id: number;
   title: string;
@@ -68,8 +77,8 @@ export interface ArticleDetailResp {
   comment_count: number;
   is_liked?: boolean;
   is_recommended: boolean;
-  music_url?: string;
-  music_name?: string;
+  music_ids?: number[];
+  music?: MusicItem[];
   category?: ArticleRelationResp;
   tags?: ArticleRelationResp[];
   created_at: string;
