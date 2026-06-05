@@ -148,7 +148,7 @@ export function NavbarUserMenu({ isGlass = false, unreadCount = 0 }: NavbarUserM
           onClick={handleLogout}
           className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] text-destructive/80 transition-colors hover:bg-destructive/[0.07] hover:text-destructive"
         >
-          <SvgIcon name="log-out" size={14} className="shrink-0" />
+          <SvgIcon name="log-out" size={14} className="shrink-0 text-destructive/80" />
           退出登录
         </button>
       </div>
