@@ -28,7 +28,8 @@ async function makeRefreshToken(uid: number) {
 
 function mockCookies(tokenValue: string | undefined) {
   (cookies as ReturnType<typeof vi.fn>).mockResolvedValue({
-    get: (name: string) => (name === "access_token" ? { value: tokenValue } : undefined),
+    get: (name: string) =>
+      name === "access_token" && tokenValue !== undefined ? { value: tokenValue } : undefined,
   });
 }
 

@@ -19,7 +19,9 @@ export async function getSession(): Promise<Session | null> {
     const payload = decodeJwt(accessToken);
     if (payload["type"] !== "access") return null;
     if (!payload.exp || payload.exp * 1000 < Date.now()) return null;
-    return { userId: Number(payload["uid"]) };
+    const uid = Number(payload["uid"]);
+    if (!Number.isFinite(uid)) return null;
+    return { userId: uid };
   } catch {
     return null;
   }
