@@ -2,6 +2,7 @@
 export type IconName =
   | "arrow-up-right"
   | "baidu"
+  | "bell"
   | "check"
   | "chevron-down"
   | "chevron-left"
