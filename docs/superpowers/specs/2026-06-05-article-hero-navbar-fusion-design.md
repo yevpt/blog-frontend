@@ -1,7 +1,7 @@
 # 文章详情页：导航栏与封面融合设计
 
 **日期**：2026-06-05  
-**方案**：C2 — 封面颜色向上延伸（Hero 内部处理，导航保持透明）
+**方案**：C2-backdrop — 封面顶部 backdrop-filter 色晕（Hero 内部处理，导航保持透明）
 
 ---
 
@@ -19,100 +19,104 @@
 
 | 维度 | 决策 |
 |------|------|
-| 颜色来源 | 服务端 SSR 提取封面主色（`node-vibrant`） |
-| 颜色作用范围 | 仅在封面可见时（Hero 内部渐变） |
-| 导航变更 | 最小：只调整哨兵高度，使封面完全可见期间 navbar 保持透明 |
-| 无封面降级 | 顶部使用 `rgba(0,0,0,0.45)` 固定遮罩 |
-| 提取失败降级 | 同无封面，使用中性深色遮罩 |
+| 颜色来源 | **无需提取**：CSS `backdrop-filter` 直接对封面图像素模糊混色 |
+| 颜色作用范围 | 仅在封面可见时（Hero 内部，顶部约 50% 高度渐变消失） |
+| 导航变更 | 最小：哨兵高度改为 Hero 高度，封面完全可见期间 navbar 保持透明 |
+| 无封面降级 | 顶部使用 `rgba(0,0,0,0.45) → transparent` 固定遮罩 |
+| 新依赖 | 无 |
 
 ---
 
 ## 视觉效果
 
-封面图的主色从顶部以渐变方式向下渗透，与封面图本身融合：
+Hero 顶部叠加一个透明 div，启用 `backdrop-filter: blur(24px) saturate(200%)`，并用 `mask-image` 渐变限制其作用范围：
 
 ```
 顶部（导航区）
-  ↓ dominantColor/65 → dominantColor/20 → transparent（约 50% 高度）
-  ↕ 图片本体
-  ↑ transparent → rgba(0,0,0,0.10) → rgba(0,0,0,0.82)（底部压暗）
+  ↓ blur+saturate 100% → 渐变消失（0%）约在 50% 高度处
+  ↕ 图片本体（清晰可见）
+  ↑ transparent → rgba(0,0,0,0.10) → rgba(0,0,0,0.82)（底部压暗，保持不变）
 底部（标题区）
 ```
 
-两层渐变叠加：上层用提取颜色，下层保持原有的底部压暗不变。
+`backdrop-filter` 直接采样图片像素并放大饱和度，天然呈现封面主色的柔和色晕，无需任何颜色提取逻辑。
 
 ---
 
 ## 技术方案
 
-### 1. 颜色提取（服务端）
+### 1. ArticleHero — 顶部色晕层
 
-在 `apps/web/app/articles/[id]/page.tsx`（Server Component）中，新增 `extractDominantColor` 工具函数：
-
-```ts
-// lib/extract-dominant-color.ts
-import Vibrant from 'node-vibrant';
-
-export async function extractDominantColor(imageUrl: string): Promise<string | null> {
-  try {
-    const palette = await Vibrant.from(imageUrl).getPalette();
-    return palette.DarkVibrant?.hex ?? palette.Vibrant?.hex ?? null;
-  } catch {
-    return null;
-  }
-}
-```
-
-- 优先取 `DarkVibrant`（饱和度高、偏深，适合做顶部遮罩）
-- 失败返回 `null`，`ArticleHero` 使用降级遮罩
-
-### 2. ArticleHero 改动
-
-**新增 prop：**
-
-```ts
-interface ArticleHeroProps {
-  article: ArticleDetailResp;
-  dominantColor?: string | null;   // 新增
-}
-```
-
-**渐变叠加层替换：**
-
-现有单层 `linear-gradient(to top, ...)` 拆分为两层：
+在现有两个渐变叠加层的基础上，**替换**当前单层渐变为：
 
 ```tsx
-{/* 顶部颜色延伸层（新增） */}
+{/* 顶部色晕层：backdrop-filter 采样封面像素，mask-image 限制作用范围 */}
+{article.cover_img_url && (
+  <div
+    className="absolute inset-0 pointer-events-none"
+    style={{
+      backdropFilter: 'blur(24px) saturate(200%)',
+      WebkitBackdropFilter: 'blur(24px) saturate(200%)',
+      maskImage: 'linear-gradient(to bottom, black 0%, black 15%, transparent 52%)',
+      WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 15%, transparent 52%)',
+    }}
+  />
+)}
+{/* 无封面时的顶部可读性遮罩（降级） */}
+{!article.cover_img_url && (
+  <div
+    className="absolute inset-0 pointer-events-none"
+    style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 45%)' }}
+  />
+)}
+{/* 底部压暗层（保留，与原有一致） */}
 <div
-  className="absolute inset-0"
-  style={{
-    background: dominantColor
-      ? `linear-gradient(to bottom, ${dominantColor}A6 0%, ${dominantColor}33 30%, transparent 52%)`
-      : 'linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 45%)',
-  }}
-/>
-{/* 底部压暗层（保留原有） */}
-<div
-  className="absolute inset-0"
+  className="absolute inset-0 pointer-events-none"
   style={{
     background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.10) 45%, transparent 60%)',
   }}
 />
 ```
 
-透明度值（hex suffix）：
-- `A6` = 65% 不透明（顶部，主色调最强处）
-- `33` = 20% 不透明（渐变中段）
+`ArticleHero` **保持 Server Component**，无需 `'use client'`。
 
-### 3. SiteNavbar 哨兵高度
+### 2. HeroSentinelSetter — 哨兵高度 Client Component
 
-现有哨兵：`h-[60px]`（绝对定位，跟随文档滚动；离开视口时触发玻璃态）。
+新增 `apps/web/components/article-detail/hero-sentinel-setter.tsx`：
 
-文章详情页 Hero 高度：`h-[380px] md:h-[480px]`。若哨兵仅 60px，用户在 Hero 范围内滚动时 navbar 就会变成玻璃态，覆盖在颜色渐变之上，破坏融合效果。
+```tsx
+'use client';
 
-**方案：通过 CSS 自定义属性动态设置哨兵高度。**
+import { useEffect } from 'react';
 
-`SiteNavbar` 的哨兵 div 读取 `--nav-sentinel-height`（默认 `60px`）：
+interface Props {
+  mobileH: number;
+  desktopH: number;
+}
+
+export function HeroSentinelSetter({ mobileH, desktopH }: Props) {
+  useEffect(() => {
+    const h = window.innerWidth >= 768 ? desktopH : mobileH;
+    document.documentElement.style.setProperty('--nav-sentinel-height', `${h}px`);
+    return () => {
+      document.documentElement.style.removeProperty('--nav-sentinel-height');
+    };
+  }, [mobileH, desktopH]);
+  return null;
+}
+```
+
+在 `ArticleHero` 的 JSX 末尾渲染：
+
+```tsx
+<HeroSentinelSetter mobileH={380} desktopH={480} />
+```
+
+这样 `ArticleHero` 的图片、渐变、标题渲染全部保持 SSR，只有哨兵逻辑是客户端的。
+
+### 3. SiteNavbar — 哨兵高度读取 CSS var
+
+现有哨兵 div 的 `h-[60px]` Tailwind 类改为读取 CSS 自定义属性（默认 `60px`）：
 
 ```tsx
 <div
@@ -123,19 +127,7 @@ interface ArticleHeroProps {
 />
 ```
 
-`ArticleHero`（客户端组件）在 mount/unmount 时设置/清除该变量：
-
-```tsx
-useEffect(() => {
-  const heroEl = heroRef.current;
-  if (!heroEl) return;
-  const h = heroEl.offsetHeight;
-  document.documentElement.style.setProperty('--nav-sentinel-height', `${h}px`);
-  return () => document.documentElement.style.removeProperty('--nav-sentinel-height');
-}, []);
-```
-
-`ArticleHero` 添加 `'use client'` 指令，转为 Client Component。`dominantColor` 是可序列化的 `string | null`，由父级 Server Component（`page.tsx`）传入，无需拆分 wrapper。
+当 `ArticleHero` 在页面上时，`--nav-sentinel-height` 被设为 480px（桌面）或 380px（移动），navbar 在封面完全可见期间保持透明。离开文章页时变量被清除，回退到默认 60px。
 
 ---
 
@@ -143,16 +135,12 @@ useEffect(() => {
 
 | 文件 | 变更类型 | 说明 |
 |------|----------|------|
-| `apps/web/lib/extract-dominant-color.ts` | 新增 | 服务端颜色提取工具 |
-| `apps/web/app/articles/[id]/page.tsx` | 修改 | 调用颜色提取，传 `dominantColor` 给 Hero |
-| `apps/web/components/article-detail/article-hero.tsx` | 修改 | 新增 prop、双层渐变、哨兵高度 CSS var 设置 |
-| `apps/web/components/navbar/site-navbar.tsx` | 修改 | 哨兵高度改为读取 CSS var |
+| `apps/web/components/article-detail/article-hero.tsx` | 修改 | 替换顶部渐变为 backdrop-filter 色晕层 + 渲染 HeroSentinelSetter |
+| `apps/web/components/article-detail/hero-sentinel-setter.tsx` | 新增 | null-render Client Component，设置哨兵高度 CSS var |
+| `apps/web/components/article-detail/index.ts` | 修改 | barrel export 加入 HeroSentinelSetter（若需对外导出） |
+| `apps/web/components/navbar/site-navbar.tsx` | 修改 | 哨兵高度改为读取 CSS var，默认 60px |
 
----
-
-## 依赖
-
-- `node-vibrant`（`node-vibrant` v3.x，支持 Node.js 环境和 URL 输入）
+无新 npm 依赖。
 
 ---
 
@@ -160,14 +148,14 @@ useEffect(() => {
 
 | 场景 | 处理 |
 |------|------|
-| 无封面图 | 顶部层使用 `rgba(0,0,0,0.45) → transparent` |
-| 封面 URL 不可达 / 提取超时 | 同上，`extractDominantColor` 返回 `null` |
-| 极亮主色（提取色过浅）| 降级为固定深色遮罩；可后续加亮度检测 |
+| 无封面图 | 不渲染 backdrop-filter 层，改用 `rgba(0,0,0,0.45) → transparent` 固定遮罩 |
+| 浏览器不支持 backdrop-filter | 透明覆盖（无色晕），底部压暗层保证标题可读 |
+| 非文章页（无 HeroSentinelSetter） | CSS var 未设置，哨兵回退默认 60px，现有逻辑不变 |
 
 ---
 
 ## 测试要求
 
-- `ArticleHero`：① 有 `dominantColor` 时渲染顶部颜色层；② 无 `dominantColor` 时渲染降级遮罩；③ mount/unmount 正确设置/清除 CSS 变量
-- `extractDominantColor`：① 返回 hex 字符串；② URL 失败时返回 `null`
-- `SiteNavbar`：哨兵高度读取 CSS var，回退默认 `60px`
+- `ArticleHero`：① 有封面图时渲染 backdrop-filter 色晕层；② 无封面图时渲染降级遮罩；③ 渲染 `HeroSentinelSetter`
+- `HeroSentinelSetter`：① mount 时设置 `--nav-sentinel-height`；② unmount 时清除
+- `SiteNavbar`：哨兵 div 的高度从 CSS var 读取，未设置时回退 `60px`
