@@ -10,7 +10,14 @@ interface ArticleNavbarSyncProps {
   isLiked: boolean;
 }
 
+interface ArticleFloatActionsProps {
+  articleId: number;
+  musicUrl?: string;
+  musicName?: string;
+}
+
 const mockArticleNavbarSync = vi.fn<(props: ArticleNavbarSyncProps) => null>(() => null);
+const mockArticleFloatActions = vi.fn<(props: ArticleFloatActionsProps) => null>(() => null);
 
 const mockArticle: ArticleDetailResp = {
   id: 1,
@@ -46,7 +53,10 @@ vi.mock("@/components/article-detail", () => ({
     <div data-testid="content" dangerouslySetInnerHTML={{ __html: contentHtml }} />
   ),
   ArticleToc: () => <nav aria-label="文章目录" />,
-  ArticleFloatActions: () => <div data-testid="float-actions" />,
+  ArticleFloatActions: (props: ArticleFloatActionsProps) => {
+    mockArticleFloatActions(props);
+    return <div data-testid="float-actions" />;
+  },
   ArticleComments: () => <section data-testid="comments" />,
 }));
 
@@ -79,8 +89,16 @@ describe("ArticleDetailPage", () => {
   });
 
   it("渲染浮动操作区", async () => {
+    mockArticleFloatActions.mockClear();
+
     const jsx = await ArticleDetailPage({ params: Promise.resolve({ id: "1" }) });
     render(jsx);
+
+    expect(mockArticleFloatActions).toHaveBeenCalledWith({
+      articleId: mockArticle.id,
+      musicUrl: mockArticle.music?.[0]?.url,
+      musicName: mockArticle.music?.[0]?.name,
+    });
     expect(screen.getByTestId("float-actions")).toBeInTheDocument();
   });
 });

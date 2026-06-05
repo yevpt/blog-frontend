@@ -76,8 +76,6 @@ export default async function ArticleDetailPage({ params }: PageProps) {
 
       <ArticleFloatActions
         articleId={article.id}
-        initialLikeCount={article.like_count}
-        initialIsLiked={article.is_liked ?? false}
         musicUrl={article.music?.[0]?.url}
         musicName={article.music?.[0]?.name}
       />

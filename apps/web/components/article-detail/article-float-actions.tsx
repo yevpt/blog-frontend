@@ -8,8 +8,6 @@ interface ArticleFloatActionsProps {
   articleId: number;
   musicUrl?: string;
   musicName?: string;
-  initialLikeCount?: number;
-  initialIsLiked?: boolean;
 }
 
 export function ArticleFloatActions({ articleId, musicUrl, musicName }: ArticleFloatActionsProps) {
