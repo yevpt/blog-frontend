@@ -44,6 +44,15 @@ describe("ArticleToc", () => {
     expect(screen.getByRole("navigation", { name: "文章目录" })).toBeInTheDocument();
   });
 
+  it("desktop 点击收起按钮可折叠目录", async () => {
+    render(<ArticleToc items={items} variant="desktop" />);
+    expect(screen.getByText("介绍")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "收起目录" }));
+    expect(screen.queryByText("介绍")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "展开目录" }));
+    expect(screen.getByText("介绍")).toBeInTheDocument();
+  });
+
   it("variant=mobile 渲染 details 折叠元素", () => {
     const { container } = render(<ArticleToc items={items} variant="mobile" />);
     expect(container.querySelector("details")).toBeInTheDocument();

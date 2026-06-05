@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useActiveHeading } from "@/hooks/use-active-heading";
 import type { TocItem } from "@/lib/markdown";
 
@@ -11,6 +12,7 @@ interface ArticleTocProps {
 export function ArticleToc({ items, variant }: ArticleTocProps) {
   const ids = items.map((i) => i.id);
   const activeId = useActiveHeading(ids);
+  const [collapsed, setCollapsed] = useState(false);
 
   if (items.length < 2) return null;
 
@@ -45,10 +47,19 @@ export function ArticleToc({ items, variant }: ArticleTocProps) {
           aria-label="文章目录"
           className="sticky top-[88px] max-h-[calc(100vh-108px)] overflow-y-auto rounded-lg border border-border bg-card p-4"
         >
-          <p className="mb-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            目录
-          </p>
-          {list}
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              目录
+            </p>
+            <button
+              onClick={() => setCollapsed((v) => !v)}
+              aria-label={collapsed ? "展开目录" : "收起目录"}
+              className="rounded p-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              {collapsed ? "▶" : "▼"}
+            </button>
+          </div>
+          {!collapsed && list}
         </nav>
       )}
       {showMobile && (

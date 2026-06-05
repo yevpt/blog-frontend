@@ -51,6 +51,14 @@ export function MusicPlayer({ url, name }: MusicPlayerProps) {
 
   return (
     <div className="relative">
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+      <audio
+        ref={audioRef}
+        src={url}
+        loop
+        onTimeUpdate={handleTimeUpdate}
+        onEnded={() => setPlaying(false)}
+      />
       {open && (
         <div className="absolute bottom-[calc(100%+8px)] right-0 w-56 rounded-xl border border-border bg-card p-3 shadow-lg">
           <p className="mb-2 truncate text-xs font-semibold text-foreground">
@@ -71,14 +79,6 @@ export function MusicPlayer({ url, name }: MusicPlayerProps) {
           >
             {playing ? "暂停" : "播放"}
           </button>
-          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-          <audio
-            ref={audioRef}
-            src={url}
-            loop
-            onTimeUpdate={handleTimeUpdate}
-            onEnded={() => setPlaying(false)}
-          />
         </div>
       )}
       <button

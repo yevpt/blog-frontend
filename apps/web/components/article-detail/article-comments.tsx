@@ -9,12 +9,12 @@ interface ArticleCommentsProps {
 
 export function ArticleComments({ articleId, commentCount }: ArticleCommentsProps) {
   return (
-    <section className="mx-auto max-w-[720px] border-t border-border px-5 pb-20 pt-10">
-      <h2 className="mb-6 text-lg font-bold text-foreground">
-        评论{" "}
-        <span className="ml-1 text-sm font-normal text-muted-foreground">{commentCount} 条</span>
-      </h2>
-      <div className="flex flex-col">
+    <section className="border-t border-border">
+      <div className="mx-auto max-w-[1100px] px-5 pb-20 pt-10">
+        <h2 className="mb-6 text-lg font-bold text-foreground">
+          评论{" "}
+          <span className="ml-1 text-sm font-normal text-muted-foreground">{commentCount} 条</span>
+        </h2>
         <CommentSection targetType="article" targetId={articleId} />
       </div>
     </section>
