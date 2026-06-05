@@ -7,10 +7,9 @@ import { SvgIcon } from "@repo/icons";
 import { cn } from "@repo/ui";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { useSnippetModal } from "@/store/use-snippet-modal";
+import { useSession } from "@/app/providers/session-provider";
 
 interface NavbarUserMenuProps {
-  /** 当前登录用户 ID，用于后续获取 profile */
-  userId: number;
   isGlass?: boolean;
 }
 
@@ -22,9 +21,9 @@ export function NavbarUserMenu({ isGlass = false }: NavbarUserMenuProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { open: openSnippetModal } = useSnippetModal();
+  const { profile } = useSession();
 
-  // TODO(Task 7): 通过 userId 调用 GET /users/me 获取 profile（username、nickname、avatar 等）
-  const displayName = "我";
+  const displayName = profile?.nickname ?? profile?.username ?? "";
 
   useEffect(() => {
     if (!open) return;
@@ -80,6 +79,9 @@ export function NavbarUserMenu({ isGlass = false }: NavbarUserMenuProps) {
         <p className="truncate text-[13px] font-semibold leading-tight text-foreground">
           {displayName}
         </p>
+        {profile?.email && (
+          <p className="mt-0.5 truncate text-[11px] text-muted-foreground/60">{profile.email}</p>
+        )}
       </div>
       {/* 菜单项 */}
       <div className="flex flex-col gap-0.5 px-1.5 py-1.5">
@@ -137,7 +139,7 @@ export function NavbarUserMenu({ isGlass = false }: NavbarUserMenuProps) {
           isGlass && "hover:ring-white/30",
         )}
       >
-        <UserAvatar name={displayName} size="md" />
+        <UserAvatar src={profile?.avatar_url ?? undefined} name={displayName || "?"} size="md" />
       </button>
 
       {open && typeof document !== "undefined" && createPortal(dropdown, document.body)}

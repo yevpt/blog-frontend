@@ -26,11 +26,10 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const { t } = useLocale();
   const { open: openLoginModal } = useLoginModal();
-  const { userId } = useSession();
+  const { userId, profile } = useSession();
   const router = useRouter();
   const nextTheme = resolvedTheme === "dark" ? "light" : "dark";
-  // TODO(Task 7): 通过 userId 调用 GET /users/me 获取 profile
-  const displayName = userId != null ? "我" : "";
+  const displayName = profile?.nickname ?? profile?.username ?? "";
 
   async function handleLogout() {
     try {
@@ -99,7 +98,11 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
                   onClick={onClose}
                   className="flex min-w-0 flex-1 items-center gap-2.5"
                 >
-                  <UserAvatar name={displayName} size="xs" />
+                  <UserAvatar
+                    src={profile?.avatar_url ?? undefined}
+                    name={displayName || "?"}
+                    size="xs"
+                  />
                   <span className="truncate text-[14px] font-semibold text-foreground">
                     {displayName}
                   </span>

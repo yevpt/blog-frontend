@@ -44,7 +44,7 @@ export function NavbarActions({ isGlass = false }: NavbarActionsProps) {
 
       <div className="hidden md:flex items-center gap-2">
         {userId != null ? (
-          <NavbarUserMenu userId={userId} isGlass={isGlass} />
+          <NavbarUserMenu isGlass={isGlass} />
         ) : (
           <Button
             variant="outline"
