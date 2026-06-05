@@ -53,7 +53,7 @@ const mockOnClose = vi.fn();
 
 describe("NavbarMobileMenu", () => {
   beforeEach(() => {
-    vi.mocked(useSession).mockReturnValue({ userId: null });
+    vi.mocked(useSession).mockReturnValue({ userId: null, profile: null });
     mockRefresh.mockClear();
     mockOnClose.mockClear();
     global.fetch = vi.fn().mockResolvedValue({ json: async () => ({}) });
@@ -66,7 +66,7 @@ describe("NavbarMobileMenu", () => {
   });
 
   it("已登录：显示用户区域和头像，不显示登录按钮", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1 });
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
     expect(screen.getByTestId("user-avatar")).toBeInTheDocument();
     expect(screen.queryByText("登录")).not.toBeInTheDocument();
@@ -74,7 +74,7 @@ describe("NavbarMobileMenu", () => {
 
   it("已登录：点击退出登录调用 /api/auth/logout 并 refresh 和 onClose", async () => {
     const user = userEvent.setup();
-    vi.mocked(useSession).mockReturnValue({ userId: 1 });
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
     await user.click(screen.getByLabelText("退出登录"));
     await waitFor(() => {

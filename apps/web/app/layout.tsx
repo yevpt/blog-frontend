@@ -5,6 +5,7 @@ import { SvgSprite } from "@repo/icons";
 import { SiteFooter } from "@/components/footer";
 import { SiteNavbar } from "@/components/navbar";
 import { getSession } from "@/lib/session";
+import { createServerApiClient } from "@/lib/server-api";
 import { STRIP_EXTENSION_ATTRS_SCRIPT } from "@/lib/strip-extension-attrs";
 import { THEME_CRITICAL_CSS } from "@/lib/theme-init";
 import { ThemeProvider } from "./providers/theme-provider";
@@ -23,6 +24,17 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   const session = await getSession();
+
+  // 每次首屏 SSR，已登录则通过 /users/me 获取完整资料（Redis 支撑，~0.2ms）
+  let profile = null;
+  if (session) {
+    try {
+      const api = await createServerApiClient();
+      profile = await api.users.getMe();
+    } catch {
+      // /users/me 失败不影响页面渲染，profile 降级为 null
+    }
+  }
 
   // 读取主题 Cookie，决定 <html> 的首屏 class，避免 hydration 前主题闪烁。
   // 主题策略与 ThemeProvider 保持一致：
@@ -45,7 +57,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body>
         <ThemeProvider>
           <LocaleProvider>
-            <SessionProvider userId={session?.userId ?? null}>
+            <SessionProvider userId={session?.userId ?? null} profile={profile}>
               <div className="flex flex-col min-h-screen">
                 {/* SvgSprite 将雪碧图注入 DOM，必须在所有使用 SvgIcon 的组件之前渲染 */}
                 <SvgSprite />
