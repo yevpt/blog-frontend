@@ -20,6 +20,7 @@ export type {
   ArticleListItemResp,
   ArticleLikeResp,
   ArticlePageResp,
+  ArticleDetailResp,
 } from "./types/article";
 export type { CategoryTabItem, CategoryTabsResp } from "./types/category";
 export type {

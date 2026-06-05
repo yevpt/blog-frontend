@@ -51,3 +51,27 @@ export interface ArticlePageResp {
   page_size: number;
   list: ArticleListItemResp[];
 }
+
+export interface ArticleDetailResp {
+  id: number;
+  title: string;
+  cover_img_url?: string;
+  content: string;
+  short_content?: string;
+  user_id: number;
+  status: number;
+  comment_status: number;
+  read_count: number;
+  /** Go int64 — safe as JS number for blog-scale counts */
+  like_count: number;
+  /** Go int64 — safe as JS number for blog-scale counts */
+  comment_count: number;
+  is_liked?: boolean;
+  is_recommended: boolean;
+  music_url?: string;
+  music_name?: string;
+  category?: ArticleRelationResp;
+  tags?: ArticleRelationResp[];
+  created_at: string;
+  updated_at: string;
+}
