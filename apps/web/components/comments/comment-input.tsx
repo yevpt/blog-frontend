@@ -66,18 +66,20 @@ export function CommentInput({
           onChange={(e) => onChange(e.target.value)}
           placeholder="写下你的评论..."
           disabled={isSubmitting}
-          className="w-full rounded-full border border-input bg-background py-2.5 pl-4 pr-10 text-[13px] leading-normal text-foreground outline-none transition-colors placeholder:text-[var(--fg3)] focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+          className={`w-full rounded-full border border-input bg-background py-2.5 pl-4 text-[13px] leading-normal text-foreground outline-none transition-colors placeholder:text-[var(--fg3)] focus:border-primary disabled:cursor-not-allowed disabled:opacity-60 ${value.trim() ? "pr-10" : "pr-4"}`}
         />
-        {/* ↑ 发送按钮，嵌入 pill 右侧 */}
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={!value.trim() || isSubmitting}
-          aria-label="发送评论"
-          className="absolute right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-primary/85 disabled:cursor-not-allowed disabled:bg-border disabled:text-[var(--fg3)]"
-        >
-          <SvgIcon name="arrow-up" size={16} />
-        </button>
+        {/* ↑ 发送按钮：仅在有内容时出现，嵌入 pill 右侧 */}
+        {value.trim() && (
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={isSubmitting}
+            aria-label="发送评论"
+            className="absolute right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-primary/85 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <SvgIcon name="arrow-up" size={16} />
+          </button>
+        )}
       </div>
       {submitError && <p className="text-xs text-red-500">{submitError}</p>}
     </div>

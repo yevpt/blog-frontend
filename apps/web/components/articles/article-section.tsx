@@ -244,12 +244,13 @@ export function ArticleSection({
         articleGrid
       )}
 
-      <CommentModal
-        open={activeComment !== null}
-        targetType={activeComment?.type === "moment" ? "moment" : "article"}
-        targetId={activeComment?.articleId ?? 0}
-        onClose={() => setActiveComment(null)}
-      />
+      {activeComment !== null && (
+        <CommentModal
+          targetType={activeComment.type === "moment" ? "moment" : "article"}
+          targetId={activeComment.articleId}
+          onClose={() => setActiveComment(null)}
+        />
+      )}
     </section>
   );
 }

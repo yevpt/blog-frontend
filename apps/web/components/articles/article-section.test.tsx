@@ -160,16 +160,10 @@ vi.mock("@/lib/toast", () => ({
 }));
 
 vi.mock("@/components/comments", () => ({
-  CommentModal: ({
-    open,
-    targetId,
-  }: {
-    open: boolean;
-    targetId: number;
-    title: string;
-    type: string;
-    onClose: () => void;
-  }) => (open ? <div data-testid="comment-modal" data-target-id={String(targetId)} /> : null),
+  // CommentModal 不接受 open prop，由父组件条件挂载控制显隐
+  CommentModal: ({ targetId }: { targetId: number; targetType: string; onClose: () => void }) => (
+    <div data-testid="comment-modal" data-target-id={String(targetId)} />
+  ),
 }));
 
 function makeArticle(id: number, title: string) {

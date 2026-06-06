@@ -42,19 +42,20 @@ describe("CommentInput（已登录）", () => {
     vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
   });
 
-  it("渲染文本框和←发送按钮", () => {
+  it("渲染文本框", () => {
     render(<CommentInput value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
-
     expect(screen.getByPlaceholderText("写下你的评论...")).toBeTruthy();
-    expect(screen.getByTestId("icon-arrow-up")).toBeTruthy();
   });
 
-  it("value 为空时发送按钮 disabled", () => {
+  it("value 为空时发送按钮不渲染", () => {
     render(<CommentInput value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
+    // 设计要求：按钮仅在有内容时出现，空值时完全不渲染
+    expect(screen.queryByTestId("icon-arrow-up")).toBeNull();
+  });
 
-    const btn = screen.getByTestId("icon-arrow-up").closest("button");
-    expect(btn).toBeTruthy();
-    expect(btn?.disabled).toBe(true);
+  it("value 非空时发送按钮出现", () => {
+    render(<CommentInput value="有内容" onChange={vi.fn()} onSubmit={vi.fn()} />);
+    expect(screen.getByTestId("icon-arrow-up")).toBeTruthy();
   });
 
   it("value 非空时点击发送触发 onSubmit", async () => {
@@ -96,9 +97,7 @@ describe("CommentInput（已登录）", () => {
   });
 
   it("isSubmitting 时发送按钮禁用", () => {
-    render(
-      <CommentInput value="内容" onChange={vi.fn()} onSubmit={vi.fn()} isSubmitting />,
-    );
+    render(<CommentInput value="内容" onChange={vi.fn()} onSubmit={vi.fn()} isSubmitting />);
 
     const btn = screen.getByTestId("icon-arrow-up").closest("button");
     expect(btn?.disabled).toBe(true);
