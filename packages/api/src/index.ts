@@ -37,10 +37,23 @@ export type {
   CommentReplyResp,
   CommentItemResp,
   CommentPageResp,
+  CommentReplyPageResp,
   CommentListReq,
+  CommentReplyListReq,
   CommentCreateReq,
   CommentReplyCreateReq,
+  CommentLikeResp,
+  CommentDeleteResp,
 } from "./types/comment";
+export type {
+  GuestbookUserResp,
+  GuestbookItemResp,
+  GuestbookPageResp,
+  GuestbookListReq,
+  GuestbookCreateReq,
+  GuestbookLikeResp,
+  GuestbookDeleteResp,
+} from "./types/guestbook";
 export type {
   UserDetailResp,
   UserMetaResp,

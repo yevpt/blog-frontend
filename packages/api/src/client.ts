@@ -22,8 +22,18 @@ import type {
   CommentListReq,
   CommentPageResp,
   CommentReplyCreateReq,
+  CommentReplyListReq,
+  CommentReplyPageResp,
   CommentReplyResp,
+  CommentLikeResp,
 } from "./types/comment";
+import type {
+  GuestbookCreateReq,
+  GuestbookItemResp,
+  GuestbookListReq,
+  GuestbookLikeResp,
+  GuestbookPageResp,
+} from "./types/guestbook";
 import type { UserDetailResp } from "./types/user";
 
 /** createApiClient 的注入配置接口 */
@@ -188,26 +198,137 @@ export function createApiClient(config: ApiClientConfig) {
       getMe: () => fetchAuthed<UserDetailResp>("/users/me", { method: "GET" }),
     },
     comments: {
-      /** 分页查询评论，支持 article / moment / guestbook */
-      listPublic: (req: CommentListReq) => {
-        const params = new URLSearchParams();
-        params.set("target_type", req.target_type);
-        params.set("target_id", String(req.target_id));
-        if (req.page !== undefined) params.set("page", String(req.page));
-        if (req.page_size !== undefined) params.set("page_size", String(req.page_size));
-        return fetchPublic<CommentPageResp>(`/comments?${params.toString()}`, { method: "GET" });
+      /** 分页查询文章评论（可选登录，登录后返回 is_liked） */
+      listArticle: (articleId: number, req: CommentListReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        const qs = p.toString();
+        return fetchOptionalAuth<CommentPageResp>(
+          `/articles/${articleId}/comments${qs ? `?${qs}` : ""}`,
+          { method: "GET" },
+        );
       },
-      /** 新增一级评论（需登录） */
-      create: (req: CommentCreateReq) =>
-        fetchAuthed<CommentItemResp>("/comments", {
+      /** 分页查询碎语评论 */
+      listMoment: (momentId: number, req: CommentListReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        const qs = p.toString();
+        return fetchOptionalAuth<CommentPageResp>(
+          `/moments/${momentId}/comments${qs ? `?${qs}` : ""}`,
+          { method: "GET" },
+        );
+      },
+      /** 新增文章评论（需登录） */
+      createArticle: (articleId: number, req: CommentCreateReq) =>
+        fetchAuthed<CommentItemResp>(`/articles/${articleId}/comments`, {
           method: "POST",
           body: JSON.stringify(req),
         }),
-      /** 回复一级评论（需登录） */
-      reply: (commentId: number, req: CommentReplyCreateReq) =>
-        fetchAuthed<CommentReplyResp>(`/comments/${commentId}/replies`, {
+      /** 新增碎语评论（需登录） */
+      createMoment: (momentId: number, req: CommentCreateReq) =>
+        fetchAuthed<CommentItemResp>(`/moments/${momentId}/comments`, {
           method: "POST",
           body: JSON.stringify(req),
+        }),
+      /** 分页查询文章评论回复（可选登录） */
+      listArticleReplies: (commentId: number, req: CommentReplyListReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        const qs = p.toString();
+        return fetchOptionalAuth<CommentReplyPageResp>(
+          `/articles/comments/${commentId}/replies${qs ? `?${qs}` : ""}`,
+          { method: "GET" },
+        );
+      },
+      /** 分页查询碎语评论回复 */
+      listMomentReplies: (commentId: number, req: CommentReplyListReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        const qs = p.toString();
+        return fetchOptionalAuth<CommentReplyPageResp>(
+          `/moments/comments/${commentId}/replies${qs ? `?${qs}` : ""}`,
+          { method: "GET" },
+        );
+      },
+      /** 回复文章评论（需登录） */
+      replyArticle: (commentId: number, req: CommentReplyCreateReq) =>
+        fetchAuthed<CommentReplyResp>(`/articles/comments/${commentId}/replies`, {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 回复碎语评论（需登录） */
+      replyMoment: (commentId: number, req: CommentReplyCreateReq) =>
+        fetchAuthed<CommentReplyResp>(`/moments/comments/${commentId}/replies`, {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 切换文章评论点赞（需登录） */
+      toggleArticleLike: (commentId: number) =>
+        fetchAuthed<CommentLikeResp>(`/articles/comments/${commentId}/like`, {
+          method: "POST",
+        }),
+      /** 切换碎语评论点赞（需登录） */
+      toggleMomentLike: (commentId: number) =>
+        fetchAuthed<CommentLikeResp>(`/moments/comments/${commentId}/like`, {
+          method: "POST",
+        }),
+      /** 切换文章评论回复点赞（需登录） */
+      toggleArticleReplyLike: (commentId: number, replyId: number) =>
+        fetchAuthed<CommentLikeResp>(`/articles/comments/${commentId}/replies/${replyId}/like`, {
+          method: "POST",
+        }),
+      /** 切换碎语评论回复点赞（需登录） */
+      toggleMomentReplyLike: (commentId: number, replyId: number) =>
+        fetchAuthed<CommentLikeResp>(`/moments/comments/${commentId}/replies/${replyId}/like`, {
+          method: "POST",
+        }),
+    },
+    guestbook: {
+      /** 分页查询留言（可选登录） */
+      list: (req: GuestbookListReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.owner_user_id !== undefined) p.set("owner_user_id", String(req.owner_user_id));
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        const qs = p.toString();
+        return fetchOptionalAuth<GuestbookPageResp>(`/guestbook${qs ? `?${qs}` : ""}`, {
+          method: "GET",
+        });
+      },
+      /** 发表留言（需登录） */
+      create: (req: GuestbookCreateReq) =>
+        fetchAuthed<GuestbookItemResp>("/guestbook", {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 切换留言点赞（需登录） */
+      toggleLike: (id: number) =>
+        fetchAuthed<GuestbookLikeResp>(`/guestbook/${id}/like`, { method: "POST" }),
+      /** 分页查询留言回复 */
+      listReplies: (guestbookId: number, req: CommentReplyListReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        const qs = p.toString();
+        return fetchOptionalAuth<CommentReplyPageResp>(
+          `/guestbook/comments/${guestbookId}/replies${qs ? `?${qs}` : ""}`,
+          { method: "GET" },
+        );
+      },
+      /** 回复留言（需登录） */
+      reply: (guestbookId: number, req: CommentReplyCreateReq) =>
+        fetchAuthed<CommentReplyResp>(`/guestbook/comments/${guestbookId}/replies`, {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 切换留言回复点赞（需登录） */
+      toggleReplyLike: (guestbookId: number, replyId: number) =>
+        fetchAuthed<CommentLikeResp>(`/guestbook/comments/${guestbookId}/replies/${replyId}/like`, {
+          method: "POST",
         }),
     },
     /**
