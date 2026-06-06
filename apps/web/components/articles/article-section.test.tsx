@@ -40,6 +40,7 @@ vi.mock("@repo/icons", () => ({
 }));
 
 vi.mock("@repo/ui", () => ({
+  cn: (...classes: (string | undefined | false | null)[]) => classes.filter(Boolean).join(" "),
   Button: ({
     children,
     onPress,

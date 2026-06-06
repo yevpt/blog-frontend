@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createApiClient } from "./client";
 import { ApiError } from "./errors";
+import type { ArticleDetailResp, ArticlePageResp } from "./types/article";
 
 // 构造一个最小的 mock Response
 function mockResponse(body: unknown, status = 200) {
@@ -225,6 +226,45 @@ describe("createApiClient", () => {
     );
   });
 
+  it("articles.listPublic 保留嵌套用户头像 CDN 地址", async () => {
+    const pageResp: ArticlePageResp = {
+      total: 1,
+      pages: 1,
+      page: 1,
+      page_size: 10,
+      list: [
+        {
+          id: 1,
+          title: "Test",
+          user_id: 1,
+          status: 1,
+          comment_status: 1,
+          read_count: 0,
+          like_count: 0,
+          is_liked: false,
+          comment_count: 0,
+          is_recommended: false,
+          user: {
+            id: 1,
+            username: "vpt",
+            nickname: "VPT",
+            avatar_url: "https://blog-oss.yevpt.com/avatars/vpt.png",
+          },
+          created_at: "2026-01-01",
+          updated_at: "2026-01-01",
+        },
+      ],
+    };
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: pageResp }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    const result = await client.articles.listPublic();
+
+    expect(result.list[0]?.user?.avatar_url).toBe("https://blog-oss.yevpt.com/avatars/vpt.png");
+  });
+
   it("articles.toggleLike 使用 fetchAuthed 调用 /articles/{id}/like", async () => {
     vi.mocked(global.fetch).mockResolvedValue(
       mockResponse({
@@ -442,7 +482,7 @@ describe("createApiClient", () => {
   });
 
   it("articles.getDetail 调用正确的端点", async () => {
-    const detail = {
+    const detail: ArticleDetailResp = {
       id: 1,
       title: "Test",
       content: "# Hello",
@@ -453,6 +493,12 @@ describe("createApiClient", () => {
       like_count: 0,
       comment_count: 0,
       is_recommended: false,
+      user: {
+        id: 1,
+        username: "vpt",
+        nickname: "VPT",
+        avatar_url: "https://blog-oss.yevpt.com/avatars/vpt.png",
+      },
       created_at: "2026-01-01",
       updated_at: "2026-01-01",
     };
@@ -468,6 +514,7 @@ describe("createApiClient", () => {
       expect.objectContaining({ method: "GET" }),
     );
     expect(result.title).toBe("Test");
+    expect(result.user?.avatar_url).toBe("https://blog-oss.yevpt.com/avatars/vpt.png");
   });
 
   it("articles.view 调用正确的端点", async () => {

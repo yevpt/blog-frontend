@@ -89,7 +89,7 @@ export function SiteNavbar() {
           aria-label="关闭导航遮罩"
           data-testid="mobile-nav-overlay"
           onPress={() => setMenuOpen(false)}
-          className="fixed inset-0 z-40 h-auto bg-background/55 p-0 backdrop-blur-sm transition-opacity md:hidden"
+          className="fixed inset-0 z-40 h-auto bg-black/20 dark:bg-black/40 p-0 backdrop-blur-sm transition-opacity md:hidden"
         />
       )}
       <nav
@@ -102,7 +102,7 @@ export function SiteNavbar() {
           // backdrop-filter 不参与过渡：动画 backdrop-filter 在 Chrome/Safari 中会触发合成层竞争导致闪烁
           "transition-[opacity,padding,background,border-color,box-shadow] duration-300 ease-out",
           mounted ? "opacity-100" : "opacity-0",
-          scrolled ? "px-5 py-2.5" : "px-5 py-[18px]",
+          scrolled ? "px-3 py-2" : "px-3 py-3",
         )}
       >
         <div

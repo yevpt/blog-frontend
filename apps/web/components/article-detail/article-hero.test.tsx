@@ -4,19 +4,9 @@ import { ArticleHero } from "./article-hero";
 import type { ArticleDetailResp } from "@repo/api";
 
 vi.mock("next/image", () => ({
-  default: ({
-    src,
-    alt,
-    _fill,
-    className,
-    _priority,
-  }: {
-    src: string;
-    alt: string;
-    _fill?: boolean;
-    className?: string;
-    _priority?: boolean;
-  }) => <img src={src} alt={alt} className={className} />,
+  default: ({ src, alt, className }: { src: string; alt: string; className?: string }) => (
+    <img src={src} alt={alt} className={className} />
+  ),
 }));
 
 const base: ArticleDetailResp = {
@@ -46,18 +36,55 @@ describe("ArticleHero", () => {
     expect(screen.getByText(/88/)).toBeInTheDocument();
   });
 
-  it("无封面图时渲染占位背景", () => {
-    const { container } = render(<ArticleHero article={base} />);
-    expect((container.firstChild as HTMLElement).className).toMatch(/from-muted/);
+  it("无封面图时不渲染 img", () => {
+    render(<ArticleHero article={base} />);
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });
 
-  it("有封面图时渲染 img", () => {
+  it("有封面图时渲染 img 并使用 alt 文字", () => {
     render(<ArticleHero article={{ ...base, cover_img_url: "https://example.com/img.jpg" }} />);
-    expect(screen.getByRole("img")).toHaveAttribute("src", expect.stringContaining("img.jpg"));
+    const img = screen.getByRole("img");
+    expect(img).toHaveAttribute("src", expect.stringContaining("img.jpg"));
+    expect(img).toHaveAttribute("alt", "Rust Web 框架");
   });
 
   it("显示分类标签", () => {
     render(<ArticleHero article={{ ...base, category: { id: 1, name: "Technology" } }} />);
     expect(screen.getByText("Technology")).toBeInTheDocument();
+  });
+
+  it("显示预计阅读时长", () => {
+    render(<ArticleHero article={base} />);
+    expect(screen.getByText(/分钟阅读/)).toBeInTheDocument();
+  });
+
+  it("有 user 时显示作者头像", () => {
+    const user = {
+      id: 1,
+      username: "vpt940417",
+      nickname: "Vpt",
+      avatar_url: "https://example.com/avatar.jpg",
+    };
+    render(<ArticleHero article={{ ...base, user }} />);
+    const avatar = screen.getByAltText("Vpt");
+    expect(avatar).toHaveAttribute("src", expect.stringContaining("avatar.jpg"));
+  });
+
+  it("有 user 时显示作者昵称", () => {
+    const user = {
+      id: 1,
+      username: "vpt940417",
+      nickname: "Vpt",
+      avatar_url: "https://example.com/avatar.jpg",
+      mark: "博主、前端攻城狮",
+    };
+    render(<ArticleHero article={{ ...base, user }} />);
+    expect(screen.getByText("Vpt")).toBeInTheDocument();
+    expect(screen.getByText("博主、前端攻城狮")).toBeInTheDocument();
+  });
+
+  it("无 user 时不渲染作者区块", () => {
+    render(<ArticleHero article={base} />);
+    expect(screen.queryByText(/博主/)).not.toBeInTheDocument();
   });
 });

@@ -28,7 +28,7 @@ describe("Button", () => {
     expect(container.querySelector("button")?.className).toContain("border");
   });
 
-  it("ghost variant 含 hover:bg-accent", () => {
+  it("ghost variant 含 hover:bg-accent（中性悬停背景）", () => {
     const { container } = render(<Button variant="ghost">幽灵</Button>);
     expect(container.querySelector("button")?.className).toContain("hover:bg-accent");
   });

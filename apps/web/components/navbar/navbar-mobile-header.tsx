@@ -59,13 +59,11 @@ function NavbarMobileMenuButton({ isGlass, menuOpen, onToggleMenu }: NavbarMobil
   );
 }
 
-function NavbarMobileArticleActions({ isGlass }: { isGlass: boolean }) {
+function NavbarMobileArticleActions() {
   const { likeCount, commentCount, isLiked, isLiking, toggleLike } = useArticleEngagement();
 
-  const actionButtonClass = cn(
-    "flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors hover:bg-foreground/5",
-    isGlass ? "text-black/54 dark:text-[var(--fg3)]" : "text-foreground dark:text-foreground",
-  );
+  const actionButtonClass =
+    "flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors hover:bg-foreground/5 text-black/54 dark:text-[var(--fg3)]";
 
   return (
     <>
@@ -118,7 +116,7 @@ export function NavbarMobileHeader({
   }
 
   return (
-    <div className="flex min-h-[52px] items-center justify-between gap-2 px-4 md:hidden">
+    <div className={cn("flex min-h-[52px] px-3 items-center md:hidden")}>
       <Button
         type="button"
         variant="ghost"
@@ -126,7 +124,7 @@ export function NavbarMobileHeader({
         onPress={() => router.push("/")}
         className="flex h-8 w-8 items-center justify-center rounded-full p-0 text-foreground transition-colors hover:bg-foreground/5"
       >
-        <SvgIcon name="arrow-back" size={18} />
+        <SvgIcon name="arrow-back" size={21} />
       </Button>
 
       <div className="min-w-0 flex-1 text-center">
@@ -136,7 +134,7 @@ export function NavbarMobileHeader({
       </div>
 
       <div className="flex items-center gap-1">
-        {mobileVariant === "article" ? <NavbarMobileArticleActions isGlass={isGlass} /> : null}
+        {mobileVariant === "article" ? <NavbarMobileArticleActions /> : null}
         <NavbarMobileMenuButton isGlass={isGlass} menuOpen={menuOpen} onToggleMenu={onToggleMenu} />
       </div>
     </div>

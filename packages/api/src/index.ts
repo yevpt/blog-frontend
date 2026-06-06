@@ -16,6 +16,7 @@ export { createApiClient } from "./client";
 export type { ApiClientConfig } from "./client";
 export type {
   ArticleRelationResp,
+  ArticleUserResp,
   ArticleListReq,
   ArticleListItemResp,
   ArticleLikeResp,

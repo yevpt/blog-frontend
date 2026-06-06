@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
 
 interface ArticleContentProps {
@@ -7,7 +8,8 @@ interface ArticleContentProps {
 }
 
 export function ArticleContent({ contentHtml }: ArticleContentProps) {
-  const progress = useScrollProgress();
+  const articleRef = useRef<HTMLElement>(null);
+  const progress = useScrollProgress(articleRef);
 
   return (
     <>
@@ -17,7 +19,8 @@ export function ArticleContent({ contentHtml }: ArticleContentProps) {
         style={{ width: `${progress * 100}%` }}
       />
       <article
-        className="prose prose-neutral mx-auto max-w-[720px] px-5 py-10 dark:prose-invert"
+        ref={articleRef}
+        className="prose prose-neutral mx-auto max-w-[720px] pb-10 px-2 md:px-0 pt-8 dark:prose-invert"
         dangerouslySetInnerHTML={{ __html: contentHtml }}
       />
     </>

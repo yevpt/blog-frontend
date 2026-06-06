@@ -41,7 +41,9 @@ function PaginationPageNumber({ value, isCurrent }: PaginationPageNumberProps) {
           "flex size-9 cursor-pointer items-center justify-center rounded-lg p-3 text-sm font-medium",
           "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
           // 仅选中态有背景色；不用 transition/hover 背景，避免切换页码时旧页闪烁
-          isSelected ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground",
+          isSelected
+            ? "bg-primary text-primary-foreground"
+            : "text-muted-foreground hover:text-foreground",
         )
       }
     >

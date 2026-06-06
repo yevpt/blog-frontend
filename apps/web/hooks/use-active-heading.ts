@@ -1,7 +1,9 @@
 "use client";
 
-/* global document, IntersectionObserver */
+/* global document, window */
 import { useState, useEffect } from "react";
+
+const OFFSET = 120; // navbar 高度 + 缓冲，低于此值视为"已滚过"
 
 export function useActiveHeading(ids: string[]): string | null {
   const [activeId, setActiveId] = useState<string | null>(ids[0] ?? null);
@@ -13,23 +15,24 @@ export function useActiveHeading(ids: string[]): string | null {
     }
     setActiveId(ids[0]);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveId(entry.target.id);
-            break;
-          }
+    const update = () => {
+      if (window.scrollY <= 0) {
+        setActiveId(ids[0]);
+        return;
+      }
+      let active = ids[0];
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && el.offsetTop - window.scrollY <= OFFSET) {
+          active = id;
         }
-      },
-      { rootMargin: "-80px 0px -60% 0px", threshold: 0 },
-    );
+      }
+      setActiveId(active);
+    };
 
-    for (const id of ids) {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    }
-    return () => observer.disconnect();
+    window.addEventListener("scroll", update, { passive: true });
+    update();
+    return () => window.removeEventListener("scroll", update);
   }, [ids]);
 
   return activeId;

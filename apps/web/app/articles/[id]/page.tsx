@@ -57,11 +57,16 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         isLiked={article.is_liked ?? false}
       />
 
-      <ArticleHero article={article} />
-
-      <div className="mx-auto max-w-[1100px] px-5 py-8">
-        <div className={hasToc ? "grid grid-cols-1 gap-8 xl:grid-cols-[1fr_200px]" : undefined}>
+      <div className="mx-auto max-w-[1100px] px-4 pt-22 pb-8 md:pt-24">
+        <div
+          className={
+            hasToc
+              ? "grid grid-cols-1 gap-8 xl:grid-cols-[1fr_240px] 2xl:grid-cols-[1fr_280px]"
+              : undefined
+          }
+        >
           <div className="min-w-0">
+            <ArticleHero article={article} />
             <ArticleContent contentHtml={contentHtml} />
           </div>
           {hasToc && (

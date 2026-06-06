@@ -7,6 +7,16 @@ export interface ArticleRelationResp {
   cover_img_url?: string;
 }
 
+export interface ArticleUserResp {
+  id: number;
+  username: string;
+  nickname?: string;
+  /** 后端返回的 CDN 化头像地址 */
+  avatar_url?: string;
+  site?: string;
+  mark?: string;
+}
+
 export interface ArticleListReq {
   page?: number;
   page_size?: number;
@@ -32,6 +42,7 @@ export interface ArticleListItemResp {
   /** Go int64 — safe as JS number for blog-scale counts */
   comment_count: number;
   is_recommended: boolean;
+  user?: ArticleUserResp;
   category?: ArticleRelationResp;
   created_at: string;
   updated_at: string;
@@ -79,6 +90,7 @@ export interface ArticleDetailResp {
   is_recommended: boolean;
   music_ids?: number[];
   music?: MusicItem[];
+  user?: ArticleUserResp;
   category?: ArticleRelationResp;
   tags?: ArticleRelationResp[];
   created_at: string;

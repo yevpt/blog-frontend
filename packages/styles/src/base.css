@@ -1,4 +1,5 @@
 @import "tailwindcss";
+
 @plugin "@tailwindcss/typography";
 
 /* -------------------------------------------------------------------------- */
@@ -8,6 +9,14 @@
 /* 扫描 monorepo 共享包中的 className，避免共享组件里的样式被裁剪。 */
 @source "../../ui/src";
 @source "../../hooks/src";
+
+/* 恢复 button 的 cursor: pointer  */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
 
 /* -------------------------------------------------------------------------- */
 /* 主题变体                                                                     */
@@ -48,7 +57,7 @@
   浅色模式作为默认值。
 */
 @theme {
-  --color-background: #fafaf9;
+  --color-background: #ffffff;
   --color-foreground: #18181b;
 
   --color-card: #ffffff;
@@ -63,8 +72,8 @@
   --color-muted: #f4f4f5;
   --color-muted-foreground: #71717a;
 
-  --color-accent: #7c3aed;
-  --color-accent-foreground: #ffffff;
+  --color-accent: #f4f4f5;
+  --color-accent-foreground: #18181b;
 
   --color-border: rgba(0, 0, 0, 0.06);
   --color-input: rgba(0, 0, 0, 0.06);
@@ -99,8 +108,8 @@
     --color-muted: #27272a;
     --color-muted-foreground: #a1a1aa;
 
-    --color-accent: #a78bfa;
-    --color-accent-foreground: #09090b;
+    --color-accent: #27272a;
+    --color-accent-foreground: #fafafa;
 
     --color-border: rgba(255, 255, 255, 0.08);
     --color-input: rgba(255, 255, 255, 0.08);
@@ -140,11 +149,11 @@
     color-scheme: dark;
 
     /*
-          深色模式文字层级：
+              深色模式文字层级：
 
-          --fg2：正文次级文字，用于文章摘要、碎语内容；
-          --fg3：辅助提示文字，用于时间戳、统计数字。
-        */
+              --fg2：正文次级文字，用于文章摘要、碎语内容；
+              --fg3：辅助提示文字，用于时间戳、统计数字。
+            */
     --fg2: #b8b8c4;
     --fg3: #9c9ca8;
 
@@ -176,11 +185,11 @@ body {
   color: var(--color-foreground);
 
   /*
-      不给 body 设置背景色。
+        不给 body 设置背景色。
 
-      这样可以让 html 的底色，以及 body::before 之类的 mesh gradient
-      页面装饰层正常透出。
-    */
+        这样可以让 html 的底色，以及 body::before 之类的 mesh gradient
+        页面装饰层正常透出。
+      */
 }
 
 /* -------------------------------------------------------------------------- */

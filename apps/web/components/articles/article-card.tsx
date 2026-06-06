@@ -4,9 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ArticleListItemResp } from "@repo/api";
 import { useLocale } from "@repo/hooks/locale";
-import { formatDate } from "../../lib/format-time";
-import { getCategoryColorClass } from "../../lib/category-colors";
+import { formatDate } from "@/lib/format-time.ts";
 import { ArticleCardStats } from "./article-card-stats";
+import { ArticleDateCategory } from "./article-date-category";
 
 interface ArticleCardProps {
   article: ArticleListItemResp;
@@ -59,18 +59,12 @@ export function ArticleCard({
             </Link>
           </h3>
 
-          {/* Date + Category */}
-          <div className="mb-3 flex items-center gap-2.5 text-sm text-muted-foreground">
-            <time dateTime={article.created_at}>{formattedDate}</time>
-            {article.category && (
-              <span className="flex items-center gap-1.5">
-                <span
-                  className={`h-2 w-2 shrink-0 rounded-full ${getCategoryColorClass(article.category.name)}`}
-                />
-                {article.category.name}
-              </span>
-            )}
-          </div>
+          <ArticleDateCategory
+            dateTime={article.created_at}
+            formattedDate={formattedDate}
+            category={article.category?.name}
+            className="mb-3"
+          />
 
           {article.short_content && (
             <p className="mb-3.5 text-sm leading-[1.72] text-[var(--fg2)] line-clamp-3">
