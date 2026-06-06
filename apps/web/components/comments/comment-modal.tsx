@@ -53,7 +53,7 @@ export function CommentModal({ open, targetType, targetId, onClose }: CommentMod
         aria-modal="true"
         aria-label="评论"
         style={isDragging ? { ...sheetStyle } : sheetStyle}
-        className="
+        className="touch-manipulation 
           relative flex w-full flex-col overflow-hidden rounded-t-[20px] bg-card shadow-[0_-4px_40px_rgba(0,0,0,0.18)]
           [height:70dvh] [max-height:92dvh]
           md:relative md:inset-auto md:h-auto md:max-h-[85vh] md:max-w-[520px] md:rounded-[20px_20px_16px_16px]

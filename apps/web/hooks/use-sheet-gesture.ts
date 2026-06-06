@@ -1,7 +1,7 @@
 // apps/web/hooks/use-sheet-gesture.ts
 "use client";
 
-import { type CSSProperties, type RefObject, useEffect, useRef, useState } from "react";
+import { type CSSProperties, type RefObject, useLayoutEffect, useRef, useState } from "react";
 
 interface SheetGestureOptions {
   snapThreshold?: number;
@@ -36,9 +36,9 @@ export function useSheetGesture(
   const [isDragging, setIsDragging] = useState(false);
   const gestureRef = useRef<GestureState | null>(null);
   const onDismissRef = useRef(onDismiss);
-  useEffect(() => { onDismissRef.current = onDismiss; });
+  useLayoutEffect(() => { onDismissRef.current = onDismiss; });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const sheet = sheetRef.current;
     const scroll = scrollRef.current;
     if (!sheet || !scroll) return;
@@ -73,12 +73,12 @@ export function useSheetGesture(
       state.velocitySamples.push({ y: touch.clientY, t: now });
       state.velocitySamples = state.velocitySamples.filter((s) => now - s.t <= 100);
 
-      if (state.startScrollTop === 0 && deltaY > 0 && state.mode === "undecided") {
+      if (state.startScrollTop <= 1 && deltaY > 0 && state.mode === "undecided") {
         e.preventDefault();
       }
 
       if (state.mode === "undecided" && Math.abs(deltaY) > 8) {
-        const isDragDown = state.startScrollTop === 0 && deltaY > 0;
+        const isDragDown = state.startScrollTop <= 1 && deltaY > 0;
         state.mode = isDragDown ? "drag" : "scroll";
         if (isDragDown) setIsDragging(true);
       }
@@ -161,7 +161,6 @@ export function useSheetGesture(
   const sheetStyle: CSSProperties = {
     transform: `translateY(${translateY}px)`,
     transition: isDragging ? "none" : "transform 0.35s cubic-bezier(.32,.72,0,1)",
-    willChange: "transform",
   };
 
   return { sheetStyle, isDragging };
