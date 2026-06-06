@@ -1,4 +1,5 @@
 // apps/web/hooks/use-sheet-gesture.ts
+/* global HTMLElement, TouchEvent, window */
 "use client";
 
 /**
@@ -7,7 +8,7 @@
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │  STATE MACHINE                                                          │
  * │                                                                         │
- * │  snapState:  "collapsed" (70dvh) ←──────────────→ "expanded" (92dvh)   │
+ * │  snapState:  "collapsed" (70dvh) ←──────────────→ "expanded" (100dvh)  │
  * │                    │  ↑ swipe-up from header               │            │
  * │                    │  ↓ swipe-down from header (collapse)   │            │
  * │                    ↓                                                    │
@@ -32,7 +33,7 @@
  *   (velocity > velocityThreshold AND displacement > minDisplacement)
  *
  * expand 条件（collapsed 状态向上）：
- *   |displacement| > 40px  OR  velocity < -velocityThreshold
+ *   expandOffset > 40px  OR  velocity < -velocityThreshold
  *
  * collapse 条件（expanded 状态向下）：同 dismiss 条件，但改为收起而非关闭
  */
@@ -51,6 +52,7 @@ type GestureMode = "undecided" | "drag" | "scroll";
 interface GestureState {
   startY: number;
   startScrollTop: number;
+  maxExpandOffset: number;
   mode: GestureMode;
   /** touch 起点在 scrollRef 上方（handle/header 区域） */
   isHeaderGesture: boolean;
@@ -68,11 +70,13 @@ export function useSheetGesture(
     minDisplacement = 60,
     onDismiss,
   }: SheetGestureOptions,
-): { sheetStyle: CSSProperties; isDragging: boolean; isExpanded: boolean } {
+): { sheetStyle: CSSProperties; isDragging: boolean; isExpanded: boolean; expandOffset: number } {
   const translateYRef = useRef(0);
   const [translateY, _setTranslateY] = useState(0);
+  const expandOffsetRef = useRef(0);
+  const [expandOffset, _setExpandOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  // snapState：collapsed(70dvh) 或 expanded(92dvh)
+  // snapState：collapsed(70dvh) 或 expanded(100dvh)
   const [isExpanded, setIsExpanded] = useState(false);
   const isExpandedRef = useRef(false); // Ref 版本供闭包内同步读取
 
@@ -96,6 +100,11 @@ export function useSheetGesture(
       _setTranslateY(val);
     }
 
+    function setExpandOffset(val: number) {
+      expandOffsetRef.current = val;
+      _setExpandOffset(val);
+    }
+
     // ─── Phase 1: touchstart ─────────────────────────────────────────────────
     // 判断手势起点是否在 handle/header 区域（scrollRef 上方）。
     // 使用 scrollRef.getBoundingClientRect().top 作为分界线：
@@ -105,14 +114,17 @@ export function useSheetGesture(
       const touch = e.touches[0];
       if (!touch) return;
       const scrollRect = scroll!.getBoundingClientRect();
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
       gestureRef.current = {
         startY: touch.clientY,
         startScrollTop: scroll!.scrollTop,
+        maxExpandOffset: Math.max(viewportHeight - sheet!.offsetHeight, 0),
         mode: "undecided",
         isHeaderGesture: touch.clientY < scrollRect.top,
         velocitySamples: [],
         lastY: touch.clientY,
       };
+      setExpandOffset(0);
     }
 
     // ─── Phase 2: touchmove ──────────────────────────────────────────────────
@@ -154,10 +166,13 @@ export function useSheetGesture(
         e.preventDefault();
         if (deltaY >= 0) {
           // 向下拖动：正 translateY（dismiss / collapse 方向）
+          setExpandOffset(0);
           setTranslateY(deltaY);
         } else {
-          // 向上拖动：橡皮筋（展开提示），限制在 -60px 以内
-          setTranslateY(Math.max(deltaY * 0.3, -60));
+          // 向上拖动：通过增加高度跟手，底部保持锚定，不移动整个 sheet。
+          const nextOffset = Math.min(Math.abs(deltaY), state.maxExpandOffset);
+          setTranslateY(0);
+          setExpandOffset(isExpandedRef.current ? 0 : nextOffset);
         }
         state.lastY = touch.clientY;
         return;
@@ -172,9 +187,11 @@ export function useSheetGesture(
             state.rubberBandStartY = touch.clientY;
           }
           const rubberDelta = Math.max(touch.clientY - state.rubberBandStartY, 0);
+          setExpandOffset(0);
           setTranslateY(Math.min(rubberDelta * 0.25, 40));
         } else {
           state.rubberBandStartY = undefined;
+          setExpandOffset(0);
           setTranslateY(0);
         }
       }
@@ -189,12 +206,14 @@ export function useSheetGesture(
       setIsDragging(false);
 
       if (!state || state.mode !== "drag") {
+        setExpandOffset(0);
         setTranslateY(0);
         return;
       }
 
       const sheetHeight = sheetRef.current?.offsetHeight ?? 0;
       const displacement = translateYRef.current;
+      const expansion = expandOffsetRef.current;
 
       // 速度计算（正 = 向下，负 = 向上）
       const samples = state.velocitySamples;
@@ -207,13 +226,14 @@ export function useSheetGesture(
       }
 
       // ── 向上手势：决定是否展开至全屏 ──────────────────────────────────────
-      if (displacement < 0) {
+      if (expansion > 0 || state.lastY < state.startY) {
         const shouldExpand =
-          !isExpandedRef.current && (Math.abs(displacement) > 40 || velocity < -velocityThreshold);
+          !isExpandedRef.current && (expansion > 40 || velocity < -velocityThreshold);
         if (shouldExpand) {
           isExpandedRef.current = true;
           setIsExpanded(true);
         }
+        setExpandOffset(0);
         setTranslateY(0);
         return;
       }
@@ -228,13 +248,16 @@ export function useSheetGesture(
           // 展开 → 收起（不 dismiss）
           isExpandedRef.current = false;
           setIsExpanded(false);
+          setExpandOffset(0);
           setTranslateY(0);
         } else {
           // 收起 → dismiss
+          setExpandOffset(0);
           setTranslateY(sheetHeight);
           setTimeout(() => onDismissRef.current(), 350);
         }
       } else {
+        setExpandOffset(0);
         setTranslateY(0);
       }
     }
@@ -258,5 +281,5 @@ export function useSheetGesture(
     transition: isDragging ? "none" : "transform 0.35s cubic-bezier(.32,.72,0,1)",
   };
 
-  return { sheetStyle, isDragging, isExpanded };
+  return { sheetStyle, isDragging, isExpanded, expandOffset };
 }

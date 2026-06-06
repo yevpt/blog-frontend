@@ -1,9 +1,16 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { CommentModal } from "./comment-modal";
+
+const gestureState = vi.hoisted(() => ({
+  sheetStyle: {},
+  isDragging: false,
+  isExpanded: false,
+  expandOffset: 0,
+}));
 
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
@@ -32,14 +39,18 @@ vi.mock("./comment-section", () => ({
 }));
 
 vi.mock("@/hooks/use-sheet-gesture", () => ({
-  useSheetGesture: () => ({
-    sheetStyle: {},
-    isDragging: false,
-  }),
+  useSheetGesture: () => gestureState,
 }));
 
 // CommentModal 不接受 open prop，由父组件条件挂载控制显隐
 describe("CommentModal", () => {
+  beforeEach(() => {
+    gestureState.sheetStyle = {};
+    gestureState.isDragging = false;
+    gestureState.isExpanded = false;
+    gestureState.expandOffset = 0;
+  });
+
   it("挂载后渲染 dialog 和「评论」标题", () => {
     render(<CommentModal targetType="article" targetId={1} onClose={vi.fn()} />);
     expect(screen.getByRole("dialog")).toBeTruthy();
@@ -77,5 +88,30 @@ describe("CommentModal", () => {
     const section = screen.getByTestId("comment-section");
     expect(section.dataset.targetType).toBe("moment");
     expect(section.dataset.targetId).toBe("7");
+  });
+
+  it("expanded 状态使用全屏高度，底部仍由 bottom-0 锚定", async () => {
+    gestureState.isExpanded = true;
+
+    render(<CommentModal targetType="article" targetId={1} onClose={vi.fn()} />);
+
+    const dialog = screen.getByRole("dialog");
+    await waitFor(() => expect(dialog.style.height).toBe("100dvh"));
+    expect(dialog.style.maxHeight).toBe("100dvh");
+    expect(dialog.className).toContain("bottom-0");
+  });
+
+  it("顶部上滑拖动中使用动态高度跟手", async () => {
+    gestureState.isDragging = true;
+    gestureState.expandOffset = 80;
+    gestureState.sheetStyle = { transform: "translateY(0px)" };
+
+    render(<CommentModal targetType="article" targetId={1} onClose={vi.fn()} />);
+
+    const dialog = screen.getByRole("dialog");
+    await waitFor(() => expect(dialog.style.height).toBe("calc(70dvh + 80px)"));
+    expect(dialog.style.maxHeight).toBe("100dvh");
+    expect(dialog.style.transform).toBe("translateY(0px)");
+    expect(dialog.style.transition).toBe("none");
   });
 });

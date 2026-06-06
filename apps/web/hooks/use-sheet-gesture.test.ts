@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+/* global document, window, DOMRect, HTMLElement, TouchEventInit, Touch, TouchEvent */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useSheetGesture } from "./use-sheet-gesture";
@@ -9,6 +10,18 @@ function makeEls() {
   document.body.appendChild(sheet);
   document.body.appendChild(scroll);
   Object.defineProperty(sheet, "offsetHeight", { value: 500, configurable: true });
+  scroll.getBoundingClientRect = () =>
+    ({
+      top: 100,
+      bottom: 500,
+      left: 0,
+      right: 320,
+      width: 320,
+      height: 400,
+      x: 0,
+      y: 100,
+      toJSON: () => ({}),
+    }) as DOMRect;
   return { sheet, scroll };
 }
 
@@ -73,11 +86,10 @@ describe("useSheetGesture", () => {
   it("大位移松手触发 onDismiss（延迟 350ms）", () => {
     const { sheet, scroll } = makeEls();
     const { unmount } = renderHook(() =>
-      useSheetGesture(
-        { current: sheet } as never,
-        { current: scroll } as never,
-        { onDismiss, snapThreshold: 0.3 },
-      ),
+      useSheetGesture({ current: sheet } as never, { current: scroll } as never, {
+        onDismiss,
+        snapThreshold: 0.3,
+      }),
     );
 
     act(() => {
@@ -106,6 +118,71 @@ describe("useSheetGesture", () => {
     });
 
     expect(onDismiss).not.toHaveBeenCalled();
+    expect(result.current.sheetStyle.transform).toBe("translateY(0px)");
+    unmount();
+    cleanup(sheet, scroll);
+  });
+
+  it("顶部向上拖动时用展开高度跟手，sheet 不产生负 translateY", () => {
+    const { sheet, scroll } = makeEls();
+    const { result, unmount } = renderHook(() =>
+      useSheetGesture({ current: sheet } as never, { current: scroll } as never, { onDismiss }),
+    );
+
+    act(() => {
+      fire(sheet, "touchstart", 80);
+      fire(sheet, "touchmove", 0);
+    });
+
+    expect(result.current.isDragging).toBe(true);
+    expect(result.current.expandOffset).toBe(80);
+    expect(result.current.sheetStyle.transform).toBe("translateY(0px)");
+    unmount();
+    cleanup(sheet, scroll);
+  });
+
+  it("顶部持续上滑时 expandOffset 不受当前 sheet 高度变化影响", () => {
+    const { sheet, scroll } = makeEls();
+    Object.defineProperty(window, "innerHeight", { value: 760, configurable: true });
+    let sheetHeight = 500;
+    Object.defineProperty(sheet, "offsetHeight", {
+      get: () => sheetHeight,
+      configurable: true,
+    });
+    const { result, unmount } = renderHook(() =>
+      useSheetGesture({ current: sheet } as never, { current: scroll } as never, { onDismiss }),
+    );
+
+    act(() => {
+      fire(sheet, "touchstart", 80);
+      fire(sheet, "touchmove", -320);
+    });
+    expect(result.current.expandOffset).toBe(260);
+
+    sheetHeight = 759;
+    act(() => {
+      fire(sheet, "touchmove", -320);
+    });
+
+    expect(result.current.expandOffset).toBe(260);
+    unmount();
+    cleanup(sheet, scroll);
+  });
+
+  it("顶部向上大位移松手后切换为 expanded", () => {
+    const { sheet, scroll } = makeEls();
+    const { result, unmount } = renderHook(() =>
+      useSheetGesture({ current: sheet } as never, { current: scroll } as never, { onDismiss }),
+    );
+
+    act(() => {
+      fire(sheet, "touchstart", 80);
+      fire(sheet, "touchmove", 0);
+      fire(sheet, "touchend", 0);
+    });
+
+    expect(result.current.isExpanded).toBe(true);
+    expect(result.current.expandOffset).toBe(0);
     expect(result.current.sheetStyle.transform).toBe("translateY(0px)");
     unmount();
     cleanup(sheet, scroll);

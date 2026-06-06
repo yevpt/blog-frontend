@@ -15,6 +15,8 @@ interface CommentModalProps {
 }
 
 const SPRING = "0.4s cubic-bezier(.32,.72,0,1)";
+const COLLAPSED_HEIGHT = "70dvh";
+const EXPANDED_HEIGHT = "100dvh";
 
 export function CommentModal({ targetType, targetId, onClose }: CommentModalProps) {
   const sheetRef = useRef<HTMLElement>(null!);
@@ -27,10 +29,14 @@ export function CommentModal({ targetType, targetId, onClose }: CommentModalProp
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  // 手势引擎：暴露 isExpanded 供高度切换
-  const { sheetStyle, isDragging, isExpanded } = useSheetGesture(sheetRef, scrollRef, {
-    onDismiss: onClose,
-  });
+  // 手势引擎：上滑时通过 expandOffset 增高，避免负 translateY 抬起底部。
+  const { sheetStyle, isDragging, isExpanded, expandOffset } = useSheetGesture(
+    sheetRef,
+    scrollRef,
+    {
+      onDismiss: onClose,
+    },
+  );
 
   // body scroll lock
   useEffect(() => {
@@ -47,21 +53,29 @@ export function CommentModal({ targetType, targetId, onClose }: CommentModalProp
   //   未入场：translateY(100%) + spring，高度 70dvh（折叠起始）
   //   已入场：
   //     - 拖动中：transition:none（手势跟手，无过渡）
+  //     - 上滑中：height 跟手增长到底部锚定的 100dvh
   //     - 释放后：transform spring（弹回 / dismiss）+ height spring（展开 / 收起）
   //
   // 注意：transition 是单一 CSS 属性，必须在同一 style 声明中列全所有需要动画的属性，
   // 否则 className 里的 transition-* 会被 inline style 覆盖。
+  const activeHeight =
+    expandOffset > 0
+      ? `calc(${COLLAPSED_HEIGHT} + ${Math.round(expandOffset)}px)`
+      : isExpanded
+        ? EXPANDED_HEIGHT
+        : COLLAPSED_HEIGHT;
+
   const mergedStyle: CSSProperties = entered
     ? {
         transform: sheetStyle.transform,
-        height: isExpanded ? "92dvh" : "70dvh",
-        maxHeight: "92dvh",
+        height: activeHeight,
+        maxHeight: EXPANDED_HEIGHT,
         transition: isDragging ? "none" : `transform ${SPRING}, height ${SPRING}`,
       }
     : {
         transform: "translateY(100%)",
-        height: "70dvh",
-        maxHeight: "92dvh",
+        height: COLLAPSED_HEIGHT,
+        maxHeight: EXPANDED_HEIGHT,
         transition: `transform ${SPRING}`,
       };
 
@@ -84,12 +98,13 @@ export function CommentModal({ targetType, targetId, onClose }: CommentModalProp
         aria-modal="true"
         aria-label="评论"
         style={mergedStyle}
-        className="
+        className={`
           touch-manipulation
-          relative flex w-full flex-col overflow-hidden rounded-t-[20px] bg-card
+          absolute bottom-0 left-0 right-0 mx-auto flex w-full flex-col overflow-hidden bg-card
           shadow-[0_-4px_40px_rgba(0,0,0,0.18)]
+          ${isExpanded ? "rounded-none" : "rounded-t-[20px]"}
           md:h-auto md:max-h-[85vh] md:max-w-[520px] md:rounded-[20px_20px_16px_16px]
-        "
+        `}
       >
         {/* 拖动把手（移动端）——touch 起点在此即为 isHeaderGesture=true */}
         <div className="mx-auto mt-2.5 h-1 w-9 shrink-0 cursor-grab rounded-full bg-border active:cursor-grabbing md:hidden" />

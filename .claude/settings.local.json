@@ -14,7 +14,21 @@
       "Bash(git -C /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend status --short apps/web/next-env.d.ts)",
       "Bash(git *)",
       "Bash(find /Users/vpt/.claude/plugins/cache/claude-plugins-official/superpowers -name \"start-server.sh\" 2>/dev/null | head -5)",
-      "Bash(/Users/vpt/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/brainstorming/scripts/start-server.sh --project-dir /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend)"
+      "Bash(/Users/vpt/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/brainstorming/scripts/start-server.sh --project-dir /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend)",
+      "Bash(mkdir -p /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend/apps/web/app/api/articles/\\\\[id\\\\]/comments)",
+      "Bash(mkdir -p /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend/apps/web/app/api/articles/comments/\\\\[id\\\\]/like)",
+      "Bash(mkdir -p /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend/apps/web/app/api/articles/comments/\\\\[id\\\\]/replies/\\\\[replyId\\\\]/like)",
+      "Bash(mkdir -p /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend/apps/web/app/api/articles/comments/\\\\[id\\\\])",
+      "Bash(mkdir -p /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend/apps/web/app/api/moments/\\\\[id\\\\]/comments)",
+      "Bash(mkdir -p /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend/apps/web/app/api/moments/comments/\\\\[id\\\\]/like)",
+      "Bash(mkdir -p /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend/apps/web/app/api/moments/comments/\\\\[id\\\\]/replies/\\\\[replyId\\\\]/like)",
+      "Bash(mkdir -p /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend/apps/web/app/api/moments/comments/\\\\[id\\\\])",
+      "Bash(mkdir -p /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend/apps/web/app/api/guestbook/\\\\[id\\\\]/like)",
+      "Bash(printf '%s' 'console.log\\(\"test\"\\)' > /tmp/test-write.txt && echo \"OK\")",
+      "Bash(python3 -c ' *)",
+      "Bash(cat > *)",
+      "Bash(npx vitest *)",
+      "Bash(python3 /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend/write_comment_replies.py)"
     ]
   }
 }
