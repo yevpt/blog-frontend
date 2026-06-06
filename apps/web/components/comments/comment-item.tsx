@@ -1,5 +1,4 @@
 import type { CommentItemResp, CommentReplyResp } from "@repo/api";
-import { Button } from "@repo/ui";
 import { formatRelativeTime } from "@/lib/format-time";
 import { UserAvatar } from "@/components/common/user-avatar";
 
@@ -42,14 +41,13 @@ function ReplyItem({ reply, commentId, onReply }: ReplyItemProps) {
           {toName && <span className="mr-1 text-[11px] font-semibold text-primary">@{toName}</span>}
           {reply.content}
         </p>
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          onPress={() => onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName })}
+          onClick={() => onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName })}
           className="mt-1 cursor-pointer rounded-md px-2 py-1 text-[11px] font-medium text-[var(--fg3)] transition-colors hover:bg-primary/10 hover:text-primary"
         >
           回复
-        </Button>
+        </button>
       </div>
     </div>
   );
@@ -69,14 +67,13 @@ export function CommentItem({ comment, onReply }: CommentItemProps) {
             <span className="text-[11px] text-[var(--fg3)]">{time}</span>
           </div>
           <p className="text-[13px] leading-[1.65] text-[var(--fg2)]">{comment.content}</p>
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            onPress={() => onReply?.({ commentId: comment.id, toUsername: displayName })}
+            onClick={() => onReply?.({ commentId: comment.id, toUsername: displayName })}
             className="mt-1.5 cursor-pointer rounded-md px-2 py-1 text-[11px] font-medium text-[var(--fg3)] transition-colors hover:bg-primary/10 hover:text-primary"
           >
             回复
-          </Button>
+          </button>
           {comment.replies.length > 0 && (
             <div className="mt-3 flex flex-col gap-3 border-l-2 border-border pl-3.5">
               {comment.replies.map((reply) => (

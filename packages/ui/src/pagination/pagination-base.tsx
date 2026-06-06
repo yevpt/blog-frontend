@@ -9,7 +9,6 @@ import React, {
   useContext,
   useMemo,
 } from "react";
-import { Button } from "../button";
 
 type PaginationPage = {
   /** The type of the pagination item. */
@@ -269,16 +268,15 @@ const Trigger: FC<TriggerProps> = ({
   }
 
   return (
-    <Button
-      variant="ghost"
+    <button
       aria-label={ariaLabel || defaultAriaLabel}
-      onPress={handleClick}
-      isDisabled={isDisabled}
+      onClick={handleClick}
+      disabled={isDisabled}
       style={style}
       className={computedClassName}
     >
       {children}
-    </Button>
+    </button>
   );
 };
 
@@ -369,17 +367,16 @@ const PaginationItem = ({
   }
 
   return (
-    <Button
+    <button
       type="button"
-      variant="ghost"
-      onPress={handleClick}
+      onClick={handleClick}
       style={style}
       className={computedClassName}
       aria-current={isCurrent ? "page" : undefined}
       aria-label={ariaLabel || `Page ${value}`}
     >
       {children}
-    </Button>
+    </button>
   );
 };
 

@@ -17,15 +17,13 @@ vi.mock("@repo/ui", () => ({
   Button: ({
     children,
     variant,
-    onPress,
     ...props
   }: {
     children: ReactNode;
     variant?: string;
-    onPress?: () => void;
     [key: string]: unknown;
   }) => (
-    <button data-variant={variant} onClick={onPress} {...props}>
+    <button data-variant={variant} {...props}>
       {children}
     </button>
   ),

@@ -12,7 +12,7 @@ import { ThemeProvider } from "./providers/theme-provider";
 import { LocaleProvider } from "./providers/locale-provider";
 import { SessionProvider } from "./providers/session-provider";
 import { GlobalModals } from "./providers/global-modals";
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import "./globals.css";
 
 const SITE_TITLE = "Yevpt's Blog";
@@ -20,13 +20,6 @@ const SITE_TITLE = "Yevpt's Blog";
 export const metadata: Metadata = {
   title: SITE_TITLE,
   description: "分享编程、工具、文学的个人博客",
-};
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

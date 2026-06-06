@@ -1,7 +1,6 @@
 "use client";
 import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@repo/ui";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -70,14 +69,14 @@ export default function RegisterPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <Button
+          <button
             type="button"
             className="rounded bg-gray-100 px-3 py-2 text-sm disabled:opacity-50"
-            onPress={handleSendCode}
-            isDisabled={loading || codeSent}
+            onClick={handleSendCode}
+            disabled={loading || codeSent}
           >
             {codeSent ? "已发送" : "发验证码"}
-          </Button>
+          </button>
         </div>
         <input
           className="w-full rounded border px-3 py-2"
@@ -96,14 +95,13 @@ export default function RegisterPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <Button
-          className="w-full rounded bg-blue-600 py-2 text-white"
+        <button
+          className="w-full rounded bg-blue-600 py-2 text-white disabled:opacity-50"
           type="submit"
-          isLoading={loading}
-          loadingText="注册中..."
+          disabled={loading}
         >
-          注册
-        </Button>
+          {loading ? "注册中..." : "注册"}
+        </button>
         {error && (
           <p role="alert" className="text-sm text-red-500">
             {error}

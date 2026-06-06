@@ -128,7 +128,6 @@ describe("Home page", () => {
             comment_status: 1,
             read_count: 12,
             like_count: 3,
-            is_liked: false,
             comment_count: 4,
             is_recommended: true,
             category: { id: 7, name: "编程" },

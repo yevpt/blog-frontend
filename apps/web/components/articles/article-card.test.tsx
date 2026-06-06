@@ -53,7 +53,6 @@ const baseArticle: ArticleListItemResp = {
   comment_status: 1,
   read_count: 100,
   like_count: 20,
-  is_liked: false,
   comment_count: 5,
   is_recommended: false,
   category: { id: 1, name: "编程" },
@@ -121,19 +120,13 @@ describe("ArticleCard", () => {
     expect(title.compareDocumentPosition(category) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("点赞按钮点击后调用 onLike", async () => {
+  it("点赞按钮可本地切换 liked 状态", async () => {
     const user = userEvent.setup();
-    const onLike = vi.fn();
-    render(<ArticleCard article={baseArticle} onLike={onLike} />);
+    render(<ArticleCard article={baseArticle} />);
     const likeButton = screen.getByRole("button", { name: /喜欢/ });
 
     expect(likeButton).toHaveAttribute("aria-pressed", "false");
     await user.click(likeButton);
-    expect(onLike).toHaveBeenCalledOnce();
-  });
-
-  it("文章已点赞时按钮呈现激活状态", () => {
-    render(<ArticleCard article={{ ...baseArticle, is_liked: true }} />);
-    expect(screen.getByRole("button", { name: /喜欢/ })).toHaveAttribute("aria-pressed", "true");
+    expect(likeButton).toHaveAttribute("aria-pressed", "true");
   });
 });

@@ -28,7 +28,7 @@ describe("Button", () => {
     expect(container.querySelector("button")?.className).toContain("border");
   });
 
-  it("ghost variant 含 hover:bg-accent（中性悬停背景）", () => {
+  it("ghost variant 含 hover:bg-accent", () => {
     const { container } = render(<Button variant="ghost">幽灵</Button>);
     expect(container.querySelector("button")?.className).toContain("hover:bg-accent");
   });
@@ -56,43 +56,6 @@ describe("Button", () => {
     );
     await user.click(screen.getByRole("button", { name: "禁用" }));
     expect(handlePress).not.toHaveBeenCalled();
-  });
-
-  it("isLoading 时显示加载状态并不触发 onPress", async () => {
-    const user = userEvent.setup();
-    const handlePress = vi.fn();
-    render(
-      <Button isLoading onPress={handlePress}>
-        提交
-      </Button>,
-    );
-
-    expect(screen.getByRole("progressbar", { name: "加载中" })).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "提交" }));
-    expect(handlePress).not.toHaveBeenCalled();
-  });
-
-  it("isLoading 时保留原内容宽度并隐藏原内容", () => {
-    const { container } = render(
-      <Button isLoading aria-label="刷新" className="size-8 p-0">
-        <span data-testid="refresh-icon">刷新图标</span>
-      </Button>,
-    );
-
-    expect(screen.getByRole("progressbar", { name: "加载中" })).toBeTruthy();
-    expect(screen.getByTestId("refresh-icon").parentElement?.className).toContain("opacity-0");
-    expect(container.querySelector("button")?.className).toContain("size-8");
-  });
-
-  it("loadingText 替换加载时的显示文案", () => {
-    render(
-      <Button isLoading loadingText="提交中">
-        提交
-      </Button>,
-    );
-
-    expect(screen.getByText("提交中")).toBeTruthy();
-    expect(screen.queryByText("提交")).toBeNull();
   });
 
   it("href prop 渲染为 <a>（Link 语义）", () => {

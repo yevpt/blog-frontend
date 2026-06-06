@@ -16,13 +16,9 @@ export { createApiClient } from "./client";
 export type { ApiClientConfig } from "./client";
 export type {
   ArticleRelationResp,
-  ArticleUserResp,
   ArticleListReq,
   ArticleListItemResp,
-  ArticleLikeResp,
   ArticlePageResp,
-  ArticleDetailResp,
-  MusicItem,
 } from "./types/article";
 export type { CategoryTabItem, CategoryTabsResp } from "./types/category";
 export type {

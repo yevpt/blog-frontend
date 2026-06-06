@@ -18,7 +18,6 @@ import {
   useState,
 } from "react";
 import useEmblaCarousel, { type UseEmblaCarouselType } from "embla-carousel-react";
-import { Button } from "../button";
 import { cn } from "../lib/utils";
 
 type CarouselApi = UseEmblaCarouselType[1];
@@ -263,16 +262,15 @@ const Trigger = ({ className, children, asChild, direction, style, ...props }: T
   }
 
   return (
-    <Button
-      variant="ghost"
+    <button
       aria-label={defaultAriaLabel}
-      isDisabled={isDisabled}
+      disabled={isDisabled}
       className={computedClassName}
-      onPress={handleClick}
+      onClick={handleClick}
       {...props}
     >
       {children}
-    </Button>
+    </button>
   );
 };
 
@@ -346,15 +344,14 @@ const CarouselIndicator = ({
   }
 
   return (
-    <Button
-      variant="ghost"
+    <button
       aria-label={defaultAriaLabel}
       aria-current={isSelected ? "true" : undefined}
       className={computedClassName}
-      onPress={handleClick}
+      onClick={handleClick}
     >
       {children}
-    </Button>
+    </button>
   );
 };
 

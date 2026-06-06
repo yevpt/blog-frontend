@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useLocale } from "@repo/hooks";
-import { Button } from "@repo/ui";
 
 interface SnippetContentProps {
   content: string;
@@ -26,13 +25,12 @@ export function SnippetContent({ content }: SnippetContentProps) {
         {displayText}
       </p>
       {isLong && (
-        <Button
-          variant="ghost"
-          onPress={() => setExpanded((prev) => !prev)}
+        <button
+          onClick={() => setExpanded((prev) => !prev)}
           className="mt-1 cursor-pointer text-xs text-primary/70 transition-colors hover:text-primary"
         >
           {expanded ? t("snippet.collapse") : t("snippet.expand")}
-        </Button>
+        </button>
       )}
     </div>
   );

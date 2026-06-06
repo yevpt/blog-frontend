@@ -79,15 +79,14 @@ export function LoginView({ onSwitchToRegister, onSuccess }: LoginViewProps) {
       <div className="mb-6">
         <div className="flex items-center justify-between gap-3 mb-[5px]">
           <h2 className="text-[22px] font-extrabold tracking-tight text-foreground">欢迎回来</h2>
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            onPress={onSwitchToRegister}
-            className="inline-flex items-center cursor-pointer gap-[3px] rounded-full px-[11px] py-[5px] text-[11.5px] font-semibold text-muted-foreground bg-foreground/[0.04] border border-foreground/[0.07] transition-colors hover:text-primary hover:bg-primary/10 hover:border-primary/25 whitespace-nowrap flex-shrink-0"
+            onClick={onSwitchToRegister}
+            className="inline-flex items-center gap-[3px] rounded-full px-[11px] py-[5px] text-[11.5px] font-semibold text-muted-foreground bg-foreground/[0.04] border border-foreground/[0.07] transition-colors hover:text-primary hover:bg-primary/10 hover:border-primary/25 whitespace-nowrap flex-shrink-0"
           >
             注册
             <SvgIcon name="arrow-up-right" size={10} />
-          </Button>
+          </button>
         </div>
         <p className="text-[12.5px] text-muted-foreground">请填写以下信息进行登录</p>
       </div>
@@ -133,15 +132,14 @@ export function LoginView({ onSwitchToRegister, onSuccess }: LoginViewProps) {
                   if (!password) setPasswordError("请输入密码");
                 }}
               />
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                onPress={() => setShowPassword((v) => !v)}
+                onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? "隐藏密码" : "显示密码"}
-                className="absolute right-[10px] top-1/2 -translate-y-1/2 w-[30px] h-[30px] rounded-lg flex items-center justify-center p-0 cursor-pointer text-muted-foreground/60 transition-colors hover:bg-foreground/[0.07] hover:text-muted-foreground"
+                className="absolute right-[10px] top-1/2 -translate-y-1/2 w-[30px] h-[30px] rounded-lg flex items-center justify-center text-muted-foreground/60 transition-colors hover:bg-foreground/[0.07] hover:text-muted-foreground"
               >
                 <SvgIcon name={showPassword ? "eye-off" : "eye"} size={15} />
-              </Button>
+              </button>
             </div>
             {passwordError && (
               <p role="alert" className="mt-1.5 text-[11.5px] text-destructive/80 px-1">
@@ -151,13 +149,12 @@ export function LoginView({ onSwitchToRegister, onSuccess }: LoginViewProps) {
           </div>
 
           <div className="text-right">
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              className="text-[11.5px] text-muted-foreground/60 transition-colors cursor-pointer hover:text-primary"
+              className="text-[11.5px] text-muted-foreground/60 transition-colors hover:text-primary"
             >
               忘记密码？
-            </Button>
+            </button>
           </div>
         </div>
 
@@ -171,11 +168,16 @@ export function LoginView({ onSwitchToRegister, onSuccess }: LoginViewProps) {
           type="submit"
           variant="default"
           className="w-full mt-5 h-[46px] rounded-xl text-[14.5px] gap-1.5"
-          isLoading={loading}
-          loadingText="登录中…"
+          isDisabled={loading}
         >
-          继续
-          <SvgIcon name="chevron-right" size={16} />
+          {loading ? (
+            "登录中…"
+          ) : (
+            <>
+              继续
+              <SvgIcon name="chevron-right" size={16} />
+            </>
+          )}
         </Button>
       </form>
 

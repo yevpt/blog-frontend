@@ -32,7 +32,7 @@ export function FeaturedCarouselSlide({
   const formattedDate = formatDate(post.date, locale);
 
   return (
-    <div className="relative h-full w-full md:flex md:flex-row md:gap-4 md:py-4">
+    <div className="relative h-full w-full md:flex md:flex-row md:gap-4 md:p-4">
       {/* ── 图片：移动端绝对定位铺满，桌面端作为 flex 子项 ── */}
       <div
         data-carousel-background-drag="true"

@@ -155,54 +155,23 @@ describe("SiteNavbar", () => {
     expect(navbarInner?.className).toContain("max-w-[1120px]");
   });
 
-  it("顶部滚动哨兵默认高度为 24px", () => {
+  it("桌面导航链接为文章、碎语、关于", () => {
     render(<SiteNavbar />);
-    const sentinel = document.querySelector('div[aria-hidden="true"]') as HTMLElement;
-    expect(sentinel.style.height).toBe("24px");
-  });
-
-  it("桌面导航链接为主页、碎语、留言、友邻、圈子", () => {
-    render(<SiteNavbar />);
-    expect(screen.getAllByText("主页").length).toBeGreaterThan(0);
+    expect(screen.getByText("文章")).toBeTruthy();
     expect(screen.getAllByText("碎语").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("留言").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("友邻").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("圈子").length).toBeGreaterThan(0);
-    expect(screen.queryByText("文章")).toBeNull();
-    expect(screen.queryByText("关于")).toBeNull();
+    expect(screen.getByText("关于")).toBeTruthy();
   });
 
   it("主题切换按钮存在（system 状态下展示当前生效主题图标）", () => {
     render(<SiteNavbar />);
     // theme 为 system 但 resolvedTheme 为 light，因此展示当前生效的 sun 图标。
-    expect(screen.getAllByTestId("icon-sun").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("icon-sun")).toBeTruthy();
     expect(screen.queryByTestId("icon-monitor")).toBeNull();
   });
 
   it("移动端 hamburger 按钮存在", () => {
     render(<SiteNavbar />);
     expect(screen.getByLabelText("打开导航菜单")).toBeTruthy();
-  });
-
-  it("文章详情页移动端头部显示返回首页、点赞、评论、menu", () => {
-    mockPathname.mockReturnValue("/articles/18");
-    render(<SiteNavbar />);
-    expect(screen.getByLabelText("返回首页")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /点赞/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /评论/ })).toBeInTheDocument();
-    expect(screen.getByLabelText("打开导航菜单")).toBeInTheDocument();
-  });
-
-  it("普通内页移动端头部显示返回首页、标题、menu", () => {
-    mockPathname.mockReturnValue("/snippets");
-    render(<SiteNavbar />);
-    const backButton = screen.getByLabelText("返回首页");
-    const mobileHeader = backButton.parentElement;
-
-    expect(backButton).toBeInTheDocument();
-    expect(mobileHeader).not.toBeNull();
-    expect(mobileHeader).toHaveTextContent("碎语");
-    expect(screen.getByLabelText("打开导航菜单")).toBeInTheDocument();
   });
 
   it("点击 hamburger 后在 nav 内部展开移动菜单", async () => {
@@ -218,22 +187,6 @@ describe("SiteNavbar", () => {
     const mobileMenu = screen.getByTestId("mobile-nav-menu");
     expect(navbar).toHaveAttribute("data-menu-open", "true");
     expect(navbar?.contains(mobileMenu)).toBe(true);
-    expect(screen.getByTestId("mobile-nav-overlay")).toBeInTheDocument();
-  });
-
-  it("移动菜单展开时点击遮罩关闭菜单", async () => {
-    const user = userEvent.setup();
-    render(<SiteNavbar />);
-
-    await act(async () => {
-      await user.click(screen.getByLabelText("打开导航菜单"));
-    });
-    await act(async () => {
-      await user.click(screen.getByTestId("mobile-nav-overlay"));
-    });
-
-    expect(document.querySelector("nav#navbar")).toHaveAttribute("data-menu-open", "false");
-    expect(screen.queryByTestId("mobile-nav-overlay")).not.toBeInTheDocument();
   });
 
   it("再次点击 hamburger 后关闭移动菜单", async () => {

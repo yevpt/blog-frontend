@@ -7,6 +7,7 @@ import {
   useEffect,
   type ChangeEvent,
   type FormEvent,
+  type MouseEvent,
 } from "react";
 import { createPortal } from "react-dom";
 import { SvgIcon } from "@repo/icons";
@@ -333,7 +334,9 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
     setAvatarPreview(URL.createObjectURL(file));
   }
 
-  function handleAvatarRemove() {
+  function handleAvatarRemove(e: MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
+    e.stopPropagation();
     if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     setAvatarPreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -353,15 +356,14 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
       <div className="mb-6">
         <div className="flex items-center justify-between gap-3 mb-[5px]">
           <h2 className="text-[22px] font-extrabold tracking-tight text-foreground">创建账号</h2>
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            onPress={onSwitchToLogin}
+            onClick={onSwitchToLogin}
             className="inline-flex items-center gap-[3px] rounded-full px-[11px] py-[5px] text-[11.5px] font-semibold text-muted-foreground bg-foreground/[0.04] border border-foreground/[0.07] transition-colors hover:text-primary hover:bg-primary/10 hover:border-primary/25 whitespace-nowrap flex-shrink-0 cursor-pointer"
           >
             <SvgIcon name="chevron-left" size={9} />
             登录
-          </Button>
+          </button>
         </div>
         <p className="text-[12.5px] text-muted-foreground">填写信息完成注册</p>
       </div>
@@ -399,13 +401,10 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
               />
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                onPress={openCaptcha}
-                isDisabled={!canSendCode}
-                isLoading={loading}
-                loadingText="处理中"
+                onClick={openCaptcha}
+                disabled={!canSendCode}
                 className={cn(
                   "absolute right-[5px] top-1/2 -translate-y-1/2",
                   "px-[10px] py-[5px] rounded-lg text-[12px] font-semibold transition-colors whitespace-nowrap",
@@ -415,7 +414,7 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
                 )}
               >
                 {sendBtnLabel}
-              </Button>
+              </button>
             </div>
             {codeError && (
               <p className="mt-1.5 text-[11.5px] text-destructive/80 px-1">{codeError}</p>
@@ -434,15 +433,14 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
                 onChange={(e) => setPassword(e.target.value)}
                 onBlur={() => setPasswordTouched(true)}
               />
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                onPress={() => setShowPassword((v) => !v)}
+                onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? "隐藏密码" : "显示密码"}
-                className="absolute right-[10px] top-1/2 -translate-y-1/2 w-[30px] h-[30px] rounded-lg flex items-center justify-center p-0 text-muted-foreground/60 transition-colors hover:bg-foreground/[0.07] hover:text-muted-foreground"
+                className="absolute right-[10px] top-1/2 -translate-y-1/2 w-[30px] h-[30px] rounded-lg flex items-center justify-center text-muted-foreground/60 transition-colors hover:bg-foreground/[0.07] hover:text-muted-foreground"
               >
                 <SvgIcon name={showPassword ? "eye-off" : "eye"} size={15} />
-              </Button>
+              </button>
             </div>
             {passwordError && (
               <p className="mt-1.5 text-[11.5px] text-destructive/80 px-1">{passwordError}</p>
@@ -469,19 +467,14 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
                 )}
               </div>
               {avatarPreview && (
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  onClickCapture={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    handleAvatarRemove();
-                  }}
+                  onClick={handleAvatarRemove}
                   aria-label="删除头像"
-                  className="absolute -top-[5px] -right-[5px] w-[16px] h-[16px] rounded-full bg-destructive flex items-center justify-center p-0 shadow-sm"
+                  className="absolute -top-[5px] -right-[5px] w-[16px] h-[16px] rounded-full bg-destructive flex items-center justify-center shadow-sm"
                 >
                   <SvgIcon name="close" size={8} className="text-white" />
-                </Button>
+                </button>
               )}
             </div>
             <div>
@@ -513,8 +506,7 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
           type="submit"
           variant="default"
           className="w-full mt-5 h-[46px] rounded-xl text-[14.5px] gap-1.5"
-          isLoading={loading}
-          loadingText="创建中..."
+          isDisabled={loading}
         >
           创建账号
           <SvgIcon name="chevron-right" size={16} />
@@ -546,18 +538,17 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
               {/* 头部 */}
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h3 className="text-[15px] font-bold text-foreground">请拖动滑块完成拼图</h3>
-                <Button
+                <button
                   type="button"
                   aria-label="关闭图形验证码"
-                  variant="ghost"
-                  onPress={() => {
+                  onClick={() => {
                     setCaptchaOpen(false);
                     setCaptchaChallenge(null);
                   }}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg p-0 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
                 >
                   <SvgIcon name="close" size={14} />
-                </Button>
+                </button>
               </div>
 
               {/* 验证码统一容器（拼图 + 滑块无缝整合） */}

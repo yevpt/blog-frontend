@@ -15,6 +15,6 @@ export function shouldUseDarkTheme(stored: string | null, prefersDark: boolean):
  * base.css 中完整色板的单一来源原则。
  */
 export const THEME_CRITICAL_CSS =
-  "html{background-color:#ffffff;color-scheme:light}" +
+  "html{background-color:#f7f7f9;color-scheme:light}" +
   "html.dark{background-color:#0c0c0f;color-scheme:dark}" +
   "@media(prefers-color-scheme:dark){html:not(.light){background-color:#0c0c0f;color-scheme:dark}}";

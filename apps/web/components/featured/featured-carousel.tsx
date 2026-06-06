@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Button, Carousel } from "@repo/ui";
+import { Carousel } from "@repo/ui";
 import type { FeaturedPost } from "@/app/_mock/types";
 import { FeaturedCarouselSlide } from "./featured-carousel-slide";
 
@@ -73,14 +73,13 @@ function FeaturedCarouselDesktop({ posts }: { posts: FeaturedPost[] }) {
       {posts.length > 1 && (
         <div className="absolute right-5 top-1/2 z-[5] flex -translate-y-1/2 flex-col items-center gap-3">
           {posts.map((post, index) => (
-            <Button
+            <button
               key={post.id}
-              variant="ghost"
-              onPress={() => handleIndicatorClick(index)}
+              onClick={() => handleIndicatorClick(index)}
               data-testid="hero-progress-button"
               aria-label={`第 ${index + 1} 张，共 ${posts.length} 张`}
               aria-current={index === currentIndex ? "true" : undefined}
-              className="group flex h-5 w-5 items-center justify-center p-0"
+              className="group flex h-5 w-5 items-center justify-center"
             >
               <span
                 className={`block rounded-full transition-all duration-500 ${
@@ -91,7 +90,7 @@ function FeaturedCarouselDesktop({ posts }: { posts: FeaturedPost[] }) {
                   height: index === currentIndex ? 24 : 8,
                 }}
               />
-            </Button>
+            </button>
           ))}
         </div>
       )}
@@ -155,13 +154,12 @@ function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
     posts.length > 1 ? (
       <div className="flex items-center gap-1.5 rounded-full border border-white/15 bg-black/20 px-2.5 py-1.5 shadow-[0_8px_28px_rgba(0,0,0,0.24)] backdrop-blur-md">
         {posts.map((post, index) => (
-          <Button
+          <button
             key={post.id}
-            variant="ghost"
-            onPress={() => handleIndicatorClick(index)}
+            onClick={() => handleIndicatorClick(index)}
             aria-label={`切换至第 ${index + 1} 张`}
             aria-current={index === currentIndex ? "true" : undefined}
-            className="flex h-5 w-5 items-center justify-center rounded-full p-0"
+            className="flex h-5 w-5 items-center justify-center rounded-full"
           >
             <span
               className="block rounded-full bg-white"
@@ -174,7 +172,7 @@ function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
                   index === currentIndex ? "width 300ms ease-out, opacity 200ms ease" : "none",
               }}
             />
-          </Button>
+          </button>
         ))}
       </div>
     ) : null;

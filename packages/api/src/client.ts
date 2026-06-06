@@ -8,12 +8,7 @@ import type {
   LoginResp,
   TokenResp,
 } from "./types/auth";
-import type {
-  ArticleDetailResp,
-  ArticleLikeResp,
-  ArticleListReq,
-  ArticlePageResp,
-} from "./types/article";
+import type { ArticleListReq, ArticlePageResp } from "./types/article";
 import type { CategoryTabsResp } from "./types/category";
 import type { MomentListReq, MomentPageResp } from "./types/moment";
 import type {
@@ -81,15 +76,6 @@ export function createApiClient(config: ApiClientConfig) {
   }
 
   /**
-   * 可选鉴权请求：有 access token 就附带，没有就按公开请求处理。
-   * 适用于支持 OptionalAuth 的公开接口，例如文章列表这类“匿名可访问，登录可带个性化状态”的场景。
-   */
-  async function fetchOptionalAuth<T>(path: string, init: RequestInit): Promise<T> {
-    const accessToken = await getAccessToken();
-    return request<T>(`${baseUrl}${path}`, init, accessToken);
-  }
-
-  /**
    * 认证请求：附加 access token，遇到 401 时自动刷新并重试一次。
    * 用于所有需要登录才能访问的接口。
    */
@@ -152,20 +138,8 @@ export function createApiClient(config: ApiClientConfig) {
         if (req.category_id !== undefined) params.set("category_id", String(req.category_id));
         if (req.tag_id !== undefined) params.set("tag_id", String(req.tag_id));
         const qs = params.toString();
-        return fetchOptionalAuth<ArticlePageResp>(`/articles${qs ? `?${qs}` : ""}`, {
-          method: "GET",
-        });
+        return fetchPublic<ArticlePageResp>(`/articles${qs ? `?${qs}` : ""}`, { method: "GET" });
       },
-      /** 切换当前用户对文章的点赞状态，返回服务端最新点赞状态与数量 */
-      toggleLike: (id: number) =>
-        fetchAuthed<ArticleLikeResp>(`/articles/${id}/like`, {
-          method: "POST",
-        }),
-      /** 获取文章详情（公开接口，携带可选登录态以返回 is_liked） */
-      getDetail: (id: number) =>
-        fetchOptionalAuth<ArticleDetailResp>(`/articles/${id}`, { method: "GET" }),
-      /** 上报一次文章阅读（触发即可，不等待返回值） */
-      view: (id: number) => fetchPublic<void>(`/articles/${id}/view`, { method: "POST" }),
     },
     categories: {
       /** 查询分类 Tab 列表（含文章数量，按 seq/count 排序） */
