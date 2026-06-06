@@ -3,11 +3,11 @@ import { render, screen } from "@testing-library/react";
 import { ArticleComments } from "./article-comments";
 
 vi.mock("@/components/comments", () => ({
-  CommentSection: ({ targetId, targetType }: { targetId: number; targetType: string }) => (
+  CommentSection: ({ targetId, targetType, layout }: { targetId: number; targetType: string }) => (
     <div
       data-testid="comment-section"
       data-target-id={String(targetId)}
-      data-target-type={targetType}
+      data-target-type={targetType} data-layout={layout}
     />
   ),
 }));
@@ -27,6 +27,7 @@ describe("ArticleComments", () => {
   it("向 CommentSection 传入正确的 targetId 和 targetType", () => {
     render(<ArticleComments articleId={42} commentCount={7} />);
     const section = screen.getByTestId("comment-section");
+    expect(section.dataset.layout).toBe("inline");
     expect(section).toHaveAttribute("data-target-id", "42");
     expect(section).toHaveAttribute("data-target-type", "article");
   });

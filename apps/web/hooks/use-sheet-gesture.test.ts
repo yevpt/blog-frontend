@@ -22,14 +22,14 @@ function fire(el: HTMLElement, type: string, clientY: number) {
   const touchInit: TouchEventInit = {
     bubbles: true,
     cancelable: true,
-    touches: isEnd ? [] : [{ clientX: 0, clientY, identifier: 1, target: el } as Touch],
-    changedTouches: [{ clientX: 0, clientY, identifier: 1, target: el } as Touch],
+    touches: isEnd ? [] : [{ clientX: 0, clientY, identifier: 1, target: el } as unknown as Touch],
+    changedTouches: [{ clientX: 0, clientY, identifier: 1, target: el } as unknown as Touch],
   };
   el.dispatchEvent(new TouchEvent(type, touchInit));
 }
 
 describe("useSheetGesture", () => {
-  let onDismiss: ReturnType<typeof vi.fn>;
+  let onDismiss: () => void;
 
   beforeEach(() => {
     onDismiss = vi.fn();

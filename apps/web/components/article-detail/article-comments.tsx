@@ -15,7 +15,7 @@ export function ArticleComments({ articleId, commentCount }: ArticleCommentsProp
           评论{" "}
           <span className="ml-1 text-sm font-normal text-muted-foreground">{commentCount} 条</span>
         </h2>
-        <CommentSection targetType="article" targetId={articleId} />
+        <CommentSection targetType="article" targetId={articleId} layout="inline" />
       </div>
     </section>
   );
