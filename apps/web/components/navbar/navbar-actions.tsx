@@ -47,7 +47,7 @@ export function NavbarActions({ isGlass = false }: NavbarActionsProps) {
           <NavbarUserMenu isGlass={isGlass} />
         ) : (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onPress={() => openLoginModal()}
             className={cn(

@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { SvgIcon } from "@repo/icons";
-import { cn } from "@repo/ui";
+import { Button, cn } from "@repo/ui";
 import type { UserResp } from "@repo/api";
 import { useLoginModal } from "@/store/use-login-modal";
 import { addToast } from "@/lib/toast";
@@ -102,14 +102,15 @@ export function LoginModal() {
       >
         {/* 关闭按钮 — sticky 吸顶，遮住滚动内容 */}
         <div className="sticky top-0 z-10 flex px-8 pt-6 pb-2 bg-card">
-          <button
+          <Button
             type="button"
-            onClick={requestClose}
+            variant="ghost"
+            onPress={requestClose}
             aria-label="关闭登录弹窗"
-            className="w-9 h-9 rounded-[11px] bg-foreground/5 border border-border flex items-center justify-center text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
+            className="w-9 h-9 rounded-[11px] bg-foreground/5 border border-border flex items-center justify-center p-0 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
           >
             <SvgIcon name="chevron-left" size={16} />
-          </button>
+          </Button>
         </div>
 
         {/* 视图内容 — key 变化时 React 重新挂载触发入场动画 */}

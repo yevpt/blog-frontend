@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { SvgIcon } from "@repo/icons";
-import { cn } from "@repo/ui";
+import { Button, cn } from "@repo/ui";
 import { useArticleEngagement } from "@/hooks/use-article-engagement";
 import { NavbarLogo } from "./navbar-logo";
 import type { NavbarMobileVariant } from "./navbar-route-config";
@@ -27,9 +27,10 @@ interface NavbarMobileMenuButtonProps {
 
 function NavbarMobileMenuButton({ isGlass, menuOpen, onToggleMenu }: NavbarMobileMenuButtonProps) {
   return (
-    <button
+    <Button
       type="button"
-      onClick={onToggleMenu}
+      variant="ghost"
+      onPress={onToggleMenu}
       aria-label={menuOpen ? "关闭导航菜单" : "打开导航菜单"}
       className={cn(
         "flex h-[34px] w-[34px] cursor-pointer flex-col items-center justify-center gap-[5px] rounded-[9px] p-[9px] text-foreground transition-colors",
@@ -54,7 +55,7 @@ function NavbarMobileMenuButton({ isGlass, menuOpen, onToggleMenu }: NavbarMobil
           menuOpen && "-translate-y-[6.5px] -rotate-45",
         )}
       />
-    </button>
+    </Button>
   );
 }
 
@@ -68,20 +69,22 @@ function NavbarMobileArticleActions({ isGlass }: { isGlass: boolean }) {
 
   return (
     <>
-      <button
+      <Button
         type="button"
+        variant="ghost"
         aria-label={`点赞 ${formatCount(likeCount)}`}
-        disabled={isLiking}
-        onClick={() => void toggleLike()}
+        isDisabled={isLiking}
+        onPress={() => void toggleLike()}
         className={cn(actionButtonClass, isLiked && "text-red-500 hover:text-red-500")}
       >
         <SvgIcon name="heart" size={21} />
         <span>{formatCount(likeCount)}</span>
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
+        variant="ghost"
         aria-label={`评论 ${formatCount(commentCount)}`}
-        onClick={() => {
+        onPress={() => {
           document.getElementById("article-comments")?.scrollIntoView({
             behavior: "smooth",
             block: "start",
@@ -91,7 +94,7 @@ function NavbarMobileArticleActions({ isGlass }: { isGlass: boolean }) {
       >
         <SvgIcon name="message-circle" size={21} />
         <span>{formatCount(commentCount)}</span>
-      </button>
+      </Button>
     </>
   );
 }
@@ -116,14 +119,15 @@ export function NavbarMobileHeader({
 
   return (
     <div className="flex min-h-[52px] items-center justify-between gap-2 px-4 md:hidden">
-      <button
+      <Button
         type="button"
+        variant="ghost"
         aria-label="返回首页"
-        onClick={() => router.push("/")}
-        className="flex h-8 w-8 items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/5"
+        onPress={() => router.push("/")}
+        className="flex h-8 w-8 items-center justify-center rounded-full p-0 text-foreground transition-colors hover:bg-foreground/5"
       >
         <SvgIcon name="arrow-back" size={18} />
-      </button>
+      </Button>
 
       <div className="min-w-0 flex-1 text-center">
         {mobileVariant === "default" ? (

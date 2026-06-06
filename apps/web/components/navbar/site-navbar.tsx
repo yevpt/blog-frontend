@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { cn } from "@repo/ui";
+import { Button, cn } from "@repo/ui";
 import { NavbarLogo } from "./navbar-logo";
 import { NavbarLinks } from "./navbar-links";
 import { NavbarActions } from "./navbar-actions";
@@ -83,12 +83,13 @@ export function SiteNavbar() {
         style={{ height: `${navbarContext.desktopCapsuleThreshold}px` }}
       />
       {menuOpen && (
-        <button
+        <Button
           type="button"
+          variant="ghost"
           aria-label="关闭导航遮罩"
           data-testid="mobile-nav-overlay"
-          onClick={() => setMenuOpen(false)}
-          className="fixed inset-0 z-40 bg-background/55 backdrop-blur-sm transition-opacity md:hidden"
+          onPress={() => setMenuOpen(false)}
+          className="fixed inset-0 z-40 h-auto bg-background/55 p-0 backdrop-blur-sm transition-opacity md:hidden"
         />
       )}
       <nav

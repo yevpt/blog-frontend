@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@repo/ui";
 import { useActiveHeading } from "@/hooks/use-active-heading";
 import type { TocItem } from "@/lib/markdown";
 
@@ -24,14 +25,15 @@ export function ArticleToc({ items, variant }: ArticleTocProps) {
     <ul className="space-y-0.5 text-sm">
       {items.map((item) => (
         <li key={item.id} style={{ paddingLeft: item.level === 3 ? "12px" : "0" }}>
-          <button
-            onClick={() => handleClick(item.id)}
+          <Button
+            variant="ghost"
+            onPress={() => handleClick(item.id)}
             className={`w-full rounded px-2 py-1 text-left transition-colors hover:text-primary ${
               activeId === item.id ? "font-semibold text-primary" : "text-muted-foreground"
             }`}
           >
             {item.text}
-          </button>
+          </Button>
         </li>
       ))}
     </ul>
@@ -51,13 +53,14 @@ export function ArticleToc({ items, variant }: ArticleTocProps) {
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               目录
             </p>
-            <button
-              onClick={() => setCollapsed((v) => !v)}
+            <Button
+              variant="ghost"
+              onPress={() => setCollapsed((v) => !v)}
               aria-label={collapsed ? "展开目录" : "收起目录"}
               className="cursor-pointer rounded p-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               {collapsed ? "▶" : "▼"}
-            </button>
+            </Button>
           </div>
           {!collapsed && list}
         </nav>

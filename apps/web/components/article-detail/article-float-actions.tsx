@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button } from "@repo/ui";
 import { useArticleEngagement } from "@/hooks/use-article-engagement";
 import { MusicPlayer } from "./music-player";
 
@@ -31,10 +32,11 @@ export function ArticleFloatActions({ articleId, musicUrl, musicName }: ArticleF
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-center gap-3">
       <MusicPlayer url={musicUrl} name={musicName} />
 
-      <button
+      <Button
+        variant="ghost"
         aria-label={isLiked ? "取消点赞" : "点赞"}
-        onClick={() => void toggleLike()}
-        disabled={isLiking}
+        onPress={() => void toggleLike()}
+        isDisabled={isLiking}
         className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full shadow-md transition-colors disabled:cursor-not-allowed ${
           isLiked
             ? "bg-rose-500 text-white hover:bg-rose-600"
@@ -44,11 +46,12 @@ export function ArticleFloatActions({ articleId, musicUrl, musicName }: ArticleF
         <span aria-hidden className="text-base">
           {isLiked ? "♥" : "♡"}
         </span>
-      </button>
+      </Button>
 
-      <button
+      <Button
+        variant="ghost"
         aria-label="回到顶部"
-        onClick={scrollToTop}
+        onPress={scrollToTop}
         className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card shadow-md transition-opacity hover:bg-muted ${
           showScrollTop ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
@@ -56,7 +59,7 @@ export function ArticleFloatActions({ articleId, musicUrl, musicName }: ArticleF
         <span aria-hidden className="text-sm font-bold">
           ↑
         </span>
-      </button>
+      </Button>
     </div>
   );
 }

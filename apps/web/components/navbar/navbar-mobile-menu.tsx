@@ -46,9 +46,10 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
 
   // 登录态和未登录态共用同一主题切换行
   const themeRow = (
-    <button
+    <Button
       type="button"
-      onClick={() => setTheme(nextTheme)}
+      variant="ghost"
+      onPress={() => setTheme(nextTheme)}
       className={listRowClass}
       aria-label={`当前生效主题：${resolvedTheme}，点击切换到 ${nextTheme}`}
     >
@@ -75,7 +76,7 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
           )}
         />
       </div>
-    </button>
+    </Button>
   );
 
   return (
@@ -112,14 +113,15 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
                     </span>
                   </span>
                 </Link>
-                <button
+                <Button
                   type="button"
-                  onClick={handleLogout}
+                  variant="ghost"
+                  onPress={handleLogout}
                   aria-label="退出登录"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground/[0.28] transition-all duration-150 hover:bg-destructive/10 hover:text-destructive/70 active:scale-90 dark:text-foreground/[0.45] dark:hover:bg-destructive/15 dark:hover:text-destructive/80 cursor-pointer"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg p-0 text-foreground/[0.28] transition-all duration-150 hover:bg-destructive/10 hover:text-destructive/70 active:scale-90 dark:text-foreground/[0.45] dark:hover:bg-destructive/15 dark:hover:text-destructive/80 cursor-pointer"
                 >
                   <SvgIcon name="log-out" size={16} />
-                </button>
+                </Button>
               </div>
             ) : (
               <div className={cn("flex items-center gap-3 px-3 py-3", cardClass)}>

@@ -32,13 +32,14 @@ export function CommentInput({
       {replyTarget && (
         <div className="flex items-center gap-2 text-xs">
           <span className="font-semibold text-primary">@{replyTarget.toUsername}</span>
-          <button
+          <Button
             type="button"
-            onClick={onCancelReply}
-            className="text-[var(--fg3)] hover:text-foreground"
+            variant="ghost"
+            onPress={onCancelReply}
+            className="h-auto p-0 text-[var(--fg3)] hover:text-foreground"
           >
             取消
-          </button>
+          </Button>
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -59,8 +60,10 @@ export function CommentInput({
               isDisabled={!value.trim() || isSubmitting}
               onPress={onSubmit}
               className="h-8 rounded-full bg-primary px-[18px] text-xs font-bold text-white hover:bg-primary/85"
+              isLoading={isSubmitting}
+              loadingText="发布中..."
             >
-              {isSubmitting ? "发布中..." : "发布"}
+              发布
             </Button>
           ) : (
             <Button

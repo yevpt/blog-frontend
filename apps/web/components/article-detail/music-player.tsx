@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, type ChangeEvent } from "react";
 import { SvgIcon } from "@repo/icons";
+import { Button } from "@repo/ui";
 
 interface MusicPlayerProps {
   url?: string;
@@ -73,21 +74,23 @@ export function MusicPlayer({ url, name }: MusicPlayerProps) {
             onChange={handleSeek}
             className="mb-2 w-full accent-primary"
           />
-          <button
-            onClick={togglePlay}
+          <Button
+            variant="ghost"
+            onPress={togglePlay}
             className="flex w-full items-center justify-center gap-1 rounded-md bg-primary/10 py-1 text-xs font-semibold text-primary hover:bg-primary/20"
           >
             {playing ? "暂停" : "播放"}
-          </button>
+          </Button>
         </div>
       )}
-      <button
+      <Button
+        variant="ghost"
         aria-label={open ? "关闭音乐播放器" : "音乐播放器"}
-        onClick={() => setOpen((v) => !v)}
-        className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card shadow-md hover:bg-muted"
+        onPress={() => setOpen((v) => !v)}
+        className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border bg-card p-0 shadow-md hover:bg-muted"
       >
         <SvgIcon name="music" className="h-4 w-4 text-foreground" />
-      </button>
+      </Button>
     </div>
   );
 }

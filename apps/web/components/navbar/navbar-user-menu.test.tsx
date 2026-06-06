@@ -82,6 +82,13 @@ describe("NavbarUserMenu", () => {
     expect(screen.getByRole("button", { name: /账号菜单/ }).className).toContain("cursor-pointer");
   });
 
+  it("头像触发按钮不使用 ghost 的悬浮背景", () => {
+    render(<NavbarUserMenu />);
+    const trigger = screen.getByRole("button", { name: /账号菜单/ });
+    expect(trigger.className).not.toContain("hover:bg-accent");
+    expect(trigger.className).toContain("hover:bg-transparent");
+  });
+
   it("初始状态下拉菜单不可见", () => {
     render(<NavbarUserMenu />);
     expect(screen.queryByText("管理账号", { exact: false })).not.toBeInTheDocument();
@@ -95,6 +102,30 @@ describe("NavbarUserMenu", () => {
     expect(screen.getByText("发表碎语")).toBeInTheDocument();
     expect(screen.getByText("我的消息")).toBeInTheDocument();
     expect(screen.getByText("退出登录")).toBeInTheDocument();
+  });
+
+  it("下拉菜单内部按钮不继承 Button 默认 ghost 布局和悬浮背景", async () => {
+    const user = userEvent.setup();
+    render(<NavbarUserMenu />);
+    await user.click(screen.getByRole("button", { name: /账号菜单/ }));
+
+    const profileButton = screen.getByText("管理账号", { exact: false }).closest("button");
+    const snippetButton = screen.getByText("发表碎语").closest("button");
+    const messagesButton = screen.getByText("我的消息").closest("button");
+    const logoutButton = screen.getByText("退出登录").closest("button");
+
+    for (const button of [profileButton, snippetButton, messagesButton, logoutButton]) {
+      expect(button).toBeTruthy();
+      expect(button?.className).not.toContain("hover:bg-accent");
+      expect(button?.className).not.toContain("h-10");
+      expect(button?.className).not.toContain("px-4");
+      expect(button?.className).not.toContain("justify-center");
+    }
+
+    expect(profileButton?.className).toContain("justify-between");
+    expect(snippetButton?.className).toContain("justify-start");
+    expect(messagesButton?.className).toContain("justify-start");
+    expect(logoutButton?.className).toContain("justify-start");
   });
 
   it("下拉展开后不显示邮箱", async () => {

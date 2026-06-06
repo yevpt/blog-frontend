@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { SvgIcon, type IconName } from "@repo/icons";
-import { cn } from "@repo/ui";
+import { Button, cn } from "@repo/ui";
 
 interface OAuthProvider {
   id: string;
@@ -37,37 +37,42 @@ export function OAuthGrid({ className }: OAuthGridProps) {
   return (
     <div className={cn("flex justify-center gap-3 flex-wrap", className)}>
       {providers.map(({ id, label, icon, color, textClass }) => (
-        <button
+        <Button
           key={id}
           type="button"
-          title={label}
+          variant="ghost"
+          aria-label={label}
           style={color ? { color } : undefined}
           className={cn(
-            "w-9 h-9 rounded-lg flex items-center justify-center transition-colors hover:bg-foreground/[0.08] active:bg-foreground/[0.14] cursor-pointer",
+            "w-9 h-9 rounded-lg flex items-center justify-center p-0 transition-colors hover:bg-foreground/[0.08] active:bg-foreground/[0.14] cursor-pointer",
             textClass ?? "text-muted-foreground",
           )}
         >
-          <SvgIcon name={icon} size={22} />
-        </button>
+          <span title={label} className="inline-flex">
+            <SvgIcon name={icon} size={22} />
+          </span>
+        </Button>
       ))}
       {expanded ? (
-        <button
+        <Button
           type="button"
+          variant="ghost"
           aria-label="收起登录方式"
-          onClick={() => setExpanded(false)}
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground/40 transition-colors hover:bg-foreground/[0.08] active:bg-foreground/[0.14] cursor-pointer"
+          onPress={() => setExpanded(false)}
+          className="w-9 h-9 rounded-lg flex items-center justify-center p-0 text-muted-foreground/40 transition-colors hover:bg-foreground/[0.08] active:bg-foreground/[0.14] cursor-pointer"
         >
           <SvgIcon name="chevron-down" size={14} className="rotate-180" />
-        </button>
+        </Button>
       ) : (
-        <button
+        <Button
           type="button"
+          variant="ghost"
           aria-label="展开更多登录方式"
-          onClick={() => setExpanded(true)}
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground/40 text-[11px] font-semibold transition-colors hover:bg-foreground/[0.08] active:bg-foreground/[0.14] cursor-pointer"
+          onPress={() => setExpanded(true)}
+          className="w-9 h-9 rounded-lg flex items-center justify-center p-0 text-muted-foreground/40 text-[11px] font-semibold transition-colors hover:bg-foreground/[0.08] active:bg-foreground/[0.14] cursor-pointer"
         >
           +{EXTRA_PROVIDERS.length}
-        </button>
+        </Button>
       )}
     </div>
   );

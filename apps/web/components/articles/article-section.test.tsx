@@ -40,6 +40,21 @@ vi.mock("@repo/icons", () => ({
 }));
 
 vi.mock("@repo/ui", () => ({
+  Button: ({
+    children,
+    onPress,
+    variant,
+    ...props
+  }: {
+    children: ReactNode;
+    onPress?: () => void;
+    variant?: string;
+    [key: string]: unknown;
+  }) => (
+    <button data-variant={variant} onClick={onPress} {...props}>
+      {children}
+    </button>
+  ),
   ToastQueue: class {
     add() {}
   },
