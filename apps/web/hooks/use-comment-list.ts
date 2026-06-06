@@ -1,9 +1,20 @@
+// apps/web/hooks/use-comment-list.ts
 import { useState, useEffect, useCallback } from "react";
-import type { CommentItemResp, CommentPageResp, CommentReplyResp } from "@repo/api";
+import type { CommentItemResp, CommentPageResp } from "@repo/api";
 
 const PAGE_SIZE = 10;
 
-export function useCommentList(targetType: string, targetId: number) {
+type TargetType = "article" | "moment";
+
+function buildListUrl(targetType: TargetType, targetId: number, page: number): string {
+  const base =
+    targetType === "article"
+      ? `/api/articles/${targetId}/comments`
+      : `/api/moments/${targetId}/comments`;
+  return `${base}?page=${page}&page_size=${PAGE_SIZE}`;
+}
+
+export function useCommentList(targetType: TargetType, targetId: number) {
   const [comments, setComments] = useState<CommentItemResp[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
@@ -15,15 +26,8 @@ export function useCommentList(targetType: string, targetId: number) {
       setIsLoading(true);
       setError(null);
       try {
-        const params = new URLSearchParams({
-          target_type: targetType,
-          target_id: String(targetId),
-          page: String(pageNum),
-          page_size: String(PAGE_SIZE),
-        });
-        const res = await fetch(`/api/comments?${params.toString()}`);
+        const res = await fetch(buildListUrl(targetType, targetId, pageNum));
         if (!res.ok) throw new Error("fetch failed");
-
         const data = (await res.json()) as CommentPageResp;
         setComments((prev) => (append ? [...prev, ...data.list] : data.list));
         setPage(pageNum);
@@ -45,22 +49,18 @@ export function useCommentList(targetType: string, targetId: number) {
   }, [fetchPage]);
 
   const loadMore = useCallback(() => {
-    if (!isLoading && hasMore) {
-      void fetchPage(page + 1, true);
-    }
+    if (!isLoading && hasMore) void fetchPage(page + 1, true);
   }, [isLoading, hasMore, page, fetchPage]);
 
   const addComment = useCallback((comment: CommentItemResp) => {
     setComments((prev) => [...prev, comment]);
   }, []);
 
-  const addReply = useCallback((commentId: number, reply: CommentReplyResp) => {
+  const incrementReplyCount = useCallback((commentId: number) => {
     setComments((prev) =>
-      prev.map((comment) =>
-        comment.id === commentId ? { ...comment, replies: [...comment.replies, reply] } : comment,
-      ),
+      prev.map((c) => (c.id === commentId ? { ...c, reply_count: c.reply_count + 1 } : c)),
     );
   }, []);
 
-  return { comments, isLoading, hasMore, error, loadMore, addComment, addReply };
+  return { comments, isLoading, hasMore, error, loadMore, addComment, incrementReplyCount };
 }
