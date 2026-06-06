@@ -246,8 +246,7 @@ export function ArticleSection({
 
       <CommentModal
         open={activeComment !== null}
-        title={activeComment?.title ?? ""}
-        type={activeComment?.type ?? "文章"}
+        targetType={activeComment?.type === "moment" ? "moment" : "article"}
         targetId={activeComment?.articleId ?? 0}
         onClose={() => setActiveComment(null)}
       />

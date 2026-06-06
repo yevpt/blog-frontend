@@ -39,7 +39,7 @@ import { useSession } from "@/app/providers/session-provider";
 
 describe("CommentInput（已登录）", () => {
   beforeEach(() => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1 });
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
   });
 
   it("渲染文本框和←发送按钮", () => {
@@ -107,7 +107,7 @@ describe("CommentInput（已登录）", () => {
 
 describe("CommentInput（未登录）", () => {
   beforeEach(() => {
-    vi.mocked(useSession).mockReturnValue({ userId: null });
+    vi.mocked(useSession).mockReturnValue({ userId: null, profile: null });
   });
 
   it("未登录时显示登录提示 pill，不显示输入框", () => {

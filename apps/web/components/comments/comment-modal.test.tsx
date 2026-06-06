@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+// @vitest-environment jsdom
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
@@ -30,35 +31,55 @@ vi.mock("./comment-section", () => ({
   ),
 }));
 
+vi.mock("@/hooks/use-sheet-gesture", () => ({
+  useSheetGesture: () => ({
+    sheetStyle: {},
+    isDragging: false,
+  }),
+}));
+
 describe("CommentModal", () => {
-  it("关闭时不渲染弹窗内容", () => {
+  it("open=false 时不渲染", () => {
     render(
-      <CommentModal open={false} title="测试文章" type="技术" targetId={5} onClose={vi.fn()} />,
+      <CommentModal open={false} targetType="article" targetId={1} onClose={vi.fn()} />,
     );
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("打开时显示文章类型和标题", () => {
-    render(<CommentModal open title="测试文章" type="技术" targetId={5} onClose={vi.fn()} />);
-    expect(screen.getByRole("dialog", { name: "评论" })).toBeTruthy();
-    expect(screen.getByText("技术 · 评论")).toBeTruthy();
-    expect(screen.getByText("测试文章")).toBeTruthy();
+  it("open=true 时渲染遮罩和 dialog", () => {
+    render(
+      <CommentModal open={true} targetType="article" targetId={1} onClose={vi.fn()} />,
+    );
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.getByText("评论")).toBeTruthy();
   });
 
-  it("将正确的 targetType 和 targetId 传给 CommentSection", () => {
-    render(<CommentModal open title="测试文章" type="技术" targetId={42} onClose={vi.fn()} />);
-    const section = screen.getByTestId("comment-section");
-    expect(section.dataset.targetType).toBe("article");
-    expect(section.dataset.targetId).toBe("42");
+  it("header 只显示「评论」，不显示文章标题", () => {
+    render(
+      <CommentModal open={true} targetType="article" targetId={1} onClose={vi.fn()} />,
+    );
+    const header = screen.getByRole("banner");
+    expect(header).toBeTruthy();
+    expect(header.textContent?.trim()).toBe("评论");
   });
 
-  it("点击关闭按钮触发 onClose", async () => {
+  it("点击遮罩触发 onClose", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    render(<CommentModal open title="测试文章" type="技术" targetId={5} onClose={onClose} />);
+    const { container } = render(
+      <CommentModal open={true} targetType="article" targetId={1} onClose={onClose} />,
+    );
+    const backdrop = container.firstElementChild as HTMLElement;
+    await user.click(backdrop);
+    expect(onClose).toHaveBeenCalled();
+  });
 
-    await user.click(screen.getByLabelText("关闭评论"));
-
-    expect(onClose).toHaveBeenCalledTimes(1);
+  it("渲染 CommentSection 并传入正确 targetType/targetId", () => {
+    render(
+      <CommentModal open={true} targetType="moment" targetId={7} onClose={vi.fn()} />,
+    );
+    expect(screen.getByTestId("comment-section")).toBeTruthy();
+    expect(screen.getByTestId("comment-section").dataset.targetType).toBe("moment");
+    expect(screen.getByTestId("comment-section").dataset.targetId).toBe("7");
   });
 });
