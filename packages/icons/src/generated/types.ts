@@ -17,6 +17,7 @@ export type IconName =
   | "gitee"
   | "github"
   | "google"
+  | "heart-fill"
   | "heart"
   | "help-circle"
   | "home"

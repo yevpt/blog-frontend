@@ -1,7 +1,12 @@
+"use client";
+
+import { useCallback } from "react";
 import type { CommentItemResp, CommentReplyResp } from "@repo/api";
 import { Button } from "@repo/ui";
+import { SvgIcon } from "@repo/icons";
 import { formatRelativeTime } from "@/lib/format-time";
 import { UserAvatar } from "@/components/common/user-avatar";
+import { CommentReplies } from "./comment-replies";
 
 export interface ReplyTarget {
   commentId: number;
@@ -9,81 +14,105 @@ export interface ReplyTarget {
   toUsername: string;
 }
 
-interface CommentItemProps {
-  comment: CommentItemResp;
-  onReply?: (target: ReplyTarget) => void;
-}
+type TargetType = "article" | "moment";
 
 function getDisplayName(user: { username: string; nickname?: string } | undefined): string {
   if (!user) return "匿名";
   return user.nickname ?? user.username;
 }
 
-interface ReplyItemProps {
-  reply: CommentReplyResp;
-  commentId: number;
+interface CommentItemProps {
+  comment: CommentItemResp;
+  targetType: TargetType;
   onReply?: (target: ReplyTarget) => void;
+  onLike?: (commentId: number) => void;
+  onReplyLike?: (commentId: number, replyId: number) => void;
+  pendingReply?: CommentReplyResp | null;
 }
 
-function ReplyItem({ reply, commentId, onReply }: ReplyItemProps) {
-  const fromName = getDisplayName(reply.from_user);
-  const toName = reply.to_user ? getDisplayName(reply.to_user) : null;
-  const time = formatRelativeTime(new Date(reply.created_at));
-
-  return (
-    <div className="flex gap-2">
-      <UserAvatar src={reply.from_user?.avatar_url} name={fromName} size="sm" />
-      <div className="min-w-0 flex-1">
-        <div className="mb-1 flex items-center gap-2">
-          <span className="text-xs font-bold text-foreground">{fromName}</span>
-          <span className="text-[11px] text-[var(--fg3)]">{time}</span>
-        </div>
-        <p className="text-[13px] leading-[1.65] text-[var(--fg2)]">
-          {toName && <span className="mr-1 text-[11px] font-semibold text-primary">@{toName}</span>}
-          {reply.content}
-        </p>
-        <Button
-          type="button"
-          variant="ghost"
-          onPress={() => onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName })}
-          className="mt-1 cursor-pointer rounded-md px-2 py-1 text-[11px] font-medium text-[var(--fg3)] transition-colors hover:bg-primary/10 hover:text-primary"
-        >
-          回复
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-export function CommentItem({ comment, onReply }: CommentItemProps) {
+export function CommentItem({
+  comment,
+  targetType,
+  onReply,
+  onLike,
+  onReplyLike,
+  pendingReply,
+}: CommentItemProps) {
   const displayName = getDisplayName(comment.user);
   const time = formatRelativeTime(new Date(comment.created_at));
+
+  const handleLike = useCallback(() => {
+    onLike?.(comment.id);
+  }, [onLike, comment.id]);
+
+  const handleReply = useCallback(() => {
+    onReply?.({ commentId: comment.id, toUsername: displayName });
+  }, [onReply, comment.id, displayName]);
+
+  const handleReplyLike = useCallback(
+    (commentId: number, replyId: number) => {
+      onReplyLike?.(commentId, replyId);
+    },
+    [onReplyLike],
+  );
 
   return (
     <div className="comment-item">
       <div className="flex gap-2.5">
         <UserAvatar src={comment.user?.avatar_url} name={displayName} size="md" />
         <div className="min-w-0 flex-1">
+          {/* 用户信息行 */}
           <div className="mb-1 flex items-center gap-2">
             <span className="text-xs font-bold text-foreground">{displayName}</span>
             <span className="text-[11px] text-[var(--fg3)]">{time}</span>
           </div>
-          <p className="text-[13px] leading-[1.65] text-[var(--fg2)]">{comment.content}</p>
+
+          {/* 评论正文 + 右侧点赞区 */}
+          <div className="flex gap-2">
+            <p className="min-w-0 flex-1 text-[13px] leading-[1.65] text-[var(--fg2)]">
+              {comment.content}
+            </p>
+            {/* INS 风格点赞按钮 */}
+            <button
+              type="button"
+              onClick={handleLike}
+              aria-label={comment.is_liked ? "取消点赞" : "点赞"}
+              className="flex shrink-0 flex-col items-center gap-0.5 self-start pt-0.5"
+            >
+              <SvgIcon
+                name={comment.is_liked ? "heart-fill" : "heart"}
+                size={12}
+                className={comment.is_liked ? "text-red-500" : "text-[var(--fg3)]"}
+              />
+              {comment.like_count > 0 && (
+                <span
+                  className={`text-[10px] font-medium ${comment.is_liked ? "text-red-500" : "text-[var(--fg3)]"}`}
+                >
+                  {comment.like_count}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* 回复按钮 */}
           <Button
             type="button"
             variant="ghost"
-            onPress={() => onReply?.({ commentId: comment.id, toUsername: displayName })}
+            onPress={handleReply}
             className="mt-1.5 cursor-pointer rounded-md px-2 py-1 text-[11px] font-medium text-[var(--fg3)] transition-colors hover:bg-primary/10 hover:text-primary"
           >
             回复
           </Button>
-          {comment.replies.length > 0 && (
-            <div className="mt-3 flex flex-col gap-3 border-l-2 border-border pl-3.5">
-              {comment.replies.map((reply) => (
-                <ReplyItem key={reply.id} reply={reply} commentId={comment.id} onReply={onReply} />
-              ))}
-            </div>
-          )}
+
+          {/* 回复子列表（懒加载） */}
+          <CommentReplies
+            commentId={comment.id}
+            targetType={targetType}
+            replyCount={comment.reply_count}
+            pendingReply={pendingReply}
+            onReply={onReply ?? (() => undefined)}
+            onLike={handleReplyLike}
+          />
         </div>
       </div>
     </div>
