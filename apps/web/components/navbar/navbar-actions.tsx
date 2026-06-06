@@ -31,7 +31,7 @@ export function NavbarActions({ isGlass = false }: NavbarActionsProps) {
   const nextTheme = getOppositeTheme(resolvedTheme);
 
   return (
-    <div className="flex items-center gap-2">
+    <div data-testid="navbar-actions" className="flex items-center gap-3">
       <Button
         variant="ghost"
         onPress={() => setTheme(nextTheme)}
@@ -42,12 +42,12 @@ export function NavbarActions({ isGlass = false }: NavbarActionsProps) {
         <SvgIcon name={THEME_ICONS[resolvedTheme]} size={18} />
       </Button>
 
-      <div className="hidden md:flex items-center gap-2">
+      <div className="hidden items-center gap-3 md:flex">
         {userId != null ? (
           <NavbarUserMenu isGlass={isGlass} />
         ) : (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onPress={() => openLoginModal()}
             className={cn(

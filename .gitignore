@@ -6,5 +6,8 @@ dist
 *.tsbuildinfo
 .env.*local
 
+# IDE
+.idea/
+
 # Superpowers brainstorming artifacts
 .superpowers/
