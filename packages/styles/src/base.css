@@ -189,18 +189,28 @@ body {
 
 /* 心形点赞跳动动效，用于 ArticleCardStats 的 heart 图标。 */
 @keyframes heartbeat {
-  0%,
-  100% {
+  0% {
+    -webkit-transform: scale(1);
     transform: scale(1);
   }
 
-  14%,
-  42% {
+  14% {
+    -webkit-transform: scale(1.3);
     transform: scale(1.3);
   }
 
-  28%,
+  28% {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+
+  42% {
+    -webkit-transform: scale(1.3);
+    transform: scale(1.3);
+  }
+
   70% {
+    -webkit-transform: scale(1);
     transform: scale(1);
   }
 }

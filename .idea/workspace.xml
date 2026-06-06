@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="cce8ed9a-8b95-4e1f-808f-4589cae5fd13" name="更改" comment="feat(web): enhance NavbarUserMenu with dynamic dropdown positioning and portal rendering">
+      <change afterPath="$PROJECT_DIR$/packages/icons/svg/arrow-back.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/packages/icons/svg/arrow-forward.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/blog-frontend.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/prettier.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/web/components/articles/article-card-stats.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/components/articles/article-card-stats.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/web/components/articles/article-card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/components/articles/article-card.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/web/components/auth/login-view.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/components/auth/login-view.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/web/components/navbar/navbar-mobile-header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/components/navbar/navbar-mobile-header.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/web/next-env.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/next-env.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/icons/src/generated/sprite.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/icons/src/generated/sprite.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/icons/src/generated/types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/packages/icons/src/generated/types.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/icons/svg/heart.svg" beforeDir="false" afterPath="$PROJECT_DIR$/packages/icons/svg/heart.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/icons/svg/message-circle.svg" beforeDir="false" afterPath="$PROJECT_DIR$/packages/icons/svg/message-circle.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/styles/src/base.css" beforeDir="false" afterPath="$PROJECT_DIR$/packages/styles/src/base.css" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager">
+    <option name="groupingKeys">
+      <option value="directory" />
+      <option value="repository" />
+    </option>
+  </component>
+  <component name="CopilotChats">
+    <option name="panelChat">
+      <chat>
+        <option name="activeSessionId" value="4c3bf0c6-228c-4740-99d3-1eea0085c8f3" />
+        <option name="sessions">
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="e6746e2f-5387-492a-923e-0e25cdaf6ed8" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="auto" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="b22b1149-1f63-4491-9400-e2de390082ee" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="auto" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+          <session>
+            <option name="chatType" value="PANEL" />
+            <option name="id" value="4c3bf0c6-228c-4740-99d3-1eea0085c8f3" />
+            <option name="modeId" value="Agent" />
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="auto" />
+            <option name="targetType" value="LOCAL" />
+          </session>
+        </option>
+        <option name="type" value="PANEL" />
+      </chat>
+    </option>
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_/Users/vpt/Desktop/blog-monorepo" value="3EANwHRhgibE1RRGRW59yN9iDZk" />
+      <entry key="_/Users/vpt/SynologyDrive/Codes/Blog/blog-frontend" value="3EaMEbsQPhWPEVEQBSClB9nrqnY" />
+      <entry key="_/Volumes/External/SynologyDrive/Codes/Blog/blog-frontend" value="3EQLgsVT8uhMVVmSti1Xkevajcw" />
+    </persistenceIdMap>
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="535" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="codex-theme-cookie" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;yevpt&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;git@github.com:yevpt/blog-frontend.git&quot;,
+    &quot;accountId&quot;: &quot;0ba93587-2378-40f0-8c6a-b7c4c67c9eb6&quot;
+  }
+}</component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="PackageJsonUpdateNotifier">
+    <dismissed value="$PROJECT_DIR$/apps/admin/package.json" />
+    <dismissed value="$PROJECT_DIR$/apps/web/package.json" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3EANwHRhgibE1RRGRW59yN9iDZk" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+    <option name="showMembers" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Git.Working.Tree.Tab.closed.by.user": "closed",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "main",
+    "javascript.preferred.runtime.type.id": "node",
+    "last_opened_file_path": "/Volumes/External/SynologyDrive/Codes/Blog/blog-frontend/packages/icons/svg",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.standard": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.standard": "",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "npm.admin > build.executor": "Run",
+    "npm.admin > dev.executor": "Run",
+    "npm.admin > preview.executor": "Run",
+    "npm.icons > build.executor": "Run",
+    "npm.lint.executor": "Run",
+    "npm.prepare.executor": "Run",
+    "npm.test.executor": "Run",
+    "npm.test:run.executor": "Run",
+    "npm.web > build.executor": "Run",
+    "npm.web > dev.executor": "Run",
+    "npm.web > start.executor": "Run",
+    "prettierjs.PrettierConfiguration.Package": "/Volumes/External/SynologyDrive/Codes/Blog/blog-frontend/node_modules/prettier",
+    "settings.editor.selected.configurable": "ml.llm.LLMThirdPartyAiProvidersConfigurable",
+    "ts.external.directory.path": "/Volumes/External/SynologyDrive/Codes/Blog/blog-frontend/node_modules/typescript/lib",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/packages/icons/svg" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/packages/ui/src" />
+    </key>
+  </component>
+  <component name="RunManager" selected="npm.icons &gt; build">
+    <configuration name="icons &gt; build" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/packages/icons/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="build" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="web &gt; build" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/apps/web/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="build" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="web &gt; dev" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/apps/web/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="web &gt; start" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/apps/web/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="start" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="npm.icons &gt; build" />
+        <item itemvalue="npm.web &gt; dev" />
+        <item itemvalue="npm.web &gt; start" />
+        <item itemvalue="npm.web &gt; build" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-3bd3a6803838-JavaScript-WS-261.22158.274" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="默认任务">
+      <changelist id="cce8ed9a-8b95-4e1f-808f-4589cae5fd13" name="更改" comment="" />
+      <created>1779617650371</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1779617650371</updated>
+      <workItem from="1779617651386" duration="2407000" />
+      <workItem from="1779784672865" duration="2605000" />
+      <workItem from="1779944743802" duration="17597000" />
+      <workItem from="1780105961693" duration="13291000" />
+      <workItem from="1780159531464" duration="12707000" />
+      <workItem from="1780230232968" duration="1000" />
+      <workItem from="1780412118116" duration="961000" />
+      <workItem from="1780462507809" duration="28298000" />
+      <workItem from="1780578741844" duration="35598000" />
+      <workItem from="1780735332951" duration="9000" />
+      <workItem from="1780735345680" duration="15000" />
+      <workItem from="1780735365367" duration="7000" />
+      <workItem from="1780735378278" duration="1000" />
+      <workItem from="1780735451954" duration="2287000" />
+    </task>
+    <task id="LOCAL-00001" summary="chore: update package name and configure Volta for Node.js version">
+      <option name="closed" value="true" />
+      <created>1780104393168</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1780104393168</updated>
+    </task>
+    <task id="LOCAL-00002" summary="feat(web): 在布局中新增页脚组件&#10;&#10;- 从 @repo/ui 引入 SiteFooter 组件，增强页面结构&#10;- 确保页脚在主内容下方渲染，保持一致的布局风格">
+      <option name="closed" value="true" />
+      <created>1780249070250</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1780249070250</updated>
+    </task>
+    <task id="LOCAL-00003" summary="feat(web): 优化主题管理与搜索框组件&#10;&#10;- 在布局中引入主题初始化脚本和关键样式，防止 FOUC 问题&#10;- 更新 ThemeProvider 逻辑，从 localStorage 读取用户主题偏好&#10;- 将 Input 组件替换为 SearchField，提升搜索框功能&#10;- 为 ThemeProvider 添加单元测试，确保主题状态正确">
+      <option name="closed" value="true" />
+      <created>1780250198243</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1780250198243</updated>
+    </task>
+    <task id="LOCAL-00004" summary="feat(web): 新增 token 管理代理逻辑与更新相关文档&#10;&#10;- 在 apps/web 中新增 proxy.ts 文件，处理 access token 和 refresh token 的管理&#10;- 更新 .cursorrules 和 CLAUDE.md 文档，修正 token 管理相关描述&#10;- 更新 next-env.d.ts 引入路径，确保类型定义正确&#10;- 修改 FeaturedCarouselSlide 组件，支持首屏 LCP 候选的 eager 预加载&#10;- 更新 FeaturedCarousel 组件，传递 isLcpCandidate 属性以优化加载策略">
+      <option name="closed" value="true" />
+      <created>1780250451944</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1780250451944</updated>
+    </task>
+    <task id="LOCAL-00005" summary="feat(web): 新增 token 管理代理逻辑&#10;&#10;- 在 apps/web 中新增 proxy.ts 文件，处理 access token 和 refresh token 的管理&#10;- 实现 JWT 解码与有效性检查，支持自动刷新 token&#10;- 配置匹配器，仅在需要保护的路径上触发代理逻辑">
+      <option name="closed" value="true" />
+      <created>1780250581640</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1780250581640</updated>
+    </task>
+    <task id="LOCAL-00006" summary="feat(web): 提取 SVG 属性并保留外层描边渲染属性">
+      <option name="closed" value="true" />
+      <created>1780293390134</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1780293390134</updated>
+    </task>
+    <task id="LOCAL-00007" summary="feat(ui): 新增 TabsPanels 组件并优化 Tabs 相关逻辑&#10;&#10;- 在 Tabs 组件中引入 TabsPanels 以支持面板动画&#10;- 更新 TabsList 和 TabsItem 组件样式，支持不同变体&#10;- 修改 SearchField 组件样式，使用 Group 组件包裹以提升布局&#10;- 新增 Prettier 和 ESLint 配置文件，统一代码风格&#10;- 更新 article-list-header 组件，调整 props 名称以符合规范">
+      <option name="closed" value="true" />
+      <created>1780306920893</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1780306920893</updated>
+    </task>
+    <task id="LOCAL-00008" summary="feat(theme): 更新主题 Cookie 策略，设置 6 小时过期并清除系统模式下的 Cookie">
+      <option name="closed" value="true" />
+      <created>1780395464997</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1780395464997</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="main" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="1" />
+    <MESSAGE value="chore: update package name and configure Volta for Node.js version" />
+    <MESSAGE value="feat(web): 在布局中新增页脚组件&#10;&#10;- 从 @repo/ui 引入 SiteFooter 组件，增强页面结构&#10;- 确保页脚在主内容下方渲染，保持一致的布局风格" />
+    <MESSAGE value="feat(web): 优化主题管理与搜索框组件&#10;&#10;- 在布局中引入主题初始化脚本和关键样式，防止 FOUC 问题&#10;- 更新 ThemeProvider 逻辑，从 localStorage 读取用户主题偏好&#10;- 将 Input 组件替换为 SearchField，提升搜索框功能&#10;- 为 ThemeProvider 添加单元测试，确保主题状态正确" />
+    <MESSAGE value="feat(web): 新增 token 管理代理逻辑与更新相关文档&#10;&#10;- 在 apps/web 中新增 proxy.ts 文件，处理 access token 和 refresh token 的管理&#10;- 更新 .cursorrules 和 CLAUDE.md 文档，修正 token 管理相关描述&#10;- 更新 next-env.d.ts 引入路径，确保类型定义正确&#10;- 修改 FeaturedCarouselSlide 组件，支持首屏 LCP 候选的 eager 预加载&#10;- 更新 FeaturedCarousel 组件，传递 isLcpCandidate 属性以优化加载策略" />
+    <MESSAGE value="feat(web): 新增 token 管理代理逻辑&#10;&#10;- 在 apps/web 中新增 proxy.ts 文件，处理 access token 和 refresh token 的管理&#10;- 实现 JWT 解码与有效性检查，支持自动刷新 token&#10;- 配置匹配器，仅在需要保护的路径上触发代理逻辑" />
+    <MESSAGE value="feat(web): 提取 SVG 属性并保留外层描边渲染属性" />
+    <MESSAGE value="feat(ui): 新增 TabsPanels 组件并优化 Tabs 相关逻辑&#10;&#10;- 在 Tabs 组件中引入 TabsPanels 以支持面板动画&#10;- 更新 TabsList 和 TabsItem 组件样式，支持不同变体&#10;- 修改 SearchField 组件样式，使用 Group 组件包裹以提升布局&#10;- 新增 Prettier 和 ESLint 配置文件，统一代码风格&#10;- 更新 article-list-header 组件，调整 props 名称以符合规范" />
+    <MESSAGE value="feat(theme): 更新主题 Cookie 策略，设置 6 小时过期并清除系统模式下的 Cookie" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat(theme): 更新主题 Cookie 策略，设置 6 小时过期并清除系统模式下的 Cookie" />
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
+  </component>
+</project>

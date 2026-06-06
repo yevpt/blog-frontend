@@ -58,11 +58,13 @@ function NavbarMobileMenuButton({ isGlass, menuOpen, onToggleMenu }: NavbarMobil
   );
 }
 
-function NavbarMobileArticleActions() {
+function NavbarMobileArticleActions({ isGlass }: { isGlass: boolean }) {
   const { likeCount, commentCount, isLiked, isLiking, toggleLike } = useArticleEngagement();
 
-  const actionButtonClass =
-    "flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground/5";
+  const actionButtonClass = cn(
+    "flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors hover:bg-foreground/5",
+    isGlass ? "text-black/54 dark:text-[var(--fg3)]" : "text-foreground dark:text-foreground",
+  );
 
   return (
     <>
@@ -71,9 +73,9 @@ function NavbarMobileArticleActions() {
         aria-label={`点赞 ${formatCount(likeCount)}`}
         disabled={isLiking}
         onClick={() => void toggleLike()}
-        className={cn(actionButtonClass, isLiked && "text-primary")}
+        className={cn(actionButtonClass, isLiked && "text-red-500 hover:text-red-500")}
       >
-        <SvgIcon name="heart" size={16} />
+        <SvgIcon name="heart" size={21} />
         <span>{formatCount(likeCount)}</span>
       </button>
       <button
@@ -87,7 +89,7 @@ function NavbarMobileArticleActions() {
         }}
         className={actionButtonClass}
       >
-        <SvgIcon name="message-circle" size={16} />
+        <SvgIcon name="message-circle" size={21} />
         <span>{formatCount(commentCount)}</span>
       </button>
     </>
@@ -120,7 +122,7 @@ export function NavbarMobileHeader({
         onClick={() => router.push("/")}
         className="flex h-8 w-8 items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/5"
       >
-        <SvgIcon name="chevron-left" size={18} />
+        <SvgIcon name="arrow-back" size={18} />
       </button>
 
       <div className="min-w-0 flex-1 text-center">
@@ -130,7 +132,7 @@ export function NavbarMobileHeader({
       </div>
 
       <div className="flex items-center gap-1">
-        {mobileVariant === "article" ? <NavbarMobileArticleActions /> : null}
+        {mobileVariant === "article" ? <NavbarMobileArticleActions isGlass={isGlass} /> : null}
         <NavbarMobileMenuButton isGlass={isGlass} menuOpen={menuOpen} onToggleMenu={onToggleMenu} />
       </div>
     </div>

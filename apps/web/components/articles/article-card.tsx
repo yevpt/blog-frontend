@@ -50,7 +50,7 @@ export function ArticleCard({
         )}
 
         <div className="flex flex-1 flex-col px-0 py-3 pb-5 md:p-4">
-          <h3 className="mb-2 text-base font-bold leading-[1.45] tracking-[-0.02em] text-foreground line-clamp-2">
+          <h3 className="mb-2 text-lg font-bold leading-[1.45] tracking-[-0.02em] text-foreground line-clamp-2">
             <Link
               href={href}
               className="hover:text-muted-foreground transition-colors duration-200"
@@ -60,7 +60,7 @@ export function ArticleCard({
           </h3>
 
           {/* Date + Category */}
-          <div className="mb-3 flex items-center gap-2.5 text-xs text-muted-foreground">
+          <div className="mb-3 flex items-center gap-2.5 text-sm text-muted-foreground">
             <time dateTime={article.created_at}>{formattedDate}</time>
             {article.category && (
               <span className="flex items-center gap-1.5">
@@ -73,7 +73,7 @@ export function ArticleCard({
           </div>
 
           {article.short_content && (
-            <p className="mb-3.5 text-[13px] leading-[1.72] text-[var(--fg2)] line-clamp-3">
+            <p className="mb-3.5 text-sm leading-[1.72] text-[var(--fg2)] line-clamp-3">
               {article.short_content}
             </p>
           )}

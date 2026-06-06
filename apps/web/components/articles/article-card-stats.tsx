@@ -44,11 +44,11 @@ export function ArticleCardStats({
           onLike();
         }}
         className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 font-medium transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 ${
-          liked ? "text-red-500 hover:text-red-500" : ""
+          liked ? "text-red-500 hover:text-red-500" : "text-black/54 dark:text-[var(--fg3)]"
         }`}
       >
-        <span className="inline-flex animate-[heartbeat_1.5s_ease-in-out_infinite]">
-          <SvgIcon name="heart" size={14} />
+        <span className="inline-flex animate-[heartbeat_1.3s_ease-in-out_infinite]">
+          <SvgIcon name="heart" size={21} />
         </span>
         <span>{formatCount(likes)}</span>
       </button>
@@ -61,9 +61,9 @@ export function ArticleCardStats({
           event.stopPropagation();
           onComment();
         }}
-        className="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 font-medium transition-colors hover:bg-primary/10 hover:text-primary"
+        className="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 font-medium transition-colors hover:bg-primary/10 hover:text-primary text-black/54 dark:text-[var(--fg3)]"
       >
-        <SvgIcon name="message-circle" size={14} />
+        <SvgIcon name="message-circle" size={21} />
         <span>{formatCount(comments)}</span>
       </button>
     </div>
