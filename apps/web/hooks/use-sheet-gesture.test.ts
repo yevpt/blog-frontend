@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-/* global document, window, DOMRect, HTMLElement, TouchEventInit, Touch, TouchEvent */
+/* global document, window, Document, DOMRect, HTMLElement, MouseEvent, TouchEventInit, Touch, TouchEvent */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useSheetGesture } from "./use-sheet-gesture";
@@ -39,6 +39,17 @@ function fire(el: HTMLElement, type: string, clientY: number) {
     changedTouches: [{ clientX: 0, clientY, identifier: 1, target: el } as unknown as Touch],
   };
   el.dispatchEvent(new TouchEvent(type, touchInit));
+}
+
+function fireMouse(el: Document | HTMLElement, type: string, clientY: number) {
+  el.dispatchEvent(
+    new MouseEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      button: 0,
+      clientY,
+    }),
+  );
 }
 
 describe("useSheetGesture", () => {
@@ -184,6 +195,31 @@ describe("useSheetGesture", () => {
     expect(result.current.isExpanded).toBe(true);
     expect(result.current.expandOffset).toBe(0);
     expect(result.current.sheetStyle.transform).toBe("translateY(0px)");
+    unmount();
+    cleanup(sheet, scroll);
+  });
+
+  it("PC 窄屏鼠标从顶部上拖时也能展开", async () => {
+    const { sheet, scroll } = makeEls();
+    const { result, unmount } = renderHook(() =>
+      useSheetGesture({ current: sheet } as never, { current: scroll } as never, { onDismiss }),
+    );
+
+    act(() => {
+      fireMouse(sheet, "mousedown", 80);
+      fireMouse(document, "mousemove", 0);
+    });
+
+    expect(result.current.isDragging).toBe(true);
+    expect(result.current.expandOffset).toBe(80);
+
+    await act(async () => {
+      fireMouse(sheet, "mouseup", 0);
+    });
+
+    expect(result.current.isDragging).toBe(false);
+    expect(result.current.isExpanded).toBe(true);
+    expect(result.current.expandOffset).toBe(0);
     unmount();
     cleanup(sheet, scroll);
   });

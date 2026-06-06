@@ -1,5 +1,5 @@
 // apps/web/hooks/use-sheet-gesture.ts
-/* global HTMLElement, TouchEvent, window */
+/* global document, HTMLElement, MouseEvent, TouchEvent, window */
 "use client";
 
 /**
@@ -105,45 +105,42 @@ export function useSheetGesture(
       _setExpandOffset(val);
     }
 
-    // ─── Phase 1: touchstart ─────────────────────────────────────────────────
+    // ─── Phase 1: gesture start ──────────────────────────────────────────────
     // 判断手势起点是否在 handle/header 区域（scrollRef 上方）。
     // 使用 scrollRef.getBoundingClientRect().top 作为分界线：
-    //   touch.clientY < scrollRect.top  → header 手势（handle + header）
-    //   touch.clientY >= scrollRect.top → 滚动区 or 输入区
-    function onTouchStart(e: TouchEvent) {
-      const touch = e.touches[0];
-      if (!touch) return;
+    //   clientY < scrollRect.top  → header 手势（handle + header）
+    //   clientY >= scrollRect.top → 滚动区 or 输入区
+    function startGesture(clientY: number) {
       const scrollRect = scroll!.getBoundingClientRect();
       const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
       gestureRef.current = {
-        startY: touch.clientY,
+        startY: clientY,
         startScrollTop: scroll!.scrollTop,
         maxExpandOffset: Math.max(viewportHeight - sheet!.offsetHeight, 0),
         mode: "undecided",
-        isHeaderGesture: touch.clientY < scrollRect.top,
+        isHeaderGesture: clientY < scrollRect.top,
         velocitySamples: [],
-        lastY: touch.clientY,
+        lastY: clientY,
       };
       setExpandOffset(0);
     }
 
-    // ─── Phase 2: touchmove ──────────────────────────────────────────────────
-    function onTouchMove(e: TouchEvent) {
+    // ─── Phase 2: gesture move ───────────────────────────────────────────────
+    function moveGesture(clientY: number, preventDefault: () => void) {
       const state = gestureRef.current;
-      const touch = e.touches[0];
-      if (!state || !touch) return;
+      if (!state) return;
 
-      const deltaY = touch.clientY - state.startY;
+      const deltaY = clientY - state.startY;
       const now = Date.now();
 
       // 速度采样：100ms 滑动窗口
-      state.velocitySamples.push({ y: touch.clientY, t: now });
+      state.velocitySamples.push({ y: clientY, t: now });
       state.velocitySamples = state.velocitySamples.filter((s) => now - s.t <= 100);
 
       // [防御2] undecided 阶段即刻 preventDefault，防止浏览器提前决定滚动方向
       if (state.mode === "undecided") {
         if (state.isHeaderGesture || (state.startScrollTop <= 1 && deltaY > 0)) {
-          e.preventDefault();
+          preventDefault();
         }
       }
 
@@ -163,7 +160,7 @@ export function useSheetGesture(
 
       // ── drag 模式：translateY 跟手 ──────────────────────────────────────────
       if (state.mode === "drag") {
-        e.preventDefault();
+        preventDefault();
         if (deltaY >= 0) {
           // 向下拖动：正 translateY（dismiss / collapse 方向）
           setExpandOffset(0);
@@ -174,19 +171,19 @@ export function useSheetGesture(
           setTranslateY(0);
           setExpandOffset(isExpandedRef.current ? 0 : nextOffset);
         }
-        state.lastY = touch.clientY;
+        state.lastY = clientY;
         return;
       }
 
       // ── scroll 模式：到顶后向下时给 sheet 轻微橡皮筋 ─────────────────────
       if (state.mode === "scroll") {
         const currentScrollTop = scroll!.scrollTop;
-        const movingDown = touch.clientY > state.lastY;
+        const movingDown = clientY > state.lastY;
         if (currentScrollTop <= 0 && movingDown) {
           if (state.rubberBandStartY === undefined) {
-            state.rubberBandStartY = touch.clientY;
+            state.rubberBandStartY = clientY;
           }
-          const rubberDelta = Math.max(touch.clientY - state.rubberBandStartY, 0);
+          const rubberDelta = Math.max(clientY - state.rubberBandStartY, 0);
           setExpandOffset(0);
           setTranslateY(Math.min(rubberDelta * 0.25, 40));
         } else {
@@ -196,11 +193,11 @@ export function useSheetGesture(
         }
       }
 
-      state.lastY = touch.clientY;
+      state.lastY = clientY;
     }
 
-    // ─── Phase 3: touchend ───────────────────────────────────────────────────
-    function onTouchEnd() {
+    // ─── Phase 3: gesture end ────────────────────────────────────────────────
+    function endGesture() {
       const state = gestureRef.current;
       gestureRef.current = null;
       setIsDragging(false);
@@ -262,16 +259,47 @@ export function useSheetGesture(
       }
     }
 
+    function onTouchStart(e: TouchEvent) {
+      const touch = e.touches[0];
+      if (!touch) return;
+      startGesture(touch.clientY);
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      const touch = e.touches[0];
+      if (!touch) return;
+      moveGesture(touch.clientY, () => e.preventDefault());
+    }
+
+    function onMouseDown(e: MouseEvent) {
+      if (e.button !== 0) return;
+      startGesture(e.clientY);
+    }
+
+    function onMouseMove(e: MouseEvent) {
+      moveGesture(e.clientY, () => e.preventDefault());
+    }
+
+    function onMouseUp() {
+      endGesture();
+    }
+
     sheet.addEventListener("touchstart", onTouchStart, { passive: true });
     sheet.addEventListener("touchmove", onTouchMove, { passive: false });
-    sheet.addEventListener("touchend", onTouchEnd, { passive: true });
-    sheet.addEventListener("touchcancel", onTouchEnd, { passive: true });
+    sheet.addEventListener("touchend", endGesture, { passive: true });
+    sheet.addEventListener("touchcancel", endGesture, { passive: true });
+    sheet.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
 
     return () => {
       sheet.removeEventListener("touchstart", onTouchStart);
       sheet.removeEventListener("touchmove", onTouchMove);
-      sheet.removeEventListener("touchend", onTouchEnd);
-      sheet.removeEventListener("touchcancel", onTouchEnd);
+      sheet.removeEventListener("touchend", endGesture);
+      sheet.removeEventListener("touchcancel", endGesture);
+      sheet.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
       scroll.style.overscrollBehaviorY = "";
     };
   }, [sheetRef, scrollRef, snapThreshold, velocityThreshold, minDisplacement]);
