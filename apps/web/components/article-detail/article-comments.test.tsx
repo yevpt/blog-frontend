@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { ArticleComments } from "./article-comments";
 
 vi.mock("@/components/comments", () => ({
-  CommentSection: ({ targetId, targetType, layout }: { targetId: number; targetType: string }) => (
+  CommentSection: ({ targetId, targetType, layout }: { targetId: number; targetType: string; layout?: string }) => (
     <div
       data-testid="comment-section"
       data-target-id={String(targetId)}
