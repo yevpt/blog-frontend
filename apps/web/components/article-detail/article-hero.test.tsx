@@ -30,10 +30,10 @@ describe("ArticleHero", () => {
     expect(screen.getByRole("heading", { name: "Rust Web 框架" })).toBeInTheDocument();
   });
 
-  it("显示阅读数和点赞数", () => {
+  it("显示阅读数（点赞/评论已下放到浮动操作区）", () => {
     render(<ArticleHero article={base} />);
     expect(screen.getByText(/1,234/)).toBeInTheDocument();
-    expect(screen.getByText(/88/)).toBeInTheDocument();
+    expect(screen.queryByText(/88/)).not.toBeInTheDocument();
   });
 
   it("无封面图时不渲染 img", () => {
