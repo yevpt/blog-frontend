@@ -24,6 +24,24 @@ vi.mock("@repo/ui", () => ({
       {children}
     </button>
   ),
+  Modal: ({
+    isOpen,
+    children,
+    onOpenChange,
+    "aria-label": ariaLabel,
+  }: {
+    isOpen?: boolean;
+    children: React.ReactNode | ((opts: { close: () => void }) => React.ReactNode);
+    onOpenChange?: (open: boolean) => void;
+    "aria-label"?: string;
+  }) =>
+    isOpen ? (
+      <div role="dialog" aria-label={ariaLabel}>
+        {typeof children === "function"
+          ? children({ close: () => onOpenChange?.(false) })
+          : children}
+      </div>
+    ) : null,
 }));
 vi.mock("@/app/providers/session-provider", () => ({
   useSession: () => ({ userId: 1 }),
@@ -40,6 +58,9 @@ vi.mock("./comment-item", () => ({
       {comment.content}
     </div>
   ),
+}));
+vi.mock("./comment-skeleton", () => ({
+  CommentListSkeleton: () => <div data-testid="comment-list-skeleton" />,
 }));
 
 function makeComment(id: number, overrides?: Partial<CommentItemResp>): CommentItemResp {
@@ -99,6 +120,12 @@ describe("CommentSection", () => {
     } as Response);
     render(<CommentSection targetType="article" targetId={1} />);
     await waitFor(() => expect(screen.getByText(/暂无评论/)).toBeTruthy());
+  });
+
+  it("加载中时显示骨架屏", () => {
+    vi.mocked(global.fetch).mockImplementation(() => new Promise(() => {}));
+    render(<CommentSection targetType="article" targetId={1} />);
+    expect(screen.getByTestId("comment-list-skeleton")).toBeTruthy();
   });
 
   it("hasMore 时显示「查看更多评论」按钮", async () => {

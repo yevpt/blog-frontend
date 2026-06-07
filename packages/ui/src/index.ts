@@ -17,6 +17,7 @@ export {
   type TabsVariant,
 } from "./tabs";
 export { Input, type InputProps, Label, HintText } from "./input";
+export { Modal, type ModalPlacement, type ModalProps, type ModalSize } from "./modal/modal";
 export { SearchField, type SearchFieldProps } from "./search-field";
 export {
   TagGroup,

@@ -22,30 +22,34 @@ export function useCommentList(targetType: TargetType, targetId: number) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchPage = useCallback(
-    async (pageNum: number, append: boolean) => {
+    async (pageNum: number, append: boolean, signal?: AbortSignal) => {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetch(buildListUrl(targetType, targetId, pageNum));
+        const res = await fetch(buildListUrl(targetType, targetId, pageNum), { signal });
         if (!res.ok) throw new Error("fetch failed");
         const data = (await res.json()) as CommentPageResp;
+        if (signal?.aborted) return;
         setComments((prev) => (append ? [...prev, ...data.list] : data.list));
         setPage(pageNum);
         setHasMore(pageNum < data.pages);
-      } catch {
+      } catch (err) {
+        if ((err as { name?: string }).name === "AbortError") return;
         setError("加载评论失败，请稍后重试");
       } finally {
-        setIsLoading(false);
+        if (!signal?.aborted) setIsLoading(false);
       }
     },
     [targetType, targetId],
   );
 
   useEffect(() => {
+    const controller = new AbortController();
     setComments([]);
     setPage(1);
     setHasMore(false);
-    void fetchPage(1, false);
+    void fetchPage(1, false, controller.signal);
+    return () => controller.abort();
   }, [fetchPage]);
 
   const loadMore = useCallback(() => {

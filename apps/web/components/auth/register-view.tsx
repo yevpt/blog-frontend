@@ -8,9 +8,8 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
-import { createPortal } from "react-dom";
 import { SvgIcon } from "@repo/icons";
-import { Button, cn } from "@repo/ui";
+import { Button, Modal, cn } from "@repo/ui";
 import { OAuthGrid } from "./oauth-grid";
 import { addToast } from "@/lib/toast";
 
@@ -531,18 +530,23 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
       {/* OAuth 图标 */}
       <OAuthGrid />
 
-      {/* 图形验证码弹层 — 挂载到 document.body 以脱离父级 stacking context */}
-      {captchaOpen &&
-        captchaChallenge &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <div className="fixed inset-0 z-[520] flex items-center justify-center bg-black/45 px-4 backdrop-blur-md">
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-label="图形验证码"
-              className="w-full max-w-[360px] rounded-2xl border border-border bg-card p-5 shadow-2xl"
-            >
+      {/* 图形验证码弹层 */}
+      {captchaChallenge && (
+        <Modal
+          isOpen={captchaOpen}
+          onOpenChange={(open) => {
+            setCaptchaOpen(open);
+            if (!open) setCaptchaChallenge(null);
+          }}
+          isDismissable
+          aria-label="图形验证码"
+          size="sm"
+          overlayClassName="z-[520] bg-black/45 backdrop-blur-md"
+          modalClassName="max-w-[360px]"
+          dialogClassName="p-5"
+        >
+          {() => (
+            <>
               {/* 头部 */}
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h3 className="text-[15px] font-bold text-foreground">请拖动滑块完成拼图</h3>
@@ -606,10 +610,10 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
                   />
                 </div>
               </div>
-            </div>
-          </div>,
-          document.body,
-        )}
+            </>
+          )}
+        </Modal>
+      )}
     </div>
   );
 }

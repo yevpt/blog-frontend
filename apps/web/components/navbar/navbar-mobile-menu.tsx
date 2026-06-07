@@ -44,13 +44,15 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
   const listRowClass =
     "flex w-full cursor-pointer items-center gap-2.5 rounded-[10px] px-2.5 py-[9px] transition-colors hover:bg-foreground/[0.04]";
 
-  // 登录态和未登录态共用同一主题切换行
+  // 登录态和未登录态共用同一主题切换行；使用原生 button，避免 Button 的按压缩放带动整行抖动
   const themeRow = (
-    <Button
+    <button
       type="button"
-      variant="ghost"
-      onPress={() => setTheme(nextTheme)}
-      className={listRowClass}
+      onClick={() => setTheme(nextTheme)}
+      className={cn(
+        listRowClass,
+        "border-0 bg-transparent font-inherit outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+      )}
       aria-label={`当前生效主题：${resolvedTheme}，点击切换到 ${nextTheme}`}
     >
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/[0.10]">
@@ -76,7 +78,7 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
           )}
         />
       </div>
-    </Button>
+    </button>
   );
 
   return (

@@ -1,11 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { RichEditor } from "@repo/editor";
+import { CodeDialog, ImageDialog, LinkDialog, RichEditor } from "@repo/editor";
 import type { MentionItem } from "@repo/editor";
-import { ImageDialog } from "./dialogs/image-dialog";
-import { LinkDialog } from "./dialogs/link-dialog";
-import { CodeDialog } from "./dialogs/code-dialog";
 
 interface RichCommentInputProps {
   value: string;

@@ -39,6 +39,7 @@ describe("useCommentList", () => {
     await waitFor(() => {
       expect(vi.mocked(global.fetch)).toHaveBeenCalledWith(
         expect.stringContaining("/api/articles/42/comments"),
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
       );
     });
   });
@@ -53,6 +54,7 @@ describe("useCommentList", () => {
     await waitFor(() => {
       expect(vi.mocked(global.fetch)).toHaveBeenCalledWith(
         expect.stringContaining("/api/moments/7/comments"),
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
       );
     });
   });
@@ -128,6 +130,20 @@ describe("useCommentList", () => {
     act(() => result.current.updateCommentLike(1, true, 5));
     expect(result.current.comments[0].is_liked).toBe(true);
     expect(result.current.comments[0].like_count).toBe(5);
+  });
+
+  it("卸载时中止进行中的首屏请求", async () => {
+    let capturedSignal: AbortSignal | undefined;
+    vi.mocked(global.fetch).mockImplementation((_url, init) => {
+      capturedSignal = init?.signal ?? undefined;
+      return new Promise(() => {});
+    });
+
+    const { unmount } = renderHook(() => useCommentList("article", 1));
+    expect(capturedSignal?.aborted).toBe(false);
+
+    unmount();
+    expect(capturedSignal?.aborted).toBe(true);
   });
 
   it("fetch 失败时设置 error", async () => {

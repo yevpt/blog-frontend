@@ -5,6 +5,24 @@ import { RichCommentInput } from "./rich-comment-input";
 
 // mock @repo/editor 避免 Tiptap DOM 依赖问题
 vi.mock("@repo/editor", () => ({
+  ImageDialog: ({ open }: { open: boolean }) =>
+    open ? (
+      <div role="dialog" aria-label="插入图片">
+        插入图片
+      </div>
+    ) : null,
+  LinkDialog: ({ open }: { open: boolean }) =>
+    open ? (
+      <div role="dialog" aria-label="插入链接">
+        插入链接
+      </div>
+    ) : null,
+  CodeDialog: ({ open }: { open: boolean }) =>
+    open ? (
+      <div role="dialog" aria-label="插入代码块">
+        插入代码块
+      </div>
+    ) : null,
   RichEditor: ({
     onSubmit,
     onInsertImage,

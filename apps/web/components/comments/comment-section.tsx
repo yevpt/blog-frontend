@@ -1,7 +1,7 @@
 // apps/web/components/comments/comment-section.tsx
 "use client";
 
-import { useState, useCallback, useRef, type RefObject } from "react";
+import { useState, useCallback, useRef, useLayoutEffect, type RefObject } from "react";
 import { Button } from "@repo/ui";
 import type { CommentReplyResp } from "@repo/api";
 import { useSession } from "@/app/providers/session-provider";
@@ -12,6 +12,7 @@ import { useCommentLike } from "@/hooks/use-comment-like";
 import { CommentInput } from "./comment-input";
 import { RichCommentInput } from "./rich-comment-input";
 import { CommentItem, type ReplyTarget } from "./comment-item";
+import { CommentListSkeleton } from "./comment-skeleton";
 
 type TargetType = "article" | "moment";
 
@@ -21,6 +22,8 @@ interface CommentSectionProps {
   layout?: "modal" | "inline";
   scrollRef?: RefObject<HTMLDivElement | null>;
   onCommentAdded?: () => void;
+  /** 列表内容尺寸变化时回调，供外层弹窗同步高度动效 */
+  onContentResize?: () => void;
 }
 
 export function CommentSection({
@@ -29,6 +32,7 @@ export function CommentSection({
   layout = "modal",
   scrollRef: externalScrollRef,
   onCommentAdded,
+  onContentResize,
 }: CommentSectionProps) {
   const { userId } = useSession();
   const { open: openLoginModal } = useLoginModal();
@@ -56,6 +60,10 @@ export function CommentSection({
   const [pendingReplies, setPendingReplies] = useState<Record<number, CommentReplyResp | null>>({});
 
   const internalScrollRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    onContentResize?.();
+  }, [comments.length, isLoading, error, hasMore, replyTarget, onContentResize]);
 
   const mergeRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -150,7 +158,7 @@ export function CommentSection({
   const commentList = (
     <>
       {isLoading && comments.length === 0 ? (
-        <div className="py-8 text-center text-sm text-(--fg3)">加载中...</div>
+        <CommentListSkeleton />
       ) : error ? (
         <p className="py-4 text-center text-sm text-(--fg3)">{error}</p>
       ) : comments.length === 0 ? (

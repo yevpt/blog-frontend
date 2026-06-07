@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
-import type { CSSProperties } from "react";
+import { useRef, useEffect, useState, useCallback, useLayoutEffect } from "react";
+import type { CSSProperties, RefObject } from "react";
 import { SvgIcon } from "@repo/icons";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { Modal, cn } from "@repo/ui";
 import { useSheetGesture } from "@/hooks/use-sheet-gesture";
 import { CommentSection } from "./comment-section";
 
@@ -16,65 +16,138 @@ interface CommentModalProps {
   onCommentAdded?: () => void;
 }
 
-function useBodyScrollLock() {
+function useAnimatedClose(onClose: () => void) {
+  const [isOpen, setIsOpen] = useState(true);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (closeTimer.current !== null) clearTimeout(closeTimer.current);
+    },
+    [],
+  );
+
+  function requestClose() {
+    setIsOpen(false);
+    if (closeTimer.current !== null) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(onClose, 210);
+  }
+
+  return { isOpen, requestClose };
+}
+
+const DESKTOP_HEIGHT_SPRING = "0.35s cubic-bezier(0.2, 0.9, 0.24, 1)";
+
+function getDesktopModalMaxHeight() {
+  if (typeof window === "undefined") return Number.POSITIVE_INFINITY;
+  const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+  return viewportHeight * 0.9;
+}
+
+function prefersReducedMotion() {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return false;
+  }
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+/** 临时解除固定高度以测量内容自然高度，供桌面弹窗高度过渡使用 */
+function measurePanelNaturalHeight(panel: HTMLDivElement) {
+  const previousHeight = panel.style.height;
+  panel.style.height = "auto";
+  const naturalHeight = Math.min(panel.getBoundingClientRect().height, getDesktopModalMaxHeight());
+  panel.style.height = previousHeight;
+  return naturalHeight;
+}
+
+function useAnimatedPanelHeight(panelRef: RefObject<HTMLDivElement | null>) {
+  const [panelHeight, setPanelHeight] = useState<number | undefined>();
+  const [heightTransition, setHeightTransition] = useState(false);
+
+  const measurePanelHeight = useCallback(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    setPanelHeight(measurePanelNaturalHeight(panel));
+  }, [panelRef]);
+
+  useLayoutEffect(() => {
+    measurePanelHeight();
+  }, [measurePanelHeight]);
+
   useEffect(() => {
-    const savedScrollY = window.scrollY;
-    document.body.style.cssText = `overflow:hidden;position:fixed;top:-${savedScrollY}px;width:100%`;
-    return () => {
-      document.body.style.cssText = "";
-      window.scrollTo(0, savedScrollY);
-    };
+    const timer = setTimeout(() => setHeightTransition(true), 220);
+    return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const handleResize = () => measurePanelHeight();
+    window.addEventListener("resize", handleResize);
+    window.visualViewport?.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.visualViewport?.removeEventListener("resize", handleResize);
+    };
+  }, [measurePanelHeight]);
+
+  const modalStyle: CSSProperties | undefined =
+    panelHeight === undefined
+      ? undefined
+      : {
+          height: panelHeight,
+          transition:
+            heightTransition && !prefersReducedMotion()
+              ? `height ${DESKTOP_HEIGHT_SPRING}`
+              : undefined,
+        };
+
+  return { modalStyle, measurePanelHeight };
 }
 
 // ── Desktop: centered dialog with fade animation ──────────────────────────
 function CommentDialog({ targetType, targetId, onClose, onCommentAdded }: CommentModalProps) {
-  const [entered, setEntered] = useState(false);
-  useBodyScrollLock();
-
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => setEntered(true));
-    return () => cancelAnimationFrame(raf);
-  }, []);
+  const { isOpen, requestClose } = useAnimatedClose(onClose);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const { modalStyle, measurePanelHeight } = useAnimatedPanelHeight(panelRef);
 
   return (
-    <div
-      role="button"
-      tabIndex={-1}
-      className="fixed inset-0 z-[300] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-300"
-      style={{ opacity: entered ? 1 : 0 }}
-      onClick={(e) => {
-        if (e.currentTarget === e.target) onClose();
+    <Modal
+      isOpen={isOpen}
+      isDismissable
+      onOpenChange={(open) => {
+        if (!open) requestClose();
       }}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onClose();
-      }}
+      aria-label="评论"
+      placement="center"
+      size="lg"
+      overlayClassName="z-[300] bg-black/50"
+      modalRef={panelRef}
+      modalStyle={modalStyle}
+      modalClassName="max-w-[520px] rounded-[20px] shadow-[0_8px_40px_rgba(0,0,0,0.18)]"
+      dialogClassName="flex h-full min-h-0 flex-col overflow-hidden"
     >
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-label="评论"
-        className={`flex w-full max-w-[520px] max-h-[85vh] flex-col overflow-hidden rounded-[20px] bg-card shadow-[0_8px_40px_rgba(0,0,0,0.18)] transition-all duration-300 ${entered ? "scale-100 opacity-100" : "scale-95 opacity-0"}`}
-      >
-        <header className="relative flex shrink-0 items-center justify-center border-b border-border px-[18px] py-3">
-          <h2 className="text-sm font-semibold text-foreground">评论</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="关闭评论"
-            className="absolute right-[18px] flex h-7 w-7 items-center justify-center rounded-lg bg-border text-(--fg2) hover:bg-primary/10 hover:text-primary"
-          >
-            <SvgIcon name="close" size={16} />
-          </button>
-        </header>
-        <CommentSection
-          targetType={targetType}
-          targetId={targetId}
-          layout="modal"
-          onCommentAdded={onCommentAdded}
-        />
-      </section>
-    </div>
+      {() => (
+        <>
+          <header className="relative flex shrink-0 items-center justify-center border-b border-border px-[18px] py-3">
+            <h2 className="text-sm font-semibold text-foreground">评论</h2>
+            <button
+              type="button"
+              onClick={requestClose}
+              aria-label="关闭评论"
+              className="absolute right-[18px] flex h-7 w-7 items-center justify-center rounded-lg bg-border text-(--fg2) hover:bg-primary/10 hover:text-primary"
+            >
+              <SvgIcon name="close" size={16} />
+            </button>
+          </header>
+          <CommentSection
+            targetType={targetType}
+            targetId={targetId}
+            layout="modal"
+            onCommentAdded={onCommentAdded}
+            onContentResize={measurePanelHeight}
+          />
+        </>
+      )}
+    </Modal>
   );
 }
 
@@ -84,9 +157,10 @@ const COLLAPSED_HEIGHT = "70dvh";
 const EXPANDED_HEIGHT = "100dvh";
 
 function CommentSheet({ targetType, targetId, onClose, onCommentAdded }: CommentModalProps) {
-  const sheetRef = useRef<HTMLElement>(null!);
+  const sheetRef = useRef<HTMLDivElement>(null!);
   const scrollRef = useRef<HTMLDivElement>(null!);
   const [entered, setEntered] = useState(false);
+  const { isOpen, requestClose } = useAnimatedClose(onClose);
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => setEntered(true));
@@ -97,11 +171,9 @@ function CommentSheet({ targetType, targetId, onClose, onCommentAdded }: Comment
     sheetRef,
     scrollRef,
     {
-      onDismiss: onClose,
+      onDismiss: requestClose,
     },
   );
-
-  useBodyScrollLock();
 
   const activeHeight =
     expandOffset > 0
@@ -125,51 +197,57 @@ function CommentSheet({ targetType, targetId, onClose, onCommentAdded }: Comment
       };
 
   return (
-    <div
-      role="button"
-      tabIndex={-1}
-      className="fixed inset-0 z-[300] flex items-end justify-center bg-black/50 backdrop-blur-sm"
-      onClick={(e) => {
-        if (e.currentTarget === e.target) onClose();
+    <Modal
+      isOpen={isOpen}
+      isDismissable
+      onOpenChange={(open) => {
+        if (!open) requestClose();
       }}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onClose();
-      }}
+      aria-label="评论"
+      placement="sheet"
+      overlayClassName="z-[300] bg-black/50"
+      modalRef={sheetRef}
+      modalStyle={mergedStyle}
+      modalClassName={cn(
+        "touch-manipulation shadow-[0_-4px_40px_rgba(0,0,0,0.18)]",
+        isExpanded ? "rounded-none" : "rounded-t-[20px]",
+      )}
     >
-      <section
-        ref={sheetRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="评论"
-        style={mergedStyle}
-        className={`touch-manipulation absolute bottom-0 left-0 right-0 mx-auto flex w-full flex-col overflow-hidden bg-card shadow-[0_-4px_40px_rgba(0,0,0,0.18)] ${isExpanded ? "rounded-none" : "rounded-t-[20px]"}`}
-      >
-        <div className="mx-auto mt-2.5 h-1 w-9 shrink-0 cursor-grab rounded-full bg-border active:cursor-grabbing" />
-        <header className="relative flex shrink-0 items-center justify-center border-b border-border px-[18px] py-3">
-          <h2 className="text-sm font-semibold text-foreground">评论</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="关闭评论"
-            className="absolute right-[18px] flex h-7 w-7 items-center justify-center rounded-lg bg-border text-(--fg2) hover:bg-primary/10 hover:text-primary"
-          >
-            <SvgIcon name="close" size={16} />
-          </button>
-        </header>
-        <CommentSection
-          targetType={targetType}
-          targetId={targetId}
-          layout="modal"
-          scrollRef={scrollRef}
-          onCommentAdded={onCommentAdded}
-        />
-      </section>
-    </div>
+      {() => (
+        <>
+          <div className="mx-auto mt-2.5 h-1 w-9 shrink-0 cursor-grab rounded-full bg-border active:cursor-grabbing" />
+          <header className="relative flex shrink-0 items-center justify-center border-b border-border px-[18px] py-3">
+            <h2 className="text-sm font-semibold text-foreground">评论</h2>
+            <button
+              type="button"
+              onClick={requestClose}
+              aria-label="关闭评论"
+              className="absolute right-[18px] flex h-7 w-7 items-center justify-center rounded-lg bg-border text-(--fg2) hover:bg-primary/10 hover:text-primary"
+            >
+              <SvgIcon name="close" size={16} />
+            </button>
+          </header>
+          <CommentSection
+            targetType={targetType}
+            targetId={targetId}
+            layout="modal"
+            scrollRef={scrollRef}
+            onCommentAdded={onCommentAdded}
+          />
+        </>
+      )}
+    </Modal>
   );
 }
 
 // ── Export: switch between desktop and mobile ────────────────────────────
 export function CommentModal(props: CommentModalProps) {
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  // 弹窗打开时锁定布局，避免媒体查询初始值抖动导致 Sheet/Dialog 切换、重复挂载 CommentSection
+  const [isDesktop] = useState(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return false;
+    }
+    return window.matchMedia("(min-width: 768px)").matches;
+  });
   return isDesktop ? <CommentDialog {...props} /> : <CommentSheet {...props} />;
 }
