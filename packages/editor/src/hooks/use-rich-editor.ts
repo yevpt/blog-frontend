@@ -33,7 +33,7 @@
  * 避免 React hydration 报错（服务端 HTML 与客户端渲染不匹配）。
  * ================================================================
  */
-import { useMemo } from "react";
+import { useRef, useEffect } from "react";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
@@ -54,18 +54,32 @@ export function useRichEditor({
   initialValue,
   onChange,
   mentionSuggestions,
+  placeholder,
   disabled = false,
 }: UseRichEditorOptions) {
+  // 通过 ref 持有最新 onChange，避免 stale closure 问题
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  });
+
   // 序列化为字符串作为稳定的 dep key，避免每次渲染传入新数组引用导致无限循环
   const mentionsJson = JSON.stringify(mentionSuggestions);
-  // useMemo 依赖序列化字符串而非数组引用，仅在候选项内容实际变化时才重新计算
-  const mentionKey = useMemo(() => mentionsJson, [mentionsJson]);
 
   return useEditor(
     {
       // ── SSR 适配 ─────────────────────────────────────────────
       // Next.js 在服务端渲染时无 DOM，必须设为 false 避免 hydration 错误
       immediatelyRender: false,
+
+      // ── editorProps：将 data-placeholder 写到 .tiptap 元素上 ──
+      // CSS 选择器 .tiptap.is-editor-empty::before 读取 attr(data-placeholder)
+      // 必须在 .tiptap 元素本身上设置该属性，放在外层 wrapper 上无效
+      editorProps: {
+        attributes: {
+          "data-placeholder": placeholder ?? "",
+        },
+      },
 
       // ── 扩展列表 ──────────────────────────────────────────────
       extensions: [
@@ -123,12 +137,13 @@ export function useRichEditor({
       editable: !disabled,
 
       // ── 内容变更回调 ──────────────────────────────────────────
+      // 通过 ref 调用最新 onChange，避免 stale closure（父组件每次渲染传入新函数引用）
       onUpdate: ({ editor }) => {
-        onChange(editor.getMarkdown());
+        onChangeRef.current(editor.getMarkdown());
       },
     },
-    // deps 数组：mentionKey 是序列化后的字符串，仅在候选列表实际变化时才重建 editor
+    // deps 数组：mentionsJson 是序列化后的字符串，仅在候选列表实际变化时才重建 editor
     // 直接用 mentionSuggestions 数组引用会导致每次渲染创建新引用 → 无限循环
-    [mentionKey],
+    [mentionsJson],
   );
 }

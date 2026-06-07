@@ -14,8 +14,9 @@ describe("RichEditor", () => {
     const { container } = render(
       <RichEditor value="" onChange={() => {}} placeholder="写下你的评论..." />,
     );
-    const el = container.querySelector("[data-placeholder]");
-    expect(el?.getAttribute("data-placeholder")).toBe("写下你的评论...");
+    // data-placeholder 应在 .tiptap 元素上（用于 CSS ::before 占位文字）
+    const tiptap = container.querySelector(".tiptap[data-placeholder]");
+    expect(tiptap?.getAttribute("data-placeholder")).toBe("写下你的评论...");
   });
 
   it("disabled=true 时 contenteditable 为 false", () => {
