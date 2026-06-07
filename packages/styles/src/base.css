@@ -526,7 +526,10 @@ body {
 }
 
 .ui-modal-panel-sheet.ui-modal-panel-enter {
-  animation: uiModalSheetIn 260ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  /* fill-mode 由 both 改为 backwards：移除 forwards 填充，防止动画结束后以高于
+     inline style 的优先级锁死 transform: translateY(0)，导致手势位移无法生效。
+     动画结束后由 CommentSheet 的 inline style.transform 接管（值相同，无视觉跳变）。 */
+  animation: uiModalSheetIn 260ms cubic-bezier(0.32, 0.72, 0, 1) backwards;
 }
 
 .ui-modal-panel-sheet.ui-modal-panel-exit {

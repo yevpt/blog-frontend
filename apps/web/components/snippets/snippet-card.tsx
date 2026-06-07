@@ -34,7 +34,7 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
   return (
     <article
       data-testid="snippet-card"
-      className="rounded-[14px] border border-border/60 bg-[#fafafa] p-3.5 transition-[border-color,box-shadow] hover:border-primary/15 hover:shadow-[0_2px_8px_rgba(124,58,237,0.06)] dark:bg-[#1f1f23] dark:hover:border-primary/20"
+      className="rounded-[14px] bg-[#fafafa] p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-[0_2px_8px_rgba(124,58,237,0.08)] dark:bg-[#1f1f23]"
     >
       {/* Header: 双行布局 */}
       <div className="mb-2.5 flex items-center gap-2.5">
