@@ -33,6 +33,7 @@
  * 避免 React hydration 报错（服务端 HTML 与客户端渲染不匹配）。
  * ================================================================
  */
+import { useMemo } from "react";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
@@ -55,6 +56,11 @@ export function useRichEditor({
   mentionSuggestions,
   disabled = false,
 }: UseRichEditorOptions) {
+  // 序列化为字符串作为稳定的 dep key，避免每次渲染传入新数组引用导致无限循环
+  const mentionsJson = JSON.stringify(mentionSuggestions);
+  // useMemo 依赖序列化字符串而非数组引用，仅在候选项内容实际变化时才重新计算
+  const mentionKey = useMemo(() => mentionsJson, [mentionsJson]);
+
   return useEditor(
     {
       // ── SSR 适配 ─────────────────────────────────────────────
@@ -121,7 +127,8 @@ export function useRichEditor({
         onChange(editor.getMarkdown());
       },
     },
-    // deps 数组：mentionSuggestions 变化时重建 editor（用于动态候选列表）
-    [mentionSuggestions],
+    // deps 数组：mentionKey 是序列化后的字符串，仅在候选列表实际变化时才重建 editor
+    // 直接用 mentionSuggestions 数组引用会导致每次渲染创建新引用 → 无限循环
+    [mentionKey],
   );
 }
