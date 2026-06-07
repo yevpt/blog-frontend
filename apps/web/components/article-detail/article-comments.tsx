@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { CommentSection } from "@/components/comments";
 
 interface ArticleCommentsProps {
@@ -7,7 +8,13 @@ interface ArticleCommentsProps {
   commentCount: number;
 }
 
-export function ArticleComments({ articleId, commentCount }: ArticleCommentsProps) {
+export function ArticleComments({ articleId, commentCount: initialCount }: ArticleCommentsProps) {
+  const [commentCount, setCommentCount] = useState(initialCount);
+
+  const handleCommentAdded = useCallback(() => {
+    setCommentCount((prev) => prev + 1);
+  }, []);
+
   return (
     <section id="article-comments" className="border-t border-border">
       <div className="mx-auto max-w-[720px] px-5 pb-20 pt-10">
@@ -15,7 +22,12 @@ export function ArticleComments({ articleId, commentCount }: ArticleCommentsProp
           评论{" "}
           <span className="ml-1 text-sm font-normal text-muted-foreground">{commentCount} 条</span>
         </h2>
-        <CommentSection targetType="article" targetId={articleId} layout="inline" />
+        <CommentSection
+          targetType="article"
+          targetId={articleId}
+          layout="inline"
+          onCommentAdded={handleCommentAdded}
+        />
       </div>
     </section>
   );

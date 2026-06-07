@@ -2,8 +2,12 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Button } from "@repo/ui";
+import { Button, cn } from "@repo/ui";
+import { SvgIcon } from "@repo/icons";
 import type { CommentReplyResp, CommentReplyPageResp } from "@repo/api";
+import { useSession } from "@/app/providers/session-provider";
+import { useLoginModal } from "@/store/use-login-modal";
+import { useCommentLike } from "@/hooks/use-comment-like";
 import { formatRelativeTime } from "@/lib/format-time";
 import { UserAvatar } from "@/components/common/user-avatar";
 import type { ReplyTarget } from "./comment-item";
@@ -28,13 +32,30 @@ function replyUrl(targetType: TargetType, commentId: number, page: number): stri
 interface ReplyItemProps {
   reply: CommentReplyResp;
   commentId: number;
+  targetType: TargetType;
   onReply?: (target: ReplyTarget) => void;
+  onLikeResult?: (replyId: number, isLiked: boolean, likeCount: number) => void;
 }
 
-function ReplyItem({ reply, commentId, onReply }: ReplyItemProps) {
+function ReplyItem({ reply, commentId, targetType, onReply, onLikeResult }: ReplyItemProps) {
+  const { userId } = useSession();
+  const { open: openLoginModal } = useLoginModal();
+  const { toggleReplyLike } = useCommentLike(targetType);
+
   const fromName = getDisplayName(reply.from_user);
   const toName = reply.to_user ? getDisplayName(reply.to_user) : null;
   const time = formatRelativeTime(new Date(reply.created_at));
+
+  const handleLike = useCallback(async () => {
+    if (!userId) {
+      openLoginModal();
+      return;
+    }
+    const result = await toggleReplyLike(commentId, reply.id);
+    if (result) {
+      onLikeResult?.(reply.id, result.is_liked, result.like_count);
+    }
+  }, [userId, openLoginModal, toggleReplyLike, commentId, reply.id, onLikeResult]);
 
   return (
     <div className="flex gap-2">
@@ -44,15 +65,40 @@ function ReplyItem({ reply, commentId, onReply }: ReplyItemProps) {
           <span className="text-xs font-bold text-foreground">{fromName}</span>
           <span className="text-[11px] text-(--fg3)">{time}</span>
         </div>
-        <p className="text-[13px] leading-[1.65] text-(--fg2)">
-          {toName && <span className="mr-1 text-[11px] font-semibold text-primary">@{toName}</span>}
-          {reply.content}
-        </p>
+        <div className="relative">
+          <p className="min-w-0 pr-7.5 text-[13px] leading-[1.65] text-(--fg2)">
+            {toName && (
+              <span className="mr-1 text-[11px] font-semibold text-primary">@{toName}</span>
+            )}
+            {reply.content}
+          </p>
+          <Button
+            variant="text"
+            type="button"
+            onClick={handleLike}
+            aria-label={reply.is_liked ? "取消点赞" : "点赞"}
+            className={cn(
+              "absolute top-0 right-1.75 flex shrink-0 flex-col items-center gap-0.5 self-start pt-0.5",
+              reply.is_liked
+                ? "text-red-500 hover:text-red-500"
+                : "text-black/54 dark:text-(--fg3)",
+            )}
+          >
+            <SvgIcon name={reply.is_liked ? "heart-fill" : "heart"} size={14} />
+            {reply.like_count > 0 && (
+              <span
+                className={`text-[10px] font-medium ${reply.is_liked ? "text-red-500" : "text-(--fg3)"}`}
+              >
+                {reply.like_count}
+              </span>
+            )}
+          </Button>
+        </div>
         <Button
           type="button"
           variant="text"
           onPress={() => onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName })}
-          className="mt-1 text-[11px] font-medium text-(--fg3) transition-colors "
+          className="mt-1 text-[11px] font-medium text-(--fg3) transition-colors"
         >
           回复
         </Button>
@@ -67,7 +113,6 @@ export interface CommentRepliesProps {
   replyCount: number;
   pendingReply?: CommentReplyResp | null;
   onReply: (target: ReplyTarget) => void;
-  onLike: (commentId: number, replyId: number) => void;
 }
 
 export function CommentReplies({
@@ -76,7 +121,6 @@ export function CommentReplies({
   replyCount,
   pendingReply,
   onReply,
-  onLike: _onLike,
 }: CommentRepliesProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [replies, setReplies] = useState<CommentReplyResp[]>([]);
@@ -118,6 +162,12 @@ export function CommentReplies({
     if (!isLoading && hasMore) void fetchReplies(page + 1, true);
   }, [isLoading, hasMore, page, fetchReplies]);
 
+  const updateReplyLike = useCallback((replyId: number, isLiked: boolean, likeCount: number) => {
+    setReplies((prev) =>
+      prev.map((r) => (r.id === replyId ? { ...r, is_liked: isLiked, like_count: likeCount } : r)),
+    );
+  }, []);
+
   if (replyCount <= 0) return null;
 
   // pendingReply 去重后追加到列表末尾
@@ -143,7 +193,14 @@ export function CommentReplies({
     <div className="mt-3">
       <div className="flex flex-col gap-3">
         {displayReplies.map((reply) => (
-          <ReplyItem key={reply.id} reply={reply} commentId={commentId} onReply={onReply} />
+          <ReplyItem
+            key={reply.id}
+            reply={reply}
+            commentId={commentId}
+            targetType={targetType}
+            onReply={onReply}
+            onLikeResult={updateReplyLike}
+          />
         ))}
       </div>
 

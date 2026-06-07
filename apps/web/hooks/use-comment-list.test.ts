@@ -90,7 +90,7 @@ describe("useCommentList", () => {
     expect(result.current.comments).toHaveLength(2);
   });
 
-  it("addComment 追加到列表末尾", async () => {
+  it("addComment 插入到列表头部（时间倒序）", async () => {
     vi.mocked(global.fetch).mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockPage([makeComment(1)])),
@@ -100,7 +100,7 @@ describe("useCommentList", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     act(() => result.current.addComment(makeComment(99)));
-    expect(result.current.comments[1].id).toBe(99);
+    expect(result.current.comments[0].id).toBe(99);
   });
 
   it("incrementReplyCount 将指定评论 reply_count +1", async () => {
@@ -114,6 +114,20 @@ describe("useCommentList", () => {
 
     act(() => result.current.incrementReplyCount(1));
     expect(result.current.comments[0].reply_count).toBe(1);
+  });
+
+  it("updateCommentLike 更新指定评论的 is_liked 和 like_count", async () => {
+    vi.mocked(global.fetch).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockPage([makeComment(1)])),
+    } as Response);
+
+    const { result } = renderHook(() => useCommentList("article", 1));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => result.current.updateCommentLike(1, true, 5));
+    expect(result.current.comments[0].is_liked).toBe(true);
+    expect(result.current.comments[0].like_count).toBe(5);
   });
 
   it("fetch 失败时设置 error", async () => {

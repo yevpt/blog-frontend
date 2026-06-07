@@ -68,7 +68,7 @@ describe("CommentInput（已登录）", () => {
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 
-  it("回复模式下显示 @用户名 和取消按钮", () => {
+  it("回复模式下显示正在回复 @用户名 和取消按钮", () => {
     render(
       <CommentInput
         value=""
@@ -79,8 +79,23 @@ describe("CommentInput（已登录）", () => {
       />,
     );
 
+    expect(screen.getByText("正在回复")).toBeTruthy();
     expect(screen.getByText("@Alice")).toBeTruthy();
     expect(screen.getByText("取消")).toBeTruthy();
+  });
+
+  it("回复模式下 placeholder 变为「写下你的回复...」", () => {
+    render(
+      <CommentInput
+        value=""
+        onChange={vi.fn()}
+        onSubmit={vi.fn()}
+        replyTarget={{ commentId: 1, toUsername: "Alice" }}
+        onCancelReply={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByPlaceholderText("写下你的回复...")).toBeTruthy();
   });
 
   it("submitError 非空时显示错误信息", () => {

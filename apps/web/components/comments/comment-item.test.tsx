@@ -13,7 +13,6 @@ vi.mock("./comment-replies", () => ({
   CommentReplies: (props: {
     replyCount: number;
     onReply: (target: unknown) => void;
-    onLike: (commentId: number, replyId: number) => void;
     pendingReply: CommentReplyResp | null;
   }) => {
     if (props.replyCount <= 0) return null;
@@ -24,9 +23,6 @@ vi.mock("./comment-replies", () => ({
           onClick={() => props.onReply({ commentId: 1, parentReplyId: 2, toUsername: "Bob" })}
         >
           回复子评论
-        </button>
-        <button type="button" onClick={() => props.onLike(1, 2)}>
-          赞回复
         </button>
         {props.pendingReply && <span data-testid="pending-in-comment">pending</span>}
       </div>
@@ -109,15 +105,6 @@ describe("CommentItem", () => {
     expect(screen.queryByTestId("comment-replies")).toBeNull();
   });
 
-  it("转发 onReplyLike 到 CommentReplies", async () => {
-    const user = userEvent.setup();
-    const onReplyLike = vi.fn();
-    render(<CommentItem comment={baseComment} targetType="article" onReplyLike={onReplyLike} />);
-
-    await user.click(screen.getByText("赞回复"));
-    expect(onReplyLike).toHaveBeenCalledWith(1, 2);
-  });
-
   it("转发 onReply 到 CommentReplies", async () => {
     const user = userEvent.setup();
     const onReply = vi.fn();
@@ -140,5 +127,11 @@ describe("CommentItem", () => {
       />,
     );
     expect(screen.getByTestId("pending-in-comment")).toBeTruthy();
+  });
+
+  it("渲染 data-comment-id 属性", () => {
+    render(<CommentItem comment={baseComment} targetType="article" />);
+    const el = screen.getByText("这篇文章写得很好").closest("[data-comment-id]");
+    expect(el?.getAttribute("data-comment-id")).toBe("1");
   });
 });

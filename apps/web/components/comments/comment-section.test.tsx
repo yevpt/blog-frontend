@@ -36,7 +36,9 @@ vi.mock("./comment-replies", () => ({
 }));
 vi.mock("./comment-item", () => ({
   CommentItem: ({ comment }: { comment: CommentItemResp }) => (
-    <div data-testid="comment-item">{comment.content}</div>
+    <div data-testid="comment-item" data-comment-id={comment.id}>
+      {comment.content}
+    </div>
   ),
 }));
 

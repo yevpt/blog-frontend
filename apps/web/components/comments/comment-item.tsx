@@ -26,7 +26,6 @@ interface CommentItemProps {
   targetType: TargetType;
   onReply?: (target: ReplyTarget) => void;
   onLike?: (commentId: number) => void;
-  onReplyLike?: (commentId: number, replyId: number) => void;
   pendingReply?: CommentReplyResp | null;
 }
 
@@ -35,7 +34,6 @@ export function CommentItem({
   targetType,
   onReply,
   onLike,
-  onReplyLike,
   pendingReply,
 }: CommentItemProps) {
   const displayName = getDisplayName(comment.user);
@@ -49,15 +47,8 @@ export function CommentItem({
     onReply?.({ commentId: comment.id, toUsername: displayName });
   }, [onReply, comment.id, displayName]);
 
-  const handleReplyLike = useCallback(
-    (commentId: number, replyId: number) => {
-      onReplyLike?.(commentId, replyId);
-    },
-    [onReplyLike],
-  );
-
   return (
-    <div className="comment-item">
+    <div className="comment-item" data-comment-id={comment.id}>
       <div className="flex gap-2.5">
         <UserAvatar src={comment.user?.avatar_url} name={displayName} size="md" />
         <div className="min-w-0 flex-1">
@@ -115,7 +106,6 @@ export function CommentItem({
             replyCount={comment.reply_count}
             pendingReply={pendingReply}
             onReply={onReply ?? (() => undefined)}
-            onLike={handleReplyLike}
           />
         </div>
       </div>

@@ -9,7 +9,25 @@ vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
 }));
 
-function makeReply(id: number): CommentReplyResp {
+vi.mock("@/app/providers/session-provider", () => ({
+  useSession: vi.fn(() => ({ userId: 1 })),
+}));
+
+vi.mock("@/store/use-login-modal", () => ({
+  useLoginModal: () => ({ open: vi.fn() }),
+}));
+
+vi.mock("@/hooks/use-comment-like", () => ({
+  useCommentLike: () => ({
+    toggleReplyLike: vi.fn(() => Promise.resolve({ is_liked: true, like_count: 1 })),
+  }),
+}));
+
+vi.mock("@/components/common/user-avatar", () => ({
+  UserAvatar: ({ name }: { name: string }) => <span data-testid="user-avatar">{name}</span>,
+}));
+
+function makeReply(id: number, overrides?: Partial<CommentReplyResp>): CommentReplyResp {
   return {
     id,
     target_type: "article",
@@ -23,6 +41,7 @@ function makeReply(id: number): CommentReplyResp {
     is_liked: false,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    ...overrides,
   };
 }
 
@@ -38,27 +57,13 @@ describe("CommentReplies", () => {
 
   it("replyCount=0 时不渲染任何内容", () => {
     const { container } = render(
-      <CommentReplies
-        commentId={1}
-        targetType="article"
-        replyCount={0}
-        onReply={vi.fn()}
-        onLike={vi.fn()}
-      />,
+      <CommentReplies commentId={1} targetType="article" replyCount={0} onReply={vi.fn()} />,
     );
     expect(container.innerHTML).toBe("");
   });
 
   it("replyCount>0 时显示展开按钮", () => {
-    render(
-      <CommentReplies
-        commentId={1}
-        targetType="article"
-        replyCount={5}
-        onReply={vi.fn()}
-        onLike={vi.fn()}
-      />,
-    );
+    render(<CommentReplies commentId={1} targetType="article" replyCount={5} onReply={vi.fn()} />);
     expect(screen.getByText(/展开 5 条回复/)).toBeTruthy();
   });
 
@@ -69,15 +74,7 @@ describe("CommentReplies", () => {
       json: () => Promise.resolve(mockPage([makeReply(1), makeReply(3)])),
     } as Response);
 
-    render(
-      <CommentReplies
-        commentId={1}
-        targetType="article"
-        replyCount={2}
-        onReply={vi.fn()}
-        onLike={vi.fn()}
-      />,
-    );
+    render(<CommentReplies commentId={1} targetType="article" replyCount={2} onReply={vi.fn()} />);
     await user.click(screen.getByText(/展开 2 条回复/));
     await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
     expect(screen.getByText("回复 3")).toBeTruthy();
@@ -91,15 +88,7 @@ describe("CommentReplies", () => {
         Promise.resolve({ total: 10, pages: 2, page: 1, page_size: 5, list: [makeReply(1)] }),
     } as Response);
 
-    render(
-      <CommentReplies
-        commentId={1}
-        targetType="article"
-        replyCount={10}
-        onReply={vi.fn()}
-        onLike={vi.fn()}
-      />,
-    );
+    render(<CommentReplies commentId={1} targetType="article" replyCount={10} onReply={vi.fn()} />);
     await user.click(screen.getByText(/展开 10 条回复/));
     await waitFor(() => expect(screen.getByText("查看更多回复")).toBeTruthy());
   });
@@ -120,7 +109,6 @@ describe("CommentReplies", () => {
         replyCount={1}
         pendingReply={pending}
         onReply={vi.fn()}
-        onLike={vi.fn()}
       />,
     );
     await user.click(screen.getByText(/展开 1 条回复/));
@@ -135,15 +123,7 @@ describe("CommentReplies", () => {
       json: () => Promise.resolve(mockPage([makeReply(1)])),
     } as Response);
 
-    render(
-      <CommentReplies
-        commentId={1}
-        targetType="article"
-        replyCount={1}
-        onReply={onReply}
-        onLike={vi.fn()}
-      />,
-    );
+    render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={onReply} />);
     await user.click(screen.getByText(/展开 1 条回复/));
     await waitFor(() => screen.getByText("回复 1"));
 
@@ -153,5 +133,48 @@ describe("CommentReplies", () => {
       parentReplyId: 1,
       toUsername: "Alice",
     });
+  });
+
+  it("回复项显示点赞按钮", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockPage([makeReply(1, { like_count: 3, is_liked: false })])),
+    } as Response);
+
+    render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />);
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+
+    expect(screen.getByTestId("icon-heart")).toBeTruthy();
+    expect(screen.getByText("3")).toBeTruthy();
+  });
+
+  it("点击回复点赞按钮调用 toggleReplyLike 并更新状态", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockPage([makeReply(1)])),
+    } as Response);
+
+    render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />);
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => screen.getByText("回复 1"));
+
+    const likeBtn = screen.getByLabelText("点赞");
+    await user.click(likeBtn);
+    // toggleReplyLike mock is called (verified by state update showing heart-fill)
+    await waitFor(() => expect(screen.getByTestId("icon-heart-fill")).toBeTruthy());
+  });
+
+  it("is_liked=true 时回复爱心为实心", async () => {
+    vi.mocked(global.fetch).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockPage([makeReply(1, { is_liked: true })])),
+    } as Response);
+
+    render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />);
+    (await userEvent.setup()).click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => expect(screen.getByTestId("icon-heart-fill")).toBeTruthy());
   });
 });

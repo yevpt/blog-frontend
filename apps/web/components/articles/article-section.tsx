@@ -137,6 +137,19 @@ export function ArticleSection({
   );
 
   const skeletonCount = pageData.list.length || 6;
+
+  const handleCommentAdded = useCallback(() => {
+    if (!activeComment) return;
+    setPageData((current) => ({
+      ...current,
+      list: current.list.map((item) =>
+        item.id === activeComment.articleId
+          ? { ...item, comment_count: item.comment_count + 1 }
+          : item,
+      ),
+    }));
+  }, [activeComment]);
+
   const openComment = (article: ArticleListItemResp) => {
     setActiveComment({
       articleId: article.id,
@@ -249,6 +262,7 @@ export function ArticleSection({
           targetType={activeComment.type === "moment" ? "moment" : "article"}
           targetId={activeComment.articleId}
           onClose={() => setActiveComment(null)}
+          onCommentAdded={handleCommentAdded}
         />
       )}
     </section>

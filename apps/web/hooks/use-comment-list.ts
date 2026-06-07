@@ -53,7 +53,7 @@ export function useCommentList(targetType: TargetType, targetId: number) {
   }, [isLoading, hasMore, page, fetchPage]);
 
   const addComment = useCallback((comment: CommentItemResp) => {
-    setComments((prev) => [...prev, comment]);
+    setComments((prev) => [comment, ...prev]);
   }, []);
 
   const incrementReplyCount = useCallback((commentId: number) => {
@@ -62,5 +62,25 @@ export function useCommentList(targetType: TargetType, targetId: number) {
     );
   }, []);
 
-  return { comments, isLoading, hasMore, error, loadMore, addComment, incrementReplyCount };
+  const updateCommentLike = useCallback(
+    (commentId: number, isLiked: boolean, likeCount: number) => {
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === commentId ? { ...c, is_liked: isLiked, like_count: likeCount } : c,
+        ),
+      );
+    },
+    [],
+  );
+
+  return {
+    comments,
+    isLoading,
+    hasMore,
+    error,
+    loadMore,
+    addComment,
+    incrementReplyCount,
+    updateCommentLike,
+  };
 }

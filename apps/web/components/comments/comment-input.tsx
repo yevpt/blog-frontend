@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useEffect } from "react";
 import { Button } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import { useSession } from "@/app/providers/session-provider";
@@ -27,6 +28,13 @@ export function CommentInput({
 }: CommentInputProps) {
   const { userId } = useSession();
   const { open: openLogin } = useLoginModal();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (replyTarget) {
+      inputRef.current?.focus();
+    }
+  }, [replyTarget]);
 
   // 未登录：显示登录提示 pill
   if (userId == null) {
@@ -48,12 +56,13 @@ export function CommentInput({
     <div className="flex shrink-0 flex-col gap-2 border-t border-border px-[18px] py-3 pb-4">
       {replyTarget && (
         <div className="flex items-center gap-2 text-xs">
+          <span className="text-(--fg3)">正在回复</span>
           <span className="font-semibold text-primary">@{replyTarget.toUsername}</span>
           <Button
             type="button"
             variant="ghost"
             onPress={onCancelReply}
-            className="h-auto p-0 text-(--fg3) hover:text-foreground"
+            className="h-auto p-0 text-[11px] text-(--fg3) hover:text-foreground"
           >
             取消
           </Button>
@@ -61,10 +70,11 @@ export function CommentInput({
       )}
       <div className="relative flex items-center">
         <input
+          ref={inputRef}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="写下你的评论..."
+          placeholder={replyTarget ? "写下你的回复..." : "写下你的评论..."}
           disabled={isSubmitting}
           className={`w-full rounded-full border border-input bg-background py-2.5 pl-4 text-[13px] leading-normal text-foreground outline-none transition-colors placeholder:text-(--fg3) focus:border-primary disabled:cursor-not-allowed disabled:opacity-60 ${value.trim() ? "pr-10" : "pr-4"}`}
         />

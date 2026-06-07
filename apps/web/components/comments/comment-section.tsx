@@ -1,9 +1,11 @@
 // apps/web/components/comments/comment-section.tsx
 "use client";
 
-import { useState, useCallback, type RefObject } from "react";
+import { useState, useCallback, useRef, type RefObject } from "react";
 import { Button } from "@repo/ui";
 import type { CommentReplyResp } from "@repo/api";
+import { useSession } from "@/app/providers/session-provider";
+import { useLoginModal } from "@/store/use-login-modal";
 import { useCommentList } from "@/hooks/use-comment-list";
 import { useCommentSubmit } from "@/hooks/use-comment-submit";
 import { useCommentLike } from "@/hooks/use-comment-like";
@@ -15,20 +17,30 @@ type TargetType = "article" | "moment";
 interface CommentSectionProps {
   targetType: TargetType;
   targetId: number;
-  /** modal：输入框在底部（默认）；inline：输入框在顶部，列表自然流 */
   layout?: "modal" | "inline";
-  /** modal layout 时由 CommentModal 传入，供 useSheetGesture 读取 scrollTop */
   scrollRef?: RefObject<HTMLDivElement | null>;
+  onCommentAdded?: () => void;
 }
 
 export function CommentSection({
   targetType,
   targetId,
   layout = "modal",
-  scrollRef: _scrollRef,
+  scrollRef: externalScrollRef,
+  onCommentAdded,
 }: CommentSectionProps) {
-  const { comments, isLoading, hasMore, error, loadMore, addComment, incrementReplyCount } =
-    useCommentList(targetType, targetId);
+  const { userId } = useSession();
+  const { open: openLoginModal } = useLoginModal();
+  const {
+    comments,
+    isLoading,
+    hasMore,
+    error,
+    loadMore,
+    addComment,
+    incrementReplyCount,
+    updateCommentLike,
+  } = useCommentList(targetType, targetId);
   const {
     isSubmitting,
     error: submitError,
@@ -36,20 +48,48 @@ export function CommentSection({
     submitComment,
     submitReply,
   } = useCommentSubmit(targetType, targetId);
-  const { toggleCommentLike, toggleReplyLike } = useCommentLike(targetType);
+  const { toggleCommentLike } = useCommentLike(targetType);
 
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
   const [content, setContent] = useState("");
-  // 每个评论最新待展示的回复（由 CommentReplies 的 pendingReply prop 消费）
   const [pendingReplies, setPendingReplies] = useState<Record<number, CommentReplyResp | null>>({});
+
+  const internalScrollRef = useRef<HTMLDivElement>(null);
+
+  const mergeRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      internalScrollRef.current = node;
+      if (externalScrollRef) {
+        externalScrollRef.current = node;
+      }
+    },
+    [externalScrollRef],
+  );
+
+  const scrollToListTop = useCallback(() => {
+    requestAnimationFrame(() => {
+      internalScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }, []);
+
+  const scrollToComment = useCallback((commentId: number) => {
+    requestAnimationFrame(() => {
+      const el = internalScrollRef.current?.querySelector(`[data-comment-id="${commentId}"]`);
+      el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  }, []);
 
   const handleReply = useCallback(
     (target: ReplyTarget) => {
+      if (!userId) {
+        openLoginModal();
+        return;
+      }
       setReplyTarget(target);
       setContent("");
       clearError();
     },
-    [clearError],
+    [userId, openLoginModal, clearError],
   );
 
   const handleCancelReply = useCallback(() => {
@@ -68,6 +108,7 @@ export function CommentSection({
         setPendingReplies((prev) => ({ ...prev, [replyTarget.commentId]: reply }));
         setReplyTarget(null);
         setContent("");
+        scrollToComment(replyTarget.commentId);
       }
       return;
     }
@@ -76,21 +117,33 @@ export function CommentSection({
     if (comment) {
       addComment(comment);
       setContent("");
+      onCommentAdded?.();
+      scrollToListTop();
     }
-  }, [content, replyTarget, submitReply, submitComment, addComment, incrementReplyCount]);
+  }, [
+    content,
+    replyTarget,
+    submitReply,
+    submitComment,
+    addComment,
+    incrementReplyCount,
+    scrollToListTop,
+    scrollToComment,
+    onCommentAdded,
+  ]);
 
   const handleCommentLike = useCallback(
     async (commentId: number) => {
-      await toggleCommentLike(commentId);
+      if (!userId) {
+        openLoginModal();
+        return;
+      }
+      const result = await toggleCommentLike(commentId);
+      if (result) {
+        updateCommentLike(commentId, result.is_liked, result.like_count);
+      }
     },
-    [toggleCommentLike],
-  );
-
-  const handleReplyLike = useCallback(
-    async (commentId: number, replyId: number) => {
-      await toggleReplyLike(commentId, replyId);
-    },
-    [toggleReplyLike],
+    [userId, openLoginModal, toggleCommentLike, updateCommentLike],
   );
 
   const commentList = (
@@ -110,7 +163,6 @@ export function CommentSection({
               targetType={targetType}
               onReply={handleReply}
               onLike={handleCommentLike}
-              onReplyLike={handleReplyLike}
               pendingReply={pendingReplies[comment.id] ?? null}
             />
           ))}
@@ -149,7 +201,7 @@ export function CommentSection({
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <div
-          ref={_scrollRef}
+          ref={mergeRef}
           className="flex-1 overflow-y-auto px-[18px] py-4"
           style={{ overscrollBehavior: "contain" }}
         >
