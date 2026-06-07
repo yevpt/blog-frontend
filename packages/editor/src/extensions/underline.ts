@@ -28,18 +28,23 @@
  * <u>text</u> 是合法的 Markdown 内联 HTML，大多数渲染器支持。
  * 下划线在 web 排版中常与超链接混淆，请在评论 UI 中酌情引导用户。
  *
- * 【未来自定义示例】
- * 如需修改序列化格式（如改为 ++text++），在此处替换：
- *   import Underline from "@tiptap/extension-underline";
- *   export const UnderlineExtension = Underline.extend({
- *     // 自定义 parseHTML / renderHTML / addInputRules
- *   });
+ * 【为什么覆盖 renderMarkdown】
+ * @tiptap/extension-underline v3 默认将下划线序列化为 ++text++（需要 remark-ins 插件）。
+ * 本项目渲染管线不包含 remark-ins，因此强制覆盖为 <u>text</u>（CommonMark 内联 HTML），
+ * 与 parseHTML [{ tag: 'u' }] 保持双向一致，并确保 Task 17 rehype-sanitize 能正常放行。
  * ================================================================
  */
+import { type JSONContent, type MarkdownRendererHelpers } from "@tiptap/core";
 import Underline from "@tiptap/extension-underline";
 
 /**
  * 下划线扩展。
- * 当前直接重导出官方扩展；扩展点保留在本文件中（见上方注释）。
+ * 覆盖官方扩展的 renderMarkdown，强制序列化为 <u>text</u> 而非 ++text++。
  */
-export const UnderlineExtension = Underline;
+export const UnderlineExtension = Underline.extend({
+  // 覆盖序列化行为：输出 <u>text</u>（CommonMark 内联 HTML）
+  // @tiptap/markdown v3 通过 getExtensionField(extension, 'renderMarkdown') 读取此方法
+  renderMarkdown(node: JSONContent, helpers: MarkdownRendererHelpers) {
+    return `<u>${helpers.renderChildren(node)}</u>`;
+  },
+});
