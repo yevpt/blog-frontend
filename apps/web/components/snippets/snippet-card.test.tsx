@@ -107,6 +107,38 @@ describe("SnippetCard", () => {
     expect(screen.queryByText("博主")).toBeNull();
   });
 
+  it("有 site 时显示 subtitle 第二行", () => {
+    render(
+      <SnippetCard
+        snippet={makeMoment({
+          user: { id: 1, username: "testuser", nickname: "测试用户", site: "我的博客" },
+        })}
+      />,
+    );
+    expect(screen.getByText("我的博客")).toBeTruthy();
+  });
+
+  it("有图片时使用 object-contain 完整展示", () => {
+    const snippet = makeMoment({
+      images: [
+        {
+          id: 1,
+          name: "photo1",
+          file_type: "image/jpeg",
+          url: "/1.jpg",
+          access_url: "/1.jpg",
+          size: 1000,
+          seq: 1,
+        },
+      ],
+    });
+    render(<SnippetCard snippet={snippet} />);
+    const imgs = screen
+      .getAllByRole("img")
+      .filter((el) => el.tagName === "IMG" && el.getAttribute("src")?.startsWith("/"));
+    expect(imgs[0].className).toContain("object-contain");
+  });
+
   it("显示点赞和评论数字（ArticleCardStats 风格）", () => {
     render(<SnippetCard snippet={makeMoment()} />);
     expect(screen.getByText("5")).toBeTruthy();

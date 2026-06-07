@@ -37,7 +37,7 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
       className="rounded-[14px] bg-[#fafafa] p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-[0_2px_8px_rgba(124,58,237,0.08)] dark:bg-[#1f1f23]"
     >
       {/* Header: 双行布局 */}
-      <div className="mb-2.5 flex items-center gap-2.5">
+      <div className="mb-2.5 flex items-start gap-2.5">
         {authorAvatar ? (
           <img
             src={authorAvatar}
@@ -56,6 +56,11 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
               <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold text-primary dark:bg-primary/15">
                 {authorBadge}
               </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5">
+            {snippet.user?.site && (
+              <span className="min-w-0 truncate text-[11px] text-(--fg3)">{snippet.user.site}</span>
             )}
             <time className="ml-auto shrink-0 text-[11px] text-(--fg3)">{relativeTime}</time>
           </div>
@@ -77,7 +82,7 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
               key={img.id}
               src={img.access_url}
               alt={img.name}
-              className="h-[90px] w-full object-cover"
+              className="max-h-[300px] w-full object-contain"
             />
           ))}
           {hiddenCount > 0 && (

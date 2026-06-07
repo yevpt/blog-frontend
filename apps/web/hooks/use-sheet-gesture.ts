@@ -260,9 +260,11 @@ export function useSheetGesture(
           setTranslateY(0);
         } else {
           // 收起 → dismiss
+          // 等待 CSS transition（0.4s SPRING）完成后再触发 onDismiss，
+          // 防止退场 CSS 动画（uiModalSheetOut）与进行中的 transition 冲突。
           setExpandOffset(0);
           setTranslateY(sheetHeight);
-          setTimeout(() => onDismissRef.current(), 350);
+          setTimeout(() => onDismissRef.current(), 420);
         }
       } else {
         setExpandOffset(0);

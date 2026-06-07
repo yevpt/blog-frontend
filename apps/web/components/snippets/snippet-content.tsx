@@ -25,9 +25,9 @@ export function SnippetContent({ content }: SnippetContentProps) {
       <p className="whitespace-pre-line text-[13px] leading-relaxed text-(--fg2)">{displayText}</p>
       {isLong && (
         <Button
-          variant="ghost"
+          variant="text"
           onPress={() => setExpanded((prev) => !prev)}
-          className="mt-1 cursor-pointer text-xs text-primary/70 transition-colors hover:text-primary"
+          className="mt-1 text-xs transition-colors"
         >
           {expanded ? t("snippet.collapse") : t("snippet.expand")}
         </Button>

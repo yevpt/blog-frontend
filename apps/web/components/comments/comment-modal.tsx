@@ -188,6 +188,11 @@ function CommentSheet({ targetType, targetId, onClose, onCommentAdded }: Comment
         height: activeHeight,
         maxHeight: EXPANDED_HEIGHT,
         transition: isDragging ? "none" : `transform ${SPRING}, height ${SPRING}`,
+        // 手势 dismiss 时（isOpen=false 且 translateY 未归零）禁用退场 CSS 动画：
+        // 退场动画的 from{transform:translateY(0)} 以 animation 优先级高于 inline style，
+        // 会把已经滑出屏幕的 sheet 拉回原位再重新退场，产生闪烁。
+        // 此时 sheet 已通过 CSS transition 滑出，直接让 React Aria 静默移除 DOM 即可。
+        animation: !isOpen && sheetStyle.transform !== "translateY(0px)" ? "none" : undefined,
       }
     : {
         transform: "translateY(100%)",
