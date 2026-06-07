@@ -11,6 +11,13 @@ function authHeader(t: string | undefined): Record<string, string> {
   return t ? { Authorization: `Bearer ${t}` } : {};
 }
 
+/** 将浏览器请求中的 Cookie 转发到后端，确保 visitor_id 等字段不丢失 */
+function cookieHeader(req: NextRequest): Record<string, string> {
+  const all = req.cookies.getAll();
+  if (all.length === 0) return {};
+  return { Cookie: all.map((c) => `${c.name}=${c.value}`).join("; ") };
+}
+
 /** 将后端 Set-Cookie header 转发到浏览器响应中 */
 function forwardCookies(res: Response, response: NextResponse): void {
   const cookies = res.headers.getSetCookie();
@@ -34,13 +41,13 @@ async function parseBackendJson(res: Response): Promise<NextResponse> {
   return okRes;
 }
 
-/** GET 代理：转发 query 参数，携带可选 access token */
+/** GET 代理：转发 query 参数，携带可选 access token 和 Cookie */
 export async function proxyGet(req: NextRequest, path: string): Promise<NextResponse> {
   const qs = req.nextUrl.searchParams.toString();
   try {
     const res = await fetch(`${BASE}${path}${qs ? `?${qs}` : ""}`, {
       method: "GET",
-      headers: authHeader(token(req)),
+      headers: { ...authHeader(token(req)), ...cookieHeader(req) },
     });
     return parseBackendJson(res);
   } catch {
@@ -48,7 +55,7 @@ export async function proxyGet(req: NextRequest, path: string): Promise<NextResp
   }
 }
 
-/** POST 代理：转发 JSON body，携带 access token（requireAuth=true 时无 token 直接 401） */
+/** POST 代理：转发 JSON body，携带 access token 和 Cookie（requireAuth=true 时无 token 直接 401） */
 export async function proxyPost(
   req: NextRequest,
   path: string,
@@ -61,7 +68,7 @@ export async function proxyPost(
     const body = hasBody ? JSON.stringify(await req.json().catch(() => ({}))) : undefined;
     const res = await fetch(`${BASE}${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeader(t) },
+      headers: { "Content-Type": "application/json", ...authHeader(t), ...cookieHeader(req) },
       body,
     });
     return parseBackendJson(res);
@@ -70,14 +77,14 @@ export async function proxyPost(
   }
 }
 
-/** DELETE 代理：需要 access token */
+/** DELETE 代理：需要 access token 并转发 Cookie */
 export async function proxyDelete(req: NextRequest, path: string): Promise<NextResponse> {
   const t = token(req);
   if (!t) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const res = await fetch(`${BASE}${path}`, {
       method: "DELETE",
-      headers: authHeader(t),
+      headers: { ...authHeader(t), ...cookieHeader(req) },
     });
     return parseBackendJson(res);
   } catch {
