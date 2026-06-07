@@ -30,6 +30,7 @@ export type {
   MomentUserResp,
   MomentMediaResp,
   MomentItemResp,
+  MomentLikeResp,
   MomentPageResp,
 } from "./types/moment";
 export type {

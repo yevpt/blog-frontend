@@ -1,9 +1,15 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, act, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { SnippetsSection } from "./snippets-section";
 import type { MomentItemResp } from "@repo/api";
+
+const mockOpenLoginModal = vi.fn();
+const toastMockState = vi.hoisted(() => ({
+  addToast: vi.fn(),
+}));
+let mockSessionUserId: number | null = 7;
 
 // Mock @repo/icons
 vi.mock("@repo/icons", () => ({
@@ -53,6 +59,35 @@ vi.mock("@repo/hooks", () => ({
   }),
 }));
 
+vi.mock("@/app/providers/session-provider", () => ({
+  useSession: () => ({ userId: mockSessionUserId, profile: null }),
+}));
+
+vi.mock("@/store/use-login-modal", () => ({
+  useLoginModal: () => ({ open: mockOpenLoginModal }),
+}));
+
+vi.mock("@/lib/toast", () => ({
+  addToast: toastMockState.addToast,
+}));
+
+vi.mock("@/components/comments", () => ({
+  CommentModal: ({
+    targetId,
+    targetType,
+  }: {
+    targetId: number;
+    targetType: string;
+    onClose: () => void;
+  }) => (
+    <div
+      data-testid="comment-modal"
+      data-target-id={String(targetId)}
+      data-target-type={targetType}
+    />
+  ),
+}));
+
 function makeMoment(
   id: number,
   content: string,
@@ -91,6 +126,18 @@ const LONG_CONTENT =
   "这里是更多的补充内容，确保文本足够长。继续增加内容直到超过一百二十个字符为止，包括这段额外的说明文字。";
 
 const mockMoments: MomentItemResp[] = [makeMoment(1, SHORT_CONTENT), makeMoment(2, LONG_CONTENT)];
+
+beforeEach(() => {
+  vi.stubGlobal("fetch", vi.fn());
+  mockSessionUserId = 7;
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.clearAllMocks();
+  mockOpenLoginModal.mockReset();
+  toastMockState.addToast.mockReset();
+});
 
 describe("SnippetsSection", () => {
   it("渲染不崩溃，显示碎语内容", () => {
@@ -200,5 +247,68 @@ describe("SnippetsSection", () => {
     expect(screen.queryByText(`${SHORT_CONTENT} #4`)).toBeNull();
     expect(screen.queryByText(`${SHORT_CONTENT} #5`)).toBeNull();
     expect(screen.queryByText(`${SHORT_CONTENT} #6`)).toBeNull();
+  });
+
+  it("点击评论按钮后弹窗接收到正确的 momentId", async () => {
+    const user = userEvent.setup();
+    render(<SnippetsSection snippets={[makeMoment(7, SHORT_CONTENT)]} />);
+
+    await user.click(screen.getByLabelText("评论"));
+
+    const modal = screen.getByTestId("comment-modal");
+    expect(modal.dataset.targetId).toBe("7");
+    expect(modal.dataset.targetType).toBe("moment");
+  });
+
+  it("已登录时点击喜欢会调用接口并使用服务端最新结果更新状态", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ is_liked: true, like_count: 9 }),
+    } as Response);
+
+    render(<SnippetsSection snippets={[makeMoment(8, SHORT_CONTENT)]} />);
+
+    await user.click(screen.getByRole("button", { name: "喜欢" }));
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith("/api/moments/8/like", { method: "POST" });
+      expect(screen.getByRole("button", { name: "喜欢" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByText("9")).toBeTruthy();
+    });
+  });
+
+  it("未登录时点击喜欢会打开全局登录弹窗", async () => {
+    const user = userEvent.setup();
+    mockSessionUserId = null;
+
+    render(<SnippetsSection snippets={[makeMoment(9, SHORT_CONTENT)]} />);
+
+    await user.click(screen.getByRole("button", { name: "喜欢" }));
+
+    expect(mockOpenLoginModal).toHaveBeenCalledOnce();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("取消点赞失败时提示取消点赞失败", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: async () => ({ error: "failed" }),
+    } as Response);
+
+    render(
+      <SnippetsSection
+        snippets={[makeMoment(10, SHORT_CONTENT, { is_liked: true, like_count: 5 })]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "喜欢" }));
+
+    await waitFor(() => {
+      expect(toastMockState.addToast).toHaveBeenCalledWith("取消点赞失败，请稍后重试", "error");
+    });
   });
 });

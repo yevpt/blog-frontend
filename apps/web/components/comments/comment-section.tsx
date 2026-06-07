@@ -60,6 +60,9 @@ export function CommentSection({
   const [pendingReplies, setPendingReplies] = useState<Record<number, CommentReplyResp | null>>({});
 
   const internalScrollRef = useRef<HTMLDivElement>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const onContentResizeRef = useRef(onContentResize);
+  onContentResizeRef.current = onContentResize;
 
   useLayoutEffect(() => {
     onContentResize?.();
@@ -67,9 +70,26 @@ export function CommentSection({
 
   const mergeRef = useCallback(
     (node: HTMLDivElement | null) => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+        resizeObserverRef.current = null;
+      }
+
       internalScrollRef.current = node;
       if (externalScrollRef) {
         externalScrollRef.current = node;
+      }
+
+      if (node && typeof window !== "undefined" && "ResizeObserver" in window) {
+        const ro = new ResizeObserver(() => {
+          onContentResizeRef.current?.();
+        });
+        ro.observe(node);
+        // modal layout 下 scrollable div 的 firstElementChild 是内容 wrapper，
+        // 它不受 overflow 限制，自然高度随内容（展开回复等）变化
+        const content = node.firstElementChild;
+        if (content) ro.observe(content);
+        resizeObserverRef.current = ro;
       }
     },
     [externalScrollRef],
@@ -214,7 +234,8 @@ export function CommentSection({
           className="flex-1 overflow-y-auto px-[18px] py-4"
           style={{ overscrollBehavior: "contain" }}
         >
-          {commentList}
+          {/* wrapper div 用于 ResizeObserver 监听自然高度变化（不受 overflow 限制） */}
+          <div>{commentList}</div>
         </div>
         {input}
       </div>

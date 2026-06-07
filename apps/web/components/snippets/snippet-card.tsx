@@ -1,3 +1,5 @@
+"use client";
+
 import type { MomentItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
 import { Button } from "@repo/ui";
@@ -8,6 +10,9 @@ import { SnippetContent } from "./snippet-content";
 
 interface SnippetCardProps {
   snippet: MomentItemResp;
+  onLike?: (snippet: MomentItemResp) => void;
+  likeDisabled?: boolean;
+  onComment?: (snippet: MomentItemResp) => void;
 }
 
 /**
@@ -23,7 +28,12 @@ function formatCount(count: number): string {
 }
 
 // 单条碎语卡片：独立圆角卡片，双行 header + 图片网格 + ArticleCardStats 风格操作区
-export function SnippetCard({ snippet }: SnippetCardProps) {
+export function SnippetCard({
+  snippet,
+  onLike,
+  likeDisabled = false,
+  onComment,
+}: SnippetCardProps) {
   const relativeTime = formatRelativeTime(new Date(snippet.created_at));
   const authorName = snippet.user?.nickname ?? snippet.user?.username ?? "匿名";
   const authorAvatar = snippet.user?.avatar_url ?? "";
@@ -99,6 +109,10 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
           size="sm"
           aria-label="喜欢"
           aria-pressed={snippet.is_liked}
+          isDisabled={likeDisabled}
+          onPress={() => {
+            onLike?.(snippet);
+          }}
           className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 font-medium transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 ${
             snippet.is_liked ? "text-red-500 hover:text-red-500" : "text-black/54 dark:text-(--fg3)"
           }`}
@@ -114,6 +128,9 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
           variant="ghost"
           size="sm"
           aria-label="评论"
+          onPress={() => {
+            onComment?.(snippet);
+          }}
           className="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 font-medium text-black/54 transition-colors hover:bg-primary/10 hover:text-primary dark:text-(--fg3)"
         >
           <SvgIcon name="message-circle" size={18} />

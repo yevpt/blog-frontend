@@ -70,7 +70,10 @@ export default async function Home() {
           categories={categoriesResp.list}
           sidebar={
             <>
-              <SnippetsSection snippets={momentsPage.list} />
+              <SnippetsSection
+                snippets={momentsPage.list}
+                ownerUserId={Number(process.env.BLOG_USER_ID) || undefined}
+              />
               <RecentVisitors visitors={visitors} />
               <TagsCloud tags={tags} />
             </>

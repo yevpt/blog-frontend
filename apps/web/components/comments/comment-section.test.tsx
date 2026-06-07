@@ -148,4 +148,43 @@ describe("CommentSection", () => {
     await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
     expect(screen.queryByText("查看更多评论")).toBeNull();
   });
+
+  it("modal layout：滚动区域尺寸变化时触发 onContentResize", async () => {
+    const onContentResize = vi.fn();
+    const callbacks: Array<ResizeObserverCallback> = [];
+
+    class MockResizeObserver {
+      constructor(cb: ResizeObserverCallback) {
+        callbacks.push(cb);
+      }
+      observe = vi.fn();
+      disconnect = vi.fn();
+    }
+
+    const originalRO = window.ResizeObserver;
+    window.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
+
+    render(
+      <CommentSection
+        targetType="article"
+        targetId={1}
+        layout="modal"
+        onContentResize={onContentResize}
+      />,
+    );
+    await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
+
+    // useLayoutEffect 在加载完成后会触发一次
+    expect(onContentResize).toHaveBeenCalled();
+
+    const callCountBefore = onContentResize.mock.calls.length;
+
+    // 模拟 ResizeObserver 尺寸变化回调（如展开回复导致高度增加）
+    if (callbacks.length > 0) {
+      callbacks[0]([], new MockResizeObserver(vi.fn()) as unknown as ResizeObserver);
+      expect(onContentResize.mock.calls.length).toBeGreaterThan(callCountBefore);
+    }
+
+    window.ResizeObserver = originalRO;
+  });
 });

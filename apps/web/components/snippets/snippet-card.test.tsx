@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { SnippetCard } from "./snippet-card";
 import type { MomentItemResp } from "@repo/api";
@@ -205,5 +206,27 @@ describe("SnippetCard", () => {
   it("未点赞时显示 heart 图标", () => {
     render(<SnippetCard snippet={makeMoment({ is_liked: false })} />);
     expect(screen.getByTestId("icon-heart")).toBeTruthy();
+  });
+
+  it("点击喜欢按钮触发 onLike 回调", async () => {
+    const user = userEvent.setup();
+    const onLike = vi.fn();
+    const snippet = makeMoment();
+    render(<SnippetCard snippet={snippet} onLike={onLike} />);
+
+    await user.click(screen.getByRole("button", { name: "喜欢" }));
+
+    expect(onLike).toHaveBeenCalledWith(snippet);
+  });
+
+  it("点击评论按钮触发 onComment 回调", async () => {
+    const user = userEvent.setup();
+    const onComment = vi.fn();
+    const snippet = makeMoment();
+    render(<SnippetCard snippet={snippet} onComment={onComment} />);
+
+    await user.click(screen.getByRole("button", { name: "评论" }));
+
+    expect(onComment).toHaveBeenCalledWith(snippet);
   });
 });

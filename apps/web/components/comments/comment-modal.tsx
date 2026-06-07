@@ -54,15 +54,17 @@ function prefersReducedMotion() {
 /** 临时解除固定高度以测量内容自然高度，供桌面弹窗高度过渡使用 */
 function measurePanelNaturalHeight(panel: HTMLDivElement) {
   const previousHeight = panel.style.height;
+  const previousTransition = panel.style.transition;
+  panel.style.transition = "none";
   panel.style.height = "auto";
   const naturalHeight = Math.min(panel.getBoundingClientRect().height, getDesktopModalMaxHeight());
   panel.style.height = previousHeight;
+  panel.style.transition = previousTransition;
   return naturalHeight;
 }
 
 function useAnimatedPanelHeight(panelRef: RefObject<HTMLDivElement | null>) {
   const [panelHeight, setPanelHeight] = useState<number | undefined>();
-  const [heightTransition, setHeightTransition] = useState(false);
 
   const measurePanelHeight = useCallback(() => {
     const panel = panelRef.current;
@@ -73,11 +75,6 @@ function useAnimatedPanelHeight(panelRef: RefObject<HTMLDivElement | null>) {
   useLayoutEffect(() => {
     measurePanelHeight();
   }, [measurePanelHeight]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setHeightTransition(true), 220);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     const handleResize = () => measurePanelHeight();
@@ -94,10 +91,7 @@ function useAnimatedPanelHeight(panelRef: RefObject<HTMLDivElement | null>) {
       ? undefined
       : {
           height: panelHeight,
-          transition:
-            heightTransition && !prefersReducedMotion()
-              ? `height ${DESKTOP_HEIGHT_SPRING}`
-              : undefined,
+          transition: !prefersReducedMotion() ? `height ${DESKTOP_HEIGHT_SPRING}` : undefined,
         };
 
   return { modalStyle, measurePanelHeight };

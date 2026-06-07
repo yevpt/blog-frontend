@@ -13,9 +13,19 @@ vi.mock("@/lib/server-api", () => ({
   }),
 }));
 
-vi.mock("@/components/snippets/snippet-card", () => ({
-  SnippetCard: ({ snippet }: { snippet: { id: number; content: string } }) => (
-    <div data-testid="snippet-card">{snippet.content}</div>
+vi.mock("@/components/snippets/snippets-list", () => ({
+  SnippetsList: ({
+    initialPage,
+  }: {
+    initialPage: { list: Array<{ id: number; content: string }> };
+  }) => (
+    <div data-testid="snippets-list">
+      {initialPage.list.map((snippet) => (
+        <div key={snippet.id} data-testid="snippet-card">
+          {snippet.content}
+        </div>
+      ))}
+    </div>
   ),
 }));
 
@@ -51,7 +61,7 @@ describe("SnippetsPage", () => {
     expect(screen.getByRole("heading", { name: "碎语" })).toBeInTheDocument();
   });
 
-  it("有碎语时渲染 SnippetCard", async () => {
+  it("有碎语时渲染 SnippetsList", async () => {
     mockState.listPublic.mockResolvedValue({
       total: 1,
       pages: 1,
@@ -60,13 +70,13 @@ describe("SnippetsPage", () => {
       list: [MOCK_SNIPPET],
     });
     render(await Page());
-    expect(screen.getByTestId("snippet-card")).toBeInTheDocument();
+    expect(screen.getByTestId("snippets-list")).toBeInTheDocument();
     expect(screen.getByText("测试碎语内容")).toBeInTheDocument();
   });
 
-  it("无碎语时显示空状态提示", async () => {
+  it("无碎语时仍渲染 SnippetsList", async () => {
     render(await Page());
-    expect(screen.getByText("暂无碎语")).toBeInTheDocument();
+    expect(screen.getByTestId("snippets-list")).toBeInTheDocument();
   });
 
   it("请求时传入 page_size=20", async () => {

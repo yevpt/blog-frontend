@@ -15,7 +15,7 @@ import type {
   ArticlePageResp,
 } from "./types/article";
 import type { CategoryTabsResp } from "./types/category";
-import type { MomentListReq, MomentPageResp } from "./types/moment";
+import type { MomentItemResp, MomentListReq, MomentPageResp } from "./types/moment";
 import type {
   CommentCreateReq,
   CommentItemResp,
@@ -184,7 +184,7 @@ export function createApiClient(config: ApiClientConfig) {
     moments: {
       /** 上报一次碎语阅读（触发即可，不等待返回值） */
       view: (id: number) => fetchPublic<void>(`/moments/${id}/view`, { method: "POST" }),
-      /** 分页查询公开碎语，支持用户/角色过滤 */
+      /** 分页查询公开碎语，支持用户/角色过滤；登录态可返回 is_liked */
       listPublic: (req: MomentListReq = {}) => {
         const params = new URLSearchParams();
         if (req.page !== undefined) params.set("page", String(req.page));
@@ -192,8 +192,15 @@ export function createApiClient(config: ApiClientConfig) {
         if (req.user_id !== undefined) params.set("user_id", String(req.user_id));
         if (req.role_id !== undefined) params.set("role_id", String(req.role_id));
         const qs = params.toString();
-        return fetchPublic<MomentPageResp>(`/moments${qs ? `?${qs}` : ""}`, { method: "GET" });
+        return fetchOptionalAuth<MomentPageResp>(`/moments${qs ? `?${qs}` : ""}`, {
+          method: "GET",
+        });
       },
+      /** 切换当前用户对碎语的点赞状态，返回服务端最新点赞状态与数量 */
+      toggleLike: (id: number) =>
+        fetchAuthed<MomentItemResp>(`/moments/${id}/like`, {
+          method: "POST",
+        }),
     },
     users: {
       /** 获取当前登录用户详情（需登录） */
