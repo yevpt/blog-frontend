@@ -18,6 +18,9 @@ export async function markdownToHtml(markdown: string): Promise<string> {
     .use(rehypeSlug)
     .use(rehypeSanitize, {
       ...defaultSchema,
+      // 允许 <u> 标签：下划线由 RichEditor 以 <u>text</u> 形式存储在 Markdown 中
+      // defaultSchema 不包含 <u>，需显式添加
+      tagNames: [...(defaultSchema.tagNames ?? []), "u"],
       attributes: {
         ...defaultSchema.attributes,
         // 允许 rehype-slug 注入的 id 属性通过 sanitize
