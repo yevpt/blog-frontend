@@ -11,6 +11,20 @@ vi.mock("@repo/icons", () => ({
   ),
 }));
 
+vi.mock("next/image", () => ({
+  default: ({
+    src,
+    alt,
+    className,
+  }: {
+    src: string;
+    alt: string;
+    fill?: boolean;
+    className?: string;
+    sizes?: string;
+  }) => <img src={src} alt={alt} className={className} />,
+}));
+
 // Mock @repo/ui Button
 vi.mock("@repo/ui", () => ({
   Button: ({

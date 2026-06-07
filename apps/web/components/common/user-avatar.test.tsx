@@ -1,6 +1,20 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { UserAvatar } from "./user-avatar";
+
+vi.mock("next/image", () => ({
+  default: ({
+    src,
+    alt,
+    className,
+    onError,
+  }: {
+    src: string;
+    alt: string;
+    className?: string;
+    onError?: () => void;
+  }) => <img src={src} alt={alt} className={className} onError={onError} />,
+}));
 
 describe("UserAvatar", () => {
   it("有 src 时渲染 img 元素", () => {

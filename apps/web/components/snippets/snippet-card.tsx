@@ -1,6 +1,7 @@
 import type { MomentItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
 import { Button } from "@repo/ui";
+import Image from "next/image";
 import { formatRelativeTime } from "../../lib/format-time";
 import { SnippetContent } from "./snippet-content";
 
@@ -36,9 +37,11 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
       {/* Header: 双行布局 */}
       <div className="mb-2.5 flex items-start gap-2.5">
         {authorAvatar ? (
-          <img
+          <Image
             src={authorAvatar}
             alt={authorName}
+            width={36}
+            height={36}
             className="h-9 w-9 shrink-0 rounded-full object-cover shadow-[0_2px_8px_rgba(124,58,237,0.2)]"
           />
         ) : (
@@ -70,12 +73,18 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
           }`}
         >
           {visibleImages.map((img) => (
-            <img
+            <div
               key={img.id}
-              src={img.access_url}
-              alt={img.name}
-              className="max-h-[300px] w-full object-contain"
-            />
+              className="relative aspect-[3/2] w-full overflow-hidden rounded-[6px]"
+            >
+              <Image
+                src={img.access_url}
+                alt={img.name}
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </div>
           ))}
           {hiddenCount > 0 && (
             <div className="flex items-center justify-center bg-muted text-xs text-(--fg3)">
