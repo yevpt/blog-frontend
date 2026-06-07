@@ -17,6 +17,7 @@
     "@repo/hooks": "workspace:*",
     "@repo/icons": "workspace:*",
     "@repo/styles": "workspace:*",
+    "@repo/editor": "workspace:*",
     "@repo/ui": "workspace:*",
     "@tailwindcss/typography": "^0.5.19",
     "clsx": "^2.1.1",
