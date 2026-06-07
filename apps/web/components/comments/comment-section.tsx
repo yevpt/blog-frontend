@@ -10,6 +10,7 @@ import { useCommentList } from "@/hooks/use-comment-list";
 import { useCommentSubmit } from "@/hooks/use-comment-submit";
 import { useCommentLike } from "@/hooks/use-comment-like";
 import { CommentInput } from "./comment-input";
+import { RichCommentInput } from "./rich-comment-input";
 import { CommentItem, type ReplyTarget } from "./comment-item";
 
 type TargetType = "article" | "moment";
@@ -215,7 +216,30 @@ export function CommentSection({
   // inline layout：输入框在上，列表自然流（页面整体可滚动）
   return (
     <div className="flex flex-col gap-6">
-      {input}
+      <RichCommentInput
+        value={content}
+        onChange={(v) => {
+          setContent(v);
+          clearError();
+        }}
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+        placeholder={replyTarget ? "写下你的回复..." : "写下你的评论..."}
+      />
+      {submitError && <p className="text-xs text-red-500">{submitError}</p>}
+      {replyTarget && (
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-(--fg3)">正在回复</span>
+          <span className="font-semibold text-primary">@{replyTarget.toUsername}</span>
+          <button
+            type="button"
+            onClick={handleCancelReply}
+            className="text-[11px] text-(--fg3) hover:text-foreground"
+          >
+            取消
+          </button>
+        </div>
+      )}
       <div>{commentList}</div>
     </div>
   );
