@@ -34,7 +34,10 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
   const hiddenCount = Math.max(0, images.length - 2);
 
   return (
-    <article data-testid="snippet-card" className="p-3.5 border-b last:border-none border-border">
+    <article
+      data-testid="snippet-card"
+      className="px-1 py-3.5 border-b last:border-none border-border"
+    >
       {/* Header: 双行布局 */}
       <div className="mb-2.5 flex items-start gap-2.5">
         <UserAvatar

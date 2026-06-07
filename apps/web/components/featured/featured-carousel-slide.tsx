@@ -50,7 +50,6 @@ export function FeaturedCarouselSlide({
             transform: isActive ? "scale(1.05)" : "scale(1)",
             willChange: isActive ? "transform" : "auto",
           }}
-          priority={isLcpCandidate}
           loading={isLcpCandidate ? "eager" : "lazy"}
           unoptimized
           sizes="(max-width: 768px) 100vw, 55vw"

@@ -58,6 +58,7 @@ export function LoadingImage({
           "transition-opacity duration-300",
           isLoading || isError ? "opacity-0" : "opacity-100",
         )}
+        fetchPriority="low"
         onLoad={(event) => {
           setStatus("loaded");
           onLoad?.(event);
