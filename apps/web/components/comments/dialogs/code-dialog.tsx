@@ -67,11 +67,11 @@ export function CodeDialog({ open, onClose, onConfirm }: CodeDialogProps) {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="插入代码"
+      aria-label="插入代码块"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
     >
       <div className="w-[min(90vw,520px)] rounded-2xl bg-background p-5 shadow-xl">
-        <h3 className="mb-4 text-[15px] font-semibold text-foreground">插入代码</h3>
+        <h3 className="mb-4 text-[15px] font-semibold text-foreground">插入代码块</h3>
 
         <div className="flex flex-col gap-3">
           <div>
