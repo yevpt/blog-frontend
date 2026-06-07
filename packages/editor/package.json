@@ -17,16 +17,17 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@tiptap/react": "^3.26.0",
-    "@tiptap/pm": "^3.26.0",
-    "@tiptap/starter-kit": "^3.26.0",
-    "@tiptap/markdown": "^3.26.0",
-    "@tiptap/extension-underline": "^3.26.0",
-    "@tiptap/extension-image": "^3.26.0",
-    "@tiptap/extension-mention": "^3.26.0",
-    "@tiptap/suggestion": "^3.26.0",
     "@repo/icons": "workspace:*",
     "@repo/ui": "workspace:*",
+    "@tiptap/core": "^3.26.0",
+    "@tiptap/extension-image": "^3.26.0",
+    "@tiptap/extension-mention": "^3.26.0",
+    "@tiptap/extension-underline": "^3.26.0",
+    "@tiptap/markdown": "^3.26.0",
+    "@tiptap/pm": "^3.26.0",
+    "@tiptap/react": "^3.26.0",
+    "@tiptap/starter-kit": "^3.26.0",
+    "@tiptap/suggestion": "^3.26.0",
     "clsx": "^2.1.1"
   },
   "peerDependencies": {
@@ -36,12 +37,12 @@
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
-    "@testing-library/jest-dom": "^6.9.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "vitest": "^4.1.7",
-    "@vitejs/plugin-react": "^6.0.2"
+    "@vitejs/plugin-react": "^6.0.2",
+    "vitest": "^4.1.7"
   }
 }
