@@ -34,7 +34,7 @@
  * 与 parseHTML [{ tag: 'u' }] 保持双向一致，并确保 Task 17 rehype-sanitize 能正常放行。
  * ================================================================
  */
-import { type JSONContent, type MarkdownRendererHelpers } from "@tiptap/core";
+import { type JSONContent, type MarkdownRendererHelpers, type RenderContext } from "@tiptap/core";
 import Underline from "@tiptap/extension-underline";
 
 /**
@@ -43,8 +43,8 @@ import Underline from "@tiptap/extension-underline";
  */
 export const UnderlineExtension = Underline.extend({
   // 覆盖序列化行为：输出 <u>text</u>（CommonMark 内联 HTML）
-  // @tiptap/markdown v3 通过 getExtensionField(extension, 'renderMarkdown') 读取此方法
-  renderMarkdown(node: JSONContent, helpers: MarkdownRendererHelpers) {
-    return `<u>${helpers.renderChildren(node)}</u>`;
+  // @tiptap/core v3 将 Markdown 序列化能力内置其中，通过 getExtensionField(extension, 'renderMarkdown') 读取此方法
+  renderMarkdown(node: JSONContent, helpers: MarkdownRendererHelpers, _ctx: RenderContext) {
+    return `<u>${helpers.renderChildren(node.content ?? [])}</u>`;
   },
 });
