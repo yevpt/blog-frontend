@@ -39,6 +39,7 @@ export type IconName =
   | "qq"
   | "search"
   | "share"
+  | "shuffle"
   | "sun"
   | "tag"
   | "user"
