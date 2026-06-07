@@ -7,9 +7,9 @@ interface RouteContext {
 
 export async function POST(req: NextRequest, context: RouteContext) {
   const { id } = await context.params;
-  const articleId = Number(id);
-  if (!Number.isInteger(articleId) || articleId <= 0) {
-    return NextResponse.json({ error: "Invalid article id" }, { status: 400 });
+  const momentId = Number(id);
+  if (!Number.isInteger(momentId) || momentId <= 0) {
+    return NextResponse.json({ error: "Invalid moment id" }, { status: 400 });
   }
-  return proxyPost(req, `/articles/${articleId}/view`, { requireAuth: false, hasBody: false });
+  return proxyPost(req, `/moments/${momentId}/view`, { requireAuth: false, hasBody: false });
 }

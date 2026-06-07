@@ -182,6 +182,8 @@ export function createApiClient(config: ApiClientConfig) {
       listTabs: () => fetchPublic<CategoryTabsResp>("/categories", { method: "GET" }),
     },
     moments: {
+      /** 上报一次碎语阅读（触发即可，不等待返回值） */
+      view: (id: number) => fetchPublic<void>(`/moments/${id}/view`, { method: "POST" }),
       /** 分页查询公开碎语，支持用户/角色过滤 */
       listPublic: (req: MomentListReq = {}) => {
         const params = new URLSearchParams();

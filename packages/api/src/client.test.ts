@@ -532,4 +532,16 @@ describe("createApiClient", () => {
       expect.objectContaining({ method: "POST" }),
     );
   });
+
+  it("moments.view 调用正确的端点", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(mockResponse({ code: 0, message: "ok", data: null }));
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    await client.moments.view(7);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/moments/7/view",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
 });

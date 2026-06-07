@@ -11,13 +11,27 @@ function authHeader(t: string | undefined): Record<string, string> {
   return t ? { Authorization: `Bearer ${t}` } : {};
 }
 
+/** 将后端 Set-Cookie header 转发到浏览器响应中 */
+function forwardCookies(res: Response, response: NextResponse): void {
+  const cookies = res.headers.getSetCookie();
+  for (const cookie of cookies) {
+    response.headers.append("set-cookie", cookie);
+  }
+}
+
 async function parseBackendJson(res: Response): Promise<NextResponse> {
   if (res.status === 401) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (res.status === 403) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   if (res.status === 404) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const json = await res.json();
-  if (json.code !== 0) return NextResponse.json({ error: json.message }, { status: 400 });
-  return NextResponse.json(json.data);
+  if (json.code !== 0) {
+    const errRes = NextResponse.json({ error: json.message }, { status: 400 });
+    forwardCookies(res, errRes);
+    return errRes;
+  }
+  const okRes = NextResponse.json(json.data);
+  forwardCookies(res, okRes);
+  return okRes;
 }
 
 /** GET 代理：转发 query 参数，携带可选 access token */
