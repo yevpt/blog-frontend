@@ -4,9 +4,9 @@
 
 **Goal:** 在 `packages/editor` 新建 Tiptap v3 WYSIWYG 富文本编辑器包，并在文章详情页评论区（inline layout）替换原有 `<input>`。
 
-**Architecture:** 新建 `@repo/editor` 包，核心是 `RichEditor` 组件（Tiptap v3 + tiptap-markdown）。插入行为（图片/链接/代码）通过 props 注入，使评论场景（URL 对话框）和未来 admin 场景（文件上传）复用同一组件。`apps/web` 新增 `RichCommentInput` 组合 RichEditor 与三个对话框，在 `CommentSection` inline layout 中替换原有 `CommentInput`。
+**Architecture:** 新建 `@repo/editor` 包，核心是 `RichEditor` 组件（Tiptap v3 + @tiptap/markdown）。插入行为（图片/链接/代码）通过 props 注入，使评论场景（URL 对话框）和未来 admin 场景（文件上传）复用同一组件。`apps/web` 新增 `RichCommentInput` 组合 RichEditor 与三个对话框，在 `CommentSection` inline layout 中替换原有 `CommentInput`。
 
-**Tech Stack:** Tiptap v3.26.0, tiptap-markdown 0.9.0, @tiptap/starter-kit, @tiptap/extension-image, @tiptap/extension-mention, React 19, TailwindCSS, @repo/ui, @repo/icons
+**Tech Stack:** Tiptap v3.26.0, @tiptap/markdown 3.26.0（官方 MIT 包）, @tiptap/starter-kit, @tiptap/extension-image, @tiptap/extension-mention, React 19, TailwindCSS, @repo/ui, @repo/icons
 
 ---
 
@@ -94,7 +94,7 @@ mkdir -p packages/editor/src/{extensions,hooks,toolbar,__tests__}
     "@tiptap/extension-image": "^3.26.0",
     "@tiptap/extension-mention": "^3.26.0",
     "@tiptap/suggestion": "^3.26.0",
-    "tiptap-markdown": "^0.9.0",
+    "@tiptap/markdown": "^3.26.0",
     "@repo/icons": "workspace:*",
     "@repo/ui": "workspace:*",
     "clsx": "^2.1.1"
@@ -405,7 +405,7 @@ git commit -m "feat(editor): 定义 InsertHandlers / MentionItem / RichEditorPro
 import { describe, it, expect } from "vitest";
 import { Editor } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
-import { Markdown } from "tiptap-markdown";
+import { Markdown } from "@tiptap/markdown";
 import { UnderlineExtension } from "../extensions/underline";
 
 /**
@@ -487,7 +487,7 @@ pnpm --filter @repo/editor test
  *   Ctrl+U 或工具栏按钮
  *     → editor.chain().focus().toggleUnderline().run()
  *     → Tiptap 在 ProseMirror doc 中标记 `underline` mark
- *     → tiptap-markdown（html: true）序列化为 <u>text</u>
+ *     → @tiptap/markdown（html: true）序列化为 <u>text</u>
  *     → 提交到后端，存储为 Markdown 字符串中的内联 HTML
  *     → apps/web/lib/markdown.ts 的 rehype-sanitize 需允许 <u> 标签
  *       （见 Task 17 对 sanitize 配置的修改）
@@ -745,7 +745,7 @@ git commit -m "feat(editor): 添加 Mention 扩展（stub 候选列表，预留�
  *
  * ② UnderlineExtension（显式引入，见 extensions/underline.ts）
  *
- * ③ Markdown（tiptap-markdown）
+ * ③ Markdown（@tiptap/markdown）
  *    - 双向 Markdown ↔ Tiptap JSON 转换
  *    - html: true 允许 <u>text</u> 等内联 HTML 通过序列化
  *
@@ -765,7 +765,7 @@ git commit -m "feat(editor): 添加 Mention 扩展（stub 候选列表，预留�
  */
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { Markdown } from "tiptap-markdown";
+import { Markdown } from "@tiptap/markdown";
 import Image from "@tiptap/extension-image";
 import { UnderlineExtension } from "../extensions/underline";
 import { createMentionExtension } from "../extensions/mention";
@@ -853,7 +853,7 @@ export function useRichEditor({
       editable: !disabled,
 
       // ── 内容变更回调 ──────────────────────────────────────────
-      // editor.storage.markdown.getMarkdown() 由 tiptap-markdown 扩展提供，
+      // editor.storage.markdown.getMarkdown() 由 @tiptap/markdown 扩展提供，
       // 将当前 ProseMirror 文档序列化为 Markdown 字符串
       onUpdate: ({ editor }) => {
         onChange(editor.storage.markdown.getMarkdown());
@@ -2409,7 +2409,7 @@ pnpm --filter apps/web dev
 git add -A
 git commit -m "feat(editor): RichEditor WYSIWYG 评论编辑器完整实现
 
-- 新建 @repo/editor 包（Tiptap v3.26.0 + tiptap-markdown）
+- 新建 @repo/editor 包（Tiptap v3.26.0 + @tiptap/markdown）
 - 教科书注释 + 响应式说明（移动端工具栏横向滚动）
 - 下划线扩展显式封装，含追溯数据流说明
 - @提及 stub（UI 完整，等待后端 /users/search API）
@@ -2436,5 +2436,5 @@ git commit -m "feat(editor): RichEditor WYSIWYG 评论编辑器完整实现
 | 响应式移动端横向滚动 | Task 8 Toolbar |
 | rehype-sanitize 允许 `<u>` | Task 17 |
 | 测试覆盖 | 每 Task 含 TDD 步骤 |
-| tiptap-markdown 替换点 | use-rich-editor.ts 注释标注 |
+| @tiptap/markdown 替换点 | use-rich-editor.ts 注释标注 |
 | 版本 Tiptap v3.26.0 | Task 1 package.json |

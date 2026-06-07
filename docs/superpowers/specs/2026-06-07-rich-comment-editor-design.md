@@ -21,7 +21,7 @@
 | 项目 | 选择 | 理由 |
 |------|------|------|
 | 编辑器内核 | **Tiptap v3.26.0** | ProseMirror 生态，扩展体系成熟，官方 React 封装 |
-| Markdown 序列化 | **tiptap-markdown 0.9.0** | 双向 Markdown ↔ Tiptap JSON；序列化用 `editor.storage.markdown.getMarkdown()` |
+| Markdown 序列化 | **@tiptap/markdown 3.26.0** | Tiptap 官方包（MIT），双向 Markdown ↔ Tiptap JSON；序列化用 `editor.storage.markdown.getMarkdown()` |
 | 下划线 | StarterKit v3 内置，在 `extensions/underline.ts` 中封装重导出 | MD 无原生下划线，存为 `<u>text</u>`；封装层使实现可追溯 |
 | @提及 | `@tiptap/extension-mention`（stub 候选列表） | 需后端用户搜索 API，UI 预留，结果暂时为空 |
 | 代码块 | StarterKit v3 内置 CodeBlock，通过对话框触发插入 | 支持语言选择，序列化为 ```lang 围栏 |
@@ -30,7 +30,7 @@
 
 - **StarterKit v3 已内置**：Bold、Italic、Strike、Code、CodeBlock、Link、Underline、Heading 等，不需要单独安装这些包
 - **SSR 适配**：Next.js 环境下 `useEditor` 必须传 `immediatelyRender: false`，否则 hydration 报错
-- **序列化**：`tiptap-markdown` 0.9.0 作者已停止维护（Tiptap 官方推付费方案），但 0.9.0 兼容 v3，后续如需替换只涉及 `use-rich-editor.ts` 一处
+- **序列化**：`@tiptap/markdown` 是 Tiptap 官方维护的开源包（同仓库，同版本号），与 StarterKit 等包一同发布，无需担心维护问题
 
 ### 新增依赖（安装到 `packages/editor`）
 
@@ -38,10 +38,10 @@
 @tiptap/react@^3.26.0
 @tiptap/pm@^3.26.0
 @tiptap/starter-kit@^3.26.0
+@tiptap/markdown@^3.26.0
 @tiptap/extension-image@^3.26.0
 @tiptap/extension-mention@^3.26.0
 @tiptap/suggestion@^3.26.0
-tiptap-markdown@^0.9.0
 ```
 
 ---
