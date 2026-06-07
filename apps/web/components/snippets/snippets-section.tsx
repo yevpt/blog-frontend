@@ -5,16 +5,18 @@ import { SvgIcon } from "@repo/icons";
 import { Button } from "@repo/ui";
 import type { MomentItemResp } from "@repo/api";
 import { SnippetCard } from "./snippet-card";
+import { SnippetCardSkeleton } from "./snippet-card-skeleton";
 
 interface SnippetsSectionProps {
   snippets: MomentItemResp[];
+  loading?: boolean;
 }
 
 /** 右侧栏最多展示的碎语条数 */
 const MAX_SNIPPETS = 3;
 
 // 碎语区块容器：渐变图标 header + 卡片堆叠 + 渐变 CTA 按钮
-export function SnippetsSection({ snippets }: SnippetsSectionProps) {
+export function SnippetsSection({ snippets, loading }: SnippetsSectionProps) {
   const { t } = useLocale();
   const visibleSnippets = snippets.slice(0, MAX_SNIPPETS);
 
@@ -42,9 +44,9 @@ export function SnippetsSection({ snippets }: SnippetsSectionProps) {
 
       {/* Cards */}
       <div className="flex flex-col gap-2 px-3 pb-3">
-        {visibleSnippets.map((snippet) => (
-          <SnippetCard key={snippet.id} snippet={snippet} />
-        ))}
+        {loading
+          ? Array.from({ length: MAX_SNIPPETS }, (_, i) => <SnippetCardSkeleton key={i} />)
+          : visibleSnippets.map((snippet) => <SnippetCard key={snippet.id} snippet={snippet} />)}
       </div>
 
       {/* Footer CTA */}

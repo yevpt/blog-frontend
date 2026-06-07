@@ -247,7 +247,7 @@ export function ArticleSection({
       </div>
 
       {sidebar ? (
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_328px]">
           <main className="min-w-0">{articleGrid}</main>
           <aside className="mt-10 flex flex-col gap-3.5 lg:sticky lg:top-[88px] lg:mt-6">
             {sidebar}

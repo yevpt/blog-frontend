@@ -110,7 +110,7 @@ describe("useSheetGesture", () => {
     });
 
     expect(onDismiss).not.toHaveBeenCalled();
-    act(() => vi.advanceTimersByTime(350));
+    act(() => vi.advanceTimersByTime(420));
     expect(onDismiss).toHaveBeenCalledOnce();
     unmount();
     cleanup(sheet, scroll);

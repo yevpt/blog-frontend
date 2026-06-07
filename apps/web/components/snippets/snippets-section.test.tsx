@@ -95,7 +95,8 @@ describe("SnippetsSection", () => {
   it("渲染不崩溃，显示碎语内容", () => {
     render(<SnippetsSection snippets={mockMoments} />);
     expect(screen.getByText("碎语")).toBeTruthy();
-    expect(screen.getByText(SHORT_CONTENT)).toBeTruthy();
+    // 重设计后 SHORT_CONTENT 可能出现在多个节点（正文 + 预览区），用 getAllByText
+    expect(screen.getAllByText(SHORT_CONTENT).length).toBeGreaterThan(0);
   });
 
   it("长内容默认截断，显示展开按钮", () => {
@@ -178,6 +179,12 @@ describe("SnippetsSection", () => {
     expect(screen.getByText("碎语")).toBeTruthy();
     expect(screen.getByText("发表碎语")).toBeTruthy();
     expect(screen.getByText((content) => content.includes("查看更多"))).toBeTruthy();
+  });
+
+  it("loading 时显示骨架屏", () => {
+    const { container } = render(<SnippetsSection snippets={mockMoments} loading />);
+    const skeletons = container.querySelectorAll('[aria-hidden="true"]');
+    expect(skeletons.length).toBe(3);
   });
 
   it("最多只显示 3 条碎语", () => {

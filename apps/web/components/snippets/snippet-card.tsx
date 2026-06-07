@@ -52,18 +52,13 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span className="truncate text-[13px] font-semibold text-foreground">{authorName}</span>
-            {authorBadge && (
-              <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold text-primary dark:bg-primary/15">
-                {authorBadge}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-1.5">
-            {snippet.user?.site && (
-              <span className="min-w-0 truncate text-[11px] text-(--fg3)">{snippet.user.site}</span>
-            )}
             <time className="ml-auto shrink-0 text-[11px] text-(--fg3)">{relativeTime}</time>
           </div>
+          {authorBadge && (
+            <span className="mt-0.5 inline-block rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold text-primary dark:bg-primary/15">
+              {authorBadge}
+            </span>
+          )}
         </div>
       </div>
 

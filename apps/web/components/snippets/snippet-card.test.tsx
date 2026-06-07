@@ -107,15 +107,11 @@ describe("SnippetCard", () => {
     expect(screen.queryByText("博主")).toBeNull();
   });
 
-  it("有 site 时显示 subtitle 第二行", () => {
-    render(
-      <SnippetCard
-        snippet={makeMoment({
-          user: { id: 1, username: "testuser", nickname: "测试用户", site: "我的博客" },
-        })}
-      />,
-    );
-    expect(screen.getByText("我的博客")).toBeTruthy();
+  it("标签显示在昵称下方第二行", () => {
+    render(<SnippetCard snippet={makeMoment()} />);
+    // 昵称在第一行，标签（mark）在第二行
+    expect(screen.getByText("测试用户")).toBeTruthy();
+    expect(screen.getByText("博主")).toBeTruthy();
   });
 
   it("有图片时使用 object-contain 完整展示", () => {
