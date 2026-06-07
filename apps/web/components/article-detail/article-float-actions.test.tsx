@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ArticleFloatActions } from "./article-float-actions";
+import { useActiveArticle } from "@/store/use-active-article";
 
 const mockToggleLike = vi.fn();
 vi.mock("@/hooks/use-article-engagement", () => ({
@@ -18,8 +19,12 @@ vi.mock("./music-player", () => ({
   MusicPlayer: () => <div data-testid="music-player" />,
 }));
 
-// 拦截 fire-and-forget 的阅读上报请求，避免 jsdom 环境下相对 URL 报错
-const mockFetch = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+// 拦截阅读上报请求，返回代理后的响应格式（proxyPost 已剥离外层包装）
+const mockFetch = vi.fn().mockResolvedValue(
+  new Response(JSON.stringify({ id: 1, view_count: 101 }), {
+    headers: { "Content-Type": "application/json" },
+  }),
+);
 vi.stubGlobal("fetch", mockFetch);
 
 const defaultProps = {
@@ -29,7 +34,17 @@ const defaultProps = {
 };
 
 describe("ArticleFloatActions", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useActiveArticle.getState().clearArticle();
+    useActiveArticle.getState().syncArticle({
+      articleId: 1,
+      likeCount: 10,
+      commentCount: 5,
+      isLiked: false,
+      readCount: 100,
+    });
+  });
 
   it("渲染点赞和回顶按钮", () => {
     render(<ArticleFloatActions {...defaultProps} />);
@@ -46,5 +61,28 @@ describe("ArticleFloatActions", () => {
   it("渲染 MusicPlayer 子组件", () => {
     render(<ArticleFloatActions {...defaultProps} musicUrl="https://x.com/a.mp3" />);
     expect(screen.getByTestId("music-player")).toBeInTheDocument();
+  });
+
+  it("上报阅读后更新 store 中的 readCount", async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response(JSON.stringify({ id: 1, view_count: 101 }), {
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    render(<ArticleFloatActions {...defaultProps} />);
+
+    // 等待 fetch 被调用
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/articles/1/view",
+        expect.objectContaining({ method: "POST" }),
+      );
+    });
+
+    // 等待 store 更新
+    await waitFor(() => {
+      expect(useActiveArticle.getState().readCount).toBe(101);
+    });
   });
 });

@@ -9,19 +9,22 @@ describe("ArticleNavbarSync", () => {
   });
 
   it("mount 时把文章信息同步到 store", () => {
-    render(<ArticleNavbarSync articleId={3} likeCount={17} commentCount={21} isLiked />);
+    render(
+      <ArticleNavbarSync articleId={3} likeCount={17} commentCount={21} isLiked readCount={100} />,
+    );
 
     expect(useActiveArticle.getState()).toMatchObject({
       articleId: 3,
       likeCount: 17,
       commentCount: 21,
       isLiked: true,
+      readCount: 100,
     });
   });
 
   it("unmount 时清空 store，避免切页残留", () => {
     const { unmount } = render(
-      <ArticleNavbarSync articleId={3} likeCount={17} commentCount={21} isLiked />,
+      <ArticleNavbarSync articleId={3} likeCount={17} commentCount={21} isLiked readCount={100} />,
     );
 
     unmount();
@@ -31,6 +34,7 @@ describe("ArticleNavbarSync", () => {
       likeCount: 0,
       commentCount: 0,
       isLiked: false,
+      readCount: 0,
     });
   });
 });

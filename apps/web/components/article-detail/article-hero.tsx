@@ -3,6 +3,7 @@
 import Image from "next/image";
 import type { ArticleDetailResp } from "@repo/api";
 import { useLocale } from "@repo/hooks";
+import { useActiveArticle } from "@/store/use-active-article";
 import { formatDate } from "@/lib/format-time.ts";
 import { ArticleDateCategory } from "@/components/articles/article-date-category";
 
@@ -17,6 +18,7 @@ function estimateReadingMinutes(content: string): number {
 
 export function ArticleHero({ article }: ArticleHeroProps) {
   const readingMin = estimateReadingMinutes(article.content);
+  const readCount = useActiveArticle((state) => state.readCount) || article.read_count;
   const { locale } = useLocale();
   const formattedDate = formatDate(article.created_at, locale);
 
@@ -70,7 +72,7 @@ export function ArticleHero({ article }: ArticleHeroProps) {
         <span aria-hidden>·</span>
         <span>{readingMin} 分钟阅读</span>
         <span aria-hidden>·</span>
-        <span>{article.read_count.toLocaleString()} 阅读</span>
+        <span>{readCount.toLocaleString()} 阅读</span>
       </div>
     </div>
   );

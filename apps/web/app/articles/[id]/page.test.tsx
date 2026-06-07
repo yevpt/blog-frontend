@@ -8,6 +8,7 @@ interface ArticleNavbarSyncProps {
   likeCount: number;
   commentCount: number;
   isLiked: boolean;
+  readCount: number;
 }
 
 interface ArticleFloatActionsProps {
@@ -72,6 +73,7 @@ describe("ArticleDetailPage", () => {
       likeCount: mockArticle.like_count,
       commentCount: mockArticle.comment_count,
       isLiked: mockArticle.is_liked ?? false,
+      readCount: mockArticle.read_count,
     });
   });
 

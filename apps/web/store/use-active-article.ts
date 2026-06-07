@@ -5,6 +5,7 @@ interface SyncArticleInput {
   likeCount: number;
   commentCount: number;
   isLiked: boolean;
+  readCount: number;
 }
 
 interface PatchLikeInput {
@@ -17,8 +18,10 @@ interface ActiveArticleStore {
   likeCount: number;
   commentCount: number;
   isLiked: boolean;
+  readCount: number;
   syncArticle: (input: SyncArticleInput) => void;
   patchLike: (input: PatchLikeInput) => void;
+  patchViewCount: (readCount: number) => void;
   clearArticle: () => void;
 }
 
@@ -27,14 +30,17 @@ export const useActiveArticle = create<ActiveArticleStore>((set) => ({
   likeCount: 0,
   commentCount: 0,
   isLiked: false,
-  syncArticle: ({ articleId, likeCount, commentCount, isLiked }) =>
-    set({ articleId, likeCount, commentCount, isLiked }),
+  readCount: 0,
+  syncArticle: ({ articleId, likeCount, commentCount, isLiked, readCount }) =>
+    set({ articleId, likeCount, commentCount, isLiked, readCount }),
   patchLike: ({ likeCount, isLiked }) => set({ likeCount, isLiked }),
+  patchViewCount: (readCount) => set({ readCount }),
   clearArticle: () =>
     set({
       articleId: null,
       likeCount: 0,
       commentCount: 0,
       isLiked: false,
+      readCount: 0,
     }),
 }));

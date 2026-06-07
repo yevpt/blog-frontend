@@ -12,6 +12,7 @@ describe("useActiveArticle", () => {
       likeCount: 12,
       commentCount: 34,
       isLiked: true,
+      readCount: 100,
     });
 
     expect(useActiveArticle.getState()).toMatchObject({
@@ -19,6 +20,7 @@ describe("useActiveArticle", () => {
       likeCount: 12,
       commentCount: 34,
       isLiked: true,
+      readCount: 100,
     });
   });
 
@@ -28,6 +30,7 @@ describe("useActiveArticle", () => {
       likeCount: 12,
       commentCount: 34,
       isLiked: false,
+      readCount: 100,
     });
 
     useActiveArticle.getState().patchLike({
@@ -40,6 +43,27 @@ describe("useActiveArticle", () => {
       likeCount: 13,
       commentCount: 34,
       isLiked: true,
+      readCount: 100,
+    });
+  });
+
+  it("patchViewCount 只更新阅读数", () => {
+    useActiveArticle.getState().syncArticle({
+      articleId: 8,
+      likeCount: 12,
+      commentCount: 34,
+      isLiked: true,
+      readCount: 100,
+    });
+
+    useActiveArticle.getState().patchViewCount(101);
+
+    expect(useActiveArticle.getState()).toMatchObject({
+      articleId: 8,
+      likeCount: 12,
+      commentCount: 34,
+      isLiked: true,
+      readCount: 101,
     });
   });
 
@@ -49,6 +73,7 @@ describe("useActiveArticle", () => {
       likeCount: 12,
       commentCount: 34,
       isLiked: true,
+      readCount: 100,
     });
 
     useActiveArticle.getState().clearArticle();
@@ -58,6 +83,7 @@ describe("useActiveArticle", () => {
       likeCount: 0,
       commentCount: 0,
       isLiked: false,
+      readCount: 0,
     });
   });
 });

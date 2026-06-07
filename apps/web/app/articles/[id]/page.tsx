@@ -55,6 +55,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         likeCount={article.like_count}
         commentCount={article.comment_count}
         isLiked={article.is_liked ?? false}
+        readCount={article.read_count}
       />
 
       <div className="mx-auto max-w-[1100px] px-4 pt-22 pb-8 md:pt-24">

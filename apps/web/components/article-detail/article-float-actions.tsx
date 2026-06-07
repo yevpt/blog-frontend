@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@repo/ui";
 import { useArticleEngagement } from "@/hooks/use-article-engagement";
+import { useActiveArticle } from "@/store/use-active-article";
 import { MusicPlayer } from "./music-player";
 
 interface ArticleFloatActionsProps {
@@ -13,12 +14,22 @@ interface ArticleFloatActionsProps {
 
 export function ArticleFloatActions({ articleId, musicUrl, musicName }: ArticleFloatActionsProps) {
   const { isLiked, isLiking, toggleLike } = useArticleEngagement();
+  const patchViewCount = useActiveArticle((state) => state.patchViewCount);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // 进入页面后上报一次阅读（fire-and-forget）
+  // 进入页面后上报一次阅读，成功后更新阅读数
   useEffect(() => {
-    void fetch(`/api/articles/${articleId}/view`, { method: "POST" });
-  }, [articleId]);
+    const controller = new AbortController();
+    fetch(`/api/articles/${articleId}/view`, { method: "POST", signal: controller.signal })
+      .then((res) => res.ok && res.json())
+      .then((data) => {
+        if (data && typeof data.view_count === "number") {
+          patchViewCount(data.view_count);
+        }
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [articleId, patchViewCount]);
 
   useEffect(() => {
     const onScroll = () => setShowScrollTop(window.scrollY > 400);

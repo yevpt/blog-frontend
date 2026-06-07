@@ -33,6 +33,7 @@ describe("useArticleEngagement", () => {
       likeCount: 5,
       commentCount: 9,
       isLiked: false,
+      readCount: 100,
     });
   });
 
