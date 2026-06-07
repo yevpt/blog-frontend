@@ -52,7 +52,6 @@ vi.mock("@repo/hooks", () => ({
   }),
 }));
 
-// 生成测试用 MomentItemResp 数据
 function makeMoment(
   id: number,
   content: string,
@@ -83,10 +82,8 @@ function makeMoment(
   };
 }
 
-// 短内容（< 120 字符）
 const SHORT_CONTENT = "这是一条短碎语，不超过120字符的限制。";
 
-// 长内容（> 120 字符），确保触发截断（JS 字符串 length 按 UTF-16 单元计算，中文每字1单元）
 const LONG_CONTENT =
   "这是一条很长的碎语内容，超过了一百二十个字符的限制，需要显示展开按钮。" +
   "这部分内容在默认状态下应该被隐藏，只有点击展开按钮后才能看到全部内容。" +
@@ -97,9 +94,7 @@ const mockMoments: MomentItemResp[] = [makeMoment(1, SHORT_CONTENT), makeMoment(
 describe("SnippetsSection", () => {
   it("渲染不崩溃，显示碎语内容", () => {
     render(<SnippetsSection snippets={mockMoments} />);
-    // 区块标题
     expect(screen.getByText("碎语")).toBeTruthy();
-    // 短内容完整显示
     expect(screen.getByText(SHORT_CONTENT)).toBeTruthy();
   });
 
@@ -146,7 +141,7 @@ describe("SnippetsSection", () => {
   it("发表碎语和查看更多按钮存在", () => {
     render(<SnippetsSection snippets={mockMoments} />);
     expect(screen.getByText("发表碎语")).toBeTruthy();
-    expect(screen.getByText("查看更多")).toBeTruthy();
+    expect(screen.getByText((content) => content.includes("查看更多"))).toBeTruthy();
   });
 
   it("短内容不显示展开按钮", () => {
@@ -162,38 +157,27 @@ describe("SnippetsSection", () => {
 
   it("显示点赞和评论统计数字", () => {
     render(<SnippetsSection snippets={mockMoments} />);
-    const likeLabels = screen.getAllByText("10 喜欢");
-    const commentLabels = screen.getAllByText("3 评论");
+    const likeLabels = screen.getAllByText("10");
+    const commentLabels = screen.getAllByText("3");
     expect(likeLabels).toHaveLength(mockMoments.length);
     expect(commentLabels).toHaveLength(mockMoments.length);
   });
 
-  it("碎语之间使用紧凑分隔线和合理内边距", () => {
+  it("渲染 shuffle 图标按钮", () => {
     render(<SnippetsSection snippets={mockMoments} />);
-    const cards = screen.getAllByTestId("snippet-card");
-    expect(cards[0].className).toContain("border-b");
-    expect(cards[0].className).toContain("py-3");
+    expect(screen.getByTestId("icon-shuffle")).toBeTruthy();
   });
 
-  it("喜欢按钮点击后变为激活状态（liked）", async () => {
-    const user = userEvent.setup();
-    render(<SnippetsSection snippets={[makeMoment(1, SHORT_CONTENT)]} />);
-
-    const likeBtn = screen.getByLabelText("喜欢");
-    expect(likeBtn.className).not.toContain("text-red-500");
-
-    await act(async () => {
-      await user.click(likeBtn);
-    });
-
-    expect(likeBtn.className).toContain("text-red-500");
+  it("渲染渐变 header 图标", () => {
+    render(<SnippetsSection snippets={mockMoments} />);
+    expect(screen.getByText("✦")).toBeTruthy();
   });
 
   it("snippets 为空时仍渲染区块标题和操作按钮", () => {
     render(<SnippetsSection snippets={[]} />);
     expect(screen.getByText("碎语")).toBeTruthy();
     expect(screen.getByText("发表碎语")).toBeTruthy();
-    expect(screen.getByText("查看更多")).toBeTruthy();
+    expect(screen.getByText((content) => content.includes("查看更多"))).toBeTruthy();
   });
 
   it("最多只显示 3 条碎语", () => {

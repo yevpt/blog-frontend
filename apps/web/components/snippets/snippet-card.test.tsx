@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { SnippetCard } from "./snippet-card";
 import type { MomentItemResp } from "@repo/api";
 
@@ -10,22 +11,25 @@ vi.mock("@repo/icons", () => ({
   ),
 }));
 
-// Mock @repo/hooks useLocale
-vi.mock("@repo/hooks", () => ({
-  useLocale: () => ({
-    locale: "zh",
-    setLocale: () => undefined,
-    t: (key: string) => {
-      const messages: Record<string, string> = {
-        "snippet.like": "喜欢",
-        "snippet.comment": "评论",
-      };
-      return messages[key] ?? key;
-    },
-  }),
+// Mock @repo/ui Button
+vi.mock("@repo/ui", () => ({
+  Button: ({
+    children,
+    variant,
+    onPress,
+    ...props
+  }: {
+    children: ReactNode;
+    variant?: string;
+    onPress?: () => void;
+    [key: string]: unknown;
+  }) => (
+    <button data-variant={variant} onClick={onPress} {...props}>
+      {children}
+    </button>
+  ),
 }));
 
-// 基础测试用 MomentItemResp（含 user）
 function makeMoment(overrides: Partial<MomentItemResp> = {}): MomentItemResp {
   return {
     id: 1,
@@ -79,14 +83,13 @@ describe("SnippetCard", () => {
     expect(img.getAttribute("src")).toBe("https://example.com/avatar.jpg");
   });
 
-  it("没有 avatar_url 时渲染首字母 fallback，不渲染 img", () => {
+  it("没有 avatar_url 时渲染首字母 fallback", () => {
     render(
       <SnippetCard
         snippet={makeMoment({ user: { id: 1, username: "testuser", nickname: "测试用户" } })}
       />,
     );
     expect(screen.queryByRole("img")).toBeNull();
-    // 首字母 fallback
     expect(screen.getByText("测")).toBeTruthy();
   });
 
@@ -101,18 +104,63 @@ describe("SnippetCard", () => {
         snippet={makeMoment({ user: { id: 1, username: "testuser", nickname: "测试用户" } })}
       />,
     );
-    // 没有 mark，不应该渲染徽章 span
     expect(screen.queryByText("博主")).toBeNull();
   });
 
-  it("显示 like_count 和 comment_count", () => {
+  it("显示点赞和评论数字（ArticleCardStats 风格）", () => {
     render(<SnippetCard snippet={makeMoment()} />);
-    expect(screen.getByText("5 喜欢")).toBeTruthy();
-    expect(screen.getByText("2 评论")).toBeTruthy();
+    expect(screen.getByText("5")).toBeTruthy();
+    expect(screen.getByText("2")).toBeTruthy();
   });
 
   it("渲染正确的 data-testid", () => {
     render(<SnippetCard snippet={makeMoment()} />);
     expect(screen.getByTestId("snippet-card")).toBeTruthy();
+  });
+
+  it("有图片时渲染图片网格", () => {
+    const snippet = makeMoment({
+      images: [
+        {
+          id: 1,
+          name: "photo1",
+          file_type: "image/jpeg",
+          url: "/1.jpg",
+          access_url: "/1.jpg",
+          size: 1000,
+          seq: 1,
+        },
+        {
+          id: 2,
+          name: "photo2",
+          file_type: "image/jpeg",
+          url: "/2.jpg",
+          access_url: "/2.jpg",
+          size: 2000,
+          seq: 2,
+        },
+      ],
+    });
+    render(<SnippetCard snippet={snippet} />);
+    const images = screen
+      .getAllByRole("img")
+      .filter((el) => el.tagName === "IMG" && el.getAttribute("src")?.startsWith("/"));
+    expect(images.length).toBe(2);
+  });
+
+  it("无图片时不渲染图片网格", () => {
+    render(<SnippetCard snippet={makeMoment({ images: [] })} />);
+    const allImgs = screen.queryAllByRole("img");
+    expect(allImgs.length).toBeLessThanOrEqual(1);
+  });
+
+  it("已点赞时显示 heart-fill 图标", () => {
+    render(<SnippetCard snippet={makeMoment({ is_liked: true })} />);
+    expect(screen.getByTestId("icon-heart-fill")).toBeTruthy();
+  });
+
+  it("未点赞时显示 heart 图标", () => {
+    render(<SnippetCard snippet={makeMoment({ is_liked: false })} />);
+    expect(screen.getByTestId("icon-heart")).toBeTruthy();
   });
 });
