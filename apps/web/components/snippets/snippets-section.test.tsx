@@ -14,6 +14,7 @@ vi.mock("@repo/icons", () => ({
 
 // Mock @repo/ui（Button 组件）
 vi.mock("@repo/ui", () => ({
+  cn: (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" "),
   Button: ({
     children,
     variant,

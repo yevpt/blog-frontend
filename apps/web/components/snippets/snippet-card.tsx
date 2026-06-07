@@ -1,7 +1,8 @@
 import type { MomentItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
 import { Button } from "@repo/ui";
-import Image from "next/image";
+import { LoadingImage } from "@/components/common/loading-image";
+import { UserAvatar } from "@/components/common/user-avatar";
 import { formatRelativeTime } from "../../lib/format-time";
 import { SnippetContent } from "./snippet-content";
 
@@ -36,19 +37,12 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
     <article data-testid="snippet-card" className="p-3.5 border-b last:border-none border-border">
       {/* Header: 双行布局 */}
       <div className="mb-2.5 flex items-start gap-2.5">
-        {authorAvatar ? (
-          <Image
-            src={authorAvatar}
-            alt={authorName}
-            width={36}
-            height={36}
-            className="h-9 w-9 shrink-0 rounded-full object-cover shadow-[0_2px_8px_rgba(124,58,237,0.2)]"
-          />
-        ) : (
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-sm font-semibold text-primary-foreground shadow-[0_2px_8px_rgba(124,58,237,0.2)]">
-            {authorName.charAt(0)}
-          </span>
-        )}
+        <UserAvatar
+          src={authorAvatar || undefined}
+          name={authorName}
+          size="lg"
+          className="shadow-[0_2px_8px_rgba(124,58,237,0.2)]"
+        />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span className="truncate text-[13px] font-semibold text-foreground">{authorName}</span>
@@ -77,7 +71,7 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
               key={img.id}
               className="relative aspect-[3/2] w-full overflow-hidden rounded-[6px]"
             >
-              <Image
+              <LoadingImage
                 src={img.access_url}
                 alt={img.name}
                 fill

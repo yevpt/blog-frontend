@@ -2,9 +2,9 @@
 
 import { useLocale } from "@repo/hooks";
 import { Button } from "@repo/ui";
+import { UserAvatar } from "@/components/common/user-avatar";
 import type { Visitor } from "../../app/_mock/types";
 import { formatRelativeTime } from "../../lib/format-time";
-import Image from "next/image";
 
 interface RecentVisitorsProps {
   visitors: Visitor[];
@@ -26,13 +26,7 @@ export function RecentVisitors({ visitors }: RecentVisitorsProps) {
             data-testid="visitor-item"
             className="-mx-2 -my-1.5 flex min-w-0 cursor-pointer select-none items-center gap-2 rounded-[10px] px-2 py-1.5 transition-[background,transform] hover:bg-primary/10 active:scale-95"
           >
-            <Image
-              src={visitor.avatar}
-              alt={visitor.name}
-              width={48}
-              height={48}
-              className="object-cover rounded-full"
-            />
+            <UserAvatar src={visitor.avatar} name={visitor.name} size="xl" />
 
             <div className="min-w-0 flex-1">
               <span className="block truncate text-xs font-semibold text-foreground">

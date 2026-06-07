@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import { cn, Button } from "@repo/ui";
 import { useLocale } from "@repo/hooks/locale";
 import type { FeaturedPost } from "@/app/_mock/types";
+import { LoadingImage } from "@/components/common/loading-image";
 import { formatDate } from "../../lib/format-time";
 import { getCategoryColorClass } from "@/lib/category-colors";
 
@@ -38,7 +38,7 @@ export function FeaturedCarouselSlide({
         data-carousel-background-drag="true"
         className="absolute inset-0 overflow-hidden md:relative md:inset-auto md:h-full md:w-auto md:flex-1 md:shrink-0 md:rounded-xl md:shadow-md"
       >
-        <Image
+        <LoadingImage
           src={post.coverImage}
           alt={post.title}
           fill

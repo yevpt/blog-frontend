@@ -89,6 +89,46 @@ body::after {
   }
 }
 
+:root {
+  --loading-image-base-a: #e4e4e7;
+  --loading-image-base-b: #f4f4f5;
+}
+
+:root.dark {
+  --loading-image-base-a: #27272a;
+  --loading-image-base-b: #3f3f46;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --loading-image-base-a: #27272a;
+    --loading-image-base-b: #3f3f46;
+  }
+}
+
+@keyframes loadingImageBreathe {
+  0%,
+  100% {
+    filter: brightness(0.98);
+    opacity: 0.88;
+  }
+  50% {
+    filter: brightness(1.04);
+    opacity: 1;
+  }
+}
+
+.loading-image-skeleton {
+  background: linear-gradient(135deg, var(--loading-image-base-a), var(--loading-image-base-b));
+  animation: loadingImageBreathe 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-image-skeleton {
+    animation: none;
+  }
+}
+
 @keyframes slideDownCard {
   from {
     opacity: 1;

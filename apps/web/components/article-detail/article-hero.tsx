@@ -1,8 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import type { ArticleDetailResp } from "@repo/api";
 import { useLocale } from "@repo/hooks";
+import { LoadingImage } from "@/components/common/loading-image";
+import { UserAvatar } from "@/components/common/user-avatar";
 import { useActiveArticle } from "@/store/use-active-article";
 import { formatDate } from "@/lib/format-time.ts";
 import { ArticleDateCategory } from "@/components/articles/article-date-category";
@@ -26,7 +27,7 @@ export function ArticleHero({ article }: ArticleHeroProps) {
     <div className="mx-auto max-w-[720px]">
       {article.cover_img_url && (
         <div className="relative mb-8 aspect-video w-full overflow-hidden rounded-2xl">
-          <Image
+          <LoadingImage
             src={article.cover_img_url}
             alt={article.title}
             fill
@@ -42,15 +43,12 @@ export function ArticleHero({ article }: ArticleHeroProps) {
 
       {article.user && (
         <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
-          {article.user.avatar_url && (
-            <Image
-              src={article.user.avatar_url}
-              alt={article.user.nickname ?? article.user.username}
-              width={24}
-              height={24}
-              className="rounded-full object-cover"
-            />
-          )}
+          <UserAvatar
+            src={article.user.avatar_url}
+            name={article.user.nickname ?? article.user.username}
+            size="sm"
+            className="h-6 w-6"
+          />
           <span className="font-medium text-foreground">
             {article.user.nickname ?? article.user.username}
           </span>

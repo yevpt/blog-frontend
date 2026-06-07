@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import type { ArticleListItemResp } from "@repo/api";
 import { useLocale } from "@repo/hooks/locale";
+import { LoadingImage } from "@/components/common/loading-image";
 import { formatDate } from "@/lib/format-time.ts";
 import { ArticleCardStats } from "./article-card-stats";
 import { ArticleDateCategory } from "./article-date-category";
@@ -38,7 +38,7 @@ export function ArticleCard({
             tabIndex={-1}
           >
             <div className="relative aspect-video overflow-hidden rounded-xl md:rounded-none">
-              <Image
+              <LoadingImage
                 src={article.cover_img_url}
                 alt={article.title}
                 fill
