@@ -32,10 +32,7 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
   const hiddenCount = Math.max(0, images.length - 2);
 
   return (
-    <article
-      data-testid="snippet-card"
-      className="rounded-[14px] bg-[#fafafa] p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-[0_2px_8px_rgba(124,58,237,0.08)] dark:bg-[#1f1f23]"
-    >
+    <article data-testid="snippet-card" className="p-3.5 border-b last:border-none border-border">
       {/* Header: 双行布局 */}
       <div className="mb-2.5 flex items-start gap-2.5">
         {authorAvatar ? (
@@ -55,7 +52,7 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
             <time className="ml-auto shrink-0 text-[11px] text-(--fg3)">{relativeTime}</time>
           </div>
           {authorBadge && (
-            <span className="mt-0.5 inline-block rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold text-primary dark:bg-primary/15">
+            <span className="mt-0.5 inline-block py-0.5 text-[11px] text-muted-foreground">
               {authorBadge}
             </span>
           )}
@@ -89,7 +86,7 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
       )}
 
       {/* 操作区：复用 ArticleCardStats 样式 */}
-      <div className="mt-2 flex items-center justify-end gap-0.5 border-t border-border/40 pt-2 text-xs text-(--fg3)">
+      <div className="mt-2 flex items-center justify-end gap-0.5 pt-2 text-xs text-(--fg3)">
         <Button
           type="button"
           variant="ghost"
