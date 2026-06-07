@@ -10,13 +10,13 @@ describe("RichEditor", () => {
     expect(container.querySelector("[contenteditable]")).toBeTruthy();
   });
 
-  it("传入 placeholder 时在编辑器上有对应 data-placeholder 属性", () => {
+  it("传入 placeholder 时在空段落上有对应 data-placeholder 属性和空态 class", () => {
     const { container } = render(
       <RichEditor value="" onChange={() => {}} placeholder="写下你的评论..." />,
     );
-    // data-placeholder 应在 .tiptap 元素上（用于 CSS ::before 占位文字）
-    const tiptap = container.querySelector(".tiptap[data-placeholder]");
-    expect(tiptap?.getAttribute("data-placeholder")).toBe("写下你的评论...");
+    const placeholderNode = container.querySelector(".tiptap [data-placeholder]");
+    expect(placeholderNode?.getAttribute("data-placeholder")).toBe("写下你的评论...");
+    expect(placeholderNode).toHaveClass("is-editor-empty");
   });
 
   it("disabled=true 时 contenteditable 为 false", () => {
@@ -28,6 +28,26 @@ describe("RichEditor", () => {
   it("onSubmit 存在时渲染发送按钮", () => {
     render(<RichEditor value="" onChange={() => {}} onSubmit={() => {}} />);
     expect(screen.getByRole("button", { name: "发送评论" })).toBeInTheDocument();
+  });
+
+  it("使用 inline 评论编辑器的浅灰面板样式，且不会在聚焦时改变边框颜色", () => {
+    const { container } = render(<RichEditor value="" onChange={() => {}} onSubmit={() => {}} />);
+    const root = container.firstElementChild;
+    const editorArea = root?.querySelector("[data-rich-editor-area]");
+
+    expect(root).toHaveClass("rounded-[14px]", "bg-[#f3f3f3]");
+    expect(root?.className).not.toContain("border");
+    expect(root?.className).not.toContain("focus-within:border-primary");
+    expect(editorArea).toHaveClass("min-h-[104px]");
+    expect(editorArea?.className).toContain("[&_.tiptap]:min-h-[104px]");
+  });
+
+  it("提交按钮显示为右侧克制的橙色胶囊按钮", () => {
+    render(<RichEditor value="" onChange={() => {}} onSubmit={() => {}} />);
+
+    const submitButton = screen.getByRole("button", { name: "发送评论" });
+    expect(submitButton).toHaveClass("h-10", "rounded-full", "bg-[#e85a00]", "px-5");
+    expect(submitButton).toHaveTextContent("提交");
   });
 
   it("onInsertImage 未提供时不渲染图片按钮", () => {

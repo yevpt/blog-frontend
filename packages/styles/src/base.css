@@ -9,6 +9,7 @@
 /* 扫描 monorepo 共享包中的 className，避免共享组件里的样式被裁剪。 */
 @source "../../ui/src";
 @source "../../hooks/src";
+@source "../../editor/src";
 
 /* 恢复 button 的 cursor: pointer  */
 @layer base {

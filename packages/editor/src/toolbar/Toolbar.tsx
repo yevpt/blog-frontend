@@ -2,7 +2,7 @@
  * Toolbar — 底部工具栏
  *
  * 【布局】
- * [ B ][ I ][ U ][ ─ ][ 🔗 ][ 🖼 ][ </> ][ @ ]   →→→   [ 发送 ↑ ]
+ * [ B ][ I ][ U ][ ─ ][ 🔗 ][ 🖼 ][ </> ][ @ ]   →→→   [ 提交 ]
  * 左侧格式按钮区（横向可滚动）            固定右侧发送按钮
  *
  * 【响应式策略】
@@ -11,7 +11,7 @@
  * - sm 及以上（平板/桌面）：工具栏单行展示，不需要滚动
  */
 import type { Editor } from "@tiptap/core";
-import { SvgIcon } from "@repo/icons";
+import { useEditorState } from "@tiptap/react";
 import { clsx } from "clsx";
 import { ToolbarButton } from "./ToolbarButton";
 import type { InsertHandlers } from "../types";
@@ -30,18 +30,34 @@ export function Toolbar({
   onInsertLink,
   onInsertCode,
 }: ToolbarProps) {
+  const formatState = useEditorState({
+    editor,
+    selector: ({ editor }) =>
+      editor
+        ? {
+            bold: editor.isActive("bold"),
+            italic: editor.isActive("italic"),
+            underline: editor.isActive("underline"),
+          }
+        : {
+            bold: false,
+            italic: false,
+            underline: false,
+          },
+  });
+
   if (!editor) return null;
 
   const disabled = !editor.isEditable;
 
   return (
-    <div className="flex items-center gap-1 border-t border-border px-2 py-1.5">
-      <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto scrollbar-none sm:overflow-x-visible">
+    <div className="mt-2 flex items-center gap-2">
+      <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto scrollbar-none sm:overflow-x-visible">
         <ToolbarButton
           title="粗体（Ctrl+B）"
           label="B"
           labelClassName="font-bold"
-          active={editor.isActive("bold")}
+          active={formatState?.bold ?? false}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleBold().run()}
         />
@@ -49,7 +65,7 @@ export function Toolbar({
           title="斜体（Ctrl+I）"
           label="I"
           labelClassName="italic"
-          active={editor.isActive("italic")}
+          active={formatState?.italic ?? false}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleItalic().run()}
         />
@@ -57,12 +73,12 @@ export function Toolbar({
           title="下划线（Ctrl+U）"
           label="U"
           labelClassName="underline underline-offset-1"
-          active={editor.isActive("underline")}
+          active={formatState?.underline ?? false}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleUnderline().run()}
         />
 
-        <div className="mx-1 h-4 w-px shrink-0 bg-border" aria-hidden />
+        <div className="mx-1 h-5 w-px shrink-0 bg-[#dddddd]" aria-hidden />
 
         {onInsertLink && (
           <ToolbarButton
@@ -131,13 +147,13 @@ export function Toolbar({
           disabled={isSubmitting || disabled}
           aria-label="发送评论"
           className={clsx(
-            "ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors",
+            "flex h-10 shrink-0 items-center justify-center rounded-full px-5 text-sm font-semibold transition-colors",
             isSubmitting || disabled
-              ? "cursor-not-allowed opacity-40 bg-primary/50"
-              : "bg-primary text-white hover:bg-primary/85",
+              ? "cursor-not-allowed bg-[#e85a00]/50 text-white opacity-60"
+              : "bg-[#e85a00] text-white hover:bg-[#d94f00]",
           )}
         >
-          <SvgIcon name="arrow-up" size={14} />
+          提交
         </button>
       )}
     </div>

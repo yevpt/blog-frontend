@@ -14,6 +14,14 @@ describe("styles dark variant", () => {
   });
 });
 
+describe("styles source paths", () => {
+  it("扫描 editor 共享包中的 Tailwind className", () => {
+    const css = readFileSync("packages/styles/src/base.css", "utf8");
+
+    expect(css).toContain('@source "../../editor/src";');
+  });
+});
+
 describe("styles mobile form controls", () => {
   it("移动端表单控件使用 16px 字号避免 iOS 聚焦自动缩放", () => {
     const css = readFileSync("packages/styles/src/base.css", "utf8");

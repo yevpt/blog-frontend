@@ -23,7 +23,10 @@
  *    - inline: true：图片可嵌入段落（适合评论）
  *    - allowBase64: false：安全考虑，不允许 base64 图片
  *
- * ⑤ Mention（@tiptap/extension-mention，见 extensions/mention.ts）
+ * ⑤ PlaceholderExtension（本地扩展）
+ *    - 为评论空态段落添加 data-placeholder 和 is-editor-empty class
+ *
+ * ⑥ Mention（@tiptap/extension-mention，见 extensions/mention.ts）
  *    - 候选数据由外部传入；当前为空数组（等待后端 API）
  *
  * 【SSR 注意】
@@ -40,6 +43,7 @@ import { Markdown } from "@tiptap/markdown";
 import Image from "@tiptap/extension-image";
 import { UnderlineExtension } from "../extensions/underline";
 import { createMentionExtension } from "../extensions/mention";
+import { PlaceholderExtension } from "../extensions/placeholder";
 import type { MentionItem } from "../types";
 
 interface UseRichEditorOptions {
@@ -71,15 +75,6 @@ export function useRichEditor({
       // ── SSR 适配 ─────────────────────────────────────────────
       // Next.js 在服务端渲染时无 DOM，必须设为 false 避免 hydration 错误
       immediatelyRender: false,
-
-      // ── editorProps：将 data-placeholder 写到 .tiptap 元素上 ──
-      // CSS 选择器 .tiptap.is-editor-empty::before 读取 attr(data-placeholder)
-      // 必须在 .tiptap 元素本身上设置该属性，放在外层 wrapper 上无效
-      editorProps: {
-        attributes: {
-          "data-placeholder": placeholder ?? "",
-        },
-      },
 
       // ── 扩展列表 ──────────────────────────────────────────────
       extensions: [
@@ -124,7 +119,12 @@ export function useRichEditor({
           },
         }),
 
-        // ⑤ @提及（候选列表由外部传入）
+        // ⑤ 占位文字：空编辑器时在首个空段落上生成 data-placeholder
+        PlaceholderExtension.configure({
+          placeholder: placeholder ?? "",
+        }),
+
+        // ⑥ @提及（候选列表由外部传入）
         // TODO(mention-api): 后端 /users/search 就绪后，在调用方填充 mentionSuggestions
         createMentionExtension(mentionSuggestions),
       ],
