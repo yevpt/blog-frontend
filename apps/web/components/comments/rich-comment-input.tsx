@@ -14,6 +14,8 @@ interface RichCommentInputProps {
   isSubmitting?: boolean;
   mentionSuggestions?: MentionItem[];
   placeholder?: string;
+  isLoggedIn?: boolean;
+  onLoginRequired?: () => void;
 }
 
 /**
@@ -32,6 +34,8 @@ export function RichCommentInput({
   isSubmitting,
   mentionSuggestions = [],
   placeholder = "写下你的评论...",
+  isLoggedIn,
+  onLoginRequired,
 }: RichCommentInputProps) {
   const [imageDialog, setImageDialog] = useState<{
     open: boolean;
@@ -67,6 +71,8 @@ export function RichCommentInput({
         onChange={onChange}
         onSubmit={onSubmit}
         isSubmitting={isSubmitting}
+        isLoggedIn={isLoggedIn}
+        onLoginRequired={onLoginRequired}
         placeholder={placeholder}
         mentionSuggestions={mentionSuggestions}
         onInsertImage={handleInsertImage}

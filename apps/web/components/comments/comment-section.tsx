@@ -224,6 +224,8 @@ export function CommentSection({
         }}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
+        isLoggedIn={!!userId}
+        onLoginRequired={openLoginModal}
         placeholder={replyTarget ? "写下你的回复..." : "写下你的评论..."}
       />
       {submitError && <p className="text-xs text-red-500">{submitError}</p>}

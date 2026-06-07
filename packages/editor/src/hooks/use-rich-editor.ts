@@ -44,6 +44,7 @@ import Image from "@tiptap/extension-image";
 import { UnderlineExtension } from "../extensions/underline";
 import { createMentionExtension } from "../extensions/mention";
 import { PlaceholderExtension } from "../extensions/placeholder";
+import { CodeBlockExtension } from "../extensions/code-block";
 import type { MentionItem } from "../types";
 
 interface UseRichEditorOptions {
@@ -92,10 +93,8 @@ export function useRichEditor({
             },
           },
 
-          // 代码块：添加样式类供 CSS 定制
-          codeBlock: {
-            HTMLAttributes: { class: "rich-editor-code-block" },
-          },
+          // 代码块由 CodeBlockExtension（lowlight 高亮版）单独引入，禁用内置版本
+          codeBlock: false,
 
           // 评论场景不需要以下扩展（减少包体积）
           blockquote: false,
@@ -105,11 +104,14 @@ export function useRichEditor({
         // ② 下划线（显式引入，见 extensions/underline.ts 追溯说明）
         UnderlineExtension,
 
-        // ③ Markdown 序列化
+        // ③ 代码块（lowlight 语法高亮 + React NodeView 语言标签）
+        CodeBlockExtension,
+
+        // ④ Markdown 序列化
         // @tiptap/markdown v3 不支持 html/tightLists 等选项，使用默认配置即可
         Markdown.configure({}),
 
-        // ④ 图片（内联，仅 URL，不允许 base64）
+        // ⑤ 图片（内联，仅 URL，不允许 base64）
         Image.configure({
           inline: true,
           allowBase64: false,
@@ -119,12 +121,12 @@ export function useRichEditor({
           },
         }),
 
-        // ⑤ 占位文字：空编辑器时在首个空段落上生成 data-placeholder
+        // ⑥ 占位文字：空编辑器时在首个空段落上生成 data-placeholder
         PlaceholderExtension.configure({
           placeholder: placeholder ?? "",
         }),
 
-        // ⑥ @提及（候选列表由外部传入）
+        // ⑦ @提及（候选列表由外部传入）
         // TODO(mention-api): 后端 /users/search 就绪后，在调用方填充 mentionSuggestions
         createMentionExtension(mentionSuggestions),
       ],

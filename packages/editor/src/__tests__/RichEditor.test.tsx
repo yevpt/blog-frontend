@@ -30,23 +30,22 @@ describe("RichEditor", () => {
     expect(screen.getByRole("button", { name: "发送评论" })).toBeInTheDocument();
   });
 
-  it("使用 inline 评论编辑器的浅灰面板样式，且不会在聚焦时改变边框颜色", () => {
+  it("使用语义色令牌的圆角面板，且不会在聚焦时改变边框颜色", () => {
     const { container } = render(<RichEditor value="" onChange={() => {}} onSubmit={() => {}} />);
     const root = container.firstElementChild;
     const editorArea = root?.querySelector("[data-rich-editor-area]");
 
-    expect(root).toHaveClass("rounded-[14px]", "bg-[#f3f3f3]");
-    expect(root?.className).not.toContain("border");
+    expect(root).toHaveClass("rounded-xl", "bg-muted");
     expect(root?.className).not.toContain("focus-within:border-primary");
-    expect(editorArea).toHaveClass("min-h-[104px]");
-    expect(editorArea?.className).toContain("[&_.tiptap]:min-h-[104px]");
+    expect(editorArea).toHaveClass("min-h-[88px]");
+    expect(editorArea?.className).toContain("[&_.tiptap]:min-h-[88px]");
   });
 
-  it("提交按钮显示为右侧克制的橙色胶囊按钮", () => {
+  it("提交按钮显示为右侧主题色胶囊按钮", () => {
     render(<RichEditor value="" onChange={() => {}} onSubmit={() => {}} />);
 
     const submitButton = screen.getByRole("button", { name: "发送评论" });
-    expect(submitButton).toHaveClass("h-10", "rounded-full", "bg-[#e85a00]", "px-5");
+    expect(submitButton).toHaveClass("h-8", "rounded-full", "bg-primary");
     expect(submitButton).toHaveTextContent("提交");
   });
 

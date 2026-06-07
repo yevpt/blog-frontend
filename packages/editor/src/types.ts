@@ -81,5 +81,15 @@ export interface RichEditorProps extends InsertHandlers {
   /** 发送中状态，传 true 时发送按钮显示 loading 并禁用 */
   isSubmitting?: boolean;
 
+  /**
+   * 当前用户是否已登录。
+   * - 未提供时（undefined）：向后兼容，按已登录处理
+   * - false：提交按钮替换为「请先登录」，点击触发 onLoginRequired
+   */
+  isLoggedIn?: boolean;
+
+  /** 用户未登录时点击提交按钮的回调，通常用于打开登录弹窗 */
+  onLoginRequired?: () => void;
+
   className?: string;
 }

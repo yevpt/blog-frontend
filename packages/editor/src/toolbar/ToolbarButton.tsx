@@ -5,8 +5,9 @@
  * - icon：传 SvgIcon name，渲染图标按钮
  * - label：传文字（如 "B" / "I" / "U"），渲染文字按钮
  *
- * active 态：按钮对应的格式当前已应用（如选中文字已加粗）
+ * active 态：bg-primary/10 底色 + text-primary，跟随网站主题色
  * disabled 态：编辑器不可用或命令不可执行
+ * 暗黑模式：通过 Tailwind 语义色令牌自动适配
  */
 import { SvgIcon, type IconName } from "@repo/icons";
 import { clsx } from "clsx";
@@ -45,15 +46,17 @@ export function ToolbarButton({
       aria-label={title}
       title={title}
       className={clsx(
-        "flex h-8 w-8 items-center justify-center rounded-md transition-colors",
-        isActive ? "text-[#e85a00]" : "text-[#666666] hover:bg-black/5 hover:text-[#333333]",
+        "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
+        isActive
+          ? "bg-primary/10 text-primary"
+          : "text-muted-foreground hover:bg-accent hover:text-foreground",
         disabled && "cursor-not-allowed opacity-40",
       )}
     >
       {icon ? (
-        <SvgIcon name={icon} size={17} />
+        <SvgIcon name={icon} size={16} />
       ) : (
-        <span className={clsx("select-none text-[17px] font-medium leading-none", labelClassName)}>
+        <span className={clsx("select-none text-[15px] font-medium leading-none", labelClassName)}>
           {label}
         </span>
       )}
