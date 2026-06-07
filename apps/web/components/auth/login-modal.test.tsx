@@ -55,7 +55,9 @@ describe("LoginModal", () => {
     render(<LoginModal />);
     fireEvent.click(screen.getByTestId("modal-backdrop"));
     expect(useLoginModal.getState().isOpen).toBe(true);
-    expect(screen.getByRole("dialog").parentElement?.className).toContain("animate-modal-pulse");
+    expect(screen.getByRole("dialog").parentElement?.parentElement?.className).toContain(
+      "animate-modal-pulse",
+    );
   });
 
   it("点击「注册」标签切换到注册视图", async () => {

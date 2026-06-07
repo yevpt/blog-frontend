@@ -21,7 +21,7 @@ export function SnippetContent({ content }: SnippetContentProps) {
   const displayText = isLong && !expanded ? content.slice(0, MAX_CHARS) + "..." : content;
 
   return (
-    <div className="mt-1">
+    <div className="mt-0.5">
       <p className="whitespace-pre-line text-[13px] leading-relaxed text-(--fg2)">{displayText}</p>
       {isLong && (
         <Button

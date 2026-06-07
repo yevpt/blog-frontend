@@ -59,26 +59,29 @@ export default async function ArticleDetailPage({ params }: PageProps) {
       />
 
       <div className="mx-auto max-w-[1100px] px-4 pt-22 pb-8 md:pt-24">
-        <div
-          className={
-            hasToc
-              ? "grid grid-cols-1 gap-8 xl:grid-cols-[1fr_240px] 2xl:grid-cols-[1fr_280px]"
-              : undefined
-          }
-        >
-          <div className="min-w-0">
-            <ArticleHero article={article} />
-            <ArticleContent contentHtml={contentHtml} />
-          </div>
-          {hasToc && (
+        {hasToc ? (
+          <div className="grid grid-cols-1 gap-x-8 gap-y-0 xl:grid-cols-[1fr_240px] 2xl:grid-cols-[1fr_280px]">
+            <div className="min-w-0">
+              <ArticleHero article={article} />
+              <ArticleContent contentHtml={contentHtml} />
+            </div>
             <aside className="hidden xl:block">
               <ArticleToc items={tocItems} variant="desktop" />
             </aside>
-          )}
-        </div>
+            <div className="min-w-0">
+              <ArticleComments articleId={article.id} commentCount={article.comment_count} />
+            </div>
+            {/* 侧栏扩展位：推荐文章等模块 */}
+            <aside className="hidden xl:block" data-testid="article-sidebar-slot" />
+          </div>
+        ) : (
+          <div className="min-w-0">
+            <ArticleHero article={article} />
+            <ArticleContent contentHtml={contentHtml} />
+            <ArticleComments articleId={article.id} commentCount={article.comment_count} />
+          </div>
+        )}
       </div>
-
-      <ArticleComments articleId={article.id} commentCount={article.comment_count} />
 
       <ArticleFloatActions
         articleId={article.id}

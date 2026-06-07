@@ -38,7 +38,14 @@
  * collapse 条件（expanded 状态向下）：同 dismiss 条件，但改为收起而非关闭
  */
 
-import { type CSSProperties, type RefObject, useLayoutEffect, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  type RefObject,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 interface SheetGestureOptions {
   snapThreshold?: number; // dismiss/collapse 位移阈值（占 sheetHeight 比例）
@@ -87,7 +94,11 @@ export function useSheetGesture(
     onDismissRef.current = onDismiss;
   });
 
-  useLayoutEffect(() => {
+  // 使用 useEffect（而非 useLayoutEffect）确保在浏览器绘制后、portal 元素完全挂载、
+  // refs 就绪后再绑定事件。对于 React Aria Modal（portal 渲染），useObjectRef 通过
+  // proxy setter 同步传递 ref，但在 React 19 中某些场景下可能晚于父组件的
+  // useLayoutEffect，改用 useEffect 规避此时序问题。
+  useEffect(() => {
     const sheet = sheetRef.current;
     const scroll = scrollRef.current;
     if (!sheet || !scroll) return;

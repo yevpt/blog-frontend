@@ -212,6 +212,7 @@ function CommentSheet({ targetType, targetId, onClose, onCommentAdded }: Comment
         "touch-manipulation shadow-[0_-4px_40px_rgba(0,0,0,0.18)]",
         isExpanded ? "rounded-none" : "rounded-t-[20px]",
       )}
+      dialogClassName="flex h-full min-h-0 flex-col overflow-hidden"
     >
       {() => (
         <>
