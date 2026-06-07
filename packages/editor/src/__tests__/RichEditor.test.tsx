@@ -41,12 +41,31 @@ describe("RichEditor", () => {
     expect(editorArea?.className).toContain("[&_.tiptap]:min-h-[88px]");
   });
 
-  it("提交按钮显示为右侧主题色胶囊按钮", () => {
+  it("提交按钮：内容为空时呈禁用态（bg-primary/50）", () => {
     render(<RichEditor value="" onChange={() => {}} onSubmit={() => {}} />);
 
     const submitButton = screen.getByRole("button", { name: "发送评论" });
-    expect(submitButton).toHaveClass("h-8", "rounded-full", "bg-primary");
+    expect(submitButton).toHaveClass("h-8", "rounded-full");
     expect(submitButton).toHaveTextContent("提交");
+    // 空内容时应禁用
+    expect(submitButton).toBeDisabled();
+    expect(submitButton.className).toContain("bg-primary/50");
+  });
+
+  it("未登录时提交区域渲染「请先登录」按钮", () => {
+    const onLoginRequired = vi.fn();
+    render(
+      <RichEditor
+        value=""
+        onChange={() => {}}
+        onSubmit={() => {}}
+        isLoggedIn={false}
+        onLoginRequired={onLoginRequired}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "发送评论" })).toBeNull();
+    expect(screen.getByRole("button", { name: "请先登录后评论" })).toBeInTheDocument();
   });
 
   it("onInsertImage 未提供时不渲染图片按钮", () => {
