@@ -29,7 +29,7 @@ export default async function SnippetsPage() {
         {momentsPage.list.length > 0 ? (
           momentsPage.list.map((snippet) => <SnippetCard key={snippet.id} snippet={snippet} />)
         ) : (
-          <p className="py-8 text-center text-sm text-[var(--fg3)]">暂无碎语</p>
+          <p className="py-8 text-center text-sm text-(--fg3)">暂无碎语</p>
         )}
       </div>
     </div>

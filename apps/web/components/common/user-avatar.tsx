@@ -30,9 +30,7 @@ export function UserAvatar({ src, name, size = "md", className }: UserAvatarProp
     );
   }
   return (
-    <div
-      className={cn(base, "flex items-center justify-center bg-border font-bold text-[var(--fg2)]")}
-    >
+    <div className={cn(base, "flex items-center justify-center bg-border font-bold text-(--fg2)")}>
       {name[0]?.toUpperCase() ?? "?"}
     </div>
   );

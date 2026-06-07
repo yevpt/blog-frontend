@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import type { CommentItemResp, CommentReplyResp } from "@repo/api";
-import { Button } from "@repo/ui";
+import { Button, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import { formatRelativeTime } from "@/lib/format-time";
 import { UserAvatar } from "@/components/common/user-avatar";
@@ -64,42 +64,46 @@ export function CommentItem({
           {/* 用户信息行 */}
           <div className="mb-1 flex items-center gap-2">
             <span className="text-xs font-bold text-foreground">{displayName}</span>
-            <span className="text-[11px] text-[var(--fg3)]">{time}</span>
+            <span className="text-[11px] text-(--fg3)">{time}</span>
           </div>
 
           {/* 评论正文 + 右侧点赞区 */}
-          <div className="flex gap-2">
-            <p className="min-w-0 flex-1 text-[13px] leading-[1.65] text-[var(--fg2)]">
-              {comment.content}
-            </p>
+          <div className="flex gap-2 relative">
+            <p className="min-w-0 pr-7.5 flex-1 text-[12px] text-(--fg1)">{comment.content}</p>
             {/* INS 风格点赞按钮 */}
-            <button
+            <Button
+              variant="text"
               type="button"
               onClick={handleLike}
               aria-label={comment.is_liked ? "取消点赞" : "点赞"}
-              className="flex shrink-0 flex-col items-center gap-0.5 self-start pt-0.5"
+              className={cn(
+                "absolute top-0 right-1.75 flex shrink-0 flex-col items-center gap-0.5 self-start pt-0.5",
+                comment.is_liked
+                  ? "text-red-500 hover:text-red-500"
+                  : "text-black/54 dark:text-(--fg3)",
+              )}
             >
               <SvgIcon
+                className="animate-[heartbeat_3s_ease-in-out_infinite]"
                 name={comment.is_liked ? "heart-fill" : "heart"}
-                size={12}
-                className={comment.is_liked ? "text-red-500" : "text-[var(--fg3)]"}
+                size={16}
               />
               {comment.like_count > 0 && (
                 <span
-                  className={`text-[10px] font-medium ${comment.is_liked ? "text-red-500" : "text-[var(--fg3)]"}`}
+                  className={`text-[10px] font-medium ${comment.is_liked ? "text-red-500" : "text-(--fg3)"}`}
                 >
                   {comment.like_count}
                 </span>
               )}
-            </button>
+            </Button>
           </div>
 
           {/* 回复按钮 */}
           <Button
             type="button"
-            variant="ghost"
+            variant="text"
             onPress={handleReply}
-            className="mt-1.5 cursor-pointer rounded-md px-2 py-1 text-[11px] font-medium text-[var(--fg3)] transition-colors hover:bg-primary/10 hover:text-primary"
+            className="mt-1.5 text-[11px] font-medium text-(--fg3) transition-colors"
           >
             回复
           </Button>

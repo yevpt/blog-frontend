@@ -10,7 +10,7 @@ describe("Button", () => {
   });
 
   it("所有 variant 均包含 cursor-pointer", () => {
-    const variants = ["default", "outline", "ghost"] as const;
+    const variants = ["default", "outline", "ghost", "text"] as const;
     for (const variant of variants) {
       const { container } = render(<Button variant={variant}>按钮</Button>);
       expect(container.querySelector("button")?.className).toContain("cursor-pointer");
@@ -31,6 +31,17 @@ describe("Button", () => {
   it("ghost variant 含 hover:bg-accent（中性悬停背景）", () => {
     const { container } = render(<Button variant="ghost">幽灵</Button>);
     expect(container.querySelector("button")?.className).toContain("hover:bg-accent");
+  });
+
+  it("text variant 是无 padding 且 hover 无背景的纯文字按钮", () => {
+    const { container } = render(<Button variant="text">纯文字</Button>);
+    const cls = container.querySelector("button")?.className ?? "";
+
+    expect(cls).toContain("text-foreground");
+    expect(cls).not.toContain("hover:bg-");
+    expect(cls).not.toContain(" h-10 ");
+    expect(cls).not.toContain(" px-4 ");
+    expect(cls).not.toContain(" py-2 ");
   });
 
   it("size sm 含 h-8", () => {

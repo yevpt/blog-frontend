@@ -67,7 +67,7 @@ export function ArticleCard({
           />
 
           {article.short_content && (
-            <p className="mb-3.5 text-sm leading-[1.72] text-[var(--fg2)] line-clamp-3">
+            <p className="mb-3.5 text-sm leading-[1.72] text-(--fg2) line-clamp-3">
               {article.short_content}
             </p>
           )}

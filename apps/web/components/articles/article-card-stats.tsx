@@ -33,7 +33,7 @@ export function ArticleCardStats({
   onComment,
 }: ArticleCardStatsProps) {
   return (
-    <div className="flex items-center gap-0.5 text-xs text-[var(--fg3)]">
+    <div className="flex items-center gap-0.5 text-xs text-(--fg3)">
       <Button
         type="button"
         variant="ghost"
@@ -45,10 +45,10 @@ export function ArticleCardStats({
           onLike();
         }}
         className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 font-medium transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 ${
-          liked ? "text-red-500 hover:text-red-500" : "text-black/54 dark:text-[var(--fg3)]"
+          liked ? "text-red-500 hover:text-red-500" : "text-black/54 dark:text-(--fg3)"
         }`}
       >
-        <span className="inline-flex animate-[heartbeat_1.3s_ease-in-out_infinite]">
+        <span className="inline-flex animate-[heartbeat_3s_ease-in-out_infinite]">
           <SvgIcon name="heart" size={21} />
         </span>
         <span>{formatCount(likes)}</span>
@@ -62,7 +62,7 @@ export function ArticleCardStats({
         onPress={() => {
           onComment();
         }}
-        className="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 font-medium transition-colors hover:bg-primary/10 hover:text-primary text-black/54 dark:text-[var(--fg3)]"
+        className="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 font-medium transition-colors hover:bg-primary/10 hover:text-primary text-black/54 dark:text-(--fg3)"
       >
         <SvgIcon name="message-circle" size={21} />
         <span>{formatCount(comments)}</span>

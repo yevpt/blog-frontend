@@ -16,7 +16,7 @@ export function SnippetActions() {
         variant="ghost"
         onPress={() => setLiked((prev) => !prev)}
         className={`flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
-          liked ? "text-red-500" : "text-[var(--fg3)] hover:bg-primary/10 hover:text-primary"
+          liked ? "text-red-500" : "text-(--fg3) hover:bg-primary/10 hover:text-primary"
         }`}
         aria-label={t("snippet.like")}
       >
@@ -26,7 +26,7 @@ export function SnippetActions() {
 
       <Button
         variant="ghost"
-        className="flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs text-[var(--fg3)] transition-colors hover:bg-primary/10 hover:text-primary"
+        className="flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs text-(--fg3) transition-colors hover:bg-primary/10 hover:text-primary"
         aria-label={t("snippet.comment")}
       >
         <SvgIcon name="message-circle" size={14} />

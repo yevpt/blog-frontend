@@ -98,7 +98,7 @@ interface UserAvatarProps {
 ```
 
 - 有 `src` 且未 error：渲染 `<img>`
-- 无图时：圆形 `bg-border text-[var(--fg2)] font-bold`，展示 `name[0].toUpperCase()`
+- 无图时：圆形 `bg-border text-(--fg2) font-bold`，展示 `name[0].toUpperCase()`
 
 同步将 `comment-item.tsx` 中的本地 `Avatar` 替换为 `<UserAvatar>`。
 

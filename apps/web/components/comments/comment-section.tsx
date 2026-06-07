@@ -29,8 +29,13 @@ export function CommentSection({
 }: CommentSectionProps) {
   const { comments, isLoading, hasMore, error, loadMore, addComment, incrementReplyCount } =
     useCommentList(targetType, targetId);
-  const { isSubmitting, error: submitError, clearError, submitComment, submitReply } =
-    useCommentSubmit(targetType, targetId);
+  const {
+    isSubmitting,
+    error: submitError,
+    clearError,
+    submitComment,
+    submitReply,
+  } = useCommentSubmit(targetType, targetId);
   const { toggleCommentLike, toggleReplyLike } = useCommentLike(targetType);
 
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
@@ -91,11 +96,11 @@ export function CommentSection({
   const commentList = (
     <>
       {isLoading && comments.length === 0 ? (
-        <div className="py-8 text-center text-sm text-[var(--fg3)]">加载中...</div>
+        <div className="py-8 text-center text-sm text-(--fg3)">加载中...</div>
       ) : error ? (
-        <p className="py-4 text-center text-sm text-[var(--fg3)]">{error}</p>
+        <p className="py-4 text-center text-sm text-(--fg3)">{error}</p>
       ) : comments.length === 0 ? (
-        <p className="py-8 text-center text-sm text-[var(--fg3)]">暂无评论，来发表第一条吧</p>
+        <p className="py-8 text-center text-sm text-(--fg3)">暂无评论，来发表第一条吧</p>
       ) : (
         <div className="flex flex-col gap-[18px]">
           {comments.map((comment) => (
@@ -118,7 +123,7 @@ export function CommentSection({
             size="sm"
             isDisabled={isLoading}
             onPress={loadMore}
-            className="h-8 rounded-full px-[18px] text-xs font-semibold text-[var(--fg2)] hover:border-primary hover:bg-primary/10 hover:text-primary"
+            className="h-8 rounded-full px-[18px] text-xs font-semibold text-(--fg2) hover:border-primary hover:bg-primary/10 hover:text-primary"
           >
             {isLoading ? "加载中..." : "查看更多评论"}
           </Button>

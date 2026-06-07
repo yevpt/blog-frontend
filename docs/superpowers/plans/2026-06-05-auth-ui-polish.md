@@ -133,7 +133,7 @@ export function UserAvatar({ src, name, size = "md", className }: UserAvatarProp
     <div
       className={cn(
         base,
-        "flex items-center justify-center bg-border font-bold text-[var(--fg2)]",
+        "flex items-center justify-center bg-border font-bold text-(--fg2)",
       )}
     >
       {name[0]?.toUpperCase() ?? "?"}
@@ -696,7 +696,7 @@ export function NavbarActions({ isGlass = false }: NavbarActionsProps) {
       <Button
         variant="ghost"
         onPress={() => setTheme(nextTheme)}
-        className="h-8 w-8 rounded-lg p-0 text-[var(--fg2)] hover:bg-foreground/5 hover:text-foreground data-[glass=true]:text-[var(--fg2)] data-[glass=true]:hover:bg-primary/10 data-[glass=true]:hover:text-primary"
+        className="h-8 w-8 rounded-lg p-0 text-(--fg2) hover:bg-foreground/5 hover:text-foreground data-[glass=true]:text-(--fg2) data-[glass=true]:hover:bg-primary/10 data-[glass=true]:hover:text-primary"
         aria-label={`当前生效主题：${resolvedTheme}，点击切换到 ${nextTheme}`}
         data-glass={isGlass}
       >
@@ -713,7 +713,7 @@ export function NavbarActions({ isGlass = false }: NavbarActionsProps) {
             onPress={() => openLoginModal()}
             className={cn(
               "h-8 rounded-full border-border bg-foreground/5 px-4 text-xs font-semibold text-foreground hover:bg-foreground/10 hover:text-foreground",
-              "data-[glass=true]:border-border data-[glass=true]:bg-transparent data-[glass=true]:text-[var(--fg2)] data-[glass=true]:hover:border-primary data-[glass=true]:hover:bg-primary/10 data-[glass=true]:hover:text-primary",
+              "data-[glass=true]:border-border data-[glass=true]:bg-transparent data-[glass=true]:text-(--fg2) data-[glass=true]:hover:border-primary data-[glass=true]:hover:bg-primary/10 data-[glass=true]:hover:text-primary",
             )}
             data-glass={isGlass}
           >
@@ -914,7 +914,7 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
     <button
       type="button"
       onClick={() => setTheme(nextTheme)}
-      className="flex cursor-pointer items-center gap-2 text-[13px] font-medium text-[var(--fg2)]"
+      className="flex cursor-pointer items-center gap-2 text-[13px] font-medium text-(--fg2)"
     >
       <span
         className={cn(
@@ -953,7 +953,7 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
                 className="flex items-center justify-between rounded-[10px] px-2.5 py-3 text-[15px] font-semibold text-foreground transition-colors hover:bg-black/5 dark:hover:bg-white/10"
               >
                 <span>{item.label}</span>
-                <span className="text-[15px] text-[var(--fg3)]">›</span>
+                <span className="text-[15px] text-(--fg3)">›</span>
               </Link>
             ))}
           </div>
@@ -977,7 +977,7 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
                     href="/messages"
                     onClick={onClose}
                     aria-label="消息"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--fg2)] transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-(--fg2) transition-colors hover:bg-black/5 dark:hover:bg-white/10"
                   >
                     <SvgIcon name="message-circle" size={16} />
                   </Link>
@@ -1342,7 +1342,7 @@ import { UserAvatar } from "@/components/common/user-avatar";
 <UserAvatar src={comment.user?.avatar_url} name={displayName} size="md" />
 ```
 
-`UserAvatar` 的 `sm`（22px）和 `md`（28px = `h-7 w-7`）与原始实现尺寸一致，`bg-border text-[var(--fg2)]` 保持一致。
+`UserAvatar` 的 `sm`（22px）和 `md`（28px = `h-7 w-7`）与原始实现尺寸一致，`bg-border text-(--fg2)` 保持一致。
 
 - [ ] **Step 2: 类型检查**
 

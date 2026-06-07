@@ -63,7 +63,7 @@ function NavbarMobileArticleActions() {
   const { likeCount, commentCount, isLiked, isLiking, toggleLike } = useArticleEngagement();
 
   const actionButtonClass =
-    "flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors hover:bg-foreground/5 text-black/54 dark:text-[var(--fg3)]";
+    "flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors hover:bg-foreground/5 text-black/54 dark:text-(--fg3)";
 
   return (
     <>
@@ -75,7 +75,7 @@ function NavbarMobileArticleActions() {
         onPress={() => void toggleLike()}
         className={cn(actionButtonClass, isLiked && "text-red-500 hover:text-red-500")}
       >
-        <SvgIcon name="heart" size={21} />
+        <SvgIcon className="animate-[heartbeat_3s_ease-in-out_infinite]" name="heart" size={21} />
         <span>{formatCount(likeCount)}</span>
       </Button>
       <Button

@@ -35,7 +35,7 @@ export function NavbarActions({ isGlass = false }: NavbarActionsProps) {
       <Button
         variant="ghost"
         onPress={() => setTheme(nextTheme)}
-        className="h-8 w-8 rounded-lg p-0 text-[var(--fg2)] hover:bg-foreground/5 hover:text-foreground data-[glass=true]:text-[var(--fg2)] data-[glass=true]:hover:bg-primary/10 data-[glass=true]:hover:text-primary"
+        className="h-8 w-8 rounded-lg p-0 text-(--fg2) hover:bg-foreground/5 hover:text-foreground data-[glass=true]:text-(--fg2) data-[glass=true]:hover:bg-primary/10 data-[glass=true]:hover:text-primary"
         aria-label={`当前生效主题：${resolvedTheme}，点击切换到 ${nextTheme}`}
         data-glass={isGlass}
       >
@@ -52,7 +52,7 @@ export function NavbarActions({ isGlass = false }: NavbarActionsProps) {
             onPress={() => openLoginModal()}
             className={cn(
               "h-8 rounded-full border-border bg-foreground/5 px-4 text-xs font-semibold text-foreground hover:bg-foreground/10 hover:text-foreground",
-              "data-[glass=true]:border-border data-[glass=true]:bg-transparent data-[glass=true]:text-[var(--fg2)] data-[glass=true]:hover:border-primary data-[glass=true]:hover:bg-primary/10 data-[glass=true]:hover:text-primary",
+              "data-[glass=true]:border-border data-[glass=true]:bg-transparent data-[glass=true]:text-(--fg2) data-[glass=true]:hover:border-primary data-[glass=true]:hover:bg-primary/10 data-[glass=true]:hover:text-primary",
             )}
             data-glass={isGlass}
           >

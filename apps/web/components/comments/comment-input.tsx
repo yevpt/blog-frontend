@@ -35,7 +35,7 @@ export function CommentInput({
         <button
           type="button"
           onClick={() => openLogin()}
-          className="w-full rounded-full border border-input bg-background px-4 py-2.5 text-[13px] text-[var(--fg3)] transition-colors hover:border-primary hover:text-primary"
+          className="w-full rounded-full border border-input bg-background px-4 py-2.5 text-[13px] text-(--fg3) transition-colors hover:border-primary hover:text-primary"
         >
           请先登录，参与评论
         </button>
@@ -53,7 +53,7 @@ export function CommentInput({
             type="button"
             variant="ghost"
             onPress={onCancelReply}
-            className="h-auto p-0 text-[var(--fg3)] hover:text-foreground"
+            className="h-auto p-0 text-(--fg3) hover:text-foreground"
           >
             取消
           </Button>
@@ -66,7 +66,7 @@ export function CommentInput({
           onChange={(e) => onChange(e.target.value)}
           placeholder="写下你的评论..."
           disabled={isSubmitting}
-          className={`w-full rounded-full border border-input bg-background py-2.5 pl-4 text-[13px] leading-normal text-foreground outline-none transition-colors placeholder:text-[var(--fg3)] focus:border-primary disabled:cursor-not-allowed disabled:opacity-60 ${value.trim() ? "pr-10" : "pr-4"}`}
+          className={`w-full rounded-full border border-input bg-background py-2.5 pl-4 text-[13px] leading-normal text-foreground outline-none transition-colors placeholder:text-(--fg3) focus:border-primary disabled:cursor-not-allowed disabled:opacity-60 ${value.trim() ? "pr-10" : "pr-4"}`}
         />
         {/* ↑ 发送按钮：仅在有内容时出现，嵌入 pill 右侧 */}
         {value.trim() && (

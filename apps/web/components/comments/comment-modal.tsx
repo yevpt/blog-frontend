@@ -116,7 +116,7 @@ export function CommentModal({ targetType, targetId, onClose }: CommentModalProp
             type="button"
             onClick={onClose}
             aria-label="关闭评论"
-            className="absolute right-[18px] flex h-7 w-7 items-center justify-center rounded-lg bg-border text-[var(--fg2)] hover:bg-primary/10 hover:text-primary"
+            className="absolute right-[18px] flex h-7 w-7 items-center justify-center rounded-lg bg-border text-(--fg2) hover:bg-primary/10 hover:text-primary"
           >
             <SvgIcon name="close" size={16} />
           </button>

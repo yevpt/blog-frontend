@@ -105,7 +105,7 @@ pnpm --filter @repo/web test -- --run navbar-mobile-menu
 
 ```tsx
 const actionClass =
-  "flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-[13px] bg-foreground/[0.04] px-3 text-[12px] font-semibold text-[var(--fg2)] transition-colors hover:bg-primary/[0.10] hover:text-primary dark:bg-white/[0.06]";
+  "flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-[13px] bg-foreground/[0.04] px-3 text-[12px] font-semibold text-(--fg2) transition-colors hover:bg-primary/[0.10] hover:text-primary dark:bg-white/[0.06]";
 ```
 
 定位退出按钮的 `cn(actionClass, ...)` 调用，将背景色从 `0.07` 加深到 `0.10`，hover 从 `0.10` 到 `0.14`：
@@ -203,9 +203,9 @@ pnpm --filter @repo/web test -- --run navbar-mobile-menu
         <SvgIcon
           name={resolvedTheme === "dark" ? "moon" : "sun"}
           size={15}
-          className="text-[var(--fg2)] opacity-75"
+          className="text-(--fg2) opacity-75"
         />
-        <span className="text-[13px] font-medium text-[var(--fg2)]">
+        <span className="text-[13px] font-medium text-(--fg2)">
           {resolvedTheme === "dark" ? "深色模式" : "浅色模式"}
         </span>
       </div>
@@ -630,7 +630,7 @@ const dropdown = (
             管理账号 →
           </span>
         </span>
-        <SvgIcon name="chevron-right" size={13} className="shrink-0 text-[var(--fg3)] opacity-50" />
+        <SvgIcon name="chevron-right" size={13} className="shrink-0 text-(--fg3) opacity-50" />
       </button>
     </div>
 

@@ -42,17 +42,17 @@ function ReplyItem({ reply, commentId, onReply }: ReplyItemProps) {
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-2">
           <span className="text-xs font-bold text-foreground">{fromName}</span>
-          <span className="text-[11px] text-[var(--fg3)]">{time}</span>
+          <span className="text-[11px] text-(--fg3)">{time}</span>
         </div>
-        <p className="text-[13px] leading-[1.65] text-[var(--fg2)]">
+        <p className="text-[13px] leading-[1.65] text-(--fg2)">
           {toName && <span className="mr-1 text-[11px] font-semibold text-primary">@{toName}</span>}
           {reply.content}
         </p>
         <Button
           type="button"
-          variant="ghost"
+          variant="text"
           onPress={() => onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName })}
-          className="mt-1 cursor-pointer rounded-md px-2 py-1 text-[11px] font-medium text-[var(--fg3)] transition-colors hover:bg-primary/10 hover:text-primary"
+          className="mt-1 text-[11px] font-medium text-(--fg3) transition-colors "
         >
           回复
         </Button>
@@ -127,20 +127,20 @@ export function CommentReplies({
 
   if (!isOpen) {
     return (
-      <div className="mt-3 border-l-2 border-border pl-3.5">
-        <button
-          type="button"
+      <div>
+        <Button
+          variant="text"
           onClick={handleToggle}
-          className="text-xs font-semibold text-[var(--fg3)] transition-colors hover:text-primary"
+          className="text-xs  text-(--fg2) transition-colors"
         >
-          --- 展开 {replyCount} 条回复
-        </button>
+          <div className="h-px w-4 bg-accent-foreground/15"></div> 展开 {replyCount} 条回复
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="mt-3 border-l-2 border-border pl-3.5">
+    <div className="mt-3">
       <div className="flex flex-col gap-3">
         {displayReplies.map((reply) => (
           <ReplyItem key={reply.id} reply={reply} commentId={commentId} onReply={onReply} />
@@ -152,20 +152,20 @@ export function CommentReplies({
       <div className="mt-2 flex gap-3">
         {hasMore && (
           <Button
-            variant="ghost"
+            variant="text"
             size="sm"
             isDisabled={isLoading}
             onPress={handleLoadMore}
-            className="h-auto p-0 text-xs font-semibold text-[var(--fg3)] hover:text-primary"
+            className="text-xs font-semibold text-(--fg2)"
           >
             {isLoading ? "加载中..." : "查看更多回复"}
           </Button>
         )}
         <Button
-          variant="ghost"
+          variant="text"
           size="sm"
           onPress={handleToggle}
-          className="h-auto p-0 text-xs font-semibold text-[var(--fg3)] hover:text-primary"
+          className="text-xs font-semibold text-(--fg2)"
         >
           收起回复
         </Button>

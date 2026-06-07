@@ -208,7 +208,7 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
                     <span className="block truncate text-[14px] font-bold leading-tight text-foreground">
                       {displayName}
                     </span>
-                    <span className="mt-1 block truncate text-[11px] font-medium text-[var(--fg3)]">
+                    <span className="mt-1 block truncate text-[11px] font-medium text-(--fg3)">
                       查看个人主页
                     </span>
                   </span>
@@ -231,7 +231,7 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
                   <p className="truncate text-[14px] font-bold leading-tight text-foreground">
                     欢迎回来
                   </p>
-                  <p className="mt-1 truncate text-[11px] font-medium text-[var(--fg3)]">
+                  <p className="mt-1 truncate text-[11px] font-medium text-(--fg3)">
                     登录后可查看消息与个人主页
                   </p>
                 </div>
@@ -254,7 +254,7 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
               {NAV_ITEMS.map((item) => (
                 <Link key={item.href} href={item.href} onClick={onClose} className={navLinkClass}>
                   <span>{item.label}</span>
-                  <SvgIcon name="chevron-right" size={15} className="text-[var(--fg3)]" />
+                  <SvgIcon name="chevron-right" size={15} className="text-(--fg3)" />
                 </Link>
               ))}
             </div>

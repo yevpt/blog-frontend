@@ -2017,7 +2017,7 @@ export function CommentReplies({
       <button
         type="button"
         onClick={handleExpand}
-        className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[var(--fg3)] hover:text-primary"
+        className="mt-2 flex items-center gap-1.5 text-xs font-medium text-(--fg3) hover:text-primary"
       >
         <span className="h-px w-4 bg-current opacity-50" />
         查看 {replyCount} 条回复
@@ -2029,7 +2029,7 @@ export function CommentReplies({
   return (
     <div className="mt-3 border-l-2 border-border pl-3.5">
       {isLoading && replies.length === 0 ? (
-        <p className="py-2 text-xs text-[var(--fg3)]">加载中...</p>
+        <p className="py-2 text-xs text-(--fg3)">加载中...</p>
       ) : (
         <div className="flex flex-col gap-3">
           {replies.map((reply) => {
@@ -2041,11 +2041,11 @@ export function CommentReplies({
                 <div className="min-w-0 flex-1">
                   <div className="mb-0.5 flex items-center gap-2">
                     <span className="text-xs font-semibold text-foreground">{fromName}</span>
-                    <span className="text-[11px] text-[var(--fg3)]">
+                    <span className="text-[11px] text-(--fg3)">
                       {formatRelativeTime(new Date(reply.created_at))}
                     </span>
                   </div>
-                  <p className="text-[13px] leading-[1.65] text-[var(--fg2)]">
+                  <p className="text-[13px] leading-[1.65] text-(--fg2)">
                     {toName && (
                       <span className="mr-1 text-[11px] font-semibold text-primary">
                         @{toName}
@@ -2057,7 +2057,7 @@ export function CommentReplies({
                     <button
                       type="button"
                       onClick={() => onReplyLike?.(reply.id)}
-                      className="flex items-center gap-1 text-[11px] text-[var(--fg3)] hover:text-primary"
+                      className="flex items-center gap-1 text-[11px] text-(--fg3) hover:text-primary"
                     >
                       ♥ {reply.like_count > 0 ? reply.like_count : ""}
                     </button>
@@ -2070,7 +2070,7 @@ export function CommentReplies({
                           toUsername: fromName,
                         })
                       }
-                      className="text-[11px] font-medium text-[var(--fg3)] hover:text-primary"
+                      className="text-[11px] font-medium text-(--fg3) hover:text-primary"
                     >
                       回复
                     </button>
@@ -2087,7 +2087,7 @@ export function CommentReplies({
           size="sm"
           isDisabled={isLoading}
           onPress={handleLoadMore}
-          className="mt-2 h-auto px-0 py-1 text-xs font-medium text-[var(--fg3)] hover:text-primary"
+          className="mt-2 h-auto px-0 py-1 text-xs font-medium text-(--fg3) hover:text-primary"
         >
           {isLoading ? "加载中..." : "查看更多回复"}
         </Button>
@@ -2250,17 +2250,17 @@ export function CommentItem({
         {/* 用户名 + 时间 */}
         <div className="mb-1 flex items-center gap-2">
           <span className="text-xs font-semibold text-foreground">{displayName}</span>
-          <span className="text-[11px] text-[var(--fg3)]">{time}</span>
+          <span className="text-[11px] text-(--fg3)">{time}</span>
         </div>
         {/* 评论内容 */}
-        <p className="text-[13px] leading-[1.65] text-[var(--fg2)]">{comment.content}</p>
+        <p className="text-[13px] leading-[1.65] text-(--fg2)">{comment.content}</p>
         {/* 操作行：点赞（左）+ 回复（右） */}
         <div className="mt-1.5 flex items-center gap-4">
           <button
             type="button"
             aria-label="点赞"
             onClick={() => onLike?.(comment.id)}
-            className="flex items-center gap-1 text-[11px] text-[var(--fg3)] hover:text-primary"
+            className="flex items-center gap-1 text-[11px] text-(--fg3) hover:text-primary"
           >
             <span className={comment.is_liked ? "text-primary" : ""}>♥</span>
             {comment.like_count > 0 && (
@@ -2270,7 +2270,7 @@ export function CommentItem({
           <button
             type="button"
             onClick={() => onReply?.({ commentId: comment.id, toUsername: displayName })}
-            className="text-[11px] font-medium text-[var(--fg3)] hover:text-primary"
+            className="text-[11px] font-medium text-(--fg3) hover:text-primary"
           >
             回复
           </button>
@@ -2463,7 +2463,7 @@ export function CommentInput({
           <button
             type="button"
             onClick={onCancelReply}
-            className="text-[var(--fg3)] hover:text-foreground"
+            className="text-(--fg3) hover:text-foreground"
           >
             取消
           </button>
@@ -2483,7 +2483,7 @@ export function CommentInput({
           disabled={!isLoggedIn || isSubmitting}
           rows={1}
           style={{ resize: "none", minHeight: "24px", maxHeight: "120px" }}
-          className="flex-1 bg-transparent text-[13px] leading-normal text-foreground outline-none placeholder:text-[var(--fg3)] disabled:cursor-pointer"
+          className="flex-1 bg-transparent text-[13px] leading-normal text-foreground outline-none placeholder:text-(--fg3) disabled:cursor-pointer"
           // 自动扩展高度
           onInput={(e) => {
             const el = e.currentTarget;
@@ -2704,11 +2704,11 @@ export function CommentSection({
   const commentList = (
     <>
       {isLoading && comments.length === 0 ? (
-        <div className="py-8 text-center text-sm text-[var(--fg3)]">加载中...</div>
+        <div className="py-8 text-center text-sm text-(--fg3)">加载中...</div>
       ) : error ? (
-        <p className="py-4 text-center text-sm text-[var(--fg3)]">{error}</p>
+        <p className="py-4 text-center text-sm text-(--fg3)">{error}</p>
       ) : comments.length === 0 ? (
-        <p className="py-8 text-center text-sm text-[var(--fg3)]">暂无评论，来发表第一条吧</p>
+        <p className="py-8 text-center text-sm text-(--fg3)">暂无评论，来发表第一条吧</p>
       ) : (
         <div className="flex flex-col gap-[18px]">
           {comments.map((comment) => (
@@ -2731,7 +2731,7 @@ export function CommentSection({
             size="sm"
             isDisabled={isLoading}
             onPress={loadMore}
-            className="h-8 rounded-full px-[18px] text-xs font-semibold text-[var(--fg2)] hover:border-primary hover:bg-primary/10 hover:text-primary"
+            className="h-8 rounded-full px-[18px] text-xs font-semibold text-(--fg2) hover:border-primary hover:bg-primary/10 hover:text-primary"
           >
             {isLoading ? "加载中..." : "查看更多评论"}
           </Button>
@@ -2956,7 +2956,7 @@ export function CommentModal({ open, targetType, targetId, onClose }: CommentMod
             type="button"
             onClick={onClose}
             aria-label="关闭评论"
-            className="absolute right-[18px] flex h-7 w-7 items-center justify-center rounded-lg bg-border text-[var(--fg2)] hover:bg-primary/10 hover:text-primary"
+            className="absolute right-[18px] flex h-7 w-7 items-center justify-center rounded-lg bg-border text-(--fg2) hover:bg-primary/10 hover:text-primary"
           >
             <SvgIcon name="close" size={16} />
           </button>

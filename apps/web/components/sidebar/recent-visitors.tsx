@@ -14,7 +14,7 @@ export function RecentVisitors({ visitors }: RecentVisitorsProps) {
 
   return (
     <section className="rounded-[14px] border border-border bg-card p-[15px] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.04)]">
-      <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.09em] text-[var(--fg3)]">
+      <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.09em] text-(--fg3)">
         {t("sidebar.recentVisitors")}
       </h3>
 
@@ -38,7 +38,7 @@ export function RecentVisitors({ visitors }: RecentVisitorsProps) {
                 className={
                   visitor.isOnline
                     ? "mt-0.5 block truncate text-[10px] font-semibold text-emerald-500"
-                    : "mt-0.5 block truncate text-[10px] text-[var(--fg3)]"
+                    : "mt-0.5 block truncate text-[10px] text-(--fg3)"
                 }
               >
                 {visitor.isOnline ? "在线" : formatRelativeTime(visitor.visitedAt)}

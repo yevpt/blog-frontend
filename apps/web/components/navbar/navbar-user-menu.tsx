@@ -104,11 +104,7 @@ export function NavbarUserMenu({ isGlass = false, unreadCount = 0 }: NavbarUserM
             </span>
             <span className="mt-0.5 block text-[11px] font-medium text-primary/70">管理账号 →</span>
           </span>
-          <SvgIcon
-            name="chevron-right"
-            size={13}
-            className="shrink-0 text-[var(--fg3)] opacity-50"
-          />
+          <SvgIcon name="chevron-right" size={13} className="shrink-0 text-(--fg3) opacity-50" />
         </Button>
       </div>
 

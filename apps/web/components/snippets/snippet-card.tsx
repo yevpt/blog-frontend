@@ -39,7 +39,7 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
                 {authorBadge}
               </span>
             )}
-            <time className="ml-auto shrink-0 text-[11px] text-[var(--fg3)]">{relativeTime}</time>
+            <time className="ml-auto shrink-0 text-[11px] text-(--fg3)">{relativeTime}</time>
           </div>
         </div>
       </div>
@@ -49,7 +49,7 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
       </div>
 
       <div className="mt-1.5 flex items-center justify-between">
-        <div className="flex gap-3 text-xs text-[var(--fg3)]">
+        <div className="flex gap-3 text-xs text-(--fg3)">
           <span>{snippet.like_count} 喜欢</span>
           <span>{snippet.comment_count} 评论</span>
         </div>

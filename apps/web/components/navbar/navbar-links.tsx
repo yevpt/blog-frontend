@@ -42,10 +42,10 @@ export function NavbarLinks({ vertical = false, onLinkClick, isGlass = false }: 
                 (isGlass
                   ? isActive
                     ? "text-foreground"
-                    : "text-[var(--fg2)] hover:text-foreground"
+                    : "text-(--fg2) hover:text-foreground"
                   : isActive
                     ? "text-foreground"
-                    : "text-[var(--fg2)] hover:text-foreground"),
+                    : "text-(--fg2) hover:text-foreground"),
               vertical && "text-foreground hover:text-primary",
             )}
           >
