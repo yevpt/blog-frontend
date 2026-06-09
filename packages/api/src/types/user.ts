@@ -52,3 +52,17 @@ export interface UserDetailResp {
   setting?: UserSettingResp;
   social_links?: UserSocialLinkResp[];
 }
+
+export interface UserListReq {
+  page?: number;
+  page_size?: number;
+  role_id?: number;
+}
+
+export interface UserPageResp {
+  total: number;
+  pages: number;
+  page: number;
+  page_size: number;
+  list: UserDetailResp[];
+}

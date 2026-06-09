@@ -8,12 +8,14 @@ const homePageMockState = vi.hoisted(() => {
   const listTabs = vi.fn();
   const featuredCarousel = vi.fn();
   const listMomentsPublic = vi.fn();
+  const listRecentUsers = vi.fn();
 
   return {
     listPublic,
     listTabs,
     featuredCarousel,
     listMomentsPublic,
+    listRecentUsers,
   };
 });
 
@@ -59,6 +61,9 @@ vi.mock("@/lib/server-api", () => ({
     moments: {
       listPublic: homePageMockState.listMomentsPublic,
     },
+    users: {
+      listRecent: homePageMockState.listRecentUsers,
+    },
   }),
 }));
 
@@ -82,6 +87,13 @@ describe("Home page", () => {
       pages: 0,
       page: 1,
       page_size: 3,
+      list: [],
+    });
+    homePageMockState.listRecentUsers.mockResolvedValue({
+      total: 0,
+      pages: 0,
+      page: 1,
+      page_size: 9,
       list: [],
     });
   });
@@ -168,6 +180,10 @@ describe("Home page", () => {
       page: 1,
       page_size: 3,
       user_id: 1,
+    });
+    expect(homePageMockState.listRecentUsers).toHaveBeenCalledWith({
+      page: 1,
+      page_size: 9,
     });
   });
 

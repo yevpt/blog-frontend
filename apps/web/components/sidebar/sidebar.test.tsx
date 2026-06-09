@@ -84,7 +84,7 @@ function makeVisitor(id: string): Visitor {
     name: `访客${id}`,
     avatar: `https://example.com/avatar${id}.jpg`,
     isOnline: id === "1",
-    visitedAt: new Date("2026-05-30T10:00:00"),
+    visitedAt: id === "1" ? new Date() : new Date("2026-05-30T10:00:00"),
   };
 }
 
@@ -126,7 +126,7 @@ describe("RecentVisitors", () => {
     const manyVisitors = [...mockVisitors, makeVisitor("10"), makeVisitor("11")];
     render(<RecentVisitors visitors={manyVisitors} />);
     const images = screen.getAllByRole("img");
-    expect(images).toHaveLength(10);
+    expect(images).toHaveLength(9);
   });
 
   it("显示区块标题", () => {

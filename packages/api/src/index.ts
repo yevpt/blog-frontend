@@ -60,4 +60,6 @@ export type {
   UserMetaResp,
   UserSettingResp,
   UserSocialLinkResp,
+  UserListReq,
+  UserPageResp,
 } from "./types/user";

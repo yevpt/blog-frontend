@@ -19,31 +19,36 @@ export function RecentVisitors({ visitors }: RecentVisitorsProps) {
         {t("sidebar.recentVisitors")}
       </h3>
 
-      <div className="mb-3 grid grid-cols-2 gap-2">
-        {visitors.slice(0, 10).map((visitor) => (
-          <div
-            key={visitor.id}
-            data-testid="visitor-item"
-            className="-mx-2 -my-1.5 flex min-w-0 cursor-pointer select-none items-center gap-2 rounded-[10px] px-2 py-1.5 transition-[background,transform] hover:bg-primary/10 active:scale-95"
-          >
-            <UserAvatar src={visitor.avatar} name={visitor.name} size="xl" />
+      <div className="mb-3 grid grid-cols-3 gap-2">
+        {visitors.slice(0, 9).map((visitor) => {
+          const isOnline = Date.now() - visitor.visitedAt.getTime() < 3 * 60 * 1000;
 
-            <div className="min-w-0 flex-1">
-              <span className="block truncate text-xs font-semibold text-foreground">
+          return (
+            <div
+              key={visitor.id}
+              data-testid="visitor-item"
+              className="flex cursor-pointer select-none flex-col items-center gap-1 rounded-[10px] p-2 transition-[background,transform] hover:bg-primary/10 active:scale-95"
+            >
+              <UserAvatar src={visitor.avatar} name={visitor.name} size="xl" />
+
+              <span className="mt-1 w-full truncate text-center text-xs font-semibold text-foreground">
                 {visitor.name}
               </span>
-              <span
-                className={
-                  visitor.isOnline
-                    ? "mt-0.5 block truncate text-[10px] font-semibold text-emerald-500"
-                    : "mt-0.5 block truncate text-[10px] text-(--fg3)"
-                }
-              >
-                {visitor.isOnline ? "在线" : formatRelativeTime(visitor.visitedAt)}
-              </span>
+              <div className="flex w-full items-center justify-center">
+                {isOnline ? (
+                  <span className="flex items-center gap-1 truncate text-[10px] font-semibold text-emerald-500">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                    在线
+                  </span>
+                ) : (
+                  <span className="truncate text-[10px] text-(--fg3)">
+                    {formatRelativeTime(visitor.visitedAt)}来过
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="mt-3 flex gap-2">

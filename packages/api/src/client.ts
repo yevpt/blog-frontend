@@ -34,7 +34,7 @@ import type {
   GuestbookLikeResp,
   GuestbookPageResp,
 } from "./types/guestbook";
-import type { UserDetailResp } from "./types/user";
+import type { UserDetailResp, UserListReq, UserPageResp } from "./types/user";
 
 /** createApiClient 的注入配置接口 */
 export interface ApiClientConfig {
@@ -205,6 +205,14 @@ export function createApiClient(config: ApiClientConfig) {
     users: {
       /** 获取当前登录用户详情（需登录） */
       getMe: () => fetchAuthed<UserDetailResp>("/users/me", { method: "GET" }),
+      /** 获取最近访问用户（公开接口） */
+      listRecent: (req: UserListReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        const qs = p.toString();
+        return fetchPublic<UserPageResp>(`/users/recent${qs ? `?${qs}` : ""}`, { method: "GET" });
+      },
     },
     comments: {
       /** 分页查询文章评论（可选登录，登录后返回 is_liked） */
