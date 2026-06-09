@@ -3,11 +3,10 @@ import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { SnippetModal } from "./snippet-modal";
 import { useSnippetModal } from "@/store/use-snippet-modal";
-
-const mockAddToast = vi.fn();
+import { addToast } from "@/lib/toast";
 
 vi.mock("@/lib/toast", () => ({
-  addToast: mockAddToast,
+  addToast: vi.fn(),
 }));
 
 describe("SnippetModal", () => {
@@ -53,7 +52,7 @@ describe("SnippetModal", () => {
     const submitButton = screen.getByRole("button", { name: "发布" });
     await user.click(submitButton);
 
-    expect(mockAddToast).toHaveBeenCalledWith("发布成功（前端演示）", "success");
+    expect(addToast).toHaveBeenCalledWith("发布成功（前端演示）", "success");
 
     await waitFor(() => {
       expect(useSnippetModal.getState().isOpen).toBe(false);
