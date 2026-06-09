@@ -11,3 +11,6 @@ dist
 
 # Superpowers brainstorming artifacts
 .superpowers/
+
+# Agent worktrees
+.claude/
