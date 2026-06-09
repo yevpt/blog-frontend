@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { MomentPageResp } from "@repo/api";
+import type { MomentPageResp, MomentItemResp } from "@repo/api";
 import dynamic from "next/dynamic";
 import { useMomentEngagement } from "@/hooks/use-moment-engagement";
 import { Card } from "@repo/ui";
@@ -46,11 +46,51 @@ function useColumnCount(): number {
   return columns;
 }
 
-function distributeToColumns<T>(items: T[], columnCount: number): T[][] {
-  const cols: T[][] = Array.from({ length: columnCount }, () => []);
-  items.forEach((item, i) => {
-    cols[i % columnCount].push(item);
+/** 估算卡片高度，用于瀑布流高度感知分配 */
+function estimateHeight(snippet: MomentItemResp): number {
+  let height = 120; // 基础高度（头部、底部操作栏、padding等）
+  const textLen = snippet.content ? snippet.content.length : 0;
+  height += Math.min(textLen * 0.8, 300); // 文本高度估算，每字符约0.8px，最高限制300px
+  if (snippet.images && snippet.images.length > 0) {
+    // 单图更宽且比例3:2所以更高，多图为双列网格所以较矮
+    height += snippet.images.length === 1 ? 250 : 130;
+  }
+  return height;
+}
+
+interface ColumnItem {
+  snippet: MomentItemResp;
+  delay: number;
+}
+
+function distributeToColumns(
+  items: MomentItemResp[],
+  columnCount: number,
+  pageSize: number,
+): ColumnItem[][] {
+  const cols: ColumnItem[][] = Array.from({ length: columnCount }, () => []);
+  const colWeights = Array.from({ length: columnCount }, () => 0);
+
+  items.forEach((item, index) => {
+    // 寻找当前高度（权重）最矮的列
+    let minCol = 0;
+    let minWeight = colWeights[0];
+    for (let i = 1; i < columnCount; i++) {
+      if (colWeights[i] < minWeight) {
+        minWeight = colWeights[i];
+        minCol = i;
+      }
+    }
+
+    cols[minCol].push({
+      snippet: item,
+      // 动画延迟基于当前批次内的索引，避免无限累加导致加载更多时出现长时间空白
+      delay: (index % pageSize) * 0.08,
+    });
+
+    colWeights[minCol] += estimateHeight(item);
   });
+
   return cols;
 }
 
@@ -126,8 +166,8 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
   }, [moments, activeSort]);
 
   const columnItems = useMemo(
-    () => distributeToColumns(sortedMoments, columnCount),
-    [sortedMoments, columnCount],
+    () => distributeToColumns(sortedMoments, columnCount, pageData.page_size || 20),
+    [sortedMoments, columnCount, pageData.page_size],
   );
 
   const fetchMomentsPage = useCallback(
@@ -262,11 +302,11 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
           <div className="flex gap-[14px]">
             {columnItems.map((col, colIdx) => (
               <div key={colIdx} className="flex min-w-0 flex-1 flex-col gap-[14px]">
-                {col.map((snippet, rowIdx) => (
+                {col.map(({ snippet, delay }) => (
                   <div
                     key={snippet.id}
                     className="animate-[snippetCardEnter_0.4s_cubic-bezier(0.16,1,0.3,1)_both]"
-                    style={{ animationDelay: `${rowIdx * 0.08}s` }}
+                    style={{ animationDelay: `${delay}s` }}
                   >
                     <SnippetCard
                       snippet={snippet}
