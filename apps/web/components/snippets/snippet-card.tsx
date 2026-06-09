@@ -119,7 +119,7 @@ export function SnippetCard({
             snippet.is_liked ? "text-red-500 hover:text-red-500" : "text-black/54 dark:text-(--fg3)"
           }`}
         >
-          <span className="inline-flex animate-[heartbeat_3s_ease-in-out_infinite]">
+          <span className="inline-flex transform-gpu animate-[heartbeat_3s_ease-in-out_infinite] will-change-transform">
             <SvgIcon name={snippet.is_liked ? "heart-fill" : "heart"} size={18} />
           </span>
           <span>{formatCount(snippet.like_count)}</span>
@@ -148,6 +148,7 @@ export function SnippetCard({
         data-testid="snippet-card"
         data-layout="embedded"
         className="min-w-0 border-b border-border/40 px-1 py-3 last:border-b-0"
+        style={{ contentVisibility: "auto", containIntrinsicSize: "auto 160px" }}
       >
         {body}
       </article>
@@ -159,6 +160,7 @@ export function SnippetCard({
       data-testid="snippet-card"
       data-layout="standalone"
       className="snippet-card-raised min-w-0 overflow-hidden rounded-2xl border border-border p-0 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.04)]"
+      style={{ contentVisibility: "auto", containIntrinsicSize: "auto 200px" }}
     >
       <CardContent className="p-4">{body}</CardContent>
     </Card>

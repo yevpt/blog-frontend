@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { cn, Button } from "@repo/ui";
 import { useLocale } from "@repo/hooks/locale";
 import type { FeaturedPost } from "@/app/_mock/types";
@@ -109,7 +110,12 @@ export function FeaturedCarouselSlide({
               transitionDelay: isActive ? "160ms" : "0ms",
             }}
           >
-            {post.title}
+            <Link
+              href={post.href}
+              className="hover:text-primary transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
+            >
+              {post.title}
+            </Link>
           </h2>
 
           {/* 摘要 */}

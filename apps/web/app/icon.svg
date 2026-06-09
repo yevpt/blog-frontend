@@ -1,0 +1,14 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .primary { fill: #7c3aed; }
+    .secondary { fill: #18181b; }
+    @media (prefers-color-scheme: dark) {
+      .primary { fill: #a78bfa; }
+      .secondary { fill: #fafafa; }
+    }
+  </style>
+  <g transform="translate(256, 256) rotate(-45)">
+    <path d="M 20 -180 A 180 180 0 0 1 20 180 C -120 180 160 -180 20 -180 Z" class="primary" />
+    <path d="M -20 180 A 180 180 0 0 1 -20 -180 C 120 -180 -160 180 -20 180 Z" class="secondary" />
+  </g>
+</svg>

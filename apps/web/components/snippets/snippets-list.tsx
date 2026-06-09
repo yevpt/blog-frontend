@@ -67,31 +67,39 @@ function distributeToColumns(
   items: MomentItemResp[],
   columnCount: number,
   pageSize: number,
-): ColumnItem[][] {
+  prevAssignments?: Map<number, number>,
+): { cols: ColumnItem[][]; assignments: Map<number, number> } {
   const cols: ColumnItem[][] = Array.from({ length: columnCount }, () => []);
   const colWeights = Array.from({ length: columnCount }, () => 0);
+  const newAssignments = new Map<number, number>();
 
   items.forEach((item, index) => {
-    // 寻找当前高度（权重）最矮的列
-    let minCol = 0;
-    let minWeight = colWeights[0];
-    for (let i = 1; i < columnCount; i++) {
-      if (colWeights[i] < minWeight) {
-        minWeight = colWeights[i];
-        minCol = i;
+    let targetCol = prevAssignments?.get(item.id);
+
+    if (targetCol === undefined || targetCol >= columnCount) {
+      // 寻找当前高度（权重）最矮的列
+      let minCol = 0;
+      let minWeight = colWeights[0];
+      for (let i = 1; i < columnCount; i++) {
+        if (colWeights[i] < minWeight) {
+          minWeight = colWeights[i];
+          minCol = i;
+        }
       }
+      targetCol = minCol;
     }
 
-    cols[minCol].push({
+    newAssignments.set(item.id, targetCol);
+    cols[targetCol].push({
       snippet: item,
       // 动画延迟基于当前批次内的索引，避免无限累加导致加载更多时出现长时间空白
       delay: (index % pageSize) * 0.08,
     });
 
-    colWeights[minCol] += estimateHeight(item);
+    colWeights[targetCol] += estimateHeight(item);
   });
 
-  return cols;
+  return { cols, assignments: newAssignments };
 }
 
 /** Tab 切换时的 flex 瀑布流骨架屏 */
@@ -137,6 +145,9 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
   const observerRef = useRef<IntersectionObserver | null>(null);
   const columnCount = useColumnCount();
 
+  const prevAssignmentsRef = useRef<Map<number, number>>(new Map());
+  const prevColumnCountRef = useRef<number>(columnCount);
+
   const getRefreshParams = useCallback(
     () => ({ page: currentPage, pageSize: pageData.page_size }),
     [currentPage, pageData.page_size],
@@ -165,10 +176,20 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
     return moments;
   }, [moments, activeSort]);
 
-  const columnItems = useMemo(
-    () => distributeToColumns(sortedMoments, columnCount, pageData.page_size || 20),
-    [sortedMoments, columnCount, pageData.page_size],
-  );
+  const columnItems = useMemo(() => {
+    if (prevColumnCountRef.current !== columnCount) {
+      prevAssignmentsRef.current = new Map();
+      prevColumnCountRef.current = columnCount;
+    }
+    const { cols, assignments } = distributeToColumns(
+      sortedMoments,
+      columnCount,
+      pageData.page_size || 20,
+      prevAssignmentsRef.current,
+    );
+    prevAssignmentsRef.current = assignments;
+    return cols;
+  }, [sortedMoments, columnCount, pageData.page_size]);
 
   const fetchMomentsPage = useCallback(
     async (page: number, tab: SnippetTab): Promise<MomentPageResp | null> => {

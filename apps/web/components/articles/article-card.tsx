@@ -33,18 +33,20 @@ export function ArticleCard({
         {article.cover_img_url && (
           <Link
             href={href}
-            className="block overflow-hidden md:rounded-none"
+            className="block overflow-hidden md:px-3 md:pt-3"
             aria-hidden
             tabIndex={-1}
           >
-            <div className="relative aspect-video overflow-hidden rounded-xl md:rounded-none">
-              <LoadingImage
-                src={article.cover_img_url}
-                alt={article.title}
-                fill
-                className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
+            <div className="group/img relative aspect-video overflow-hidden rounded-xl">
+              <div className="absolute inset-0 transition-transform duration-500 ease-out group-hover/img:scale-[1.06]">
+                <LoadingImage
+                  src={article.cover_img_url}
+                  alt={article.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              </div>
             </div>
           </Link>
         )}
