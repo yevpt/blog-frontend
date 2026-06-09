@@ -26,7 +26,6 @@ vi.mock("next/image", () => ({
   }) => <img src={src} alt={alt} className={className} />,
 }));
 
-// Mock @repo/ui Button
 vi.mock("@repo/ui", () => ({
   cn: (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" "),
   Button: ({
@@ -43,6 +42,17 @@ vi.mock("@repo/ui", () => ({
     <button data-variant={variant} onClick={onPress} {...props}>
       {children}
     </button>
+  ),
+  Card: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
+    <div {...props}>{children}</div>
+  ),
+  CardContent: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
+    <div {...props}>{children}</div>
+  ),
+  Avatar: ({ src, alt, initials }: { src?: string; alt?: string; initials?: string }) =>
+    src ? <img src={src} alt={alt} /> : <span>{initials}</span>,
+  Badge: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
+    <span {...props}>{children}</span>
   ),
 }));
 
@@ -160,6 +170,13 @@ describe("SnippetCard", () => {
   it("渲染正确的 data-testid", () => {
     render(<SnippetCard snippet={makeMoment()} />);
     expect(screen.getByTestId("snippet-card")).toBeTruthy();
+  });
+
+  it("embedded 布局不使用 Card 包裹", () => {
+    render(<SnippetCard snippet={makeMoment()} layout="embedded" />);
+    const card = screen.getByTestId("snippet-card");
+    expect(card.getAttribute("data-layout")).toBe("embedded");
+    expect(card.tagName).toBe("ARTICLE");
   });
 
   it("有图片时渲染图片网格", () => {

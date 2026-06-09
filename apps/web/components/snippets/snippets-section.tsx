@@ -44,7 +44,6 @@ export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSect
   return (
     <>
       <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.04)]">
-        {/* Header */}
         <div className="flex items-center justify-between px-4 pb-3 pt-4">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-[10px] bg-gradient-to-br from-primary to-primary/80 text-[13px] text-primary-foreground">
@@ -64,13 +63,15 @@ export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSect
           </Button>
         </div>
 
-        {/* Cards */}
-        <div className="flex flex-col gap-2 px-3 pb-3">
+        <div className="flex flex-col px-3 pb-3">
           {loading
-            ? Array.from({ length: MAX_SNIPPETS }, (_, i) => <SnippetCardSkeleton key={i} />)
+            ? Array.from({ length: MAX_SNIPPETS }, (_, i) => (
+                <SnippetCardSkeleton key={i} variant={i} layout="embedded" />
+              ))
             : visibleSnippets.map((snippet) => (
                 <SnippetCard
                   key={snippet.id}
+                  layout="embedded"
                   snippet={snippet}
                   onLike={handleLike}
                   likeDisabled={pendingLikeIds.includes(snippet.id)}
@@ -79,12 +80,11 @@ export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSect
               ))}
         </div>
 
-        {/* Footer CTA */}
         <div className="flex gap-2 border-t border-border/40 px-4 py-3">
           <Button
             variant="outline"
             size="sm"
-            className="h-9 flex-1 rounded-xl bg-gradient-to-r from-primary to-primary/90 text-xs font-semibold text-primary-foreground shadow-[0_2px_8px_rgba(124,58,237,0.25)] hover:opacity-90 border-none"
+            className="h-9 flex-1 rounded-xl border-none bg-gradient-to-r from-primary to-primary/90 text-xs font-semibold text-primary-foreground shadow-[0_2px_8px_rgba(124,58,237,0.25)] hover:opacity-90"
           >
             {t("snippet.postNew")}
           </Button>

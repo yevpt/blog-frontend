@@ -22,7 +22,9 @@ export function SnippetContent({ content }: SnippetContentProps) {
 
   return (
     <div className="mt-0.5">
-      <p className="whitespace-pre-line text-[13px] leading-relaxed text-(--fg2)">{displayText}</p>
+      <p className="whitespace-pre-line break-words text-[13px] leading-relaxed text-(--fg2)">
+        {displayText}
+      </p>
       {isLong && (
         <Button
           variant="text"

@@ -2,6 +2,7 @@
 export type IconName =
   | "arrow-back"
   | "arrow-forward"
+  | "arrow-up-down"
   | "arrow-up-right"
   | "arrow-up"
   | "at"
@@ -15,6 +16,7 @@ export type IconName =
   | "code-block"
   | "dots-vertical"
   | "droplet-filled"
+  | "edit"
   | "eye-off"
   | "eye"
   | "gitee"
@@ -35,6 +37,7 @@ export type IconName =
   | "monitor"
   | "moon"
   | "music"
+  | "pen"
   | "plus"
   | "qq"
   | "search"

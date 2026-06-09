@@ -220,3 +220,183 @@ body::after {
 .animate-dropdown-enter {
   animation: dropdownEnter 150ms ease-out both;
 }
+
+/* ═══════════════════════════════════════════════
+   碎语卡片入场动画
+   ═══════════════════════════════════════════════ */
+
+@keyframes snippetCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   碎语骨架屏 — Shimmer Skeleton
+   ═══════════════════════════════════════════════ */
+
+@keyframes snippetShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.snippet-shimmer-bar {
+  position: relative;
+  overflow: hidden;
+  background: var(--loading-image-base-a);
+  border-radius: 6px;
+}
+
+.snippet-shimmer-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--loading-image-base-b) 50%,
+    transparent 100%
+  );
+  animation: snippetShimmer 1.8s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════
+   碎语无限滚动加载器
+   ═══════════════════════════════════════════════ */
+
+@keyframes snippetLoaderPulse {
+  0%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+@keyframes snippetLoaderGlow {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+.snippet-scroll-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 0 20px;
+}
+
+.snippet-loader-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.snippet-loader-dots::before {
+  content: "";
+  position: absolute;
+  width: 60px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse,
+    color-mix(in srgb, var(--color-primary) 15%, transparent) 0%,
+    transparent 70%
+  );
+  animation: snippetLoaderGlow 2s ease-in-out infinite;
+}
+
+.snippet-loader-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  animation: snippetLoaderPulse 1.2s ease-in-out infinite;
+}
+
+.snippet-loader-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.snippet-loader-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.snippet-loader-text {
+  font-size: 12px;
+  color: var(--fg3);
+  letter-spacing: 0.02em;
+}
+
+/* ── 碎语到底提示 ── */
+.snippet-end-reached {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 0 20px;
+  color: var(--fg3);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.snippet-end-reached::before,
+.snippet-end-reached::after {
+  content: "";
+  flex: 0 1 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-border), transparent);
+}
+
+/* ═══════════════════════════════════════════════
+   碎语卡片 hover 提升
+   ═══════════════════════════════════════════════ */
+
+.snippet-card-raised {
+  transition:
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.snippet-card-raised:hover {
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .snippet-shimmer-bar::after,
+  .snippet-loader-dot,
+  .snippet-loader-dots::before {
+    animation: none;
+  }
+
+  .snippet-card-raised {
+    transition: none;
+  }
+
+  .snippet-card-raised:hover {
+    transform: none;
+  }
+}

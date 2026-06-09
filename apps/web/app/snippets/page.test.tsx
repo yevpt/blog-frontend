@@ -13,8 +13,8 @@ vi.mock("@/lib/server-api", () => ({
   }),
 }));
 
-vi.mock("@/components/snippets/snippets-list", () => ({
-  SnippetsList: ({
+vi.mock("@/components/snippets/snippets-list-loader", () => ({
+  SnippetsListLoader: ({
     initialPage,
   }: {
     initialPage: { list: Array<{ id: number; content: string }> };
@@ -56,9 +56,10 @@ describe("SnippetsPage", () => {
     expect(() => render(element)).not.toThrow();
   });
 
-  it("包含碎语页面标题", async () => {
-    render(await Page());
-    expect(screen.getByRole("heading", { name: "碎语" })).toBeInTheDocument();
+  it("使用加宽容器（max-w-[960px]）", async () => {
+    const { container } = render(await Page());
+    const wrapper = container.querySelector(".max-w-\\[960px\\]");
+    expect(wrapper).toBeInTheDocument();
   });
 
   it("有碎语时渲染 SnippetsList", async () => {

@@ -27,6 +27,33 @@ vi.mock("@repo/ui", () => ({
       {children}
     </button>
   ),
+  Card: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
+    <div {...props}>{children}</div>
+  ),
+  Tabs: ({
+    children,
+    onSelectionChange,
+  }: {
+    children: ReactNode;
+    selectedKey?: string;
+    onSelectionChange?: (key: string) => void;
+  }) => {
+    const handleSelect = (e: { target: EventTarget | null }) => {
+      const btn = (e.target as HTMLElement).closest("button[data-tab-id]");
+      if (btn && onSelectionChange) {
+        onSelectionChange(btn.getAttribute("data-tab-id") ?? "");
+      }
+    };
+    return (
+      <div role="presentation" onClick={handleSelect} onKeyDown={handleSelect}>
+        {children}
+      </div>
+    );
+  },
+  TabsList: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  TabsItem: ({ children, id }: { children: ReactNode; id?: string; variant?: string }) => (
+    <button data-tab-id={id}>{children}</button>
+  ),
   Pagination: ({
     currentPage,
     totalPages,
@@ -53,6 +80,14 @@ vi.mock("@/app/providers/session-provider", () => ({
 
 vi.mock("@/store/use-login-modal", () => ({
   useLoginModal: () => ({ open: mockOpenLoginModal }),
+}));
+
+vi.mock("@/store/use-snippet-modal", () => ({
+  useSnippetModal: () => ({ open: vi.fn() }),
+}));
+
+vi.mock("@repo/hooks", () => ({
+  useLocale: () => ({ t: (key: string) => key }),
 }));
 
 vi.mock("@/lib/toast", () => ({
@@ -115,6 +150,16 @@ function makePageResp(overrides: Partial<MomentPageResp> = {}): MomentPageResp {
 
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn());
+  vi.stubGlobal(
+    "IntersectionObserver",
+    class MockIntersectionObserver {
+      observe = vi.fn();
+      unobserve = vi.fn();
+      disconnect = vi.fn();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      constructor(_cb: any, _options?: any) {}
+    },
+  );
   mockSessionUserId = 7;
 });
 
@@ -145,29 +190,33 @@ describe("SnippetsList", () => {
     expect(modal.dataset.targetType).toBe("moment");
   });
 
-  it("pages > 1 时显示分页", async () => {
+  it("pages > 1 时显示加载更多哨兵", () => {
+    render(<SnippetsList initialPage={makePageResp({ total: 40, pages: 2 })} />);
+
+    // 无限滚动模式下有哨兵元素（h-px div）
+    const sentinel = document.querySelector(".h-px");
+    expect(sentinel).toBeTruthy();
+  });
+
+  it("pages === 1 时显示到底提示", () => {
+    render(<SnippetsList initialPage={makePageResp({ total: 1, pages: 1 })} />);
+
+    expect(screen.getByText("已经到底了")).toBeTruthy();
+  });
+
+  it("Tab 切换触发重新加载", async () => {
     const user = userEvent.setup();
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: true,
-      json: async () =>
-        makePageResp({
-          page: 2,
-          list: [
-            {
-              ...makePageResp().list[0],
-              id: 2,
-              content: "第二页碎语",
-            },
-          ],
-        }),
+      json: async () => makePageResp({ list: [] }),
     } as Response);
 
-    render(<SnippetsList initialPage={makePageResp({ total: 40, pages: 2 })} />);
+    render(<SnippetsList initialPage={makePageResp()} />);
 
-    await user.click(screen.getByRole("button", { name: "下一页" }));
+    await user.click(screen.getByRole("button", { name: "博主" }));
 
     await waitFor(() => {
-      expect(screen.getByText("第二页碎语")).toBeTruthy();
+      expect(screen.getByText("暂无碎语")).toBeTruthy();
     });
   });
 });

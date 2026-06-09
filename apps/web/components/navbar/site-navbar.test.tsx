@@ -40,6 +40,14 @@ vi.mock("../../store/use-login-modal", () => ({
   useLoginModal: () => ({ open: vi.fn(), close: vi.fn(), isOpen: false, view: "login" }),
 }));
 
+vi.mock("../../store/use-snippet-modal", () => ({
+  useSnippetModal: () => ({ open: vi.fn(), close: vi.fn(), isOpen: false }),
+}));
+
+vi.mock("../../app/providers/session-provider", () => ({
+  useSession: () => ({ userId: null, profile: null }),
+}));
+
 // Mock providers
 vi.mock("../../app/providers/theme-provider", () => ({
   useTheme: () => ({
@@ -193,15 +201,12 @@ describe("SiteNavbar", () => {
     expect(screen.getByLabelText("打开导航菜单")).toBeInTheDocument();
   });
 
-  it("普通内页移动端头部显示返回首页、标题、menu", () => {
+  it("碎语页移动端头部显示 Logo、menu，不显示返回按钮，不显示写碎语按钮", () => {
     mockPathname.mockReturnValue("/snippets");
     render(<SiteNavbar />);
-    const backButton = screen.getByLabelText("返回首页");
-    const mobileHeader = backButton.parentElement;
 
-    expect(backButton).toBeInTheDocument();
-    expect(mobileHeader).not.toBeNull();
-    expect(mobileHeader).toHaveTextContent("碎语");
+    expect(screen.queryByLabelText("返回首页")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("写碎语")).not.toBeInTheDocument();
     expect(screen.getByLabelText("打开导航菜单")).toBeInTheDocument();
   });
 

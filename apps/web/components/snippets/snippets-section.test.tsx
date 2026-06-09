@@ -18,7 +18,6 @@ vi.mock("@repo/icons", () => ({
   ),
 }));
 
-// Mock @repo/ui（Button 组件）
 vi.mock("@repo/ui", () => ({
   cn: (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" "),
   Button: ({
@@ -35,6 +34,17 @@ vi.mock("@repo/ui", () => ({
     <button data-variant={variant} onClick={onPress} {...props}>
       {children}
     </button>
+  ),
+  Card: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
+    <div {...props}>{children}</div>
+  ),
+  CardContent: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
+    <div {...props}>{children}</div>
+  ),
+  Avatar: ({ src, alt, initials }: { src?: string; alt?: string; initials?: string }) =>
+    src ? <img src={src} alt={alt} /> : <span>{initials}</span>,
+  Badge: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
+    <span {...props}>{children}</span>
   ),
 }));
 

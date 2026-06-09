@@ -35,13 +35,13 @@ describe("useNavbarContext", () => {
     expect(result.current.desktopCapsuleThreshold).toBe(24);
   });
 
-  it("碎语页返回对应标题", () => {
+  it("碎语页复用 home variant，无标题", () => {
     mockPathname = "/snippets";
 
     const { result } = renderHook(() => useNavbarContext());
 
-    expect(result.current.title).toBe("碎语");
-    expect(result.current.mobileVariant).toBe("default");
+    expect(result.current.title).toBeUndefined();
+    expect(result.current.mobileVariant).toBe("home");
     expect(result.current.desktopCapsuleThreshold).toBe(24);
   });
 });

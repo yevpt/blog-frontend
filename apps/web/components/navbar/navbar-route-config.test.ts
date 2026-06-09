@@ -30,10 +30,10 @@ describe("matchNavbarRoute", () => {
     });
   });
 
-  it("snippets 命中 default，并返回碎语标题", () => {
+  it("snippets 复用 home variant，无标题", () => {
     expect(matchNavbarRoute("/snippets")).toEqual({
-      mobileVariant: "default",
-      title: "碎语",
+      mobileVariant: "home",
+      title: undefined,
     });
   });
 

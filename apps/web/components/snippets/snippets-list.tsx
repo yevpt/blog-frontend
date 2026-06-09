@@ -1,23 +1,101 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { Pagination } from "@repo/ui";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { MomentPageResp } from "@repo/api";
-import { CommentModal } from "@/components/comments";
+import dynamic from "next/dynamic";
 import { useMomentEngagement } from "@/hooks/use-moment-engagement";
+import { Card } from "@repo/ui";
 import { SnippetCard } from "./snippet-card";
 import { SnippetCardSkeleton } from "./snippet-card-skeleton";
+import { SnippetFilterBar, type SnippetSort, type SnippetTab } from "./snippet-filter-bar";
+import { SnippetScrollLoader, SnippetEndReached } from "./snippet-scroll-loader";
+
+const CommentModal = dynamic(() => import("@/components/comments").then((m) => m.CommentModal), {
+  ssr: false,
+});
 
 interface SnippetsListProps {
   initialPage: MomentPageResp;
   ownerUserId?: number;
+  /** 朋友们 Tab 对应的 role_id，由页面注入 */
+  friendRoleId?: number;
 }
 
-export function SnippetsList({ initialPage, ownerUserId }: SnippetsListProps) {
+const SKELETON_COUNT = 8;
+
+/** 与 Tailwind sm/lg 断点保持一致 */
+export function getSnippetColumnCount(width: number): number {
+  if (width >= 1024) return 3;
+  if (width >= 640) return 2;
+  return 1;
+}
+
+/**
+ * 响应式列数 — 由 SnippetsListLoader 保证仅在客户端挂载后渲染，
+ * 首帧即可读到 window.innerWidth，避免 1 列 → N 列闪烁。
+ */
+function useColumnCount(): number {
+  const [columns, setColumns] = useState(() => getSnippetColumnCount(window.innerWidth));
+
+  useLayoutEffect(() => {
+    const update = () => setColumns(getSnippetColumnCount(window.innerWidth));
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return columns;
+}
+
+function distributeToColumns<T>(items: T[], columnCount: number): T[][] {
+  const cols: T[][] = Array.from({ length: columnCount }, () => []);
+  items.forEach((item, i) => {
+    cols[i % columnCount].push(item);
+  });
+  return cols;
+}
+
+/** Tab 切换时的 flex 瀑布流骨架屏 */
+function SnippetMasonrySkeleton({ columnCount }: { columnCount: number }) {
+  return (
+    <div className="flex gap-[14px]">
+      {Array.from({ length: columnCount }, (_, colIdx) => (
+        <div key={colIdx} className="flex min-w-0 flex-1 flex-col gap-[14px]">
+          {Array.from({ length: Math.ceil(SKELETON_COUNT / columnCount) }, (_, rowIdx) => (
+            <div
+              key={rowIdx}
+              className="animate-[snippetCardEnter_0.4s_cubic-bezier(0.16,1,0.3,1)_both]"
+              style={{ animationDelay: `${rowIdx * 0.08}s` }}
+            >
+              <SnippetCardSkeleton variant={rowIdx * columnCount + colIdx} />
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * 碎语列表（flex 瀑布流 + 无限滚动 + Tab/排序筛选）
+ *
+ * 布局原理：
+ * - round-robin 将卡片分配到 N 个 flex 列，位置一旦确定不再变动
+ * - 展开/收起内容不会导致卡片跨列漂移
+ * - 排序后卡片按 top→bottom, left→right 排列
+ */
+export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: SnippetsListProps) {
+  const [activeTab, setActiveTab] = useState<SnippetTab>("all");
+  const [activeSort, setActiveSort] = useState<SnippetSort>("latest");
   const [currentPage, setCurrentPage] = useState(initialPage.page);
   const [pageData, setPageData] = useState(initialPage);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingInitial, setIsLoadingInitial] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [endReached, setEndReached] = useState(initialPage.page >= initialPage.pages);
   const [fetchError, setFetchError] = useState(false);
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const columnCount = useColumnCount();
 
   const getRefreshParams = useCallback(
     () => ({ page: currentPage, pageSize: pageData.page_size }),
@@ -35,82 +113,184 @@ export function SnippetsList({ initialPage, ownerUserId }: SnippetsListProps) {
     handleCommentAdded,
   } = useMomentEngagement({
     initialMoments: initialPage.list,
-    ownerUserId,
+    ownerUserId: activeTab === "owner" ? ownerUserId : undefined,
     getRefreshParams,
     onRefresh: setPageData,
   });
 
-  const fetchPage = useCallback(
-    async (page: number) => {
-      setIsLoading(true);
-      setFetchError(false);
+  const sortedMoments = useMemo(() => {
+    if (activeSort === "popular") {
+      return [...moments].sort((a, b) => b.like_count - a.like_count);
+    }
+    return moments;
+  }, [moments, activeSort]);
+
+  const columnItems = useMemo(
+    () => distributeToColumns(sortedMoments, columnCount),
+    [sortedMoments, columnCount],
+  );
+
+  const fetchMomentsPage = useCallback(
+    async (page: number, tab: SnippetTab): Promise<MomentPageResp | null> => {
       try {
         const params = new URLSearchParams({
           page: String(page),
           page_size: String(pageData.page_size),
         });
-        if (ownerUserId !== undefined) {
+        if (tab === "owner" && ownerUserId !== undefined) {
           params.set("user_id", String(ownerUserId));
+        } else if (tab === "friends" && friendRoleId !== undefined) {
+          params.set("role_id", String(friendRoleId));
         }
         const res = await fetch(`/api/moments?${params.toString()}`);
         if (!res.ok) throw new Error("fetch failed");
-        const data: MomentPageResp = await res.json();
-        setPageData(data);
-        setMoments(data.list);
-        setCurrentPage(page);
+        return (await res.json()) as MomentPageResp;
       } catch {
-        setFetchError(true);
-      } finally {
-        setIsLoading(false);
+        return null;
       }
     },
-    [ownerUserId, pageData.page_size, setMoments],
+    [ownerUserId, friendRoleId, pageData.page_size],
   );
 
-  const handlePageChange = useCallback(
-    (page: number) => {
-      void fetchPage(page);
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || endReached || isLoadingInitial) return;
+    if (currentPage >= pageData.pages) {
+      setEndReached(true);
+      return;
+    }
+
+    setIsLoadingMore(true);
+    setFetchError(false);
+
+    const nextPage = currentPage + 1;
+    const data = await fetchMomentsPage(nextPage, activeTab);
+
+    if (data) {
+      setMoments((prev) => [...prev, ...data.list]);
+      setPageData(data);
+      setCurrentPage(nextPage);
+      if (nextPage >= data.pages) {
+        setEndReached(true);
+      }
+    } else {
+      setFetchError(true);
+    }
+
+    setIsLoadingMore(false);
+  }, [
+    isLoadingMore,
+    endReached,
+    isLoadingInitial,
+    currentPage,
+    pageData.pages,
+    activeTab,
+    fetchMomentsPage,
+    setMoments,
+  ]);
+
+  useEffect(() => {
+    if (observerRef.current) observerRef.current.disconnect();
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) void loadMore();
+      },
+      { rootMargin: "200px" },
+    );
+
+    if (sentinelRef.current) observerRef.current.observe(sentinelRef.current);
+
+    return () => observerRef.current?.disconnect();
+  }, [loadMore]);
+
+  const handleTabChange = useCallback(
+    async (tab: SnippetTab) => {
+      if (tab === activeTab) return;
+      setActiveTab(tab);
+      setIsLoadingInitial(true);
+      setEndReached(false);
+      setFetchError(false);
+
+      const data = await fetchMomentsPage(1, tab);
+      if (data) {
+        setMoments(data.list);
+        setPageData(data);
+        setCurrentPage(1);
+        if (data.pages <= 1) setEndReached(true);
+      } else {
+        setFetchError(true);
+      }
+
+      setIsLoadingInitial(false);
     },
-    [fetchPage],
+    [activeTab, fetchMomentsPage, setMoments],
   );
 
-  const skeletonCount = pageData.list.length || pageData.page_size;
+  const handleSortChange = useCallback((sort: SnippetSort) => {
+    setActiveSort(sort);
+  }, []);
 
-  if (moments.length === 0 && !isLoading) {
+  if (moments.length === 0 && !isLoadingInitial && !isLoadingMore) {
     return (
-      <p className="rounded-2xl border border-border bg-card py-8 text-center text-sm text-(--fg3)">
-        暂无碎语
-      </p>
+      <>
+        <SnippetFilterBar
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          activeSort={activeSort}
+          onSortChange={handleSortChange}
+        />
+        <Card className="rounded-2xl py-8 text-center">
+          <p className="text-sm text-(--fg3)">暂无碎语</p>
+        </Card>
+      </>
     );
   }
 
   return (
     <>
-      <div className="flex flex-col gap-2.5 rounded-2xl border border-border bg-card px-3 py-2">
-        {isLoading
-          ? Array.from({ length: skeletonCount }, (_, i) => <SnippetCardSkeleton key={i} />)
-          : moments.map((snippet) => (
-              <SnippetCard
-                key={snippet.id}
-                snippet={snippet}
-                onLike={handleLike}
-                likeDisabled={pendingLikeIds.includes(snippet.id)}
-                onComment={openComment}
-              />
+      <SnippetFilterBar
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        activeSort={activeSort}
+        onSortChange={handleSortChange}
+      />
+
+      {isLoadingInitial ? (
+        <SnippetMasonrySkeleton columnCount={columnCount} />
+      ) : (
+        <>
+          <div className="flex gap-[14px]">
+            {columnItems.map((col, colIdx) => (
+              <div key={colIdx} className="flex min-w-0 flex-1 flex-col gap-[14px]">
+                {col.map((snippet, rowIdx) => (
+                  <div
+                    key={snippet.id}
+                    className="animate-[snippetCardEnter_0.4s_cubic-bezier(0.16,1,0.3,1)_both]"
+                    style={{ animationDelay: `${rowIdx * 0.08}s` }}
+                  >
+                    <SnippetCard
+                      snippet={snippet}
+                      onLike={handleLike}
+                      likeDisabled={pendingLikeIds.includes(snippet.id)}
+                      onComment={openComment}
+                    />
+                  </div>
+                ))}
+              </div>
             ))}
-      </div>
+          </div>
 
-      {fetchError && (
-        <p className="mt-4 text-center text-sm text-muted-foreground">加载失败，请稍后重试</p>
-      )}
+          {isLoadingMore && <SnippetScrollLoader />}
+          {endReached && !isLoadingMore && <SnippetEndReached />}
 
-      {pageData.pages > 1 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={pageData.pages}
-          onPageChange={handlePageChange}
-          className="mt-8"
-        />
+          {!endReached && !isLoadingMore && !fetchError && (
+            <div ref={sentinelRef} className="h-px" />
+          )}
+
+          {fetchError && !isLoadingMore && (
+            <p className="mt-4 text-center text-sm text-muted-foreground">加载失败，请稍后重试</p>
+          )}
+        </>
       )}
 
       {activeComment !== null && (

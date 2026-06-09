@@ -2,14 +2,17 @@
 
 import type { MomentItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
-import { Button } from "@repo/ui";
+import { Avatar, Badge, Button, Card, CardContent } from "@repo/ui";
 import { LoadingImage } from "@/components/common/loading-image";
-import { UserAvatar } from "@/components/common/user-avatar";
 import { formatRelativeTime } from "../../lib/format-time";
 import { SnippetContent } from "./snippet-content";
 
+export type SnippetCardLayout = "standalone" | "embedded";
+
 interface SnippetCardProps {
   snippet: MomentItemResp;
+  /** standalone：碎语页独立卡片；embedded：首页区块内嵌条目（无 Card 包裹） */
+  layout?: SnippetCardLayout;
   onLike?: (snippet: MomentItemResp) => void;
   likeDisabled?: boolean;
   onComment?: (snippet: MomentItemResp) => void;
@@ -27,9 +30,10 @@ function formatCount(count: number): string {
   return String(count);
 }
 
-// 单条碎语卡片：独立圆角卡片，双行 header + 图片网格 + ArticleCardStats 风格操作区
+// 单条碎语：双行 header + 图片网格 + ArticleCardStats 风格操作区
 export function SnippetCard({
   snippet,
+  layout = "standalone",
   onLike,
   likeDisabled = false,
   onComment,
@@ -38,23 +42,21 @@ export function SnippetCard({
   const authorName = snippet.user?.nickname ?? snippet.user?.username ?? "匿名";
   const authorAvatar = snippet.user?.avatar_url ?? "";
   const authorBadge = snippet.user?.mark ?? "";
+  const authorInitial = authorName[0]?.toUpperCase() ?? "?";
 
   const images = snippet.images ?? [];
   const visibleImages = images.slice(0, 2);
   const hiddenCount = Math.max(0, images.length - 2);
 
-  return (
-    <article
-      data-testid="snippet-card"
-      className="px-1 py-3.5 border-b last:border-none border-border"
-    >
-      {/* Header: 双行布局 */}
+  const body = (
+    <>
       <div className="mb-2.5 flex items-start gap-2.5">
-        <UserAvatar
+        <Avatar
           src={authorAvatar || undefined}
-          name={authorName}
-          size="lg"
-          className="shadow-[0_2px_8px_rgba(124,58,237,0.2)]"
+          alt={authorName}
+          initials={authorInitial}
+          size="sm"
+          className="size-9 shadow-[0_2px_8px_rgba(124,58,237,0.2)]"
         />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
@@ -62,17 +64,18 @@ export function SnippetCard({
             <time className="ml-auto shrink-0 text-[11px] text-(--fg3)">{relativeTime}</time>
           </div>
           {authorBadge && (
-            <span className="mt-0.5 inline-block py-0.5 text-[11px] text-muted-foreground">
+            <Badge
+              variant="outline"
+              className="mt-0.5 rounded-none border-0 bg-transparent px-0 py-0.5 text-[11px] font-normal text-muted-foreground"
+            >
               {authorBadge}
-            </span>
+            </Badge>
           )}
         </div>
       </div>
 
-      {/* 正文 */}
       <SnippetContent content={snippet.content} />
 
-      {/* 图片网格 */}
       {visibleImages.length > 0 && (
         <div
           className={`mt-2.5 grid gap-1 overflow-hidden rounded-[10px] ${
@@ -101,8 +104,7 @@ export function SnippetCard({
         </div>
       )}
 
-      {/* 操作区：复用 ArticleCardStats 样式 */}
-      <div className="mt-2 flex items-center justify-end gap-0.5 pt-2 text-xs text-(--fg3)">
+      <div className="mt-3 flex items-center justify-end gap-0.5 text-xs text-(--fg3)">
         <Button
           type="button"
           variant="ghost"
@@ -137,6 +139,28 @@ export function SnippetCard({
           <span>{formatCount(snippet.comment_count)}</span>
         </Button>
       </div>
-    </article>
+    </>
+  );
+
+  if (layout === "embedded") {
+    return (
+      <article
+        data-testid="snippet-card"
+        data-layout="embedded"
+        className="min-w-0 border-b border-border/40 px-1 py-3 last:border-b-0"
+      >
+        {body}
+      </article>
+    );
+  }
+
+  return (
+    <Card
+      data-testid="snippet-card"
+      data-layout="standalone"
+      className="snippet-card-raised min-w-0 overflow-hidden rounded-2xl border border-border p-0 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.04)]"
+    >
+      <CardContent className="p-4">{body}</CardContent>
+    </Card>
   );
 }
