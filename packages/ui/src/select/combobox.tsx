@@ -56,6 +56,8 @@ interface ComboBoxValueProps {
 const ComboBoxValue = ({
   size,
   placeholder,
+  shortcut: _shortcut,
+  shortcutClassName: _shortcutClassName,
   icon: IconProp,
   ref,
   ...otherProps

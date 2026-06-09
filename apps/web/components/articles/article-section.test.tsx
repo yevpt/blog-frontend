@@ -45,14 +45,16 @@ vi.mock("@repo/ui", () => ({
     children,
     onPress,
     variant,
+    isDisabled,
     ...props
   }: {
     children: ReactNode;
     onPress?: () => void;
     variant?: string;
+    isDisabled?: boolean;
     [key: string]: unknown;
   }) => (
-    <button data-variant={variant} onClick={onPress} {...props}>
+    <button data-variant={variant} onClick={onPress} disabled={isDisabled} {...props}>
       {children}
     </button>
   ),

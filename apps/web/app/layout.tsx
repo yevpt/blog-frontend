@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import Script from "next/script";
 import { cookies } from "next/headers";
 import { SvgSprite } from "@repo/icons";
 import { SiteFooter } from "@/components/footer";
@@ -57,9 +56,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         {/* 关键内联样式：外部 CSS 加载前防止背景闪烁 */}
         <style dangerouslySetInnerHTML={{ __html: THEME_CRITICAL_CSS }} />
         {/* hydration 前清除扩展注入 attribute，见 lib/strip-extension-attrs.ts */}
-        <Script id="strip-extension-attrs" strategy="beforeInteractive">
-          {STRIP_EXTENSION_ATTRS_SCRIPT}
-        </Script>
+        <script
+          id="strip-extension-attrs"
+          dangerouslySetInnerHTML={{ __html: STRIP_EXTENSION_ATTRS_SCRIPT }}
+          suppressHydrationWarning
+        />
       </head>
       <body>
         <ThemeProvider>

@@ -46,5 +46,6 @@ export type IconName =
   | "sun"
   | "tag"
   | "user"
+  | "vip"
   | "wechat"
   | "weibo";

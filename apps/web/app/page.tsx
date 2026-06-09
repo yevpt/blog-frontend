@@ -65,7 +65,7 @@ export default async function Home() {
 
   const recentVisitors = recentUsersPage.list.map((u) => ({
     id: String(u.id),
-    name: u.nickname || u.username,
+    name: u.nickname || "User",
     avatar: u.avatar_url || "",
     isOnline: false,
     visitedAt: u.last_login_at ? new Date(u.last_login_at) : new Date(),

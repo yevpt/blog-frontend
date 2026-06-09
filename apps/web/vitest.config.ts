@@ -9,6 +9,9 @@ export default defineConfig({
     name: "web",
     environment: "jsdom",
     globals: true,
-    setupFiles: [path.resolve(__dirname, "../../vitest.setup.ts")],
+    setupFiles: [
+      path.resolve(__dirname, "../../vitest.setup.ts"),
+      path.resolve(__dirname, "vitest.setup.ts"),
+    ],
   },
 });

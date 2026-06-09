@@ -10,6 +10,7 @@ const nextConfig = {
       { hostname: "picsum.photos" },
       { hostname: "i.pravatar.cc" },
       { hostname: "blog-oss.yevpt.com" },
+      { hostname: "api.dicebear.com" },
     ],
   },
 };

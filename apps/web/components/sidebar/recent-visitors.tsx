@@ -2,9 +2,8 @@
 
 import { useLocale } from "@repo/hooks";
 import { Button } from "@repo/ui";
-import { UserAvatar } from "@/components/common/user-avatar";
+import { BaseUserCard } from "@/components/common/base-user-card";
 import type { Visitor } from "../../app/_mock/types";
-import { formatRelativeTime } from "../../lib/format-time";
 
 interface RecentVisitorsProps {
   visitors: Visitor[];
@@ -20,35 +19,20 @@ export function RecentVisitors({ visitors }: RecentVisitorsProps) {
       </h3>
 
       <div className="mb-3 grid grid-cols-3 gap-2">
-        {visitors.slice(0, 9).map((visitor) => {
-          const isOnline = Date.now() - visitor.visitedAt.getTime() < 3 * 60 * 1000;
-
-          return (
-            <div
-              key={visitor.id}
-              data-testid="visitor-item"
-              className="flex cursor-pointer select-none flex-col items-center gap-1 rounded-[10px] p-2 transition-[background,transform] hover:bg-primary/10 active:scale-95"
-            >
-              <UserAvatar src={visitor.avatar} name={visitor.name} size="xl" />
-
-              <span className="mt-1 w-full truncate text-center text-xs font-semibold text-foreground">
-                {visitor.name}
-              </span>
-              <div className="flex w-full items-center justify-center">
-                {isOnline ? (
-                  <span className="flex items-center gap-1 truncate text-[10px] font-semibold text-emerald-500">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                    在线
-                  </span>
-                ) : (
-                  <span className="truncate text-[10px] text-(--fg3)">
-                    {formatRelativeTime(visitor.visitedAt)}来过
-                  </span>
-                )}
-              </div>
-            </div>
-          );
-        })}
+        {visitors.slice(0, 9).map((visitor) => (
+          <BaseUserCard
+            key={visitor.id}
+            user={{
+              id: visitor.id,
+              nickname: visitor.name,
+              avatar_url: visitor.avatar,
+              last_login_at: visitor.visitedAt,
+              roles: [],
+            }}
+            variant="compact"
+            data-testid="visitor-item"
+          />
+        ))}
       </div>
 
       <div className="mt-3 flex gap-2">

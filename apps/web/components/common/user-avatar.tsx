@@ -10,6 +10,7 @@ const SIZE = {
   md: "h-7 w-7 text-xs",
   lg: "h-9 w-9 text-sm",
   xl: "h-12 w-12 text-base",
+  "2xl": "h-16 w-16 text-lg",
 } as const;
 
 const SIZE_PX: Record<keyof typeof SIZE, number> = {
@@ -18,6 +19,7 @@ const SIZE_PX: Record<keyof typeof SIZE, number> = {
   md: 28,
   lg: 36,
   xl: 48,
+  "2xl": 64,
 };
 
 interface UserAvatarProps {

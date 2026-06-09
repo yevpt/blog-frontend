@@ -25,7 +25,11 @@ export interface TagGroupWrapperProps extends Omit<TagGroupProps, "className" | 
 
 export function TagGroup({ label, hint, className, children, ...props }: TagGroupWrapperProps) {
   return (
-    <AriaTagGroup className={cn("flex flex-col gap-2", className)} {...props}>
+    <AriaTagGroup
+      aria-label={label ?? props["aria-label"] ?? "标签组"}
+      className={cn("flex flex-col gap-2", className)}
+      {...props}
+    >
       {label && <Label className="text-sm font-semibold">{label}</Label>}
       {children}
       {hint && (

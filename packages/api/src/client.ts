@@ -213,6 +213,15 @@ export function createApiClient(config: ApiClientConfig) {
         const qs = p.toString();
         return fetchPublic<UserPageResp>(`/users/recent${qs ? `?${qs}` : ""}`, { method: "GET" });
       },
+      /** 分页查询公开用户，包含所有注册用户 */
+      listPublic: (req: UserListReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        if (req.role_id !== undefined) p.set("role_id", String(req.role_id));
+        const qs = p.toString();
+        return fetchPublic<UserPageResp>(`/users${qs ? `?${qs}` : ""}`, { method: "GET" });
+      },
     },
     comments: {
       /** 分页查询文章评论（可选登录，登录后返回 is_liked） */
