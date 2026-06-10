@@ -1,4 +1,3 @@
-// packages/api/src/types/comment.ts
 export interface CommentUserResp {
   id: number;
   username: string;
@@ -18,8 +17,6 @@ export interface CommentReplyResp {
   content: string;
   from_user?: CommentUserResp;
   to_user?: CommentUserResp;
-  like_count: number;
-  is_liked: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -31,9 +28,7 @@ export interface CommentItemResp {
   user_id: number;
   content: string;
   user?: CommentUserResp;
-  reply_count: number;
-  like_count: number;
-  is_liked: boolean;
+  replies: CommentReplyResp[];
   created_at: string;
   updated_at: string;
 }
@@ -46,38 +41,21 @@ export interface CommentPageResp {
   list: CommentItemResp[];
 }
 
-export interface CommentReplyPageResp {
-  total: number;
-  pages: number;
-  page: number;
-  page_size: number;
-  list: CommentReplyResp[];
-}
-
 export interface CommentListReq {
-  page?: number;
-  page_size?: number;
-}
-
-export interface CommentReplyListReq {
+  target_type: string;
+  target_id: number;
   page?: number;
   page_size?: number;
 }
 
 export interface CommentCreateReq {
+  target_type: string;
+  target_id: number;
   content: string;
 }
 
 export interface CommentReplyCreateReq {
+  target_type: string;
   parent_reply_id?: number;
   content: string;
-}
-
-export interface CommentLikeResp {
-  is_liked: boolean;
-  like_count: number;
-}
-
-export interface CommentDeleteResp {
-  id: number;
 }

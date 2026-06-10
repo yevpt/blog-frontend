@@ -3,18 +3,10 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Tabs, TabsList, TabsItem, TabsPanels, TabsPanel } from "./tabs";
 
-// SelectionIndicator 使用 Web Animations API 和 ResizeObserver，happy-dom 未实现，需打桩
+// SelectionIndicator 使用 Web Animations API，happy-dom 未实现，需打桩
 beforeAll(() => {
   if (!HTMLElement.prototype.getAnimations) {
     HTMLElement.prototype.getAnimations = () => [];
-  }
-  if (typeof ResizeObserver === "undefined") {
-    class MockResizeObserver {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    }
-    (globalThis as Record<string, unknown>).ResizeObserver = MockResizeObserver;
   }
 });
 

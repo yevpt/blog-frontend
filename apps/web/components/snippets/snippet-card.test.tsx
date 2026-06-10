@@ -1,7 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import type { ReactNode } from "react";
 import { SnippetCard } from "./snippet-card";
 import type { MomentItemResp } from "@repo/api";
 
@@ -12,50 +10,22 @@ vi.mock("@repo/icons", () => ({
   ),
 }));
 
-vi.mock("next/image", () => ({
-  default: ({
-    src,
-    alt,
-    className,
-  }: {
-    src: string;
-    alt: string;
-    fill?: boolean;
-    className?: string;
-    sizes?: string;
-  }) => <img src={src} alt={alt} className={className} />,
+// Mock @repo/hooks useLocale
+vi.mock("@repo/hooks", () => ({
+  useLocale: () => ({
+    locale: "zh",
+    setLocale: () => undefined,
+    t: (key: string) => {
+      const messages: Record<string, string> = {
+        "snippet.like": "喜欢",
+        "snippet.comment": "评论",
+      };
+      return messages[key] ?? key;
+    },
+  }),
 }));
 
-vi.mock("@repo/ui", () => ({
-  cn: (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" "),
-  Button: ({
-    children,
-    variant,
-    onPress,
-    ...props
-  }: {
-    children: ReactNode;
-    variant?: string;
-    onPress?: () => void;
-    [key: string]: unknown;
-  }) => (
-    <button data-variant={variant} onClick={onPress} {...props}>
-      {children}
-    </button>
-  ),
-  Card: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
-    <div {...props}>{children}</div>
-  ),
-  CardContent: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
-    <div {...props}>{children}</div>
-  ),
-  Avatar: ({ src, alt, initials }: { src?: string; alt?: string; initials?: string }) =>
-    src ? <img src={src} alt={alt} /> : <span>{initials}</span>,
-  Badge: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
-    <span {...props}>{children}</span>
-  ),
-}));
-
+// 基础测试用 MomentItemResp（含 user）
 function makeMoment(overrides: Partial<MomentItemResp> = {}): MomentItemResp {
   return {
     id: 1,
@@ -109,13 +79,14 @@ describe("SnippetCard", () => {
     expect(img.getAttribute("src")).toBe("https://example.com/avatar.jpg");
   });
 
-  it("没有 avatar_url 时渲染首字母 fallback", () => {
+  it("没有 avatar_url 时渲染首字母 fallback，不渲染 img", () => {
     render(
       <SnippetCard
         snippet={makeMoment({ user: { id: 1, username: "testuser", nickname: "测试用户" } })}
       />,
     );
     expect(screen.queryByRole("img")).toBeNull();
+    // 首字母 fallback
     expect(screen.getByText("测")).toBeTruthy();
   });
 
@@ -130,120 +101,18 @@ describe("SnippetCard", () => {
         snippet={makeMoment({ user: { id: 1, username: "testuser", nickname: "测试用户" } })}
       />,
     );
+    // 没有 mark，不应该渲染徽章 span
     expect(screen.queryByText("博主")).toBeNull();
   });
 
-  it("标签显示在昵称下方第二行", () => {
+  it("显示 like_count 和 comment_count", () => {
     render(<SnippetCard snippet={makeMoment()} />);
-    // 昵称在第一行，标签（mark）在第二行
-    expect(screen.getByText("测试用户")).toBeTruthy();
-    expect(screen.getByText("博主")).toBeTruthy();
-  });
-
-  it("有图片时使用 object-contain 完整展示", () => {
-    const snippet = makeMoment({
-      images: [
-        {
-          id: 1,
-          name: "photo1",
-          file_type: "image/jpeg",
-          url: "/1.jpg",
-          access_url: "/1.jpg",
-          size: 1000,
-          seq: 1,
-        },
-      ],
-    });
-    render(<SnippetCard snippet={snippet} />);
-    const imgs = screen
-      .getAllByRole("img")
-      .filter((el) => el.tagName === "IMG" && el.getAttribute("src")?.startsWith("/"));
-    expect(imgs[0].className).toContain("object-contain");
-  });
-
-  it("显示点赞和评论数字（ArticleCardStats 风格）", () => {
-    render(<SnippetCard snippet={makeMoment()} />);
-    expect(screen.getByText("5")).toBeTruthy();
-    expect(screen.getByText("2")).toBeTruthy();
+    expect(screen.getByText("5 喜欢")).toBeTruthy();
+    expect(screen.getByText("2 评论")).toBeTruthy();
   });
 
   it("渲染正确的 data-testid", () => {
     render(<SnippetCard snippet={makeMoment()} />);
     expect(screen.getByTestId("snippet-card")).toBeTruthy();
-  });
-
-  it("embedded 布局不使用 Card 包裹", () => {
-    render(<SnippetCard snippet={makeMoment()} layout="embedded" />);
-    const card = screen.getByTestId("snippet-card");
-    expect(card.getAttribute("data-layout")).toBe("embedded");
-    expect(card.tagName).toBe("ARTICLE");
-  });
-
-  it("有图片时渲染图片网格", () => {
-    const snippet = makeMoment({
-      images: [
-        {
-          id: 1,
-          name: "photo1",
-          file_type: "image/jpeg",
-          url: "/1.jpg",
-          access_url: "/1.jpg",
-          size: 1000,
-          seq: 1,
-        },
-        {
-          id: 2,
-          name: "photo2",
-          file_type: "image/jpeg",
-          url: "/2.jpg",
-          access_url: "/2.jpg",
-          size: 2000,
-          seq: 2,
-        },
-      ],
-    });
-    render(<SnippetCard snippet={snippet} />);
-    const images = screen
-      .getAllByRole("img")
-      .filter((el) => el.tagName === "IMG" && el.getAttribute("src")?.startsWith("/"));
-    expect(images.length).toBe(2);
-  });
-
-  it("无图片时不渲染图片网格", () => {
-    render(<SnippetCard snippet={makeMoment({ images: [] })} />);
-    const allImgs = screen.queryAllByRole("img");
-    expect(allImgs.length).toBeLessThanOrEqual(1);
-  });
-
-  it("已点赞时显示 heart-fill 图标", () => {
-    render(<SnippetCard snippet={makeMoment({ is_liked: true })} />);
-    expect(screen.getByTestId("icon-heart-fill")).toBeTruthy();
-  });
-
-  it("未点赞时显示 heart 图标", () => {
-    render(<SnippetCard snippet={makeMoment({ is_liked: false })} />);
-    expect(screen.getByTestId("icon-heart")).toBeTruthy();
-  });
-
-  it("点击喜欢按钮触发 onLike 回调", async () => {
-    const user = userEvent.setup();
-    const onLike = vi.fn();
-    const snippet = makeMoment();
-    render(<SnippetCard snippet={snippet} onLike={onLike} />);
-
-    await user.click(screen.getByRole("button", { name: "喜欢" }));
-
-    expect(onLike).toHaveBeenCalledWith(snippet);
-  });
-
-  it("点击评论按钮触发 onComment 回调", async () => {
-    const user = userEvent.setup();
-    const onComment = vi.fn();
-    const snippet = makeMoment();
-    render(<SnippetCard snippet={snippet} onComment={onComment} />);
-
-    await user.click(screen.getByRole("button", { name: "评论" }));
-
-    expect(onComment).toHaveBeenCalledWith(snippet);
   });
 });

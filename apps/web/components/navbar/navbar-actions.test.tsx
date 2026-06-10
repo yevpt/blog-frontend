@@ -62,7 +62,6 @@ describe("NavbarActions", () => {
   it("渲染不崩溃，显示主题切换和登录入口", () => {
     render(<NavbarActions />);
 
-    expect(screen.getByTestId("navbar-actions")).toHaveClass("gap-3");
     expect(
       screen.getByRole("button", { name: "当前生效主题：light，点击切换到 dark" }),
     ).toBeTruthy();

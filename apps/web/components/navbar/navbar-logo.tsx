@@ -14,7 +14,7 @@ export function NavbarLogo({ isGlass = false }: NavbarLogoProps) {
       <span
         className={cn(
           "font-serif text-[15px] font-medium leading-none tracking-[0.08em] antialiased transition-colors",
-          isGlass ? "text-(--fg2)" : "text-foreground",
+          isGlass ? "text-[var(--fg2)]" : "text-foreground",
         )}
       >
         YEVPT

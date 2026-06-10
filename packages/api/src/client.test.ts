@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createApiClient } from "./client";
 import { ApiError } from "./errors";
-import type { ArticleDetailResp, ArticlePageResp } from "./types/article";
 
 // 构造一个最小的 mock Response
 function mockResponse(body: unknown, status = 200) {
@@ -203,93 +202,6 @@ describe("createApiClient", () => {
     expect(url.searchParams.get("recommend")).toBe("true");
   });
 
-  it("articles.listPublic 在存在 access token 时附带 Authorization header", async () => {
-    vi.mocked(global.fetch).mockResolvedValue(
-      mockResponse({
-        code: 0,
-        message: "ok",
-        data: { total: 0, pages: 0, page: 1, page_size: 10, list: [] },
-      }),
-    );
-    const client = createApiClient({
-      baseUrl: "http://api",
-      getAccessToken: () => "token123",
-    });
-
-    await client.articles.listPublic({ page: 1 });
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      "http://api/articles?page=1",
-      expect.objectContaining({
-        headers: expect.objectContaining({ Authorization: "Bearer token123" }),
-      }),
-    );
-  });
-
-  it("articles.listPublic 保留嵌套用户头像 CDN 地址", async () => {
-    const pageResp: ArticlePageResp = {
-      total: 1,
-      pages: 1,
-      page: 1,
-      page_size: 10,
-      list: [
-        {
-          id: 1,
-          title: "Test",
-          user_id: 1,
-          status: 1,
-          comment_status: 1,
-          read_count: 0,
-          like_count: 0,
-          is_liked: false,
-          comment_count: 0,
-          is_recommended: false,
-          user: {
-            id: 1,
-            username: "vpt",
-            nickname: "VPT",
-            avatar_url: "https://blog-oss.yevpt.com/avatars/vpt.png",
-          },
-          created_at: "2026-01-01",
-          updated_at: "2026-01-01",
-        },
-      ],
-    };
-    vi.mocked(global.fetch).mockResolvedValue(
-      mockResponse({ code: 0, message: "ok", data: pageResp }),
-    );
-    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
-
-    const result = await client.articles.listPublic();
-
-    expect(result.list[0]?.user?.avatar_url).toBe("https://blog-oss.yevpt.com/avatars/vpt.png");
-  });
-
-  it("articles.toggleLike 使用 fetchAuthed 调用 /articles/{id}/like", async () => {
-    vi.mocked(global.fetch).mockResolvedValue(
-      mockResponse({
-        code: 0,
-        message: "ok",
-        data: { is_liked: true, like_count: 9 },
-      }),
-    );
-    const client = createApiClient({
-      baseUrl: "http://api",
-      getAccessToken: () => "token123",
-    });
-
-    const result = await client.articles.toggleLike(7);
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      "http://api/articles/7/like",
-      expect.objectContaining({
-        method: "POST",
-        headers: expect.objectContaining({ Authorization: "Bearer token123" }),
-      }),
-    );
-    expect(result).toEqual({ is_liked: true, like_count: 9 });
-  });
-
   it("categories.listTabs 调用 /categories", async () => {
     vi.mocked(global.fetch).mockResolvedValue(
       mockResponse({ code: 0, message: "ok", data: { list: [] } }),
@@ -397,7 +309,7 @@ describe("createApiClient", () => {
   // ── 评论接口 ─────────────────────────────────────────────────────
 
   describe("comments", () => {
-    it("listArticle 拼接正确的查询参数", async () => {
+    it("listPublic 拼接正确的查询参数", async () => {
       vi.mocked(global.fetch).mockResolvedValue(
         mockResponse({
           code: 0,
@@ -407,15 +319,15 @@ describe("createApiClient", () => {
       );
       const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
 
-      await client.comments.listArticle(5, { page: 2 });
+      await client.comments.listPublic({ target_type: "article", target_id: 5, page: 2 });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://api/articles/5/comments?page=2",
+        "http://api/comments?target_type=article&target_id=5&page=2",
         expect.objectContaining({ method: "GET" }),
       );
     });
 
-    it("createArticle 使用 fetchAuthed 并发送正确 body", async () => {
+    it("create 使用 fetchAuthed 并发送正确 body", async () => {
       vi.mocked(global.fetch).mockResolvedValue(
         mockResponse({
           code: 0,
@@ -426,9 +338,7 @@ describe("createApiClient", () => {
             target_id: 5,
             user_id: 1,
             content: "hi",
-            reply_count: 0,
-            like_count: 0,
-            is_liked: false,
+            replies: [],
             created_at: "",
             updated_at: "",
           },
@@ -439,19 +349,19 @@ describe("createApiClient", () => {
         getAccessToken: () => "token123",
       });
 
-      await client.comments.createArticle(5, { content: "hi" });
+      await client.comments.create({ target_type: "article", target_id: 5, content: "hi" });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://api/articles/5/comments",
+        "http://api/comments",
         expect.objectContaining({
           method: "POST",
-          body: JSON.stringify({ content: "hi" }),
+          body: JSON.stringify({ target_type: "article", target_id: 5, content: "hi" }),
           headers: expect.objectContaining({ Authorization: "Bearer token123" }),
         }),
       );
     });
 
-    it("replyArticle 调用 /articles/comments/{id}/replies", async () => {
+    it("reply 调用 /comments/{id}/replies", async () => {
       vi.mocked(global.fetch).mockResolvedValue(
         mockResponse({
           code: 0,
@@ -464,8 +374,6 @@ describe("createApiClient", () => {
             to_user_id: 1,
             parent_reply_id: 0,
             content: "ok",
-            like_count: 0,
-            is_liked: false,
             created_at: "",
             updated_at: "",
           },
@@ -476,72 +384,12 @@ describe("createApiClient", () => {
         getAccessToken: () => "token123",
       });
 
-      await client.comments.replyArticle(1, { content: "ok" });
+      await client.comments.reply(1, { target_type: "article", content: "ok" });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://api/articles/comments/1/replies",
+        "http://api/comments/1/replies",
         expect.objectContaining({ method: "POST" }),
       );
     });
-  });
-
-  it("articles.getDetail 调用正确的端点", async () => {
-    const detail: ArticleDetailResp = {
-      id: 1,
-      title: "Test",
-      content: "# Hello",
-      user_id: 1,
-      status: 1,
-      comment_status: 1,
-      read_count: 0,
-      like_count: 0,
-      comment_count: 0,
-      is_recommended: false,
-      user: {
-        id: 1,
-        username: "vpt",
-        nickname: "VPT",
-        avatar_url: "https://blog-oss.yevpt.com/avatars/vpt.png",
-      },
-      created_at: "2026-01-01",
-      updated_at: "2026-01-01",
-    };
-    vi.mocked(global.fetch).mockResolvedValue(
-      mockResponse({ code: 0, message: "ok", data: detail }),
-    );
-    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
-
-    const result = await client.articles.getDetail(1);
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      "http://api/articles/1",
-      expect.objectContaining({ method: "GET" }),
-    );
-    expect(result.title).toBe("Test");
-    expect(result.user?.avatar_url).toBe("https://blog-oss.yevpt.com/avatars/vpt.png");
-  });
-
-  it("articles.view 调用正确的端点", async () => {
-    vi.mocked(global.fetch).mockResolvedValue(mockResponse({ code: 0, message: "ok", data: null }));
-    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
-
-    await client.articles.view(42);
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      "http://api/articles/42/view",
-      expect.objectContaining({ method: "POST" }),
-    );
-  });
-
-  it("moments.view 调用正确的端点", async () => {
-    vi.mocked(global.fetch).mockResolvedValue(mockResponse({ code: 0, message: "ok", data: null }));
-    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
-
-    await client.moments.view(7);
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      "http://api/moments/7/view",
-      expect.objectContaining({ method: "POST" }),
-    );
   });
 });

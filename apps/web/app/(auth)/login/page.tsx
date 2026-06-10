@@ -1,7 +1,6 @@
 "use client";
 import { type FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@repo/ui";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -56,14 +55,13 @@ export default function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <Button
-          className="w-full rounded bg-blue-600 py-2 text-white"
+        <button
+          className="w-full rounded bg-blue-600 py-2 text-white disabled:opacity-50"
           type="submit"
-          isLoading={loading}
-          loadingText="登录中..."
+          disabled={loading}
         >
-          登录
-        </Button>
+          {loading ? "登录中..." : "登录"}
+        </button>
         {error && (
           <p role="alert" className="text-sm text-red-500">
             {error}

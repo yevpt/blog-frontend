@@ -18,7 +18,7 @@ describe("Dropdown", () => {
   it("渲染触发器不崩溃", () => {
     render(
       <Dropdown.Root>
-        <Dropdown.DotsButton aria-label="打开菜单" />
+        <button>打开菜单</button>
         <Dropdown.Popover>
           <Dropdown.Menu aria-label="菜单">
             <Dropdown.Item label="选项一" id="1" />
@@ -26,7 +26,6 @@ describe("Dropdown", () => {
         </Dropdown.Popover>
       </Dropdown.Root>,
     );
-    // DotsButton 默认 aria-label 为 "Open menu"，测试名称兼容
     expect(screen.getByRole("button", { name: "打开菜单" })).toBeTruthy();
   });
 

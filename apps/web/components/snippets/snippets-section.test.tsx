@@ -1,15 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, act, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { SnippetsSection } from "./snippets-section";
 import type { MomentItemResp } from "@repo/api";
-
-const mockOpenLoginModal = vi.fn();
-const toastMockState = vi.hoisted(() => ({
-  addToast: vi.fn(),
-}));
-let mockSessionUserId: number | null = 7;
 
 // Mock @repo/icons
 vi.mock("@repo/icons", () => ({
@@ -18,35 +12,20 @@ vi.mock("@repo/icons", () => ({
   ),
 }));
 
+// Mock @repo/ui（Button 组件）
 vi.mock("@repo/ui", () => ({
-  cn: (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" "),
   Button: ({
     children,
     variant,
-    onPress,
-    isDisabled,
     ...props
   }: {
     children: ReactNode;
     variant?: string;
-    onPress?: () => void;
-    isDisabled?: boolean;
     [key: string]: unknown;
   }) => (
-    <button data-variant={variant} onClick={onPress} disabled={isDisabled} {...props}>
+    <button data-variant={variant} {...props}>
       {children}
     </button>
-  ),
-  Card: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
-    <div {...props}>{children}</div>
-  ),
-  CardContent: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
-    <div {...props}>{children}</div>
-  ),
-  Avatar: ({ src, alt, initials }: { src?: string; alt?: string; initials?: string }) =>
-    src ? <img src={src} alt={alt} /> : <span>{initials}</span>,
-  Badge: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
-    <span {...props}>{children}</span>
   ),
 }));
 
@@ -71,35 +50,7 @@ vi.mock("@repo/hooks", () => ({
   }),
 }));
 
-vi.mock("@/app/providers/session-provider", () => ({
-  useSession: () => ({ userId: mockSessionUserId, profile: null }),
-}));
-
-vi.mock("@/store/use-login-modal", () => ({
-  useLoginModal: () => ({ open: mockOpenLoginModal }),
-}));
-
-vi.mock("@/lib/toast", () => ({
-  addToast: toastMockState.addToast,
-}));
-
-vi.mock("@/components/comments", () => ({
-  CommentModal: ({
-    targetId,
-    targetType,
-  }: {
-    targetId: number;
-    targetType: string;
-    onClose: () => void;
-  }) => (
-    <div
-      data-testid="comment-modal"
-      data-target-id={String(targetId)}
-      data-target-type={targetType}
-    />
-  ),
-}));
-
+// 生成测试用 MomentItemResp 数据
 function makeMoment(
   id: number,
   content: string,
@@ -130,8 +81,10 @@ function makeMoment(
   };
 }
 
+// 短内容（< 120 字符）
 const SHORT_CONTENT = "这是一条短碎语，不超过120字符的限制。";
 
+// 长内容（> 120 字符），确保触发截断（JS 字符串 length 按 UTF-16 单元计算，中文每字1单元）
 const LONG_CONTENT =
   "这是一条很长的碎语内容，超过了一百二十个字符的限制，需要显示展开按钮。" +
   "这部分内容在默认状态下应该被隐藏，只有点击展开按钮后才能看到全部内容。" +
@@ -139,24 +92,13 @@ const LONG_CONTENT =
 
 const mockMoments: MomentItemResp[] = [makeMoment(1, SHORT_CONTENT), makeMoment(2, LONG_CONTENT)];
 
-beforeEach(() => {
-  vi.stubGlobal("fetch", vi.fn());
-  mockSessionUserId = 7;
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-  vi.clearAllMocks();
-  mockOpenLoginModal.mockReset();
-  toastMockState.addToast.mockReset();
-});
-
 describe("SnippetsSection", () => {
   it("渲染不崩溃，显示碎语内容", () => {
     render(<SnippetsSection snippets={mockMoments} />);
+    // 区块标题
     expect(screen.getByText("碎语")).toBeTruthy();
-    // 重设计后 SHORT_CONTENT 可能出现在多个节点（正文 + 预览区），用 getAllByText
-    expect(screen.getAllByText(SHORT_CONTENT).length).toBeGreaterThan(0);
+    // 短内容完整显示
+    expect(screen.getByText(SHORT_CONTENT)).toBeTruthy();
   });
 
   it("长内容默认截断，显示展开按钮", () => {
@@ -202,7 +144,7 @@ describe("SnippetsSection", () => {
   it("发表碎语和查看更多按钮存在", () => {
     render(<SnippetsSection snippets={mockMoments} />);
     expect(screen.getByText("发表碎语")).toBeTruthy();
-    expect(screen.getByText((content) => content.includes("查看更多"))).toBeTruthy();
+    expect(screen.getByText("查看更多")).toBeTruthy();
   });
 
   it("短内容不显示展开按钮", () => {
@@ -218,33 +160,38 @@ describe("SnippetsSection", () => {
 
   it("显示点赞和评论统计数字", () => {
     render(<SnippetsSection snippets={mockMoments} />);
-    const likeLabels = screen.getAllByText("10");
-    const commentLabels = screen.getAllByText("3");
+    const likeLabels = screen.getAllByText("10 喜欢");
+    const commentLabels = screen.getAllByText("3 评论");
     expect(likeLabels).toHaveLength(mockMoments.length);
     expect(commentLabels).toHaveLength(mockMoments.length);
   });
 
-  it("渲染 shuffle 图标按钮", () => {
+  it("碎语之间使用紧凑分隔线和合理内边距", () => {
     render(<SnippetsSection snippets={mockMoments} />);
-    expect(screen.getByTestId("icon-shuffle")).toBeTruthy();
+    const cards = screen.getAllByTestId("snippet-card");
+    expect(cards[0].className).toContain("border-b");
+    expect(cards[0].className).toContain("py-3");
   });
 
-  it("渲染渐变 header 图标", () => {
-    render(<SnippetsSection snippets={mockMoments} />);
-    expect(screen.getByText("✦")).toBeTruthy();
+  it("喜欢按钮点击后变为激活状态（liked）", async () => {
+    const user = userEvent.setup();
+    render(<SnippetsSection snippets={[makeMoment(1, SHORT_CONTENT)]} />);
+
+    const likeBtn = screen.getByLabelText("喜欢");
+    expect(likeBtn.className).not.toContain("text-red-500");
+
+    await act(async () => {
+      await user.click(likeBtn);
+    });
+
+    expect(likeBtn.className).toContain("text-red-500");
   });
 
   it("snippets 为空时仍渲染区块标题和操作按钮", () => {
     render(<SnippetsSection snippets={[]} />);
     expect(screen.getByText("碎语")).toBeTruthy();
     expect(screen.getByText("发表碎语")).toBeTruthy();
-    expect(screen.getByText((content) => content.includes("查看更多"))).toBeTruthy();
-  });
-
-  it("loading 时显示骨架屏", () => {
-    const { container } = render(<SnippetsSection snippets={mockMoments} loading />);
-    const skeletons = container.querySelectorAll('[aria-hidden="true"]');
-    expect(skeletons.length).toBe(3);
+    expect(screen.getByText("查看更多")).toBeTruthy();
   });
 
   it("最多只显示 3 条碎语", () => {
@@ -259,68 +206,5 @@ describe("SnippetsSection", () => {
     expect(screen.queryByText(`${SHORT_CONTENT} #4`)).toBeNull();
     expect(screen.queryByText(`${SHORT_CONTENT} #5`)).toBeNull();
     expect(screen.queryByText(`${SHORT_CONTENT} #6`)).toBeNull();
-  });
-
-  it("点击评论按钮后弹窗接收到正确的 momentId", async () => {
-    const user = userEvent.setup();
-    render(<SnippetsSection snippets={[makeMoment(7, SHORT_CONTENT)]} />);
-
-    await user.click(screen.getByLabelText("评论"));
-
-    const modal = screen.getByTestId("comment-modal");
-    expect(modal.dataset.targetId).toBe("7");
-    expect(modal.dataset.targetType).toBe("moment");
-  });
-
-  it("已登录时点击喜欢会调用接口并使用服务端最新结果更新状态", async () => {
-    const user = userEvent.setup();
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({ is_liked: true, like_count: 9 }),
-    } as Response);
-
-    render(<SnippetsSection snippets={[makeMoment(8, SHORT_CONTENT)]} />);
-
-    await user.click(screen.getByRole("button", { name: "喜欢" }));
-
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith("/api/moments/8/like", { method: "POST" });
-      expect(screen.getByRole("button", { name: "喜欢" })).toHaveAttribute("aria-pressed", "true");
-      expect(screen.getByText("9")).toBeTruthy();
-    });
-  });
-
-  it("未登录时点击喜欢会打开全局登录弹窗", async () => {
-    const user = userEvent.setup();
-    mockSessionUserId = null;
-
-    render(<SnippetsSection snippets={[makeMoment(9, SHORT_CONTENT)]} />);
-
-    await user.click(screen.getByRole("button", { name: "喜欢" }));
-
-    expect(mockOpenLoginModal).toHaveBeenCalledOnce();
-    expect(fetch).not.toHaveBeenCalled();
-  });
-
-  it("取消点赞失败时提示取消点赞失败", async () => {
-    const user = userEvent.setup();
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      json: async () => ({ error: "failed" }),
-    } as Response);
-
-    render(
-      <SnippetsSection
-        snippets={[makeMoment(10, SHORT_CONTENT, { is_liked: true, like_count: 5 })]}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "喜欢" }));
-
-    await waitFor(() => {
-      expect(toastMockState.addToast).toHaveBeenCalledWith("取消点赞失败，请稍后重试", "error");
-    });
   });
 });

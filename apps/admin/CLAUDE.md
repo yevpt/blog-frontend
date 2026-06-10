@@ -1,1 +1,21 @@
-@AGENTS.md
+# apps/admin — Vite + React SPA
+
+## 渲染模式
+- 纯客户端 SPA，禁止生成 `'use client'`、`'use server'` 等 Next.js 指令
+
+## 数据获取与状态
+- 数据获取用 React Query 或 `useEffect`
+- 全局状态与权限管理用 Zustand
+
+## 响应式
+- 移动优先，断点顺序 `base → sm → md → lg → xl`
+- 表格、数据面板在小屏下可横向滚动（`overflow-x-auto`），禁止裁剪内容
+
+## 环境变量
+- 用 `import.meta.env`，禁止用 `process.env`
+
+## 测试
+- 测试环境：`happy-dom`（根 vitest.config.ts 默认）
+- 新增组件 → 同目录 `*.test.tsx`，用 `@testing-library/react`
+- 新增 Hook → 同目录 `*.test.ts`，用 `renderHook`
+- React Query 相关组件：用 `QueryClientProvider` 包裹测试，验证 loading/error/success 状态

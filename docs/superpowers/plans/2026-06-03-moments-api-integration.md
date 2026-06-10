@@ -527,7 +527,7 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
                 {authorBadge}
               </span>
             )}
-            <time className="ml-auto shrink-0 text-[10px] text-(--fg3)">{relativeTime}</time>
+            <time className="ml-auto shrink-0 text-[10px] text-[var(--fg3)]">{relativeTime}</time>
           </div>
         </div>
       </div>
@@ -537,7 +537,7 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
       </div>
 
       <div className="mt-1.5 flex items-center justify-between pl-[27px]">
-        <div className="flex gap-3 text-[11px] text-(--fg3)">
+        <div className="flex gap-3 text-[11px] text-[var(--fg3)]">
           <span>{snippet.like_count} 喜欢</span>
           <span>{snippet.comment_count} 评论</span>
         </div>
@@ -580,7 +580,7 @@ export function SnippetsSection({ snippets }: SnippetsSectionProps) {
 
   return (
     <section className="rounded-[14px] border border-border bg-card p-[15px] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.04)]">
-      <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.09em] text-(--fg3)">
+      <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.09em] text-[var(--fg3)]">
         {t("home.snippets")}
       </h3>
 

@@ -5,14 +5,11 @@ import { cn } from "@repo/ui";
 import { NavbarLogo } from "./navbar-logo";
 import { NavbarLinks } from "./navbar-links";
 import { NavbarActions } from "./navbar-actions";
-import { NavbarMobileHeader } from "./navbar-mobile-header";
 import { NavbarMobileMenu } from "./navbar-mobile-menu";
-import { useNavbarContext } from "./use-navbar-context";
 
 export function SiteNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const navbarContext = useNavbarContext();
   // mounted=false 时导航完全不可见（opacity-0）；
   // IO 首次回调确定正确的玻璃态后，下一帧再置为 true，导航以淡入动效整体弹出。
   // 这样无论页面停在何处刷新，弹出时都已是完整形态（胶囊或非胶囊），永不裸露。
@@ -73,24 +70,14 @@ export function SiteNavbar() {
 
   return (
     <>
-      {/* 顶部滚动哨兵：absolute 锚定文档顶部并随页面滚动，高度即玻璃态阈值。
+      {/* 顶部滚动哨兵：absolute 锚定文档顶部并随页面滚动，高度即玻璃态阈值（60px）。
           滚动超过其高度后离开视口，由上方 IntersectionObserver 判定为已滚动。
           必须置于 fixed 的 <nav> 之外，否则会随导航固定而无法滚出视口。 */}
       <div
         ref={sentinelRef}
         aria-hidden
-        className="pointer-events-none absolute left-0 top-0 w-px"
-        style={{ height: `${navbarContext.desktopCapsuleThreshold}px` }}
+        className="pointer-events-none absolute left-0 top-0 h-[60px] w-px"
       />
-      {menuOpen && (
-        <button
-          type="button"
-          aria-label="关闭导航遮罩"
-          data-testid="mobile-nav-overlay"
-          onClick={() => setMenuOpen(false)}
-          className="fixed inset-0 z-40 border-0 bg-black/20 p-0 backdrop-blur-sm transition-opacity dark:bg-black/40 md:hidden"
-        />
-      )}
       <nav
         id="navbar"
         data-glass={isGlass}
@@ -101,7 +88,7 @@ export function SiteNavbar() {
           // backdrop-filter 不参与过渡：动画 backdrop-filter 在 Chrome/Safari 中会触发合成层竞争导致闪烁
           "transition-[opacity,padding,background,border-color,box-shadow] duration-300 ease-out",
           mounted ? "opacity-100" : "opacity-0",
-          scrolled ? "px-3 py-2" : "px-3 py-3",
+          scrolled ? "px-5 py-2.5" : "px-5 py-[18px]",
         )}
       >
         <div
@@ -118,24 +105,45 @@ export function SiteNavbar() {
               "border-[var(--glass-bdr)] bg-[var(--glass-bg)] shadow-[0_0_0_1px_var(--glass-ring),0_4px_32px_rgba(0,0,0,0.12)] backdrop-blur-2xl [backdrop-filter:blur(24px)_saturate(180%)]",
           )}
         >
-          <NavbarMobileHeader
-            mobileVariant={navbarContext.mobileVariant}
-            title={navbarContext.title}
-            isGlass={isGlass}
-            menuOpen={menuOpen}
-            onToggleMenu={() => setMenuOpen((open) => !open)}
-          />
-
-          <div className="hidden min-h-0 items-center justify-between px-4 py-[9px] md:flex">
+          <div className="flex min-h-[52px] items-center justify-between px-4 md:min-h-0 md:px-4 md:py-[9px]">
             <NavbarLogo isGlass={isGlass} />
 
-            <div className="absolute left-1/2 -translate-x-1/2">
+            <div className="absolute left-1/2 hidden -translate-x-1/2 md:block">
               <NavbarLinks isGlass={isGlass} />
             </div>
 
-            <div className="items-center gap-1">
+            <div className="hidden items-center gap-1 md:flex">
               <NavbarActions isGlass={isGlass} />
             </div>
+
+            <button
+              type="button"
+              onClick={() => setMenuOpen((open) => !open)}
+              aria-label={menuOpen ? "关闭导航菜单" : "打开导航菜单"}
+              className={cn(
+                "flex h-[34px] w-[34px] cursor-pointer flex-col items-center justify-center gap-[5px] rounded-[9px] p-[9px] text-foreground transition-colors md:hidden",
+                isGlass ? "bg-primary/10 text-primary" : "bg-foreground/5",
+              )}
+            >
+              <span
+                className={cn(
+                  "block h-[1.5px] w-full rounded bg-current transition-transform",
+                  menuOpen && "translate-y-[6.5px] rotate-45",
+                )}
+              />
+              <span
+                className={cn(
+                  "block h-[1.5px] w-full rounded bg-current transition-[opacity,transform]",
+                  menuOpen && "scale-x-0 opacity-0",
+                )}
+              />
+              <span
+                className={cn(
+                  "block h-[1.5px] w-full rounded bg-current transition-transform",
+                  menuOpen && "-translate-y-[6.5px] -rotate-45",
+                )}
+              />
+            </button>
           </div>
 
           <NavbarMobileMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />

@@ -29,14 +29,6 @@ describe("ToastRegion", () => {
     expect(screen.getByText("操作失败")).toBeInTheDocument();
   });
 
-  it("error toast 使用高对比度样式", () => {
-    const queue = makeQueue({ message: "操作失败", type: "error" });
-    render(<ToastRegion queue={queue} />);
-    const toast = screen.getByText("操作失败").closest('[role="alertdialog"]');
-    expect(toast).toHaveClass("bg-destructive");
-    expect(toast).toHaveClass("text-destructive-foreground");
-  });
-
   it("点击关闭按钮后 toast 消失", async () => {
     const user = userEvent.setup();
     const queue = makeQueue({ message: "测试通知", type: "info" });

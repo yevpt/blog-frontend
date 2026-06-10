@@ -42,6 +42,6 @@ describe("NavbarLogo", () => {
   it("玻璃态下标识颜色更克制", () => {
     render(<NavbarLogo isGlass />);
 
-    expect(screen.getByText("YEVPT").className).toContain("text-(--fg2)");
+    expect(screen.getByText("YEVPT").className).toContain("text-[var(--fg2)]");
   });
 });

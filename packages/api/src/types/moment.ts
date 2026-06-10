@@ -44,12 +44,6 @@ export interface MomentItemResp {
   updated_at: string;
 }
 
-export interface MomentLikeResp {
-  is_liked: boolean;
-  /** Go int64 — safe as JS number for blog-scale counts */
-  like_count: number;
-}
-
 export interface MomentPageResp {
   /** Go int64 — safe as JS number for blog-scale counts */
   total: number;

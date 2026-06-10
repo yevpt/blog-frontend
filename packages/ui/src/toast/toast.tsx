@@ -22,7 +22,7 @@ export { UNSTABLE_ToastQueue as ToastQueue } from "react-aria-components/Toast";
 
 const typeStyles: Record<ToastType, string> = {
   success: "bg-emerald-500 border-emerald-600 text-white",
-  error: "bg-destructive border-destructive text-destructive-foreground",
+  error: "bg-destructive/10 border-destructive/25 text-destructive",
   info: "bg-primary/10 border-primary/25 text-primary",
 };
 

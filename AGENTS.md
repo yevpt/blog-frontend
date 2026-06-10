@@ -39,3 +39,25 @@ React, TypeScript, TailwindCSS, Zustand, pnpm workspaces Monorepo。
 - 组件：① 渲染不崩溃 ② 关键 props 影响输出 ③ 用户交互触发正确回调
 - Hook：① 初始状态正确 ② 状态变更逻辑 ③ 边界条件（空值、错误）
 - 页面：① 核心内容渲染 ② loading/error 状态（若有）
+
+## Git Commit 规范
+格式：`<type>(<scope>): <中文主题>`，正文用中文 bullet points，技术词保留英文。
+
+| type | 用途 | type | 用途 |
+|------|------|------|------|
+| `feat` | 新增功能 | `refactor` | 重构 |
+| `fix` | 修复 Bug | `test` | 测试 |
+| `chore` | 构建/工具链/依赖 | `perf` | 性能优化 |
+| `docs` | 文档 | `ci` | CI/CD |
+| `style` | 格式（不影响逻辑） | `build` | 构建系统 |
+
+type 英文；scope 可选英文技术词；主题中文 ≤50 字、动词开头；Breaking change 末尾加 `BREAKING CHANGE: <描述>`
+
+示例：
+```
+feat(web): 新增博客文章详情页
+
+- 使用 Next.js App Router 动态路由 [slug] 实现
+- 接入 @packages/hooks 中的 usePost 获取数据
+- 样式复用 @packages/styles/base.css 基础排版
+```

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import type { MomentPageResp } from "@repo/api";
 import { createServerApiClient } from "@/lib/server-api";
-import { SnippetsListLoader } from "@/components/snippets/snippets-list-loader";
-import { WriteSnippetButton } from "@/components/snippets/write-snippet-button";
+import { SnippetCard } from "@/components/snippets/snippet-card";
 
 export const metadata: Metadata = {
   title: "碎语 | Yevpt's Blog",
@@ -19,23 +18,19 @@ const EMPTY_MOMENTS: MomentPageResp = {
 
 export default async function SnippetsPage() {
   const api = await createServerApiClient();
-  const ownerUserId = Number(process.env.BLOG_USER_ID) || undefined;
-  const friendRoleId = Number(process.env.BLOG_FRIEND_ROLE_ID) || undefined;
   const momentsPage = await api.moments
-    .listPublic({ page: 1, page_size: 20 })
+    .listPublic({ page: 1, page_size: 20, user_id: Number(process.env.BLOG_USER_ID) })
     .catch(() => EMPTY_MOMENTS);
 
   return (
-    <div className="relative mx-auto max-w-[960px] px-5 pb-20 pt-20 md:pt-24">
-      <SnippetsListLoader
-        initialPage={momentsPage}
-        ownerUserId={ownerUserId}
-        friendRoleId={friendRoleId}
-      />
-      <div className="pointer-events-none absolute inset-x-5 bottom-6 top-0 z-40 md:bottom-10">
-        <div className="sticky top-[calc(100dvh-4rem)] flex justify-end md:top-[calc(100dvh-5.5rem)]">
-          <WriteSnippetButton />
-        </div>
+    <div className="mx-auto max-w-[640px] px-5 pb-20 pt-16 md:pt-24">
+      <h1 className="mb-6 text-2xl font-bold">碎语</h1>
+      <div className="rounded-[14px] border border-border bg-card p-[15px] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.04)]">
+        {momentsPage.list.length > 0 ? (
+          momentsPage.list.map((snippet) => <SnippetCard key={snippet.id} snippet={snippet} />)
+        ) : (
+          <p className="py-8 text-center text-sm text-[var(--fg3)]">暂无碎语</p>
+        )}
       </div>
     </div>
   );

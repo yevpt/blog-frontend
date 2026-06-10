@@ -1,20 +1,9 @@
-// apps/web/hooks/use-comment-list.ts
 import { useState, useEffect, useCallback } from "react";
-import type { CommentItemResp, CommentPageResp } from "@repo/api";
+import type { CommentItemResp, CommentPageResp, CommentReplyResp } from "@repo/api";
 
 const PAGE_SIZE = 10;
 
-type TargetType = "article" | "moment";
-
-function buildListUrl(targetType: TargetType, targetId: number, page: number): string {
-  const base =
-    targetType === "article"
-      ? `/api/articles/${targetId}/comments`
-      : `/api/moments/${targetId}/comments`;
-  return `${base}?page=${page}&page_size=${PAGE_SIZE}`;
-}
-
-export function useCommentList(targetType: TargetType, targetId: number) {
+export function useCommentList(targetType: string, targetId: number) {
   const [comments, setComments] = useState<CommentItemResp[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
@@ -22,69 +11,56 @@ export function useCommentList(targetType: TargetType, targetId: number) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchPage = useCallback(
-    async (pageNum: number, append: boolean, signal?: AbortSignal) => {
+    async (pageNum: number, append: boolean) => {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetch(buildListUrl(targetType, targetId, pageNum), { signal });
+        const params = new URLSearchParams({
+          target_type: targetType,
+          target_id: String(targetId),
+          page: String(pageNum),
+          page_size: String(PAGE_SIZE),
+        });
+        const res = await fetch(`/api/comments?${params.toString()}`);
         if (!res.ok) throw new Error("fetch failed");
+
         const data = (await res.json()) as CommentPageResp;
-        if (signal?.aborted) return;
         setComments((prev) => (append ? [...prev, ...data.list] : data.list));
         setPage(pageNum);
         setHasMore(pageNum < data.pages);
-      } catch (err) {
-        if ((err as { name?: string }).name === "AbortError") return;
+      } catch {
         setError("加载评论失败，请稍后重试");
       } finally {
-        if (!signal?.aborted) setIsLoading(false);
+        setIsLoading(false);
       }
     },
     [targetType, targetId],
   );
 
   useEffect(() => {
-    const controller = new AbortController();
     setComments([]);
     setPage(1);
     setHasMore(false);
-    void fetchPage(1, false, controller.signal);
-    return () => controller.abort();
+    void fetchPage(1, false);
   }, [fetchPage]);
 
   const loadMore = useCallback(() => {
-    if (!isLoading && hasMore) void fetchPage(page + 1, true);
+    if (!isLoading && hasMore) {
+      void fetchPage(page + 1, true);
+    }
   }, [isLoading, hasMore, page, fetchPage]);
 
   const addComment = useCallback((comment: CommentItemResp) => {
-    setComments((prev) => [comment, ...prev]);
+    setComments((prev) => [...prev, comment]);
   }, []);
 
-  const incrementReplyCount = useCallback((commentId: number) => {
+  const addReply = useCallback((commentId: number, reply: CommentReplyResp) => {
     setComments((prev) =>
-      prev.map((c) => (c.id === commentId ? { ...c, reply_count: c.reply_count + 1 } : c)),
+      prev.map((comment) =>
+        comment.id === commentId ? { ...comment, replies: [...comment.replies, reply] } : comment,
+      ),
     );
   }, []);
 
-  const updateCommentLike = useCallback(
-    (commentId: number, isLiked: boolean, likeCount: number) => {
-      setComments((prev) =>
-        prev.map((c) =>
-          c.id === commentId ? { ...c, is_liked: isLiked, like_count: likeCount } : c,
-        ),
-      );
-    },
-    [],
-  );
-
-  return {
-    comments,
-    isLoading,
-    hasMore,
-    error,
-    loadMore,
-    addComment,
-    incrementReplyCount,
-    updateCommentLike,
-  };
+  return { comments, isLoading, hasMore, error, loadMore, addComment, addReply };
 }
