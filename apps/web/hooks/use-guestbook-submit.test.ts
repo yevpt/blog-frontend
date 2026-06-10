@@ -95,6 +95,17 @@ describe("useGuestbookSubmit", () => {
     expect((returned as CommentReplyResp | null)?.id).toBe(10);
   });
 
+  it("submitReply 401 时设置登录错误", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 401 } as Response);
+    const { result } = renderHook(() => useGuestbookSubmit());
+    let returned: CommentReplyResp | null = null;
+    await act(async () => {
+      returned = await result.current.submitReply(1, "Hi");
+    });
+    expect(returned).toBeNull();
+    expect(result.current.error).toMatch(/登录/);
+  });
+
   it("clearError 清除错误状态", async () => {
     vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 500 } as Response);
     const { result } = renderHook(() => useGuestbookSubmit());
