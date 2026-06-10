@@ -1,0 +1,124 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import type { CommentReplyResp, GuestbookPageResp } from "@repo/api";
+import { useSession } from "@/app/providers/session-provider";
+import { useLoginModal } from "@/store/use-login-modal";
+import { useGuestbookList } from "@/hooks/use-guestbook-list";
+import { useGuestbookSubmit } from "@/hooks/use-guestbook-submit";
+import { useGuestbookLike } from "@/hooks/use-guestbook-like";
+import { GuestbookPageHeader } from "./guestbook-page-header";
+import { GuestbookList } from "./guestbook-list";
+import { GuestbookInputBar } from "./guestbook-input-bar";
+import type { GuestbookReplyTarget } from "./guestbook-item";
+
+interface GuestbookPageProps {
+  initialPage: GuestbookPageResp;
+}
+
+export function GuestbookPage({ initialPage }: GuestbookPageProps) {
+  const { userId } = useSession();
+  const { open: openLoginModal } = useLoginModal();
+
+  const {
+    items,
+    page,
+    totalPages,
+    total,
+    isLoading,
+    error,
+    fetchPage,
+    addItem,
+    incrementReplyCount,
+    updateLike,
+  } = useGuestbookList(initialPage);
+
+  const {
+    isSubmitting,
+    error: submitError,
+    clearError,
+    submitEntry,
+    submitReply,
+  } = useGuestbookSubmit();
+
+  const { toggleEntryLike } = useGuestbookLike();
+
+  const [replyTarget, setReplyTarget] = useState<GuestbookReplyTarget | null>(null);
+  const [pendingReplies, setPendingReplies] = useState<Record<number, CommentReplyResp | null>>({});
+
+  const handleSubmit = useCallback(
+    async (content: string) => {
+      if (replyTarget) {
+        const reply = await submitReply(
+          replyTarget.guestbookId,
+          content,
+          replyTarget.parentReplyId,
+        );
+        if (reply) {
+          incrementReplyCount(replyTarget.guestbookId);
+          setPendingReplies((prev) => ({ ...prev, [replyTarget.guestbookId]: reply }));
+          setReplyTarget(null);
+        }
+        return;
+      }
+      const item = await submitEntry(content);
+      if (item) addItem(item);
+    },
+    [replyTarget, submitReply, submitEntry, incrementReplyCount, addItem],
+  );
+
+  const handleLike = useCallback(
+    async (id: number) => {
+      if (!userId) {
+        openLoginModal();
+        return;
+      }
+      const result = await toggleEntryLike(id);
+      if (result) updateLike(id, result.is_liked, result.like_count);
+    },
+    [userId, openLoginModal, toggleEntryLike, updateLike],
+  );
+
+  const handleReply = useCallback(
+    (target: GuestbookReplyTarget) => {
+      if (!userId) {
+        openLoginModal();
+        return;
+      }
+      setReplyTarget(target);
+    },
+    [userId, openLoginModal],
+  );
+
+  const handleCancelReply = useCallback(() => {
+    setReplyTarget(null);
+    clearError();
+  }, [clearError]);
+
+  return (
+    <div className="relative mx-auto max-w-[680px] px-5 pb-[120px] pt-10">
+      <div className="mb-6">
+        <GuestbookPageHeader />
+      </div>
+      <GuestbookList
+        items={items}
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        isLoading={isLoading}
+        error={error}
+        onPageChange={fetchPage}
+        onReply={handleReply}
+        onLike={handleLike}
+        pendingReplies={pendingReplies}
+      />
+      <GuestbookInputBar
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+        submitError={submitError}
+        replyTarget={replyTarget}
+        onCancelReply={handleCancelReply}
+      />
+    </div>
+  );
+}
