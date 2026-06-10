@@ -8,7 +8,7 @@ import { useLoginModal } from "@/store/use-login-modal";
 import type { GuestbookReplyTarget } from "./guestbook-item";
 
 interface GuestbookInputBarProps {
-  onSubmit: (content: string) => Promise<void>;
+  onSubmit: (content: string) => Promise<boolean>;
   isSubmitting?: boolean;
   submitError?: string | null;
   replyTarget?: GuestbookReplyTarget | null;
@@ -46,9 +46,11 @@ export function GuestbookInputBar({
 
   const handleSubmit = useCallback(async () => {
     if (!content.trim() || isSubmitting) return;
-    await onSubmit(content);
-    setContent("");
-    setIsOpen(false);
+    const success = await onSubmit(content);
+    if (success) {
+      setContent("");
+      setIsOpen(false);
+    }
   }, [content, isSubmitting, onSubmit]);
 
   const placeholder = replyTarget ? `回复 @${replyTarget.toUsername}…` : "说点什么，支持 Markdown…";

@@ -47,7 +47,7 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
   const [pendingReplies, setPendingReplies] = useState<Record<number, CommentReplyResp | null>>({});
 
   const handleSubmit = useCallback(
-    async (content: string) => {
+    async (content: string): Promise<boolean> => {
       if (replyTarget) {
         const reply = await submitReply(
           replyTarget.guestbookId,
@@ -58,11 +58,16 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
           incrementReplyCount(replyTarget.guestbookId);
           setPendingReplies((prev) => ({ ...prev, [replyTarget.guestbookId]: reply }));
           setReplyTarget(null);
+          return true;
         }
-        return;
+        return false;
       }
       const item = await submitEntry(content);
-      if (item) addItem(item);
+      if (item) {
+        addItem(item);
+        return true;
+      }
+      return false;
     },
     [replyTarget, submitReply, submitEntry, incrementReplyCount, addItem],
   );
