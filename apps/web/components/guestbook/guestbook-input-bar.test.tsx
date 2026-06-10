@@ -4,12 +4,16 @@ import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 import { GuestbookInputBar } from "./guestbook-input-bar";
 
+const mockOpenLoginModal = vi.fn();
+const mockUseSession = vi.fn(() => ({ userId: 1 as number | null }));
+const mockUseLoginModal = vi.fn(() => ({ open: mockOpenLoginModal }));
+
 vi.mock("@/app/providers/session-provider", () => ({
-  useSession: () => ({ userId: 1 }),
+  useSession: () => mockUseSession(),
 }));
 
 vi.mock("@/store/use-login-modal", () => ({
-  useLoginModal: () => ({ open: vi.fn() }),
+  useLoginModal: () => mockUseLoginModal(),
 }));
 
 vi.mock("@/components/comments/rich-comment-input", () => ({
@@ -44,16 +48,31 @@ describe("GuestbookInputBar", () => {
     expect(screen.getByTestId("rich-input")).toBeTruthy();
   });
 
-  it("点击 pill 后 placeholder 显示正确", async () => {
-    render(<GuestbookInputBar onSubmit={vi.fn()} />);
-    const pillText = screen.getByText("说点什么…");
-    await userEvent.click(pillText);
-    expect(screen.getByTestId("placeholder").textContent).toContain("说点什么");
+  it("replyTarget 传入时 RichCommentInput placeholder 包含回复对象名", () => {
+    render(
+      <GuestbookInputBar
+        onSubmit={vi.fn()}
+        replyTarget={{ guestbookId: 1, toUsername: "Alice" }}
+      />,
+    );
+    // RichCommentInput is pre-mounted, placeholder is always passed
+    expect(screen.getByTestId("placeholder").textContent).toContain("Alice");
   });
 
-  it("遮罩存在且点击后状态变化", async () => {
-    render(<GuestbookInputBar onSubmit={vi.fn()} />);
-    const overlay = document.querySelector("[aria-hidden='true']");
+  it("遮罩存在且初始状态不可点击（pointer-events-none）", () => {
+    const { container } = render(<GuestbookInputBar onSubmit={vi.fn()} />);
+    const overlay = container.querySelector("[aria-hidden='true']");
     expect(overlay).toBeTruthy();
+    expect(overlay?.className).toContain("pointer-events-none");
+  });
+
+  it("未登录时点击 pill 调用 openLoginModal", async () => {
+    mockUseSession.mockReturnValueOnce({ userId: null });
+    mockOpenLoginModal.mockClear();
+
+    render(<GuestbookInputBar onSubmit={vi.fn()} />);
+    const pillButton = screen.getByRole("button", { name: /说点什么…/ });
+    await userEvent.click(pillButton);
+    expect(mockOpenLoginModal).toHaveBeenCalled();
   });
 });
