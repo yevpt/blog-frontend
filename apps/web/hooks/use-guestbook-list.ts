@@ -1,6 +1,4 @@
-"use client";
-
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import type { GuestbookItemResp, GuestbookPageResp } from "@repo/api";
 
 const PAGE_SIZE = 10;
@@ -12,22 +10,34 @@ export function useGuestbookList(initialPage: GuestbookPageResp) {
   const [total, setTotal] = useState(initialPage.total);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchPage = useCallback(async (pageNum: number) => {
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/guestbook?page=${pageNum}&page_size=${PAGE_SIZE}`);
+      const res = await fetch(`/api/guestbook?page=${pageNum}&page_size=${PAGE_SIZE}`, {
+        signal: controller.signal,
+      });
       if (!res.ok) throw new Error("fetch failed");
       const data = (await res.json()) as GuestbookPageResp;
-      setItems(data.list);
-      setPage(data.page);
-      setTotalPages(data.pages);
-      setTotal(data.total);
-    } catch {
+      if (!controller.signal.aborted) {
+        setItems(data.list);
+        setPage(data.page);
+        setTotalPages(data.pages);
+        setTotal(data.total);
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return;
       setError("加载留言失败，请稍后重试");
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
