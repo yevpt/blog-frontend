@@ -4,6 +4,8 @@ import { useCallback } from "react";
 import type { CommentReplyResp, GuestbookItemResp } from "@repo/api";
 import { cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
+import { useMarkdown, MarkdownContent } from "@repo/markdown";
+import { renderMarkdown } from "@/app/actions/markdown";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { formatRelativeTime } from "@/lib/format-time";
 import { GuestbookReplies } from "./guestbook-replies";
@@ -17,6 +19,15 @@ export interface GuestbookReplyTarget {
 function getDisplayName(user: GuestbookItemResp["user"]): string {
   if (!user) return "匿名";
   return user.nickname ?? user.username;
+}
+
+/** 留言正文：异步渲染 Markdown，加载期间展示纯文本 */
+function GuestbookBody({ content }: { content: string }) {
+  const { html, isLoading } = useMarkdown(content, renderMarkdown);
+  if (isLoading || !html) {
+    return <span>{content}</span>;
+  }
+  return <MarkdownContent html={html} variant="comment" />;
 }
 
 interface GuestbookItemProps {
@@ -37,7 +48,7 @@ export function GuestbookItem({ item, onReply, onLike, pendingReply }: Guestbook
   );
 
   return (
-    <div className="py-4 first:pt-0 last:pb-0">
+    <div className="py-4">
       <div className="flex gap-2.5">
         <UserAvatar src={item.user?.avatar_url} name={displayName} size="md" />
         <div className="min-w-0 flex-1">
@@ -62,7 +73,9 @@ export function GuestbookItem({ item, onReply, onLike, pendingReply }: Guestbook
           </div>
 
           <div className="relative flex gap-2">
-            <p className="min-w-0 flex-1 pr-7.5 text-[12px] text-(--fg1)">{item.content}</p>
+            <div className="min-w-0 flex-1 pr-7.5 text-[12px] text-(--fg1)">
+              <GuestbookBody content={item.content} />
+            </div>
             <button
               type="button"
               onClick={handleLike}

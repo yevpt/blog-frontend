@@ -30,37 +30,42 @@ export function GuestbookList({
   pendingReplies,
 }: GuestbookListProps) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-white dark:bg-card">
-      <div className="divide-y divide-border px-[18px]">
-        {isLoading && items.length === 0 ? (
-          <p className="py-10 text-center text-sm text-(--fg3)">加载中…</p>
-        ) : error ? (
-          <p className="py-6 text-center text-sm text-(--fg3)">{error}</p>
-        ) : items.length === 0 ? (
-          <p className="py-10 text-center text-sm text-(--fg3)">还没有留言，来第一个吧 👋</p>
-        ) : (
-          items.map((item) => (
-            <GuestbookItem
-              key={item.id}
-              item={item}
-              onReply={onReply}
-              onLike={onLike}
-              pendingReply={pendingReplies[item.id] ?? null}
-            />
-          ))
+    <>
+      <div className="overflow-hidden rounded-2xl border border-border bg-white dark:bg-card">
+        <div className="divide-y divide-border px-[18px]">
+          {isLoading && items.length === 0 ? (
+            <p className="py-10 text-center text-sm text-(--fg3)">加载中…</p>
+          ) : error ? (
+            <p className="py-6 text-center text-sm text-(--fg3)">{error}</p>
+          ) : items.length === 0 ? (
+            <p className="py-10 text-center text-sm text-(--fg3)">还没有留言，来第一个吧 👋</p>
+          ) : (
+            items.map((item) => (
+              <GuestbookItem
+                key={item.id}
+                item={item}
+                onReply={onReply}
+                onLike={onLike}
+                pendingReply={pendingReplies[item.id] ?? null}
+              />
+            ))
+          )}
+        </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center px-[18px] py-3">
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={onPageChange} />
+          </div>
         )}
       </div>
 
-      {/* 分页行：三列 grid 保证分页视觉居中，不受左侧留言数影响 */}
-      {(totalPages > 0 || total > 0) && (
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center border-t border-border px-[18px] py-3">
-          <span className="text-[11px] text-(--fg3)">{total} 条留言</span>
-          {totalPages > 1 && (
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={onPageChange} />
-          )}
-          <span />
+      {total > 0 && (
+        <div className="flex items-center justify-center gap-3 pt-4 text-[12px] tracking-[0.02em] text-(--fg3)">
+          <span className="h-px w-14 flex-none bg-gradient-to-r from-transparent via-border to-transparent" />
+          <span>{total} 条留言</span>
+          <span className="h-px w-14 flex-none bg-gradient-to-r from-transparent via-border to-transparent" />
         </div>
       )}
-    </div>
+    </>
   );
 }

@@ -11,6 +11,7 @@ import { GuestbookPageHeader } from "./guestbook-page-header";
 import { GuestbookList } from "./guestbook-list";
 import { GuestbookInputBar } from "./guestbook-input-bar";
 import type { GuestbookReplyTarget } from "./guestbook-item";
+import { PageContainer } from "@/components/common/page-container";
 
 interface GuestbookPageProps {
   initialPage: GuestbookPageResp;
@@ -101,7 +102,7 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
   }, [clearError]);
 
   return (
-    <div className="relative mx-auto max-w-[680px] px-5 pb-[120px] pt-10">
+    <PageContainer size="default" className="min-h-dvh pb-24">
       <div className="mb-6">
         <GuestbookPageHeader />
       </div>
@@ -124,6 +125,6 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
         replyTarget={replyTarget}
         onCancelReply={handleCancelReply}
       />
-    </div>
+    </PageContainer>
   );
 }

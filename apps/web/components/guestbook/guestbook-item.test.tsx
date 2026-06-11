@@ -9,6 +9,17 @@ vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
 }));
 
+vi.mock("@repo/markdown", () => ({
+  useMarkdown: (_content: string) => ({ html: _content, isLoading: false, error: null }),
+  MarkdownContent: ({ html }: { html: string }) => (
+    <div dangerouslySetInnerHTML={{ __html: html }} />
+  ),
+}));
+
+vi.mock("@/app/actions/markdown", () => ({
+  renderMarkdown: vi.fn().mockResolvedValue("<p>mocked</p>"),
+}));
+
 vi.mock("@/components/common/user-avatar", () => ({
   UserAvatar: ({ name }: { name?: string }) => <div data-testid="avatar" aria-label={name} />,
 }));

@@ -4,6 +4,8 @@ import { useState, useCallback } from "react";
 import type { CommentReplyResp, CommentReplyPageResp } from "@repo/api";
 import { cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
+import { useMarkdown, MarkdownContent } from "@repo/markdown";
+import { renderMarkdown } from "@/app/actions/markdown";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { formatRelativeTime } from "@/lib/format-time";
 import { useSession } from "@/app/providers/session-provider";
@@ -12,6 +14,15 @@ import { useGuestbookLike } from "@/hooks/use-guestbook-like";
 import type { GuestbookReplyTarget } from "./guestbook-item";
 
 const PAGE_SIZE = 5;
+
+/** 回复正文：异步渲染 Markdown，加载期间展示纯文本 */
+function ReplyBody({ content }: { content: string }) {
+  const { html, isLoading } = useMarkdown(content, renderMarkdown);
+  if (isLoading || !html) {
+    return <span>{content}</span>;
+  }
+  return <MarkdownContent html={html} variant="comment" />;
+}
 
 function getReplyDisplayName(user: { username: string; nickname?: string } | undefined): string {
   if (!user) return "匿名";
@@ -133,12 +144,12 @@ export function GuestbookReplies({
                 <span className="text-[11px] text-(--fg3)">{time}</span>
               </div>
               <div className="relative">
-                <p className="min-w-0 pr-7.5 text-[13px] leading-[1.65] text-(--fg2)">
+                <div className="min-w-0 pr-7.5 text-[13px] leading-[1.65] text-(--fg2)">
                   {toName && (
                     <span className="mr-1 text-[11px] font-semibold text-primary">@{toName}</span>
                   )}
-                  {reply.content}
-                </p>
+                  <ReplyBody content={reply.content} />
+                </div>
                 <button
                   type="button"
                   onClick={() => void handleReplyLike(reply.id)}
