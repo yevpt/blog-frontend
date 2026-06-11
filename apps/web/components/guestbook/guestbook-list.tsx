@@ -2,7 +2,44 @@
 
 import type { CommentReplyResp, GuestbookItemResp } from "@repo/api";
 import { Pagination } from "@repo/ui";
+import type { RefObject } from "react";
 import { GuestbookItem, type GuestbookReplyTarget } from "./guestbook-item";
+
+/** 单条骨架占位 */
+function SkeletonItem() {
+  return (
+    <div className="animate-pulse py-4">
+      <div className="flex gap-2.5">
+        {/* 头像 */}
+        <div className="size-8 shrink-0 rounded-full bg-border" />
+        <div className="flex-1 space-y-2">
+          {/* 用户名 + 时间 */}
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-20 rounded bg-border" />
+            <div className="h-3 w-14 rounded bg-border" />
+          </div>
+          {/* 内容行 */}
+          <div className="space-y-1.5">
+            <div className="h-3 w-full rounded bg-border" />
+            <div className="h-3 w-4/5 rounded bg-border" />
+          </div>
+          {/* 回复按钮占位 */}
+          <div className="h-3 w-8 rounded bg-border" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GuestbookSkeleton({ count = 5 }: { count?: number }) {
+  return (
+    <div className="divide-y divide-border px-[18px]">
+      {Array.from({ length: count }).map((_, i) => (
+        <SkeletonItem key={i} />
+      ))}
+    </div>
+  );
+}
 
 interface GuestbookListProps {
   items: GuestbookItemResp[];
@@ -15,6 +52,7 @@ interface GuestbookListProps {
   onReply: (target: GuestbookReplyTarget) => void;
   onLike: (id: number) => void;
   pendingReplies: Record<number, CommentReplyResp | null>;
+  listRef?: RefObject<HTMLDivElement | null>;
 }
 
 export function GuestbookList({
@@ -28,19 +66,27 @@ export function GuestbookList({
   onReply,
   onLike,
   pendingReplies,
+  listRef,
 }: GuestbookListProps) {
   return (
     <>
-      <div className="overflow-hidden rounded-2xl border border-border bg-white dark:bg-card">
-        <div className="divide-y divide-border px-[18px]">
-          {isLoading && items.length === 0 ? (
-            <p className="py-10 text-center text-sm text-(--fg3)">加载中…</p>
-          ) : error ? (
+      <div
+        ref={listRef}
+        className="overflow-hidden rounded-2xl border border-border bg-white dark:bg-card"
+      >
+        {isLoading ? (
+          <GuestbookSkeleton />
+        ) : error ? (
+          <div className="px-[18px]">
             <p className="py-6 text-center text-sm text-(--fg3)">{error}</p>
-          ) : items.length === 0 ? (
+          </div>
+        ) : items.length === 0 ? (
+          <div className="px-[18px]">
             <p className="py-10 text-center text-sm text-(--fg3)">还没有留言，来第一个吧 👋</p>
-          ) : (
-            items.map((item) => (
+          </div>
+        ) : (
+          <div className="divide-y divide-border px-[18px]">
+            {items.map((item) => (
               <GuestbookItem
                 key={item.id}
                 item={item}
@@ -48,9 +94,9 @@ export function GuestbookList({
                 onLike={onLike}
                 pendingReply={pendingReplies[item.id] ?? null}
               />
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
 
         {totalPages > 1 && (
           <div className="flex items-center justify-center px-[18px] py-3">

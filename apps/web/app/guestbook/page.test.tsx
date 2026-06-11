@@ -30,7 +30,7 @@ vi.mock("@/components/guestbook", () => ({
 describe("GuestbookPageRoute", () => {
   it("渲染不崩溃并传入 initialPage", async () => {
     const { default: GuestbookPageRoute } = await import("./page");
-    const element = await GuestbookPageRoute();
+    const element = await GuestbookPageRoute({ searchParams: Promise.resolve({}) });
     render(element);
     expect(screen.getByTestId("guestbook-page")).toBeTruthy();
     expect(screen.getByText("0 条留言")).toBeTruthy();
