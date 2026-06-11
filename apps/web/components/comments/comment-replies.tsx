@@ -10,6 +10,8 @@ import { useLoginModal } from "@/store/use-login-modal";
 import { useCommentLike } from "@/hooks/use-comment-like";
 import { formatRelativeTime } from "@/lib/format-time";
 import { UserAvatar } from "@/components/common/user-avatar";
+import { useMarkdown, MarkdownContent } from "@repo/markdown";
+import { renderMarkdown } from "@/app/actions/markdown";
 import type { ReplyTarget } from "./comment-item";
 
 const PAGE_SIZE = 5;
@@ -35,6 +37,15 @@ interface ReplyItemProps {
   targetType: TargetType;
   onReply?: (target: ReplyTarget) => void;
   onLikeResult?: (replyId: number, isLiked: boolean, likeCount: number) => void;
+}
+
+/** 回复正文：异步渲染 Markdown，加载期间展示纯文本 */
+function ReplyBody({ content }: { content: string }) {
+  const { html, isLoading } = useMarkdown(content, renderMarkdown);
+  if (isLoading || !html) {
+    return <span>{content}</span>;
+  }
+  return <MarkdownContent html={html} variant="comment" />;
 }
 
 function ReplyItem({ reply, commentId, targetType, onReply, onLikeResult }: ReplyItemProps) {
@@ -66,12 +77,12 @@ function ReplyItem({ reply, commentId, targetType, onReply, onLikeResult }: Repl
           <span className="text-[11px] text-(--fg3)">{time}</span>
         </div>
         <div className="relative">
-          <p className="min-w-0 pr-7.5 text-[13px] leading-[1.65] text-(--fg2)">
+          <div className="min-w-0 pr-7.5 text-[13px] leading-[1.65] text-(--fg2)">
             {toName && (
               <span className="mr-1 text-[11px] font-semibold text-primary">@{toName}</span>
             )}
-            {reply.content}
-          </p>
+            <ReplyBody content={reply.content} />
+          </div>
           <Button
             variant="text"
             type="button"
