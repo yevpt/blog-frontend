@@ -15,11 +15,16 @@ export interface TocItem {
 /**
  * 将 Markdown 字符串转换为安全的 HTML 字符串。
  *
- * 管线：remark-parse → remark-rehype → rehype-slug → rehype-sanitize → rehype-stringify
+ * 管线：remark-parse → remark-rehype → rehype-raw → rehype-slug → rehype-sanitize → rehype-stringify
+ *
+ * rehype-raw 说明：将 remark-rehype 输出的原始 HTML 节点（如 <u>）解析为真实 hast 节点，
+ * 否则内联 HTML 在 sanitize 前会被丢弃
  *
  * sanitize 白名单扩展说明：
  *  - <u>：RichEditor 以 <u>text</u> 形式存储下划线，defaultSchema 不含 <u>，需显式添加
  *  - id 属性：rehype-slug 为标题注入 id，sanitize 默认会剥离，需放行
+ *  - clobberPrefix: ""：rehype-sanitize v6 默认为 id 添加 "user-content-" 前缀，
+ *    会破坏目录锚点链接，设为空字符串保持原始 id
  */
 export async function markdownToHtml(markdown: string): Promise<string> {
   const result = await unified()
