@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import Script from "next/script";
 import { cookies } from "next/headers";
+import Script from "next/script";
 import { SvgSprite } from "@repo/icons";
 import { SiteFooter } from "@/components/footer";
 import { SiteNavbar } from "@/components/navbar";
@@ -12,7 +12,7 @@ import { ThemeProvider } from "./providers/theme-provider";
 import { LocaleProvider } from "./providers/locale-provider";
 import { SessionProvider } from "./providers/session-provider";
 import { GlobalModals } from "./providers/global-modals";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 const SITE_TITLE = "Yevpt's Blog";
@@ -20,6 +20,13 @@ const SITE_TITLE = "Yevpt's Blog";
 export const metadata: Metadata = {
   title: SITE_TITLE,
   description: "分享编程、工具、文学的个人博客",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
@@ -50,9 +57,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         {/* 关键内联样式：外部 CSS 加载前防止背景闪烁 */}
         <style dangerouslySetInnerHTML={{ __html: THEME_CRITICAL_CSS }} />
         {/* hydration 前清除扩展注入 attribute，见 lib/strip-extension-attrs.ts */}
-        <Script id="strip-extension-attrs" strategy="beforeInteractive">
-          {STRIP_EXTENSION_ATTRS_SCRIPT}
-        </Script>
+        <Script
+          id="strip-extension-attrs"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: STRIP_EXTENSION_ATTRS_SCRIPT }}
+        />
       </head>
       <body>
         <ThemeProvider>

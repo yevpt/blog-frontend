@@ -1,5 +1,8 @@
 import "@testing-library/jest-dom/vitest";
 
+// 告知 React 测试环境支持 act()，消除 "not configured to support act" 警告
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+
 process.env.BLOG_USER_ID = "1";
 
 // Node.js ≥22 adds an experimental `localStorage` to globalThis, which causes

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useLocale } from "@repo/hooks";
+import { Button } from "@repo/ui";
 
 interface SnippetContentProps {
   content: string;
@@ -20,17 +21,18 @@ export function SnippetContent({ content }: SnippetContentProps) {
   const displayText = isLong && !expanded ? content.slice(0, MAX_CHARS) + "..." : content;
 
   return (
-    <div className="mt-1">
-      <p className="whitespace-pre-line text-[13px] leading-relaxed text-[var(--fg2)]">
+    <div className="mt-0.5">
+      <p className="whitespace-pre-line break-words text-[13px] leading-relaxed text-(--fg2)">
         {displayText}
       </p>
       {isLong && (
-        <button
-          onClick={() => setExpanded((prev) => !prev)}
-          className="mt-1 cursor-pointer text-xs text-primary/70 transition-colors hover:text-primary"
+        <Button
+          variant="text"
+          onPress={() => setExpanded((prev) => !prev)}
+          className="mt-1 text-xs transition-colors"
         >
           {expanded ? t("snippet.collapse") : t("snippet.expand")}
-        </button>
+        </Button>
       )}
     </div>
   );

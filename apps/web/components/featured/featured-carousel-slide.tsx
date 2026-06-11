@@ -1,10 +1,11 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
+import Link from "next/link";
 import { cn, Button } from "@repo/ui";
 import { useLocale } from "@repo/hooks/locale";
 import type { FeaturedPost } from "@/app/_mock/types";
+import { LoadingImage } from "@/components/common/loading-image";
 import { formatDate } from "../../lib/format-time";
 import { getCategoryColorClass } from "@/lib/category-colors";
 
@@ -32,13 +33,13 @@ export function FeaturedCarouselSlide({
   const formattedDate = formatDate(post.date, locale);
 
   return (
-    <div className="relative h-full w-full md:flex md:flex-row md:gap-4 md:p-4">
+    <div className="relative h-full w-full md:flex md:flex-row md:gap-4 md:py-4">
       {/* ── 图片：移动端绝对定位铺满，桌面端作为 flex 子项 ── */}
       <div
         data-carousel-background-drag="true"
         className="absolute inset-0 overflow-hidden md:relative md:inset-auto md:h-full md:w-auto md:flex-1 md:shrink-0 md:rounded-xl md:shadow-md"
       >
-        <Image
+        <LoadingImage
           src={post.coverImage}
           alt={post.title}
           fill
@@ -50,7 +51,6 @@ export function FeaturedCarouselSlide({
             transform: isActive ? "scale(1.05)" : "scale(1)",
             willChange: isActive ? "transform" : "auto",
           }}
-          priority={isLcpCandidate}
           loading={isLcpCandidate ? "eager" : "lazy"}
           unoptimized
           sizes="(max-width: 768px) 100vw, 55vw"
@@ -110,7 +110,12 @@ export function FeaturedCarouselSlide({
               transitionDelay: isActive ? "160ms" : "0ms",
             }}
           >
-            {post.title}
+            <Link
+              href={post.href}
+              className="hover:text-primary transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
+            >
+              {post.title}
+            </Link>
           </h2>
 
           {/* 摘要 */}

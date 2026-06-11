@@ -1,7 +1,7 @@
 // apps/web/components/comments/comment-replies.tsx
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Button, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import type { CommentReplyResp, CommentReplyPageResp } from "@repo/api";
@@ -10,8 +10,7 @@ import { useLoginModal } from "@/store/use-login-modal";
 import { useCommentLike } from "@/hooks/use-comment-like";
 import { formatRelativeTime } from "@/lib/format-time";
 import { UserAvatar } from "@/components/common/user-avatar";
-import { useMarkdown, MarkdownContent } from "@repo/markdown";
-import { renderMarkdown } from "@/app/actions/markdown";
+import { markdownToHtmlSync, MarkdownContent } from "@repo/markdown";
 import type { ReplyTarget } from "./comment-item";
 
 const PAGE_SIZE = 5;
@@ -39,12 +38,8 @@ interface ReplyItemProps {
   onLikeResult?: (replyId: number, isLiked: boolean, likeCount: number) => void;
 }
 
-/** 回复正文：异步渲染 Markdown，加载期间展示纯文本 */
 function ReplyBody({ content }: { content: string }) {
-  const { html, isLoading } = useMarkdown(content, renderMarkdown);
-  if (isLoading || !html) {
-    return <span>{content}</span>;
-  }
+  const html = useMemo(() => markdownToHtmlSync(content), [content]);
   return <MarkdownContent html={html} variant="comment" />;
 }
 

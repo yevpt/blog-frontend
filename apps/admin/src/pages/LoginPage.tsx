@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiError } from "@repo/api";
+import { Button } from "@repo/ui";
 import { apiClient } from "../lib/api";
 import { useAuthStore } from "../store/auth";
 
@@ -49,13 +50,14 @@ export function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button
-          className="w-full rounded bg-blue-600 py-2 text-white disabled:opacity-50"
+        <Button
+          className="w-full rounded bg-blue-600 py-2 text-white"
           type="submit"
-          disabled={loading}
+          isLoading={loading}
+          loadingText="登录中..."
         >
-          {loading ? "登录中..." : "登录"}
-        </button>
+          登录
+        </Button>
         {error && (
           <p role="alert" className="text-sm text-red-500">
             {error}

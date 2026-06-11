@@ -688,7 +688,7 @@ export function LoginModal() {
             <SvgIcon name="close" size={16} />
           </Button>
         </div>
-        <p className="text-sm text-[var(--fg2)]">登录功能即将上线，敬请期待。</p>
+        <p className="text-sm text-(--fg2)">登录功能即将上线，敬请期待。</p>
       </div>
     </div>
   );
@@ -1349,7 +1349,7 @@ function Avatar({ url, name, size }: { url?: string; name: string; size: "sm" | 
   if (url) return <img src={url} alt={name} className={cls} />;
   return (
     <div
-      className={`${cls} flex items-center justify-center bg-border font-bold text-[var(--fg2)] ${textCls}`}
+      className={`${cls} flex items-center justify-center bg-border font-bold text-(--fg2) ${textCls}`}
     >
       {name[0]?.toUpperCase() ?? "?"}
     </div>
@@ -1373,9 +1373,9 @@ function ReplyItem({ reply, commentId, onReply }: ReplyItemProps) {
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-2">
           <span className="text-xs font-bold text-foreground">{fromName}</span>
-          <span className="text-[11px] text-[var(--fg3)]">{time}</span>
+          <span className="text-[11px] text-(--fg3)">{time}</span>
         </div>
-        <p className="text-[13px] leading-[1.65] text-[var(--fg2)]">
+        <p className="text-[13px] leading-[1.65] text-(--fg2)">
           {toName && (
             <span className="mr-1 text-[11px] font-semibold text-primary">@{toName}</span>
           )}
@@ -1386,7 +1386,7 @@ function ReplyItem({ reply, commentId, onReply }: ReplyItemProps) {
           onClick={() =>
             onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName })
           }
-          className="mt-1 cursor-pointer rounded-md px-2 py-1 text-[11px] font-medium text-[var(--fg3)] transition-colors hover:bg-primary/10 hover:text-primary"
+          className="mt-1 cursor-pointer rounded-md px-2 py-1 text-[11px] font-medium text-(--fg3) transition-colors hover:bg-primary/10 hover:text-primary"
         >
           回复
         </button>
@@ -1406,13 +1406,13 @@ export function CommentItem({ comment, onReply }: CommentItemProps) {
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-center gap-2">
             <span className="text-xs font-bold text-foreground">{displayName}</span>
-            <span className="text-[11px] text-[var(--fg3)]">{time}</span>
+            <span className="text-[11px] text-(--fg3)">{time}</span>
           </div>
-          <p className="text-[13px] leading-[1.65] text-[var(--fg2)]">{comment.content}</p>
+          <p className="text-[13px] leading-[1.65] text-(--fg2)">{comment.content}</p>
           <button
             type="button"
             onClick={() => onReply?.({ commentId: comment.id, toUsername: displayName })}
-            className="mt-1.5 cursor-pointer rounded-md px-2 py-1 text-[11px] font-medium text-[var(--fg3)] transition-colors hover:bg-primary/10 hover:text-primary"
+            className="mt-1.5 cursor-pointer rounded-md px-2 py-1 text-[11px] font-medium text-(--fg3) transition-colors hover:bg-primary/10 hover:text-primary"
           >
             回复
           </button>
@@ -1629,7 +1629,7 @@ export function CommentInput({
           <button
             type="button"
             onClick={onCancelReply}
-            className="text-[var(--fg3)] hover:text-foreground"
+            className="text-(--fg3) hover:text-foreground"
           >
             取消
           </button>
@@ -1642,7 +1642,7 @@ export function CommentInput({
           placeholder={user ? "写下你的评论..." : "请先登录才能发表评论"}
           disabled={!user || isSubmitting}
           rows={3}
-          className="min-h-[72px] w-full resize-none rounded-xl border border-input bg-background px-3 py-2.5 text-[13px] leading-normal text-foreground outline-none transition-colors placeholder:text-[var(--fg3)] focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-[72px] w-full resize-none rounded-xl border border-input bg-background px-3 py-2.5 text-[13px] leading-normal text-foreground outline-none transition-colors placeholder:text-(--fg3) focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
         />
         {submitError && <p className="text-xs text-red-500">{submitError}</p>}
         <div className="flex justify-end">
@@ -1902,11 +1902,11 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto px-[18px] py-4">
         {isLoading && comments.length === 0 ? (
-          <div className="py-8 text-center text-sm text-[var(--fg3)]">加载中...</div>
+          <div className="py-8 text-center text-sm text-(--fg3)">加载中...</div>
         ) : error ? (
-          <p className="py-4 text-center text-sm text-[var(--fg3)]">{error}</p>
+          <p className="py-4 text-center text-sm text-(--fg3)">{error}</p>
         ) : comments.length === 0 ? (
-          <p className="py-8 text-center text-sm text-[var(--fg3)]">暂无评论，来发表第一条吧</p>
+          <p className="py-8 text-center text-sm text-(--fg3)">暂无评论，来发表第一条吧</p>
         ) : (
           <div className="flex flex-col gap-[18px]">
             {comments.map((comment) => (
@@ -1921,7 +1921,7 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
               size="sm"
               isDisabled={isLoading}
               onPress={loadMore}
-              className="h-8 rounded-full px-[18px] text-xs font-semibold text-[var(--fg2)] hover:border-primary hover:bg-primary/10 hover:text-primary"
+              className="h-8 rounded-full px-[18px] text-xs font-semibold text-(--fg2) hover:border-primary hover:bg-primary/10 hover:text-primary"
             >
               {isLoading ? "加载中..." : "查看更多评论"}
             </Button>
@@ -2112,7 +2112,7 @@ export function CommentModal({ open, title, type, targetId, onClose }: CommentMo
             variant="ghost"
             onPress={onClose}
             aria-label="关闭评论"
-            className="h-7 w-7 shrink-0 rounded-lg bg-border p-0 text-[var(--fg2)] hover:bg-primary/10 hover:text-primary"
+            className="h-7 w-7 shrink-0 rounded-lg bg-border p-0 text-(--fg2) hover:bg-primary/10 hover:text-primary"
           >
             <SvgIcon name="close" size={16} />
           </Button>

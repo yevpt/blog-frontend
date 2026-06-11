@@ -77,19 +77,23 @@ vi.mock("@repo/ui", () => ({
     href,
     children,
     className,
+    onPress,
+    ...props
   }: {
     href?: string;
     children: ReactNode;
     className?: string;
+    onPress?: () => void;
     variant?: string;
     size?: string;
+    [key: string]: unknown;
   }) =>
     href ? (
-      <a href={href} className={className}>
+      <a href={href} className={className} {...props}>
         {children}
       </a>
     ) : (
-      <button type="button" className={className}>
+      <button type="button" className={className} onClick={onPress} {...props}>
         {children}
       </button>
     ),

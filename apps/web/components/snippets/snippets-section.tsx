@@ -1,43 +1,111 @@
 "use client";
 
+import { useCallback } from "react";
 import { useLocale } from "@repo/hooks";
+import { SvgIcon } from "@repo/icons";
 import { Button } from "@repo/ui";
 import type { MomentItemResp } from "@repo/api";
+import { CommentModal } from "@/components/comments";
+import { useMomentEngagement } from "@/hooks/use-moment-engagement";
 import { SnippetCard } from "./snippet-card";
+import { SnippetCardSkeleton } from "./snippet-card-skeleton";
 
 interface SnippetsSectionProps {
   snippets: MomentItemResp[];
+  loading?: boolean;
+  /** 与首页 SSR 查询一致，登录态变化时用于刷新 is_liked */
+  ownerUserId?: number;
 }
 
 /** 右侧栏最多展示的碎语条数 */
 const MAX_SNIPPETS = 3;
 
-// 碎语区块容器：标题 + 卡片网格 + 操作按钮
-// 因为使用了 useLocale 需要标记 'use client'
-export function SnippetsSection({ snippets }: SnippetsSectionProps) {
+// 碎语区块容器：渐变图标 header + 卡片堆叠 + 渐变 CTA 按钮
+export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSectionProps) {
   const { t } = useLocale();
-  const visibleSnippets = snippets.slice(0, MAX_SNIPPETS);
+  const getRefreshParams = useCallback(() => ({ page: 1, pageSize: MAX_SNIPPETS }), []);
+
+  const {
+    moments,
+    activeComment,
+    pendingLikeIds,
+    handleLike,
+    openComment,
+    closeComment,
+    handleCommentAdded,
+  } = useMomentEngagement({
+    initialMoments: snippets,
+    ownerUserId,
+    getRefreshParams,
+  });
+
+  const visibleSnippets = moments.slice(0, MAX_SNIPPETS);
 
   return (
-    <section className="rounded-[14px] border border-border bg-card px-[10px] py-[15px] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.04)]">
-      <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.09em] text-[var(--fg3)]">
-        {t("home.snippets")}
-      </h3>
+    <>
+      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.04)]">
+        <div className="flex items-center justify-between px-4 pb-3 pt-4">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-[10px] bg-gradient-to-br from-primary to-primary/80 text-[13px] text-primary-foreground">
+              ✦
+            </div>
+            <h3 className="text-sm font-bold tracking-[-0.01em] text-foreground">
+              {t("home.snippets")}
+            </h3>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label="随机换一批"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-[10px] border border-border p-0 text-(--fg3) transition-colors hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+          >
+            <SvgIcon name="shuffle" size={16} />
+          </Button>
+        </div>
 
-      <div className="flex flex-col">
-        {visibleSnippets.map((snippet) => (
-          <SnippetCard key={snippet.id} snippet={snippet} />
-        ))}
-      </div>
+        <div className="flex flex-col px-3 pb-3">
+          {loading
+            ? Array.from({ length: MAX_SNIPPETS }, (_, i) => (
+                <SnippetCardSkeleton key={i} variant={i} layout="embedded" />
+              ))
+            : visibleSnippets.map((snippet) => (
+                <SnippetCard
+                  key={snippet.id}
+                  layout="embedded"
+                  snippet={snippet}
+                  onLike={handleLike}
+                  likeDisabled={pendingLikeIds.includes(snippet.id)}
+                  onComment={openComment}
+                />
+              ))}
+        </div>
 
-      <div className="mt-3 flex gap-2">
-        <Button variant="outline" size="sm" className="h-8 flex-1 rounded-full text-[11px]">
-          {t("snippet.postNew")}
-        </Button>
-        <Button variant="ghost" size="sm" className="h-8 flex-1 rounded-full text-[11px]">
-          {t("snippet.viewMore")}
-        </Button>
-      </div>
-    </section>
+        <div className="flex gap-2 border-t border-border/40 px-4 py-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 flex-1 rounded-xl border-none bg-gradient-to-r from-primary to-primary/90 text-xs font-semibold text-primary-foreground shadow-[0_2px_8px_rgba(124,58,237,0.25)] hover:opacity-90"
+          >
+            {t("snippet.postNew")}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-9 flex-1 rounded-xl border border-border/60 text-xs font-medium text-(--fg2) hover:border-primary/30 hover:text-primary"
+          >
+            {t("snippet.viewMore")} →
+          </Button>
+        </div>
+      </section>
+
+      {activeComment !== null && (
+        <CommentModal
+          targetType="moment"
+          targetId={activeComment.momentId}
+          onClose={closeComment}
+          onCommentAdded={handleCommentAdded}
+        />
+      )}
+    </>
   );
 }

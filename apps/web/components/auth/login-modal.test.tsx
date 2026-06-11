@@ -50,11 +50,14 @@ describe("LoginModal", () => {
     await waitFor(() => expect(useLoginModal.getState().isOpen).toBe(false));
   });
 
-  it("点击遮罩不关闭弹窗", () => {
+  it("点击遮罩不关闭弹窗，并触发轻微抖动反馈", () => {
     useLoginModal.setState({ isOpen: true, view: "login" });
-    const { container } = render(<LoginModal />);
-    fireEvent.click(container.firstChild as HTMLElement);
+    render(<LoginModal />);
+    fireEvent.click(screen.getByTestId("modal-backdrop"));
     expect(useLoginModal.getState().isOpen).toBe(true);
+    expect(screen.getByRole("dialog").parentElement?.parentElement?.className).toContain(
+      "animate-modal-pulse",
+    );
   });
 
   it("点击「注册」标签切换到注册视图", async () => {

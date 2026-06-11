@@ -1,6 +1,22 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { UserAvatar } from "./user-avatar";
+
+vi.mock("next/image", () => ({
+  default: ({
+    src,
+    alt,
+    className,
+    onLoad,
+    onError,
+  }: {
+    src: string;
+    alt: string;
+    className?: string;
+    onLoad?: () => void;
+    onError?: () => void;
+  }) => <img src={src} alt={alt} className={className} onLoad={onLoad} onError={onError} />,
+}));
 
 describe("UserAvatar", () => {
   it("有 src 时渲染 img 元素", () => {
@@ -8,6 +24,28 @@ describe("UserAvatar", () => {
     const img = screen.getByRole("img", { name: "Alice" });
     expect(img).toBeInTheDocument();
     expect(img).toHaveAttribute("src", "https://example.com/a.jpg");
+  });
+
+  it("有 src 时加载前显示首字母占位，加载完成后图片淡入", () => {
+    render(<UserAvatar src="https://example.com/a.jpg" name="Alice" />);
+
+    expect(screen.getByTestId("user-avatar-placeholder")).toHaveTextContent("A");
+    expect(screen.getByRole("img", { name: "Alice" })).toHaveClass("opacity-0");
+
+    fireEvent.load(screen.getByRole("img", { name: "Alice" }));
+
+    expect(screen.getByRole("img", { name: "Alice" })).toHaveClass("opacity-100");
+    expect(screen.getByTestId("user-avatar-placeholder")).toHaveClass("opacity-0");
+  });
+
+  it("src 变化后重新显示加载占位", () => {
+    const { rerender } = render(<UserAvatar src="https://example.com/a.jpg" name="Alice" />);
+
+    fireEvent.load(screen.getByRole("img", { name: "Alice" }));
+    rerender(<UserAvatar src="https://example.com/b.jpg" name="Alice" />);
+
+    expect(screen.getByTestId("user-avatar-placeholder")).toHaveClass("opacity-100");
+    expect(screen.getByRole("img", { name: "Alice" })).toHaveClass("opacity-0");
   });
 
   it("无 src 时渲染首字母大写", () => {

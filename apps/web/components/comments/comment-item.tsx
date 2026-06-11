@@ -1,11 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type { CommentItemResp, CommentReplyResp } from "@repo/api";
 import { Button, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
-import { useMarkdown, MarkdownContent } from "@repo/markdown";
-import { renderMarkdown } from "@/app/actions/markdown";
+import { markdownToHtmlSync, MarkdownContent } from "@repo/markdown";
 import { formatRelativeTime } from "@/lib/format-time";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { CommentReplies } from "./comment-replies";
@@ -31,12 +30,8 @@ interface CommentItemProps {
   pendingReply?: CommentReplyResp | null;
 }
 
-/** 评论正文：使用 useMarkdown hook 异步渲染 Markdown，加载期间展示纯文本 */
 function CommentBody({ content }: { content: string }) {
-  const { html, isLoading } = useMarkdown(content, renderMarkdown);
-  if (isLoading || !html) {
-    return <span>{content}</span>;
-  }
+  const html = useMemo(() => markdownToHtmlSync(content), [content]);
   return <MarkdownContent html={html} variant="comment" />;
 }
 

@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import type { CommentReplyResp, CommentReplyPageResp } from "@repo/api";
 import { cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
-import { useMarkdown, MarkdownContent } from "@repo/markdown";
-import { renderMarkdown } from "@/app/actions/markdown";
+import { markdownToHtmlSync, MarkdownContent } from "@repo/markdown";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { formatRelativeTime } from "@/lib/format-time";
 import { useSession } from "@/app/providers/session-provider";
@@ -15,12 +14,8 @@ import type { GuestbookReplyTarget } from "./guestbook-item";
 
 const PAGE_SIZE = 5;
 
-/** 回复正文：异步渲染 Markdown，加载期间展示纯文本 */
 function ReplyBody({ content }: { content: string }) {
-  const { html, isLoading } = useMarkdown(content, renderMarkdown);
-  if (isLoading || !html) {
-    return <span>{content}</span>;
-  }
+  const html = useMemo(() => markdownToHtmlSync(content), [content]);
   return <MarkdownContent html={html} variant="comment" />;
 }
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { createServerApiClient } from "@/lib/server-api";
 import { CircleList } from "./_components/circle-list";
+import { PageContainer } from "@/components/common/page-container";
 
 export const metadata: Metadata = {
   title: "圈子 | Yevpt's Blog",
@@ -31,7 +32,7 @@ export default async function CirclePage() {
   const initialPage = { ...usersPage, list: sortedList };
 
   return (
-    <div className="relative mx-auto max-w-[960px] px-5 pb-20 pt-20 md:pt-24">
+    <PageContainer size="default">
       <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-primary">
         Members
       </p>
@@ -40,6 +41,6 @@ export default async function CirclePage() {
       </h1>
 
       <CircleList initialPage={initialPage} />
-    </div>
+    </PageContainer>
   );
 }

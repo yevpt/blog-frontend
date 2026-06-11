@@ -29,7 +29,7 @@ interface PaginationPageNumberProps {
   isCurrent: boolean;
 }
 
-/** 页码按钮，与 Untitled UI PaginationItem 一致使用 PaginationBase.Item + 原生 button */
+/** 页码按钮，与 Untitled UI PaginationItem 一致使用 PaginationBase.Item 的默认 Button */
 function PaginationPageNumber({ value, isCurrent }: PaginationPageNumberProps) {
   return (
     <PaginationBase.Item
@@ -41,7 +41,9 @@ function PaginationPageNumber({ value, isCurrent }: PaginationPageNumberProps) {
           "flex size-9 cursor-pointer items-center justify-center rounded-lg p-3 text-sm font-medium",
           "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
           // 仅选中态有背景色；不用 transition/hover 背景，避免切换页码时旧页闪烁
-          isSelected ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground",
+          isSelected
+            ? "bg-primary text-primary-foreground"
+            : "text-muted-foreground hover:text-foreground",
         )
       }
     >
@@ -73,14 +75,11 @@ export function Pagination({
       )}
     >
       <PaginationBase.PrevTrigger
-        asChild
         ariaLabel="上一页"
         className={({ isDisabled }) => navButtonClassName(isDisabled)}
       >
-        <button type="button">
-          <SvgIcon name="chevron-left" size={16} />
-          <span className="hidden md:inline">{prevLabel}</span>
-        </button>
+        <SvgIcon name="chevron-left" size={16} />
+        <span className="hidden md:inline">{prevLabel}</span>
       </PaginationBase.PrevTrigger>
 
       <PaginationBase.Context>
@@ -113,14 +112,11 @@ export function Pagination({
       </PaginationBase.Context>
 
       <PaginationBase.NextTrigger
-        asChild
         ariaLabel="下一页"
         className={({ isDisabled }) => navButtonClassName(isDisabled)}
       >
-        <button type="button">
-          <span className="hidden md:inline">{nextLabel}</span>
-          <SvgIcon name="chevron-right" size={16} />
-        </button>
+        <span className="hidden md:inline">{nextLabel}</span>
+        <SvgIcon name="chevron-right" size={16} />
       </PaginationBase.NextTrigger>
     </PaginationBase.Root>
   );

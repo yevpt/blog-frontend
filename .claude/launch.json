@@ -2,11 +2,11 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "web",
+      "name": "web-dev",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["dev:web"],
       "port": 3000,
-      "autoPort": true
+      "autoPort": false
     }
   ]
 }

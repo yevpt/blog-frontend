@@ -5,6 +5,12 @@ import type { ReactNode } from "react";
 import type { ArticlePageResp, CategoryTabItem } from "@repo/api";
 import { ArticleSection } from "./article-section";
 
+const mockOpenLoginModal = vi.fn();
+const toastMockState = vi.hoisted(() => ({
+  addToast: vi.fn(),
+}));
+let mockSessionUserId: number | null = 7;
+
 vi.mock("next/image", () => ({
   default: ({ src, alt, className }: { src: string; alt: string; className?: string }) => (
     <img src={src} alt={alt} className={className} />
@@ -34,6 +40,27 @@ vi.mock("@repo/icons", () => ({
 }));
 
 vi.mock("@repo/ui", () => ({
+  cn: (...classes: (string | undefined | false | null)[]) => classes.filter(Boolean).join(" "),
+  Button: ({
+    children,
+    onPress,
+    variant,
+    isDisabled,
+    ...props
+  }: {
+    children: ReactNode;
+    onPress?: () => void;
+    variant?: string;
+    isDisabled?: boolean;
+    [key: string]: unknown;
+  }) => (
+    <button data-variant={variant} onClick={onPress} disabled={isDisabled} {...props}>
+      {children}
+    </button>
+  ),
+  ToastQueue: class {
+    add() {}
+  },
   Pagination: ({
     currentPage,
     totalPages,
@@ -122,17 +149,23 @@ vi.mock("@repo/hooks", () => ({
   }),
 }));
 
+vi.mock("@/app/providers/session-provider", () => ({
+  useSession: () => ({ userId: mockSessionUserId, profile: null }),
+}));
+
+vi.mock("@/store/use-login-modal", () => ({
+  useLoginModal: () => ({ open: mockOpenLoginModal }),
+}));
+
+vi.mock("@/lib/toast", () => ({
+  addToast: toastMockState.addToast,
+}));
+
 vi.mock("@/components/comments", () => ({
-  CommentModal: ({
-    open,
-    targetId,
-  }: {
-    open: boolean;
-    targetId: number;
-    title: string;
-    type: string;
-    onClose: () => void;
-  }) => (open ? <div data-testid="comment-modal" data-target-id={String(targetId)} /> : null),
+  // CommentModal 不接受 open prop，由父组件条件挂载控制显隐
+  CommentModal: ({ targetId }: { targetId: number; targetType: string; onClose: () => void }) => (
+    <div data-testid="comment-modal" data-target-id={String(targetId)} />
+  ),
 }));
 
 function makeArticle(id: number, title: string) {
@@ -144,6 +177,7 @@ function makeArticle(id: number, title: string) {
     comment_status: 1,
     read_count: 10,
     like_count: 2,
+    is_liked: false,
     comment_count: 1,
     is_recommended: false,
     created_at: "2026-01-01T00:00:00Z",
@@ -170,11 +204,14 @@ const mockCategories: CategoryTabItem[] = [
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn());
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
+  mockSessionUserId = 7;
 });
 
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.clearAllMocks();
+  mockOpenLoginModal.mockReset();
+  toastMockState.addToast.mockReset();
 });
 
 describe("ArticleSection", () => {
@@ -379,5 +416,176 @@ describe("ArticleSection", () => {
 
     const modal = screen.getByTestId("comment-modal");
     expect(modal.dataset.targetId).toBe("7");
+  });
+
+  it("已登录时点击喜欢会调用接口并使用服务端最新结果更新状态", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ is_liked: true, like_count: 9 }),
+    } as Response);
+
+    render(
+      <ArticleSection
+        initialPage={makePageResp({ list: [makeArticle(8, "可点赞文章")] })}
+        categories={mockCategories}
+      />,
+    );
+
+    const likeButton = screen.getByRole("button", { name: "喜欢" });
+    await user.click(likeButton);
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith("/api/articles/8/like", { method: "POST" });
+      expect(screen.getByRole("button", { name: "喜欢" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByText("9")).toBeTruthy();
+    });
+  });
+
+  it("未登录时点击喜欢会打开全局登录弹窗", async () => {
+    const user = userEvent.setup();
+    mockSessionUserId = null;
+
+    render(
+      <ArticleSection
+        initialPage={makePageResp({ list: [makeArticle(9, "需登录文章")] })}
+        categories={mockCategories}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "喜欢" }));
+
+    expect(mockOpenLoginModal).toHaveBeenCalledOnce();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("取消点赞失败时提示取消点赞失败", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: async () => ({ error: "failed" }),
+    } as Response);
+
+    render(
+      <ArticleSection
+        initialPage={makePageResp({
+          list: [{ ...makeArticle(10, "已点赞文章"), is_liked: true, like_count: 5 }],
+        })}
+        categories={mockCategories}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "喜欢" }));
+
+    await waitFor(() => {
+      expect(toastMockState.addToast).toHaveBeenCalledWith("取消点赞失败，请稍后重试", "error");
+    });
+  });
+
+  it("登录成功后会重新获取当前列表并展示已点赞状态", async () => {
+    mockSessionUserId = null;
+    const { rerender } = render(
+      <ArticleSection
+        initialPage={makePageResp({
+          list: [{ ...makeArticle(11, "登录后同步"), is_liked: false }],
+        })}
+        categories={mockCategories}
+      />,
+    );
+
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () =>
+        makePageResp({
+          list: [{ ...makeArticle(11, "登录后同步"), is_liked: true, like_count: 6 }],
+        }),
+    } as Response);
+
+    mockSessionUserId = 7;
+    rerender(
+      <ArticleSection
+        initialPage={makePageResp({
+          list: [{ ...makeArticle(11, "登录后同步"), is_liked: false }],
+        })}
+        categories={mockCategories}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith("/api/articles?page=1", expect.any(Object));
+      expect(screen.getByRole("button", { name: "喜欢" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByText("6")).toBeTruthy();
+    });
+  });
+
+  it("登录态同步点赞状态时不会触发滚动", async () => {
+    const scrollIntoView = vi.fn();
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
+    mockSessionUserId = null;
+
+    const { rerender } = render(
+      <ArticleSection
+        initialPage={makePageResp({ list: [{ ...makeArticle(13, "静默同步"), is_liked: false }] })}
+        categories={mockCategories}
+      />,
+    );
+
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () =>
+        makePageResp({ list: [{ ...makeArticle(13, "静默同步"), is_liked: true, like_count: 7 }] }),
+    } as Response);
+
+    mockSessionUserId = 7;
+    rerender(
+      <ArticleSection
+        initialPage={makePageResp({ list: [{ ...makeArticle(13, "静默同步"), is_liked: false }] })}
+        categories={mockCategories}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith("/api/articles?page=1", expect.any(Object));
+      expect(screen.getByRole("button", { name: "喜欢" })).toHaveAttribute("aria-pressed", "true");
+    });
+
+    expect(scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it("退出登录后会重新获取当前列表并清除已点赞状态", async () => {
+    const { rerender } = render(
+      <ArticleSection
+        initialPage={makePageResp({
+          list: [{ ...makeArticle(12, "退出后同步"), is_liked: true, like_count: 4 }],
+        })}
+        categories={mockCategories}
+      />,
+    );
+
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () =>
+        makePageResp({
+          list: [{ ...makeArticle(12, "退出后同步"), is_liked: false, like_count: 3 }],
+        }),
+    } as Response);
+
+    mockSessionUserId = null;
+    rerender(
+      <ArticleSection
+        initialPage={makePageResp({
+          list: [{ ...makeArticle(12, "退出后同步"), is_liked: true, like_count: 4 }],
+        })}
+        categories={mockCategories}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith("/api/articles?page=1", expect.any(Object));
+      expect(screen.getByRole("button", { name: "喜欢" })).toHaveAttribute("aria-pressed", "false");
+      expect(screen.getByText("3")).toBeTruthy();
+    });
   });
 });

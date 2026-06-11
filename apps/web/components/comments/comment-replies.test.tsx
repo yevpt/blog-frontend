@@ -6,14 +6,10 @@ import type { CommentReplyResp, CommentReplyPageResp } from "@repo/api";
 import { CommentReplies } from "./comment-replies";
 
 vi.mock("@repo/markdown", () => ({
-  useMarkdown: (_content: string) => ({ html: _content, isLoading: false, error: null }),
+  markdownToHtmlSync: (content: string) => content,
   MarkdownContent: ({ html }: { html: string }) => (
     <div dangerouslySetInnerHTML={{ __html: html }} />
   ),
-}));
-
-vi.mock("@/app/actions/markdown", () => ({
-  renderMarkdown: vi.fn().mockResolvedValue("<p>mocked</p>"),
 }));
 
 vi.mock("@repo/icons", () => ({

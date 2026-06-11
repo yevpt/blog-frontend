@@ -336,9 +336,6 @@ importers:
       react:
         specifier: '*'
         version: 19.2.6
-      react-dom:
-        specifier: '*'
-        version: 19.2.6(react@19.2.6)
       rehype-raw:
         specifier: ^7.0.0
         version: 7.0.0

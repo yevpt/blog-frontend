@@ -4,12 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@repo/hooks";
 import { cn } from "@repo/ui";
-
-const NAV_ITEMS = [
-  { key: "articles", label: "文章", href: "#articles" },
-  { key: "snippets", label: "碎语", href: "/snippets" },
-  { key: "about", label: "关于", href: "/about" },
-] as const;
+import { NAV_ITEMS } from "./nav-items";
 
 interface NavbarLinksProps {
   /** 竖向排列（用于移动端抽屉），默认 false（横向排列） */
@@ -33,7 +28,7 @@ export function NavbarLinks({ vertical = false, onLinkClick, isGlass = false }: 
       )}
     >
       {NAV_ITEMS.map(({ key, label, href }) => {
-        const isActive = href.startsWith("#") ? pathname === "/" : pathname.startsWith(href);
+        const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
 
         return (
           <Link
@@ -47,10 +42,10 @@ export function NavbarLinks({ vertical = false, onLinkClick, isGlass = false }: 
                 (isGlass
                   ? isActive
                     ? "text-foreground"
-                    : "text-[var(--fg2)] hover:text-foreground"
+                    : "text-(--fg2) hover:text-foreground"
                   : isActive
                     ? "text-foreground"
-                    : "text-[var(--fg2)] hover:text-foreground"),
+                    : "text-(--fg2) hover:text-foreground"),
               vertical && "text-foreground hover:text-primary",
             )}
           >
