@@ -1,7 +1,7 @@
 {
   "extends": "@repo/typescript-config/react",
   "compilerOptions": {
-    "types": ["react"]
+    "types": ["react", "@testing-library/jest-dom", "vitest/globals"]
   },
   "include": ["src"]
 }

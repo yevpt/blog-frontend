@@ -21,7 +21,8 @@
     "lint:fix": "eslint . --fix"
   },
   "peerDependencies": {
-    "react": "*"
+    "react": "*",
+    "react-dom": "*"
   },
   "dependencies": {
     "clsx": "^2.1.1",
