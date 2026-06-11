@@ -1,113 +1,164 @@
 @import "tailwindcss";
 
-/* 让 Tailwind 扫描共享包里的 className，避免只在 package 中出现的样式被裁掉。 */
+@plugin "@tailwindcss/typography";
+
+/* -------------------------------------------------------------------------- */
+/* Tailwind 扫描范围                                                            */
+/* -------------------------------------------------------------------------- */
+
+/* 扫描 monorepo 共享包中的 className，避免共享组件里的样式被裁剪。 */
 @source "../../ui/src";
 @source "../../hooks/src";
+@source "../../editor/src";
+@source "../../markdown/src";
+
+/* 恢复 button 的 cursor: pointer  */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 主题变体                                                                     */
+/* -------------------------------------------------------------------------- */
 
 /*
-  dark 变体：匹配 .dark 类（显式深色）或媒体查询（系统深色，且未被 .light 覆盖）。
-  Tailwind 编译时会为所有使用 dark: 前缀的工具类以及 @variant dark { } 块
-  分别生成这两条规则，深色配置只需在源码写一次。
+  dark 变体规则：
+
+  1. 当 html / :root 显式带有 .dark 时，启用深色模式；
+  2. 当系统处于深色模式，且 html / :root 没有显式 .light 时，启用深色模式；
+  3. 使用祖先选择器，确保 dark:* 工具类可以作用于后代元素。
 */
 @custom-variant dark {
-  &.dark {
+  &:where(:root.dark, :root.dark *) {
     @slot;
   }
+
   @media (prefers-color-scheme: dark) {
-    &:not(.light) {
+    &:where(:root:not(.light), :root:not(.light) *) {
       @slot;
     }
   }
 }
 
-/* 这里定义的是整个 monorepo 共享的设计令牌，两个应用都会使用同一套颜色语义。 */
+/* -------------------------------------------------------------------------- */
+/* Tailwind 设计令牌                                                            */
+/* -------------------------------------------------------------------------- */
+
+/*
+  这里定义 Tailwind 可识别的共享设计令牌。
+
+  这些变量会生成对应的 Tailwind 工具能力，例如：
+  - bg-background
+  - text-foreground
+  - border-border
+  - ring-ring
+
+  浅色模式作为默认值。
+*/
 @theme {
-  /* Light mode */
-  --color-background: #fafaf9;
+  --color-background: #ffffff;
   --color-foreground: #18181b;
+
   --color-card: #ffffff;
   --color-card-foreground: #18181b;
+
   --color-primary: #7c3aed;
   --color-primary-foreground: #ffffff;
+
   --color-secondary: #f4f4f5;
   --color-secondary-foreground: #18181b;
+
   --color-muted: #f4f4f5;
   --color-muted-foreground: #71717a;
-  --color-accent: #7c3aed;
-  --color-accent-foreground: #ffffff;
+
+  --color-accent: #f4f4f5;
+  --color-accent-foreground: #18181b;
+
   --color-border: rgba(0, 0, 0, 0.06);
   --color-input: rgba(0, 0, 0, 0.06);
   --color-ring: #7c3aed;
-}
 
-/* 页面级基础样式放在共享包里，应用只保留自己特有的布局限制。 */
-html {
-  background-color: var(--color-background);
-  color-scheme: light;
-}
-
-body {
-  margin: 0;
-  /* body 背景透明，让 html 底色 + body::before mesh gradient 装饰层可见 */
-  color: var(--color-foreground);
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #fafafa;
 }
 
 /*
-  深色主题令牌：通过 @custom-variant dark 同时覆盖 .dark 类和系统媒体查询。
-  Tailwind 编译输出：
-    :root.dark { ... }
-    @media (prefers-color-scheme: dark) { :root:not(.light) { ... } }
-  深色颜色值仅在此处定义一次。
+  深色模式下的 Tailwind 设计令牌覆盖。
+
+  注意：
+  这里复用上方定义的 dark 变体，因此不需要手写两套选择器：
+  - :root.dark
+  - @media (prefers-color-scheme: dark) { :root:not(.light) }
 */
-/* Dark mode overrides */
 :root {
   @variant dark {
     --color-background: #09090b;
     --color-foreground: #fafafa;
+
     --color-card: #18181b;
     --color-card-foreground: #fafafa;
+
     --color-primary: #a78bfa;
     --color-primary-foreground: #09090b;
+
     --color-secondary: #27272a;
     --color-secondary-foreground: #fafafa;
+
     --color-muted: #27272a;
     --color-muted-foreground: #a1a1aa;
-    --color-accent: #a78bfa;
-    --color-accent-foreground: #09090b;
+
+    --color-accent: #27272a;
+    --color-accent-foreground: #fafafa;
+
     --color-border: rgba(255, 255, 255, 0.08);
     --color-input: rgba(255, 255, 255, 0.08);
     --color-ring: #a78bfa;
-    color-scheme: dark;
+
+    --color-destructive: #f87171;
+    --color-destructive-foreground: #09090b;
   }
 }
 
-/* 全局工具变量：次要文字色、玻璃态背景/边框（不在 @theme 中，直接写 CSS 变量） */
+/* -------------------------------------------------------------------------- */
+/* 应用级 CSS 变量                                                              */
+/* -------------------------------------------------------------------------- */
+
+/*
+  这里放不需要暴露成 Tailwind 工具类的应用变量。
+
+  适合放：
+  - 普通 CSS 中直接使用的文字层级变量；
+  - 玻璃态背景、边框、遮罩变量；
+  - 组件内部共享但不需要成为 Tailwind token 的变量。
+*/
 :root {
+  color-scheme: light;
+
+  /* 文字层级 */
   --fg2: #52525b;
   --fg3: #a1a1aa;
+
+  /* 玻璃态效果 */
   --glass-bg: rgba(255, 255, 255, 0.78);
   --glass-bdr: rgba(255, 255, 255, 0.9);
   --glass-mob: rgba(250, 250, 249, 0.85);
   --glass-ring: rgba(0, 0, 0, 0.06);
-}
-/*
- * 深色模式文字令牌：
- *   --fg2 (#b8b8c4)：正文次级文字，用于文章摘要、碎语内容；≥12px 小字对比度约 9:1
- *   --fg3 (#9c9ca8)：辅助提示文字，用于时间戳、统计数字；较原 #71717a（4.3:1）大幅提升至约 6.4:1
- *   同时补充 @media prefers-color-scheme 覆盖，避免系统深色用户看到浅色值
- */
-:root.dark {
-  --fg2: #b8b8c4;
-  --fg3: #9c9ca8;
-  --glass-bg: rgba(9, 9, 11, 0.78);
-  --glass-bdr: rgba(255, 255, 255, 0.09);
-  --glass-mob: rgba(24, 24, 27, 0.85);
-  --glass-ring: rgba(255, 255, 255, 0.04);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
+
+  @variant dark {
+    color-scheme: dark;
+
+    /*
+              深色模式文字层级：
+
+              --fg2：正文次级文字，用于文章摘要、碎语内容；
+              --fg3：辅助提示文字，用于时间戳、统计数字。
+            */
     --fg2: #b8b8c4;
     --fg3: #9c9ca8;
+
     --glass-bg: rgba(9, 9, 11, 0.78);
     --glass-bdr: rgba(255, 255, 255, 0.09);
     --glass-mob: rgba(24, 24, 27, 0.85);
@@ -115,51 +166,392 @@ body {
   }
 }
 
-/* 心形点赞跳动动效，用于 ArticleCardStats 的 heart 图标 */
+/* -------------------------------------------------------------------------- */
+/* 页面基础样式                                                                 */
+/* -------------------------------------------------------------------------- */
+
+/*
+  页面级基础样式放在共享包里。
+
+  应用自身只保留：
+  - 页面最大宽度；
+  - 路由布局；
+  - 业务特有容器样式。
+*/
+html {
+  background-color: var(--color-background);
+}
+
+body {
+  margin: 0;
+  color: var(--color-foreground);
+
+  /*
+        不给 body 设置背景色。
+
+        这样可以让 html 的底色，以及 body::before 之类的 mesh gradient
+        页面装饰层正常透出。
+      */
+}
+
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select,
+  input[class],
+  textarea[class],
+  select[class] {
+    font-size: 16px;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* RichEditor 代码块样式                                                        */
+/* -------------------------------------------------------------------------- */
+
+/*
+  代码块语法高亮颜色令牌。
+  lowlight 给代码内容添加 .hljs-* 类名；这里用 CSS 变量统一管理明暗两套配色。
+*/
+:root {
+  --editor-hl-keyword: #7c3aed; /* primary 紫 */
+  --editor-hl-string: #0f766e; /* 青绿 */
+  --editor-hl-comment: #a1a1aa; /* 浅灰 */
+  --editor-hl-number: #c2410c; /* 橙红 */
+  --editor-hl-title: #1d4ed8; /* 蓝 */
+  --editor-hl-builtin: #7c3aed; /* primary 紫 */
+  --editor-hl-attr: #0f766e; /* 青绿 */
+  --editor-hl-meta: #71717a; /* 中灰 */
+  /* 浅色模式下加深代码块背景，避免与编辑器 bg-muted(#f4f4f5) 难以区分 */
+  --editor-code-bg: #e6e6ef;
+  --editor-code-fg: #18181b;
+
+  @variant dark {
+    --editor-hl-keyword: #c084fc; /* 浅紫 */
+    --editor-hl-string: #34d399; /* 浅绿 */
+    --editor-hl-comment: #6b7280; /* 中灰 */
+    --editor-hl-number: #fb923c; /* 浅橙 */
+    --editor-hl-title: #60a5fa; /* 浅蓝 */
+    --editor-hl-builtin: #c084fc; /* 浅紫 */
+    --editor-hl-attr: #34d399; /* 浅绿 */
+    --editor-hl-meta: #9ca3af; /* 浅灰 */
+    --editor-code-bg: #1c1c28;
+    --editor-code-fg: #e4e4f0;
+  }
+}
+
+/* 代码块容器：覆盖 prose 的背景，使用深色主题变量 */
+.tiptap .rich-editor-code-wrapper {
+  margin: 0.5rem 0;
+}
+
+.tiptap .rich-editor-code-block {
+  position: relative;
+  background-color: var(--editor-code-bg) !important;
+  color: var(--editor-code-fg);
+  border-radius: 0.5rem;
+  /* 浅色模式下用细边框让代码块与编辑器背景区分开 */
+  border: 1px solid var(--color-border) !important;
+  padding: 0.625rem 0.875rem !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.6 !important;
+  overflow-x: auto;
+  margin: 0 !important;
+}
+
+/* 语言选择器（右上角）：由 CodeBlockView NodeView 渲染为 <select> */
+.rich-editor-code-lang {
+  position: absolute;
+  right: 0.5rem;
+  top: 0.375rem;
+  z-index: 10;
+}
+
+/* <select> 本身的样式，透明背景融入代码块 */
+.rich-editor-code-lang-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--editor-hl-meta);
+  font-family: ui-monospace, monospace;
+  padding: 0 2px;
+  transition: color 0.15s;
+}
+
+.rich-editor-code-lang-select:hover {
+  color: var(--editor-code-fg);
+}
+
+/* option 在 dark 模式下需要显式设置背景色，否则浏览器默认白底 */
+.rich-editor-code-lang-select option {
+  background-color: var(--color-card);
+  color: var(--color-card-foreground);
+}
+
+/* ── 语法高亮色 ── */
+.tiptap .rich-editor-code-block .hljs-keyword,
+.tiptap .rich-editor-code-block .hljs-selector-tag,
+.tiptap .rich-editor-code-block .hljs-literal,
+.tiptap .rich-editor-code-block .hljs-doctag {
+  color: var(--editor-hl-keyword);
+}
+
+.tiptap .rich-editor-code-block .hljs-string,
+.tiptap .rich-editor-code-block .hljs-regexp,
+.tiptap .rich-editor-code-block .hljs-template-string,
+.tiptap .rich-editor-code-block .hljs-template-tag {
+  color: var(--editor-hl-string);
+}
+
+.tiptap .rich-editor-code-block .hljs-comment,
+.tiptap .rich-editor-code-block .hljs-quote {
+  color: var(--editor-hl-comment);
+  font-style: italic;
+}
+
+.tiptap .rich-editor-code-block .hljs-number,
+.tiptap .rich-editor-code-block .hljs-operator {
+  color: var(--editor-hl-number);
+}
+
+.tiptap .rich-editor-code-block .hljs-title,
+.tiptap .rich-editor-code-block .hljs-title.class_,
+.tiptap .rich-editor-code-block .hljs-title.function_ {
+  color: var(--editor-hl-title);
+  font-weight: 600;
+}
+
+.tiptap .rich-editor-code-block .hljs-built_in,
+.tiptap .rich-editor-code-block .hljs-type {
+  color: var(--editor-hl-builtin);
+}
+
+.tiptap .rich-editor-code-block .hljs-attr,
+.tiptap .rich-editor-code-block .hljs-attribute,
+.tiptap .rich-editor-code-block .hljs-selector-attr,
+.tiptap .rich-editor-code-block .hljs-selector-class,
+.tiptap .rich-editor-code-block .hljs-selector-id {
+  color: var(--editor-hl-attr);
+}
+
+.tiptap .rich-editor-code-block .hljs-meta,
+.tiptap .rich-editor-code-block .hljs-meta .hljs-string {
+  color: var(--editor-hl-meta);
+}
+
+.tiptap .rich-editor-code-block .hljs-variable,
+.tiptap .rich-editor-code-block .hljs-params {
+  color: var(--editor-code-fg);
+}
+
+.tiptap .rich-editor-code-block .hljs-addition {
+  color: var(--editor-hl-string);
+  background-color: color-mix(in srgb, var(--editor-hl-string) 12%, transparent);
+}
+
+.tiptap .rich-editor-code-block .hljs-deletion {
+  color: var(--editor-hl-number);
+  background-color: color-mix(in srgb, var(--editor-hl-number) 12%, transparent);
+}
+
+/*
+  暗黑模式下 @tailwindcss/typography 的 prose 未应用 prose-invert，
+  导致 strong / b 的颜色仍使用浅色主题值（接近黑色）。
+  此处直接覆盖为主题前景色。
+*/
+:root {
+  @variant dark {
+    .tiptap strong,
+    .tiptap b {
+      color: var(--color-foreground);
+    }
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 全局动画                                                                     */
+/* -------------------------------------------------------------------------- */
+
+/* 心形点赞跳动动效，用于 ArticleCardStats 的 heart 图标。 */
 @keyframes heartbeat {
-  0%,
-  100% {
+  0% {
+    -webkit-transform: scale(1);
     transform: scale(1);
   }
+
   14% {
+    -webkit-transform: scale(1.3);
     transform: scale(1.3);
   }
+
   28% {
+    -webkit-transform: scale(1);
     transform: scale(1);
   }
+
   42% {
+    -webkit-transform: scale(1.3);
     transform: scale(1.3);
   }
+
   70% {
+    -webkit-transform: scale(1);
     transform: scale(1);
   }
 }
 
+/* 首页 Hero 进度条动画。 */
 @keyframes heroProgress {
   from {
     transform: scaleX(0);
   }
+
   to {
     transform: scaleX(1);
   }
 }
 
+/* 卡片从下方轻微浮入。 */
 @keyframes slideUpCard {
   from {
     opacity: 0;
     transform: translateY(32px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
+/* 全屏面板从底部滑入。 */
 @keyframes slideUpFull {
   from {
     transform: translateY(100%);
   }
+
   to {
     transform: translateY(0);
+  }
+}
+
+@keyframes uiModalOverlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes uiModalOverlayOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes uiModalPanelZoomIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes uiModalPanelZoomOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+@keyframes uiModalSheetIn {
+  from {
+    opacity: 0.72;
+    transform: translateY(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes uiModalSheetOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0.78;
+    transform: translateY(100%);
+  }
+}
+
+.ui-modal-overlay-enter {
+  animation: uiModalOverlayIn 180ms ease-out both;
+}
+
+.ui-modal-overlay-exit {
+  animation: uiModalOverlayOut 160ms ease-in both;
+}
+
+.ui-modal-panel-enter {
+  animation: uiModalPanelZoomIn 220ms cubic-bezier(0.2, 0.9, 0.24, 1) both;
+}
+
+.ui-modal-panel-exit {
+  animation: uiModalPanelZoomOut 160ms ease-in both;
+}
+
+.ui-modal-panel-sheet.ui-modal-panel-enter {
+  /* fill-mode 由 both 改为 backwards：移除 forwards 填充，防止动画结束后以高于
+     inline style 的优先级锁死 transform: translateY(0)，导致手势位移无法生效。
+     动画结束后由 CommentSheet 的 inline style.transform 接管（值相同，无视觉跳变）。 */
+  animation: uiModalSheetIn 260ms cubic-bezier(0.32, 0.72, 0, 1) backwards;
+}
+
+.ui-modal-panel-sheet.ui-modal-panel-exit {
+  animation: uiModalSheetOut 200ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@media (max-width: 767px) {
+  .ui-modal-panel-fullscreen-mobile.ui-modal-panel-enter {
+    animation: uiModalSheetIn 260ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+
+  .ui-modal-panel-fullscreen-mobile.ui-modal-panel-exit {
+    animation: uiModalSheetOut 200ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-modal-overlay-enter,
+  .ui-modal-overlay-exit,
+  .ui-modal-panel-enter,
+  .ui-modal-panel-exit {
+    animation: none;
   }
 }
