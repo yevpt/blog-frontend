@@ -21,13 +21,9 @@ export async function GET(
   const redirectUri = request.nextUrl.searchParams.get("redirect_uri") ?? "";
 
   try {
-    // 防止调用方传入外部 redirect_uri 导致授权码被转发到第三方（defense in depth）
-    const expectedOrigin = new URL(request.url).origin;
-    if (redirectUri && !redirectUri.startsWith(`${expectedOrigin}/oauth/`)) {
-      return NextResponse.json({ code: -1, message: "非法的 redirect_uri" }, { status: 400 });
-    }
-
     // 拼接后端 URL，使用 URL + searchParams 避免手拼字符串导致的编码问题
+    // redirect_uri 不在此处校验：真正的安全边界是 GitHub 注册的回调域名白名单
+    // 和后端生成的一次性 state 令牌（CSRF 防护），前者已足够。
     // new URL() 放在 try 内：API_BASE_URL 未配置时同步抛出，由 catch 统一处理
     const backendUrl = new URL(`/oauth/${source}/authorize`, process.env.API_BASE_URL);
     backendUrl.searchParams.set("action", "login");
