@@ -85,6 +85,6 @@ export interface OAuthAuthorizeResp {
  * - action="bind" 时 binding 字段存在（本次不实现）
  */
 export interface OAuthCallbackResp {
-  action: string;
+  action: "login" | "bind";
   login?: LoginResp;
 }
