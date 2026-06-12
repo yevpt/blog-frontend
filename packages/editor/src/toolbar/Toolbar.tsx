@@ -62,9 +62,7 @@ export function Toolbar({
           },
   });
 
-  if (!editor) return null;
-
-  const disabled = !editor.isEditable;
+  const disabled = !editor || !editor.isEditable;
   const isEmpty = editorState?.isEmpty ?? true;
 
   /* 未登录且提供了 onLoginRequired 时，提交区域切换为登录引导按钮 */
@@ -82,7 +80,7 @@ export function Toolbar({
           labelClassName="font-bold"
           active={editorState?.bold ?? false}
           disabled={disabled}
-          onClick={() => editor.chain().focus().toggleBold().run()}
+          onClick={() => editor?.chain().focus().toggleBold().run()}
         />
         <ToolbarButton
           title="斜体（Ctrl+I）"
@@ -90,7 +88,7 @@ export function Toolbar({
           labelClassName="italic"
           active={editorState?.italic ?? false}
           disabled={disabled}
-          onClick={() => editor.chain().focus().toggleItalic().run()}
+          onClick={() => editor?.chain().focus().toggleItalic().run()}
         />
         <ToolbarButton
           title="下划线（Ctrl+U）"
@@ -98,7 +96,7 @@ export function Toolbar({
           labelClassName="underline underline-offset-1"
           active={editorState?.underline ?? false}
           disabled={disabled}
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          onClick={() => editor?.chain().focus().toggleUnderline().run()}
         />
 
         <div className="mx-1 h-4 w-px shrink-0 bg-border" aria-hidden />
@@ -111,9 +109,9 @@ export function Toolbar({
             onClick={() => {
               onInsertLink((url, title) => {
                 if (title) {
-                  editor.chain().focus().insertContent(`[${title}](${url})`).run();
+                  editor?.chain().focus().insertContent(`[${title}](${url})`).run();
                 } else {
-                  editor.chain().focus().setLink({ href: url }).run();
+                  editor?.chain().focus().setLink({ href: url }).run();
                 }
               });
             }}
@@ -128,7 +126,7 @@ export function Toolbar({
             onClick={() => {
               onInsertImage((url, alt) => {
                 editor
-                  .chain()
+                  ?.chain()
                   .focus()
                   .setImage({ src: url, alt: alt ?? "" })
                   .run();
@@ -144,7 +142,7 @@ export function Toolbar({
             disabled={disabled}
             onClick={() => {
               onInsertCode((code, lang) => {
-                editor.chain().focus().setCodeBlock({ language: lang }).insertContent(code).run();
+                editor?.chain().focus().setCodeBlock({ language: lang }).insertContent(code).run();
               });
             }}
           />
@@ -155,7 +153,7 @@ export function Toolbar({
           icon="at"
           disabled={disabled}
           onClick={() => {
-            editor.chain().focus().insertContent("@").run();
+            editor?.chain().focus().insertContent("@").run();
           }}
         />
       </div>

@@ -33,6 +33,7 @@
  */
 "use client";
 
+import { useEffect } from "react";
 import { EditorContent } from "@tiptap/react";
 import { clsx } from "clsx";
 import { useRichEditor } from "./hooks/use-rich-editor";
@@ -53,6 +54,8 @@ export function RichEditor({
   onInsertLink,
   onInsertCode,
   className,
+  header,
+  focusTrigger,
 }: RichEditorProps) {
   const editor = useRichEditor({
     initialValue: value,
@@ -62,30 +65,57 @@ export function RichEditor({
     disabled,
   });
 
+  useEffect(() => {
+    if (focusTrigger != null) {
+      editor?.commands.focus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusTrigger]);
+
+  const shell = clsx(
+    "overflow-hidden rounded-xl bg-muted px-3 py-3 sm:px-4 sm:py-3.5",
+    disabled && "opacity-60",
+    className,
+  );
+
+  // Tiptap 就绪前显示骨架屏，高度与真实编辑器完全一致，防止布局跳动
+  if (!editor) {
+    const bone = "animate-pulse rounded-md bg-foreground/[0.08]";
+    return (
+      <div className={shell} aria-hidden>
+        <div className="min-h-[88px]">
+          <div className={clsx(bone, "mt-[3px] h-[14px] w-2/5")} />
+        </div>
+        <div className="mt-1.5 flex items-center gap-1.5">
+          <div className="flex flex-1 items-center gap-0.5">
+            <div className={clsx(bone, "h-7 w-7")} />
+            <div className={clsx(bone, "h-7 w-7")} />
+            <div className={clsx(bone, "h-7 w-7")} />
+            <div className="mx-1 h-4 w-px shrink-0 bg-border" />
+            <div className={clsx(bone, "h-7 w-7")} />
+            <div className={clsx(bone, "h-7 w-7")} />
+            <div className={clsx(bone, "h-7 w-7")} />
+            <div className={clsx(bone, "h-7 w-7")} />
+          </div>
+          <div className={clsx(bone, "h-8 w-14 rounded-full")} />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className={clsx(
-        "overflow-hidden rounded-xl bg-muted px-3 py-3 sm:px-4 sm:py-3.5",
-        disabled && "opacity-60",
-        className,
-      )}
-    >
+    <div className={shell}>
       {/*
-       * 编辑区
-       * [&_.tiptap] 是 Tailwind 任意变体，精准选中 Tiptap 渲染的 .tiptap 元素。
-       * prose：启用 @tailwindcss/typography 排版样式，使标题/粗体/代码在编辑中即时渲染。
-       * [&_.tiptap_p]:my-[0.2em]：覆盖 prose-sm 默认的段落 margin（~12px → ~3px），
-       *   避免评论框内段落间距过大。
-       * 响应式说明：
-       *   - min-h-[88px]：确保空状态下编辑区有足够点击区域
-       *   - max-h-56 overflow-y-auto：超长内容在编辑区内滚动，不撑开页面
-       *   - sm:max-h-72：平板及以上允许更高的编辑区
+       * 编辑区（min-h 固定 88px）
+       * header 存在时：header(24px) + tiptap(64px) = 88px，外部高度不变。
        */}
       <div
         data-rich-editor-area
         className={clsx(
           "min-h-[88px]",
-          "[&_.tiptap]:block [&_.tiptap]:min-h-[88px] [&_.tiptap]:max-h-56 [&_.tiptap]:overflow-y-auto",
+          "[&_.tiptap]:block",
+          header ? "[&_.tiptap]:min-h-[64px]" : "[&_.tiptap]:min-h-[88px]",
+          "[&_.tiptap]:max-h-56 [&_.tiptap]:overflow-y-auto",
           "[&_.tiptap]:px-0 [&_.tiptap]:py-0 [&_.tiptap]:text-[14px] [&_.tiptap]:leading-[1.6]",
           "[&_.tiptap]:text-foreground",
           "[&_.tiptap]:outline-none",
@@ -98,9 +128,7 @@ export function RichEditor({
           "sm:[&_.tiptap]:max-h-72",
         )}
       >
-        {!editor && (
-          <p className="text-[14px] leading-[1.6] text-muted-foreground">{placeholder}</p>
-        )}
+        {header && <div className="flex h-6 items-center">{header}</div>}
         <EditorContent editor={editor} data-placeholder={placeholder} />
       </div>
 

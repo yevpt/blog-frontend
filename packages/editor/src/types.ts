@@ -53,6 +53,12 @@ export interface MentionItem {
 
 /** RichEditor 组件完整 props */
 export interface RichEditorProps extends InsertHandlers {
+  /** 渲染在编辑区上方（容器内部）的自定义内容，常用于回复指示条 */
+  header?: React.ReactNode;
+
+  /** 变化时触发编辑器 focus，适用于切换回复对象后自动聚焦 */
+  focusTrigger?: unknown;
+
   /**
    * 受控 Markdown 字符串。
    * 仅在 editor 首次创建时作为初始内容读取；
