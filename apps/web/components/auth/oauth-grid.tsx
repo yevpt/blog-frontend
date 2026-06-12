@@ -7,6 +7,32 @@ import type { UserResp } from "@repo/api";
 import type { OAuthMessage } from "@/lib/oauth";
 import { addToast } from "@/lib/toast";
 
+// 模块级缓存：整个页面生命周期内只发一次请求，React StrictMode 双执行不重复请求
+let _providersPromise: Promise<Set<string>> | null = null;
+
+function getEnabledProviders(): Promise<Set<string>> {
+  if (!_providersPromise) {
+    _providersPromise = fetch("/api/oauth/providers")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.code === 0 && Array.isArray(data.data)) {
+          return new Set<string>(data.data);
+        }
+        return new Set<string>();
+      })
+      .catch(() => {
+        _providersPromise = null; // 失败时重置，允许下次重试
+        return new Set<string>();
+      });
+  }
+  return _providersPromise;
+}
+
+/** 仅供测试使用：重置 providers 缓存 */
+export function _resetProvidersCache() {
+  _providersPromise = null;
+}
+
 interface OAuthProvider {
   id: string;
   label: string;
@@ -15,21 +41,15 @@ interface OAuthProvider {
   textClass?: string;
 }
 
-const PRIMARY_PROVIDERS: OAuthProvider[] = [
-  { id: "wechat", label: "微信", icon: "wechat", color: "#07C160" },
+const ALL_PROVIDERS: OAuthProvider[] = [
   { id: "qq", label: "QQ", icon: "qq", color: "#1299EF" },
   { id: "github", label: "GitHub", icon: "github", color: null, textClass: "text-foreground" },
-  { id: "google", label: "Google", icon: "google", color: null },
-];
-
-const EXTRA_PROVIDERS: OAuthProvider[] = [
   { id: "weibo", label: "微博", icon: "weibo", color: "#DF2029" },
   { id: "gitee", label: "Gitee", icon: "gitee", color: "#C71D23" },
   { id: "baidu", label: "百度", icon: "baidu", color: "#2932E1" },
 ];
 
-/** 当前后端已启用的 OAuth 平台，其他平台按钮暂不可用 */
-const ENABLED_PROVIDERS = new Set(["github"]);
+const FOLD_THRESHOLD = 5;
 
 interface OAuthGridProps {
   className?: string;
@@ -42,9 +62,14 @@ interface OAuthGridProps {
 
 export function OAuthGrid({ className, onSuccess }: OAuthGridProps) {
   const [expanded, setExpanded] = useState(false);
+  const [enabledProviders, setEnabledProviders] = useState<Set<string>>(new Set());
 
   // 保存当前活跃的 postMessage 监听器引用，以便组件卸载时清理
   const messageHandlerRef = useRef<((e: MessageEvent) => void) | null>(null);
+
+  useEffect(() => {
+    getEnabledProviders().then(setEnabledProviders);
+  }, []);
 
   // 组件卸载时移除尚未触发的监听器，防止内存泄漏
   useEffect(() => {
@@ -55,24 +80,11 @@ export function OAuthGrid({ className, onSuccess }: OAuthGridProps) {
     };
   }, []);
 
-  /**
-   * 处理 GitHub OAuth 登录。
-   *
-   * 详细流程：
-   *   1. 调用 /api/oauth/github/authorize 获取 GitHub 授权地址
-   *   2. window.open 弹出 popup 窗口跳转至授权地址
-   *   3. 用户在 GitHub 完成授权后，GitHub 重定向至我们的回调页
-   *   4. 回调页调用 /api/oauth/github/callback 换取 token 并写入 Cookie
-   *   5. 回调页通过 postMessage 把结果传回此父窗口
-   *   6. 收到 oauth_success → 调用 onSuccess；oauth_error → 显示错误 toast
-   */
-  async function handleGitHubLogin() {
+  async function handleOAuthLogin(id: string) {
     try {
-      // redirect_uri：GitHub 授权完成后重定向至此前端路径（popup 内）
-      const redirectUri = `${window.location.origin}/oauth/github/callback`;
-
+      const redirectUri = `${window.location.origin}/oauth/${id}/callback`;
       const res = await fetch(
-        `/api/oauth/github/authorize?action=login&redirect_uri=${encodeURIComponent(redirectUri)}`,
+        `/api/oauth/${id}/authorize?action=login&redirect_uri=${encodeURIComponent(redirectUri)}`,
       );
       const data = await res.json();
 
@@ -81,27 +93,26 @@ export function OAuthGrid({ className, onSuccess }: OAuthGridProps) {
         return;
       }
 
-      // 弹出固定尺寸的 popup 窗口（部分浏览器会在非用户手势时拦截）
-      const popup = window.open(
-        data.data.authorize_url,
-        "oauth_popup",
-        "width=600,height=700,left=200,top=100",
-      );
+      const w = 600;
+      const h = 700;
+      // 移动端浏览器会忽略 features，自动以新标签页（全屏）打开
+      const isMobile = window.matchMedia("(max-width: 768px)").matches;
+      const features = isMobile
+        ? ""
+        : `width=${w},height=${h},left=${Math.round(window.screenLeft + (window.outerWidth - w) / 2)},top=${Math.round(window.screenTop + (window.outerHeight - h) / 2)}`;
+
+      const popup = window.open(data.data.authorize_url, "oauth_popup", features);
 
       if (!popup) {
-        // 浏览器拦截了 popup（通常是用户未手动触发点击）
         addToast("浏览器阻止了弹出窗口，请允许后重试", "error");
         return;
       }
 
-      // 清理上一个未完成的监听器（理论上不会有，但做好防御）
       if (messageHandlerRef.current) {
         window.removeEventListener("message", messageHandlerRef.current);
       }
 
-      // 监听 popup 回调页发来的结果消息
       function handleMessage(event: MessageEvent<OAuthMessage>) {
-        // 严格校验 origin，防止其他来源的 postMessage 注入
         if (event.origin !== window.location.origin) return;
 
         const msg = event.data;
@@ -112,7 +123,6 @@ export function OAuthGrid({ className, onSuccess }: OAuthGridProps) {
           addToast(msg.message ?? "登录失败，请稍后重试", "error");
         }
 
-        // 消息处理完毕，移除监听器
         window.removeEventListener("message", handleMessage);
         messageHandlerRef.current = null;
       }
@@ -124,7 +134,8 @@ export function OAuthGrid({ className, onSuccess }: OAuthGridProps) {
     }
   }
 
-  const providers = expanded ? [...PRIMARY_PROVIDERS, ...EXTRA_PROVIDERS] : PRIMARY_PROVIDERS;
+  const needsFold = ALL_PROVIDERS.length > FOLD_THRESHOLD;
+  const providers = !needsFold || expanded ? ALL_PROVIDERS : ALL_PROVIDERS.slice(0, FOLD_THRESHOLD);
 
   return (
     <div className={cn("flex justify-center gap-3 flex-wrap", className)}>
@@ -138,12 +149,12 @@ export function OAuthGrid({ className, onSuccess }: OAuthGridProps) {
           className={cn(
             "w-9 h-9 rounded-lg flex items-center justify-center p-0 transition-colors hover:bg-foreground/[0.08] active:bg-foreground/[0.14] cursor-pointer",
             // 未启用的平台降低不透明度，视觉上表示不可用（但仍可点击以显示 toast 提示）
-            ENABLED_PROVIDERS.has(id) ? "" : "opacity-40",
+            enabledProviders.has(id) ? "" : "opacity-40",
             textClass ?? "text-muted-foreground",
           )}
           onPress={() => {
-            if (id === "github") {
-              handleGitHubLogin();
+            if (enabledProviders.has(id)) {
+              handleOAuthLogin(id);
             } else {
               addToast(`${label} 登录暂未开放`, "info");
             }
@@ -154,27 +165,28 @@ export function OAuthGrid({ className, onSuccess }: OAuthGridProps) {
           </span>
         </Button>
       ))}
-      {expanded ? (
-        <Button
-          type="button"
-          variant="ghost"
-          aria-label="收起登录方式"
-          onPress={() => setExpanded(false)}
-          className="w-9 h-9 rounded-lg flex items-center justify-center p-0 text-muted-foreground/40 transition-colors hover:bg-foreground/[0.08] active:bg-foreground/[0.14] cursor-pointer"
-        >
-          <SvgIcon name="chevron-down" size={14} className="rotate-180" />
-        </Button>
-      ) : (
-        <Button
-          type="button"
-          variant="ghost"
-          aria-label="展开更多登录方式"
-          onPress={() => setExpanded(true)}
-          className="w-9 h-9 rounded-lg flex items-center justify-center p-0 text-muted-foreground/40 text-[11px] font-semibold transition-colors hover:bg-foreground/[0.08] active:bg-foreground/[0.14] cursor-pointer"
-        >
-          +{EXTRA_PROVIDERS.length}
-        </Button>
-      )}
+      {needsFold &&
+        (expanded ? (
+          <Button
+            type="button"
+            variant="ghost"
+            aria-label="收起登录方式"
+            onPress={() => setExpanded(false)}
+            className="w-9 h-9 rounded-lg flex items-center justify-center p-0 text-muted-foreground/40 transition-colors hover:bg-foreground/[0.08] active:bg-foreground/[0.14] cursor-pointer"
+          >
+            <SvgIcon name="chevron-down" size={14} className="rotate-180" />
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="ghost"
+            aria-label="展开更多登录方式"
+            onPress={() => setExpanded(true)}
+            className="w-9 h-9 rounded-lg flex items-center justify-center p-0 text-muted-foreground/40 text-[11px] font-semibold transition-colors hover:bg-foreground/[0.08] active:bg-foreground/[0.14] cursor-pointer"
+          >
+            +{ALL_PROVIDERS.length - FOLD_THRESHOLD}
+          </Button>
+        ))}
     </div>
   );
 }

@@ -2,68 +2,70 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { UserResp } from "@repo/api";
-import { OAuthGrid } from "./oauth-grid";
 
-// 全局 mock fetch 和 window.open
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 const mockWindowOpen = vi.fn();
 vi.stubGlobal("open", mockWindowOpen);
 
-describe("OAuthGrid — 展开/收起", () => {
-  it("渲染 4 个主要 provider + 展开按钮", () => {
-    render(<OAuthGrid />);
-    expect(screen.getByTitle("微信")).toBeInTheDocument();
-    expect(screen.getByTitle("QQ")).toBeInTheDocument();
-    expect(screen.getByTitle("GitHub")).toBeInTheDocument();
-    expect(screen.getByTitle("Google")).toBeInTheDocument();
-    expect(screen.getByLabelText("展开更多登录方式")).toBeInTheDocument();
-    expect(screen.queryByTitle("微博")).not.toBeInTheDocument();
+import { OAuthGrid, _resetProvidersCache } from "./oauth-grid";
+
+// 每个测试前重置模块级 providers 缓存，确保 fetch 重新触发
+beforeEach(() => {
+  _resetProvidersCache();
+  mockFetch.mockClear();
+  mockWindowOpen.mockClear();
+});
+
+/** 默认 providers 接口 mock：只启用 github */
+function mockProviders(providers: string[] = ["github"]) {
+  return { json: () => Promise.resolve({ code: 0, data: providers }) };
+}
+
+/** authorize 接口 mock */
+function mockAuthorize(url: string) {
+  return { json: () => Promise.resolve({ code: 0, data: { authorize_url: url } }) };
+}
+
+describe("OAuthGrid — 展示逻辑", () => {
+  beforeEach(() => {
+    mockFetch.mockResolvedValue(mockProviders());
   });
 
-  it("点击展开按钮后显示全部 7 个 provider，展开按钮消失", async () => {
-    const user = userEvent.setup();
+  it("≤5 个 provider 时直接展示全部，无折叠按钮", () => {
     render(<OAuthGrid />);
-    await user.click(screen.getByLabelText("展开更多登录方式"));
+    expect(screen.getByTitle("QQ")).toBeInTheDocument();
+    expect(screen.getByTitle("GitHub")).toBeInTheDocument();
     expect(screen.getByTitle("微博")).toBeInTheDocument();
     expect(screen.getByTitle("Gitee")).toBeInTheDocument();
     expect(screen.getByTitle("百度")).toBeInTheDocument();
     expect(screen.queryByLabelText("展开更多登录方式")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("收起登录方式")).toBeInTheDocument();
+    expect(screen.queryByLabelText("收起登录方式")).not.toBeInTheDocument();
   });
 
-  it("展开后点击收起按钮可折叠回 4 个 provider", async () => {
-    const user = userEvent.setup();
+  it("不显示已移除的微信和 Google 按钮", () => {
     render(<OAuthGrid />);
-    await user.click(screen.getByLabelText("展开更多登录方式"));
-    expect(screen.getByTitle("微博")).toBeInTheDocument();
-    await user.click(screen.getByLabelText("收起登录方式"));
-    expect(screen.queryByTitle("微博")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("展开更多登录方式")).toBeInTheDocument();
+    expect(screen.queryByTitle("微信")).not.toBeInTheDocument();
+    expect(screen.queryByTitle("Google")).not.toBeInTheDocument();
   });
 });
 
-describe("OAuthGrid — GitHub Popup 登录流程", () => {
+describe("OAuthGrid — OAuth Popup 登录流程", () => {
   const mockSuccess = vi.fn();
 
   beforeEach(() => {
-    mockFetch.mockClear();
-    mockWindowOpen.mockClear();
     mockSuccess.mockClear();
   });
 
-  it("点击 GitHub 按钮后调用 authorize 接口并弹出 popup", async () => {
+  it("点击已启用的 provider 按钮后调用 authorize 接口并弹出 popup", async () => {
     const user = userEvent.setup();
-    mockFetch.mockResolvedValue({
-      json: () =>
-        Promise.resolve({
-          code: 0,
-          data: { authorize_url: "https://github.com/login/oauth/authorize" },
-        }),
-    });
+    mockFetch
+      .mockResolvedValueOnce(mockProviders(["github", "gitee"]))
+      .mockResolvedValueOnce(mockAuthorize("https://github.com/login/oauth/authorize"));
     mockWindowOpen.mockReturnValue({ closed: false });
 
     render(<OAuthGrid onSuccess={mockSuccess} />);
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/oauth/providers"));
     await user.click(screen.getByLabelText("GitHub"));
 
     await waitFor(() =>
@@ -81,20 +83,16 @@ describe("OAuthGrid — GitHub Popup 登录流程", () => {
   it("收到 oauth_success postMessage 时调用 onSuccess", async () => {
     const user = userEvent.setup();
     const mockUser: UserResp = { id: 1, username: "vpt" };
-    mockFetch.mockResolvedValue({
-      json: () =>
-        Promise.resolve({
-          code: 0,
-          data: { authorize_url: "https://github.com/login/oauth/authorize" },
-        }),
-    });
+    mockFetch
+      .mockResolvedValueOnce(mockProviders(["github"]))
+      .mockResolvedValueOnce(mockAuthorize("https://github.com/login/oauth/authorize"));
     mockWindowOpen.mockReturnValue({ closed: false });
 
     render(<OAuthGrid onSuccess={mockSuccess} />);
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/oauth/providers"));
     await user.click(screen.getByLabelText("GitHub"));
     await waitFor(() => expect(mockWindowOpen).toHaveBeenCalled());
 
-    // 模拟 popup 回调页发来的 postMessage
     window.dispatchEvent(
       new MessageEvent("message", {
         data: { type: "oauth_success", user: mockUser },
@@ -105,19 +103,15 @@ describe("OAuthGrid — GitHub Popup 登录流程", () => {
     expect(mockSuccess).toHaveBeenCalledWith(mockUser);
   });
 
-  it("popup 被浏览器拦截时，不打开 popup，也不调用 onSuccess", async () => {
+  it("popup 被浏览器拦截时，不调用 onSuccess", async () => {
     const user = userEvent.setup();
-    mockFetch.mockResolvedValue({
-      json: () =>
-        Promise.resolve({
-          code: 0,
-          data: { authorize_url: "https://github.com/login/oauth/authorize" },
-        }),
-    });
-    // window.open 返回 null 表示 popup 被浏览器拦截
+    mockFetch
+      .mockResolvedValueOnce(mockProviders(["github"]))
+      .mockResolvedValueOnce(mockAuthorize("https://github.com/login/oauth/authorize"));
     mockWindowOpen.mockReturnValue(null);
 
     render(<OAuthGrid onSuccess={mockSuccess} />);
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/oauth/providers"));
     await user.click(screen.getByLabelText("GitHub"));
 
     await waitFor(() => expect(mockWindowOpen).toHaveBeenCalled());
@@ -126,20 +120,16 @@ describe("OAuthGrid — GitHub Popup 登录流程", () => {
 
   it("不同 origin 的 postMessage 被忽略", async () => {
     const user = userEvent.setup();
-    mockFetch.mockResolvedValue({
-      json: () =>
-        Promise.resolve({
-          code: 0,
-          data: { authorize_url: "https://github.com/login/oauth/authorize" },
-        }),
-    });
+    mockFetch
+      .mockResolvedValueOnce(mockProviders(["github"]))
+      .mockResolvedValueOnce(mockAuthorize("https://github.com/login/oauth/authorize"));
     mockWindowOpen.mockReturnValue({ closed: false });
 
     render(<OAuthGrid onSuccess={mockSuccess} />);
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/oauth/providers"));
     await user.click(screen.getByLabelText("GitHub"));
     await waitFor(() => expect(mockWindowOpen).toHaveBeenCalled());
 
-    // 来自不同 origin 的消息应被忽略
     window.dispatchEvent(
       new MessageEvent("message", {
         data: { type: "oauth_success", user: { id: 1, username: "vpt" } },
@@ -148,5 +138,17 @@ describe("OAuthGrid — GitHub Popup 登录流程", () => {
     );
 
     expect(mockSuccess).not.toHaveBeenCalled();
+  });
+
+  it("未启用的 provider 点击后不调用 authorize 接口", async () => {
+    const user = userEvent.setup();
+    mockFetch.mockResolvedValueOnce(mockProviders(["github"]));
+
+    render(<OAuthGrid onSuccess={mockSuccess} />);
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/oauth/providers"));
+    await user.click(screen.getByLabelText("QQ"));
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(mockWindowOpen).not.toHaveBeenCalled();
   });
 });

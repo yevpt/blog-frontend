@@ -11,7 +11,6 @@ const nextConfig = {
       { hostname: "i.pravatar.cc" },
       { hostname: "blog-oss.yevpt.com" },
       { hostname: "api.dicebear.com" },
-      { hostname: "avatars.githubusercontent.com" },
     ],
   },
 };
