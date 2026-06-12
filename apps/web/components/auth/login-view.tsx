@@ -187,7 +187,7 @@ export function LoginView({ onSwitchToRegister, onSuccess }: LoginViewProps) {
       </div>
 
       {/* OAuth 图标 */}
-      <OAuthGrid />
+      <OAuthGrid onSuccess={onSuccess} />
     </div>
   );
 }

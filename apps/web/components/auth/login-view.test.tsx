@@ -105,4 +105,32 @@ describe("LoginView", () => {
     await user.click(screen.getByRole("button", { name: /继续/ }));
     expect(await screen.findByText("登录中…")).toBeInTheDocument();
   });
+
+  it("GitHub OAuth 成功时调用 onSuccess（OAuthGrid onSuccess 冒泡）", async () => {
+    const user = userEvent.setup();
+    const mockUser: UserResp = { id: 1, username: "alice" };
+
+    // 模拟 authorize 接口和 window.open
+    mockFetch.mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          code: 0,
+          data: { authorize_url: "https://github.com/login/oauth/authorize" },
+        }),
+    });
+    vi.stubGlobal("open", vi.fn().mockReturnValue({ closed: false }));
+
+    render(<LoginView onSwitchToRegister={mockSwitch} onSuccess={mockSuccess} />);
+    await user.click(screen.getByLabelText("GitHub"));
+
+    // 模拟 popup 发来的成功消息
+    window.dispatchEvent(
+      new MessageEvent("message", {
+        data: { type: "oauth_success", user: mockUser },
+        origin: window.location.origin,
+      }),
+    );
+
+    await waitFor(() => expect(mockSuccess).toHaveBeenCalledWith(mockUser));
+  });
 });
