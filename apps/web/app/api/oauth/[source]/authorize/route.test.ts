@@ -46,4 +46,15 @@ describe("GET /api/oauth/[source]/authorize", () => {
     expect(body.code).toBe(400);
     expect(body.message).toBe("不支持的平台");
   });
+
+  it("后端网络异常时，返回 502 结构化错误", async () => {
+    vi.mocked(global.fetch).mockRejectedValue(new Error("network error"));
+
+    const req = new NextRequest("http://localhost/api/oauth/github/authorize");
+    const res = await GET(req, { params: Promise.resolve({ source: "github" }) });
+    const body = await res.json();
+
+    expect(res.status).toBe(502);
+    expect(body.code).toBe(-1);
+  });
 });

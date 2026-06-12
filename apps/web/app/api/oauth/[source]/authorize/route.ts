@@ -20,13 +20,17 @@ export async function GET(
   const { source } = await params;
   const redirectUri = request.nextUrl.searchParams.get("redirect_uri") ?? "";
 
-  // 拼接后端 URL，保留 redirect_uri 编码，避免特殊字符问题
+  // 拼接后端 URL，使用 URL + searchParams 避免手拼字符串导致的编码问题
   const backendUrl = new URL(`/oauth/${source}/authorize`, process.env.API_BASE_URL);
   backendUrl.searchParams.set("action", "login");
   backendUrl.searchParams.set("redirect_uri", redirectUri);
 
-  const res = await fetch(backendUrl.toString());
-  const data = await res.json();
-
-  return NextResponse.json(data);
+  try {
+    const res = await fetch(backendUrl.toString());
+    const data = await res.json();
+    return NextResponse.json(data);
+  } catch {
+    // 后端网络不可达或返回非 JSON 时，返回结构化错误，避免 Next.js 抛出 500 白屏
+    return NextResponse.json({ code: -1, message: "服务暂时不可用，请稍后重试" }, { status: 502 });
+  }
 }
