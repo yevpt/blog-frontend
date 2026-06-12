@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { _resetProvidersCache } from "./oauth-grid";
 import { RegisterView } from "./register-view";
+
+function mockProviders(providers: string[] = ["github", "qq", "weibo", "gitee", "baidu"]) {
+  return { json: () => Promise.resolve({ code: 0, data: providers }) } as Response;
+}
 
 const mockAddToast = vi.fn();
 vi.mock("@/lib/toast", () => ({
@@ -14,11 +19,12 @@ describe("RegisterView", () => {
   const mockSwitch = vi.fn();
 
   beforeEach(() => {
+    _resetProvidersCache();
     mockSwitch.mockClear();
     mockAddToast.mockClear();
     URL.createObjectURL = vi.fn(() => "blob:mock-url");
     URL.revokeObjectURL = vi.fn();
-    global.fetch = vi.fn();
+    global.fetch = vi.fn().mockResolvedValue(mockProviders());
     // jsdom does not implement pointer capture
     Element.prototype.setPointerCapture = vi.fn();
     Element.prototype.releasePointerCapture = vi.fn();
@@ -56,7 +62,7 @@ describe("RegisterView", () => {
   it("渲染其他方式注册分割线和 OAuthGrid", () => {
     render(<RegisterView onSwitchToLogin={mockSwitch} />);
     expect(screen.getByText("其他方式注册")).toBeInTheDocument();
-    expect(screen.getByTitle("微信")).toBeInTheDocument();
+    expect(screen.getByLabelText("QQ")).toBeInTheDocument();
   });
 
   it("邮箱格式无效时获取验证码按钮不可点击", async () => {
@@ -110,6 +116,7 @@ describe("RegisterView", () => {
   it("获取邮箱验证码前先完成 GoCaptcha 校验，并携带 captcha_token 发送邮件验证码", async () => {
     const user = userEvent.setup();
     vi.mocked(global.fetch)
+      .mockResolvedValueOnce(mockProviders())
       .mockResolvedValueOnce({
         json: async () => ({
           code: 0,
@@ -185,6 +192,7 @@ describe("RegisterView", () => {
   it("send-code 返回 429 时关闭验证码弹层并 toast 通知，不重试拼图", async () => {
     const user = userEvent.setup();
     vi.mocked(global.fetch)
+      .mockResolvedValueOnce(mockProviders())
       .mockResolvedValueOnce({
         json: async () => ({
           code: 0,
@@ -236,6 +244,6 @@ describe("RegisterView", () => {
       expect(screen.queryByTestId("captcha-track")).not.toBeInTheDocument();
     });
     expect(mockAddToast).toHaveBeenCalledWith("IP 已被封禁，请稍后再试", "error");
-    expect(global.fetch).toHaveBeenCalledTimes(3);
+    expect(global.fetch).toHaveBeenCalledTimes(4);
   });
 });

@@ -2,19 +2,26 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { UserResp } from "@repo/api";
+import { _resetProvidersCache } from "./oauth-grid";
 import { LoginView } from "./login-view";
 
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
+
+function mockProviders(providers: string[] = ["github", "qq", "weibo", "gitee", "baidu"]) {
+  return { json: () => Promise.resolve({ code: 0, data: providers }) };
+}
 
 describe("LoginView", () => {
   const mockSwitch = vi.fn();
   const mockSuccess = vi.fn();
 
   beforeEach(() => {
+    _resetProvidersCache();
     mockSwitch.mockClear();
     mockSuccess.mockClear();
     mockFetch.mockClear();
+    mockFetch.mockResolvedValue(mockProviders());
   });
 
   it("渲染账号、密码输入框和继续按钮", () => {
@@ -49,7 +56,7 @@ describe("LoginView", () => {
   it("渲染其他方式登录分割线和 OAuthGrid", () => {
     render(<LoginView onSwitchToRegister={mockSwitch} onSuccess={mockSuccess} />);
     expect(screen.getByText("其他方式登录")).toBeInTheDocument();
-    expect(screen.getByTitle("微信")).toBeInTheDocument();
+    expect(screen.getByLabelText("QQ")).toBeInTheDocument();
   });
 
   it("identifier 为空时提交显示校验提示，不调用 fetch", async () => {
@@ -57,7 +64,7 @@ describe("LoginView", () => {
     render(<LoginView onSwitchToRegister={mockSwitch} onSuccess={mockSuccess} />);
     await user.click(screen.getByRole("button", { name: /继续/ }));
     expect(screen.getByRole("alert")).toHaveTextContent("请输入账号 / 邮箱 / 手机号");
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
   it("password 为空时提交显示校验提示，不调用 fetch", async () => {
@@ -66,7 +73,7 @@ describe("LoginView", () => {
     await user.type(screen.getByPlaceholderText("账号 / 邮箱 / 手机号"), "test@example.com");
     await user.click(screen.getByRole("button", { name: /继续/ }));
     expect(screen.getByRole("alert")).toHaveTextContent("请输入密码");
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
   it("接口成功时调用 onSuccess 并传入 user", async () => {
@@ -110,8 +117,8 @@ describe("LoginView", () => {
     const user = userEvent.setup();
     const mockUser: UserResp = { id: 1, username: "alice" };
 
-    // 模拟 authorize 接口和 window.open
-    mockFetch.mockResolvedValue({
+    // 模拟 providers 接口和 authorize 接口
+    mockFetch.mockResolvedValueOnce(mockProviders(["github"])).mockResolvedValueOnce({
       json: () =>
         Promise.resolve({
           code: 0,
