@@ -19,8 +19,9 @@ describe("GET /api/oauth/[source]/authorize", () => {
         }),
     } as Response);
 
+    // redirect_uri 必须与请求同源（http://localhost），校验才能通过
     const req = new NextRequest(
-      "http://localhost/api/oauth/github/authorize?action=login&redirect_uri=https%3A%2F%2Fwww.yevpt.com%2Foauth%2Fgithub%2Fcallback",
+      "http://localhost/api/oauth/github/authorize?action=login&redirect_uri=http%3A%2F%2Flocalhost%2Foauth%2Fgithub%2Fcallback",
     );
     const res = await GET(req, { params: Promise.resolve({ source: "github" }) });
     const body = await res.json();
@@ -32,6 +33,20 @@ describe("GET /api/oauth/[source]/authorize", () => {
     // redirect_uri 被正确编码后传出
     expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining("redirect_uri="));
     expect(body.data.authorize_url).toBe("https://github.com/login/oauth/authorize?client_id=xxx");
+  });
+
+  it("redirect_uri 指向外部域名时，返回 400", async () => {
+    const req = new NextRequest(
+      "http://localhost/api/oauth/github/authorize?redirect_uri=https%3A%2F%2Fevil.example.com%2Foauth%2Fgithub%2Fcallback",
+    );
+    const res = await GET(req, { params: Promise.resolve({ source: "github" }) });
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.code).toBe(-1);
+    expect(body.message).toBe("非法的 redirect_uri");
+    // 不应转发到后端
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 
   it("后端返回错误时，透传错误响应给客户端", async () => {

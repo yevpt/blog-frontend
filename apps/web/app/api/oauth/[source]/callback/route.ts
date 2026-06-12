@@ -24,11 +24,12 @@ export async function GET(
   const code = request.nextUrl.searchParams.get("code") ?? "";
   const state = request.nextUrl.searchParams.get("state") ?? "";
 
-  const backendUrl = new URL(`/oauth/${source}/callback`, process.env.API_BASE_URL);
-  backendUrl.searchParams.set("code", code);
-  backendUrl.searchParams.set("state", state);
-
   try {
+    // new URL() 放在 try 内：API_BASE_URL 未配置时同步抛出，由 catch 统一处理
+    const backendUrl = new URL(`/oauth/${source}/callback`, process.env.API_BASE_URL);
+    backendUrl.searchParams.set("code", code);
+    backendUrl.searchParams.set("state", state);
+
     const res = await fetch(backendUrl.toString());
     const data = await res.json();
 

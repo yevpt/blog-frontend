@@ -59,7 +59,12 @@ function OAuthCallbackContent() {
         if (data.code !== 0) {
           notify({ type: "oauth_error", message: data.message ?? "登录失败，请稍后重试" });
         } else {
-          notify({ type: "oauth_success", user: data.data.user });
+          const user = data.data?.user;
+          if (!user) {
+            notify({ type: "oauth_error", message: "登录数据异常，请稍后重试" });
+            return;
+          }
+          notify({ type: "oauth_success", user });
         }
       })
       .catch(() => {
