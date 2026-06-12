@@ -73,3 +73,18 @@ export interface CaptchaVerifyReq {
 export interface CaptchaVerifyResp {
   captcha_token: string;
 }
+
+/** 获取 OAuth 授权地址响应 */
+export interface OAuthAuthorizeResp {
+  authorize_url: string;
+}
+
+/**
+ * OAuth callback 处理响应
+ * - action="login" 时 login 字段存在，包含 token 和用户信息
+ * - action="bind" 时 binding 字段存在（本次不实现）
+ */
+export interface OAuthCallbackResp {
+  action: string;
+  login?: LoginResp;
+}

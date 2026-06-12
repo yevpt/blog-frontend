@@ -10,6 +10,8 @@ export type {
   CaptchaChallengeResp,
   CaptchaVerifyReq,
   CaptchaVerifyResp,
+  OAuthAuthorizeResp,
+  OAuthCallbackResp,
 } from "./types/auth";
 export { ApiError } from "./errors";
 export { createApiClient } from "./client";

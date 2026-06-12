@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, type ReactNode } from "react";
 import { CodeDialog, ImageDialog, LinkDialog, RichEditor } from "@repo/editor";
 import type { MentionItem } from "@repo/editor";
 
@@ -13,6 +13,9 @@ interface RichCommentInputProps {
   placeholder?: string;
   isLoggedIn?: boolean;
   onLoginRequired?: () => void;
+  header?: ReactNode;
+  focusTrigger?: unknown;
+  className?: string;
 }
 
 /**
@@ -33,6 +36,9 @@ export function RichCommentInput({
   placeholder = "写下你的评论...",
   isLoggedIn,
   onLoginRequired,
+  header,
+  focusTrigger,
+  className,
 }: RichCommentInputProps) {
   const [imageDialog, setImageDialog] = useState<{
     open: boolean;
@@ -75,6 +81,9 @@ export function RichCommentInput({
         onInsertImage={handleInsertImage}
         onInsertLink={handleInsertLink}
         onInsertCode={handleInsertCode}
+        header={header}
+        focusTrigger={focusTrigger}
+        className={className}
       />
 
       <ImageDialog
