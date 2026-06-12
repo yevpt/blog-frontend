@@ -38,6 +38,24 @@ interface ReplyItemProps {
   onLikeResult?: (replyId: number, isLiked: boolean, likeCount: number) => void;
 }
 
+function ReplyItemSkeleton() {
+  return (
+    <div className="flex animate-pulse gap-2" aria-hidden="true">
+      <div className="size-6 shrink-0 rounded-full bg-muted" />
+      <div className="min-w-0 flex-1">
+        <div className="mb-1 flex items-center gap-2">
+          <div className="h-2.5 w-12 rounded bg-muted" />
+          <div className="h-2.5 w-8 rounded bg-muted" />
+        </div>
+        <div className="space-y-1">
+          <div className="h-2.5 w-full rounded bg-muted" />
+          <div className="h-2.5 w-3/4 rounded bg-muted" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ReplyBody({ content }: { content: string }) {
   const html = useMemo(() => markdownToHtmlSync(content), [content]);
   return <MarkdownContent html={html} variant="comment" />;
@@ -195,44 +213,59 @@ export function CommentReplies({
     );
   }
 
+  const isInitialLoading = isLoading && displayReplies.length === 0;
+
   return (
     <div className="mt-3">
-      <div className="flex flex-col gap-3">
-        {displayReplies.map((reply) => (
-          <ReplyItem
-            key={reply.id}
-            reply={reply}
-            commentId={commentId}
-            targetType={targetType}
-            onReply={onReply}
-            onLikeResult={updateReplyLike}
-          />
-        ))}
-      </div>
+      {isInitialLoading ? (
+        <div className="flex flex-col gap-3" aria-label="回复加载中">
+          {Array.from({ length: Math.min(replyCount, 3) }, (_, i) => (
+            <ReplyItemSkeleton key={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {displayReplies.map((reply) => (
+            <ReplyItem
+              key={reply.id}
+              reply={reply}
+              commentId={commentId}
+              targetType={targetType}
+              onReply={onReply}
+              onLikeResult={updateReplyLike}
+            />
+          ))}
+        </div>
+      )}
 
       {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
 
-      <div className="mt-2 flex gap-3">
-        {hasMore && (
+      {!isInitialLoading && (
+        <div className="mt-2 flex gap-3">
+          {hasMore && (
+            <Button
+              variant="text"
+              size="sm"
+              isDisabled={isLoading}
+              onPress={handleLoadMore}
+              className="flex items-center gap-1 text-xs font-semibold text-(--fg2)"
+            >
+              {isLoading && (
+                <span className="inline-block size-3 animate-spin rounded-full border-[1.5px] border-current border-t-transparent" />
+              )}
+              {isLoading ? "加载中" : "查看更多回复"}
+            </Button>
+          )}
           <Button
             variant="text"
             size="sm"
-            isDisabled={isLoading}
-            onPress={handleLoadMore}
+            onPress={handleToggle}
             className="text-xs font-semibold text-(--fg2)"
           >
-            {isLoading ? "加载中..." : "查看更多回复"}
+            收起回复
           </Button>
-        )}
-        <Button
-          variant="text"
-          size="sm"
-          onPress={handleToggle}
-          className="text-xs font-semibold text-(--fg2)"
-        >
-          收起回复
-        </Button>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

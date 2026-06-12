@@ -174,6 +174,42 @@ describe("CommentReplies", () => {
     await waitFor(() => expect(screen.getByTestId("icon-heart-fill")).toBeTruthy());
   });
 
+  it("展开时首次加载显示 skeleton", async () => {
+    const user = userEvent.setup();
+    let resolve!: (v: unknown) => void;
+    vi.mocked(global.fetch).mockReturnValue(
+      new Promise((res) => {
+        resolve = res;
+      }) as unknown as Promise<Response>,
+    );
+
+    render(<CommentReplies commentId={1} targetType="article" replyCount={3} onReply={vi.fn()} />);
+    await user.click(screen.getByText(/展开 3 条回复/));
+
+    expect(screen.getByLabelText("回复加载中")).toBeTruthy();
+
+    resolve({ ok: true, json: () => Promise.resolve(mockPage([makeReply(1)])) });
+    await waitFor(() => expect(screen.queryByLabelText("回复加载中")).toBeNull());
+  });
+
+  it("加载更多时按钮显示加载中文案", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({ total: 10, pages: 2, page: 1, page_size: 5, list: [makeReply(1)] }),
+      } as Response)
+      .mockReturnValueOnce(new Promise(() => {}) as unknown as Promise<Response>);
+
+    render(<CommentReplies commentId={1} targetType="article" replyCount={10} onReply={vi.fn()} />);
+    await user.click(screen.getByText(/展开 10 条回复/));
+    await waitFor(() => screen.getByText("查看更多回复"));
+
+    await user.click(screen.getByText("查看更多回复"));
+    await waitFor(() => expect(screen.getByText("加载中")).toBeTruthy());
+  });
+
   it("is_liked=true 时回复爱心为实心", async () => {
     vi.mocked(global.fetch).mockResolvedValue({
       ok: true,
