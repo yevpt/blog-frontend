@@ -33,7 +33,7 @@ function SkeletonItem() {
 
 function GuestbookSkeleton({ count = 5 }: { count?: number }) {
   return (
-    <div className="divide-y divide-border px-[18px]">
+    <div aria-label="加载中" className="divide-y divide-border px-[18px]">
       {Array.from({ length: count }).map((_, i) => (
         <SkeletonItem key={i} />
       ))}

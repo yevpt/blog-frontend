@@ -7,7 +7,6 @@ import { useLoginModal } from "@/store/use-login-modal";
 import { useGuestbookList } from "@/hooks/use-guestbook-list";
 import { useGuestbookSubmit } from "@/hooks/use-guestbook-submit";
 import { useGuestbookLike } from "@/hooks/use-guestbook-like";
-import { GuestbookPageHeader } from "./guestbook-page-header";
 import { GuestbookList } from "./guestbook-list";
 import { GuestbookInputBar } from "./guestbook-input-bar";
 import type { GuestbookReplyTarget } from "./guestbook-item";
@@ -102,9 +101,15 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
   }, [clearError]);
 
   return (
-    <PageContainer size="default" className="min-h-dvh pb-24">
+    <PageContainer size="default" className="min-h-dvh">
       <div className="mb-6">
-        <GuestbookPageHeader />
+        <GuestbookInputBar
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+          submitError={submitError}
+          replyTarget={replyTarget}
+          onCancelReply={handleCancelReply}
+        />
       </div>
       <GuestbookList
         items={items}
@@ -117,13 +122,6 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
         onReply={handleReply}
         onLike={handleLike}
         pendingReplies={pendingReplies}
-      />
-      <GuestbookInputBar
-        onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
-        submitError={submitError}
-        replyTarget={replyTarget}
-        onCancelReply={handleCancelReply}
       />
     </PageContainer>
   );

@@ -12,10 +12,6 @@ vi.mock("@/store/use-login-modal", () => ({
   useLoginModal: () => ({ open: vi.fn() }),
 }));
 
-vi.mock("./guestbook-page-header", () => ({
-  GuestbookPageHeader: () => <h1>留下你的痕迹</h1>,
-}));
-
 vi.mock("./guestbook-list", () => ({
   GuestbookList: ({ total }: { total: number }) => (
     <div data-testid="guestbook-list">{total} 条留言</div>
@@ -72,19 +68,14 @@ const filledPage: GuestbookPageResp = {
 };
 
 describe("GuestbookPage", () => {
-  it("渲染页面 header", () => {
+  it("渲染顶部输入框", () => {
     render(<GuestbookPage initialPage={emptyPage} />);
-    expect(screen.getByText("留下你的痕迹")).toBeTruthy();
+    expect(screen.getByTestId("input-bar")).toBeTruthy();
   });
 
   it("渲染留言列表", () => {
     render(<GuestbookPage initialPage={filledPage} />);
     expect(screen.getByTestId("guestbook-list")).toBeTruthy();
     expect(screen.getByText("3 条留言")).toBeTruthy();
-  });
-
-  it("渲染底部输入栏", () => {
-    render(<GuestbookPage initialPage={emptyPage} />);
-    expect(screen.getByTestId("input-bar")).toBeTruthy();
   });
 });
