@@ -55,4 +55,20 @@ describe("useCommentLike", () => {
     });
     expect(ret).toBeNull();
   });
+
+  it("toggleReplyLike guestbook 调用正确 URL", async () => {
+    vi.mocked(global.fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ is_liked: true, like_count: 1 }),
+    } as Response);
+
+    const { result } = renderHook(() => useCommentLike("guestbook"));
+    await act(() => result.current.toggleReplyLike(5, 20));
+
+    expect(vi.mocked(global.fetch)).toHaveBeenCalledWith(
+      "/api/guestbook/comments/5/replies/20/like",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
 });
