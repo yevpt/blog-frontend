@@ -3,7 +3,8 @@
 import type { CommentReplyResp, GuestbookItemResp } from "@repo/api";
 import { Pagination } from "@repo/ui";
 import type { RefObject } from "react";
-import { GuestbookItem, type GuestbookReplyTarget } from "./guestbook-item";
+import { GuestbookItem } from "./guestbook-item";
+import type { ReplyTarget } from "@/components/comments/comment-replies";
 
 /** 单条骨架占位 */
 function SkeletonItem() {
@@ -49,7 +50,7 @@ interface GuestbookListProps {
   isLoading: boolean;
   error: string | null;
   onPageChange: (page: number) => void;
-  onReply: (target: GuestbookReplyTarget) => void;
+  onReply: (target: ReplyTarget) => void;
   onLike: (id: number) => void;
   pendingReplies: Record<number, CommentReplyResp | null>;
   listRef?: RefObject<HTMLDivElement | null>;

@@ -64,7 +64,7 @@ describe("GuestbookItem", () => {
     const onReply = vi.fn();
     render(<GuestbookItem item={mockItem} onReply={onReply} />);
     await userEvent.click(screen.getByRole("button", { name: "回复" }));
-    expect(onReply).toHaveBeenCalledWith(expect.objectContaining({ guestbookId: 1 }));
+    expect(onReply).toHaveBeenCalledWith(expect.objectContaining({ commentId: 1 }));
   });
 
   it("is_liked 时显示 heart-fill 图标", () => {

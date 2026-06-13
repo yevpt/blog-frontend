@@ -4,13 +4,13 @@ import { useState, useCallback } from "react";
 import { RichCommentInput } from "@/components/comments/rich-comment-input";
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
-import type { GuestbookReplyTarget } from "./guestbook-item";
+import type { ReplyTarget } from "@/components/comments/comment-replies";
 
 interface GuestbookInputBarProps {
   onSubmit: (content: string) => Promise<boolean>;
   isSubmitting?: boolean;
   submitError?: string | null;
-  replyTarget?: GuestbookReplyTarget | null;
+  replyTarget?: ReplyTarget | null;
   onCancelReply?: () => void;
 }
 

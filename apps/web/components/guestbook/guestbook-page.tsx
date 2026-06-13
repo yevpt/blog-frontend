@@ -9,7 +9,7 @@ import { useGuestbookSubmit } from "@/hooks/use-guestbook-submit";
 import { useGuestbookLike } from "@/hooks/use-guestbook-like";
 import { GuestbookList } from "./guestbook-list";
 import { GuestbookInputBar } from "./guestbook-input-bar";
-import type { GuestbookReplyTarget } from "./guestbook-item";
+import type { ReplyTarget } from "@/components/comments/comment-replies";
 import { PageContainer } from "@/components/common/page-container";
 
 interface GuestbookPageProps {
@@ -43,20 +43,16 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
 
   const { toggleEntryLike } = useGuestbookLike();
 
-  const [replyTarget, setReplyTarget] = useState<GuestbookReplyTarget | null>(null);
+  const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
   const [pendingReplies, setPendingReplies] = useState<Record<number, CommentReplyResp | null>>({});
 
   const handleSubmit = useCallback(
     async (content: string): Promise<boolean> => {
       if (replyTarget) {
-        const reply = await submitReply(
-          replyTarget.guestbookId,
-          content,
-          replyTarget.parentReplyId,
-        );
+        const reply = await submitReply(replyTarget.commentId, content, replyTarget.parentReplyId);
         if (reply) {
-          incrementReplyCount(replyTarget.guestbookId);
-          setPendingReplies((prev) => ({ ...prev, [replyTarget.guestbookId]: reply }));
+          incrementReplyCount(replyTarget.commentId);
+          setPendingReplies((prev) => ({ ...prev, [replyTarget.commentId]: reply }));
           setReplyTarget(null);
           return true;
         }
@@ -85,7 +81,7 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
   );
 
   const handleReply = useCallback(
-    (target: GuestbookReplyTarget) => {
+    (target: ReplyTarget) => {
       if (!userId) {
         openLoginModal();
         return;

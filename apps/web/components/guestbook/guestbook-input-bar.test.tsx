@@ -48,20 +48,14 @@ describe("GuestbookInputBar", () => {
 
   it("replyTarget 传入时 placeholder 包含回复对象名", () => {
     render(
-      <GuestbookInputBar
-        onSubmit={vi.fn()}
-        replyTarget={{ guestbookId: 1, toUsername: "Alice" }}
-      />,
+      <GuestbookInputBar onSubmit={vi.fn()} replyTarget={{ commentId: 1, toUsername: "Alice" }} />,
     );
     expect(screen.getByTestId("placeholder").textContent).toContain("Alice");
   });
 
   it("replyTarget 传入时通过 header 显示回复指示条（包含用户名）", () => {
     render(
-      <GuestbookInputBar
-        onSubmit={vi.fn()}
-        replyTarget={{ guestbookId: 1, toUsername: "Alice" }}
-      />,
+      <GuestbookInputBar onSubmit={vi.fn()} replyTarget={{ commentId: 1, toUsername: "Alice" }} />,
     );
     expect(screen.getByTestId("reply-banner")).toBeTruthy();
     expect(screen.getByText("@Alice")).toBeTruthy();
@@ -72,7 +66,7 @@ describe("GuestbookInputBar", () => {
     render(
       <GuestbookInputBar
         onSubmit={vi.fn()}
-        replyTarget={{ guestbookId: 1, toUsername: "Alice" }}
+        replyTarget={{ commentId: 1, toUsername: "Alice" }}
         onCancelReply={onCancelReply}
       />,
     );

@@ -7,13 +7,8 @@ import { SvgIcon } from "@repo/icons";
 import { markdownToHtmlSync, MarkdownContent } from "@repo/markdown";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { formatRelativeTime } from "@/lib/format-time";
-import { GuestbookReplies } from "./guestbook-replies";
-
-export interface GuestbookReplyTarget {
-  guestbookId: number;
-  parentReplyId?: number;
-  toUsername: string;
-}
+import { CommentReplies } from "@/components/comments/comment-replies";
+import type { ReplyTarget } from "@/components/comments/comment-replies";
 
 function getDisplayName(user: GuestbookItemResp["user"]): string {
   if (!user) return "匿名";
@@ -27,7 +22,7 @@ function GuestbookBody({ content }: { content: string }) {
 
 interface GuestbookItemProps {
   item: GuestbookItemResp;
-  onReply?: (target: GuestbookReplyTarget) => void;
+  onReply?: (target: ReplyTarget) => void;
   onLike?: (id: number) => void;
   pendingReply?: CommentReplyResp | null;
 }
@@ -38,7 +33,7 @@ export function GuestbookItem({ item, onReply, onLike, pendingReply }: Guestbook
 
   const handleLike = useCallback(() => onLike?.(item.id), [onLike, item.id]);
   const handleReply = useCallback(
-    () => onReply?.({ guestbookId: item.id, toUsername: displayName }),
+    () => onReply?.({ commentId: item.id, toUsername: displayName }),
     [onReply, item.id, displayName],
   );
 
@@ -96,10 +91,11 @@ export function GuestbookItem({ item, onReply, onLike, pendingReply }: Guestbook
           </button>
 
           {item.reply_count > 0 && (
-            <GuestbookReplies
-              guestbookId={item.id}
+            <CommentReplies
+              commentId={item.id}
+              targetType="guestbook"
               replyCount={item.reply_count}
-              pendingReply={pendingReply ?? null}
+              pendingReply={pendingReply}
               onReply={onReply ?? (() => undefined)}
             />
           )}

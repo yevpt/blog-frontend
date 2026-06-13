@@ -10,7 +10,7 @@ import { formatRelativeTime } from "@/lib/format-time";
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
 import { useGuestbookLike } from "@/hooks/use-guestbook-like";
-import type { GuestbookReplyTarget } from "./guestbook-item";
+import type { ReplyTarget } from "@/components/comments/comment-replies";
 
 const PAGE_SIZE = 5;
 
@@ -28,7 +28,7 @@ interface GuestbookRepliesProps {
   guestbookId: number;
   replyCount: number;
   pendingReply: CommentReplyResp | null;
-  onReply: (target: GuestbookReplyTarget) => void;
+  onReply: (target: ReplyTarget) => void;
 }
 
 export function GuestbookReplies({
@@ -60,6 +60,7 @@ export function GuestbookReplies({
         setReplies((prev) => (append ? [...prev, ...data.list] : data.list));
         setPage(pageNum);
         setHasMore(pageNum < data.pages);
+        if (!append) setIsOpen(true);
       } catch {
         setError("加载回复失败");
       } finally {
@@ -71,7 +72,7 @@ export function GuestbookReplies({
 
   const handleToggle = useCallback(() => {
     if (!isOpen) {
-      setIsOpen(true);
+      setError(null);
       void fetchReplies(1, false);
     } else {
       setIsOpen(false);
@@ -115,11 +116,20 @@ export function GuestbookReplies({
         <button
           type="button"
           onClick={handleToggle}
+          disabled={isLoading}
           className="flex items-center gap-1.5 text-xs text-(--fg2)"
         >
           <div className="h-px w-4 bg-accent-foreground/15" />
-          展开 {replyCount} 条回复
+          {isLoading ? (
+            <>
+              <span className="inline-block size-3 animate-spin rounded-full border-[1.5px] border-current border-t-transparent" />
+              加载中
+            </>
+          ) : (
+            <>展开 {replyCount} 条回复</>
+          )}
         </button>
+        {error && !isLoading && <p className="mt-1 text-[11px] text-red-500">{error}</p>}
       </div>
     );
   }
@@ -131,7 +141,7 @@ export function GuestbookReplies({
         const toName = reply.to_user ? getReplyDisplayName(reply.to_user) : null;
         const time = formatRelativeTime(new Date(reply.created_at));
         return (
-          <div key={reply.id} className="flex gap-2">
+          <div key={reply.id} className="flex gap-2 [animation:replyFadeIn_0.2s_ease-out_both]">
             <UserAvatar src={reply.from_user?.avatar_url} name={fromName} size="sm" />
             <div className="min-w-0 flex-1">
               <div className="mb-0.5 flex items-center gap-2">
@@ -163,9 +173,9 @@ export function GuestbookReplies({
               <button
                 type="button"
                 onClick={() =>
-                  onReply({ guestbookId, parentReplyId: reply.id, toUsername: fromName })
+                  onReply({ commentId: guestbookId, parentReplyId: reply.id, toUsername: fromName })
                 }
-                className="mt-1 text-[11px] font-medium text-(--fg3) transition-colors hover:text-foreground"
+                className="mt-3 text-[11px] font-medium text-(--fg3) transition-colors hover:text-foreground"
               >
                 回复
               </button>
