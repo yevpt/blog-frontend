@@ -7,6 +7,7 @@ import { SvgIcon } from "@repo/icons";
 import { markdownToHtmlSync, MarkdownContent } from "@repo/markdown";
 import { formatRelativeTime } from "@/lib/format-time";
 import { UserAvatar } from "@/components/common/user-avatar";
+import type { TargetType } from "@/hooks/use-comment-like";
 import { CommentReplies } from "./comment-replies";
 
 export interface ReplyTarget {
@@ -14,8 +15,6 @@ export interface ReplyTarget {
   parentReplyId?: number;
   toUsername: string;
 }
-
-type TargetType = "article" | "moment";
 
 function getDisplayName(user: { username: string; nickname?: string } | undefined): string {
   if (!user) return "匿名";

@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import type { CommentReplyResp, GuestbookItemResp } from "@repo/api";
-import { cn } from "@repo/ui";
+import { Button, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import { markdownToHtmlSync, MarkdownContent } from "@repo/markdown";
 import { UserAvatar } from "@/components/common/user-avatar";
@@ -66,9 +66,9 @@ export function GuestbookItem({ item, onReply, onLike, pendingReply }: Guestbook
             <div className="min-w-0 flex-1 pr-7.5 text-[12px] text-(--fg1)">
               <GuestbookBody content={item.content} />
             </div>
-            <button
-              type="button"
-              onClick={handleLike}
+            <Button
+              variant="text"
+              onPress={handleLike}
               aria-label={item.is_liked ? "取消点赞" : "点赞"}
               className={cn(
                 "absolute right-1.75 top-0 flex shrink-0 flex-col items-center gap-0.5",
@@ -79,16 +79,16 @@ export function GuestbookItem({ item, onReply, onLike, pendingReply }: Guestbook
               {item.like_count > 0 && (
                 <span className="text-[10px] font-medium">{item.like_count}</span>
               )}
-            </button>
+            </Button>
           </div>
 
-          <button
-            type="button"
-            onClick={handleReply}
+          <Button
+            variant="text"
+            onPress={handleReply}
             className="mt-1.5 text-[11px] font-medium text-(--fg3) transition-colors hover:text-foreground"
           >
             回复
-          </button>
+          </Button>
 
           {item.reply_count > 0 && (
             <CommentReplies
