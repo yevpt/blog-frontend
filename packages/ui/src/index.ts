@@ -42,3 +42,4 @@ export { Dropdown } from "./dropdown/dropdown";
 export { Select, type SelectProps, type SelectItemType } from "./select/select";
 export { Carousel, CarouselContext, useCarousel } from "./carousel/carousel-base";
 export { ToastRegion, ToastQueue, type ToastContent, type ToastType } from "./toast/toast";
+export { FadeInUp } from "./fade-in-up";
