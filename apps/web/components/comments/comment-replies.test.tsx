@@ -174,7 +174,7 @@ describe("CommentReplies", () => {
     await waitFor(() => expect(screen.getByTestId("icon-heart-fill")).toBeTruthy());
   });
 
-  it("展开时首次加载显示 skeleton", async () => {
+  it("点击展开后按钮保持可见并显示加载状态", async () => {
     const user = userEvent.setup();
     let resolve!: (v: unknown) => void;
     vi.mocked(global.fetch).mockReturnValue(
@@ -186,10 +186,30 @@ describe("CommentReplies", () => {
     render(<CommentReplies commentId={1} targetType="article" replyCount={3} onReply={vi.fn()} />);
     await user.click(screen.getByText(/展开 3 条回复/));
 
-    expect(screen.getByLabelText("回复加载中")).toBeTruthy();
+    // 加载期间：按钮保持可见，显示加载中状态
+    expect(screen.getByText("加载中")).toBeTruthy();
+    // 展开文案消失（替换为加载中）
+    expect(screen.queryByText(/展开 3 条回复/)).toBeNull();
+    // 尚未展开，不应出现收起按钮
+    expect(screen.queryByText("收起回复")).toBeNull();
 
     resolve({ ok: true, json: () => Promise.resolve(mockPage([makeReply(1)])) });
-    await waitFor(() => expect(screen.queryByLabelText("回复加载中")).toBeNull());
+    // 加载完成后：回复显示，加载状态消失
+    await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+    expect(screen.queryByText("加载中")).toBeNull();
+  });
+
+  it("加载失败时展开按钮重新可用并显示错误提示", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch).mockRejectedValue(new Error("network error"));
+
+    render(<CommentReplies commentId={1} targetType="article" replyCount={2} onReply={vi.fn()} />);
+    await user.click(screen.getByText(/展开 2 条回复/));
+
+    await waitFor(() => expect(screen.getByText("加载回复失败")).toBeTruthy());
+    // 失败后展开按钮重新可用（不显示加载中）
+    expect(screen.queryByText("加载中")).toBeNull();
+    expect(screen.getByText(/展开 2 条回复/)).toBeTruthy();
   });
 
   it("加载更多时按钮显示加载中文案", async () => {
@@ -219,5 +239,37 @@ describe("CommentReplies", () => {
     render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />);
     (await userEvent.setup()).click(screen.getByText(/展开 1 条回复/));
     await waitFor(() => expect(screen.getByTestId("icon-heart-fill")).toBeTruthy());
+  });
+
+  it("targetType=guestbook 时展开并显示回复", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockPage([makeReply(1)])),
+    } as Response);
+
+    render(
+      <CommentReplies commentId={1} targetType="guestbook" replyCount={1} onReply={vi.fn()} />,
+    );
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+  });
+
+  it("targetType=guestbook 时 fetch URL 包含 guestbook 路径", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockPage([makeReply(1)])),
+    } as Response);
+
+    render(
+      <CommentReplies commentId={7} targetType="guestbook" replyCount={1} onReply={vi.fn()} />,
+    );
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+
+    expect(vi.mocked(global.fetch)).toHaveBeenCalledWith(
+      expect.stringContaining("/api/guestbook/comments/7/replies"),
+    );
   });
 });

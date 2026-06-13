@@ -13,9 +13,11 @@ import { UserAvatar } from "@/components/common/user-avatar";
 import { markdownToHtmlSync, MarkdownContent } from "@repo/markdown";
 import type { ReplyTarget } from "./comment-item";
 
+export type { ReplyTarget };
+
 const PAGE_SIZE = 5;
 
-type TargetType = "article" | "moment";
+export type TargetType = "article" | "moment" | "guestbook";
 
 function getDisplayName(user: { username: string; nickname?: string } | undefined): string {
   if (!user) return "匿名";
@@ -26,8 +28,15 @@ function replyUrl(targetType: TargetType, commentId: number, page: number): stri
   const base =
     targetType === "article"
       ? `/api/articles/comments/${commentId}/replies`
-      : `/api/moments/comments/${commentId}/replies`;
+      : targetType === "moment"
+        ? `/api/moments/comments/${commentId}/replies`
+        : `/api/guestbook/comments/${commentId}/replies`;
   return `${base}?page=${page}&page_size=${PAGE_SIZE}`;
+}
+
+function ReplyBody({ content }: { content: string }) {
+  const html = useMemo(() => markdownToHtmlSync(content), [content]);
+  return <MarkdownContent html={html} variant="comment" />;
 }
 
 interface ReplyItemProps {
@@ -36,29 +45,6 @@ interface ReplyItemProps {
   targetType: TargetType;
   onReply?: (target: ReplyTarget) => void;
   onLikeResult?: (replyId: number, isLiked: boolean, likeCount: number) => void;
-}
-
-function ReplyItemSkeleton() {
-  return (
-    <div className="flex animate-pulse gap-2" aria-hidden="true">
-      <div className="size-6 shrink-0 rounded-full bg-muted" />
-      <div className="min-w-0 flex-1">
-        <div className="mb-1 flex items-center gap-2">
-          <div className="h-2.5 w-12 rounded bg-muted" />
-          <div className="h-2.5 w-8 rounded bg-muted" />
-        </div>
-        <div className="space-y-1">
-          <div className="h-2.5 w-full rounded bg-muted" />
-          <div className="h-2.5 w-3/4 rounded bg-muted" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ReplyBody({ content }: { content: string }) {
-  const html = useMemo(() => markdownToHtmlSync(content), [content]);
-  return <MarkdownContent html={html} variant="comment" />;
 }
 
 function ReplyItem({ reply, commentId, targetType, onReply, onLikeResult }: ReplyItemProps) {
@@ -82,7 +68,7 @@ function ReplyItem({ reply, commentId, targetType, onReply, onLikeResult }: Repl
   }, [userId, openLoginModal, toggleReplyLike, commentId, reply.id, onLikeResult]);
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 [animation:replyFadeIn_0.2s_ease-out_both]">
       <UserAvatar src={reply.from_user?.avatar_url} name={fromName} size="sm" />
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-2">
@@ -103,9 +89,7 @@ function ReplyItem({ reply, commentId, targetType, onReply, onLikeResult }: Repl
             aria-label={reply.is_liked ? "取消点赞" : "点赞"}
             className={cn(
               "absolute top-0 right-1.75 flex shrink-0 flex-col items-center gap-0.5 self-start pt-0.5",
-              reply.is_liked
-                ? "text-red-500 hover:text-red-500"
-                : "text-black/54 dark:text-(--fg3)",
+              reply.is_liked ? "text-red-500 hover:text-red-500" : "text-foreground/40",
             )}
           >
             <SvgIcon name={reply.is_liked ? "heart-fill" : "heart"} size={14} />
@@ -122,7 +106,7 @@ function ReplyItem({ reply, commentId, targetType, onReply, onLikeResult }: Repl
           type="button"
           variant="text"
           onPress={() => onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName })}
-          className="mt-1 text-[11px] font-medium text-(--fg3) transition-colors"
+          className="mt-3 text-[11px] font-medium text-(--fg3) transition-colors hover:text-foreground"
         >
           回复
         </Button>
@@ -164,6 +148,7 @@ export function CommentReplies({
         setReplies((prev) => (append ? [...prev, ...data.list] : data.list));
         setPage(pageNum);
         setHasMore(pageNum < data.pages);
+        if (!append) setIsOpen(true);
       } catch {
         setError("加载回复失败");
       } finally {
@@ -175,7 +160,7 @@ export function CommentReplies({
 
   const handleToggle = useCallback(() => {
     if (!isOpen) {
-      setIsOpen(true);
+      setError(null);
       void fetchReplies(1, false);
     } else {
       setIsOpen(false);
@@ -194,7 +179,6 @@ export function CommentReplies({
 
   if (replyCount <= 0) return null;
 
-  // pendingReply 去重后追加到列表末尾
   const displayReplies = pendingReply
     ? [...replies.filter((r) => r.id !== pendingReply.id), pendingReply]
     : replies;
@@ -205,67 +189,65 @@ export function CommentReplies({
         <Button
           variant="text"
           onClick={handleToggle}
-          className="text-xs  text-(--fg2) transition-colors"
+          isDisabled={isLoading}
+          className="flex items-center gap-1.5 text-xs text-(--fg2) transition-colors"
         >
-          <div className="h-px w-4 bg-accent-foreground/15"></div> 展开 {replyCount} 条回复
+          <div className="h-px w-4 bg-accent-foreground/15"></div>
+          {isLoading ? (
+            <>
+              <span className="inline-block size-3 animate-spin rounded-full border-[1.5px] border-current border-t-transparent" />
+              加载中
+            </>
+          ) : (
+            <>展开 {replyCount} 条回复</>
+          )}
         </Button>
+        {error && !isLoading && <p className="mt-1 text-[11px] text-red-500">{error}</p>}
       </div>
     );
   }
 
-  const isInitialLoading = isLoading && displayReplies.length === 0;
-
   return (
     <div className="mt-3">
-      {isInitialLoading ? (
-        <div className="flex flex-col gap-3" aria-label="回复加载中">
-          {Array.from({ length: Math.min(replyCount, 3) }, (_, i) => (
-            <ReplyItemSkeleton key={i} />
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {displayReplies.map((reply) => (
-            <ReplyItem
-              key={reply.id}
-              reply={reply}
-              commentId={commentId}
-              targetType={targetType}
-              onReply={onReply}
-              onLikeResult={updateReplyLike}
-            />
-          ))}
-        </div>
-      )}
+      <div className="flex flex-col gap-3">
+        {displayReplies.map((reply) => (
+          <ReplyItem
+            key={reply.id}
+            reply={reply}
+            commentId={commentId}
+            targetType={targetType}
+            onReply={onReply}
+            onLikeResult={updateReplyLike}
+          />
+        ))}
+      </div>
 
       {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
 
-      {!isInitialLoading && (
-        <div className="mt-2 flex gap-3">
-          {hasMore && (
-            <Button
-              variant="text"
-              size="sm"
-              isDisabled={isLoading}
-              onPress={handleLoadMore}
-              className="flex items-center gap-1 text-xs font-semibold text-(--fg2)"
-            >
-              {isLoading && (
-                <span className="inline-block size-3 animate-spin rounded-full border-[1.5px] border-current border-t-transparent" />
-              )}
-              {isLoading ? "加载中" : "查看更多回复"}
-            </Button>
-          )}
+      <div className="mt-2 flex gap-3">
+        {hasMore && (
           <Button
             variant="text"
             size="sm"
-            onPress={handleToggle}
-            className="text-xs font-semibold text-(--fg2)"
+            isDisabled={isLoading}
+            onPress={handleLoadMore}
+            className="flex items-center gap-1 text-xs font-semibold text-(--fg2)"
           >
-            收起回复
+            {isLoading && (
+              <span className="inline-block size-3 animate-spin rounded-full border-[1.5px] border-current border-t-transparent" />
+            )}
+            {isLoading ? "加载中" : "查看更多回复"}
           </Button>
-        </div>
-      )}
+        )}
+        <Button
+          variant="text"
+          size="sm"
+          onPress={handleToggle}
+          className="text-xs font-semibold text-(--fg2)"
+        >
+          收起回复
+        </Button>
+      </div>
     </div>
   );
 }
