@@ -11,19 +11,22 @@ describe("FriendLinksRulesCard", () => {
     expect(screen.getByText(/注①/)).toBeTruthy();
   });
 
-  it("点击「收起」后隐藏规则内容", async () => {
+  it("点击「收起」后 aria-expanded 变为 false", async () => {
     render(<FriendLinksRulesCard />);
     const toggleBtn = screen.getByRole("button", { name: /收起/ });
     await userEvent.click(toggleBtn);
-    expect(screen.queryByText(/vpt940417@gmail\.com/)).toBeNull();
+    // 内容保留在 DOM 中，通过 CSS grid 动画隐藏，以 aria-expanded 验证折叠状态
+    expect(screen.getByRole("button", { name: /展开/ }).getAttribute("aria-expanded")).toBe(
+      "false",
+    );
   });
 
-  it("折叠后点击「展开」重新显示内容", async () => {
+  it("折叠后点击「展开」aria-expanded 恢复 true", async () => {
     render(<FriendLinksRulesCard />);
     const toggleBtn = screen.getByRole("button", { name: /收起/ });
     await userEvent.click(toggleBtn);
     const expandBtn = screen.getByRole("button", { name: /展开/ });
     await userEvent.click(expandBtn);
-    expect(screen.getByText(/vpt940417@gmail\.com/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /收起/ }).getAttribute("aria-expanded")).toBe("true");
   });
 });
