@@ -185,7 +185,7 @@ export function CommentReplies({
 
   if (!isOpen) {
     return (
-      <div>
+      <div className="mt-3">
         <Button
           variant="text"
           onClick={handleToggle}
