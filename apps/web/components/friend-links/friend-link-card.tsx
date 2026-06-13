@@ -19,6 +19,9 @@ const baseCardClass =
   "flex items-center gap-3 rounded-xl border border-border bg-secondary px-4 py-3.5";
 
 export function FriendLinkCard({ link }: FriendLinkCardProps) {
+  // status=0（隐藏）不应出现在公开列表，防御性处理
+  if (link.status === 0) return null;
+
   const disconnected = link.status === 2;
 
   const inner = (

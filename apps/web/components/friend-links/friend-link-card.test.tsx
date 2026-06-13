@@ -49,4 +49,9 @@ describe("FriendLinkCard", () => {
     render(<FriendLinkCard link={{ ...base, avatar_url: undefined }} />);
     expect(screen.getByText("Y")).toBeTruthy();
   });
+
+  it("status=0 不渲染任何内容", () => {
+    const { container } = render(<FriendLinkCard link={{ ...base, status: 0 }} />);
+    expect(container.firstChild).toBeNull();
+  });
 });
