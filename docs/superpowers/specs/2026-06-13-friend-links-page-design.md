@@ -23,7 +23,23 @@
 | 1 | 显示（正常） |
 | 2 | 失联（出现在列表，带「失联」标识，禁止点击） |
 
-涉及文件：`blog-backend/internal/dto/friendlink.go`、对应 service/model 层的校验逻辑。
+#### 1. GORM model — `internal/model/friend_link.go`
+
+将 `Status` 字段的 `comment` tag 更新为包含 `2=失联` 的描述：
+
+```go
+Status uint8 `gorm:"type:tinyint;default:1;comment:状态 0=隐藏 1=显示 2=失联" json:"status"`
+```
+
+`AutoMigrate` 重跑后，MySQL `friend_link.status` 列注释会自动同步。迁移脚本（`cmd/migrate/main.go`）的 `autoMigrate()` 已注册 `&model.FriendLink{}`，无需额外修改。
+
+#### 2. DTO 注释 — `internal/dto/friendlink.go`
+
+`FriendLinkCreateReq`、`FriendLinkUpdateReq`、`FriendLinkItemResp` 中 `Status` 字段的 Go 注释补充 `2=失联` 说明。
+
+#### 3. Service 校验 — `internal/service/friendlink.go`
+
+`ErrFriendLinkStatusInvalid` 的校验条件从 `status > 1` 改为 `status > 2`，允许 `status=2` 通过验证。
 
 ---
 
@@ -211,4 +227,6 @@ page.tsx (Server)
 - `packages/api/src/index.ts` — 导出新类型
 - `packages/ui/src/index.ts` — 导出 `FadeInUp`
 - `apps/web/tailwind.config.ts` — 新增 `fade-in-up` keyframe & animation
-- 后端：`blog-backend/internal/dto/friendlink.go` 等（`status=2` 支持）
+- `blog-backend/internal/model/friend_link.go` — `Status` comment tag 补充 `2=失联`
+- `blog-backend/internal/dto/friendlink.go` — `Status` Go 注释补充 `2=失联`
+- `blog-backend/internal/service/friendlink.go` — 状态校验上限从 `>1` 改为 `>2`
