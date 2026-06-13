@@ -10,7 +10,9 @@ export function useCommentLike(targetType: TargetType) {
       const url =
         targetType === "article"
           ? `/api/articles/comments/${commentId}/like`
-          : `/api/moments/comments/${commentId}/like`;
+          : targetType === "moment"
+            ? `/api/moments/comments/${commentId}/like`
+            : `/api/guestbook/${commentId}/like`;
       try {
         const res = await fetch(url, { method: "POST" });
         if (!res.ok) return null;
