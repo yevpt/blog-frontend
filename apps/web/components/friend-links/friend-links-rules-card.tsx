@@ -18,13 +18,14 @@ export function FriendLinksRulesCard() {
           onClick={() => setOpen((v) => !v)}
           className="text-xs text-muted-foreground hover:text-foreground"
           aria-expanded={open}
+          aria-controls="friend-links-rules-body"
         >
           {open ? "收起 ▲" : "展开 ▼"}
         </button>
       </div>
 
       {open && (
-        <div className="mt-3.5">
+        <div id="friend-links-rules-body" className="mt-3.5">
           <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
             如果要和本站交换友链，请按照以下格式发送到{" "}
             <a href="mailto:vpt940417@gmail.com" className="text-primary hover:underline">
