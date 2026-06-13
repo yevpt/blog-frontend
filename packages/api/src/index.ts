@@ -66,3 +66,8 @@ export type {
   UserListItemResp,
   UserPageResp,
 } from "./types/user";
+export type {
+  FriendLinkItemResp,
+  FriendLinkPageResp,
+  FriendLinkListReq,
+} from "./types/friend-link";

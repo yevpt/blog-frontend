@@ -35,6 +35,7 @@ import type {
   GuestbookPageResp,
 } from "./types/guestbook";
 import type { UserDetailResp, UserListReq, UserPageResp } from "./types/user";
+import type { FriendLinkListReq, FriendLinkPageResp } from "./types/friend-link";
 
 /** createApiClient 的注入配置接口 */
 export interface ApiClientConfig {
@@ -356,6 +357,18 @@ export function createApiClient(config: ApiClientConfig) {
         fetchAuthed<CommentLikeResp>(`/guestbook/comments/${guestbookId}/replies/${replyId}/like`, {
           method: "POST",
         }),
+    },
+    friendLinks: {
+      /** 查询公开友情链接（含显示和失联状态） */
+      listPublic: (req: FriendLinkListReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        const qs = p.toString();
+        return fetchPublic<FriendLinkPageResp>(`/friend-links${qs ? `?${qs}` : ""}`, {
+          method: "GET",
+        });
+      },
     },
     /**
      * 测试用端点，与后端 /test/* 路由对应。
