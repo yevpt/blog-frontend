@@ -24,10 +24,6 @@ vi.mock("@/lib/format-time", () => ({
   formatRelativeTime: () => "刚刚",
 }));
 
-vi.mock("./guestbook-replies", () => ({
-  GuestbookReplies: () => null,
-}));
-
 const mockItem: GuestbookItemResp = {
   id: 1,
   owner_user_id: 0,
