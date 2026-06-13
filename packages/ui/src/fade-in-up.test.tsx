@@ -22,6 +22,16 @@ describe("FadeInUp", () => {
     expect((container.firstChild as HTMLElement).className).toContain("animate-fade-in-up");
   });
 
+  it("delay=0（默认）时不注入 animationDelay style", () => {
+    const { container } = render(
+      <FadeInUp>
+        <span>hi</span>
+      </FadeInUp>,
+    );
+    const el = container.firstChild as HTMLElement;
+    expect(el.style.animationDelay).toBe("");
+  });
+
   it("delay prop 注入到 animationDelay style", () => {
     const { container } = render(
       <FadeInUp delay={150}>

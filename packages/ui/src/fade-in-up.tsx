@@ -12,8 +12,8 @@ interface FadeInUpProps {
 
 export function FadeInUp({ children, delay = 0, duration = 400, className }: FadeInUpProps) {
   const style: CSSProperties = {
-    animationDelay: `${delay}ms`,
-    animationDuration: `${duration}ms`,
+    ...(delay !== 0 && { animationDelay: `${delay}ms` }),
+    ...(duration !== 400 && { animationDuration: `${duration}ms` }),
   };
 
   return (
