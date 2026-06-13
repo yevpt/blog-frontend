@@ -37,12 +37,12 @@ describe("matchNavbarRoute", () => {
     });
   });
 
-  it("guestbook、friends、circle 命中 default", () => {
+  it("guestbook、friend-links、circle 命中 default", () => {
     expect(matchNavbarRoute("/guestbook")).toEqual({
       mobileVariant: "default",
       title: "留言",
     });
-    expect(matchNavbarRoute("/friends")).toEqual({
+    expect(matchNavbarRoute("/friend-links")).toEqual({
       mobileVariant: "default",
       title: "友邻",
     });

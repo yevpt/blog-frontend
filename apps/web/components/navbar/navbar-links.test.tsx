@@ -33,7 +33,7 @@ describe("NavbarLinks", () => {
       "/",
       "/snippets",
       "/guestbook",
-      "/friends",
+      "/friend-links",
       "/circle",
     ]);
   });
