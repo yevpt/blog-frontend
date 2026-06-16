@@ -64,9 +64,7 @@ if (/breaking change/i.test(raw) && !/BREAKING CHANGE:/.test(raw)) {
 if (/^Co-authored-by:/im.test(raw)) {
   errors.push("禁止添加 `Co-authored-by:` 署名");
 }
-if (
-  /generated with|🤖|claude code|noreply@anthropic|by \[?(claude|codex|cursor|copilot)/i.test(raw)
-) {
+if (/generated (with|by)\b|🤖|noreply@\S+|by \[?\w+/i.test(raw)) {
   errors.push("禁止添加 AI 生成标记 / 工具署名（如 Generated with、🤖、Claude Code 等）");
 }
 
