@@ -17,6 +17,7 @@
     "prepare": "simple-git-hooks"
   },
   "simple-git-hooks": {
+    "commit-msg": "node scripts/validate-commit-msg.cjs $1",
     "pre-commit": "pnpm exec lint-staged && pnpm run check-types && pnpm run lint",
     "pre-push": "pnpm run test:run"
   },

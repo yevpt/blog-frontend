@@ -19,10 +19,12 @@
 ## 快速开始
 
 ```bash
-pnpm install
+pnpm install     # 同时由 prepare 自动安装 git hooks
 pnpm dev:web     # http://localhost:3000
 pnpm dev:admin   # http://localhost:5173
 ```
+
+> `pnpm install` 会经 `prepare` 自动安装 git hooks，其中 `commit-msg` 强制校验提交信息格式（规范见 `.agents/skills/git-commit/SKILL.md`），无需手动启用。
 
 ---
 

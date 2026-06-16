@@ -3,6 +3,10 @@
 ## 技术栈
 React, TypeScript, TailwindCSS, Zustand, pnpm workspaces Monorepo。
 
+## Git 提交
+- 提交代码前阅读 `.agents/skills/git-commit/SKILL.md`，按其格式写 message。
+- `commit-msg` 钩子（`scripts/validate-commit-msg.cjs`）会强制校验，不合规直接拒绝。
+
 ## Monorepo 规则
 - 禁止在 `apps/*` 直接实现基础 UI 组件，统一从 `@repo/ui` 引入
 - 共享 Hooks/类型从 `packages/hooks`、`packages/typescript-config` 等包引入
