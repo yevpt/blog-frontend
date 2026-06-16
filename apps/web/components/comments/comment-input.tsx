@@ -27,7 +27,7 @@ export function CommentInput({
   submitError,
 }: CommentInputProps) {
   const { userId } = useSession();
-  const { open: openLogin } = useLoginModal();
+  const openLogin = useLoginModal((s) => s.open);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {

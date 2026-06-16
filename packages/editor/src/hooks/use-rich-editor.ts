@@ -20,7 +20,9 @@
  *    - 双向 Markdown ↔ Tiptap JSON 转换
  *
  * ④ Image（@tiptap/extension-image）
- *    - inline: true：图片可嵌入段落（适合评论）
+ *    - inline: false：图片为块级节点，独占一行
+ *      （曾用 inline: true，但图片远高于文本行高，导致 contenteditable
+ *      光标命中测试错位，见下方 ⑤ 处注释）
  *    - allowBase64: false：安全考虑，不允许 base64 图片
  *
  * ⑤ PlaceholderExtension（本地扩展）
@@ -45,6 +47,7 @@ import { UnderlineExtension } from "../extensions/underline";
 import { createMentionExtension } from "../extensions/mention";
 import { PlaceholderExtension } from "../extensions/placeholder";
 import { CodeBlockExtension } from "../extensions/code-block";
+import { AtomParagraphMergeExtension } from "../extensions/atom-paragraph-merge";
 import type { MentionItem } from "../types";
 
 interface UseRichEditorOptions {
@@ -111,22 +114,29 @@ export function useRichEditor({
         // @tiptap/markdown v3 不支持 html/tightLists 等选项，使用默认配置即可
         Markdown.configure({}),
 
-        // ⑤ 图片（内联，仅 URL，不允许 base64）
+        // ⑤ 图片（块级，仅 URL，不允许 base64）
+        // 注意：曾用 inline: true 让图片嵌入段落，但图片渲染高度（240px）远超文本行高，
+        // 导致 contenteditable 对内联原子节点的点击命中测试/光标渲染严重错位
+        // （点击图片右侧光标不可见、按 Left 键移动后光标位置与实际插入位置不一致）。
+        // 改为块级后，图片独占一行，由 StarterKit 内置的 Gapcursor 处理光标定位，问题消失。
         Image.configure({
-          inline: true,
+          inline: false,
           allowBase64: false,
           HTMLAttributes: {
             class: "rich-editor-image",
-            style: "max-width: 100%; height: auto; border-radius: 4px;",
+            style: "max-width: 240px; height: auto; border-radius: 6px;",
           },
         }),
 
-        // ⑥ 占位文字：空编辑器时在首个空段落上生成 data-placeholder
+        // ⑥ 修复空段落与图片相邻时 Backspace/Delete 无法删除空段落的问题（见该扩展内注释）
+        AtomParagraphMergeExtension,
+
+        // ⑦ 占位文字：空编辑器时在首个空段落上生成 data-placeholder
         PlaceholderExtension.configure({
           placeholder: placeholder ?? "",
         }),
 
-        // ⑦ @提及（候选列表由外部传入）
+        // ⑧ @提及（候选列表由外部传入）
         // TODO(mention-api): 后端 /users/search 就绪后，在调用方填充 mentionSuggestions
         createMentionExtension(mentionSuggestions),
       ],

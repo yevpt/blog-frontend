@@ -125,6 +125,11 @@ export function RichEditor({
           "[&_.tiptap_p.is-editor-empty:first-child::before]:text-muted-foreground [&_.tiptap_p.is-editor-empty:first-child::before]:float-left",
           "[&_.tiptap_p.is-editor-empty:first-child::before]:pointer-events-none [&_.tiptap_p.is-editor-empty:first-child::before]:h-0",
           "[&_.rich-editor-mention]:text-primary [&_.rich-editor-mention]:font-medium",
+          // 图片为块级原子节点，方向键导航到图片时 ProseMirror 会产生 NodeSelection（节点选中态，
+          // 而非文本插入光标），默认没有任何视觉样式会显得「光标消失」，这里补上选中态高亮。
+          // 注意：outline-offset 必须用负值（向内绘制），因为外层 shell 容器有 overflow-hidden，
+          // 正向 offset 会让描边超出图片自身盒模型，被祖先裁切（曾导致某一侧描边缺失）。
+          "[&_.tiptap_img.ProseMirror-selectednode]:outline [&_.tiptap_img.ProseMirror-selectednode]:outline-2 [&_.tiptap_img.ProseMirror-selectednode]:outline-primary [&_.tiptap_img.ProseMirror-selectednode]:-outline-offset-2",
           "sm:[&_.tiptap]:max-h-72",
         )}
       >

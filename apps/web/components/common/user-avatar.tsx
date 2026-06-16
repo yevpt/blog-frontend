@@ -74,6 +74,7 @@ export function UserAvatar({ src, name, size = "md", className }: UserAvatarProp
           )}
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
+          suppressHydrationWarning
         />
       </span>
     );

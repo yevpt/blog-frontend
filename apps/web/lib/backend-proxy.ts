@@ -77,6 +77,40 @@ export async function proxyPost(
   }
 }
 
+/** PATCH 代理：转发 JSON body，携带 access token */
+export async function proxyPatch(req: NextRequest, path: string): Promise<NextResponse> {
+  const t = token(req);
+  if (!t) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const body = JSON.stringify(await req.json().catch(() => ({})));
+    const res = await fetch(`${BASE}${path}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeader(t), ...cookieHeader(req) },
+      body,
+    });
+    return parseBackendJson(res);
+  } catch {
+    return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
+  }
+}
+
+/** POST 代理：转发 multipart/form-data，携带 access token */
+export async function proxyPostForm(req: NextRequest, path: string): Promise<NextResponse> {
+  const t = token(req);
+  if (!t) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const formData = await req.formData();
+    const res = await fetch(`${BASE}${path}`, {
+      method: "POST",
+      headers: { ...authHeader(t), ...cookieHeader(req) },
+      body: formData,
+    });
+    return parseBackendJson(res);
+  } catch {
+    return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
+  }
+}
+
 /** DELETE 代理：需要 access token 并转发 Cookie */
 export async function proxyDelete(req: NextRequest, path: string): Promise<NextResponse> {
   const t = token(req);

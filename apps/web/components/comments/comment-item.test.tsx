@@ -1,9 +1,22 @@
 // @vitest-environment jsdom
+import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { CommentItemResp, CommentReplyResp } from "@repo/api";
 import { CommentItem } from "./comment-item";
+
+vi.mock("next/link", () => ({
+  default: ({
+    href,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
 
 vi.mock("@repo/markdown", () => ({
   markdownToHtmlSync: (content: string) => content,
@@ -140,5 +153,18 @@ describe("CommentItem", () => {
     render(<CommentItem comment={baseComment} targetType="article" />);
     const el = screen.getByText("这篇文章写得很好").closest("[data-comment-id]");
     expect(el?.getAttribute("data-comment-id")).toBe("1");
+  });
+
+  it("有 user 时昵称渲染为跳转链接", () => {
+    render(<CommentItem comment={baseComment} targetType="article" />);
+    const link = screen.getByRole("link", { name: "Alice" });
+    expect(link.getAttribute("href")).toBe("/users/10");
+  });
+
+  it("无 user 时昵称为普通文本", () => {
+    const comment = { ...baseComment, user: undefined };
+    render(<CommentItem comment={comment} targetType="article" />);
+    expect(screen.queryByRole("link", { name: "匿名" })).toBeNull();
+    expect(screen.getByText("匿名")).toBeTruthy();
   });
 });

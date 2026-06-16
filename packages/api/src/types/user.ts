@@ -53,6 +53,49 @@ export interface UserDetailResp {
   social_links?: UserSocialLinkResp[];
 }
 
+/** GET /users/:id — 某用户的公开详情 */
+export interface UserPublicProfileResp {
+  id: number;
+  nickname: string;
+  avatar_url: string | null;
+  mark: string | null;
+  description: string | null;
+  last_login_at: string | null;
+  register_at: string;
+  roles: string[];
+  display_email: string | null;
+  site: string | null;
+  social_links: UserSocialLinkResp[];
+  gender: string | null;
+  birthday: string | null;
+}
+
+/** PATCH /users/me/email/display */
+export type EmailDisplaySetting = "main" | "sub" | "none";
+
+/** GET /users/me/oauth-bindings */
+export interface OAuthBindingResp {
+  provider: string;
+  bound: boolean;
+  bound_at?: string;
+}
+
+/** PATCH /users/me/profile 请求体 */
+export interface UpdateProfileReq {
+  nickname?: string;
+  mark?: string;
+  description?: string;
+  site?: string | null;
+}
+
+/** PATCH /users/me/meta 请求体 */
+export interface UpdateMetaReq {
+  gender?: string | null;
+  birthday?: string | null;
+  phone?: string | null;
+  sub_email?: string | null;
+}
+
 export interface UserListReq {
   page?: number;
   page_size?: number;

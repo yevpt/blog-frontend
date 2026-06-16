@@ -24,6 +24,7 @@ const VARIANT_CLASSES: Record<"article" | "comment", string> = {
     "prose-headings:text-sm prose-headings:font-semibold prose-headings:mt-2 prose-headings:mb-0.5",
     "prose-ul:my-1 prose-ol:my-1 prose-li:my-0",
     "prose-blockquote:my-1 prose-pre:my-1 prose-code:text-xs",
+    "prose-img:max-w-[240px] prose-img:rounded-md",
   ].join(" "),
 };
 

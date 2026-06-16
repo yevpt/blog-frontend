@@ -22,7 +22,7 @@ export function NavbarUserMenu({ isGlass = false, unreadCount = 0 }: NavbarUserM
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { open: openSnippetModal } = useSnippetModal();
-  const { profile } = useSession();
+  const { userId, profile } = useSession();
 
   const displayName = profile?.nickname ?? profile?.username ?? "";
 
@@ -95,7 +95,7 @@ export function NavbarUserMenu({ isGlass = false, unreadCount = 0 }: NavbarUserM
           type="button"
           variant={null}
           size={null}
-          onPress={() => navigate("/profile")}
+          onPress={() => navigate(userId != null ? `/users/${userId}` : "/profile")}
           className="flex h-auto w-full cursor-pointer items-center justify-between gap-2 rounded-xl bg-primary/[0.07] px-3 py-2 text-left transition-colors hover:bg-primary/[0.10]"
         >
           <span className="min-w-0">

@@ -47,7 +47,10 @@ vi.mock("@/app/providers/session-provider", () => ({
   useSession: () => ({ userId: 1 }),
 }));
 vi.mock("@/store/use-login-modal", () => ({
-  useLoginModal: () => ({ open: vi.fn() }),
+  useLoginModal: (selector?: (s: { open: ReturnType<typeof vi.fn> }) => unknown) => {
+    const store = { open: vi.fn() };
+    return typeof selector === "function" ? selector(store) : store;
+  },
 }));
 vi.mock("./comment-replies", () => ({
   CommentReplies: () => null,

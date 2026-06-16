@@ -1,7 +1,8 @@
 // apps/web/components/comments/comment-replies.tsx
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { memo, useState, useCallback, useMemo } from "react";
+import Link from "next/link";
 import { Button, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import type { CommentReplyResp, CommentReplyPageResp } from "@repo/api";
@@ -47,9 +48,16 @@ interface ReplyItemProps {
   onLikeResult?: (replyId: number, isLiked: boolean, likeCount: number) => void;
 }
 
-function ReplyItem({ reply, commentId, targetType, onReply, onLikeResult }: ReplyItemProps) {
+const ReplyItem = memo(function ReplyItem({
+  reply,
+  commentId,
+  targetType,
+  onReply,
+  onLikeResult,
+}: ReplyItemProps) {
   const { userId } = useSession();
-  const { open: openLoginModal } = useLoginModal();
+  // selector 写法：仅订阅 open 函数，modal 开关时不触发重渲
+  const openLoginModal = useLoginModal((s) => s.open);
   const { toggleReplyLike } = useCommentLike(targetType);
 
   const fromName = getDisplayName(reply.from_user);
@@ -67,19 +75,46 @@ function ReplyItem({ reply, commentId, targetType, onReply, onLikeResult }: Repl
     }
   }, [userId, openLoginModal, toggleReplyLike, commentId, reply.id, onLikeResult]);
 
+  const handleReply = useCallback(() => {
+    onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName });
+  }, [onReply, commentId, reply.id, fromName]);
+
   return (
     <div className="flex gap-2 [animation:replyFadeIn_0.2s_ease-out_both]">
-      <UserAvatar src={reply.from_user?.avatar_url} name={fromName} size="sm" />
+      {reply.from_user ? (
+        <Link href={`/users/${reply.from_user.id}`} className="shrink-0">
+          <UserAvatar src={reply.from_user.avatar_url} name={fromName} size="sm" />
+        </Link>
+      ) : (
+        <UserAvatar src={undefined} name={fromName} size="sm" />
+      )}
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-2">
-          <span className="text-xs font-bold text-foreground">{fromName}</span>
+          {reply.from_user ? (
+            <Link
+              href={`/users/${reply.from_user.id}`}
+              className="text-xs font-bold text-foreground "
+            >
+              {fromName}
+            </Link>
+          ) : (
+            <span className="text-xs font-bold text-foreground">{fromName}</span>
+          )}
           <span className="text-[11px] text-(--fg3)">{time}</span>
         </div>
         <div className="relative">
           <div className="min-w-0 pr-7.5 text-[13px] leading-[1.65] text-(--fg2)">
-            {toName && (
-              <span className="mr-1 text-[11px] font-semibold text-primary">@{toName}</span>
-            )}
+            {toName &&
+              (reply.to_user ? (
+                <Link
+                  href={`/users/${reply.to_user.id}`}
+                  className="mr-1 text-[11px] font-semibold text-primary "
+                >
+                  @{toName}
+                </Link>
+              ) : (
+                <span className="mr-1 text-[11px] font-semibold text-primary">@{toName}</span>
+              ))}
             <ReplyBody content={reply.content} />
           </div>
           <Button
@@ -105,7 +140,7 @@ function ReplyItem({ reply, commentId, targetType, onReply, onLikeResult }: Repl
         <Button
           type="button"
           variant="text"
-          onPress={() => onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName })}
+          onPress={handleReply}
           className="mt-3 text-[11px] font-medium text-(--fg3) transition-colors hover:text-foreground"
         >
           回复
@@ -113,7 +148,7 @@ function ReplyItem({ reply, commentId, targetType, onReply, onLikeResult }: Repl
       </div>
     </div>
   );
-}
+});
 
 export interface CommentRepliesProps {
   commentId: number;
@@ -123,7 +158,7 @@ export interface CommentRepliesProps {
   onReply: (target: ReplyTarget) => void;
 }
 
-export function CommentReplies({
+export const CommentReplies = memo(function CommentReplies({
   commentId,
   targetType,
   replyCount,
@@ -250,4 +285,4 @@ export function CommentReplies({
       </div>
     </div>
   );
-}
+});

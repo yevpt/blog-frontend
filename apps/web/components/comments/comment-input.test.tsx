@@ -32,7 +32,10 @@ vi.mock("@/app/providers/session-provider", () => ({
 }));
 
 vi.mock("@/store/use-login-modal", () => ({
-  useLoginModal: () => ({ open: vi.fn() }),
+  useLoginModal: (selector?: (s: { open: ReturnType<typeof vi.fn> }) => unknown) => {
+    const store = { open: vi.fn() };
+    return typeof selector === "function" ? selector(store) : store;
+  },
 }));
 
 import { useSession } from "@/app/providers/session-provider";

@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
 import type { UserDetailResp } from "@repo/api";
 
@@ -26,7 +26,8 @@ export function SessionProvider({
   profile: UserDetailResp | null;
   children: ReactNode;
 }) {
-  return <SessionContext.Provider value={{ userId, profile }}>{children}</SessionContext.Provider>;
+  const value = useMemo(() => ({ userId, profile }), [userId, profile]);
+  return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 
 /** 在 Client Component 中获取当前登录用户信息 */

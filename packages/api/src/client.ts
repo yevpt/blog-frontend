@@ -34,7 +34,16 @@ import type {
   GuestbookLikeResp,
   GuestbookPageResp,
 } from "./types/guestbook";
-import type { UserDetailResp, UserListReq, UserPageResp } from "./types/user";
+import type {
+  UserDetailResp,
+  UserListReq,
+  UserPageResp,
+  UserPublicProfileResp,
+  OAuthBindingResp,
+  UpdateProfileReq,
+  UpdateMetaReq,
+  EmailDisplaySetting,
+} from "./types/user";
 import type { FriendLinkListReq, FriendLinkPageResp } from "./types/friend-link";
 
 /** createApiClient 的注入配置接口 */
@@ -206,6 +215,48 @@ export function createApiClient(config: ApiClientConfig) {
     users: {
       /** 获取当前登录用户详情（需登录） */
       getMe: () => fetchAuthed<UserDetailResp>("/users/me", { method: "GET" }),
+      /** 按 ID 获取某个用户的公开详情 */
+      getPublicProfile: (id: number) =>
+        fetchOptionalAuth<UserPublicProfileResp>(`/users/${id}`, { method: "GET" }),
+      /** 更新昵称、身份标签、简介等基本信息（需登录） */
+      updateProfile: (req: UpdateProfileReq) =>
+        fetchAuthed<UserDetailResp>("/users/me/profile", {
+          method: "PATCH",
+          body: JSON.stringify(req),
+        }),
+      /** 更新 meta 字段（需登录） */
+      updateMeta: (req: UpdateMetaReq) =>
+        fetchAuthed<UserDetailResp>("/users/me/meta", {
+          method: "PATCH",
+          body: JSON.stringify(req),
+        }),
+      /** 更新或删除某个社交链接（需登录） */
+      updateSocialLink: (platform: string, url: string | null) =>
+        fetchAuthed<UserDetailResp>(`/users/me/social/${platform}`, {
+          method: "PATCH",
+          body: JSON.stringify({ url }),
+        }),
+      /** 修改用户名（成功后需重新登录） */
+      updateUsername: (username: string) =>
+        fetchAuthed<void>("/users/me/username", {
+          method: "PATCH",
+          body: JSON.stringify({ username }),
+        }),
+      /** 修改密码（成功后需重新登录） */
+      updatePassword: (oldPassword: string, newPassword: string) =>
+        fetchAuthed<void>("/users/me/password", {
+          method: "PATCH",
+          body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
+        }),
+      /** 获取 OAuth 绑定列表 */
+      getOAuthBindings: () =>
+        fetchAuthed<OAuthBindingResp[]>("/users/me/oauth-bindings", { method: "GET" }),
+      /** 设置对外展示邮箱 */
+      updateEmailDisplay: (display: EmailDisplaySetting) =>
+        fetchAuthed<void>("/users/me/email/display", {
+          method: "PATCH",
+          body: JSON.stringify({ display }),
+        }),
       /** 获取最近访问用户（公开接口） */
       listRecent: (req: UserListReq = {}) => {
         const p = new URLSearchParams();

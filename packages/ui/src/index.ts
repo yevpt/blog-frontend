@@ -43,3 +43,6 @@ export { Select, type SelectProps, type SelectItemType } from "./select/select";
 export { Carousel, CarouselContext, useCarousel } from "./carousel/carousel-base";
 export { ToastRegion, ToastQueue, type ToastContent, type ToastType } from "./toast/toast";
 export { FadeInUp } from "./fade-in-up";
+export { DatePicker, type DatePickerProps } from "./date-picker/date-picker";
+export type { DateValue } from "react-aria-components";
+export { parseDate } from "@internationalized/date";

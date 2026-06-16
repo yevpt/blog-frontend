@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
+import Link from "next/link";
 import type { CommentItemResp, CommentReplyResp } from "@repo/api";
 import { Button, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
@@ -15,6 +16,8 @@ export interface ReplyTarget {
   parentReplyId?: number;
   toUsername: string;
 }
+
+const NOOP_REPLY = () => undefined;
 
 function getDisplayName(user: { username: string; nickname?: string } | undefined): string {
   if (!user) return "匿名";
@@ -34,7 +37,7 @@ function CommentBody({ content }: { content: string }) {
   return <MarkdownContent html={html} variant="comment" />;
 }
 
-export function CommentItem({
+export const CommentItem = memo(function CommentItem({
   comment,
   targetType,
   onReply,
@@ -55,10 +58,25 @@ export function CommentItem({
   return (
     <div className="comment-item" data-comment-id={comment.id}>
       <div className="flex gap-2.5">
-        <UserAvatar src={comment.user?.avatar_url} name={displayName} size="md" />
+        {comment.user ? (
+          <Link href={`/users/${comment.user.id}`} className="shrink-0">
+            <UserAvatar src={comment.user.avatar_url} name={displayName} size="md" />
+          </Link>
+        ) : (
+          <UserAvatar src={undefined} name={displayName} size="md" />
+        )}
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-center gap-2">
-            <span className="text-xs font-bold text-foreground">{displayName}</span>
+            {comment.user ? (
+              <Link
+                href={`/users/${comment.user.id}`}
+                className="text-xs font-bold text-foreground"
+              >
+                {displayName}
+              </Link>
+            ) : (
+              <span className="text-xs font-bold text-foreground">{displayName}</span>
+            )}
             <span className="text-[11px] text-(--fg3)">{time}</span>
           </div>
 
@@ -107,10 +125,10 @@ export function CommentItem({
             targetType={targetType}
             replyCount={comment.reply_count}
             pendingReply={pendingReply}
-            onReply={onReply ?? (() => undefined)}
+            onReply={onReply ?? NOOP_REPLY}
           />
         </div>
       </div>
     </div>
   );
-}
+});

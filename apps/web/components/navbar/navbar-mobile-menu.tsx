@@ -96,7 +96,7 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
             {userId != null ? (
               <div className={cn("flex min-w-0 items-center gap-2 px-3 py-[11px]", cardClass)}>
                 <Link
-                  href="/profile"
+                  href={userId != null ? `/users/${userId}` : "/profile"}
                   onClick={onClose}
                   className="flex min-w-0 flex-1 items-center gap-3 transition-opacity hover:opacity-80"
                 >

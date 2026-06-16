@@ -46,9 +46,11 @@ for (const file of files) {
   const svgAttributes = getSvgAttributes(content);
   const symbolAttributes = svgAttributes ? ` ${svgAttributes}` : "";
 
-  // 剥离 XML 声明和外层 <svg> 标签，只保留图形内容
+  // 剥离 XML 声明、DOCTYPE 声明、空 style 标签（含 <defs> 包裹）和外层 <svg> 标签
   const inner = content
     .replace(/<\?xml[^?]*\?>/g, "")
+    .replace(/<!DOCTYPE[^>]*>/g, "")
+    .replace(/<defs><style[^>]*><\/style><\/defs>/g, "")
     .replace(/<svg[^>]*>/g, "")
     .replace(/<\/svg>/g, "")
     .trim();

@@ -148,12 +148,12 @@ describe("NavbarUserMenu", () => {
     expect(screen.queryByText("发表碎语")).not.toBeInTheDocument();
   });
 
-  it("点击昵称行跳转 /profile 并关闭下拉", async () => {
+  it("点击昵称行跳转用户详情页并关闭下拉", async () => {
     const user = userEvent.setup();
     render(<NavbarUserMenu />);
     await user.click(screen.getByRole("button", { name: /账号菜单/ }));
     await user.click(screen.getByText("管理账号", { exact: false }));
-    expect(mockPush).toHaveBeenCalledWith("/profile");
+    expect(mockPush).toHaveBeenCalledWith("/users/1");
     expect(screen.queryByText("发表碎语")).not.toBeInTheDocument();
   });
 

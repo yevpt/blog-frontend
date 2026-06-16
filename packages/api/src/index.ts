@@ -65,6 +65,11 @@ export type {
   UserListReq,
   UserListItemResp,
   UserPageResp,
+  UserPublicProfileResp,
+  OAuthBindingResp,
+  UpdateProfileReq,
+  UpdateMetaReq,
+  EmailDisplaySetting,
 } from "./types/user";
 export type {
   FriendLinkItemResp,

@@ -1,5 +1,5 @@
 // apps/web/hooks/use-comment-submit.ts
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import type { CommentItemResp, CommentReplyResp } from "@repo/api";
 
 type TargetType = "article" | "moment";
@@ -19,10 +19,13 @@ function replyUrl(targetType: TargetType, commentId: number): string {
 export function useCommentSubmit(targetType: TargetType, targetId: number) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 用 ref 做并发提交守卫，避免将 isSubmitting 状态列入 useCallback 依赖
+  const isSubmittingRef = useRef(false);
 
   const submitComment = useCallback(
     async (content: string): Promise<CommentItemResp | null> => {
-      if (isSubmitting) return null;
+      if (isSubmittingRef.current) return null;
+      isSubmittingRef.current = true;
       setIsSubmitting(true);
       setError(null);
       try {
@@ -41,10 +44,11 @@ export function useCommentSubmit(targetType: TargetType, targetId: number) {
         setError("发布失败，请稍后重试");
         return null;
       } finally {
+        isSubmittingRef.current = false;
         setIsSubmitting(false);
       }
     },
-    [isSubmitting, targetType, targetId],
+    [targetType, targetId],
   );
 
   const submitReply = useCallback(
@@ -53,7 +57,8 @@ export function useCommentSubmit(targetType: TargetType, targetId: number) {
       content: string,
       parentReplyId = 0,
     ): Promise<CommentReplyResp | null> => {
-      if (isSubmitting) return null;
+      if (isSubmittingRef.current) return null;
+      isSubmittingRef.current = true;
       setIsSubmitting(true);
       setError(null);
       try {
@@ -72,10 +77,11 @@ export function useCommentSubmit(targetType: TargetType, targetId: number) {
         setError("回复失败，请稍后重试");
         return null;
       } finally {
+        isSubmittingRef.current = false;
         setIsSubmitting(false);
       }
     },
-    [isSubmitting, targetType],
+    [targetType],
   );
 
   const clearError = useCallback(() => setError(null), []);

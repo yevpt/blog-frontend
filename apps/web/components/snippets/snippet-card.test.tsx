@@ -1,9 +1,22 @@
+import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { SnippetCard } from "./snippet-card";
 import type { MomentItemResp } from "@repo/api";
+
+vi.mock("next/link", () => ({
+  default: ({
+    href,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
 
 // Mock @repo/icons
 vi.mock("@repo/icons", () => ({
@@ -245,5 +258,13 @@ describe("SnippetCard", () => {
     await user.click(screen.getByRole("button", { name: "评论" }));
 
     expect(onComment).toHaveBeenCalledWith(snippet);
+  });
+
+  it("有 user 时昵称渲染为跳转用户详情的链接", () => {
+    render(<SnippetCard snippet={makeMoment()} />);
+    const links = screen.getAllByRole("link");
+    const nicknameLink = links.find((l) => l.textContent === "测试用户");
+    expect(nicknameLink).toBeTruthy();
+    expect(nicknameLink?.getAttribute("href")).toBe("/users/1");
   });
 });

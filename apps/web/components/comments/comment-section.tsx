@@ -1,7 +1,7 @@
 // apps/web/components/comments/comment-section.tsx
 "use client";
 
-import { useState, useCallback, useRef, useLayoutEffect, type RefObject } from "react";
+import { useState, useCallback, useRef, useLayoutEffect, useMemo, type RefObject } from "react";
 import { Button } from "@repo/ui";
 import type { CommentReplyResp } from "@repo/api";
 import { useSession } from "@/app/providers/session-provider";
@@ -35,7 +35,7 @@ export function CommentSection({
   onContentResize,
 }: CommentSectionProps) {
   const { userId } = useSession();
-  const { open: openLoginModal } = useLoginModal();
+  const openLoginModal = useLoginModal((s) => s.open);
   const {
     comments,
     isLoading,
@@ -58,6 +58,10 @@ export function CommentSection({
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
   const [content, setContent] = useState("");
   const [pendingReplies, setPendingReplies] = useState<Record<number, CommentReplyResp | null>>({});
+
+  // 通过 ref 持有最新 content，避免 handleSubmit 因 content 变化重建引用
+  const contentRef = useRef(content);
+  contentRef.current = content;
 
   const internalScrollRef = useRef<HTMLDivElement>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
@@ -128,10 +132,15 @@ export function CommentSection({
   }, [clearError]);
 
   const handleSubmit = useCallback(async () => {
-    if (!content.trim()) return;
+    const currentContent = contentRef.current;
+    if (!currentContent.trim()) return;
 
     if (replyTarget) {
-      const reply = await submitReply(replyTarget.commentId, content, replyTarget.parentReplyId);
+      const reply = await submitReply(
+        replyTarget.commentId,
+        currentContent,
+        replyTarget.parentReplyId,
+      );
       if (reply) {
         incrementReplyCount(replyTarget.commentId);
         setPendingReplies((prev) => ({ ...prev, [replyTarget.commentId]: reply }));
@@ -142,7 +151,7 @@ export function CommentSection({
       return;
     }
 
-    const comment = await submitComment(content);
+    const comment = await submitComment(currentContent);
     if (comment) {
       addComment(comment);
       setContent("");
@@ -150,7 +159,6 @@ export function CommentSection({
       scrollToListTop();
     }
   }, [
-    content,
     replyTarget,
     submitReply,
     submitComment,
@@ -175,42 +183,63 @@ export function CommentSection({
     [userId, openLoginModal, toggleCommentLike, updateCommentLike],
   );
 
-  const commentList = (
-    <>
-      {isLoading && comments.length === 0 ? (
-        <CommentListSkeleton />
-      ) : error ? (
-        <p className="py-4 text-center text-sm text-(--fg3)">{error}</p>
-      ) : comments.length === 0 ? (
-        <p className="py-8 text-center text-sm text-(--fg3)">暂无评论，来发表第一条吧</p>
-      ) : (
-        <div className="flex flex-col gap-[18px]">
-          {comments.map((comment) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
-              targetType={targetType}
-              onReply={handleReply}
-              onLike={handleCommentLike}
-              pendingReply={pendingReplies[comment.id] ?? null}
-            />
-          ))}
-        </div>
-      )}
-      {hasMore && (
-        <div className="mt-4 flex justify-center">
-          <Button
-            variant="outline"
-            size="sm"
-            isDisabled={isLoading}
-            onPress={loadMore}
-            className="h-8 rounded-full px-[18px] text-xs font-semibold text-(--fg2) hover:border-primary hover:bg-primary/10 hover:text-primary"
-          >
-            {isLoading ? "加载中..." : "查看更多评论"}
-          </Button>
-        </div>
-      )}
-    </>
+  const handleChange = useCallback(
+    (v: string) => {
+      setContent(v);
+      clearError();
+    },
+    [clearError],
+  );
+
+  const commentList = useMemo(
+    () => (
+      <>
+        {isLoading && comments.length === 0 ? (
+          <CommentListSkeleton />
+        ) : error ? (
+          <p className="py-4 text-center text-sm text-(--fg3)">{error}</p>
+        ) : comments.length === 0 ? (
+          <p className="py-8 text-center text-sm text-(--fg3)">暂无评论，来发表第一条吧</p>
+        ) : (
+          <div className="flex flex-col gap-[18px]">
+            {comments.map((comment) => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                targetType={targetType}
+                onReply={handleReply}
+                onLike={handleCommentLike}
+                pendingReply={pendingReplies[comment.id] ?? null}
+              />
+            ))}
+          </div>
+        )}
+        {hasMore && (
+          <div className="mt-4 flex justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              isDisabled={isLoading}
+              onPress={loadMore}
+              className="h-8 rounded-full px-[18px] text-xs font-semibold text-(--fg2) hover:border-primary hover:bg-primary/10 hover:text-primary"
+            >
+              {isLoading ? "加载中..." : "查看更多评论"}
+            </Button>
+          </div>
+        )}
+      </>
+    ),
+    [
+      isLoading,
+      comments,
+      error,
+      hasMore,
+      targetType,
+      handleReply,
+      handleCommentLike,
+      pendingReplies,
+      loadMore,
+    ],
   );
 
   const input = (
@@ -247,10 +276,7 @@ export function CommentSection({
     <div className="flex flex-col gap-6">
       <RichCommentInput
         value={content}
-        onChange={(v) => {
-          setContent(v);
-          clearError();
-        }}
+        onChange={handleChange}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
         isLoggedIn={!!userId}

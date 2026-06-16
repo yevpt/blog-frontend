@@ -46,7 +46,14 @@ function FooterLink({ href, label, openInNewTab = false, showBeianIcon = false }
     >
       {showBeianIcon ? (
         <>
-          <Image src="/image/beian110.png" alt="" width={20} height={20} className="shrink-0" />
+          <Image
+            src="/image/beian110.png"
+            alt=""
+            width={20}
+            height={20}
+            className="shrink-0"
+            suppressHydrationWarning
+          />
           <span className="ml-1.5">{label}</span>
         </>
       ) : (

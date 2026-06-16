@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { MomentItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
 import { Avatar, Badge, Button, Card, CardContent } from "@repo/ui";
@@ -51,16 +52,32 @@ export function SnippetCard({
   const body = (
     <>
       <div className="mb-2.5 flex items-start gap-2.5">
-        <Avatar
-          src={authorAvatar || undefined}
-          alt={authorName}
-          initials={authorInitial}
-          size="sm"
-          className="size-9 shadow-[0_2px_8px_rgba(124,58,237,0.2)]"
-        />
+        <Link
+          href={snippet.user?.id ? `/users/${snippet.user.id}` : "#"}
+          className="shrink-0"
+          onClick={(e) => {
+            if (!snippet.user?.id) e.preventDefault();
+          }}
+        >
+          <Avatar
+            src={authorAvatar || undefined}
+            alt={authorName}
+            initials={authorInitial}
+            size="sm"
+            className="size-9 shadow-[0_2px_8px_rgba(124,58,237,0.2)]"
+          />
+        </Link>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <span className="truncate text-[13px] font-semibold text-foreground">{authorName}</span>
+            <Link
+              href={snippet.user?.id ? `/users/${snippet.user.id}` : "#"}
+              className="truncate text-[13px] font-semibold text-foreground"
+              onClick={(e) => {
+                if (!snippet.user?.id) e.preventDefault();
+              }}
+            >
+              {authorName}
+            </Link>
             <time className="ml-auto shrink-0 text-[11px] text-(--fg3)">{relativeTime}</time>
           </div>
           {authorBadge && (

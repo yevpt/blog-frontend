@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { cn } from "@repo/ui";
 import { formatRelativeTime } from "@/lib/format-time";
 import { UserAvatar } from "@/components/common/user-avatar";
@@ -37,7 +38,8 @@ export function BaseUserCard({
   const isCompact = variant === "compact";
 
   return (
-    <div
+    <Link
+      href={`/users/${user.id}`}
       data-testid={testId}
       onTouchStart={() => {}}
       className={cn(
@@ -105,6 +107,6 @@ export function BaseUserCard({
           <span className="text-[10px] text-(--fg3)">从未登录</span>
         )}
       </div>
-    </div>
+    </Link>
   );
 }

@@ -1,9 +1,22 @@
 // @vitest-environment jsdom
+import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { CommentReplyResp, CommentReplyPageResp } from "@repo/api";
 import { CommentReplies } from "./comment-replies";
+
+vi.mock("next/link", () => ({
+  default: ({
+    href,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
 
 vi.mock("@repo/markdown", () => ({
   markdownToHtmlSync: (content: string) => content,
@@ -21,7 +34,10 @@ vi.mock("@/app/providers/session-provider", () => ({
 }));
 
 vi.mock("@/store/use-login-modal", () => ({
-  useLoginModal: () => ({ open: vi.fn() }),
+  useLoginModal: (selector?: (s: { open: ReturnType<typeof vi.fn> }) => unknown) => {
+    const store = { open: vi.fn() };
+    return typeof selector === "function" ? selector(store) : store;
+  },
 }));
 
 vi.mock("@/hooks/use-comment-like", () => ({
@@ -271,5 +287,20 @@ describe("CommentReplies", () => {
     expect(vi.mocked(global.fetch)).toHaveBeenCalledWith(
       expect.stringContaining("/api/guestbook/comments/7/replies"),
     );
+  });
+
+  it("有 from_user 时昵称渲染为跳转链接", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockPage([makeReply(1)])),
+    } as Response);
+
+    render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />);
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => {
+      const links = screen.getAllByRole("link", { name: "Alice" });
+      expect(links.every((l) => l.getAttribute("href") === "/users/1")).toBe(true);
+    });
   });
 });
