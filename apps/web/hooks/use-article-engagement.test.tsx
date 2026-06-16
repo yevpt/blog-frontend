@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { useArticleEngagement } from "./use-article-engagement";
 import { useActiveArticle } from "@/store/use-active-article";
 
@@ -7,6 +9,10 @@ const mockOpenLoginModal = vi.fn();
 const mockAddToast = vi.fn();
 const mockFetch = vi.fn();
 let mockUserId: number | null = null;
+
+function webSourcePath(path: string): string {
+  return resolve(process.cwd().endsWith("apps/web") ? path : `apps/web/${path}`);
+}
 
 vi.mock("@/app/providers/session-provider", () => ({
   useSession: () => ({ userId: mockUserId }),
@@ -46,6 +52,11 @@ describe("useArticleEngagement", () => {
 
     expect(mockOpenLoginModal).toHaveBeenCalledOnce();
     expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("不在 hook 内直接调用 fetch", () => {
+    const source = readFileSync(webSourcePath("hooks/use-article-engagement.ts"), "utf8");
+    expect(source).not.toContain("fetch(");
   });
 
   it("点赞成功后更新 store 中的 likeCount 和 isLiked", async () => {

@@ -23,6 +23,7 @@ export interface UseMomentListOptions {
   initialPage: MomentPageResp;
   ownerUserId?: number;
   friendRoleId?: number;
+  initialTab?: MomentTab;
 }
 
 export function buildMomentListUrl(query: MomentListQuery): string {
@@ -39,11 +40,16 @@ export function buildMomentListUrl(query: MomentListQuery): string {
   return `/api/moments?${qs}`;
 }
 
-export function useMomentList({ initialPage, ownerUserId, friendRoleId }: UseMomentListOptions) {
+export function useMomentList({
+  initialPage,
+  ownerUserId,
+  friendRoleId,
+  initialTab = "all",
+}: UseMomentListOptions) {
   const { userId } = useSession();
   const { open: openLoginModal } = useLoginModal();
 
-  const [activeTab, setActiveTab] = useState<MomentTab>("all");
+  const [activeTab, setActiveTab] = useState<MomentTab>(initialTab);
   const [activeSort, setActiveSort] = useState<MomentSort>("latest");
   const [currentPage, setCurrentPage] = useState(initialPage.page);
   const [pageData, setPageData] = useState(initialPage);

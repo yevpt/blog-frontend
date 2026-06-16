@@ -3,6 +3,8 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import type { CommentReplyResp, CommentReplyPageResp } from "@repo/api";
 import { CommentReplies } from "./comment-replies";
 
@@ -72,6 +74,14 @@ function mockPage(list: CommentReplyResp[], pages = 1): CommentReplyPageResp {
   return { total: list.length, pages, page: 1, page_size: 5, list };
 }
 
+function webSourcePath(path: string): string {
+  return resolve(process.cwd().endsWith("apps/web") ? path : `apps/web/${path}`);
+}
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status });
+}
+
 describe("CommentReplies", () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -85,6 +95,11 @@ describe("CommentReplies", () => {
     expect(container.innerHTML).toBe("");
   });
 
+  it("回复分页不在组件内直接调用 fetch", () => {
+    const source = readFileSync(webSourcePath("components/comments/comment-replies.tsx"), "utf8");
+    expect(source).not.toContain("fetch(");
+  });
+
   it("replyCount>0 时显示展开按钮", () => {
     render(<CommentReplies commentId={1} targetType="article" replyCount={5} onReply={vi.fn()} />);
     expect(screen.getByText(/展开 5 条回复/)).toBeTruthy();
@@ -92,10 +107,7 @@ describe("CommentReplies", () => {
 
   it("点击展开后加载并显示回复列表", async () => {
     const user = userEvent.setup();
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeReply(1), makeReply(3)])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1), makeReply(3)])));
 
     render(<CommentReplies commentId={1} targetType="article" replyCount={2} onReply={vi.fn()} />);
     await user.click(screen.getByText(/展开 2 条回复/));
@@ -105,11 +117,9 @@ describe("CommentReplies", () => {
 
   it("hasMore 时显示「查看更多回复」", async () => {
     const user = userEvent.setup();
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () =>
-        Promise.resolve({ total: 10, pages: 2, page: 1, page_size: 5, list: [makeReply(1)] }),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(
+      jsonResponse({ total: 10, pages: 2, page: 1, page_size: 5, list: [makeReply(1)] }),
+    );
 
     render(<CommentReplies commentId={1} targetType="article" replyCount={10} onReply={vi.fn()} />);
     await user.click(screen.getByText(/展开 10 条回复/));
@@ -120,10 +130,7 @@ describe("CommentReplies", () => {
     const user = userEvent.setup();
     const pending: CommentReplyResp = makeReply(99);
     pending.content = "刚刚发布的回复";
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([])));
 
     render(
       <CommentReplies
@@ -141,10 +148,7 @@ describe("CommentReplies", () => {
   it("点击回复内的回复按钮触发 onReply", async () => {
     const user = userEvent.setup();
     const onReply = vi.fn();
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeReply(1)])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
 
     render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={onReply} />);
     await user.click(screen.getByText(/展开 1 条回复/));
@@ -160,10 +164,9 @@ describe("CommentReplies", () => {
 
   it("回复项显示点赞按钮", async () => {
     const user = userEvent.setup();
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeReply(1, { like_count: 3, is_liked: false })])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(
+      jsonResponse(mockPage([makeReply(1, { like_count: 3, is_liked: false })])),
+    );
 
     render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />);
     await user.click(screen.getByText(/展开 1 条回复/));
@@ -175,10 +178,7 @@ describe("CommentReplies", () => {
 
   it("点击回复点赞按钮调用 toggleReplyLike 并更新状态", async () => {
     const user = userEvent.setup();
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeReply(1)])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
 
     render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />);
     await user.click(screen.getByText(/展开 1 条回复/));
@@ -209,7 +209,7 @@ describe("CommentReplies", () => {
     // 尚未展开，不应出现收起按钮
     expect(screen.queryByText("收起回复")).toBeNull();
 
-    resolve({ ok: true, json: () => Promise.resolve(mockPage([makeReply(1)])) });
+    resolve(jsonResponse(mockPage([makeReply(1)])));
     // 加载完成后：回复显示，加载状态消失
     await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
     expect(screen.queryByText("加载中")).toBeNull();
@@ -231,11 +231,9 @@ describe("CommentReplies", () => {
   it("加载更多时按钮显示加载中文案", async () => {
     const user = userEvent.setup();
     vi.mocked(global.fetch)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({ total: 10, pages: 2, page: 1, page_size: 5, list: [makeReply(1)] }),
-      } as Response)
+      .mockResolvedValueOnce(
+        jsonResponse({ total: 10, pages: 2, page: 1, page_size: 5, list: [makeReply(1)] }),
+      )
       .mockReturnValueOnce(new Promise(() => {}) as unknown as Promise<Response>);
 
     render(<CommentReplies commentId={1} targetType="article" replyCount={10} onReply={vi.fn()} />);
@@ -247,10 +245,9 @@ describe("CommentReplies", () => {
   });
 
   it("is_liked=true 时回复爱心为实心", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeReply(1, { is_liked: true })])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(
+      jsonResponse(mockPage([makeReply(1, { is_liked: true })])),
+    );
 
     render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />);
     (await userEvent.setup()).click(screen.getByText(/展开 1 条回复/));
@@ -259,10 +256,7 @@ describe("CommentReplies", () => {
 
   it("targetType=guestbook 时展开并显示回复", async () => {
     const user = userEvent.setup();
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeReply(1)])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
 
     render(
       <CommentReplies commentId={1} targetType="guestbook" replyCount={1} onReply={vi.fn()} />,
@@ -273,10 +267,7 @@ describe("CommentReplies", () => {
 
   it("targetType=guestbook 时 fetch URL 包含 guestbook 路径", async () => {
     const user = userEvent.setup();
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeReply(1)])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
 
     render(
       <CommentReplies commentId={7} targetType="guestbook" replyCount={1} onReply={vi.fn()} />,
@@ -286,15 +277,13 @@ describe("CommentReplies", () => {
 
     expect(vi.mocked(global.fetch)).toHaveBeenCalledWith(
       expect.stringContaining("/api/guestbook/comments/7/replies"),
+      undefined,
     );
   });
 
   it("有 from_user 时昵称渲染为跳转链接", async () => {
     const user = userEvent.setup();
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeReply(1)])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
 
     render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />);
     await user.click(screen.getByText(/展开 1 条回复/));

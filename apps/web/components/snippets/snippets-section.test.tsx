@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, act, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { SnippetsSection } from "./snippets-section";
 import type { MomentItemResp } from "@repo/api";
 
@@ -139,6 +141,14 @@ const LONG_CONTENT =
 
 const mockMoments: MomentItemResp[] = [makeMoment(1, SHORT_CONTENT), makeMoment(2, LONG_CONTENT)];
 
+function webSourcePath(path: string): string {
+  return resolve(process.cwd().endsWith("apps/web") ? path : `apps/web/${path}`);
+}
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status });
+}
+
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn());
   mockSessionUserId = 7;
@@ -152,6 +162,11 @@ afterEach(() => {
 });
 
 describe("SnippetsSection", () => {
+  it("不再依赖旧的 useMomentEngagement hook", () => {
+    const source = readFileSync(webSourcePath("components/snippets/snippets-section.tsx"), "utf8");
+    expect(source).not.toContain("use-moment-engagement");
+  });
+
   it("渲染不崩溃，显示碎语内容", () => {
     render(<SnippetsSection snippets={mockMoments} />);
     expect(screen.getByText("碎语")).toBeTruthy();
@@ -274,11 +289,7 @@ describe("SnippetsSection", () => {
 
   it("已登录时点击喜欢会调用接口并使用服务端最新结果更新状态", async () => {
     const user = userEvent.setup();
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({ is_liked: true, like_count: 9 }),
-    } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ is_liked: true, like_count: 9 }));
 
     render(<SnippetsSection snippets={[makeMoment(8, SHORT_CONTENT)]} />);
 
@@ -305,11 +316,7 @@ describe("SnippetsSection", () => {
 
   it("取消点赞失败时提示取消点赞失败", async () => {
     const user = userEvent.setup();
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      json: async () => ({ error: "failed" }),
-    } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "failed" }, 500));
 
     render(
       <SnippetsSection

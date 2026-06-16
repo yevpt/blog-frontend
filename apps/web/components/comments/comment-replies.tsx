@@ -10,6 +10,8 @@ import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
 import { useCommentLike } from "@/hooks/use-comment-like";
 import { formatRelativeTime } from "@/lib/format-time";
+import { apiJson } from "@/lib/client-fetch";
+import { buildQuery } from "@/lib/query";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { markdownToHtmlSync, MarkdownContent } from "@repo/markdown";
 import type { ReplyTarget } from "./comment-item";
@@ -32,7 +34,8 @@ function replyUrl(targetType: TargetType, commentId: number, page: number): stri
       : targetType === "moment"
         ? `/api/moments/comments/${commentId}/replies`
         : `/api/guestbook/comments/${commentId}/replies`;
-  return `${base}?page=${page}&page_size=${PAGE_SIZE}`;
+  const qs = buildQuery({ page, page_size: PAGE_SIZE });
+  return `${base}?${qs}`;
 }
 
 function ReplyBody({ content }: { content: string }) {
@@ -177,9 +180,7 @@ export const CommentReplies = memo(function CommentReplies({
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetch(replyUrl(targetType, commentId, pageNum));
-        if (!res.ok) throw new Error("fetch failed");
-        const data: CommentReplyPageResp = await res.json();
+        const data = await apiJson<CommentReplyPageResp>(replyUrl(targetType, commentId, pageNum));
         setReplies((prev) => (append ? [...prev, ...data.list] : data.list));
         setPage(pageNum);
         setHasMore(pageNum < data.pages);

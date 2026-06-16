@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import type { ArticleLikeResp } from "@repo/api";
 import { useSession } from "@/app/providers/session-provider";
 import { addToast } from "@/lib/toast";
+import { apiJson, ApiClientError } from "@/lib/client-fetch";
 import { useActiveArticle } from "@/store/use-active-article";
 import { useLoginModal } from "@/store/use-login-modal";
 
@@ -28,20 +29,15 @@ export function useArticleEngagement() {
     setIsLiking(true);
 
     try {
-      const res = await fetch(`/api/articles/${articleId}/like`, { method: "POST" });
-
-      if (res.status === 401) {
+      const data = await apiJson<ArticleLikeResp>(`/api/articles/${articleId}/like`, {
+        method: "POST",
+      });
+      patchLike({ likeCount: data.like_count, isLiked: data.is_liked });
+    } catch (err) {
+      if (err instanceof ApiClientError && err.status === 401) {
         openLoginModal();
         return;
       }
-
-      if (!res.ok) {
-        throw new Error("failed");
-      }
-
-      const data: ArticleLikeResp = await res.json();
-      patchLike({ likeCount: data.like_count, isLiked: data.is_liked });
-    } catch {
       addToast("点赞失败，请稍后重试", "error");
     } finally {
       setIsLiking(false);

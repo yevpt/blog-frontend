@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useLocale } from "@repo/hooks";
 import { SvgIcon } from "@repo/icons";
 import { Button } from "@repo/ui";
-import type { MomentItemResp } from "@repo/api";
+import type { MomentItemResp, MomentPageResp } from "@repo/api";
 import { CommentModal } from "@/components/comments";
-import { useMomentEngagement } from "@/hooks/use-moment-engagement";
+import { useMomentList } from "@/hooks/use-moment-list";
 import { SnippetCard } from "./snippet-card";
 import { SnippetCardSkeleton } from "./snippet-card-skeleton";
 
@@ -23,23 +23,41 @@ const MAX_SNIPPETS = 3;
 // 碎语区块容器：渐变图标 header + 卡片堆叠 + 渐变 CTA 按钮
 export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSectionProps) {
   const { t } = useLocale();
-  const getRefreshParams = useCallback(() => ({ page: 1, pageSize: MAX_SNIPPETS }), []);
+  const initialPage = useMemo<MomentPageResp>(
+    () => ({
+      total: snippets.length,
+      pages: 1,
+      page: 1,
+      page_size: MAX_SNIPPETS,
+      list: snippets,
+    }),
+    [snippets],
+  );
 
-  const {
-    moments,
-    activeComment,
-    pendingLikeIds,
-    handleLike,
-    openComment,
-    closeComment,
-    handleCommentAdded,
-  } = useMomentEngagement({
-    initialMoments: snippets,
+  const { moments, pendingLikeIds, toggleLike, setMoments } = useMomentList({
+    initialPage,
     ownerUserId,
-    getRefreshParams,
+    initialTab: ownerUserId === undefined ? "all" : "owner",
   });
+  const [activeComment, setActiveComment] = useState<{ momentId: number } | null>(null);
 
   const visibleSnippets = moments.slice(0, MAX_SNIPPETS);
+  const openComment = useCallback((snippet: MomentItemResp) => {
+    setActiveComment({ momentId: snippet.id });
+  }, []);
+  const closeComment = useCallback(() => {
+    setActiveComment(null);
+  }, []);
+  const handleCommentAdded = useCallback(() => {
+    if (!activeComment) return;
+    setMoments((current) =>
+      current.map((item) =>
+        item.id === activeComment.momentId
+          ? { ...item, comment_count: item.comment_count + 1 }
+          : item,
+      ),
+    );
+  }, [activeComment, setMoments]);
 
   return (
     <>
@@ -73,8 +91,8 @@ export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSect
                   key={snippet.id}
                   layout="embedded"
                   snippet={snippet}
-                  onLike={handleLike}
-                  likeDisabled={pendingLikeIds.includes(snippet.id)}
+                  onLike={toggleLike}
+                  likeDisabled={pendingLikeIds.has(snippet.id)}
                   onComment={openComment}
                 />
               ))}
