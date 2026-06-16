@@ -15,7 +15,6 @@
 - 用 `import.meta.env`，禁止用 `process.env`
 
 ## 测试
-- 测试环境：`happy-dom`（根 vitest.config.ts 默认）
-- 新增组件 → 同目录 `*.test.tsx`，用 `@testing-library/react`
-- 新增 Hook → 同目录 `*.test.ts`，用 `renderHook`
-- React Query 相关组件：用 `QueryClientProvider` 包裹测试，验证 loading/error/success 状态
+- 环境 `happy-dom`；组件 → `*.test.tsx`，Hook → `*.test.ts`。
+- React Query 组件用 `QueryClientProvider` 包裹，验证 loading/error/success。
+- 写法/mock 配方（apiClient、MemoryRouter、zustand 复位）见 `.agents/skills/writing-tests/SKILL.md`。

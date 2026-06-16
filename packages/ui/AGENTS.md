@@ -11,7 +11,6 @@
 - **响应式**：组件默认支持移动端，布局/尺寸用 Tailwind 响应式前缀；避免写死固定宽度
 
 ## 组件测试
-- 每个组件文件旁边必须有同名 `*.test.tsx`（`Button.tsx` → `Button.test.tsx`）
-- 测试环境：`happy-dom`（根 vitest.config.ts 默认）
-- 必须覆盖：① 渲染不崩溃 ② props 变化影响 DOM 输出 ③ onClick 等交互事件
-- 用 `@testing-library/react` 的 `render` + `screen` + `userEvent`
+- 每个组件文件旁边必须有同名 `*.test.tsx`（`button.tsx` → `button.test.tsx`）。
+- 环境 `happy-dom`；覆盖：① 渲染不崩溃 ② props 变化影响 DOM ③ 交互事件。
+- 写法/mock 配方见 `.agents/skills/writing-tests/SKILL.md`。

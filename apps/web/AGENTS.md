@@ -21,7 +21,6 @@
 - `components/`：当前应用的业务组件（基础组件从 `@repo/ui` 引入）
 
 ## 测试
-- 测试环境：`jsdom`（`apps/web/**` 已在根 vitest.config.ts 配置）
-- 新增 `components/` 下的组件 → 同目录 `*.test.tsx`，用 `@testing-library/react`
-- 新增 `app/**/page.tsx` → 同目录 `page.test.tsx`，测试核心内容渲染
-- Server Components 中只测试输出的 HTML 结构，不测试服务端数据获取逻辑
+- 环境 `jsdom`；`components/` 组件 → `*.test.tsx`，`app/**/page.tsx` → `page.test.tsx`。
+- Server Components 只测输出的 HTML 结构，不测服务端取数逻辑。
+- 写法/环境/mock 配方见 `.agents/skills/writing-tests/SKILL.md`。

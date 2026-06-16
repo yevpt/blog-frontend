@@ -2,8 +2,6 @@
 name: "git-commit"
 description: "Use when writing or amending a git commit message in this repo. Provides the required Conventional-Commits-style format with a Chinese subject, the allowed type enum, scope rules, and body conventions. Trigger whenever you are about to run `git commit`, generate a commit message, or are asked to commit changes."
 license: "MIT"
-metadata:
-  scope: "project"
 ---
 
 # Git Commit 规范
