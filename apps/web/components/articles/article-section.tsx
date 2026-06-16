@@ -3,22 +3,14 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import type { ReactNode } from "react";
 import { Pagination } from "@repo/ui";
-import type {
-  ArticleLikeResp,
-  ArticleListItemResp,
-  ArticlePageResp,
-  CategoryTabItem,
-} from "@repo/api";
+import type { ArticleListItemResp, ArticlePageResp, CategoryTabItem } from "@repo/api";
 import { ArticleListHeader } from "./article-list-header";
 import { PageSectionHeader } from "@/components/common/page-section-header";
 import { ArticleCard } from "./article-card";
 import { ArticleCardSkeleton } from "./article-card-skeleton";
 import { CommentModal } from "@/components/comments";
 import { useSession } from "@/app/providers/session-provider";
-import { useLoginModal } from "@/store/use-login-modal";
-import { addToast } from "@/lib/toast";
-
-const ALL_CATEGORY_ID = 0;
+import { ALL_CATEGORY_ID, useArticleList } from "@/hooks/use-article-list";
 
 // 虚拟"全部"Tab，对应不带 category_id 的请求
 const ALL_CATEGORY: CategoryTabItem = {
@@ -48,28 +40,30 @@ export function ArticleSection({
   sidebar,
   currentCategoryId: controlledCategoryId,
 }: ArticleSectionProps) {
-  const [internalCategoryId, setInternalCategoryId] = useState(ALL_CATEGORY_ID);
-  const isControlled = controlledCategoryId !== undefined;
-  const currentCategoryId = isControlled ? controlledCategoryId : internalCategoryId;
+  const {
+    currentCategoryId,
+    currentPage,
+    pageData,
+    isLoading,
+    fetchError,
+    pendingLikeIds,
+    changeCategory,
+    changePage,
+    toggleLike,
+    refreshForSessionChange,
+    setPageData,
+  } = useArticleList({ initialPage, controlledCategoryId });
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageData, setPageData] = useState(initialPage);
-  const [isLoading, setIsLoading] = useState(false);
-  const [fetchError, setFetchError] = useState(false);
   // TODO: 待后端支持文字搜索接口后，在 fetchPage 中加入 search 参数
   const [searchQuery, setSearchQuery] = useState("");
   const [activeComment, setActiveComment] = useState<ActiveComment | null>(null);
-  const [pendingLikeIds, setPendingLikeIds] = useState<number[]>([]);
   const { userId } = useSession();
-  const { open: openLoginModal } = useLoginModal();
 
   const allCategories = useMemo(() => [ALL_CATEGORY, ...categories], [categories]);
 
-  const abortRef = useRef<AbortController | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const prevUserIdRef = useRef<number | null>(userId);
   const silentRefreshRef = useRef(false);
-  // 记录上一次的 isLoading 值，用于检测加载完成时机
   const wasLoadingRef = useRef(false);
 
   // 数据加载完成（isLoading true → false）后再滚动，避免布局偏移打断平滑滚动
@@ -84,58 +78,14 @@ export function ArticleSection({
     wasLoadingRef.current = isLoading;
   }, [isLoading]);
 
-  const fetchPage = useCallback(async (categoryId: number, page: number) => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams({ page: String(page) });
-      if (categoryId !== ALL_CATEGORY_ID) params.set("category_id", String(categoryId));
-      const res = await fetch(`/api/articles?${params.toString()}`, {
-        signal: controller.signal,
-      });
-      if (!res.ok) throw new Error("fetch failed");
-      const data: ArticlePageResp = await res.json();
-      setPageData(data);
-    } catch (err) {
-      if ((err as { name?: string }).name !== "AbortError") {
-        setFetchError(true);
-      }
-    } finally {
-      if (!controller.signal.aborted) setIsLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
     if (prevUserIdRef.current === userId) {
       return;
     }
     prevUserIdRef.current = userId;
     silentRefreshRef.current = true;
-    setFetchError(false);
-    void fetchPage(currentCategoryId, currentPage);
-  }, [currentCategoryId, currentPage, fetchPage, userId]);
-
-  const handleCategoryChange = useCallback(
-    (id: number) => {
-      setFetchError(false);
-      setInternalCategoryId(id);
-      setCurrentPage(1);
-      void fetchPage(id, 1);
-    },
-    [fetchPage],
-  );
-
-  const handlePageChange = useCallback(
-    (page: number) => {
-      setFetchError(false);
-      setCurrentPage(page);
-      void fetchPage(currentCategoryId, page);
-      // 滚动由 useEffect 在 isLoading 变为 false 后触发，布局稳定时再执行
-    },
-    [currentCategoryId, fetchPage],
-  );
+    void refreshForSessionChange();
+  }, [refreshForSessionChange, userId]);
 
   const skeletonCount = pageData.list.length || 6;
 
@@ -149,7 +99,7 @@ export function ArticleSection({
           : item,
       ),
     }));
-  }, [activeComment]);
+  }, [activeComment, setPageData]);
 
   const openComment = (article: ArticleListItemResp) => {
     setActiveComment({
@@ -158,45 +108,6 @@ export function ArticleSection({
       type: article.category?.name ?? "文章",
     });
   };
-
-  const handleLike = useCallback(
-    async (article: ArticleListItemResp) => {
-      if (userId == null) {
-        openLoginModal();
-        return;
-      }
-      if (pendingLikeIds.includes(article.id)) {
-        return;
-      }
-
-      setPendingLikeIds((current) => [...current, article.id]);
-      try {
-        const res = await fetch(`/api/articles/${article.id}/like`, { method: "POST" });
-        if (res.status === 401) {
-          openLoginModal();
-          return;
-        }
-        if (!res.ok) {
-          throw new Error("failed");
-        }
-
-        const data: ArticleLikeResp = await res.json();
-        setPageData((current) => ({
-          ...current,
-          list: current.list.map((item) =>
-            item.id === article.id
-              ? { ...item, is_liked: data.is_liked, like_count: data.like_count }
-              : item,
-          ),
-        }));
-      } catch {
-        addToast(article.is_liked ? "取消点赞失败，请稍后重试" : "点赞失败，请稍后重试", "error");
-      } finally {
-        setPendingLikeIds((current) => current.filter((id) => id !== article.id));
-      }
-    },
-    [openLoginModal, pendingLikeIds, userId],
-  );
 
   const articleGrid = (
     <>
@@ -207,8 +118,8 @@ export function ArticleSection({
               <ArticleCard
                 key={article.id}
                 article={article}
-                onLike={handleLike}
-                likeDisabled={pendingLikeIds.includes(article.id)}
+                onLike={toggleLike}
+                likeDisabled={pendingLikeIds.has(article.id)}
                 onComment={openComment}
               />
             ))}
@@ -222,7 +133,7 @@ export function ArticleSection({
         <Pagination
           currentPage={currentPage}
           totalPages={pageData.pages}
-          onPageChange={handlePageChange}
+          onPageChange={changePage}
           className="mt-8"
         />
       )}
@@ -236,7 +147,7 @@ export function ArticleSection({
         <ArticleListHeader
           categories={allCategories}
           currentCategoryId={currentCategoryId}
-          onCategoryChange={handleCategoryChange}
+          onCategoryChange={changeCategory}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />

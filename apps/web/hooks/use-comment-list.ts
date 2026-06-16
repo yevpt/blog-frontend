@@ -1,17 +1,27 @@
 // apps/web/hooks/use-comment-list.ts
 import { useState, useEffect, useCallback } from "react";
 import type { CommentItemResp, CommentPageResp } from "@repo/api";
+import { apiJson } from "@/lib/client-fetch";
+import { buildQuery } from "@/lib/query";
 
 const PAGE_SIZE = 10;
 
 type TargetType = "article" | "moment";
+
+function isAbortError(err: unknown): boolean {
+  return (
+    (err instanceof DOMException && err.name === "AbortError") ||
+    (err instanceof Error && err.name === "AbortError")
+  );
+}
 
 function buildListUrl(targetType: TargetType, targetId: number, page: number): string {
   const base =
     targetType === "article"
       ? `/api/articles/${targetId}/comments`
       : `/api/moments/${targetId}/comments`;
-  return `${base}?page=${page}&page_size=${PAGE_SIZE}`;
+  const qs = buildQuery({ page, page_size: PAGE_SIZE });
+  return `${base}?${qs}`;
 }
 
 export function useCommentList(targetType: TargetType, targetId: number) {
@@ -26,18 +36,24 @@ export function useCommentList(targetType: TargetType, targetId: number) {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetch(buildListUrl(targetType, targetId, pageNum), { signal });
-        if (!res.ok) throw new Error("fetch failed");
-        const data = (await res.json()) as CommentPageResp;
-        if (signal?.aborted) return;
+        const data = await apiJson<CommentPageResp>(buildListUrl(targetType, targetId, pageNum), {
+          signal,
+        });
+        if (signal?.aborted) {
+          return;
+        }
         setComments((prev) => (append ? [...prev, ...data.list] : data.list));
         setPage(pageNum);
         setHasMore(pageNum < data.pages);
       } catch (err) {
-        if ((err as { name?: string }).name === "AbortError") return;
+        if (isAbortError(err)) {
+          return;
+        }
         setError("加载评论失败，请稍后重试");
       } finally {
-        if (!signal?.aborted) setIsLoading(false);
+        if (!signal?.aborted) {
+          setIsLoading(false);
+        }
       }
     },
     [targetType, targetId],
@@ -53,8 +69,10 @@ export function useCommentList(targetType: TargetType, targetId: number) {
   }, [fetchPage]);
 
   const loadMore = useCallback(() => {
-    if (!isLoading && hasMore) void fetchPage(page + 1, true);
-  }, [isLoading, hasMore, page, fetchPage]);
+    if (!isLoading && hasMore) {
+      void fetchPage(page + 1, true);
+    }
+  }, [fetchPage, hasMore, isLoading, page]);
 
   const addComment = useCallback((comment: CommentItemResp) => {
     setComments((prev) => [comment, ...prev]);

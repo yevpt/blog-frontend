@@ -4,6 +4,10 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import type { CommentItemResp, CommentPageResp } from "@repo/api";
 import { useCommentList } from "./use-comment-list";
 
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status });
+}
+
 function makeComment(id: number): CommentItemResp {
   return {
     id,
@@ -30,10 +34,7 @@ describe("useCommentList", () => {
   });
 
   it("article 类型使用正确 URL", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeComment(1)])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeComment(1)])));
 
     renderHook(() => useCommentList("article", 42));
     await waitFor(() => {
@@ -45,10 +46,7 @@ describe("useCommentList", () => {
   });
 
   it("moment 类型使用正确 URL", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeComment(1)])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeComment(1)])));
 
     renderHook(() => useCommentList("moment", 7));
     await waitFor(() => {
@@ -60,10 +58,9 @@ describe("useCommentList", () => {
   });
 
   it("挂载时自动加载第 1 页", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeComment(1), makeComment(2)])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(
+      jsonResponse(mockPage([makeComment(1), makeComment(2)])),
+    );
 
     const { result } = renderHook(() => useCommentList("article", 1));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -74,14 +71,8 @@ describe("useCommentList", () => {
 
   it("loadMore 追加下一页", async () => {
     vi.mocked(global.fetch)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockPage([makeComment(1)], 1, 2)),
-      } as Response)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockPage([makeComment(2)], 2, 2)),
-      } as Response);
+      .mockResolvedValueOnce(jsonResponse(mockPage([makeComment(1)], 1, 2)))
+      .mockResolvedValueOnce(jsonResponse(mockPage([makeComment(2)], 2, 2)));
 
     const { result } = renderHook(() => useCommentList("article", 1));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -93,10 +84,7 @@ describe("useCommentList", () => {
   });
 
   it("addComment 插入到列表头部（时间倒序）", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeComment(1)])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeComment(1)])));
 
     const { result } = renderHook(() => useCommentList("article", 1));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -106,10 +94,7 @@ describe("useCommentList", () => {
   });
 
   it("incrementReplyCount 将指定评论 reply_count +1", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeComment(1)])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeComment(1)])));
 
     const { result } = renderHook(() => useCommentList("article", 1));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -119,10 +104,7 @@ describe("useCommentList", () => {
   });
 
   it("updateCommentLike 更新指定评论的 is_liked 和 like_count", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeComment(1)])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeComment(1)])));
 
     const { result } = renderHook(() => useCommentList("article", 1));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -147,10 +129,7 @@ describe("useCommentList", () => {
   });
 
   it("fetch 失败时设置 error", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: false,
-      json: () => Promise.resolve({}),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse({ error: "failed" }, 500));
 
     const { result } = renderHook(() => useCommentList("article", 1));
     await waitFor(() => expect(result.current.isLoading).toBe(false));

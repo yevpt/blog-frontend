@@ -3,6 +3,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useCommentSubmit } from "./use-comment-submit";
 
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status });
+}
+
 describe("useCommentSubmit", () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -10,23 +14,20 @@ describe("useCommentSubmit", () => {
   });
 
   it("submitComment article 调用正确 URL", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () =>
-        Promise.resolve({
-          id: 1,
-          content: "test",
-          reply_count: 0,
-          like_count: 0,
-          is_liked: false,
-          target_type: "article",
-          target_id: 5,
-          user_id: 1,
-          created_at: "",
-          updated_at: "",
-        }),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(
+      jsonResponse({
+        id: 1,
+        content: "test",
+        reply_count: 0,
+        like_count: 0,
+        is_liked: false,
+        target_type: "article",
+        target_id: 5,
+        user_id: 1,
+        created_at: "",
+        updated_at: "",
+      }),
+    );
 
     const { result } = renderHook(() => useCommentSubmit("article", 5));
     await act(() => result.current.submitComment("hello"));
@@ -38,23 +39,20 @@ describe("useCommentSubmit", () => {
   });
 
   it("submitComment moment 调用正确 URL", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () =>
-        Promise.resolve({
-          id: 1,
-          content: "test",
-          reply_count: 0,
-          like_count: 0,
-          is_liked: false,
-          target_type: "moment",
-          target_id: 3,
-          user_id: 1,
-          created_at: "",
-          updated_at: "",
-        }),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(
+      jsonResponse({
+        id: 1,
+        content: "test",
+        reply_count: 0,
+        like_count: 0,
+        is_liked: false,
+        target_type: "moment",
+        target_id: 3,
+        user_id: 1,
+        created_at: "",
+        updated_at: "",
+      }),
+    );
 
     const { result } = renderHook(() => useCommentSubmit("moment", 3));
     await act(() => result.current.submitComment("hello"));
@@ -66,24 +64,21 @@ describe("useCommentSubmit", () => {
   });
 
   it("submitReply article 调用正确 URL", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () =>
-        Promise.resolve({
-          id: 10,
-          content: "reply",
-          like_count: 0,
-          is_liked: false,
-          target_type: "article",
-          comment_id: 1,
-          from_user_id: 2,
-          to_user_id: 1,
-          parent_reply_id: 0,
-          created_at: "",
-          updated_at: "",
-        }),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(
+      jsonResponse({
+        id: 10,
+        content: "reply",
+        like_count: 0,
+        is_liked: false,
+        target_type: "article",
+        comment_id: 1,
+        from_user_id: 2,
+        to_user_id: 1,
+        parent_reply_id: 0,
+        created_at: "",
+        updated_at: "",
+      }),
+    );
 
     const { result } = renderHook(() => useCommentSubmit("article", 5));
     await act(() => result.current.submitReply(1, "reply content"));
@@ -95,11 +90,7 @@ describe("useCommentSubmit", () => {
   });
 
   it("401 时返回 null 并设置 error", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: false,
-      status: 401,
-      json: () => Promise.resolve({}),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse({ error: "Unauthorized" }, 401));
 
     const { result } = renderHook(() => useCommentSubmit("article", 1));
     let ret: unknown;

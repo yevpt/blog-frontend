@@ -1,12 +1,11 @@
 import { useCallback } from "react";
 import type { GuestbookLikeResp, CommentLikeResp } from "@repo/api";
+import { apiJson } from "@/lib/client-fetch";
 
 export function useGuestbookLike() {
   const toggleEntryLike = useCallback(async (id: number): Promise<GuestbookLikeResp | null> => {
     try {
-      const res = await fetch(`/api/guestbook/${id}/like`, { method: "POST" });
-      if (!res.ok) return null;
-      return (await res.json()) as GuestbookLikeResp;
+      return await apiJson<GuestbookLikeResp>(`/api/guestbook/${id}/like`, { method: "POST" });
     } catch {
       return null;
     }
@@ -15,11 +14,10 @@ export function useGuestbookLike() {
   const toggleReplyLike = useCallback(
     async (guestbookId: number, replyId: number): Promise<CommentLikeResp | null> => {
       try {
-        const res = await fetch(`/api/guestbook/comments/${guestbookId}/replies/${replyId}/like`, {
-          method: "POST",
-        });
-        if (!res.ok) return null;
-        return (await res.json()) as CommentLikeResp;
+        return await apiJson<CommentLikeResp>(
+          `/api/guestbook/comments/${guestbookId}/replies/${replyId}/like`,
+          { method: "POST" },
+        );
       } catch {
         return null;
       }

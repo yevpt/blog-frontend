@@ -3,12 +3,15 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { MomentPageResp, MomentItemResp } from "@repo/api";
 import dynamic from "next/dynamic";
-import { useMomentEngagement } from "@/hooks/use-moment-engagement";
+import { useMomentList } from "@/hooks/use-moment-list";
 import { Card } from "@repo/ui";
 import { SnippetCard } from "./snippet-card";
 import { SnippetCardSkeleton } from "./snippet-card-skeleton";
-import { SnippetFilterBar, type SnippetSort, type SnippetTab } from "./snippet-filter-bar";
+import { SnippetFilterBar } from "./snippet-filter-bar";
 import { SnippetScrollLoader, SnippetEndReached } from "./snippet-scroll-loader";
+import { distributeToColumns, getSnippetColumnCount } from "./snippet-masonry";
+
+export { getSnippetColumnCount } from "./snippet-masonry";
 
 const CommentModal = dynamic(() => import("@/components/comments").then((m) => m.CommentModal), {
   ssr: false,
@@ -23,17 +26,6 @@ interface SnippetsListProps {
 
 const SKELETON_COUNT = 8;
 
-/** 与 Tailwind sm/lg 断点保持一致 */
-export function getSnippetColumnCount(width: number): number {
-  if (width >= 1024) return 3;
-  if (width >= 640) return 2;
-  return 1;
-}
-
-/**
- * 响应式列数 — 由 SnippetsListLoader 保证仅在客户端挂载后渲染，
- * 首帧即可读到 window.innerWidth，避免 1 列 → N 列闪烁。
- */
 function useColumnCount(): number {
   const [columns, setColumns] = useState(() => getSnippetColumnCount(window.innerWidth));
 
@@ -46,63 +38,6 @@ function useColumnCount(): number {
   return columns;
 }
 
-/** 估算卡片高度，用于瀑布流高度感知分配 */
-function estimateHeight(snippet: MomentItemResp): number {
-  let height = 120; // 基础高度（头部、底部操作栏、padding等）
-  const textLen = snippet.content ? snippet.content.length : 0;
-  height += Math.min(textLen * 0.8, 300); // 文本高度估算，每字符约0.8px，最高限制300px
-  if (snippet.images && snippet.images.length > 0) {
-    // 单图更宽且比例3:2所以更高，多图为双列网格所以较矮
-    height += snippet.images.length === 1 ? 250 : 130;
-  }
-  return height;
-}
-
-interface ColumnItem {
-  snippet: MomentItemResp;
-  delay: number;
-}
-
-function distributeToColumns(
-  items: MomentItemResp[],
-  columnCount: number,
-  pageSize: number,
-  prevAssignments?: Map<number, number>,
-): { cols: ColumnItem[][]; assignments: Map<number, number> } {
-  const cols: ColumnItem[][] = Array.from({ length: columnCount }, () => []);
-  const colWeights = Array.from({ length: columnCount }, () => 0);
-  const newAssignments = new Map<number, number>();
-
-  items.forEach((item, index) => {
-    let targetCol = prevAssignments?.get(item.id);
-
-    if (targetCol === undefined || targetCol >= columnCount) {
-      // 寻找当前高度（权重）最矮的列
-      let minCol = 0;
-      let minWeight = colWeights[0];
-      for (let i = 1; i < columnCount; i++) {
-        if (colWeights[i] < minWeight) {
-          minWeight = colWeights[i];
-          minCol = i;
-        }
-      }
-      targetCol = minCol;
-    }
-
-    newAssignments.set(item.id, targetCol);
-    cols[targetCol].push({
-      snippet: item,
-      // 动画延迟基于当前批次内的索引，避免无限累加导致加载更多时出现长时间空白
-      delay: (index % pageSize) * 0.08,
-    });
-
-    colWeights[targetCol] += estimateHeight(item);
-  });
-
-  return { cols, assignments: newAssignments };
-}
-
-/** Tab 切换时的 flex 瀑布流骨架屏 */
 function SnippetMasonrySkeleton({ columnCount }: { columnCount: number }) {
   return (
     <div className="flex gap-[14px]">
@@ -125,56 +60,36 @@ function SnippetMasonrySkeleton({ columnCount }: { columnCount: number }) {
 
 /**
  * 碎语列表（flex 瀑布流 + 无限滚动 + Tab/排序筛选）
- *
- * 布局原理：
- * - round-robin 将卡片分配到 N 个 flex 列，位置一旦确定不再变动
- * - 展开/收起内容不会导致卡片跨列漂移
- * - 排序后卡片按 top→bottom, left→right 排列
  */
 export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: SnippetsListProps) {
-  const [activeTab, setActiveTab] = useState<SnippetTab>("all");
-  const [activeSort, setActiveSort] = useState<SnippetSort>("latest");
-  const [currentPage, setCurrentPage] = useState(initialPage.page);
-  const [pageData, setPageData] = useState(initialPage);
-  const [isLoadingInitial, setIsLoadingInitial] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [endReached, setEndReached] = useState(initialPage.page >= initialPage.pages);
-  const [fetchError, setFetchError] = useState(false);
+  const {
+    activeTab,
+    activeSort,
+    sortedMoments,
+    moments,
+    pageData,
+    isLoadingInitial,
+    isLoadingMore,
+    endReached,
+    fetchError,
+    pendingLikeIds,
+    changeTab,
+    changeSort,
+    loadMore,
+    toggleLike,
+    setMoments,
+  } = useMomentList({ initialPage, ownerUserId, friendRoleId });
+
+  const [activeComment, setActiveComment] = useState<{ momentId: number } | null>(null);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef(loadMore);
   const columnCount = useColumnCount();
 
   const prevAssignmentsRef = useRef<Map<number, number>>(new Map());
   const prevColumnCountRef = useRef<number>(columnCount);
 
-  const getRefreshParams = useCallback(
-    () => ({ page: currentPage, pageSize: pageData.page_size }),
-    [currentPage, pageData.page_size],
-  );
-
-  const {
-    moments,
-    setMoments,
-    activeComment,
-    pendingLikeIds,
-    handleLike,
-    openComment,
-    closeComment,
-    handleCommentAdded,
-  } = useMomentEngagement({
-    initialMoments: initialPage.list,
-    ownerUserId: activeTab === "owner" ? ownerUserId : undefined,
-    getRefreshParams,
-    onRefresh: setPageData,
-  });
-
-  const sortedMoments = useMemo(() => {
-    if (activeSort === "popular") {
-      return [...moments].sort((a, b) => b.like_count - a.like_count);
-    }
-    return moments;
-  }, [moments, activeSort]);
+  loadMoreRef.current = loadMore;
 
   const columnItems = useMemo(() => {
     if (prevColumnCountRef.current !== columnCount) {
@@ -191,114 +106,56 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
     return cols;
   }, [sortedMoments, columnCount, pageData.page_size]);
 
-  const fetchMomentsPage = useCallback(
-    async (page: number, tab: SnippetTab): Promise<MomentPageResp | null> => {
-      try {
-        const params = new URLSearchParams({
-          page: String(page),
-          page_size: String(pageData.page_size),
-        });
-        if (tab === "owner" && ownerUserId !== undefined) {
-          params.set("user_id", String(ownerUserId));
-        } else if (tab === "friends" && friendRoleId !== undefined) {
-          params.set("role_id", String(friendRoleId));
-        }
-        const res = await fetch(`/api/moments?${params.toString()}`);
-        if (!res.ok) throw new Error("fetch failed");
-        return (await res.json()) as MomentPageResp;
-      } catch {
-        return null;
-      }
-    },
-    [ownerUserId, friendRoleId, pageData.page_size],
-  );
+  const showSentinel = !endReached && !isLoadingMore && !fetchError;
 
-  const loadMore = useCallback(async () => {
-    if (isLoadingMore || endReached || isLoadingInitial) return;
-    if (currentPage >= pageData.pages) {
-      setEndReached(true);
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !showSentinel) {
       return;
     }
 
-    setIsLoadingMore(true);
-    setFetchError(false);
-
-    const nextPage = currentPage + 1;
-    const data = await fetchMomentsPage(nextPage, activeTab);
-
-    if (data) {
-      setMoments((prev) => [...prev, ...data.list]);
-      setPageData(data);
-      setCurrentPage(nextPage);
-      if (nextPage >= data.pages) {
-        setEndReached(true);
-      }
-    } else {
-      setFetchError(true);
-    }
-
-    setIsLoadingMore(false);
-  }, [
-    isLoadingMore,
-    endReached,
-    isLoadingInitial,
-    currentPage,
-    pageData.pages,
-    activeTab,
-    fetchMomentsPage,
-    setMoments,
-  ]);
-
-  useEffect(() => {
-    if (observerRef.current) observerRef.current.disconnect();
-
-    observerRef.current = new IntersectionObserver(
+    const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) void loadMore();
+        if (entries[0]?.isIntersecting) {
+          void loadMoreRef.current();
+        }
       },
       { rootMargin: "200px" },
     );
 
-    if (sentinelRef.current) observerRef.current.observe(sentinelRef.current);
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [showSentinel]);
 
-    return () => observerRef.current?.disconnect();
-  }, [loadMore]);
-
-  const handleTabChange = useCallback(
-    async (tab: SnippetTab) => {
-      if (tab === activeTab) return;
-      setActiveTab(tab);
-      setIsLoadingInitial(true);
-      setEndReached(false);
-      setFetchError(false);
-
-      const data = await fetchMomentsPage(1, tab);
-      if (data) {
-        setMoments(data.list);
-        setPageData(data);
-        setCurrentPage(1);
-        if (data.pages <= 1) setEndReached(true);
-      } else {
-        setFetchError(true);
-      }
-
-      setIsLoadingInitial(false);
-    },
-    [activeTab, fetchMomentsPage, setMoments],
-  );
-
-  const handleSortChange = useCallback((sort: SnippetSort) => {
-    setActiveSort(sort);
+  const openComment = useCallback((snippet: MomentItemResp) => {
+    setActiveComment({ momentId: snippet.id });
   }, []);
+
+  const closeComment = useCallback(() => {
+    setActiveComment(null);
+  }, []);
+
+  const handleCommentAdded = useCallback(() => {
+    if (!activeComment) {
+      return;
+    }
+    setMoments((current) =>
+      current.map((item) =>
+        item.id === activeComment.momentId
+          ? { ...item, comment_count: item.comment_count + 1 }
+          : item,
+      ),
+    );
+  }, [activeComment, setMoments]);
 
   if (moments.length === 0 && !isLoadingInitial && !isLoadingMore) {
     return (
       <>
         <SnippetFilterBar
           activeTab={activeTab}
-          onTabChange={handleTabChange}
+          onTabChange={changeTab}
           activeSort={activeSort}
-          onSortChange={handleSortChange}
+          onSortChange={changeSort}
         />
         <Card className="rounded-2xl py-8 text-center">
           <p className="text-sm text-(--fg3)">暂无碎语</p>
@@ -311,9 +168,9 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
     <>
       <SnippetFilterBar
         activeTab={activeTab}
-        onTabChange={handleTabChange}
+        onTabChange={changeTab}
         activeSort={activeSort}
-        onSortChange={handleSortChange}
+        onSortChange={changeSort}
       />
 
       {isLoadingInitial ? (
@@ -331,8 +188,8 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
                   >
                     <SnippetCard
                       snippet={snippet}
-                      onLike={handleLike}
-                      likeDisabled={pendingLikeIds.includes(snippet.id)}
+                      onLike={toggleLike}
+                      likeDisabled={pendingLikeIds.has(snippet.id)}
                       onComment={openComment}
                     />
                   </div>
@@ -344,9 +201,7 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
           {isLoadingMore && <SnippetScrollLoader />}
           {endReached && !isLoadingMore && <SnippetEndReached />}
 
-          {!endReached && !isLoadingMore && !fetchError && (
-            <div ref={sentinelRef} className="h-px" />
-          )}
+          {showSentinel && <div ref={sentinelRef} className="h-px" />}
 
           {fetchError && !isLoadingMore && (
             <p className="mt-4 text-center text-sm text-muted-foreground">加载失败，请稍后重试</p>

@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import type { GuestbookItemResp, CommentReplyResp, CommentReplyCreateReq } from "@repo/api";
+import { apiJson, ApiClientError } from "@/lib/client-fetch";
 
 export function useGuestbookSubmit() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -7,22 +8,22 @@ export function useGuestbookSubmit() {
 
   const submitEntry = useCallback(
     async (content: string): Promise<GuestbookItemResp | null> => {
-      if (isSubmitting) return null;
+      if (isSubmitting) {
+        return null;
+      }
       setIsSubmitting(true);
       setError(null);
       try {
-        const res = await fetch("/api/guestbook", {
+        return await apiJson<GuestbookItemResp>("/api/guestbook", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ content }),
         });
-        if (res.status === 401) {
+      } catch (err) {
+        if (err instanceof ApiClientError && err.status === 401) {
           setError("请先登录");
           return null;
         }
-        if (!res.ok) throw new Error("failed");
-        return (await res.json()) as GuestbookItemResp;
-      } catch {
         setError("发布失败，请稍后重试");
         return null;
       } finally {
@@ -38,23 +39,23 @@ export function useGuestbookSubmit() {
       content: string,
       parentReplyId = 0,
     ): Promise<CommentReplyResp | null> => {
-      if (isSubmitting) return null;
+      if (isSubmitting) {
+        return null;
+      }
       setIsSubmitting(true);
       setError(null);
       try {
         const body: CommentReplyCreateReq = { parent_reply_id: parentReplyId, content };
-        const res = await fetch(`/api/guestbook/comments/${guestbookId}/replies`, {
+        return await apiJson<CommentReplyResp>(`/api/guestbook/comments/${guestbookId}/replies`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        if (res.status === 401) {
+      } catch (err) {
+        if (err instanceof ApiClientError && err.status === 401) {
           setError("请先登录");
           return null;
         }
-        if (!res.ok) throw new Error("failed");
-        return (await res.json()) as CommentReplyResp;
-      } catch {
         setError("回复失败，请稍后重试");
         return null;
       } finally {

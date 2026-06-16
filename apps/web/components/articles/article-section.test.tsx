@@ -196,6 +196,10 @@ function makePageResp(overrides: Partial<ArticlePageResp> = {}): ArticlePageResp
   };
 }
 
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status });
+}
+
 const mockCategories: CategoryTabItem[] = [
   { id: 1, name: "编程", seq: 0, article_count: 10 },
   { id: 2, name: "工具", seq: 1, article_count: 5 },
@@ -245,10 +249,9 @@ describe("ArticleSection", () => {
 
   it("点击分类 Tab 后以 category_id 参数 fetch 第一页", async () => {
     const user = userEvent.setup();
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => makePageResp({ list: [makeArticle(3, "编程文章")] }),
-    } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(makePageResp({ list: [makeArticle(3, "编程文章")] })),
+    );
 
     render(<ArticleSection initialPage={makePageResp()} categories={mockCategories} />);
 
@@ -272,10 +275,9 @@ describe("ArticleSection", () => {
 
   it("点击下一页后以正确 page 参数 fetch", async () => {
     const user = userEvent.setup();
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => makePageResp({ page: 2, list: [makeArticle(11, "第二页文章")] }),
-    } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(makePageResp({ page: 2, list: [makeArticle(11, "第二页文章")] })),
+    );
 
     render(
       <ArticleSection
@@ -304,14 +306,10 @@ describe("ArticleSection", () => {
   it("切换分类后页码重置为 1", async () => {
     const user = userEvent.setup();
     vi.mocked(fetch)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => makePageResp({ page: 2, pages: 3, list: [makeArticle(5, "第二页")] }),
-      } as Response)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => makePageResp({ list: [makeArticle(6, "编程第一页")] }),
-      } as Response);
+      .mockResolvedValueOnce(
+        jsonResponse(makePageResp({ page: 2, pages: 3, list: [makeArticle(5, "第二页")] })),
+      )
+      .mockResolvedValueOnce(jsonResponse(makePageResp({ list: [makeArticle(6, "编程第一页")] })));
 
     render(
       <ArticleSection
@@ -341,10 +339,9 @@ describe("ArticleSection", () => {
     const scrollIntoView = vi.fn();
     window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
 
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => makePageResp({ page: 2, list: [makeArticle(11, "第二页文章")] }),
-    } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(makePageResp({ page: 2, list: [makeArticle(11, "第二页文章")] })),
+    );
 
     const user = userEvent.setup();
     render(
@@ -391,10 +388,9 @@ describe("ArticleSection", () => {
 
     // 解决 fetch，文章出现
     await act(async () => {
-      resolveResponse({
-        ok: true,
-        json: async () => makePageResp({ page: 2, list: [makeArticle(11, "骨架屏测试文章")] }),
-      } as Response);
+      resolveResponse(
+        jsonResponse(makePageResp({ page: 2, list: [makeArticle(11, "骨架屏测试文章")] })),
+      );
     });
 
     await waitFor(() => {
@@ -420,11 +416,7 @@ describe("ArticleSection", () => {
 
   it("已登录时点击喜欢会调用接口并使用服务端最新结果更新状态", async () => {
     const user = userEvent.setup();
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({ is_liked: true, like_count: 9 }),
-    } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ is_liked: true, like_count: 9 }));
 
     render(
       <ArticleSection
@@ -462,11 +454,7 @@ describe("ArticleSection", () => {
 
   it("取消点赞失败时提示取消点赞失败", async () => {
     const user = userEvent.setup();
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      json: async () => ({ error: "failed" }),
-    } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "failed" }, 500));
 
     render(
       <ArticleSection
@@ -495,13 +483,13 @@ describe("ArticleSection", () => {
       />,
     );
 
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () =>
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(
         makePageResp({
           list: [{ ...makeArticle(11, "登录后同步"), is_liked: true, like_count: 6 }],
         }),
-    } as Response);
+      ),
+    );
 
     mockSessionUserId = 7;
     rerender(
@@ -532,11 +520,11 @@ describe("ArticleSection", () => {
       />,
     );
 
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () =>
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(
         makePageResp({ list: [{ ...makeArticle(13, "静默同步"), is_liked: true, like_count: 7 }] }),
-    } as Response);
+      ),
+    );
 
     mockSessionUserId = 7;
     rerender(
@@ -564,13 +552,13 @@ describe("ArticleSection", () => {
       />,
     );
 
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () =>
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(
         makePageResp({
           list: [{ ...makeArticle(12, "退出后同步"), is_liked: false, like_count: 3 }],
         }),
-    } as Response);
+      ),
+    );
 
     mockSessionUserId = null;
     rerender(

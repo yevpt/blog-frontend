@@ -1,7 +1,16 @@
 import { useState, useCallback, useRef } from "react";
 import type { GuestbookItemResp, GuestbookPageResp } from "@repo/api";
+import { apiJson } from "@/lib/client-fetch";
+import { buildQuery } from "@/lib/query";
 
 const PAGE_SIZE = 10;
+
+function isAbortError(err: unknown): boolean {
+  return (
+    (err instanceof DOMException && err.name === "AbortError") ||
+    (err instanceof Error && err.name === "AbortError")
+  );
+}
 
 export function useGuestbookList(initialPage: GuestbookPageResp) {
   const [items, setItems] = useState<GuestbookItemResp[]>(initialPage.list);
@@ -20,11 +29,10 @@ export function useGuestbookList(initialPage: GuestbookPageResp) {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/guestbook?page=${pageNum}&page_size=${PAGE_SIZE}`, {
+      const qs = buildQuery({ page: pageNum, page_size: PAGE_SIZE });
+      const data = await apiJson<GuestbookPageResp>(`/api/guestbook?${qs}`, {
         signal: controller.signal,
       });
-      if (!res.ok) throw new Error("fetch failed");
-      const data = (await res.json()) as GuestbookPageResp;
       if (!controller.signal.aborted) {
         setItems(data.list);
         setPage(data.page);
@@ -32,7 +40,9 @@ export function useGuestbookList(initialPage: GuestbookPageResp) {
         setTotal(data.total);
       }
     } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") return;
+      if (isAbortError(err)) {
+        return;
+      }
       setError("加载留言失败，请稍后重试");
     } finally {
       if (!controller.signal.aborted) {

@@ -32,6 +32,10 @@ const emptyPage: GuestbookPageResp = {
   list: [],
 };
 
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status });
+}
+
 describe("useGuestbookList", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
@@ -56,10 +60,7 @@ describe("useGuestbookList", () => {
       page_size: 10,
       list: [{ ...mockItem, id: 2 }],
     };
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => page2,
-    } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(page2));
 
     const { result } = renderHook(() => useGuestbookList(initialPage));
     await act(async () => {
@@ -72,7 +73,7 @@ describe("useGuestbookList", () => {
   });
 
   it("fetchPage 网络失败时设置 error", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce({ ok: false } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "failed" }, 500));
     const { result } = renderHook(() => useGuestbookList(emptyPage));
     await act(async () => {
       await result.current.fetchPage(1);

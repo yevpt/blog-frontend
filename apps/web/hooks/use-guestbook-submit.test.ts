@@ -4,6 +4,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useGuestbookSubmit } from "./use-guestbook-submit";
 import type { GuestbookItemResp, CommentReplyResp } from "@repo/api";
 
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status });
+}
+
 const mockItem: GuestbookItemResp = {
   id: 1,
   owner_user_id: 0,
@@ -45,11 +49,7 @@ describe("useGuestbookSubmit", () => {
   });
 
   it("submitEntry 成功返回新条目", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => mockItem,
-    } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(mockItem));
 
     const { result } = renderHook(() => useGuestbookSubmit());
     let returned: GuestbookItemResp | null = null;
@@ -62,7 +62,7 @@ describe("useGuestbookSubmit", () => {
   });
 
   it("submitEntry 401 时设置登录错误", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 401 } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "Unauthorized" }, 401));
     const { result } = renderHook(() => useGuestbookSubmit());
     let returned: GuestbookItemResp | null = null;
     await act(async () => {
@@ -73,7 +73,7 @@ describe("useGuestbookSubmit", () => {
   });
 
   it("submitEntry 网络失败时设置错误", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 500 } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "failed" }, 500));
     const { result } = renderHook(() => useGuestbookSubmit());
     await act(async () => {
       await result.current.submitEntry("Hi");
@@ -82,11 +82,7 @@ describe("useGuestbookSubmit", () => {
   });
 
   it("submitReply 成功返回回复", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => mockReply,
-    } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(mockReply));
     const { result } = renderHook(() => useGuestbookSubmit());
     let returned: CommentReplyResp | null = null;
     await act(async () => {
@@ -96,7 +92,7 @@ describe("useGuestbookSubmit", () => {
   });
 
   it("submitReply 401 时设置登录错误", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 401 } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "Unauthorized" }, 401));
     const { result } = renderHook(() => useGuestbookSubmit());
     let returned: CommentReplyResp | null = null;
     await act(async () => {
@@ -107,7 +103,7 @@ describe("useGuestbookSubmit", () => {
   });
 
   it("clearError 清除错误状态", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 500 } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "failed" }, 500));
     const { result } = renderHook(() => useGuestbookSubmit());
     await act(async () => {
       await result.current.submitEntry("Hi");

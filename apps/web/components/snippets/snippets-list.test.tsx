@@ -206,10 +206,9 @@ describe("SnippetsList", () => {
 
   it("Tab 切换触发重新加载", async () => {
     const user = userEvent.setup();
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => makePageResp({ list: [] }),
-    } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify(makePageResp({ list: [] })), { status: 200 }),
+    );
 
     render(<SnippetsList initialPage={makePageResp()} />);
 

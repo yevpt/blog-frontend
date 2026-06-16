@@ -2,6 +2,8 @@
 
 import { useCallback, useRef, useState } from "react";
 import type { UserListItemResp, UserPageResp } from "@repo/api";
+import { apiJson } from "@/lib/client-fetch";
+import { buildQuery } from "@/lib/query";
 import { UserCard } from "./user-card";
 import { VirtuosoGrid } from "react-virtuoso";
 
@@ -34,9 +36,8 @@ export function CircleList({ initialPage }: CircleListProps) {
 
     const nextPage = currentPage + 1;
     try {
-      const res = await fetch(`/api/users/public?page=${nextPage}&page_size=${PAGE_SIZE}`);
-      if (!res.ok) throw new Error("fetch failed");
-      const data: UserPageResp = await res.json();
+      const qs = buildQuery({ page: nextPage, page_size: PAGE_SIZE });
+      const data = await apiJson<UserPageResp>(`/api/users/public?${qs}`);
 
       // 排序：Admin 优先，其次 VIP
       const sorted = [...data.list].sort((a, b) => {

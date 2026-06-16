@@ -87,13 +87,16 @@ function mockPage(list: CommentItemResp[], pages = 1): CommentPageResp {
   return { total: list.length, pages, page: 1, page_size: 10, list };
 }
 
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status });
+}
+
 describe("CommentSection", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeComment(1), makeComment(2)])),
-    } as Response);
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(jsonResponse(mockPage([makeComment(1), makeComment(2)])));
   });
 
   it("modal layout：加载并渲染评论列表", async () => {
@@ -108,19 +111,15 @@ describe("CommentSection", () => {
   });
 
   it("moment targetType 正常工作", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeComment(1, { target_type: "moment" })])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(
+      jsonResponse(mockPage([makeComment(1, { target_type: "moment" })])),
+    );
     render(<CommentSection targetType="moment" targetId={5} />);
     await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
   });
 
   it("暂无评论时显示提示文案", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([])),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([])));
     render(<CommentSection targetType="article" targetId={1} />);
     await waitFor(() => expect(screen.getByText(/暂无评论/)).toBeTruthy());
   });
@@ -132,20 +131,14 @@ describe("CommentSection", () => {
   });
 
   it("hasMore 时显示「查看更多评论」按钮", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeComment(1)], 3)),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeComment(1)], 3)));
 
     render(<CommentSection targetType="article" targetId={1} />);
     await waitFor(() => expect(screen.getByText("查看更多评论")).toBeTruthy());
   });
 
   it("无更多时不显示「查看更多评论」", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockPage([makeComment(1)], 1)),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeComment(1)], 1)));
 
     render(<CommentSection targetType="article" targetId={1} />);
     await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());

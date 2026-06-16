@@ -3,6 +3,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useCommentLike } from "./use-comment-like";
 
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status });
+}
+
 describe("useCommentLike", () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -10,11 +14,7 @@ describe("useCommentLike", () => {
   });
 
   it("toggleCommentLike article 调用正确 URL", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ is_liked: true, like_count: 1 }),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse({ is_liked: true, like_count: 1 }));
 
     const { result } = renderHook(() => useCommentLike("article"));
     await act(() => result.current.toggleCommentLike(42));
@@ -26,11 +26,7 @@ describe("useCommentLike", () => {
   });
 
   it("toggleReplyLike moment 调用正确 URL（含 commentId）", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ is_liked: true, like_count: 2 }),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse({ is_liked: true, like_count: 2 }));
 
     const { result } = renderHook(() => useCommentLike("moment"));
     await act(() => result.current.toggleReplyLike(10, 99));
@@ -42,11 +38,7 @@ describe("useCommentLike", () => {
   });
 
   it("401 时返回 null", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: false,
-      status: 401,
-      json: () => Promise.resolve({}),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse({ error: "Unauthorized" }, 401));
 
     const { result } = renderHook(() => useCommentLike("article"));
     let ret: unknown;
@@ -57,11 +49,7 @@ describe("useCommentLike", () => {
   });
 
   it("toggleCommentLike guestbook 调用正确 URL", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ is_liked: true, like_count: 1 }),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse({ is_liked: true, like_count: 1 }));
 
     const { result } = renderHook(() => useCommentLike("guestbook"));
     await act(() => result.current.toggleCommentLike(3));
@@ -73,11 +61,7 @@ describe("useCommentLike", () => {
   });
 
   it("toggleReplyLike guestbook 调用正确 URL", async () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ is_liked: true, like_count: 1 }),
-    } as Response);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse({ is_liked: true, like_count: 1 }));
 
     const { result } = renderHook(() => useCommentLike("guestbook"));
     await act(() => result.current.toggleReplyLike(5, 20));

@@ -1,17 +1,10 @@
 "use client";
 
-import {
-  type PointerEvent,
-  useState,
-  useRef,
-  useEffect,
-  type ChangeEvent,
-  type FormEvent,
-} from "react";
 import { SvgIcon } from "@repo/icons";
-import { Button, Modal, cn } from "@repo/ui";
+import { Button, cn } from "@repo/ui";
 import { OAuthGrid } from "./oauth-grid";
-import { addToast } from "@/lib/toast";
+import { RegisterCaptcha } from "./register-captcha";
+import { useRegisterForm } from "@/hooks/use-register-form";
 
 function inputCls(hasError?: boolean) {
   return cn(
@@ -22,333 +15,49 @@ function inputCls(hasError?: boolean) {
   );
 }
 
-function isValidEmail(v: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-}
-
-function validatePassword(v: string): string | null {
-  if (!v) return "请设置密码";
-  if (v.length < 8) return "密码不能少于 8 位";
-  if (!/[a-zA-Z]/.test(v)) return "密码需包含英文字母";
-  if (!/[0-9]/.test(v)) return "密码需包含数字";
-  return null;
-}
-
 interface RegisterViewProps {
   onSwitchToLogin: () => void;
 }
 
-interface ApiResponse<T> {
-  code: number;
-  message: string;
-  data?: T;
-}
-
-interface CaptchaChallenge {
-  challenge_id: string;
-  master_image: string;
-  tile_image: string;
-  tile_x: number;
-  tile_y: number;
-  tile_width: number;
-  tile_height: number;
-  image_width: number;
-  image_height: number;
-}
-
-interface CaptchaVerifyResp {
-  captcha_token: string;
-}
-
-// ── 自定义拼图滑块 ─────────────────────────────────────────────
-class ApiError extends Error {
-  constructor(
-    message: string,
-    public readonly code: number,
-  ) {
-    super(message);
-    this.name = "ApiError";
-  }
-}
-
-const THUMB_W = 44;
-
-interface SliderProps {
-  value: number;
-  max: number;
-  disabled?: boolean;
-  onChange: (x: number) => void;
-  onRelease: (x: number) => void;
-}
-
-function CaptchaSlider({ value, max, disabled, onChange, onRelease }: SliderProps) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const isDragging = useRef(false);
-
-  function calcValue(clientX: number) {
-    const track = trackRef.current;
-    if (!track) return 0;
-    const rect = track.getBoundingClientRect();
-    const usable = rect.width - THUMB_W;
-    if (usable <= 0) return 0;
-    const raw = (clientX - rect.left - THUMB_W / 2) / usable;
-    return Math.max(0, Math.min(max, Math.round(raw * max)));
-  }
-
-  function handlePointerDown(e: PointerEvent<HTMLDivElement>) {
-    if (disabled) return;
-    isDragging.current = true;
-    if (e.currentTarget.setPointerCapture) {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    }
-    onChange(calcValue(e.clientX));
-  }
-
-  function handlePointerMove(e: PointerEvent<HTMLDivElement>) {
-    if (!isDragging.current || disabled) return;
-    onChange(calcValue(e.clientX));
-  }
-
-  function handlePointerUp(e: PointerEvent<HTMLDivElement>) {
-    if (!isDragging.current) return;
-    isDragging.current = false;
-    if (e.currentTarget.releasePointerCapture) {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    }
-    const x = calcValue(e.clientX);
-    onChange(x);
-    onRelease(x);
-  }
-
-  const fraction = max > 0 ? value / max : 0;
-  const fillW = `calc(${fraction * 100}% + ${THUMB_W * (1 - fraction)}px)`;
-  const thumbLeft = `calc(${fraction * 100}% - ${fraction * THUMB_W}px)`;
-
-  return (
-    <div
-      ref={trackRef}
-      data-testid="captcha-track"
-      className={cn(
-        "relative w-full h-[44px] rounded-lg select-none touch-none overflow-hidden",
-        "bg-foreground/[0.06]",
-        disabled ? "opacity-50 cursor-not-allowed" : "cursor-grab active:cursor-grabbing",
-      )}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-    >
-      {/* 进度填充 */}
-      <div
-        className="absolute inset-y-0 left-0 bg-primary/[0.12] pointer-events-none"
-        style={{ width: fillW }}
-      />
-      {/* 提示文字 */}
-      {fraction < 0.08 && !disabled && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-[12px] text-muted-foreground/40 pl-14 select-none">
-            向右拖动完成验证
-          </span>
-        </div>
-      )}
-      {/* 滑块手柄 */}
-      <div
-        className={cn(
-          "absolute top-[4px] bottom-[4px] flex items-center justify-center pointer-events-none",
-          "rounded-[9px] bg-white dark:bg-zinc-100 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.18)]",
-        )}
-        style={{ width: THUMB_W, left: thumbLeft }}
-      >
-        {disabled ? (
-          <div className="w-[18px] h-[18px] border-[2.5px] border-gray-200 border-t-primary rounded-full animate-spin" />
-        ) : (
-          <div className="flex items-center gap-[3px]">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="w-[3px] h-[13px] rounded-full bg-gray-300" />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── 主组件 ────────────────────────────────────────────────────
 export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
-  const [showPassword, setShowPassword] = useState(false);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [password, setPassword] = useState("");
-  const [nickname, setNickname] = useState("");
-  const [apiError, setApiError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  // 验证码发送状态
-  const [codeSent, setCodeSent] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-
-  // 字段级错误（onBlur 或提交后显示）
-  const [emailTouched, setEmailTouched] = useState(false);
-  const [passwordTouched, setPasswordTouched] = useState(false);
-  const [submitAttempted, setSubmitAttempted] = useState(false);
-
-  // 图形验证码
-  const [captchaOpen, setCaptchaOpen] = useState(false);
-  const [captchaChallenge, setCaptchaChallenge] = useState<CaptchaChallenge | null>(null);
-  const [captchaX, setCaptchaX] = useState(0);
-  const [captchaLoading, setCaptchaLoading] = useState(false);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // 倒计时
-  useEffect(() => {
-    if (countdown <= 0) return;
-    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [countdown]);
-
-  const emailError =
-    emailTouched || submitAttempted
-      ? !email.trim()
-        ? "请输入邮箱地址"
-        : !isValidEmail(email)
-          ? "邮箱格式不正确"
-          : null
-      : null;
-
-  const passwordError = passwordTouched || submitAttempted ? validatePassword(password) : null;
-
-  const codeError = submitAttempted && !code.trim() ? "请输入验证码" : null;
-
-  const canSendCode = isValidEmail(email) && !loading && countdown === 0;
-
-  async function requestJSON<T>(url: string, init: Parameters<typeof fetch>[1]): Promise<T> {
-    const res = await fetch(url, init);
-    const json = (await res.json()) as ApiResponse<T>;
-    if (json.code !== 0) throw new ApiError(json.message || "请求失败", json.code);
-    return json.data as T;
-  }
-
-  async function openCaptcha() {
-    if (!isValidEmail(email)) return;
-    setLoading(true);
-    setApiError(null);
-    try {
-      const challenge = await requestJSON<CaptchaChallenge>("/api/captcha/register/challenge", {
-        method: "POST",
-      });
-      setCaptchaChallenge(challenge);
-      setCaptchaX(challenge.tile_x);
-      setCaptchaOpen(true);
-    } catch (err) {
-      setApiError(err instanceof Error ? err.message : "图形验证码加载失败");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function sendEmailCode(captchaToken: string) {
-    await requestJSON<void>("/api/auth/send-code", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, captcha_token: captchaToken }),
-    });
-    setCodeSent(true);
-    setCountdown(60);
-  }
-
-  async function handleCaptchaVerify(x: number) {
-    if (!captchaChallenge) return;
-    setCaptchaLoading(true);
-    try {
-      const result = await requestJSON<CaptchaVerifyResp>("/api/captcha/register/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          challenge_id: captchaChallenge.challenge_id,
-          x,
-          y: captchaChallenge.tile_y,
-        }),
-      });
-      await sendEmailCode(result.captcha_token);
-      setCaptchaOpen(false);
-      setCaptchaChallenge(null);
-    } catch (err) {
-      if (err instanceof ApiError && err.code === 429) {
-        setCaptchaOpen(false);
-        setCaptchaChallenge(null);
-        addToast(err.message, "error");
-        return;
-      }
-      // 验证失败：自动刷新新一轮拼图
-      try {
-        const challenge = await requestJSON<CaptchaChallenge>("/api/captcha/register/challenge", {
-          method: "POST",
-        });
-        setCaptchaChallenge(challenge);
-        setCaptchaX(challenge.tile_x);
-      } catch {
-        setCaptchaOpen(false);
-        setCaptchaChallenge(null);
-      }
-    } finally {
-      setCaptchaLoading(false);
-    }
-  }
-
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setSubmitAttempted(true);
-    setApiError(null);
-
-    if (!isValidEmail(email) || validatePassword(password) !== null || !code.trim()) {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await requestJSON("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          code,
-          ...(nickname.trim() ? { nickname: nickname.trim() } : {}),
-        }),
-      });
-      onSwitchToLogin();
-    } catch (err) {
-      setApiError(err instanceof Error ? err.message : "注册失败，请稍后重试");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-    setAvatarPreview(URL.createObjectURL(file));
-  }
-
-  function handleAvatarRemove() {
-    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-    setAvatarPreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }
-
-  const sendBtnLabel = loading
-    ? "处理中"
-    : countdown > 0
-      ? `重新发送 (${countdown}s)`
-      : codeSent
-        ? "重新发送"
-        : "获取验证码";
+  const {
+    showPassword,
+    setShowPassword,
+    avatarPreview,
+    email,
+    setEmail,
+    code,
+    setCode,
+    password,
+    setPassword,
+    nickname,
+    setNickname,
+    apiError,
+    loading,
+    setEmailTouched,
+    setPasswordTouched,
+    captchaOpen,
+    captchaChallenge,
+    captchaX,
+    setCaptchaX,
+    captchaLoading,
+    setCaptchaOpen,
+    fileInputRef,
+    emailError,
+    passwordError,
+    codeError,
+    canSendCode,
+    sendBtnLabel,
+    openCaptcha,
+    handleCaptchaVerify,
+    closeCaptcha,
+    handleSubmit,
+    handleAvatarChange,
+    handleAvatarRemove,
+  } = useRegisterForm({ onSwitchToLogin });
 
   return (
     <div className="flex flex-col">
-      {/* 标题行 */}
       <div className="mb-6">
         <div className="flex items-center justify-between gap-3 mb-[5px]">
           <h2 className="text-[22px] font-extrabold tracking-tight text-foreground">创建账号</h2>
@@ -365,10 +74,8 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
         <p className="text-[12.5px] text-muted-foreground">填写信息完成注册</p>
       </div>
 
-      {/* 表单 */}
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-[14px]">
-          {/* 邮箱 */}
           <div>
             <input
               type="email"
@@ -376,9 +83,7 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
               autoComplete="email"
               className={inputCls(!!emailError)}
               value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-              }}
+              onChange={(e) => setEmail(e.target.value)}
               onBlur={() => setEmailTouched(true)}
             />
             {emailError && (
@@ -386,7 +91,6 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
             )}
           </div>
 
-          {/* 验证码行：输入框内嵌发送按钮 */}
           <div>
             <div className="relative">
               <input
@@ -421,7 +125,6 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
             )}
           </div>
 
-          {/* 密码 */}
           <div>
             <div className="relative">
               <input
@@ -436,7 +139,7 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
               <Button
                 type="button"
                 variant="ghost"
-                onPress={() => setShowPassword((v) => !v)}
+                onPress={() => setShowPassword((value) => !value)}
                 aria-label={showPassword ? "隐藏密码" : "显示密码"}
                 className="absolute right-[10px] top-1/2 -translate-y-1/2 w-[30px] h-[30px] rounded-lg flex items-center justify-center p-0 text-muted-foreground/60 transition-colors hover:bg-foreground/[0.07] hover:text-muted-foreground"
               >
@@ -457,7 +160,6 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
             onChange={(e) => setNickname(e.target.value)}
           />
 
-          {/* 头像上传 */}
           <label className="flex items-center gap-[14px] p-[12px_16px] rounded-xl bg-foreground/[0.03] border-[1.5px] border-dashed border-foreground/[0.09] cursor-pointer transition-colors hover:bg-primary/5 hover:border-primary/25">
             <div className="relative w-[38px] h-[38px] flex-shrink-0">
               <div className="w-full h-full rounded-full bg-primary/12 border-[1.5px] border-dashed border-primary/25 flex items-center justify-center overflow-hidden">
@@ -474,7 +176,7 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
                   onClickCapture={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
-                    handleAvatarRemove();
+                    handleAvatarRemove(fileInputRef.current);
                   }}
                   aria-label="删除头像"
                   className="absolute -top-[5px] -right-[5px] w-[16px] h-[16px] rounded-full bg-destructive flex items-center justify-center p-0 shadow-sm"
@@ -507,7 +209,6 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
           </p>
         )}
 
-        {/* 创建账号按钮 */}
         <Button
           type="submit"
           variant="default"
@@ -520,100 +221,29 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
         </Button>
       </form>
 
-      {/* 分割线 */}
       <div className="flex items-center gap-3 my-[22px] text-[11.5px]">
         <div className="flex-1 h-px bg-border" />
         <span className="text-muted-foreground flex-shrink-0">其他方式注册</span>
         <div className="flex-1 h-px bg-border" />
       </div>
 
-      {/* OAuth 图标 */}
       <OAuthGrid />
 
-      {/* 图形验证码弹层 */}
-      {captchaChallenge && (
-        <Modal
-          isOpen={captchaOpen}
-          onOpenChange={(open) => {
-            setCaptchaOpen(open);
-            if (!open) setCaptchaChallenge(null);
-          }}
-          isDismissable
-          aria-label="图形验证码"
-          size="sm"
-          overlayClassName="z-[520] bg-black/45 backdrop-blur-md"
-          modalClassName="max-w-[360px]"
-          dialogClassName="p-5"
-        >
-          {() => (
-            <>
-              {/* 头部 */}
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <h3 className="text-[15px] font-bold text-foreground">请拖动滑块完成拼图</h3>
-                <Button
-                  type="button"
-                  aria-label="关闭图形验证码"
-                  variant="ghost"
-                  onPress={() => {
-                    setCaptchaOpen(false);
-                    setCaptchaChallenge(null);
-                  }}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg p-0 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
-                >
-                  <SvgIcon name="close" size={14} />
-                </Button>
-              </div>
-
-              {/* 验证码统一容器（拼图 + 滑块无缝整合） */}
-              <div className="overflow-hidden rounded-xl border border-border">
-                {/* 拼图区域 */}
-                <div
-                  className="relative mx-auto overflow-hidden bg-foreground/[0.03]"
-                  style={{
-                    width: captchaChallenge.image_width,
-                    height: captchaChallenge.image_height,
-                    maxWidth: "100%",
-                  }}
-                >
-                  <img
-                    src={captchaChallenge.master_image}
-                    alt=""
-                    className="h-full w-full select-none object-cover"
-                    draggable={false}
-                  />
-                  <img
-                    src={captchaChallenge.tile_image}
-                    alt=""
-                    className="absolute select-none drop-shadow-lg"
-                    draggable={false}
-                    style={{
-                      width: captchaChallenge.tile_width,
-                      height: captchaChallenge.tile_height,
-                      left: captchaX,
-                      top: captchaChallenge.tile_y,
-                    }}
-                  />
-                  {captchaLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-                      <div className="w-6 h-6 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                    </div>
-                  )}
-                </div>
-                {/* 滑块底栏 */}
-                <div className="border-t border-border/50 p-3">
-                  <CaptchaSlider
-                    value={captchaX}
-                    max={Math.max(0, captchaChallenge.image_width - captchaChallenge.tile_width)}
-                    disabled={captchaLoading}
-                    onChange={(x) => setCaptchaX(x)}
-                    onRelease={(x) => handleCaptchaVerify(x)}
-                  />
-                </div>
-              </div>
-            </>
-          )}
-        </Modal>
-      )}
+      <RegisterCaptcha
+        challenge={captchaChallenge}
+        captchaX={captchaX}
+        captchaOpen={captchaOpen}
+        captchaLoading={captchaLoading}
+        onOpenChange={(open) => {
+          setCaptchaOpen(open);
+          if (!open) {
+            closeCaptcha();
+          }
+        }}
+        onCaptchaXChange={setCaptchaX}
+        onVerify={handleCaptchaVerify}
+        onClose={closeCaptcha}
+      />
     </div>
   );
 }
