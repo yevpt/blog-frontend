@@ -12,5 +12,6 @@ dist
 # Superpowers brainstorming artifacts
 .superpowers/
 
-# Agent worktrees
-.claude/
+# Agent 本地目录：忽略 worktrees 等本地状态，但保留 skills 符号链接（指向已提交的 .agents/）
+.claude/*
+!.claude/skills
