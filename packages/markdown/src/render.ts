@@ -5,6 +5,9 @@ import rehypeRaw from "rehype-raw";
 import rehypeSlug from "rehype-slug";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import rehypeStringify from "rehype-stringify";
+import rehypeHighlight from "rehype-highlight";
+import { visit } from "unist-util-visit";
+import type { Root, Element, Properties } from "hast";
 
 export interface TocItem {
   id: string;
@@ -12,25 +15,224 @@ export interface TocItem {
   level: 2 | 3;
 }
 
+// 语言显示名映射
+const LANG_DISPLAY: Record<string, string> = {
+  javascript: "JavaScript",
+  typescript: "TypeScript",
+  python: "Python",
+  rust: "Rust",
+  go: "Go",
+  java: "Java",
+  cpp: "C++",
+  c: "C",
+  csharp: "C#",
+  css: "CSS",
+  html: "HTML",
+  bash: "Bash",
+  shell: "Shell",
+  json: "JSON",
+  sql: "SQL",
+  yaml: "YAML",
+  markdown: "Markdown",
+  xml: "XML",
+  graphql: "GraphQL",
+  kotlin: "Kotlin",
+  swift: "Swift",
+  php: "PHP",
+  ruby: "Ruby",
+  scala: "Scala",
+};
+
+function getDisplayLang(lang: string): string {
+  return LANG_DISPLAY[lang.toLowerCase()] ?? lang;
+}
+
+// SVG：</> 代码图标
+function codeIconSvg(): Element {
+  return {
+    type: "element",
+    tagName: "svg",
+    properties: {
+      width: "12",
+      height: "12",
+      viewBox: "0 0 16 16",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "2",
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+    } as Properties,
+    children: [
+      {
+        type: "element",
+        tagName: "polyline",
+        properties: { points: "5 3 1 8 5 13" } as Properties,
+        children: [],
+      },
+      {
+        type: "element",
+        tagName: "polyline",
+        properties: { points: "11 3 15 8 11 13" } as Properties,
+        children: [],
+      },
+    ],
+  };
+}
+
+// SVG：剪贴板复制图标
+function copyIconSvg(): Element {
+  return {
+    type: "element",
+    tagName: "svg",
+    properties: {
+      width: "13",
+      height: "13",
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "2",
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+    } as Properties,
+    children: [
+      {
+        type: "element",
+        tagName: "rect",
+        properties: { x: "9", y: "9", width: "13", height: "13", rx: "2" } as Properties,
+        children: [],
+      },
+      {
+        type: "element",
+        tagName: "path",
+        properties: { d: "M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" } as Properties,
+        children: [],
+      },
+    ],
+  };
+}
+
+// 构建带工具栏的 wrapper（有语言）或仅带绝对定位复制按钮的 wrapper（无语言）
+function buildWrapper(pre: Element, lang: string | null): Element {
+  const wrapper: Element = {
+    type: "element",
+    tagName: "div",
+    properties: { className: ["md-code-wrapper"] } as Properties,
+    children: [],
+  };
+
+  if (lang) {
+    const toolbar: Element = {
+      type: "element",
+      tagName: "div",
+      properties: { className: ["md-code-toolbar"] } as Properties,
+      children: [
+        {
+          type: "element",
+          tagName: "span",
+          properties: { className: ["md-code-lang"] } as Properties,
+          children: [codeIconSvg(), { type: "text", value: " " + getDisplayLang(lang) }],
+        },
+        {
+          type: "element",
+          tagName: "button",
+          properties: {
+            className: ["md-copy-btn"],
+            type: "button",
+            ariaLabel: "复制代码",
+          } as Properties,
+          children: [copyIconSvg()],
+        },
+      ],
+    };
+    wrapper.children.push(toolbar);
+  } else {
+    // 无语言：复制按钮绝对定位，不占顶部高度
+    const copyBtn: Element = {
+      type: "element",
+      tagName: "button",
+      properties: {
+        className: ["md-copy-btn", "md-copy-btn-abs"],
+        type: "button",
+        ariaLabel: "复制代码",
+      } as Properties,
+      children: [copyIconSvg()],
+    };
+    wrapper.children.push(copyBtn);
+  }
+
+  wrapper.children.push(pre);
+  return wrapper;
+}
+
+// rehype 插件：将每个 pre>code 包装进带工具栏的 div
+function rehypeCodeWrapper() {
+  return (tree: Root) => {
+    type Replacement = {
+      parent: Element | Root;
+      index: number;
+      pre: Element;
+      lang: string | null;
+    };
+    const replacements: Replacement[] = [];
+
+    visit(tree, "element", (node: Element, index, parent) => {
+      if (node.tagName !== "pre" || !parent || index === undefined) return;
+      const codeChild = node.children.find(
+        (c): c is Element => c.type === "element" && (c as Element).tagName === "code",
+      );
+      if (!codeChild) return;
+
+      const classNames = (codeChild.properties?.className as string[] | undefined) ?? [];
+      const langClass = classNames.find((c: string) => c.startsWith("language-"));
+      const lang = langClass ? langClass.replace("language-", "") : null;
+
+      replacements.push({ parent: parent as Element | Root, index, pre: node, lang });
+    });
+
+    // 倒序替换，确保 index 不错位
+    for (let i = replacements.length - 1; i >= 0; i--) {
+      const { parent, index, pre, lang } = replacements[i];
+      parent.children.splice(index, 1, buildWrapper(pre, lang));
+    }
+  };
+}
+
 /**
- * Sanitize 配置：扩展 defaultSchema，允许 <u> 标签和 id 属性通过。
- * clobberPrefix 置空：防止 rehype-sanitize v6 为 rehype-slug 注入的 id 添加 "user-content-" 前缀。
+ * Sanitize 配置：放行 hljs 高亮类名 + 工具栏所需的 button/svg 结构。
+ * button/svg 本身不是 XSS 向量；危险的 on* 属性由 defaultSchema 默认拦截。
  */
 function buildSanitizeSchema() {
   return {
     ...defaultSchema,
     clobberPrefix: "",
-    tagNames: [...(defaultSchema.tagNames ?? []), "u"],
+    tagNames: [...(defaultSchema.tagNames ?? []), "u", "button", "svg", "path", "polyline", "rect"],
     attributes: {
       ...defaultSchema.attributes,
-      "*": [...(defaultSchema.attributes?.["*"] ?? []), "id"],
+      "*": [...(defaultSchema.attributes?.["*"] ?? []), "id", "className"],
+      button: ["type", "ariaLabel", "className"],
+      svg: [
+        "viewBox",
+        "fill",
+        "stroke",
+        "strokeWidth",
+        "strokeLinecap",
+        "strokeLinejoin",
+        "width",
+        "height",
+      ],
+      path: ["d"],
+      polyline: ["points"],
+      rect: ["x", "y", "width", "height", "rx"],
+      code: [...(defaultSchema.attributes?.["code"] ?? []), "className"],
+      span: [...(defaultSchema.attributes?.["span"] ?? []), "className"],
     },
   };
 }
 
 /**
- * 构建统一的 unified 管线（remark-parse → remark-rehype → rehype-raw → rehype-slug → rehype-sanitize → rehype-stringify）。
- * rehype-raw：将原始 HTML 节点（如 <u>）解析为真实 hast 节点，否则内联 HTML 在 sanitize 前被丢弃。
+ * 构建统一的 unified 管线。
+ * 顺序：remark-parse → remark-rehype → rehype-raw → rehype-slug
+ *       → rehype-highlight → rehypeCodeWrapper → rehype-sanitize → rehype-stringify
  */
 function buildPipeline() {
   return unified()
@@ -38,6 +240,8 @@ function buildPipeline() {
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeSlug)
+    .use(rehypeHighlight, { detect: false, ignoreMissing: true })
+    .use(rehypeCodeWrapper)
     .use(rehypeSanitize, buildSanitizeSchema())
     .use(rehypeStringify);
 }

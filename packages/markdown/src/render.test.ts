@@ -26,6 +26,16 @@ describe("markdownToHtml", () => {
     const html = await markdownToHtml('<script>alert("xss")</script>');
     expect(html).not.toContain("<script>");
   });
+
+  it("typescript 代码围栏生成语法高亮类名", async () => {
+    const html = await markdownToHtml("```typescript\nconst x = 1\n```");
+    expect(html).toContain("hljs-keyword");
+  });
+
+  it("代码围栏的 code 元素保留 language-* className", async () => {
+    const html = await markdownToHtml("```typescript\nconst x = 1\n```");
+    expect(html).toContain("language-typescript");
+  });
 });
 
 describe("extractTocFromHtml", () => {

@@ -40,7 +40,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@vitejs/plugin-react": "^6.0.2",
-    "hast": "^1.0.0",
+    "@types/hast": "^3.0.4",
     "unist-util-visit": "^5.1.0"
   }
 }
