@@ -240,8 +240,9 @@ body {
   }
 }
 
-/* 代码块容器：覆盖 prose 的背景，使用深色主题变量 */
+/* 代码块容器：relative 使语言标签绝对定位固定于右上角，不随 pre 横向滚动 */
 .tiptap .rich-editor-code-wrapper {
+  position: relative;
   margin: 0.5rem 0;
 }
 
@@ -259,7 +260,11 @@ body {
   margin: 0 !important;
 }
 
-/* 语言选择器（右上角）：由 CodeBlockView NodeView 渲染为 <select> */
+.rich-editor-code-block code {
+  white-space: pre;
+}
+
+/* 语言选择器（右上角）：由 CodeBlockView NodeView 渲染为封装 Select 组件 */
 .rich-editor-code-lang {
   position: absolute;
   right: 0.5rem;
@@ -267,32 +272,91 @@ body {
   z-index: 10;
 }
 
-/* <select> 本身的样式，透明背景融入代码块 */
-.rich-editor-code-lang-select {
-  appearance: none;
-  -webkit-appearance: none;
-  background: transparent;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: 0.02em;
-  color: var(--editor-hl-meta);
-  font-family: ui-monospace, monospace;
-  padding: 0 2px;
-  transition: color 0.15s;
+/* ── 触发按钮：剥离 Select 默认样式，融入代码块 ── */
+.rich-editor-code-lang > div {
+  gap: 0;
 }
 
-.rich-editor-code-lang-select:hover {
-  color: var(--editor-code-fg);
+.rich-editor-code-lang button {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border-radius: 3px !important;
+  width: auto !important;
+  min-width: 0 !important;
+  padding: 0 !important;
 }
 
-/* option 在 dark 模式下需要显式设置背景色，否则浏览器默认白底 */
-.rich-editor-code-lang-select option {
-  background-color: var(--color-card);
-  color: var(--color-card-foreground);
+/* button 内容容器：极小内边距 */
+.rich-editor-code-lang button > div {
+  padding: 1px 3px !important;
+  height: auto !important;
+  width: auto !important;
+  gap: 2px !important;
+  justify-content: flex-end !important;
+}
+
+/* section 层不要撑满宽度 */
+.rich-editor-code-lang button > div > section {
+  flex: 0 0 auto !important;
+  width: auto !important;
+}
+
+/* 语言文字：精细小字，靠右对齐 */
+.rich-editor-code-lang button p {
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0.04em !important;
+  color: var(--editor-hl-meta) !important;
+  font-family: ui-monospace, monospace !important;
+  text-align: right !important;
+  transition: color 0.15s !important;
+}
+
+.rich-editor-code-lang button:hover p,
+.rich-editor-code-lang button[data-focused] p,
+.rich-editor-code-lang button[data-pressed] p {
+  color: var(--editor-code-fg) !important;
+}
+
+/* 下拉箭头：随文字色，缩小至 8px */
+.rich-editor-code-lang button > div > span {
+  color: var(--editor-hl-meta) !important;
+}
+
+.rich-editor-code-lang button > div > span svg {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+/* ── 语言选择弹窗（portal 至 body，用 popoverClassName 注入此类）── */
+
+/* React Aria 会写内联 maxHeight 覆盖 CSS class，必须用 !important 强制限高 */
+.rich-editor-lang-popover {
+  max-height: 11rem !important; /* ~176px，约 8 个紧凑选项后滚动 */
+  overflow-y: auto !important;
+}
+
+/* 选项行：紧凑内边距 */
+.rich-editor-lang-popover [role="option"] > div {
+  padding: 3px 6px !important;
+  border-radius: 4px !important;
+  gap: 4px !important;
+  min-height: 0 !important;
+}
+
+/* 选项文字：10px 等宽小字 */
+.rich-editor-lang-popover [role="option"] span {
+  font-size: 10px !important;
+  font-family: ui-monospace, monospace !important;
+  letter-spacing: 0.03em !important;
+  line-height: 1.3 !important;
+}
+
+/* 选中勾图标 */
+.rich-editor-lang-popover [role="option"] span svg {
+  width: 10px !important;
+  height: 10px !important;
 }
 
 /* ── 语法高亮色 ── */
@@ -373,6 +437,145 @@ body {
       color: var(--color-foreground);
     }
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Markdown 渲染代码块增强                                                      */
+/* -------------------------------------------------------------------------- */
+
+/*
+  代码块外层 wrapper：relative 定位供无语言时复制按钮绝对定位。
+  background 显式设置以覆盖不同 prose variant 的默认值，确保顶部工具栏与代码区视觉一致。
+*/
+.md-code-wrapper {
+  position: relative;
+}
+
+.md-code-wrapper pre {
+  background-color: var(--editor-code-bg) !important;
+  color: var(--editor-code-fg) !important;
+  margin-top: 0 !important;
+}
+
+/* 工具栏：与代码区完全同色，无分隔线 */
+.md-code-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px 5px;
+  background-color: var(--editor-code-bg);
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+/* 有工具栏时 pre 取消顶部圆角 */
+.md-code-wrapper:has(.md-code-toolbar) pre {
+  border-radius: 0 0 0.5rem 0.5rem !important;
+  padding-top: 4px !important;
+}
+
+/* 语言标签：</> 图标 + 语言名 */
+.md-code-lang {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--editor-hl-meta);
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.01em;
+  user-select: none;
+}
+
+/* 复制按钮：通用样式 */
+.md-copy-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--editor-hl-meta);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: color 0.15s;
+  line-height: 0;
+}
+
+.md-copy-btn:hover {
+  color: var(--editor-code-fg);
+}
+
+/* 无语言时：绝对定位于 pre 右上角 */
+.md-copy-btn-abs {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  z-index: 1;
+}
+
+/* ── 语法高亮色（复用 editor 现有 CSS 变量）── */
+.md-code-wrapper .hljs-keyword,
+.md-code-wrapper .hljs-selector-tag,
+.md-code-wrapper .hljs-literal,
+.md-code-wrapper .hljs-doctag {
+  color: var(--editor-hl-keyword);
+}
+
+.md-code-wrapper .hljs-string,
+.md-code-wrapper .hljs-regexp,
+.md-code-wrapper .hljs-template-string,
+.md-code-wrapper .hljs-template-tag {
+  color: var(--editor-hl-string);
+}
+
+.md-code-wrapper .hljs-comment,
+.md-code-wrapper .hljs-quote {
+  color: var(--editor-hl-comment);
+  font-style: italic;
+}
+
+.md-code-wrapper .hljs-number,
+.md-code-wrapper .hljs-operator {
+  color: var(--editor-hl-number);
+}
+
+.md-code-wrapper .hljs-title,
+.md-code-wrapper .hljs-title.class_,
+.md-code-wrapper .hljs-title.function_ {
+  color: var(--editor-hl-title);
+  font-weight: 600;
+}
+
+.md-code-wrapper .hljs-built_in,
+.md-code-wrapper .hljs-type {
+  color: var(--editor-hl-builtin);
+}
+
+.md-code-wrapper .hljs-attr,
+.md-code-wrapper .hljs-attribute,
+.md-code-wrapper .hljs-selector-attr,
+.md-code-wrapper .hljs-selector-class,
+.md-code-wrapper .hljs-selector-id {
+  color: var(--editor-hl-attr);
+}
+
+.md-code-wrapper .hljs-meta,
+.md-code-wrapper .hljs-meta .hljs-string {
+  color: var(--editor-hl-meta);
+}
+
+.md-code-wrapper .hljs-variable,
+.md-code-wrapper .hljs-params {
+  color: var(--editor-code-fg);
+}
+
+.md-code-wrapper .hljs-addition {
+  color: var(--editor-hl-string);
+  background-color: color-mix(in srgb, var(--editor-hl-string) 12%, transparent);
+}
+
+.md-code-wrapper .hljs-deletion {
+  color: var(--editor-hl-number);
+  background-color: color-mix(in srgb, var(--editor-hl-number) 12%, transparent);
 }
 
 /* -------------------------------------------------------------------------- */
