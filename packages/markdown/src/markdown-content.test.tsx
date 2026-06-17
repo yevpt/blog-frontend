@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { MarkdownContent } from "./markdown-content";
 
 describe("MarkdownContent", () => {
@@ -37,5 +37,47 @@ describe("MarkdownContent", () => {
 
   it("html 为空字符串时不崩溃", () => {
     expect(() => render(<MarkdownContent html="" />)).not.toThrow();
+  });
+});
+
+describe("复制按钮", () => {
+  beforeEach(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: vi.fn().mockResolvedValue(undefined) },
+      configurable: true,
+      writable: true,
+    });
+  });
+
+  it("点击 .md-copy-btn 调用 navigator.clipboard.writeText", async () => {
+    const html = `<div class="md-code-wrapper"><button class="md-copy-btn" type="button" aria-label="复制代码"><svg></svg></button><pre><code>const x = 1</code></pre></div>`;
+    const { container } = render(<MarkdownContent html={html} />);
+
+    const btn = container.querySelector(".md-copy-btn") as HTMLButtonElement;
+    await act(async () => {
+      fireEvent.click(btn);
+    });
+
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith("const x = 1");
+  });
+
+  it("点击复制按钮后按钮颜色变绿，2 秒后恢复", async () => {
+    vi.useFakeTimers();
+    const html = `<div class="md-code-wrapper"><button class="md-copy-btn" type="button" aria-label="复制代码"><svg></svg></button><pre><code>hello</code></pre></div>`;
+    const { container } = render(<MarkdownContent html={html} />);
+
+    const btn = container.querySelector(".md-copy-btn") as HTMLButtonElement;
+    await act(async () => {
+      fireEvent.click(btn);
+    });
+
+    expect(btn.style.color).toBe("rgb(22, 163, 74)");
+
+    await act(async () => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(btn.style.color).toBe("");
+
+    vi.useRealTimers();
   });
 });
