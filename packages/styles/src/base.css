@@ -455,6 +455,7 @@ body {
   background-color: var(--editor-code-bg) !important;
   color: var(--editor-code-fg) !important;
   margin-top: 0 !important;
+  border: none !important;
 }
 
 /* 工具栏：与代码区完全同色，无分隔线 */
