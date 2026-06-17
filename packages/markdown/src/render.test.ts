@@ -56,3 +56,41 @@ describe("extractTocFromHtml", () => {
     expect(extractTocFromHtml("")).toHaveLength(0);
   });
 });
+
+describe("rehypeCodeWrapper", () => {
+  it("有语言的代码围栏输出 md-code-wrapper 和 md-code-toolbar", async () => {
+    const html = await markdownToHtml("```typescript\nconst x = 1\n```");
+    expect(html).toContain("md-code-wrapper");
+    expect(html).toContain("md-code-toolbar");
+    expect(html).toContain("md-code-lang");
+    expect(html).toContain("TypeScript");
+  });
+
+  it("有语言的代码围栏包含复制按钮（md-copy-btn）", async () => {
+    const html = await markdownToHtml("```typescript\nconst x = 1\n```");
+    expect(html).toContain("md-copy-btn");
+    expect(html).not.toContain("md-copy-btn-abs");
+  });
+
+  it("无语言代码围栏不输出 md-code-toolbar", async () => {
+    const html = await markdownToHtml("```\nnpm install react\n```");
+    expect(html).toContain("md-code-wrapper");
+    expect(html).not.toContain("md-code-toolbar");
+  });
+
+  it("无语言代码围栏输出绝对定位复制按钮（md-copy-btn-abs）", async () => {
+    const html = await markdownToHtml("```\nnpm install react\n```");
+    expect(html).toContain("md-copy-btn-abs");
+  });
+
+  it("未知语言使用原始语言字符串作为显示名", async () => {
+    const html = await markdownToHtml("```foobar\ncode\n```");
+    expect(html).toContain("foobar");
+  });
+
+  it("pre 元素仍在 md-code-wrapper 内", async () => {
+    const html = await markdownToHtml("```typescript\nconst x = 1\n```");
+    // wrapper 在 pre 之前出现
+    expect(html.indexOf("md-code-wrapper")).toBeLessThan(html.indexOf("<pre"));
+  });
+});
