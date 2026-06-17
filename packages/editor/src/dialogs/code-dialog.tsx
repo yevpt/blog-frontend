@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button, Modal } from "@repo/ui";
+import { Button, Modal, Select } from "@repo/ui";
 
 export const SUPPORTED_LANGUAGES = [
   "plain",
@@ -78,22 +78,17 @@ export function CodeDialog({ open, onClose, onConfirm }: CodeDialogProps) {
 
       <div className="flex flex-col gap-3">
         <div>
-          <label htmlFor="code-lang" className="mb-1 block text-xs font-medium text-(--fg2)">
-            语言
-          </label>
-          <select
-            id="code-lang"
+          <p className="mb-1 text-xs font-medium text-(--fg2)">语言</p>
+          <Select
+            selectedKey={lang}
+            onSelectionChange={(key) => setLang(key as SupportedLanguage)}
             aria-label="语言"
-            value={lang}
-            onChange={(event) => setLang(event.target.value as SupportedLanguage)}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-primary"
+            size="sm"
           >
             {SUPPORTED_LANGUAGES.map((language) => (
-              <option key={language} value={language}>
-                {LANGUAGE_LABELS[language]}
-              </option>
+              <Select.Item key={language} id={language} label={LANGUAGE_LABELS[language]} />
             ))}
-          </select>
+          </Select>
         </div>
 
         <div>
