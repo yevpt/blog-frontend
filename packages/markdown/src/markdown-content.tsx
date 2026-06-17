@@ -41,35 +41,30 @@ export function MarkdownContent({ html, variant = "article", className }: Markdo
     const container = containerRef.current;
     if (!container) return;
 
-    const buttons = container.querySelectorAll<HTMLButtonElement>(".md-copy-btn");
-    const cleanups: Array<() => void> = [];
-
-    buttons.forEach((btn) => {
+    // 用事件委托绑在稳定的 container 上，避免 dangerouslySetInnerHTML 替换 innerHTML 后旧节点失效
+    const handleClick = (event: MouseEvent) => {
+      const btn = (event.target as Element).closest<HTMLButtonElement>(".md-copy-btn");
+      if (!btn) return;
       const wrapper = btn.closest(".md-code-wrapper");
       if (!wrapper) return;
       const code = wrapper.querySelector("pre > code");
       if (!code) return;
 
       const originalHTML = btn.innerHTML;
+      const text = code.textContent ?? "";
+      navigator.clipboard.writeText(text).then(() => {
+        btn.innerHTML = CHECKMARK_SVG;
+        btn.style.color = "rgb(22, 163, 74)";
+        setTimeout(() => {
+          btn.innerHTML = originalHTML;
+          btn.style.color = "";
+        }, 2000);
+      });
+    };
 
-      const handleClick = () => {
-        const text = code.textContent ?? "";
-        navigator.clipboard.writeText(text).then(() => {
-          btn.innerHTML = CHECKMARK_SVG;
-          btn.style.color = "rgb(22, 163, 74)";
-          setTimeout(() => {
-            btn.innerHTML = originalHTML;
-            btn.style.color = "";
-          }, 2000);
-        });
-      };
-
-      btn.addEventListener("click", handleClick);
-      cleanups.push(() => btn.removeEventListener("click", handleClick));
-    });
-
-    return () => cleanups.forEach((fn) => fn());
-  }, [html]);
+    container.addEventListener("click", handleClick);
+    return () => container.removeEventListener("click", handleClick);
+  }, []);
 
   return (
     <div
