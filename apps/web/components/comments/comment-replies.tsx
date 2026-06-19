@@ -13,7 +13,8 @@ import { formatRelativeTime } from "@/lib/format-time";
 import { apiJson } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
 import { UserAvatar } from "@/components/common/user-avatar";
-import { markdownToHtmlSync, MarkdownContent } from "@repo/markdown";
+import { markdownToHtmlSync } from "@repo/markdown";
+import { PreviewableMarkdown } from "@/components/common/previewable-markdown";
 import type { ReplyTarget } from "./comment-item";
 
 export type { ReplyTarget };
@@ -40,7 +41,7 @@ function replyUrl(targetType: TargetType, commentId: number, page: number): stri
 
 function ReplyBody({ content }: { content: string }) {
   const html = useMemo(() => markdownToHtmlSync(content), [content]);
-  return <MarkdownContent html={html} variant="comment" />;
+  return <PreviewableMarkdown html={html} variant="comment" />;
 }
 
 interface ReplyItemProps {

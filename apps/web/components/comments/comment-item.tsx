@@ -5,9 +5,10 @@ import Link from "next/link";
 import type { CommentItemResp, CommentReplyResp } from "@repo/api";
 import { Button, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
-import { markdownToHtmlSync, MarkdownContent } from "@repo/markdown";
+import { markdownToHtmlSync } from "@repo/markdown";
 import { formatRelativeTime } from "@/lib/format-time";
 import { UserAvatar } from "@/components/common/user-avatar";
+import { PreviewableMarkdown } from "@/components/common/previewable-markdown";
 import type { TargetType } from "@/hooks/use-comment-like";
 import { CommentReplies } from "./comment-replies";
 
@@ -34,7 +35,7 @@ interface CommentItemProps {
 
 function CommentBody({ content }: { content: string }) {
   const html = useMemo(() => markdownToHtmlSync(content), [content]);
-  return <MarkdownContent html={html} variant="comment" />;
+  return <PreviewableMarkdown html={html} variant="comment" />;
 }
 
 export const CommentItem = memo(function CommentItem({

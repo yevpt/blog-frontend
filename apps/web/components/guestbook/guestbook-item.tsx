@@ -4,8 +4,9 @@ import { useCallback, useMemo } from "react";
 import type { CommentReplyResp, GuestbookItemResp } from "@repo/api";
 import { Button, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
-import { markdownToHtmlSync, MarkdownContent } from "@repo/markdown";
+import { markdownToHtmlSync } from "@repo/markdown";
 import { UserAvatar } from "@/components/common/user-avatar";
+import { PreviewableMarkdown } from "@/components/common/previewable-markdown";
 import { formatRelativeTime } from "@/lib/format-time";
 import { CommentReplies } from "@/components/comments/comment-replies";
 import type { ReplyTarget } from "@/components/comments/comment-replies";
@@ -17,7 +18,7 @@ function getDisplayName(user: GuestbookItemResp["user"]): string {
 
 function GuestbookBody({ content }: { content: string }) {
   const html = useMemo(() => markdownToHtmlSync(content), [content]);
-  return <MarkdownContent html={html} variant="comment" />;
+  return <PreviewableMarkdown html={html} variant="comment" />;
 }
 
 interface GuestbookItemProps {
