@@ -5,4 +5,5 @@ export type {
   DropdownPopoverProps,
   DropdownSelectionIndicator,
   DropdownSeparatorProps,
+  DropdownSubmenuTriggerProps,
 } from "./types";

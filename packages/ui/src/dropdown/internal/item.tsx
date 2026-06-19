@@ -1,6 +1,6 @@
 "use client";
 
-import { MenuItem as AriaMenuItem } from "react-aria-components";
+import { MenuItem as AriaMenuItem, Text } from "react-aria-components";
 import { SvgIcon } from "@repo/icons";
 import { Avatar } from "../../avatar/avatar";
 import { cn } from "../../lib/utils";
@@ -10,6 +10,7 @@ import { SelectionIndicator } from "./selection-indicator";
 /** 带图标/头像/选中态指示器的菜单项；`unstyled` 时退化为原生 MenuItem。 */
 export const DropdownItem = ({
   label,
+  description,
   children,
   addon,
   icon: Icon,
@@ -61,14 +62,25 @@ export const DropdownItem = ({
             <Icon aria-hidden="true" className="mr-2 size-4 shrink-0 text-muted-foreground" />
           )}
 
-          <span
-            className={cn(
-              "grow truncate text-sm font-semibold text-foreground",
-              state.isFocused && "text-accent-foreground",
+          <div className="min-w-0 grow">
+            <Text
+              slot="label"
+              className={cn(
+                "block truncate text-sm font-semibold text-foreground",
+                state.isFocused && "text-accent-foreground",
+              )}
+            >
+              {label || (typeof children === "function" ? children(state) : children)}
+            </Text>
+            {description && (
+              <Text
+                slot="description"
+                className="mt-0.5 block truncate text-xs font-normal text-muted-foreground"
+              >
+                {description}
+              </Text>
             )}
-          >
-            {label || (typeof children === "function" ? children(state) : children)}
-          </span>
+          </div>
 
           {addon && (
             <span className="ml-1 shrink-0 pr-1 text-xs font-medium text-muted-foreground">

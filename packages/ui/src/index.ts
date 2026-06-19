@@ -60,6 +60,7 @@ export {
   type DropdownPopoverProps,
   type DropdownSelectionIndicator,
   type DropdownSeparatorProps,
+  type DropdownSubmenuTriggerProps,
 } from "./dropdown";
 export {
   Select,

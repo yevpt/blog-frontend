@@ -4,6 +4,7 @@ import type {
   MenuProps as AriaMenuProps,
   PopoverProps as AriaPopoverProps,
   SeparatorProps as AriaSeparatorProps,
+  SubmenuTriggerProps as AriaSubmenuTriggerProps,
 } from "react-aria-components";
 
 /** 菜单项选中态指示器的呈现方式。 */
@@ -13,6 +14,8 @@ export type DropdownSelectionIndicator = "checkmark" | "checkbox" | "radio" | "t
 export interface DropdownItemProps extends AriaMenuItemProps {
   /** 主文案；省略时回退到 children。 */
   label?: string;
+  /** 次级描述文案，渲染在主文案下方（语义 `Text slot="description"`）。 */
+  description?: string;
   /** 行尾辅助文案（如快捷键）。 */
   addon?: string;
   /** 跳过内置样式，仅渲染原生 MenuItem。 */
@@ -33,3 +36,12 @@ export type DropdownPopoverProps = AriaPopoverProps;
 
 /** `Dropdown.Separator` 的 props。 */
 export type DropdownSeparatorProps = AriaSeparatorProps;
+
+/**
+ * `Dropdown.SubmenuTrigger` 的 props。
+ * children 必须为 `[触发项 Item, 子菜单 Menu]` 两个元素，组件自动用 Popover 包裹子菜单。
+ */
+export interface DropdownSubmenuTriggerProps extends AriaSubmenuTriggerProps {
+  /** 透传给内部子菜单 Popover 的 props（如 placement/offset）。 */
+  popoverProps?: DropdownPopoverProps;
+}
