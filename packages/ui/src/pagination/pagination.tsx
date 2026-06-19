@@ -3,16 +3,8 @@
 import { SvgIcon } from "@repo/icons";
 
 import { cn } from "../lib/utils";
-import { PaginationBase } from "./pagination-base";
-
-export interface PaginationProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  className?: string;
-  prevLabel?: string;
-  nextLabel?: string;
-}
+import { PaginationBase } from "./base";
+import type { PaginationProps } from "./types";
 
 const navButtonClassName = (isDisabled: boolean) =>
   cn(

@@ -1,20 +1,10 @@
 "use client";
 
-import type { ReactNode, Ref } from "react";
-import type { LabelProps as AriaLabelProps } from "react-aria-components";
 import { Label as AriaLabel } from "react-aria-components";
 import { SvgIcon } from "@repo/icons";
 import { Tooltip, TooltipTrigger } from "../tooltip/tooltip";
 import { cn } from "../lib/utils";
-
-interface LabelProps extends AriaLabelProps {
-  children: ReactNode;
-  isInvalid?: boolean;
-  isRequired?: boolean;
-  tooltip?: string;
-  tooltipDescription?: string;
-  ref?: Ref<HTMLLabelElement>;
-}
+import type { LabelProps } from "./types";
 
 export const Label = ({
   isInvalid,
@@ -34,7 +24,7 @@ export const Label = ({
   >
     {props.children}
     {isRequired && (
-      <span aria-hidden="true" className={cn("text-blue-500", isInvalid && "text-red-500")}>
+      <span aria-hidden="true" className={cn("text-primary", isInvalid && "text-destructive")}>
         *
       </span>
     )}
@@ -42,7 +32,7 @@ export const Label = ({
       <Tooltip title={tooltip} description={tooltipDescription} placement="top">
         <TooltipTrigger
           isDisabled={false}
-          className="cursor-pointer text-gray-400 hover:text-gray-500"
+          className="cursor-pointer text-muted-foreground hover:text-foreground"
         >
           <SvgIcon name="help-circle" size={16} />
         </TooltipTrigger>

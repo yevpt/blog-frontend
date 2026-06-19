@@ -1,7 +1,6 @@
 "use client";
 
-import { type ComponentType, type ReactNode, type Ref, useState } from "react";
-import type { TextFieldProps as AriaTextFieldProps } from "react-aria-components";
+import { useState } from "react";
 import {
   Button as AriaButton,
   Group as AriaGroup,
@@ -12,19 +11,7 @@ import { SvgIcon } from "@repo/icons";
 import { HintText } from "./hint-text";
 import { Label } from "./label";
 import { cn } from "../lib/utils";
-
-export interface InputProps extends Omit<AriaTextFieldProps, "children"> {
-  label?: string;
-  hint?: string;
-  tooltip?: string;
-  tooltipDescription?: string;
-  placeholder?: string;
-  size?: "sm" | "md";
-  inputClassName?: string;
-  leadingIcon?: ComponentType<{ className?: string }> | ReactNode;
-  trailingIcon?: ComponentType<{ className?: string }> | ReactNode;
-  ref?: Ref<HTMLDivElement>;
-}
+import type { InputProps } from "./types";
 
 const sizes = {
   sm: { root: "h-9 px-3 gap-2 text-sm", icon: "size-4" },
