@@ -173,7 +173,7 @@ export function ArticlesPage() {
           }}
           emptyText="暂无文章"
           maxHeightClassName={false}
-          className="shadow-sm"
+          classNames={{ container: "shadow-sm" }}
         />
       </section>
     </div>

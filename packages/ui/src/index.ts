@@ -47,11 +47,15 @@ export { DatePicker, type DatePickerProps } from "./date-picker/date-picker";
 export {
   DataTable,
   type DataTableProps,
+  type DataTableClassNames,
   type DataTableColumn,
   type DataTableState,
+  type DataTableSortState,
+  type DataTableSortDirection,
+  type DataTableOption,
   type DataTableSort,
   type DataTableFilter,
   type DataTableSearch,
-} from "./table/table";
+} from "./table";
 export type { DateValue, Selection, SortDescriptor } from "react-aria-components";
 export { parseDate } from "@internationalized/date";

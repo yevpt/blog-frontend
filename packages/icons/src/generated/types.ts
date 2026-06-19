@@ -22,6 +22,8 @@ export type IconName =
   | "edit"
   | "eye-off"
   | "eye"
+  | "filter"
+  | "folder"
   | "gender"
   | "gitee"
   | "github"

@@ -225,6 +225,9 @@ body {
   /* 浅色模式下加深代码块背景，避免与编辑器 bg-muted(#f4f4f5) 难以区分 */
   --editor-code-bg: #e6e6ef;
   --editor-code-fg: #18181b;
+  /* Markdown 渲染代码块（ChatGPT 风格，独立于编辑器配色，避免误伤 tiptap） */
+  --md-code-bg: #f9f9f9;
+  --md-code-border: #e5e5e5;
 
   @variant dark {
     --editor-hl-keyword: #c084fc; /* 浅紫 */
@@ -237,6 +240,8 @@ body {
     --editor-hl-meta: #9ca3af; /* 浅灰 */
     --editor-code-bg: #1c1c28;
     --editor-code-fg: #e4e4f0;
+    --md-code-bg: #171717;
+    --md-code-border: #2a2a2a;
   }
 }
 
@@ -447,30 +452,37 @@ body {
   代码块外层 wrapper：relative 定位供无语言时复制按钮绝对定位。
   background 显式设置以覆盖不同 prose variant 的默认值，确保顶部工具栏与代码区视觉一致。
 */
+/*
+  ChatGPT 风格：底色 / 边框 / 圆角统一落在 wrapper 上，overflow:hidden 裁切圆角；
+  内部 toolbar 与 pre 全透明，保证工具栏与代码区无缝同色、无分隔线。
+*/
 .md-code-wrapper {
   position: relative;
+  background-color: var(--md-code-bg);
+  border: 1px solid var(--md-code-border);
+  border-radius: 0.75rem;
+  overflow: hidden;
 }
 
 .md-code-wrapper pre {
-  background-color: var(--editor-code-bg) !important;
+  background-color: transparent !important;
   color: var(--editor-code-fg) !important;
-  margin-top: 0 !important;
+  margin: 0 !important;
   border: none !important;
+  border-radius: 0 !important;
 }
 
-/* 工具栏：与代码区完全同色，无分隔线 */
+/* 工具栏：透明继承 wrapper 底色 */
 .md-code-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 12px 5px;
-  background-color: var(--editor-code-bg);
-  border-radius: 0.5rem 0.5rem 0 0;
+  padding: 8px 14px 6px;
+  background-color: transparent;
 }
 
-/* 有工具栏时 pre 取消顶部圆角 */
+/* 有工具栏时 pre 收紧顶部内边距，贴合工具栏 */
 .md-code-wrapper:has(.md-code-toolbar) pre {
-  border-radius: 0 0 0.5rem 0.5rem !important;
   padding-top: 4px !important;
 }
 

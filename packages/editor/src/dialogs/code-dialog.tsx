@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button, Modal, Select } from "@repo/ui";
 
 export const SUPPORTED_LANGUAGES = [
-  "plain",
+  "plaintext",
   "javascript",
   "typescript",
   "python",
@@ -23,7 +23,7 @@ export const SUPPORTED_LANGUAGES = [
 type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
-  plain: "纯文本",
+  plaintext: "纯文本",
   javascript: "JavaScript",
   typescript: "TypeScript",
   python: "Python",
@@ -47,12 +47,12 @@ export interface CodeDialogProps {
 
 export function CodeDialog({ open, onClose, onConfirm }: CodeDialogProps) {
   const [code, setCode] = useState("");
-  const [lang, setLang] = useState<SupportedLanguage>("plain");
+  const [lang, setLang] = useState<SupportedLanguage>("plaintext");
 
   useEffect(() => {
     if (!open) {
       setCode("");
-      setLang("plain");
+      setLang("plaintext");
     }
   }, [open]);
 
@@ -84,6 +84,7 @@ export function CodeDialog({ open, onClose, onConfirm }: CodeDialogProps) {
             onSelectionChange={(key) => setLang(key as SupportedLanguage)}
             aria-label="语言"
             size="sm"
+            popoverClassName="rich-editor-lang-popover"
           >
             {SUPPORTED_LANGUAGES.map((language) => (
               <Select.Item key={language} id={language} label={LANGUAGE_LABELS[language]} />

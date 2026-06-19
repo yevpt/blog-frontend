@@ -1,7 +1,7 @@
 /**
  * CodeBlockView — 代码块 React NodeView
  *
- * 右上角渲染语言下拉选择器（<select>），用户可在插入代码块后随时切换语言。
+ * 右上角渲染语言下拉选择器（封装 Select 组件），用户可在插入代码块后随时切换语言。
  * 语言变更通过 updateAttributes 写回 ProseMirror 节点属性，
  * lowlight 扩展监听属性变化并重新高亮代码。
  *
@@ -14,12 +14,13 @@
 import { NodeViewContent, NodeViewWrapper } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/core";
 import type React from "react";
+import { Select } from "@repo/ui";
 
 type AnyNodeViewContent = React.ComponentType<{ as?: string; className?: string }>;
 const TypedNodeViewContent = NodeViewContent as AnyNodeViewContent;
 
 const SUPPORTED_LANGUAGES: Array<{ value: string; label: string }> = [
-  { value: "plain", label: "Plain Text" },
+  { value: "plaintext", label: "Plain Text" },
   { value: "javascript", label: "JavaScript" },
   { value: "typescript", label: "TypeScript" },
   { value: "python", label: "Python" },
@@ -47,28 +48,27 @@ const SUPPORTED_LANGUAGES: Array<{ value: string; label: string }> = [
 ];
 
 export function CodeBlockView({ node, updateAttributes }: NodeViewProps) {
-  const language = (node.attrs.language as string | null) ?? "plain";
+  const language = (node.attrs.language as string | null) ?? "plaintext";
 
   return (
     <NodeViewWrapper as="div" className="rich-editor-code-wrapper">
+      {/* contentEditable={false} 防止 ProseMirror 捕获 Select 的键盘事件 */}
+      <span contentEditable={false} className="rich-editor-code-lang">
+        <Select
+          selectedKey={language}
+          onSelectionChange={(key) => {
+            updateAttributes({ language: key as string });
+          }}
+          aria-label="选择代码语言"
+          size="sm"
+          popoverClassName="rich-editor-lang-popover min-w-24"
+        >
+          {SUPPORTED_LANGUAGES.map(({ value, label }) => (
+            <Select.Item key={value} id={value} label={label} />
+          ))}
+        </Select>
+      </span>
       <pre className="rich-editor-code-block">
-        <span contentEditable={false} className="rich-editor-code-lang">
-          <select
-            value={language}
-            onChange={(e) => {
-              const lang = e.target.value === "plain" ? null : e.target.value;
-              updateAttributes({ language: lang });
-            }}
-            aria-label="选择代码语言"
-            className="rich-editor-code-lang-select"
-          >
-            {SUPPORTED_LANGUAGES.map(({ value, label }) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </span>
         <TypedNodeViewContent as="code" />
       </pre>
     </NodeViewWrapper>

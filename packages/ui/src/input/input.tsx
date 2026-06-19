@@ -27,8 +27,8 @@ export interface InputProps extends Omit<AriaTextFieldProps, "children"> {
 }
 
 const sizes = {
-  sm: { root: "py-2 px-3 gap-2 text-sm", icon: "size-4" },
-  md: { root: "py-2.5 px-3.5 gap-2 text-base", icon: "size-5" },
+  sm: { root: "h-9 px-3 gap-2 text-sm", icon: "size-4" },
+  md: { root: "h-[42px] px-3 gap-2 text-[15px]", icon: "size-5" },
 };
 
 export const Input = ({
@@ -74,42 +74,44 @@ export const Input = ({
           )}
           <AriaGroup
             className={cn(
-              "relative flex w-full items-center rounded-lg bg-white shadow-xs ring-1 ring-gray-300 outline-none transition duration-100 ring-inset",
-              "focus-within:ring-2 focus-within:ring-blue-500",
+              "relative flex w-full items-center rounded-xl bg-card/75 shadow-xs ring-1 ring-input outline-none transition-[background-color,box-shadow] duration-150 ring-inset",
+              "hover:bg-card/90 hover:ring-foreground/20",
+              "focus-within:bg-card focus-within:ring-1 focus-within:ring-primary/55 focus-within:shadow-[0_0_0_3px_rgb(from_var(--color-ring)_r_g_b_/_0.24)]",
               "group-disabled:cursor-not-allowed group-disabled:opacity-50",
-              isInvalid && "ring-red-500 focus-within:ring-red-500",
+              isInvalid && "ring-destructive focus-within:ring-destructive",
               sizes[size].root,
             )}
           >
             {LeadingIcon && typeof LeadingIcon === "function" ? (
-              <LeadingIcon className={cn("shrink-0 text-gray-400", sizes[size].icon)} />
+              <LeadingIcon className={cn("shrink-0 text-muted-foreground", sizes[size].icon)} />
             ) : (
               LeadingIcon
             )}
             <AriaInput
               placeholder={placeholder}
               className={cn(
-                "min-w-0 flex-1 bg-transparent text-gray-900 placeholder:text-gray-400 outline-none",
+                "min-w-0 flex-1 bg-transparent text-foreground placeholder:text-muted-foreground/65 outline-none",
                 inputClassName,
               )}
             />
             {isPassword && (
               <AriaButton
                 type="button"
+                aria-label={isPasswordVisible ? "隐藏密码" : "显示密码"}
                 onPress={() => setIsPasswordVisible((v) => !v)}
-                className="shrink-0 text-gray-400 hover:text-gray-600 outline-none"
+                className="flex size-[34px] shrink-0 items-center justify-center rounded-[9px] text-muted-foreground outline-none transition-[background-color,color,transform] duration-150 hover:bg-muted hover:text-foreground data-[pressed]:scale-[0.97] focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {isPasswordVisible ? (
-                  <SvgIcon name="eye-off" size={16} />
+                  <SvgIcon name="eye-off" size={18} />
                 ) : (
-                  <SvgIcon name="eye" size={16} />
+                  <SvgIcon name="eye" size={18} />
                 )}
               </AriaButton>
             )}
             {TrailingIcon &&
               !isPassword &&
               (typeof TrailingIcon === "function" ? (
-                <TrailingIcon className={cn("shrink-0 text-gray-400", sizes[size].icon)} />
+                <TrailingIcon className={cn("shrink-0 text-muted-foreground", sizes[size].icon)} />
               ) : (
                 TrailingIcon
               ))}

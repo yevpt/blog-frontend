@@ -39,14 +39,15 @@ describe("Input", () => {
 
   it("type=password 时渲染密码切换按钮", () => {
     render(<Input aria-label="密码" type="password" />);
-    expect(screen.getByRole("button")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "显示密码" })).toBeTruthy();
     expect(screen.getByTestId("icon-eye")).toBeTruthy();
   });
 
   it("点击密码切换按钮后显示 eye-off 图标", async () => {
     const user = userEvent.setup();
     render(<Input aria-label="密码" type="password" />);
-    await user.click(screen.getByRole("button"));
+    await user.click(screen.getByRole("button", { name: "显示密码" }));
     expect(screen.getByTestId("icon-eye-off")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "隐藏密码" })).toBeTruthy();
   });
 });

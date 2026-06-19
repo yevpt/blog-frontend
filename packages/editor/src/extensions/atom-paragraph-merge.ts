@@ -1,4 +1,5 @@
 import { Extension } from "@tiptap/core";
+import { NodeSelection, Selection } from "@tiptap/pm/state";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -7,6 +8,8 @@ declare module "@tiptap/core" {
       deleteEmptyParagraphBeforeAtom: () => ReturnType;
       /** 光标在空段落末尾处、且后一个兄弟节点是非文本块级原子节点（如图片）时，删除该空段落 */
       deleteEmptyParagraphAfterAtom: () => ReturnType;
+      /** 原子节点（如图片）被整体选中时，方向键应将选区收起为节点旁边的文字光标 */
+      moveCursorPastAtomSelection: (dir: -1 | 1) => ReturnType;
     };
   }
 }
@@ -66,13 +69,38 @@ export const AtomParagraphMergeExtension = Extension.create({
           }
           return true;
         },
+
+      moveCursorPastAtomSelection:
+        (dir) =>
+        ({ state, dispatch }) => {
+          const { selection } = state;
+          if (!(selection instanceof NodeSelection) || !selection.node.isAtom) return false;
+
+          const pos = dir < 0 ? selection.from : selection.to;
+          // textOnly: 找不到合法文字位置时返回 null，把这类边界情况交给 Gapcursor 处理
+          const found = Selection.findFrom(state.doc.resolve(pos), dir, true);
+          if (!found) return false;
+
+          if (dispatch) {
+            dispatch(state.tr.setSelection(found));
+          }
+          return true;
+        },
     };
   },
 
   addKeyboardShortcuts() {
     return {
-      Backspace: () => this.editor.commands.deleteEmptyParagraphBeforeAtom(),
-      Delete: () => this.editor.commands.deleteEmptyParagraphAfterAtom(),
+      // macOS 键盘只有一个删除键且发送的是 Backspace，无法触发 Delete（前向删除）
+      // 因此 Backspace/Delete 都需要同时尝试两种方向的空段落合并
+      Backspace: () =>
+        this.editor.commands.deleteEmptyParagraphBeforeAtom() ||
+        this.editor.commands.deleteEmptyParagraphAfterAtom(),
+      Delete: () =>
+        this.editor.commands.deleteEmptyParagraphAfterAtom() ||
+        this.editor.commands.deleteEmptyParagraphBeforeAtom(),
+      ArrowLeft: () => this.editor.commands.moveCursorPastAtomSelection(-1),
+      ArrowRight: () => this.editor.commands.moveCursorPastAtomSelection(1),
     };
   },
 });

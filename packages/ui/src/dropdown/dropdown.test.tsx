@@ -81,4 +81,29 @@ describe("Dropdown", () => {
     );
     expect(screen.getByTestId("icon-dots-vertical")).toBeTruthy();
   });
+
+  it("unstyled 菜单项保留自定义内容和可访问名称", async () => {
+    const user = userEvent.setup();
+    render(
+      <Dropdown.Root>
+        <Dropdown.DotsButton aria-label="打开菜单" />
+        <Dropdown.Popover>
+          <Dropdown.Menu aria-label="菜单" selectionMode="single" selectedKeys={new Set(["draft"])}>
+            <Dropdown.Item unstyled id="draft" textValue="草稿">
+              {({ isSelected }) => (
+                <>
+                  <span>{isSelected ? "已选" : "未选"}</span>
+                  <span>草稿</span>
+                </>
+              )}
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown.Popover>
+      </Dropdown.Root>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "打开菜单" }));
+
+    expect(await screen.findByRole("menuitemradio", { name: "已选 草稿" })).toBeTruthy();
+  });
 });

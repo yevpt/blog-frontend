@@ -4,6 +4,33 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Blog Admin</title>
+    <style>
+      html {
+        background-color: #ffffff;
+        color-scheme: light;
+      }
+
+      html.dark {
+        background-color: #09090b;
+        color-scheme: dark;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        html:not(.light) {
+          background-color: #09090b;
+          color-scheme: dark;
+        }
+      }
+    </style>
+    <script>
+      (() => {
+        const match = document.cookie.match(/(?:^|;\s*)theme=([^;]*)/);
+        const theme = match?.[1];
+        if (theme === "dark" || theme === "light") {
+          document.documentElement.classList.add(theme);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -21,5 +21,7 @@ export const CodeBlockExtension = CodeBlockLowlight.extend({
 }).configure({
   lowlight,
   HTMLAttributes: { class: "rich-editor-code-block" },
-  defaultLanguage: null,
+  // 未指定语言时回退到 plaintext（lowlight common 内置），避免 highlightAuto 自动探测着色。
+  // language 为空会触发 highlightAuto，使「Plain Text」代码块仍被高亮，与需求不符。
+  defaultLanguage: "plaintext",
 });

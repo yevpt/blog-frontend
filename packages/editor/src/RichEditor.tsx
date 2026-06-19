@@ -72,6 +72,15 @@ export function RichEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusTrigger]);
 
+  // 当外部将 value 重置为空字符串（如提交成功后），同步清空编辑器内容。
+  // useRichEditor 的 content 只在首次创建时读取，之后不自动跟随 value 变化，
+  // 因此需要在此显式调用 clearContent。
+  useEffect(() => {
+    if (value === "" && editor && !editor.isEmpty) {
+      editor.commands.clearContent(true);
+    }
+  }, [value, editor]);
+
   const shell = clsx(
     "overflow-hidden rounded-xl bg-muted px-3 py-3 sm:px-4 sm:py-3.5",
     disabled && "opacity-60",

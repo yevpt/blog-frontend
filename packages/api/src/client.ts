@@ -3,6 +3,7 @@ import type {
   SendCodeReq,
   RegisterReq,
   LoginReq,
+  AdminLoginReq,
   RefreshReq,
   UserResp,
   LoginResp,
@@ -161,6 +162,14 @@ export function createApiClient(config: ApiClientConfig) {
       /** 换发新 token（不走 fetchAuthed 避免递归） */
       refresh: (req: RefreshReq) =>
         fetchPublic<TokenResp>("/auth/refresh", { method: "POST", body: JSON.stringify(req) }),
+    },
+    adminAuth: {
+      /** 管理后台登录，返回双 token；401 = 凭证错误，403 = 非管理员或账号禁用 */
+      login: (req: AdminLoginReq) =>
+        fetchPublic<LoginResp>("/admin/auth/login", {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
     },
     articles: {
       /** 分页查询公开文章，支持分类/标签/推荐过滤 */

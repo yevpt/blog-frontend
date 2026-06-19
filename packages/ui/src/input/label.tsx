@@ -28,22 +28,16 @@ export const Label = ({
     data-label="true"
     {...props}
     className={cn(
-      "flex cursor-default items-center gap-0.5 text-sm font-medium text-gray-700",
+      "flex cursor-default items-center gap-0.5 text-xs font-semibold text-foreground/80",
       className,
     )}
   >
     {props.children}
-    <span
-      className={cn(
-        "hidden text-blue-500",
-        isRequired && "block",
-        typeof isRequired === "undefined" && "group-required:block",
-        isInvalid && "text-red-500",
-        typeof isInvalid === "undefined" && "group-invalid:text-red-500",
-      )}
-    >
-      *
-    </span>
+    {isRequired && (
+      <span aria-hidden="true" className={cn("text-blue-500", isInvalid && "text-red-500")}>
+        *
+      </span>
+    )}
     {tooltip && (
       <Tooltip title={tooltip} description={tooltipDescription} placement="top">
         <TooltipTrigger

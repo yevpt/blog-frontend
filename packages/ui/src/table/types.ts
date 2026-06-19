@@ -53,7 +53,28 @@ export interface DataTableColumn<T> {
   filter?: DataTableFilter<T>;
 }
 
-type DataTableAccessibleName =
+export interface DataTableClassNames {
+  root?: string;
+  toolbar?: string;
+  search?: string;
+  resultCount?: string;
+  container?: string;
+  table?: string;
+  header?: string;
+  headerCell?: string;
+  headerCellContent?: string;
+  body?: string;
+  row?: string;
+  cell?: string;
+  sortButton?: string;
+  filterButton?: string;
+  filterPopover?: string;
+  filterMenu?: string;
+  filterMenuTitle?: string;
+  filterMenuItem?: string;
+}
+
+export type DataTableAccessibleName =
   | {
       "aria-label": string;
       "aria-labelledby"?: never;
@@ -75,5 +96,6 @@ export type DataTableProps<T> = DataTableAccessibleName & {
   loadingText?: ReactNode;
   isLoading?: boolean;
   className?: string;
+  classNames?: DataTableClassNames;
   maxHeightClassName?: string | false;
 };

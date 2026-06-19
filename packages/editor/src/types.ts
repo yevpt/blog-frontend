@@ -35,7 +35,7 @@ export interface InsertHandlers {
 
   /**
    * 工具栏点击代码块按钮时触发。
-   * @param insert 将代码块插入编辑器的函数，code 必填，lang 必填（可传 "plain"）
+   * @param insert 将代码块插入编辑器的函数，code 必填，lang 必填（纯文本传 "plaintext"）
    */
   onInsertCode?: (insert: (code: string, lang: string) => void) => void;
 }

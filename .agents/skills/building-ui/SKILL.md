@@ -1,6 +1,6 @@
 ---
 name: "building-ui"
-description: "Use when writing or editing any UI in this monorepo — JSX/TSX markup, Tailwind classes, page.tsx, or React components in apps/web, apps/admin, or packages/ui. Provides the reuse-first component inventory (what to import from @repo/ui instead of hand-rolling), the icon/style/data-fetch rules, and the concrete anti-patterns from the refactor backlog so you don't recreate known debt. Trigger before reaching for a raw <button>, <input>, <svg>, fetch(), or a custom Tailwind widget."
+description: "Use when writing or editing any UI in this monorepo — JSX/TSX markup, Tailwind classes, page.tsx, or React components in apps/web, apps/admin, or packages/ui. Provides the reuse-first component inventory, package UI component-library standards, icon/style/data-fetch rules, and concrete anti-patterns from the refactor backlog. Trigger before reaching for a raw <button>, <input>, <svg>, fetch(), or a custom Tailwind widget."
 license: "MIT"
 ---
 
@@ -17,6 +17,22 @@ license: "MIT"
 - 确实没有 → 是「基础通用 UI」就在 `packages/ui` 新建并导出再用；是业务组件才写进 app 的 `components/`。
 
 > 为什么：app 里手写 `<button>`/`<input>` 会绕过统一的 a11y、主题、响应式，制造下一轮重构债。
+
+## `packages/ui` 组件库封装标准
+
+新增或修改 `packages/ui/src/*` 里的通用组件时，按组件库标准处理，而不是按业务组件临时实现：
+
+- **Public API 边界**：组件目录优先提供 `index.ts` 作为组件级 public barrel；根 `packages/ui/src/index.ts` 从组件目录导出。实现文件只做实现，不兼任类型聚合。外部只暴露用户应消费的组件与类型，不导出内部视图/按钮/Hook。
+- **目录结构**：复杂组件使用 `internal/` 放私有 DOM 子组件，`hooks/` 放状态 Hook，`utils/` 放纯函数，`types.ts` 放公共类型。内部文件名避免重复目录语义，例如在 `table/internal/` 里用 `header.tsx`、`body.tsx`、`view.tsx`，不再写 `table-header.tsx`。
+- **入口简洁**：主组件文件只展示 props 解构、Hook 调用和高层 DOM 组合。筛选、排序、弹窗、渲染循环、状态计算等细节下沉到子组件、Hook 或 utils。
+- **类型设计**：禁止 `any`。公共 props、配置项、状态类型都要精确导出；内部 props 用命名 interface。受控/非受控状态要明确优先级，默认值只作为初始化语义使用。
+- **样式 API**：`className` 默认作用在组件 root。复杂组件提供 `classNames` slot API，让使用方定制 root、container、trigger、popover、item、cell 等关键节点；不要要求使用方 fork 内部实现或依赖脆弱选择器。
+- **可访问性**：优先使用 React Aria 原语。交互状态必须语义准确：二态按钮可用 `aria-pressed`，排序这类三态状态应由表头 `aria-sort` 或明确 label 表达，不能把“未排序”和“降序”混成同一个状态。按钮 label 要说明当前状态和动作。
+- **交互隔离**：嵌在可点击容器里的按钮、菜单、链接必须阻止不该冒泡的事件，避免一次点击触发两层行为。例如表头整体排序时，筛选/排序按钮点击不能再次触发表头排序。
+- **性能边界**：客户端过滤/排序只适合中小数据量。若组件可能承载大数据，设计 `manual`/server-side 模式、分页、虚拟滚动或 debounce 的扩展点；不要把全量计算写死为唯一模式。
+- **测试要求**：改组件必须补组件测试。至少覆盖渲染、公共 API、受控/非受控状态、关键交互、a11y 文案/ARIA、slot classNames。若 app 中已有消费示例，也同步跑对应 app 测试。
+
+`DataTable` 是当前基准实现：`packages/ui/src/table` 展示了 public barrel、`internal/`、`hooks/`、`utils/`、slot classNames、React Aria 表格语义和受控状态测试的组织方式。后续通用组件优先对齐这套形状。
 
 ## `@repo/ui` 组件清单（手写前先查）
 

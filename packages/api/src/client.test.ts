@@ -51,6 +51,30 @@ describe("createApiClient", () => {
     expect(result).toEqual(loginResp);
   });
 
+  it("adminAuth.login 调用 /admin/auth/login 并返回 LoginResp", async () => {
+    const loginResp = {
+      access_token: "acc",
+      refresh_token: "ref",
+      expires_in: 7200,
+      user: { id: 1, username: "admin" },
+    };
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: loginResp }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    const result = await client.adminAuth.login({ username: "admin", password: "pass" });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/auth/login",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ username: "admin", password: "pass" }),
+      }),
+    );
+    expect(result).toEqual(loginResp);
+  });
+
   it("code !== 0 时抛出 ApiError", async () => {
     vi.mocked(global.fetch).mockResolvedValue(mockResponse({ code: 400, message: "参数错误" }));
     const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });

@@ -3,6 +3,7 @@ export type {
   SendCodeReq,
   RegisterReq,
   LoginReq,
+  AdminLoginReq,
   RefreshReq,
   UserResp,
   LoginResp,

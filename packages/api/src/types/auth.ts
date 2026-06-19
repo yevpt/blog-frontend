@@ -20,6 +20,12 @@ export interface LoginReq {
   password: string;
 }
 
+/** 管理后台登录（仅用户名 + 密码） */
+export interface AdminLoginReq {
+  username: string;
+  password: string;
+}
+
 /** 刷新 token */
 export interface RefreshReq {
   refresh_token: string;

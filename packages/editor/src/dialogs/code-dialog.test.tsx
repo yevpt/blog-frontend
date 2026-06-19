@@ -13,7 +13,8 @@ describe("Editor CodeDialog", () => {
     render(<CodeDialog open onClose={() => {}} onConfirm={() => {}} />);
     expect(screen.getByRole("dialog", { name: "插入代码块" })).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: /代码内容/i })).toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: /语言/i })).toBeInTheDocument();
+    // react-aria Select 触发器渲染为 button，并继承 aria-label="语言"
+    expect(screen.getByRole("button", { name: /语言/ })).toBeInTheDocument();
   });
 
   it("填写代码并选择语言后点击插入触发 onConfirm", async () => {
@@ -22,7 +23,9 @@ describe("Editor CodeDialog", () => {
     render(<CodeDialog open onClose={() => {}} onConfirm={onConfirm} />);
 
     await user.type(screen.getByRole("textbox", { name: /代码内容/i }), "console.log(1)");
-    await user.selectOptions(screen.getByRole("combobox", { name: /语言/i }), "javascript");
+    // 打开语言下拉并选择 JavaScript（react-aria Select 通过 listbox/option 交互）
+    await user.click(screen.getByRole("button", { name: /语言/ }));
+    await user.click(await screen.findByRole("option", { name: "JavaScript" }));
     await user.click(screen.getByRole("button", { name: "插入" }));
 
     expect(onConfirm).toHaveBeenCalledWith("console.log(1)", "javascript");

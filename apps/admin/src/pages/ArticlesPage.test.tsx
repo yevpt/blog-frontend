@@ -33,7 +33,9 @@ describe("ArticlesPage", () => {
     expect(within(table).getByRole("button", { name: "筛选分类" })).toBeInTheDocument();
     expect(within(table).getByRole("button", { name: "筛选标签" })).toBeInTheDocument();
     expect(within(table).getByRole("button", { name: "筛选置顶" })).toBeInTheDocument();
-    expect(within(table).getByRole("button", { name: "更新时间排序：降序" })).toBeInTheDocument();
+    expect(
+      within(table).getByRole("button", { name: "更新时间排序：降序，点击切换为升序" }),
+    ).toBeInTheDocument();
 
     expect(within(table).getByRole("link", { name: "React Query 与后台表格状态" })).toHaveAttribute(
       "href",
@@ -78,15 +80,14 @@ describe("ArticlesPage", () => {
     const user = userEvent.setup();
     renderArticlesPage();
 
-    await user.click(screen.getByRole("button", { name: "更新时间排序：降序" }));
+    await user.click(screen.getByRole("columnheader", { name: /更新时间/ }));
 
     const articleLinks = within(screen.getByRole("grid", { name: "文章列表" })).getAllByRole(
       "link",
     );
-    expect(screen.getByRole("button", { name: "更新时间排序：升序" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    expect(
+      screen.getByRole("button", { name: "更新时间排序：升序，点击切换为降序" }),
+    ).not.toHaveAttribute("aria-pressed");
     expect(articleLinks[0]).toHaveTextContent("旧友链清理记录");
   });
 });

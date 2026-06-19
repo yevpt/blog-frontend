@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Badge, Button } from "../index";
-import { DataTable, type DataTableColumn, type DataTableState } from "./table";
+import { DataTable, type DataTableColumn, type DataTableState } from ".";
 
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
@@ -139,6 +139,34 @@ describe("DataTable", () => {
     expect(screen.getByText("共 3 条")).toBeInTheDocument();
   });
 
+  it("支持 root className 与内部 slot classNames 定制", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <DataTable
+        aria-label="文章"
+        items={rows}
+        columns={columns}
+        getRowId={(article) => article.id}
+        className="table-root"
+        classNames={{
+          container: "table-container",
+          headerCell: "table-header-cell",
+          cell: "table-cell",
+          filterPopover: "table-filter-popover",
+        }}
+      />,
+    );
+
+    expect(container.firstElementChild).toHaveClass("table-root");
+    expect(container.querySelector(".table-container")).toBeInTheDocument();
+    expect(container.querySelector(".table-header-cell")).toBeInTheDocument();
+    expect(container.querySelector(".table-cell")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "筛选状态" }));
+
+    expect(screen.getByRole("dialog", { name: "筛选状态" })).toHaveClass("table-filter-popover");
+  });
+
   it("通过内置搜索过滤可见行", async () => {
     const user = userEvent.setup();
     renderArticleTable();
@@ -170,19 +198,73 @@ describe("DataTable", () => {
     expect(screen.getByText("共 1 条")).toBeInTheDocument();
   });
 
-  it("通过排序配置切换方向并重排行", async () => {
+  it("筛选入口使用通用 filter 图标并将状态限制在表头按钮内", () => {
+    renderArticleTable();
+
+    const filterButton = screen.getByRole("button", { name: "筛选状态" });
+
+    expect(within(filterButton).getByTestId("icon-filter")).toBeInTheDocument();
+    expect(filterButton).not.toHaveClass("focus-visible:ring-2");
+    expect(filterButton).not.toHaveClass("focus-visible:ring-offset-2");
+  });
+
+  it("筛选弹窗以触发图标为中心向下展开", async () => {
+    const user = userEvent.setup();
+    renderArticleTable();
+
+    await user.click(screen.getByRole("button", { name: "筛选状态" }));
+
+    expect(screen.getByRole("dialog", { name: "筛选状态" })).toHaveAttribute(
+      "data-placement",
+      "bottom",
+    );
+  });
+
+  it("点击可排序表头整体切换方向并重排行", async () => {
     const user = userEvent.setup();
     renderArticleTable();
 
     expect(getArticleLinks()[0]).toHaveTextContent("React Query 与后台表格状态");
+    expect(
+      screen.getByRole("button", { name: "更新时间排序：降序，点击切换为升序" }),
+    ).not.toHaveAttribute("aria-pressed");
 
-    await user.click(screen.getByRole("button", { name: "更新时间排序：降序" }));
+    await user.click(screen.getByRole("columnheader", { name: /更新时间/ }));
 
-    expect(screen.getByRole("button", { name: "更新时间排序：升序" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    expect(
+      screen.getByRole("button", { name: "更新时间排序：升序，点击切换为降序" }),
+    ).not.toHaveAttribute("aria-pressed");
     expect(getArticleLinks()[0]).toHaveTextContent("旧友链清理记录");
+  });
+
+  it("点击筛选按钮不会触发表头排序", async () => {
+    const user = userEvent.setup();
+    renderArticleTable();
+
+    await user.click(screen.getByRole("button", { name: "筛选状态" }));
+
+    expect(getArticleLinks()[0]).toHaveTextContent("React Query 与后台表格状态");
+  });
+
+  it("未排序状态下排序按钮提供准确的无障碍文案", () => {
+    renderArticleTable({ state: { searchValue: "", filters: { status: "all" } } });
+
+    expect(
+      screen.getByRole("button", { name: "更新时间排序：未排序，点击排序" }),
+    ).not.toHaveAttribute("aria-pressed");
+  });
+
+  it("排序激活态只改变图标状态，不使用背景胶囊样式", async () => {
+    const user = userEvent.setup();
+    renderArticleTable();
+
+    await user.click(screen.getByRole("columnheader", { name: /更新时间/ }));
+
+    const sortButton = screen.getByRole("button", {
+      name: "更新时间排序：升序，点击切换为降序",
+    });
+    expect(sortButton).not.toHaveClass("bg-primary/10");
+    expect(sortButton.querySelector(".text-primary")).toBeTruthy();
   });
 
   it("受控状态模式下只回传下一份表格状态", async () => {
@@ -195,7 +277,7 @@ describe("DataTable", () => {
     };
     renderArticleTable({ state, onStateChange });
 
-    await user.click(screen.getByRole("button", { name: "更新时间排序：降序" }));
+    await user.click(screen.getByRole("columnheader", { name: /更新时间/ }));
 
     expect(onStateChange).toHaveBeenCalledWith({
       searchValue: "",

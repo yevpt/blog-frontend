@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest";
 import { Editor } from "@tiptap/core";
+import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { AtomParagraphMergeExtension } from "../extensions/atom-paragraph-merge";
@@ -79,6 +80,77 @@ describe("AtomParagraphMergeExtension", () => {
 
     expect(handled).toBe(false);
     expect(editor.state.doc.childCount).toBe(3);
+    editor.destroy();
+  });
+
+  it("图片被整体选中（NodeSelection）时，ArrowLeft 应将选区收起为图片前的文字光标", () => {
+    const editor = makeEditor('<p>before</p><img src="a.png" /><p>after</p>');
+    const imagePos = editor.state.doc.content.firstChild!.nodeSize;
+    editor.view.dispatch(
+      editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, imagePos)),
+    );
+
+    const handled = editor.commands.moveCursorPastAtomSelection(-1);
+
+    expect(handled).toBe(true);
+    expect(editor.state.selection).toBeInstanceOf(TextSelection);
+    expect(editor.state.selection.empty).toBe(true);
+    // 落在图片前一个段落「before」文字末尾（图片与该段落的边界位置本身不在任何文本块内，不能作为文字光标位置）
+    expect(editor.state.selection.from).toBe(imagePos - 1);
+    editor.destroy();
+  });
+
+  it("图片被整体选中（NodeSelection）时，ArrowRight 应将选区收起为图片后的文字光标", () => {
+    const editor = makeEditor('<p>before</p><img src="a.png" /><p>after</p>');
+    const imagePos = editor.state.doc.content.firstChild!.nodeSize;
+    editor.view.dispatch(
+      editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, imagePos)),
+    );
+
+    const handled = editor.commands.moveCursorPastAtomSelection(1);
+
+    expect(handled).toBe(true);
+    expect(editor.state.selection).toBeInstanceOf(TextSelection);
+    expect(editor.state.selection.empty).toBe(true);
+    // 落在图片后一个段落「after」文字开头（图片与该段落的边界位置本身不在任何文本块内，不能作为文字光标位置）
+    expect(editor.state.selection.from).toBe(imagePos + 2);
+    editor.destroy();
+  });
+
+  it("选区不是 NodeSelection 时 moveCursorPastAtomSelection 不触发", () => {
+    const editor = makeEditor("<p>hello</p>");
+    editor.commands.setTextSelection(1);
+    const handled = editor.commands.moveCursorPastAtomSelection(-1);
+
+    expect(handled).toBe(false);
+    editor.destroy();
+  });
+
+  it("macOS 只有 Backspace 键时，前导空段落 + 图片也能通过 Backspace 删除（向两个方向回退尝试）", () => {
+    const editor = makeEditor('<p></p><img src="a.png" /><p>tail</p>');
+    editor.commands.setTextSelection(1);
+
+    const handled =
+      editor.commands.deleteEmptyParagraphBeforeAtom() ||
+      editor.commands.deleteEmptyParagraphAfterAtom();
+
+    expect(handled).toBe(true);
+    expect(editor.state.doc.childCount).toBe(2);
+    expect(editor.state.doc.firstChild?.type.name).toBe("image");
+    editor.destroy();
+  });
+
+  it("尾随空段落 + 图片也能通过 Delete 删除（向两个方向回退尝试）", () => {
+    const editor = makeEditor('<img src="a.png" /><p></p><p>tail</p>');
+    editor.commands.setTextSelection(2);
+
+    const handled =
+      editor.commands.deleteEmptyParagraphAfterAtom() ||
+      editor.commands.deleteEmptyParagraphBeforeAtom();
+
+    expect(handled).toBe(true);
+    expect(editor.state.doc.childCount).toBe(2);
+    expect(editor.state.doc.firstChild?.type.name).toBe("image");
     editor.destroy();
   });
 });

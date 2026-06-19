@@ -4,7 +4,7 @@ import type {
   DataTableSort,
   DataTableSortDirection,
   DataTableState,
-} from "./types";
+} from "../types";
 
 function isSortConfig<T>(sort: DataTableColumn<T>["sort"]): sort is DataTableSort<T> {
   return typeof sort === "object" && sort !== null;
@@ -32,6 +32,7 @@ function compareValues(
     return normalizedA - normalizedB;
   }
 
+  // 文本排序默认贴近中文后台列表的阅读习惯，避免英文 locale 对中文标签排序不稳定。
   return String(normalizedA).localeCompare(String(normalizedB), "zh-Hans-CN");
 }
 
@@ -51,6 +52,7 @@ export function getDefaultTableState<T>({
     return result;
   }, {});
 
+  // 只有对象形式的 sort 才代表列声明了默认排序；true 仅表示该列允许用户手动排序。
   const defaultSortColumn = columns.find((column) => isSortConfig(column.sort));
   const defaultSort = defaultSortColumn
     ? {
@@ -73,6 +75,7 @@ export function mergeTableState(
   return {
     ...current,
     ...patch,
+    // filters 的变更通常只来自单列筛选，合并 patch 可避免清掉其它列的筛选状态。
     filters: patch.filters ? { ...current.filters, ...patch.filters } : current.filters,
   };
 }
@@ -93,6 +96,7 @@ export function getNextSort<T>({
     return { column: column.id, direction: fallbackDirection };
   }
 
+  // 排序交互维持双态循环，未排序状态由切换到其它列或外部受控 state 决定。
   return {
     column: column.id,
     direction: current.direction === "ascending" ? "descending" : "ascending",
@@ -121,6 +125,7 @@ export function getFilteredSortedRows<T>({
       if (!column.filter) return true;
       const value = state.filters[column.id];
       if (Array.isArray(value)) {
+        // 状态结构预留多选筛选：空数组等同不过滤，多值命中任意一个即可。
         return (
           value.length === 0 || value.some((itemValue) => column.filter?.match(item, itemValue))
         );
