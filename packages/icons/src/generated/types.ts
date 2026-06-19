@@ -19,6 +19,7 @@ export type IconName =
   | "close"
   | "code-block"
   | "dots-vertical"
+  | "download"
   | "droplet-filled"
   | "edit"
   | "eye-off"
@@ -48,6 +49,7 @@ export type IconName =
   | "phone"
   | "plus"
   | "qq"
+  | "rotate-cw"
   | "search"
   | "share"
   | "shield"
@@ -58,4 +60,6 @@ export type IconName =
   | "vip"
   | "wechat"
   | "weibo"
-  | "zhihu";
+  | "zhihu"
+  | "zoom-in"
+  | "zoom-out";
