@@ -17,7 +17,7 @@ export {
   type TabsVariant,
 } from "./tabs";
 export { Input, type InputProps, Label, HintText } from "./input";
-export { Modal, type ModalPlacement, type ModalProps, type ModalSize } from "./modal/modal";
+export { Modal, type ModalPlacement, type ModalProps, type ModalSize } from "./modal";
 export { SearchField, type SearchFieldProps } from "./search-field";
 export {
   TagGroup,
@@ -79,9 +79,15 @@ export {
   type CarouselRootProps,
   type CarouselTriggerProps,
 } from "./carousel";
-export { ToastRegion, ToastQueue, type ToastContent, type ToastType } from "./toast/toast";
+export {
+  ToastRegion,
+  ToastQueue,
+  type ToastContent,
+  type ToastRegionProps,
+  type ToastType,
+} from "./toast";
 export { FadeInUp } from "./fade-in-up";
-export { DatePicker, type DatePickerProps } from "./date-picker/date-picker";
+export { DatePicker, type DatePickerProps } from "./date-picker";
 export {
   DataTable,
   type DataTableProps,

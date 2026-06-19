@@ -1,35 +1,9 @@
 "use client";
 
-import type { CSSProperties, MouseEvent, ReactNode, Ref } from "react";
-import {
-  Dialog,
-  Modal as AriaModal,
-  ModalOverlay,
-  type DialogProps,
-  type DialogRenderProps,
-  type ModalOverlayProps as AriaModalOverlayProps,
-} from "react-aria-components/Modal";
+import type { MouseEvent } from "react";
+import { Dialog, Modal as AriaModal, ModalOverlay } from "react-aria-components/Modal";
 import { cn } from "../lib/utils";
-
-export type ModalPlacement = "center" | "sheet" | "fullscreen-mobile";
-export type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
-
-export interface ModalProps
-  extends
-    Omit<AriaModalOverlayProps, "children" | "className" | "style">,
-    Pick<DialogProps, "aria-label" | "aria-labelledby" | "role"> {
-  children: ReactNode | ((opts: DialogRenderProps) => ReactNode);
-  placement?: ModalPlacement;
-  size?: ModalSize;
-  overlayClassName?: string;
-  positionerClassName?: string;
-  modalClassName?: string;
-  modalRef?: Ref<HTMLDivElement>;
-  dialogClassName?: string;
-  overlayStyle?: CSSProperties;
-  modalStyle?: CSSProperties;
-  onBackdropPress?: () => void;
-}
+import type { ModalPlacement, ModalProps, ModalSize } from "./types";
 
 const sizeClasses: Record<ModalSize, string> = {
   sm: "max-w-[360px]",

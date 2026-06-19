@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ToastQueue } from "./toast";
-import { ToastRegion, type ToastContent } from "./toast";
+import { ToastRegion } from "./toast";
+import type { ToastContent } from "./types";
 
 function makeQueue(...items: ToastContent[]) {
   const q = new ToastQueue<ToastContent>({ maxVisibleToasts: 5 });

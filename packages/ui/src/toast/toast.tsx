@@ -4,18 +4,11 @@ import {
   UNSTABLE_Toast as AriaToast,
   UNSTABLE_ToastContent as AriaToastContent,
   UNSTABLE_ToastRegion as AriaToastRegion,
-  type UNSTABLE_ToastQueue,
 } from "react-aria-components/Toast";
 import { Button } from "react-aria-components";
 import { SvgIcon } from "@repo/icons";
 import { cn } from "../lib/utils";
-
-export type ToastType = "success" | "error" | "info";
-
-export interface ToastContent {
-  message: string;
-  type?: ToastType;
-}
+import type { ToastRegionProps, ToastType } from "./types";
 
 // 导出 ToastQueue 类，供 apps/* 无需直接依赖 react-aria-components
 export { UNSTABLE_ToastQueue as ToastQueue } from "react-aria-components/Toast";
@@ -25,11 +18,6 @@ const typeStyles: Record<ToastType, string> = {
   error: "bg-destructive border-destructive text-destructive-foreground",
   info: "bg-primary/10 border-primary/25 text-primary",
 };
-
-interface ToastRegionProps {
-  queue: UNSTABLE_ToastQueue<ToastContent>;
-  className?: string;
-}
 
 export function ToastRegion({ queue, className }: ToastRegionProps) {
   return (

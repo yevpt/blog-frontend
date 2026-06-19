@@ -10,6 +10,7 @@ export type IconName =
   | "bell"
   | "bilibili"
   | "birthday"
+  | "calendar"
   | "camera"
   | "check"
   | "chevron-down"
