@@ -13,6 +13,7 @@
 - **复用优先**：实现任何东西前先搜现成的组件/工具/Hook，有则用、不写平行实现；不确定某抽象是否存在，先读包入口/索引（`@repo/ui`·`@repo/hooks`·`@repo/api`·`@repo/icons` 的 `src/index.ts`）确认。新通用逻辑先提取到 `packages/*`。
 - **TypeScript**：禁 `any`（用 `unknown` 或精确类型）；优先纯函数 + Early Return；命名 `camelCase` / `PascalCase` / `UPPER_SNAKE_CASE`；非显然逻辑写中文注释。
 - **测试（强制，缺测 = 未完成）**：改 Hook → `*.test.ts`、组件 → `*.test.tsx`、页面 → `page.test.tsx`。
+- **Git 历史**：合并分支到 `main` 必须保持线性历史，只能使用 `git merge --ff-only <branch>`；若失败，停止并说明原因，禁止改用普通 merge、`--no-ff` 或网页端 “Create a merge commit”。
 - **提交（强制）**：`commit-msg` 钩子（`scripts/validate-commit-msg.cjs`）强校验，不合规直接拒。
 
 ## 按场景读 skill（`.agents/skills/<name>/SKILL.md`）

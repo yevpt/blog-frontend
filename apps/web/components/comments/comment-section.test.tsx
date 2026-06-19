@@ -42,6 +42,26 @@ vi.mock("@repo/ui", () => ({
           : children}
       </div>
     ) : null,
+  Select: Object.assign(
+    ({
+      children,
+      "aria-label": ariaLabel,
+    }: {
+      children: React.ReactNode;
+      "aria-label"?: string;
+    }) => (
+      <div role="listbox" aria-label={ariaLabel}>
+        {children}
+      </div>
+    ),
+    {
+      Item: ({ id, label }: { id: string; label: string }) => (
+        <div role="option" aria-selected="false" data-select-id={id}>
+          {label}
+        </div>
+      ),
+    },
+  ),
 }));
 vi.mock("@/app/providers/session-provider", () => ({
   useSession: () => ({ userId: 1 }),
