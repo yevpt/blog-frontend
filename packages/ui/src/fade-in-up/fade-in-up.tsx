@@ -1,14 +1,6 @@
-import type { CSSProperties, ReactNode } from "react";
-import { cn } from "./lib/utils";
-
-interface FadeInUpProps {
-  children: ReactNode;
-  /** 动画延迟（毫秒），默认 0 */
-  delay?: number;
-  /** 动画时长（毫秒），默认 400 */
-  duration?: number;
-  className?: string;
-}
+import type { CSSProperties } from "react";
+import { cn } from "../lib/utils";
+import type { FadeInUpProps } from "./types";
 
 export function FadeInUp({ children, delay = 0, duration = 400, className }: FadeInUpProps) {
   const style: CSSProperties = {

@@ -86,7 +86,7 @@ export {
   type ToastRegionProps,
   type ToastType,
 } from "./toast";
-export { FadeInUp } from "./fade-in-up";
+export { FadeInUp, type FadeInUpProps } from "./fade-in-up";
 export { DatePicker, type DatePickerProps } from "./date-picker";
 export {
   DataTable,

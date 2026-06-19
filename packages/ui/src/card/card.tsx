@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "./lib/utils";
+import { cn } from "../lib/utils";
 
 // Card 被拆成多个小组件，页面可以像搭积木一样组合标题、描述和内容区域。
 export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
