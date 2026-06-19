@@ -5,6 +5,7 @@ import type { MomentItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
 import { Avatar, Badge, Button, Card, CardContent } from "@repo/ui";
 import { LoadingImage } from "@/components/common/loading-image";
+import { useImageViewer } from "@/store/use-image-viewer";
 import { formatRelativeTime } from "../../lib/format-time";
 import { SnippetContent } from "./snippet-content";
 
@@ -45,9 +46,13 @@ export function SnippetCard({
   const authorBadge = snippet.user?.mark ?? "";
   const authorInitial = authorName[0]?.toUpperCase() ?? "?";
 
+  const openViewer = useImageViewer((s) => s.open);
+
   const images = snippet.images ?? [];
   const visibleImages = images.slice(0, 2);
   const hiddenCount = Math.max(0, images.length - 2);
+  // 预览画廊包含该碎语全部图片（含被折叠的），点击任意图从对应索引打开
+  const viewerImages = images.map((img) => ({ src: img.access_url, alt: img.name }));
 
   const body = (
     <>
@@ -99,10 +104,13 @@ export function SnippetCard({
             visibleImages.length === 1 ? "grid-cols-1" : "grid-cols-2"
           }`}
         >
-          {visibleImages.map((img) => (
-            <div
+          {visibleImages.map((img, idx) => (
+            <button
               key={img.id}
-              className="relative aspect-[3/2] w-full overflow-hidden rounded-[6px]"
+              type="button"
+              aria-label={`查看图片 ${img.name}`}
+              onClick={() => openViewer(viewerImages, idx)}
+              className="relative block aspect-[3/2] w-full cursor-zoom-in overflow-hidden rounded-[6px]"
             >
               <LoadingImage
                 src={img.access_url}
@@ -111,12 +119,17 @@ export function SnippetCard({
                 className="object-contain"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
-            </div>
+            </button>
           ))}
           {hiddenCount > 0 && (
-            <div className="flex items-center justify-center bg-muted text-xs text-(--fg3)">
+            <button
+              type="button"
+              aria-label="查看更多图片"
+              onClick={() => openViewer(viewerImages, visibleImages.length)}
+              className="flex cursor-zoom-in items-center justify-center bg-muted text-xs text-(--fg3)"
+            >
               +{hiddenCount}
-            </div>
+            </button>
           )}
         </div>
       )}

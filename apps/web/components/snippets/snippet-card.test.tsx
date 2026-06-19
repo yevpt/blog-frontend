@@ -4,6 +4,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { SnippetCard } from "./snippet-card";
+import { useImageViewer } from "@/store/use-image-viewer";
 import type { MomentItemResp } from "@repo/api";
 
 vi.mock("next/link", () => ({
@@ -266,5 +267,65 @@ describe("SnippetCard", () => {
     const nicknameLink = links.find((l) => l.textContent === "测试用户");
     expect(nicknameLink).toBeTruthy();
     expect(nicknameLink?.getAttribute("href")).toBe("/users/1");
+  });
+
+  function makeImageMoment() {
+    return makeMoment({
+      images: [
+        {
+          id: 1,
+          name: "p1",
+          file_type: "image/jpeg",
+          url: "/1.jpg",
+          access_url: "/1.jpg",
+          size: 1,
+          seq: 1,
+        },
+        {
+          id: 2,
+          name: "p2",
+          file_type: "image/jpeg",
+          url: "/2.jpg",
+          access_url: "/2.jpg",
+          size: 1,
+          seq: 2,
+        },
+        {
+          id: 3,
+          name: "p3",
+          file_type: "image/jpeg",
+          url: "/3.jpg",
+          access_url: "/3.jpg",
+          size: 1,
+          seq: 3,
+        },
+      ],
+    });
+  }
+
+  it("点击碎语图片打开全屏预览，且画廊含全部图片", async () => {
+    const user = userEvent.setup();
+    useImageViewer.setState({ isOpen: false, images: [], index: 0 });
+    render(<SnippetCard snippet={makeImageMoment()} />);
+
+    await user.click(screen.getByRole("button", { name: "查看图片 p2" }));
+
+    const s = useImageViewer.getState();
+    expect(s.isOpen).toBe(true);
+    expect(s.images).toHaveLength(3); // 含被折叠的第 3 张
+    expect(s.images[0]).toEqual({ src: "/1.jpg", alt: "p1" });
+    expect(s.index).toBe(1);
+  });
+
+  it("点击 +N 折叠块从第一张被折叠图片打开预览", async () => {
+    const user = userEvent.setup();
+    useImageViewer.setState({ isOpen: false, images: [], index: 0 });
+    render(<SnippetCard snippet={makeImageMoment()} />);
+
+    await user.click(screen.getByRole("button", { name: "查看更多图片" }));
+
+    const s = useImageViewer.getState();
+    expect(s.isOpen).toBe(true);
+    expect(s.index).toBe(2); // 第一张被折叠的图片
   });
 });
