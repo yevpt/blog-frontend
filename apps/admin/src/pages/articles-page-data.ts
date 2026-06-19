@@ -1,7 +1,16 @@
-export type ArticleStatus = "published" | "draft" | "reviewing" | "archived";
-export type StatusFilter = ArticleStatus | "all";
-export type PinnedFilter = "all" | "pinned" | "normal";
-export type SortDirection = "ascending" | "descending";
+import type { AdminArticleListItemResp, ArticleListSortBy, ArticleListSortOrder } from "@repo/api";
+import type { DataTableSortDirection } from "@repo/ui";
+
+/** 与后端 status(0 隐藏 / 1 公开 / 2 加密) 及软删除对齐 */
+export type ArticleStatus = "published" | "hidden" | "encrypted" | "archived";
+
+/** 支持服务端排序的表格列 id */
+export type ArticleTableSortColumn = "createdAt" | "updatedAt" | "category" | "status" | "pinned";
+
+export interface ArticleTableSort {
+  column: ArticleTableSortColumn;
+  direction: DataTableSortDirection;
+}
 
 export interface ArticleRow {
   id: string;
@@ -9,28 +18,21 @@ export interface ArticleRow {
   excerpt: string;
   status: ArticleStatus;
   category: string;
-  tags: string[];
   isPinned: boolean;
+  createdAt: string;
   updatedAt: string;
 }
 
-export interface FilterOption<T extends string> {
+export interface FilterOption<T extends string = string> {
   value: T;
   label: string;
 }
 
-export interface ArticleFilters {
-  status: StatusFilter;
-  category: string;
-  tag: string;
-  pinned: PinnedFilter;
-}
-
 export const articleStatusText: Record<ArticleStatus, string> = {
   published: "已发布",
-  draft: "草稿",
-  reviewing: "审核中",
-  archived: "已归档",
+  hidden: "隐藏",
+  encrypted: "加密",
+  archived: "已删除",
 };
 
 export const articleStatusVariant: Record<
@@ -38,123 +40,91 @@ export const articleStatusVariant: Record<
   "success" | "secondary" | "warning" | "outline"
 > = {
   published: "success",
-  draft: "secondary",
-  reviewing: "warning",
+  hidden: "secondary",
+  encrypted: "warning",
   archived: "outline",
 };
 
-// TODO(api): 待后端提供后台文章列表、搜索、筛选、排序与删除接口。
-export const articles: ArticleRow[] = [
-  {
-    id: "react-query-admin-table",
-    title: "React Query 与后台表格状态",
-    excerpt: "用稳定的数据状态承载后台筛选、分页与刷新。",
-    status: "published",
-    category: "工程",
-    tags: ["React", "表格"],
-    isPinned: true,
-    updatedAt: "2026-06-16",
-  },
-  {
-    id: "vite-admin-theme",
-    title: "Vite 管理后台的主题方案",
-    excerpt: "记录后台浅色、深色主题和设计令牌的接入方式。",
-    status: "draft",
-    category: "前端",
-    tags: ["Vite", "主题"],
-    isPinned: false,
-    updatedAt: "2026-06-15",
-  },
-  {
-    id: "blog-editor-polish",
-    title: "把博客编辑器体验打磨到顺手",
-    excerpt: "从工具栏、快捷插入和代码块体验梳理编辑器细节。",
-    status: "reviewing",
-    category: "产品",
-    tags: ["编辑器"],
-    isPinned: false,
-    updatedAt: "2026-06-12",
-  },
-  {
-    id: "old-link-cleanup",
-    title: "旧友链清理记录",
-    excerpt: "归档长期不可访问的站点链接并保留维护说明。",
-    status: "archived",
-    category: "站点",
-    tags: ["维护"],
-    isPinned: false,
-    updatedAt: "2026-06-08",
-  },
-];
-
-export const initialArticleFilters: ArticleFilters = {
-  status: "all",
-  category: "all",
-  tag: "all",
-  pinned: "all",
+export const DEFAULT_ARTICLE_TABLE_SORT: ArticleTableSort = {
+  column: "createdAt",
+  direction: "descending",
 };
 
-export const statusFilterOptions: Array<FilterOption<StatusFilter>> = [
-  { value: "all", label: "全部" },
-  { value: "published", label: "已发布" },
-  { value: "draft", label: "草稿" },
-  { value: "reviewing", label: "审核中" },
-  { value: "archived", label: "已归档" },
-];
+const COLUMN_TO_SORT_BY: Record<ArticleTableSortColumn, ArticleListSortBy> = {
+  createdAt: "created_at",
+  updatedAt: "updated_at",
+  category: "category",
+  status: "status",
+  pinned: "recommended",
+};
 
-export const pinnedFilterOptions: Array<FilterOption<PinnedFilter>> = [
-  { value: "all", label: "全部" },
-  { value: "pinned", label: "已置顶" },
-  { value: "normal", label: "普通" },
-];
+const ALL_FILTER_OPTION: FilterOption = { value: "all", label: "全部" };
 
-function uniqueSorted(values: string[]) {
-  return Array.from(new Set(values)).sort((a, b) => a.localeCompare(b, "zh-Hans-CN"));
-}
+/** 服务端排序列配置：保留排序 UI，不在前端重排 */
+export const serverSideColumnSort = {
+  defaultDirection: "descending" as const,
+  value: () => "",
+};
 
-function getTextFilterOptions(values: string[]): Array<FilterOption<string>> {
+/** 将带 id/name 的资源列表转为表头筛选选项 */
+export function buildIdFilterOptions(items: Array<{ id: number; name: string }>): FilterOption[] {
   return [
-    { value: "all", label: "全部" },
-    ...uniqueSorted(values).map((value) => ({ value, label: value })),
+    ALL_FILTER_OPTION,
+    ...items.map((item) => ({ value: String(item.id), label: item.name })),
   ];
 }
 
-export const categoryFilterOptions = getTextFilterOptions(
-  articles.map((article) => article.category),
-);
+export function parseOptionalIdFilter(value: string): number | undefined {
+  if (value === "all") return undefined;
+  const id = Number(value);
+  return Number.isInteger(id) && id > 0 ? id : undefined;
+}
 
-export const tagFilterOptions = getTextFilterOptions(articles.flatMap((article) => article.tags));
+export function toArticleListSortBy(column: ArticleTableSortColumn): ArticleListSortBy {
+  return COLUMN_TO_SORT_BY[column];
+}
 
-export function filterAndSortArticles({
-  source,
-  filters,
-  searchValue,
-  sortDirection,
-}: {
-  source: ArticleRow[];
-  filters: ArticleFilters;
-  searchValue: string;
-  sortDirection: SortDirection;
-}) {
-  const normalizedSearchValue = searchValue.trim().toLowerCase();
+export function toArticleListSortOrder(direction: DataTableSortDirection): ArticleListSortOrder {
+  return direction === "ascending" ? "asc" : "desc";
+}
 
-  return source
-    .filter((article) => {
-      if (filters.status !== "all" && article.status !== filters.status) return false;
-      if (filters.category !== "all" && article.category !== filters.category) return false;
-      if (filters.tag !== "all" && !article.tags.includes(filters.tag)) return false;
-      if (filters.pinned === "pinned" && !article.isPinned) return false;
-      if (filters.pinned === "normal" && article.isPinned) return false;
-      if (!normalizedSearchValue) return true;
+/** 服务端筛选模式下，DataTable 列 filter.match 恒为 true */
+export function passThroughFilter<T>(_item: T, _value: string) {
+  return true;
+}
 
-      const searchableText = [article.title, article.excerpt, article.category, ...article.tags]
-        .join(" ")
-        .toLowerCase();
-      return searchableText.includes(normalizedSearchValue);
-    })
-    .sort((a, b) =>
-      sortDirection === "descending"
-        ? b.updatedAt.localeCompare(a.updatedAt)
-        : a.updatedAt.localeCompare(b.updatedAt),
-    );
+function mapBackendStatus(item: AdminArticleListItemResp): ArticleStatus {
+  if (item.deleted_at) return "archived";
+  switch (item.status) {
+    case 1:
+      return "published";
+    case 2:
+      return "encrypted";
+    default:
+      return "hidden";
+  }
+}
+
+function formatAdminDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+}
+
+/** 将管理端列表项映射为表格行 */
+export function mapAdminArticleToRow(item: AdminArticleListItemResp): ArticleRow {
+  return {
+    id: String(item.id),
+    title: item.title,
+    excerpt: item.short_content?.trim() || "—",
+    status: mapBackendStatus(item),
+    category: item.category?.name ?? "—",
+    isPinned: item.is_recommended,
+    createdAt: formatAdminDate(item.created_at),
+    updatedAt: formatAdminDate(item.updated_at),
+  };
 }
