@@ -14,6 +14,8 @@ export function ImageViewer({ images, index, isOpen, onClose, onIndexChange }: I
   const { transform, reset, zoomIn, zoomOut, rotate, handlers } = useViewerTransform();
   const current = images[index];
   const hasGallery = images.length > 1 && !!onIndexChange;
+  // 下载文件名取自 URL 末段路径（剥离查询串），无法解析时回退空串
+  const downloadName = current?.src.split(/[?#]/, 1)[0]?.split("/").pop() ?? "";
 
   // 切换图片或开关时重置变换
   useEffect(() => {
@@ -107,7 +109,7 @@ export function ImageViewer({ images, index, isOpen, onClose, onIndexChange }: I
         onRotate={rotate}
         onClose={onClose}
         downloadUrl={current.src}
-        downloadName={current.alt}
+        downloadName={downloadName}
       />
     </Modal>
   );

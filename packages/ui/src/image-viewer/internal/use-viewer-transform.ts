@@ -43,7 +43,11 @@ export function useViewerTransform(): UseViewerTransformResult {
   const reset = useCallback(() => setTransform(IDENTITY), []);
 
   const zoomBy = useCallback((factor: number) => {
-    setTransform((t) => ({ ...t, scale: clamp(t.scale * factor, MIN_SCALE, MAX_SCALE) }));
+    setTransform((t) => {
+      const scale = clamp(t.scale * factor, MIN_SCALE, MAX_SCALE);
+      // 缩放回到最小值时归位，避免图像停留在偏移位置
+      return scale <= MIN_SCALE ? { ...t, scale, x: 0, y: 0 } : { ...t, scale };
+    });
   }, []);
 
   const zoomIn = useCallback(() => zoomBy(BUTTON_FACTOR), [zoomBy]);
@@ -56,7 +60,11 @@ export function useViewerTransform(): UseViewerTransformResult {
   const onWheel = useCallback((e: ReactWheelEvent) => {
     e.preventDefault();
     const factor = 1 - e.deltaY * WHEEL_STEP;
-    setTransform((t) => ({ ...t, scale: clamp(t.scale * factor, MIN_SCALE, MAX_SCALE) }));
+    setTransform((t) => {
+      const scale = clamp(t.scale * factor, MIN_SCALE, MAX_SCALE);
+      // 缩放回到最小值时归位，避免图像停留在偏移位置
+      return scale <= MIN_SCALE ? { ...t, scale, x: 0, y: 0 } : { ...t, scale };
+    });
   }, []);
 
   const onPointerDown = useCallback((e: ReactPointerEvent) => {
