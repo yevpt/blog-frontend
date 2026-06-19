@@ -35,7 +35,7 @@ vi.mock("embla-carousel-react", () => ({
   default: vi.fn(() => [vi.fn(), mockApi]),
 }));
 
-import { Carousel, useCarousel } from "./carousel-base";
+import { Carousel, useCarousel } from "./index";
 
 beforeEach(() => {
   emblaCallbacks = {};

@@ -40,7 +40,22 @@ export { Avatar, type AvatarProps } from "./avatar/avatar";
 export { CheckboxBase, Checkbox, type CheckboxBaseProps } from "./checkbox/checkbox";
 export { Dropdown } from "./dropdown/dropdown";
 export { Select, type SelectProps, type SelectItemType } from "./select/select";
-export { Carousel, CarouselContext, useCarousel } from "./carousel/carousel-base";
+export {
+  Carousel,
+  CarouselContext,
+  useCarousel,
+  type CarouselApi,
+  type CarouselContentProps,
+  type CarouselContextValue,
+  type CarouselIndicatorGroupProps,
+  type CarouselIndicatorProps,
+  type CarouselOptions,
+  type CarouselOrientation,
+  type CarouselPlugin,
+  type CarouselProps,
+  type CarouselRootProps,
+  type CarouselTriggerProps,
+} from "./carousel";
 export { ToastRegion, ToastQueue, type ToastContent, type ToastType } from "./toast/toast";
 export { FadeInUp } from "./fade-in-up";
 export { DatePicker, type DatePickerProps } from "./date-picker/date-picker";
