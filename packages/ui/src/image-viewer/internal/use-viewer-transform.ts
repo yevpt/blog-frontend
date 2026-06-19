@@ -26,7 +26,6 @@ export interface UseViewerTransformResult {
   zoomIn: () => void;
   zoomOut: () => void;
   rotate: () => void;
-  isZoomed: boolean;
   handlers: {
     onWheel: (e: ReactWheelEvent) => void;
     onPointerDown: (e: ReactPointerEvent) => void;
@@ -121,7 +120,6 @@ export function useViewerTransform(): UseViewerTransformResult {
     zoomIn,
     zoomOut,
     rotate,
-    isZoomed: transform.scale > MIN_SCALE,
     handlers: { onWheel, onPointerDown, onPointerMove, onPointerUp, onDoubleClick },
   };
 }
