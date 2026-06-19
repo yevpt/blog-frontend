@@ -36,6 +36,14 @@ export {
   type RadioGroupProps,
 } from "./radio-buttons";
 export { Tooltip, TooltipTrigger, type TooltipProps } from "./tooltip";
+export {
+  Popover,
+  PopoverTrigger,
+  PopoverDialog,
+  type PopoverProps,
+  type PopoverClassNames,
+  type PopoverRenderProps,
+} from "./popover";
 export { Toggle, ToggleBase, type ToggleBaseProps, type ToggleProps } from "./toggle";
 export {
   ButtonUtility,
