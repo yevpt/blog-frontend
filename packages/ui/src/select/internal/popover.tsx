@@ -3,12 +3,14 @@
 import type { RefAttributes } from "react";
 import type { PopoverProps as AriaPopoverProps } from "react-aria-components";
 import { Popover as AriaPopover } from "react-aria-components";
-import { cn } from "../lib/utils";
+import { cn } from "../../lib/utils";
+import type { SelectSize } from "../types";
 
 interface PopoverProps extends AriaPopoverProps, RefAttributes<HTMLElement> {
-  size: "sm" | "md" | "lg";
+  size: SelectSize;
 }
 
+/** 选项浮层容器，宽度对齐触发器并带进出场动画。 */
 export const Popover = (props: PopoverProps) => (
   <AriaPopover
     placement="bottom"
@@ -17,7 +19,7 @@ export const Popover = (props: PopoverProps) => (
     {...props}
     className={(state) =>
       cn(
-        "w-(--trigger-width) overflow-x-hidden overflow-y-auto rounded-lg bg-white py-1 shadow-lg ring-1 ring-gray-200 outline-hidden will-change-transform",
+        "w-(--trigger-width) overflow-x-hidden overflow-y-auto rounded-lg bg-card py-1 shadow-lg ring-1 ring-border outline-hidden will-change-transform",
         state.isEntering &&
           "duration-150 ease-out animate-in fade-in placement-bottom:slide-in-from-top-0.5",
         state.isExiting &&

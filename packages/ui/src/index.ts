@@ -46,7 +46,16 @@ export {
   type DropdownSelectionIndicator,
   type DropdownSeparatorProps,
 } from "./dropdown";
-export { Select, type SelectProps, type SelectItemType } from "./select/select";
+export {
+  Select,
+  SelectContext,
+  type ComboBoxProps,
+  type SelectItemProps,
+  type SelectItemType,
+  type SelectProps,
+  type SelectSelectionIndicator,
+  type SelectSize,
+} from "./select";
 export {
   Carousel,
   CarouselContext,

@@ -1,45 +1,17 @@
 "use client";
 
 import { isValidElement, useContext } from "react";
-import type { ListBoxItemProps as AriaListBoxItemProps } from "react-aria-components";
 import { ListBoxItem as AriaListBoxItem, Text as AriaText } from "react-aria-components";
 import { SvgIcon } from "@repo/icons";
-import { Avatar } from "../avatar/avatar";
-import { CheckboxBase } from "../checkbox/checkbox";
-import { cn } from "../lib/utils";
-import { isReactComponent } from "../lib/is-react-component";
-import type { SelectItemType } from "./select-shared";
-import { SelectContext } from "./select-shared";
+import { Avatar } from "../../avatar/avatar";
+import { CheckboxBase } from "../../checkbox/checkbox";
+import { cn } from "../../lib/utils";
+import { isReactComponent } from "../../lib/is-react-component";
+import { SelectContext } from "../context";
+import type { SelectItemProps } from "../types";
+import { itemSizes } from "../utils/sizes";
 
-const itemSizes = {
-  sm: {
-    root: "p-2 pr-2.5 gap-2",
-    text: "text-sm",
-    textContainer: "gap-x-1.5",
-    checkSize: 16 as const,
-    checkboxSize: "sm" as const,
-  },
-  md: {
-    root: "p-2 pr-2.5 gap-2",
-    text: "text-base",
-    textContainer: "gap-x-2",
-    checkSize: 20 as const,
-    checkboxSize: "sm" as const,
-  },
-  lg: {
-    root: "p-2.5 pl-2 gap-2",
-    text: "text-base",
-    textContainer: "gap-x-2",
-    checkSize: 20 as const,
-    checkboxSize: "md" as const,
-  },
-};
-
-interface SelectItemProps extends Omit<AriaListBoxItemProps<SelectItemType>, "id">, SelectItemType {
-  selectionIndicator?: "checkmark" | "checkbox" | "none";
-  selectionIndicatorAlign?: "left" | "right";
-}
-
+/** 单个列表项，支持头像/图标、勾选或复选框两种选中态指示器。 */
 export const SelectItem = ({
   label,
   id,
@@ -92,9 +64,9 @@ export const SelectItem = ({
             (state.isFocused ||
               state.isHovered ||
               (state.isSelected && selectionIndicator !== "checkbox")) &&
-              "bg-gray-50",
+              "bg-accent",
             state.isDisabled && "cursor-not-allowed opacity-50",
-            state.isFocusVisible && "ring-2 ring-blue-500 ring-inset",
+            state.isFocusVisible && "ring-2 ring-ring ring-inset",
             s.root,
           )}
         >
@@ -117,14 +89,14 @@ export const SelectItem = ({
           <div className={cn("flex w-full min-w-0 flex-1 flex-wrap", s.textContainer)}>
             <AriaText
               slot="label"
-              className={cn("truncate font-medium whitespace-nowrap text-gray-900", s.text)}
+              className={cn("truncate font-medium whitespace-nowrap text-foreground", s.text)}
             >
               {label || (typeof children === "function" ? children(state) : children)}
             </AriaText>
             {supportingText && (
               <AriaText
                 slot="description"
-                className={cn("whitespace-nowrap text-gray-500", s.text)}
+                className={cn("whitespace-nowrap text-muted-foreground", s.text)}
               >
                 {supportingText}
               </AriaText>
@@ -132,7 +104,7 @@ export const SelectItem = ({
           </div>
 
           {state.isSelected && selectionIndicator === "checkmark" && (
-            <span className="ml-auto text-blue-600">
+            <span className="ml-auto text-primary">
               <SvgIcon name="check" size={s.checkSize} />
             </span>
           )}

@@ -1,49 +1,27 @@
 "use client";
 
-import type {
-  FC,
-  FocusEventHandler,
-  PointerEventHandler,
-  ReactNode,
-  Ref,
-  RefAttributes,
-} from "react";
+import type { FC, FocusEventHandler, PointerEventHandler, ReactNode, Ref } from "react";
 import { isValidElement, useCallback, useContext, useRef, useState } from "react";
-import type {
-  ComboBoxProps as AriaComboBoxProps,
-  ListBoxProps as AriaListBoxProps,
-} from "react-aria-components";
 import {
   ComboBox as AriaComboBox,
+  ComboBoxStateContext,
   Group as AriaGroup,
   Input as AriaInput,
   ListBox as AriaListBox,
-  ComboBoxStateContext,
 } from "react-aria-components";
 import { SvgIcon } from "@repo/icons";
-import { HintText } from "../input/hint-text";
-import { Label } from "../input/label";
+import { HintText } from "../../input/hint-text";
+import { Label } from "../../input/label";
+import { cn } from "../../lib/utils";
+import { isReactComponent } from "../../lib/is-react-component";
+import { useResizeObserver } from "../../lib/use-resize-observer";
+import { SelectContext } from "../context";
+import type { ComboBoxProps, SelectSize } from "../types";
+import { triggerSizes } from "../utils/sizes";
 import { Popover } from "./popover";
-import { type CommonProps, SelectContext, type SelectItemType, sizes } from "./select-shared";
-import { useResizeObserver } from "../lib/use-resize-observer";
-import { cn } from "../lib/utils";
-import { isReactComponent } from "../lib/is-react-component";
-
-interface ComboBoxProps
-  extends
-    Omit<AriaComboBoxProps<SelectItemType>, "children" | "items">,
-    RefAttributes<HTMLDivElement>,
-    CommonProps {
-  shortcut?: boolean;
-  items?: SelectItemType[];
-  popoverClassName?: string;
-  shortcutClassName?: string;
-  icon?: FC | ReactNode;
-  children: AriaListBoxProps<SelectItemType>["children"];
-}
 
 interface ComboBoxValueProps {
-  size: "sm" | "md" | "lg";
+  size: SelectSize;
   shortcut?: boolean;
   placeholder?: string;
   shortcutClassName?: string;
@@ -70,10 +48,10 @@ const ComboBoxValue = ({
       {...otherProps}
       className={({ isFocusWithin, isDisabled }) =>
         cn(
-          "relative flex w-full items-center gap-2 rounded-lg bg-white shadow-xs ring-1 ring-gray-300 outline-hidden transition-shadow duration-100 ease-linear ring-inset",
+          "relative flex w-full items-center gap-2 rounded-lg bg-card shadow-xs ring-1 ring-input outline-hidden transition-shadow duration-100 ease-linear ring-inset",
           isDisabled && "cursor-not-allowed opacity-50",
-          isFocusWithin && "ring-2 ring-blue-500",
-          sizes[size].root,
+          isFocusWithin && "ring-2 ring-ring",
+          triggerSizes[size].root,
         )
       }
     >
@@ -82,21 +60,22 @@ const ComboBoxValue = ({
       ) : isValidElement(IconProp) ? (
         IconProp
       ) : (
-        <span className="text-gray-400">
+        <span className="text-muted-foreground">
           <SvgIcon name="search" size={size === "lg" ? 20 : 16} />
         </span>
       )}
       <AriaInput
         placeholder={placeholder}
         className={cn(
-          "min-w-0 flex-1 bg-transparent text-gray-900 placeholder:text-gray-400 outline-none",
-          sizes[size].text,
+          "min-w-0 flex-1 bg-transparent text-foreground placeholder:text-muted-foreground outline-none",
+          triggerSizes[size].text,
         )}
       />
     </AriaGroup>
   );
 };
 
+/** 可搜索下拉框：输入框 + 联想列表，浮层宽度跟随触发器。 */
 export const ComboBox = ({
   placeholder = "Search",
   shortcut = true,
