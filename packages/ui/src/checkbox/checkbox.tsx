@@ -1,20 +1,8 @@
 "use client";
 
-import type { ReactNode, Ref } from "react";
-import {
-  Checkbox as AriaCheckbox,
-  type CheckboxProps as AriaCheckboxProps,
-} from "react-aria-components";
+import { Checkbox as AriaCheckbox } from "react-aria-components";
 import { cn } from "../lib/utils";
-
-export interface CheckboxBaseProps {
-  size?: "sm" | "md";
-  className?: string;
-  isFocusVisible?: boolean;
-  isSelected?: boolean;
-  isDisabled?: boolean;
-  isIndeterminate?: boolean;
-}
+import type { CheckboxBaseProps, CheckboxProps } from "./types";
 
 export const CheckboxBase = ({
   className,
@@ -26,12 +14,12 @@ export const CheckboxBase = ({
 }: CheckboxBaseProps) => (
   <div
     className={cn(
-      "relative flex size-4 shrink-0 cursor-pointer items-center justify-center rounded bg-white ring-1 ring-gray-300 ring-inset",
+      "relative flex size-4 shrink-0 cursor-pointer items-center justify-center rounded bg-card ring-1 ring-input ring-inset",
       size === "md" && "size-5 rounded-md",
-      (isSelected || isIndeterminate) && "bg-blue-600 ring-blue-600",
+      (isSelected || isIndeterminate) && "bg-primary ring-primary",
       isDisabled && "cursor-not-allowed opacity-50",
-      isDisabled && !(isSelected || isIndeterminate) && "bg-gray-100",
-      isFocusVisible && "outline-2 outline-offset-2 outline-blue-500",
+      isDisabled && !(isSelected || isIndeterminate) && "bg-muted",
+      isFocusVisible && "outline-2 outline-offset-2 outline-ring",
       className,
     )}
   >
@@ -41,7 +29,7 @@ export const CheckboxBase = ({
       viewBox="0 0 14 14"
       fill="none"
       className={cn(
-        "pointer-events-none absolute h-3 w-2.5 text-white opacity-0 transition-all",
+        "pointer-events-none absolute h-3 w-2.5 text-primary-foreground opacity-0 transition-all",
         size === "md" && "size-3.5",
         isIndeterminate && "opacity-100",
       )}
@@ -60,7 +48,7 @@ export const CheckboxBase = ({
       viewBox="0 0 14 14"
       fill="none"
       className={cn(
-        "pointer-events-none absolute size-3 text-white opacity-0 transition-all",
+        "pointer-events-none absolute size-3 text-primary-foreground opacity-0 transition-all",
         size === "md" && "size-3.5",
         isSelected && !isIndeterminate && "opacity-100",
       )}
@@ -76,13 +64,6 @@ export const CheckboxBase = ({
   </div>
 );
 CheckboxBase.displayName = "CheckboxBase";
-
-interface CheckboxProps extends AriaCheckboxProps {
-  ref?: Ref<HTMLLabelElement>;
-  size?: "sm" | "md";
-  label?: ReactNode;
-  hint?: ReactNode;
-}
 
 const sizeStyles = {
   sm: { root: "gap-2", textWrapper: "", label: "text-sm font-medium", hint: "text-sm" },
@@ -120,12 +101,12 @@ export const Checkbox = ({
         {(label || hint) && (
           <div className={cn("inline-flex flex-col", sizeStyles[size].textWrapper)}>
             {label && (
-              <p className={cn("text-gray-700 select-none", sizeStyles[size].label)}>{label}</p>
+              <p className={cn("text-foreground select-none", sizeStyles[size].label)}>{label}</p>
             )}
             {hint && (
               // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
               <span
-                className={cn("text-gray-500", sizeStyles[size].hint)}
+                className={cn("text-muted-foreground", sizeStyles[size].hint)}
                 onClick={(e) => e.stopPropagation()}
               >
                 {hint}

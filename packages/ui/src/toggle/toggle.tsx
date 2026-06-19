@@ -1,19 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
-import type { SwitchProps as AriaSwitchProps } from "react-aria-components";
 import { Switch as AriaSwitch } from "react-aria-components";
 import { cn } from "../lib/utils";
-
-interface ToggleBaseProps {
-  size?: "sm" | "md";
-  slim?: boolean;
-  className?: string;
-  isHovered?: boolean;
-  isFocusVisible?: boolean;
-  isSelected?: boolean;
-  isDisabled?: boolean;
-}
+import type { ToggleBaseProps, ToggleProps } from "./types";
 
 export const ToggleBase = ({
   className,
@@ -39,11 +28,11 @@ export const ToggleBase = ({
   return (
     <div
       className={cn(
-        "cursor-pointer rounded-full bg-gray-200 ring-[0.5px] ring-gray-300 outline-none transition duration-150 ease-linear ring-inset",
-        isSelected && "bg-blue-600",
-        isSelected && isHovered && "bg-blue-700",
+        "cursor-pointer rounded-full bg-muted ring-[0.5px] ring-input outline-none transition duration-150 ease-linear ring-inset",
+        isSelected && "bg-primary",
+        isSelected && isHovered && "bg-primary/90",
         isDisabled && "cursor-not-allowed opacity-50",
-        isFocusVisible && "outline-2 outline-offset-2 outline-blue-500",
+        isFocusVisible && "outline-2 outline-offset-2 outline-ring",
         slim && "ring-1",
         slim && isSelected && "ring-transparent",
         classes.root,
@@ -52,6 +41,7 @@ export const ToggleBase = ({
     >
       <div
         style={{ transition: "transform 0.15s ease-in-out" }}
+        // 滑块始终为白：需同时在 muted 轨道与 primary 轨道上保持对比，无对应语义令牌，故保留 bg-white
         className={cn("rounded-full bg-white shadow-sm", classes.switch)}
       />
     </div>
@@ -62,13 +52,6 @@ const sizeStyles = {
   sm: { root: "gap-2", textWrapper: "", label: "text-sm font-medium", hint: "text-sm" },
   md: { root: "gap-3", textWrapper: "gap-0.5", label: "text-base font-medium", hint: "text-base" },
 };
-
-interface ToggleProps extends AriaSwitchProps {
-  size?: "sm" | "md";
-  label?: string;
-  hint?: ReactNode;
-  slim?: boolean;
-}
 
 export const Toggle = ({
   label,
@@ -103,13 +86,13 @@ export const Toggle = ({
         {(label || hint) && (
           <div className={cn("flex flex-col", sizeStyles[size].textWrapper)}>
             {label && (
-              <p className={cn("text-gray-700 select-none", sizeStyles[size].label)}>{label}</p>
+              <p className={cn("text-foreground select-none", sizeStyles[size].label)}>{label}</p>
             )}
             {hint && (
               // hint 区域阻止冒泡，防止点击提示文字触发 toggle（如 hint 内含链接时）
               // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
               <span
-                className={cn("text-gray-500", sizeStyles[size].hint)}
+                className={cn("text-muted-foreground", sizeStyles[size].hint)}
                 onClick={(e) => e.stopPropagation()}
               >
                 {hint}

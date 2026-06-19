@@ -31,13 +31,15 @@ export {
   RadioGroup,
   RadioButtonBase,
   type RadioButtonBaseProps,
+  type RadioButtonProps,
   type RadioGroupContextType,
-} from "./radio-buttons/radio-buttons";
+  type RadioGroupProps,
+} from "./radio-buttons";
 export { Tooltip, TooltipTrigger } from "./tooltip/tooltip";
-export { Toggle, ToggleBase } from "./toggle/toggle";
+export { Toggle, ToggleBase, type ToggleBaseProps, type ToggleProps } from "./toggle";
 export { ButtonUtility, type ButtonUtilityProps } from "./button-utility/button-utility";
 export { Avatar, type AvatarProps } from "./avatar/avatar";
-export { CheckboxBase, Checkbox, type CheckboxBaseProps } from "./checkbox/checkbox";
+export { CheckboxBase, Checkbox, type CheckboxBaseProps, type CheckboxProps } from "./checkbox";
 export {
   Dropdown,
   type DropdownItemProps,

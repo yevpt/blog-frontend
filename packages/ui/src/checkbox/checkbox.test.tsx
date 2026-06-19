@@ -13,7 +13,7 @@ describe("CheckboxBase", () => {
   it("isSelected 时有选中样式类", () => {
     const { container } = render(<CheckboxBase isSelected />);
     const el = container.firstChild as HTMLElement;
-    expect(el.className).toContain("bg-blue-600");
+    expect(el.className).toContain("bg-primary");
   });
 });
 
