@@ -17,6 +17,10 @@ export interface ArticleUserResp {
   mark?: string;
 }
 
+export type ArticleListSortBy = "created_at" | "updated_at" | "category" | "status" | "recommended";
+
+export type ArticleListSortOrder = "asc" | "desc";
+
 export interface ArticleListReq {
   page?: number;
   page_size?: number;
@@ -25,6 +29,10 @@ export interface ArticleListReq {
   category_id?: number;
   /** Must be a positive integer (uint on backend) */
   tag_id?: number;
+  /** 搜索关键词，匹配标题和摘要 */
+  search?: string;
+  sort_by?: ArticleListSortBy;
+  sort_order?: ArticleListSortOrder;
 }
 
 export interface ArticleListItemResp {
@@ -61,6 +69,21 @@ export interface ArticlePageResp {
   page: number;
   page_size: number;
   list: ArticleListItemResp[];
+}
+
+/** 管理端文章列表项，含软删除时间 */
+export interface AdminArticleListItemResp extends ArticleListItemResp {
+  deleted_at?: string;
+}
+
+/** 管理端文章分页响应 */
+export interface AdminArticlePageResp {
+  /** Go int64 — safe as JS number for blog-scale counts */
+  total: number;
+  pages: number;
+  page: number;
+  page_size: number;
+  list: AdminArticleListItemResp[];
 }
 
 export interface MusicItem {

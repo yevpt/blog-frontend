@@ -21,13 +21,18 @@ export type {
   ArticleRelationResp,
   ArticleUserResp,
   ArticleListReq,
+  ArticleListSortBy,
+  ArticleListSortOrder,
   ArticleListItemResp,
   ArticleLikeResp,
   ArticlePageResp,
+  AdminArticleListItemResp,
+  AdminArticlePageResp,
   ArticleDetailResp,
   MusicItem,
 } from "./types/article";
 export type { CategoryTabItem, CategoryTabsResp } from "./types/category";
+export type { TagItemResp, TagListResp } from "./types/tag";
 export type {
   MomentListReq,
   MomentUserResp,

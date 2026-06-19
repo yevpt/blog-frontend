@@ -289,6 +289,74 @@ describe("createApiClient", () => {
     expect(result.list[0]?.user?.avatar_url).toBe("https://blog-oss.yevpt.com/avatars/vpt.png");
   });
 
+  it("articles.listAdmin 使用 fetchAuthed 并构造 query string", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { total: 0, pages: 0, page: 1, page_size: 10, list: [] },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    await client.articles.listAdmin({
+      page: 2,
+      page_size: 10,
+      recommend: false,
+      category_id: 3,
+      tag_id: 5,
+      search: "Go",
+      sort_by: "category",
+      sort_order: "asc",
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/articles?page=2&page_size=10&recommend=false&category_id=3&tag_id=5&search=Go&sort_by=category&sort_order=asc",
+      expect.objectContaining({
+        method: "GET",
+        headers: expect.objectContaining({ Authorization: "Bearer admin-token" }),
+      }),
+    );
+  });
+
+  it("articles.deleteAdmin 使用 fetchAuthed 调用 DELETE /admin/articles/{id}", async () => {
+    const detailResp: ArticleDetailResp = {
+      id: 7,
+      title: "Deleted",
+      content: "body",
+      user_id: 1,
+      status: 1,
+      comment_status: 1,
+      read_count: 0,
+      like_count: 0,
+      comment_count: 0,
+      is_recommended: false,
+      created_at: "2026-01-01",
+      updated_at: "2026-01-01",
+    };
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: detailResp }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    const result = await client.articles.deleteAdmin(7);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/articles/7",
+      expect.objectContaining({
+        method: "DELETE",
+        headers: expect.objectContaining({ Authorization: "Bearer admin-token" }),
+      }),
+    );
+    expect(result.id).toBe(7);
+  });
+
   it("articles.toggleLike 使用 fetchAuthed 调用 /articles/{id}/like", async () => {
     vi.mocked(global.fetch).mockResolvedValue(
       mockResponse({
@@ -324,6 +392,20 @@ describe("createApiClient", () => {
 
     expect(global.fetch).toHaveBeenCalledWith(
       "http://api/categories",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("tags.list 调用 /tags", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: { list: [] } }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    await client.tags.list();
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/tags",
       expect.objectContaining({ method: "GET" }),
     );
   });

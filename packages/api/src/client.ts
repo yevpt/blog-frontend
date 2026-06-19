@@ -10,11 +10,13 @@ import type {
   TokenResp,
 } from "./types/auth";
 import type {
+  AdminArticlePageResp,
   ArticleDetailResp,
   ArticleLikeResp,
   ArticleListReq,
   ArticlePageResp,
 } from "./types/article";
+import type { TagListResp } from "./types/tag";
 import type { CategoryTabsResp } from "./types/category";
 import type { MomentItemResp, MomentListReq, MomentPageResp } from "./types/moment";
 import type {
@@ -195,10 +197,35 @@ export function createApiClient(config: ApiClientConfig) {
         fetchOptionalAuth<ArticleDetailResp>(`/articles/${id}`, { method: "GET" }),
       /** 上报一次文章阅读（触发即可，不等待返回值） */
       view: (id: number) => fetchPublic<void>(`/articles/${id}/view`, { method: "POST" }),
+      /** 分页查询管理端文章，需管理员登录；含隐藏/公开/加密及已软删除文章 */
+      listAdmin: (req: ArticleListReq = {}) => {
+        const params = new URLSearchParams();
+        if (req.page !== undefined) params.set("page", String(req.page));
+        if (req.page_size !== undefined) params.set("page_size", String(req.page_size));
+        if (req.recommend !== undefined) params.set("recommend", String(req.recommend));
+        if (req.category_id !== undefined) params.set("category_id", String(req.category_id));
+        if (req.tag_id !== undefined) params.set("tag_id", String(req.tag_id));
+        if (req.search !== undefined && req.search.trim() !== "") {
+          params.set("search", req.search.trim());
+        }
+        if (req.sort_by !== undefined) params.set("sort_by", req.sort_by);
+        if (req.sort_order !== undefined) params.set("sort_order", req.sort_order);
+        const qs = params.toString();
+        return fetchAuthed<AdminArticlePageResp>(`/admin/articles${qs ? `?${qs}` : ""}`, {
+          method: "GET",
+        });
+      },
+      /** 软删除文章，需管理员登录；返回删除后的文章详情 */
+      deleteAdmin: (id: number) =>
+        fetchAuthed<ArticleDetailResp>(`/admin/articles/${id}`, { method: "DELETE" }),
     },
     categories: {
       /** 查询分类 Tab 列表（含文章数量，按 seq/count 排序） */
       listTabs: () => fetchPublic<CategoryTabsResp>("/categories", { method: "GET" }),
+    },
+    tags: {
+      /** 查询标签列表（含公开文章数量，按 seq/count 排序） */
+      list: () => fetchPublic<TagListResp>("/tags", { method: "GET" }),
     },
     moments: {
       /** 上报一次碎语阅读（触发即可，不等待返回值） */
