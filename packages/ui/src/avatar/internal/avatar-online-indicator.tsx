@@ -19,8 +19,8 @@ interface AvatarOnlineIndicatorProps {
 export const AvatarOnlineIndicator = ({ size, status, className }: AvatarOnlineIndicatorProps) => (
   <span
     className={cn(
-      "absolute right-0 bottom-0 flex justify-center rounded-full ring-[1.5px] ring-white",
-      status === "online" ? "bg-green-400" : "bg-gray-300",
+      "absolute right-0 bottom-0 flex justify-center rounded-full ring-[1.5px] ring-background",
+      status === "online" ? "bg-green-400" : "bg-muted-foreground",
       sizes[size],
       className,
     )}

@@ -1,29 +1,11 @@
 "use client";
 
-import { type FC, type ReactNode, useState } from "react";
+import { useState } from "react";
 import { SvgIcon } from "@repo/icons";
 import { cn } from "../lib/utils";
-import { AvatarOnlineIndicator, VerifiedTick } from "./base-components";
-import { AvatarCount } from "./base-components/avatar-count";
-
-export interface AvatarProps {
-  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
-  className?: string;
-  contentClassName?: string;
-  src?: string | null;
-  alt?: string;
-  contrastBorder?: boolean;
-  rounded?: boolean;
-  border?: boolean;
-  badge?: ReactNode;
-  status?: "online" | "offline";
-  verified?: boolean;
-  count?: number;
-  initials?: string;
-  placeholderIcon?: FC<{ className?: string }>;
-  placeholder?: ReactNode;
-  focusable?: boolean;
-}
+import { AvatarOnlineIndicator, VerifiedTick } from "./internal";
+import { AvatarCount } from "./internal/avatar-count";
+import type { AvatarProps } from "./types";
 
 const iconSizes: Record<string, number> = {
   xs: 16,
@@ -93,8 +75,8 @@ export const Avatar = ({
         />
       );
     if (initials)
-      return <span className={cn("text-gray-500", initialsClasses[size])}>{initials}</span>;
-    if (PlaceholderIcon) return <PlaceholderIcon className="text-gray-400" />;
+      return <span className={cn("text-muted-foreground", initialsClasses[size])}>{initials}</span>;
+    if (PlaceholderIcon) return <PlaceholderIcon className="text-muted-foreground" />;
     return placeholder || <SvgIcon name="user" size={iconSizes[size]} />;
   };
 
@@ -118,8 +100,8 @@ export const Avatar = ({
         "relative inline-flex shrink-0 rounded-[7px]",
         rounded && "rounded-full",
         focusable &&
-          "outline-transparent group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-blue-500",
-        border && "ring-1 ring-gray-200",
+          "outline-transparent group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-ring",
+        border && "ring-1 ring-border",
         border && rootBorderPadding[size],
         rootSizes[size],
         className,
@@ -127,7 +109,7 @@ export const Avatar = ({
     >
       <div
         className={cn(
-          "relative inline-flex size-full shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-100 outline-[0.5px] -outline-offset-[0.5px] outline-black/8",
+          "relative inline-flex size-full shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted outline-[0.5px] -outline-offset-[0.5px] outline-border",
           rounded && "rounded-full",
           contentClassName,
         )}

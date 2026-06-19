@@ -27,7 +27,7 @@ export const AvatarAddButton = ({
       {...props}
       aria-label={title}
       className={cn(
-        "flex cursor-pointer items-center justify-center rounded-full border border-dashed border-gray-300 bg-white text-gray-400 outline-none hover:bg-gray-50 hover:text-gray-500 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50",
+        "flex cursor-pointer items-center justify-center rounded-full border border-dashed border-input bg-card text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50",
         sizes[size].root,
         className,
       )}

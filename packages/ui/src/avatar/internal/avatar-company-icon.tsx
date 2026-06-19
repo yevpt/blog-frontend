@@ -21,7 +21,7 @@ export const AvatarCompanyIcon = ({ size, src, alt }: AvatarCompanyIconProps) =>
     src={src}
     alt={alt}
     className={cn(
-      "absolute -right-0.5 -bottom-0.5 rounded-full bg-blue-50 object-cover ring-[1.5px] ring-white",
+      "absolute -right-0.5 -bottom-0.5 rounded-full bg-primary/10 object-cover ring-[1.5px] ring-background",
       sizes[size],
     )}
   />
