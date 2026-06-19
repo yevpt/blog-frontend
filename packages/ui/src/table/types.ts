@@ -68,6 +68,7 @@ export interface DataTableClassNames {
   root?: string;
   toolbar?: string;
   search?: string;
+  actions?: string;
   resultCount?: string;
   container?: string;
   table?: string;
@@ -77,6 +78,7 @@ export interface DataTableClassNames {
   body?: string;
   row?: string;
   cell?: string;
+  overlay?: string;
   sortButton?: string;
   filterButton?: string;
   filterPopover?: string;
@@ -103,9 +105,17 @@ export type DataTableProps<T> = DataTableAccessibleName & {
   defaultState?: Partial<DataTableState>;
   onStateChange?: (state: DataTableState) => void;
   search?: DataTableSearch<T>;
+  /** 工具栏右侧操作区（如新建、批量操作按钮），渲染在搜索框对侧 */
+  actions?: ReactNode;
+  /** 服务端分页时的总条数；未传则使用当前可见行数 */
+  total?: number;
+  /** 是否在工具栏显示「共 N 条」总数，默认 true；置 false 可改由外部（如分页栏）承载 */
+  showTotal?: boolean;
   emptyText?: ReactNode;
   loadingText?: ReactNode;
   isLoading?: boolean;
+  /** 首屏无数据加载时渲染的骨架占位行数，默认 5 */
+  skeletonRows?: number;
   className?: string;
   classNames?: DataTableClassNames;
   maxHeightClassName?: string | false;

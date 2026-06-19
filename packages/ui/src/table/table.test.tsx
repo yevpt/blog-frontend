@@ -101,11 +101,14 @@ function renderArticleTable(props?: {
   state?: DataTableState;
   onStateChange?: (state: DataTableState) => void;
   isLoading?: boolean;
+  items?: ArticleRow[];
+  skeletonRows?: number;
 }) {
+  const { items = rows, ...rest } = props ?? {};
   return render(
     <DataTable
       aria-label="文章"
-      items={rows}
+      items={items}
       columns={columns}
       getRowId={(article) => article.id}
       search={{
@@ -115,7 +118,7 @@ function renderArticleTable(props?: {
       }}
       emptyText="暂无文章"
       loadingText="加载中"
-      {...props}
+      {...rest}
     />,
   );
 }
@@ -137,6 +140,22 @@ describe("DataTable", () => {
     ).toBeInTheDocument();
     expect(within(table).getAllByRole("button", { name: "删除" })).toHaveLength(3);
     expect(screen.getByText("共 3 条")).toBeInTheDocument();
+  });
+
+  it("渲染工具栏 actions 操作区，showTotal=false 时隐藏总数", () => {
+    render(
+      <DataTable
+        aria-label="文章"
+        items={rows}
+        columns={columns}
+        getRowId={(article) => article.id}
+        showTotal={false}
+        actions={<button type="button">新建文章</button>}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "新建文章" })).toBeInTheDocument();
+    expect(screen.queryByText("共 3 条")).not.toBeInTheDocument();
   });
 
   it("支持 root className 与内部 slot classNames 定制", async () => {
@@ -316,10 +335,34 @@ describe("DataTable", () => {
     ).toBeInTheDocument();
   });
 
-  it("加载中时展示加载文案", () => {
-    renderArticleTable({ isLoading: true });
+  it("已有数据加载时叠加覆盖层并保留旧行", () => {
+    const { container } = renderArticleTable({ isLoading: true });
 
+    const grid = screen.getByRole("grid", { name: "文章" });
+    expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument();
+    // 旧数据仍然可见
+    expect(
+      within(grid).getByRole("rowheader", { name: "React Query 与后台表格状态" }),
+    ).toBeInTheDocument();
+    // 覆盖层 spinner 与文案
+    expect(screen.getByRole("progressbar", { name: "加载中" })).toBeInTheDocument();
     expect(screen.getByText("加载中")).toBeInTheDocument();
+  });
+
+  it("首屏无数据加载时渲染骨架占位行而非空态文案", () => {
+    const { container } = renderArticleTable({ items: [], isLoading: true, skeletonRows: 4 });
+
+    expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument();
+    // 4 行 × 4 列骨架灰条
+    expect(container.querySelectorAll("[data-skeleton-bar]")).toHaveLength(16);
+    // 加载中不显示空态文案
+    expect(screen.queryByText("暂无文章")).not.toBeInTheDocument();
+  });
+
+  it("非加载且无数据时展示空态文案", () => {
+    renderArticleTable({ items: [] });
+
+    expect(screen.getByText("暂无文章")).toBeInTheDocument();
   });
 
   it("无匹配结果时展示空态文案", async () => {

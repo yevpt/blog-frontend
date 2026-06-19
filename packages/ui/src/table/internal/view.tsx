@@ -4,6 +4,7 @@ import { Table as AriaTable, ResizableTableContainer } from "react-aria-componen
 import { cn } from "../../lib/utils";
 import { DataTableBody } from "./body";
 import { DataTableHeader } from "./header";
+import { DataTableOverlay } from "./overlay";
 import type {
   DataTableAccessibleName,
   DataTableClassNames,
@@ -19,7 +20,9 @@ interface DataTableViewProps<T extends object> {
   tableState: DataTableState;
   emptyText: DataTableProps<T>["emptyText"];
   loadingText: DataTableProps<T>["loadingText"];
-  isLoading: boolean;
+  showSkeleton: boolean;
+  showOverlay: boolean;
+  skeletonRows: number;
   classNames?: DataTableClassNames;
   maxHeightClassName?: string | false;
   labelProps: DataTableAccessibleName;
@@ -34,7 +37,9 @@ export function DataTableView<T extends object>({
   tableState,
   emptyText,
   loadingText,
-  isLoading,
+  showSkeleton,
+  showOverlay,
+  skeletonRows,
   classNames,
   maxHeightClassName,
   labelProps,
@@ -68,11 +73,13 @@ export function DataTableView<T extends object>({
           rowItems={rowItems}
           getRowId={getRowId}
           emptyText={emptyText}
-          loadingText={loadingText}
-          isLoading={isLoading}
+          showSkeleton={showSkeleton}
+          skeletonRows={skeletonRows}
           classNames={classNames}
         />
       </AriaTable>
+
+      {showOverlay ? <DataTableOverlay loadingText={loadingText} classNames={classNames} /> : null}
     </ResizableTableContainer>
   );
 }

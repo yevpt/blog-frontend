@@ -2,6 +2,7 @@
 
 import { Cell, Row, TableBody } from "react-aria-components";
 import { cn } from "../../lib/utils";
+import { renderSkeletonRows } from "./skeleton";
 import type { DataTableClassNames, DataTableColumn, DataTableProps } from "../types";
 
 interface DataTableBodyProps<T extends object> {
@@ -9,8 +10,8 @@ interface DataTableBodyProps<T extends object> {
   rowItems: T[];
   getRowId: DataTableProps<T>["getRowId"];
   emptyText: DataTableProps<T>["emptyText"];
-  loadingText: DataTableProps<T>["loadingText"];
-  isLoading: boolean;
+  showSkeleton: boolean;
+  skeletonRows: number;
   classNames?: DataTableClassNames;
 }
 
@@ -19,46 +20,49 @@ export function DataTableBody<T extends object>({
   rowItems,
   getRowId,
   emptyText,
-  loadingText,
-  isLoading,
+  showSkeleton,
+  skeletonRows,
   classNames,
 }: DataTableBodyProps<T>) {
   return (
     <TableBody
-      renderEmptyState={() => (isLoading ? loadingText : emptyText)}
+      // 骨架行存在时不会触发 renderEmptyState；空态文案仅在非加载且无数据时显示。
+      renderEmptyState={() => emptyText}
       className={cn(
         "data-[empty]:text-center data-[empty]:text-sm data-[empty]:italic",
         classNames?.body,
       )}
     >
-      {rowItems.map((item) => (
-        <Row
-          key={getRowId(item)}
-          id={getRowId(item)}
-          className={cn(
-            "group/row cursor-default select-none text-foreground outline-hidden",
-            "hover:bg-muted/60 data-[pressed]:bg-muted",
-            "data-[disabled]:text-muted-foreground",
-            "data-[focus-visible]:outline-2 data-[focus-visible]:-outline-offset-2 data-[focus-visible]:outline-ring",
-            classNames?.row,
-          )}
-        >
-          {columns.map((column) => (
-            <Cell
-              key={column.id}
+      {showSkeleton
+        ? renderSkeletonRows({ columns, rows: skeletonRows, classNames })
+        : rowItems.map((item) => (
+            <Row
+              key={getRowId(item)}
+              id={getRowId(item)}
               className={cn(
-                "truncate border-b border-border px-3 py-2.5 align-middle outline-hidden",
-                "group-last/row:border-b-0",
+                "group/row cursor-default select-none text-foreground outline-hidden",
+                "hover:bg-muted/60 data-[pressed]:bg-muted",
+                "data-[disabled]:text-muted-foreground",
                 "data-[focus-visible]:outline-2 data-[focus-visible]:-outline-offset-2 data-[focus-visible]:outline-ring",
-                classNames?.cell,
-                column.className,
+                classNames?.row,
               )}
             >
-              {column.cell(item)}
-            </Cell>
+              {columns.map((column) => (
+                <Cell
+                  key={column.id}
+                  className={cn(
+                    "truncate border-b border-border px-3 py-2.5 align-middle outline-hidden",
+                    "group-last/row:border-b-0",
+                    "data-[focus-visible]:outline-2 data-[focus-visible]:-outline-offset-2 data-[focus-visible]:outline-ring",
+                    classNames?.cell,
+                    column.className,
+                  )}
+                >
+                  {column.cell(item)}
+                </Cell>
+              ))}
+            </Row>
           ))}
-        </Row>
-      ))}
     </TableBody>
   );
 }

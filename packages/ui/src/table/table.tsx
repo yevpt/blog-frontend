@@ -14,9 +14,13 @@ export function DataTable<T extends object>({
   defaultState,
   onStateChange,
   search,
+  actions,
+  total,
+  showTotal = true,
   emptyText = "暂无数据",
   loadingText = "加载中",
   isLoading = false,
+  skeletonRows = 5,
   className,
   classNames,
   maxHeightClassName = "max-h-[480px]",
@@ -33,11 +37,17 @@ export function DataTable<T extends object>({
   });
 
   return (
-    <div className={cn("grid gap-3", classNames?.root, className)}>
+    <div
+      // react-aria 的 Table/Container 会过滤 aria-busy，故在外层根节点标记加载态
+      aria-busy={isLoading || undefined}
+      className={cn("grid gap-3", classNames?.root, className)}
+    >
       <DataTableToolbar
         search={search}
         searchValue={table.tableState.searchValue}
-        total={table.visibleItems.length}
+        total={total ?? table.visibleItems.length}
+        showTotal={showTotal}
+        actions={actions}
         onSearchChange={table.onSearchChange}
         classNames={classNames}
       />
@@ -50,7 +60,9 @@ export function DataTable<T extends object>({
         tableState={table.tableState}
         emptyText={emptyText}
         loadingText={loadingText}
-        isLoading={isLoading}
+        showSkeleton={table.showSkeleton}
+        showOverlay={table.showOverlay}
+        skeletonRows={skeletonRows}
         classNames={classNames}
         maxHeightClassName={maxHeightClassName}
         onSortChange={table.onSortChange}

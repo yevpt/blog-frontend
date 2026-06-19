@@ -46,7 +46,13 @@ export function useDataTable<T extends object>({
     [columns, items, search, tableState],
   );
 
-  const rowItems = isLoading ? [] : visibleItems;
+  // 区分两种加载形态：
+  // - 首屏无数据 → 骨架屏（清空行，由 body 渲染占位行）
+  // - 已有数据刷新/翻页 → 覆盖层（保留旧行，叠加遮罩）
+  const hasData = visibleItems.length > 0;
+  const showSkeleton = isLoading && !hasData;
+  const showOverlay = isLoading && hasData;
+  const rowItems = showSkeleton ? [] : visibleItems;
 
   function updateTableState(patch: Partial<DataTableState>) {
     const nextState = mergeTableState(tableState, patch);
@@ -77,6 +83,8 @@ export function useDataTable<T extends object>({
     rowItems,
     tableState,
     visibleItems,
+    showSkeleton,
+    showOverlay,
     onFilterChange,
     onSearchChange,
     onSortChange,
