@@ -1,10 +1,19 @@
 import { SvgIcon } from "@repo/icons";
-import { Button } from "@repo/ui";
+import { Button, cn } from "@repo/ui";
 import { useTheme } from "../../providers/theme-provider";
 
-export function ThemeToggle({ className }: { className?: string }) {
+interface ThemeToggleProps {
+  className?: string;
+  /** 显示文字标签，用于侧栏的行式布局；不传则只渲染图标（如登录页） */
+  showLabel?: boolean;
+  /** 折叠态下隐藏文字标签（保留无障碍文案） */
+  collapsed?: boolean;
+}
+
+export function ThemeToggle({ className, showLabel = false, collapsed = false }: ThemeToggleProps) {
   const { resolvedTheme, setTheme } = useTheme();
-  const nextTheme = resolvedTheme === "dark" ? "light" : "dark";
+  const isDark = resolvedTheme === "dark";
+  const nextTheme = isDark ? "light" : "dark";
 
   return (
     <Button
@@ -14,7 +23,12 @@ export function ThemeToggle({ className }: { className?: string }) {
       onPress={() => setTheme(nextTheme)}
       className={className}
     >
-      <SvgIcon name={resolvedTheme === "dark" ? "moon" : "sun"} size={20} />
+      <SvgIcon name={isDark ? "moon" : "sun"} size={20} />
+      {showLabel ? (
+        <span className={cn("truncate text-sm", collapsed && "sr-only")}>
+          {isDark ? "深色模式" : "浅色模式"}
+        </span>
+      ) : null}
     </Button>
   );
 }

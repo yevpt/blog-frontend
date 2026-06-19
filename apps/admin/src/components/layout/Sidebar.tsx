@@ -3,6 +3,7 @@ import { Button, cn } from "@repo/ui";
 import { BrandMark } from "./BrandMark";
 import { SidebarNav } from "./SidebarNav";
 import { SidebarUser } from "./SidebarUser";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -31,14 +32,22 @@ export function Sidebar({ isCollapsed, onToggleCollapsed, onNavigate, className 
 
       <SidebarNav isCollapsed={isCollapsed} onNavigate={onNavigate} />
 
-      <div className="hidden border-t border-border p-3 lg:block">
+      <div className="grid gap-1 border-t border-border p-3">
+        <ThemeToggle
+          showLabel
+          collapsed={isCollapsed}
+          className={cn(
+            "h-9 w-full justify-start rounded-lg px-2 text-muted-foreground hover:bg-accent hover:text-primary",
+            isCollapsed && "justify-center px-0",
+          )}
+        />
         <Button
           type="button"
           variant="ghost"
           aria-label={isCollapsed ? "展开侧栏" : "折叠侧栏"}
           onPress={onToggleCollapsed}
           className={cn(
-            "h-9 w-full justify-start rounded-lg px-2 text-muted-foreground",
+            "hidden h-9 w-full justify-start rounded-lg px-2 text-muted-foreground lg:flex",
             isCollapsed && "justify-center px-0",
           )}
         >

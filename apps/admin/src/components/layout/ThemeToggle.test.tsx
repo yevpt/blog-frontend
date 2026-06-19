@@ -41,4 +41,24 @@ describe("ThemeToggle", () => {
     expect(document.documentElement).toHaveClass("light");
     expect(document.documentElement).not.toHaveClass("dark");
   });
+
+  it("showLabel 时显示当前主题文字标签", () => {
+    render(
+      <ThemeProvider>
+        <ThemeToggle showLabel />
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByText("浅色模式")).toBeInTheDocument();
+  });
+
+  it("默认不渲染文字标签（图标按钮形态）", () => {
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>,
+    );
+
+    expect(screen.queryByText("浅色模式")).not.toBeInTheDocument();
+  });
 });

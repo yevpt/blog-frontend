@@ -1,14 +1,11 @@
-import { Outlet, useLocation } from "react-router-dom";
-import { cn } from "@repo/ui";
-import { getNavItemByPath } from "../../config/nav";
+import { Outlet } from "react-router-dom";
+import { SvgIcon } from "@repo/icons";
+import { Button, cn } from "@repo/ui";
 import { Sidebar } from "./Sidebar";
-import { Topbar } from "./Topbar";
 import { useSidebar } from "./useSidebar";
 
 export function AdminLayout() {
-  const location = useLocation();
   const sidebar = useSidebar();
-  const currentItem = getNavItemByPath(location.pathname);
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
@@ -36,7 +33,18 @@ export function AdminLayout() {
       </div>
 
       <div className={cn("min-h-dvh lg:pl-[248px]", sidebar.isCollapsed && "lg:pl-[72px]")}>
-        <Topbar title={currentItem.label} onOpenMobile={sidebar.openMobile} />
+        {/* 移动端无常驻侧栏，保留精简的菜单触发条；桌面端不再有重复标题栏 */}
+        <div className="sticky top-0 z-20 flex h-14 items-center border-b border-border bg-card/95 px-4 backdrop-blur lg:hidden">
+          <Button
+            type="button"
+            variant="ghost"
+            aria-label="打开侧栏菜单"
+            onPress={sidebar.openMobile}
+            className="h-9 w-9 shrink-0 rounded-lg p-0 text-foreground"
+          >
+            <SvgIcon name="menu" size={20} />
+          </Button>
+        </div>
         <main className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 lg:px-8">
           <Outlet />
         </main>
