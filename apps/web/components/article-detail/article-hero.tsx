@@ -5,6 +5,7 @@ import { useLocale } from "@repo/hooks";
 import { LoadingImage } from "@/components/common/loading-image";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { useActiveArticle } from "@/store/use-active-article";
+import { useImageViewer } from "@/store/use-image-viewer";
 import { formatDate } from "@/lib/format-time.ts";
 import { ArticleDateCategory } from "@/components/articles/article-date-category";
 
@@ -21,12 +22,18 @@ export function ArticleHero({ article }: ArticleHeroProps) {
   const readingMin = estimateReadingMinutes(article.content);
   const readCount = useActiveArticle((state) => state.readCount) || article.read_count;
   const { locale } = useLocale();
+  const openViewer = useImageViewer((s) => s.open);
   const formattedDate = formatDate(article.created_at, locale);
 
   return (
     <div className="mx-auto max-w-[720px]">
       {article.cover_img_url && (
-        <div className="relative mb-8 aspect-video w-full overflow-hidden rounded-2xl">
+        <button
+          type="button"
+          aria-label="查看封面大图"
+          onClick={() => openViewer([{ src: article.cover_img_url!, alt: article.title }], 0)}
+          className="group relative mb-8 block aspect-video w-full cursor-zoom-in overflow-hidden rounded-2xl"
+        >
           <LoadingImage
             src={article.cover_img_url}
             alt={article.title}
@@ -34,7 +41,7 @@ export function ArticleHero({ article }: ArticleHeroProps) {
             className="object-cover object-center"
             priority
           />
-        </div>
+        </button>
       )}
 
       <h1 className="mb-4 text-2xl font-extrabold leading-tight tracking-tight text-foreground md:text-3xl lg:text-[2rem]">

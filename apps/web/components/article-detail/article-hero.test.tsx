@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { ArticleHero } from "./article-hero";
+import { useImageViewer } from "@/store/use-image-viewer";
 import type { ArticleDetailResp } from "@repo/api";
 
 vi.mock("next/image", () => ({
@@ -86,5 +87,15 @@ describe("ArticleHero", () => {
   it("无 user 时不渲染作者区块", () => {
     render(<ArticleHero article={base} />);
     expect(screen.queryByText(/博主/)).not.toBeInTheDocument();
+  });
+
+  it("点击封面打开图片查看器", () => {
+    useImageViewer.setState({ isOpen: false, images: [], index: 0 });
+    render(<ArticleHero article={{ ...base, cover_img_url: "https://example.com/img.jpg" }} />);
+    fireEvent.click(screen.getByRole("button", { name: "查看封面大图" }));
+    const state = useImageViewer.getState();
+    expect(state.isOpen).toBe(true);
+    expect(state.images).toEqual([{ src: "https://example.com/img.jpg", alt: "Rust Web 框架" }]);
+    expect(state.index).toBe(0);
   });
 });
