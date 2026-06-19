@@ -81,3 +81,28 @@ describe("复制按钮", () => {
     vi.useRealTimers();
   });
 });
+
+describe("MarkdownContent 图片预览", () => {
+  it("点击图片以 (images, index) 调用 onImagePreview", () => {
+    const onImagePreview = vi.fn();
+    const html = '<p><img src="x.jpg" alt="第一张"><img src="y.jpg" alt="第二张"></p>';
+    render(<MarkdownContent html={html} onImagePreview={onImagePreview} />);
+    const first = screen.getByAltText("第一张") as HTMLImageElement;
+    const second = screen.getByAltText("第二张") as HTMLImageElement;
+    // jsdom 会把相对 src 解析为绝对 URL，断言用元素实际暴露的 src 而非原始属性
+    fireEvent.click(second);
+    expect(onImagePreview).toHaveBeenCalledWith(
+      [
+        { src: first.currentSrc || first.src, alt: "第一张" },
+        { src: second.currentSrc || second.src, alt: "第二张" },
+      ],
+      1,
+    );
+  });
+
+  it("未传 onImagePreview 时点击图片不报错", () => {
+    const html = '<p><img src="x.jpg" alt="图"></p>';
+    render(<MarkdownContent html={html} />);
+    expect(() => fireEvent.click(screen.getByAltText("图"))).not.toThrow();
+  });
+});

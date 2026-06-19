@@ -14,6 +14,8 @@ export interface MarkdownContentProps {
   variant?: "article" | "comment";
   /** 追加到根元素的自定义类名 */
   className?: string;
+  /** 点击正文图片时回调（已渲染的原生 img 用事件委托捕获）。 */
+  onImagePreview?: (images: { src: string; alt?: string }[], index: number) => void;
 }
 
 const VARIANT_CLASSES: Record<"article" | "comment", string> = {
@@ -34,7 +36,12 @@ const VARIANT_CLASSES: Record<"article" | "comment", string> = {
 // 复制成功后显示的勾图标（绿色），2 秒后恢复
 const CHECKMARK_SVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 
-export function MarkdownContent({ html, variant = "article", className }: MarkdownContentProps) {
+export function MarkdownContent({
+  html,
+  variant = "article",
+  className,
+  onImagePreview,
+}: MarkdownContentProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,6 +50,19 @@ export function MarkdownContent({ html, variant = "article", className }: Markdo
 
     // 用事件委托绑在稳定的 container 上，避免 dangerouslySetInnerHTML 替换 innerHTML 后旧节点失效
     const handleClick = (event: MouseEvent) => {
+      // 图片预览：点击正文 <img> 收集同容器全部图片
+      const img = (event.target as Element).closest<HTMLImageElement>("img");
+      if (img && onImagePreview) {
+        const all = Array.from(container.querySelectorAll("img"));
+        const items = all.map((el) => ({
+          src: el.currentSrc || el.src,
+          alt: el.alt || undefined,
+        }));
+        const index = all.indexOf(img);
+        if (index >= 0) onImagePreview(items, index);
+        return;
+      }
+
       const btn = (event.target as Element).closest<HTMLButtonElement>(".md-copy-btn");
       if (!btn) return;
       const wrapper = btn.closest(".md-code-wrapper");
@@ -64,12 +84,16 @@ export function MarkdownContent({ html, variant = "article", className }: Markdo
 
     container.addEventListener("click", handleClick);
     return () => container.removeEventListener("click", handleClick);
-  }, []);
+  }, [onImagePreview]);
 
   return (
     <div
       ref={containerRef}
-      className={clsx(VARIANT_CLASSES[variant], className)}
+      className={clsx(
+        VARIANT_CLASSES[variant],
+        onImagePreview && "[&_img]:cursor-zoom-in",
+        className,
+      )}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
