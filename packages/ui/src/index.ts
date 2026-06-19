@@ -93,6 +93,8 @@ export {
   type DataTableProps,
   type DataTableClassNames,
   type DataTableColumn,
+  type DataTableColumnSize,
+  type DataTableColumnStaticSize,
   type DataTableState,
   type DataTableSortState,
   type DataTableSortDirection,

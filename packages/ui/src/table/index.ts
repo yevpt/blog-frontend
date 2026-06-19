@@ -2,6 +2,8 @@ export { DataTable } from "./table";
 export type {
   DataTableClassNames,
   DataTableColumn,
+  DataTableColumnSize,
+  DataTableColumnStaticSize,
   DataTableFilter,
   DataTableOption,
   DataTableProps,

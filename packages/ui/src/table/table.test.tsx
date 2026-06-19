@@ -286,6 +286,36 @@ describe("DataTable", () => {
     });
   });
 
+  it("接受 fr 弹性列宽并正常渲染（吸收容器剩余宽度）", () => {
+    const flexColumns: Array<DataTableColumn<ArticleRow>> = [
+      {
+        id: "title",
+        header: "标题",
+        isRowHeader: true,
+        // 弹性列：固定列之和小于容器时撑满剩余宽度
+        width: "1fr",
+        minWidth: 320,
+        cell: (article) => article.title,
+      },
+      { id: "status", header: "状态", width: 120, cell: (article) => statusLabel[article.status] },
+    ];
+
+    render(
+      <DataTable
+        aria-label="弹性列文章"
+        items={rows}
+        columns={flexColumns}
+        getRowId={(article) => article.id}
+      />,
+    );
+
+    const grid = screen.getByRole("grid", { name: "弹性列文章" });
+    expect(within(grid).getByRole("columnheader", { name: /标题/ })).toBeInTheDocument();
+    expect(
+      within(grid).getByRole("rowheader", { name: "React Query 与后台表格状态" }),
+    ).toBeInTheDocument();
+  });
+
   it("加载中时展示加载文案", () => {
     renderArticleTable({ isLoading: true });
 

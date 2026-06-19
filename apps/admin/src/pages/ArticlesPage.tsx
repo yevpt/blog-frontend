@@ -25,8 +25,9 @@ export function ArticlesPage() {
         id: "title",
         header: "标题",
         isRowHeader: true,
-        width: 430,
-        className: "max-w-[360px]",
+        // 弹性列：吸收容器剩余宽度，避免固定列之和小于容器时右侧留白
+        width: "1fr",
+        minWidth: 360,
         cell: (article) => (
           <>
             <Link

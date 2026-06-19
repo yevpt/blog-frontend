@@ -2,6 +2,17 @@ import type { ReactNode } from "react";
 
 export type DataTableSortDirection = "ascending" | "descending";
 
+/**
+ * 列宽，对齐 react-aria `ColumnSize`：
+ * - 数字 / `${n}` / `${n}%` 为静态宽度，不参与剩余空间分配；
+ * - `${n}fr` 为弹性宽度，按比例吸收容器的剩余宽度（类似 CSS grid 的 fr）。
+ * 一张表至少留一个 `fr` 列，固定列之和小于容器时才不会留白。
+ */
+export type DataTableColumnSize = number | `${number}` | `${number}%` | `${number}fr`;
+
+/** 静态宽度，用于 `minWidth`（弹性单位不可作为下限）。 */
+export type DataTableColumnStaticSize = number | `${number}` | `${number}%`;
+
 export interface DataTableSortState {
   column: string;
   direction: DataTableSortDirection;
@@ -44,8 +55,8 @@ export interface DataTableColumn<T> {
   id: string;
   header: ReactNode;
   cell: (item: T) => ReactNode;
-  width?: number;
-  minWidth?: number;
+  width?: DataTableColumnSize;
+  minWidth?: DataTableColumnStaticSize;
   className?: string;
   headerClassName?: string;
   isRowHeader?: boolean;
