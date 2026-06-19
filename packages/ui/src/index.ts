@@ -105,3 +105,9 @@ export {
 } from "./table";
 export type { DateValue, Selection, SortDescriptor } from "react-aria-components";
 export { parseDate } from "@internationalized/date";
+export {
+  ImageViewer,
+  type ImageItem,
+  type ImageViewerProps,
+  type ViewerTransform,
+} from "./image-viewer";

@@ -1,0 +1,114 @@
+"use client";
+
+import { useEffect } from "react";
+import { SvgIcon } from "@repo/icons";
+import { Modal } from "../modal";
+import { ImageViewerToolbar } from "./internal/toolbar";
+import { useViewerTransform } from "./internal/use-viewer-transform";
+import type { ImageViewerProps } from "./types";
+
+const NAV_BTN =
+  "absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white/90 transition-colors hover:bg-black/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/60";
+
+export function ImageViewer({ images, index, isOpen, onClose, onIndexChange }: ImageViewerProps) {
+  const { transform, reset, zoomIn, zoomOut, rotate, handlers } = useViewerTransform();
+  const current = images[index];
+  const hasGallery = images.length > 1 && !!onIndexChange;
+
+  // 切换图片或开关时重置变换
+  useEffect(() => {
+    reset();
+  }, [index, isOpen, reset]);
+
+  const goPrev = () => onIndexChange?.((index - 1 + images.length) % images.length);
+  const goNext = () => onIndexChange?.((index + 1) % images.length);
+
+  // 键盘左右切换
+  useEffect(() => {
+    if (!isOpen || !hasGallery) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") goPrev();
+      else if (e.key === "ArrowRight") goNext();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // goPrev/goNext 依赖 index、images.length
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, hasGallery, index, images.length]);
+
+  if (!current) return null;
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      isDismissable
+      role="dialog"
+      aria-label="图片预览"
+      overlayClassName="bg-black/80 backdrop-blur-md"
+      positionerClassName="items-center justify-center p-0"
+      modalClassName="!h-dvh !w-screen !max-w-none !rounded-none !border-0 !bg-transparent !shadow-none"
+      dialogClassName="relative h-dvh w-screen"
+    >
+      {/* 手势舞台：承载滚轮/指针/双击交互，键盘关闭由 Modal 的 ESC（isDismissable）提供 */}
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
+      <div
+        data-testid="image-viewer-stage"
+        className="relative flex h-dvh w-screen touch-none items-center justify-center overflow-hidden"
+        onWheel={handlers.onWheel}
+        onPointerDown={handlers.onPointerDown}
+        onPointerMove={handlers.onPointerMove}
+        onPointerUp={handlers.onPointerUp}
+        onPointerCancel={handlers.onPointerUp}
+        onDoubleClick={handlers.onDoubleClick}
+        onClick={(e) => {
+          // 点击图片以外的暗区关闭
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
+        <img
+          src={current.src}
+          alt={current.alt ?? ""}
+          draggable={false}
+          className="max-h-full max-w-full select-none object-contain transition-transform duration-75"
+          style={{
+            transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale}) rotate(${transform.rotation}deg)`,
+            cursor: transform.scale > 1 ? "grab" : "default",
+          }}
+        />
+      </div>
+
+      {hasGallery && (
+        <>
+          <button
+            type="button"
+            aria-label="上一张"
+            className={`${NAV_BTN} left-4`}
+            onClick={goPrev}
+          >
+            <SvgIcon name="chevron-left" size={24} />
+          </button>
+          <button
+            type="button"
+            aria-label="下一张"
+            className={`${NAV_BTN} right-4`}
+            onClick={goNext}
+          >
+            <SvgIcon name="chevron-right" size={24} />
+          </button>
+        </>
+      )}
+
+      <ImageViewerToolbar
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
+        onRotate={rotate}
+        onClose={onClose}
+        downloadUrl={current.src}
+        downloadName={current.alt}
+      />
+    </Modal>
+  );
+}
