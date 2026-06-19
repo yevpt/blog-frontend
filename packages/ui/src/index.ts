@@ -38,7 +38,14 @@ export { Toggle, ToggleBase } from "./toggle/toggle";
 export { ButtonUtility, type ButtonUtilityProps } from "./button-utility/button-utility";
 export { Avatar, type AvatarProps } from "./avatar/avatar";
 export { CheckboxBase, Checkbox, type CheckboxBaseProps } from "./checkbox/checkbox";
-export { Dropdown } from "./dropdown/dropdown";
+export {
+  Dropdown,
+  type DropdownItemProps,
+  type DropdownMenuProps,
+  type DropdownPopoverProps,
+  type DropdownSelectionIndicator,
+  type DropdownSeparatorProps,
+} from "./dropdown";
 export { Select, type SelectProps, type SelectItemType } from "./select/select";
 export {
   Carousel,

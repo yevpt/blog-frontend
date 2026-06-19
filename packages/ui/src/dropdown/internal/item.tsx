@@ -1,0 +1,92 @@
+"use client";
+
+import { MenuItem as AriaMenuItem } from "react-aria-components";
+import { SvgIcon } from "@repo/icons";
+import { Avatar } from "../../avatar/avatar";
+import { cn } from "../../lib/utils";
+import type { DropdownItemProps } from "../types";
+import { SelectionIndicator } from "./selection-indicator";
+
+/** 带图标/头像/选中态指示器的菜单项；`unstyled` 时退化为原生 MenuItem。 */
+export const DropdownItem = ({
+  label,
+  children,
+  addon,
+  icon: Icon,
+  avatarUrl,
+  unstyled,
+  selectionIndicator = "checkmark",
+  ...props
+}: DropdownItemProps) => {
+  if (unstyled) {
+    return (
+      <AriaMenuItem id={label} textValue={label} {...props}>
+        {children}
+      </AriaMenuItem>
+    );
+  }
+
+  return (
+    <AriaMenuItem
+      {...props}
+      className={(state) =>
+        cn(
+          "group block cursor-pointer px-1.5 py-px outline-hidden",
+          state.isDisabled && "cursor-not-allowed opacity-50",
+          typeof props.className === "function" ? props.className(state) : props.className,
+        )
+      }
+    >
+      {(state) => (
+        <div
+          className={cn(
+            "relative flex items-center rounded-md px-2.5 py-2 outline-none transition duration-100 ease-linear",
+            !state.isDisabled && "group-hover:bg-accent",
+            state.isFocused && "bg-accent",
+            state.isFocusVisible && "ring-2 ring-ring ring-inset -ring-offset-2",
+            state.hasSubmenu && "pr-1.5",
+          )}
+        >
+          {state.selectionMode !== "none" && !avatarUrl && !Icon && (
+            <SelectionIndicator variant={selectionIndicator} {...state} className="mr-2" />
+          )}
+
+          {avatarUrl && (
+            <div className="mr-2 flex size-4 items-center justify-center">
+              <Avatar aria-hidden="true" size="xs" src={avatarUrl} alt={label} className="size-5" />
+            </div>
+          )}
+
+          {Icon && (
+            <Icon aria-hidden="true" className="mr-2 size-4 shrink-0 text-muted-foreground" />
+          )}
+
+          <span
+            className={cn(
+              "grow truncate text-sm font-semibold text-foreground",
+              state.isFocused && "text-accent-foreground",
+            )}
+          >
+            {label || (typeof children === "function" ? children(state) : children)}
+          </span>
+
+          {addon && (
+            <span className="ml-1 shrink-0 pr-1 text-xs font-medium text-muted-foreground">
+              {addon}
+            </span>
+          )}
+
+          {state.selectionMode !== "none" && (avatarUrl || Icon) && (
+            <SelectionIndicator variant={selectionIndicator} {...state} className="ml-1" />
+          )}
+
+          {state.hasSubmenu && (
+            <span className="ml-auto">
+              <SvgIcon name="chevron-right" size={16} />
+            </span>
+          )}
+        </div>
+      )}
+    </AriaMenuItem>
+  );
+};
