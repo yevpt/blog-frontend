@@ -56,6 +56,7 @@ export type IconName =
   | "shuffle"
   | "sun"
   | "tag"
+  | "trash"
   | "user"
   | "vip"
   | "wechat"
