@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { RichCommentInput } from "@/components/comments/inputs/rich-comment-input";
+import { RichCommentInput, type ReplyTarget } from "@/components/comments";
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
-import type { ReplyTarget } from "@/components/comments/parts/comment-replies";
 
 interface GuestbookInputBarProps {
   onSubmit: (content: string) => Promise<boolean>;

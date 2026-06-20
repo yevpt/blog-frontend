@@ -17,7 +17,7 @@ vi.mock("@/store/use-login-modal", () => ({
   useLoginModal: () => mockUseLoginModal(),
 }));
 
-vi.mock("@/components/comments/inputs/rich-comment-input", () => ({
+vi.mock("@/components/comments", () => ({
   RichCommentInput: ({
     onSubmit,
     placeholder,

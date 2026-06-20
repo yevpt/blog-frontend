@@ -2,4 +2,4 @@ export { GuestbookPage } from "./guestbook-page";
 export { GuestbookList } from "./guestbook-list";
 export { GuestbookItem } from "./guestbook-item";
 export { GuestbookInputBar } from "./guestbook-input-bar";
-export type { ReplyTarget } from "@/components/comments/parts/comment-replies";
+export type { ReplyTarget } from "@/components/comments";

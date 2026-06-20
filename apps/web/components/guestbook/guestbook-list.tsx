@@ -4,7 +4,7 @@ import type { CommentReplyResp, GuestbookItemResp } from "@repo/api";
 import { Pagination } from "@repo/ui";
 import type { RefObject } from "react";
 import { GuestbookItem } from "./guestbook-item";
-import type { ReplyTarget } from "@/components/comments/parts/comment-replies";
+import type { ReplyTarget } from "@/components/comments";
 
 /** 单条骨架占位 */
 function SkeletonItem() {
