@@ -122,9 +122,19 @@ describe("ArticlesPage", () => {
     expect(screen.queryByRole("link", { name: "置顶管理" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "新建" })).toHaveAttribute("href", "/articles/new");
     expect(screen.getByText("全部 42")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /筛选分类/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /全部.*筛选分类|筛选分类.*全部/ }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "更多筛选" })).toBeDisabled();
     expect(screen.getByText("共 42 条")).toBeInTheDocument();
+
+    const listRegion = screen.getByRole("region", { name: "文章列表工具栏" });
+    expect(
+      Array.from(listRegion.children).some(
+        (child) =>
+          child.tagName === "DIV" && child.childElementCount === 0 && child.textContent === "",
+      ),
+    ).toBe(false);
 
     const table = screen.getByRole("grid", { name: "文章列表" });
     expect(within(table).getByRole("columnheader", { name: /创建时间/ })).toBeInTheDocument();

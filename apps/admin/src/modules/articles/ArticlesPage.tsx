@@ -188,7 +188,7 @@ export function ArticlesPage() {
           <Select
             aria-label="筛选分类"
             placeholder="筛选分类"
-            selectedKey={filters.categoryId === "all" ? undefined : filters.categoryId}
+            selectedKey={filters.categoryId}
             onSelectionChange={(key) => {
               if (key == null) return;
               setCategoryId(String(key));
@@ -217,16 +217,17 @@ export function ArticlesPage() {
       </section>
 
       <section
-        className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-3 pt-3"
+        className={cn(
+          "grid min-h-0 gap-3 pt-3",
+          listError ? "grid-rows-[auto_minmax(0,1fr)_auto]" : "grid-rows-[minmax(0,1fr)_auto]",
+        )}
         aria-label="文章列表工具栏"
       >
-        <div>
-          {listError ? (
-            <p role="alert" className="text-sm text-destructive">
-              {listError.message}
-            </p>
-          ) : null}
-        </div>
+        {listError ? (
+          <p role="alert" className="text-sm text-destructive">
+            {listError.message}
+          </p>
+        ) : null}
         <DataTable
           aria-label="文章列表"
           items={rows}
