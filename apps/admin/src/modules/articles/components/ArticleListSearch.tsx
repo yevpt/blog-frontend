@@ -15,15 +15,17 @@ export function ArticleListSearch({
 }: ArticleListSearchProps) {
   const [isExpanded, setIsExpanded] = useState(value.trim().length > 0);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const shouldFocusSearchRef = useRef(false);
 
   useEffect(() => {
     if (value.trim().length > 0) setIsExpanded(true);
   }, [value]);
 
   useEffect(() => {
-    if (!isExpanded) return;
+    if (!isExpanded || !shouldFocusSearchRef.current) return;
 
     searchContainerRef.current?.querySelector<HTMLInputElement>("input")?.focus();
+    shouldFocusSearchRef.current = false;
   }, [isExpanded]);
 
   if (!isExpanded) {
@@ -32,7 +34,10 @@ export function ArticleListSearch({
         type="button"
         variant="outline"
         aria-label="展开搜索"
-        onPress={() => setIsExpanded(true)}
+        onPress={() => {
+          shouldFocusSearchRef.current = true;
+          setIsExpanded(true);
+        }}
         className="size-8 rounded-full border-border bg-background p-0 shadow-sm"
       >
         <SvgIcon name="search" size={15} />

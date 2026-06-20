@@ -22,12 +22,14 @@ describe("ArticleListSearch", () => {
     expect(input).toHaveFocus();
   });
 
-  it("输入内容时调用 onChange，且有值时直接保持展开", async () => {
+  it("有值时直接保持展开但不自动聚焦，输入内容时调用 onChange", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(<ArticleListSearch value="Vite" onChange={onChange} />);
 
     const input = screen.getByRole("searchbox", { name: "搜索标题或摘要" });
+    expect(input).not.toHaveFocus();
+
     await user.type(input, " 管理后台");
 
     expect(onChange).toHaveBeenCalled();
