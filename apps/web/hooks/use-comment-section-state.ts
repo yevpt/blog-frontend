@@ -7,7 +7,7 @@ import { useLoginModal } from "@/store/use-login-modal";
 import { useCommentList } from "@/hooks/use-comment-list";
 import { useCommentSubmit } from "@/hooks/use-comment-submit";
 import { useCommentLike } from "@/hooks/use-comment-like";
-import type { ReplyTarget } from "@/components/comments/comment-item";
+import type { ReplyTarget } from "@/components/comments/parts/comment-item";
 
 export type CommentSectionTargetType = "article" | "moment";
 

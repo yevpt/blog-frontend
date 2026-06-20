@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import type { CommentItemResp, CommentReplyResp } from "@repo/api";
-import type { ReplyTarget } from "@/components/comments/comment-item";
+import type { ReplyTarget } from "@/components/comments/parts/comment-item";
 import { useCommentSectionState } from "./use-comment-section-state";
 
 const mockOpenLoginModal = vi.fn();

@@ -1,4 +1,4 @@
-// apps/web/components/comments/comment-replies.tsx
+// apps/web/components/comments/parts/comment-replies.tsx
 "use client";
 
 import { memo, useState, useCallback, useEffect } from "react";

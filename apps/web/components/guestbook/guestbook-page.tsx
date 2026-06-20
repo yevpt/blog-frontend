@@ -9,7 +9,7 @@ import { useGuestbookSubmit } from "@/hooks/use-guestbook-submit";
 import { useGuestbookLike } from "@/hooks/use-guestbook-like";
 import { GuestbookList } from "./guestbook-list";
 import { GuestbookInputBar } from "./guestbook-input-bar";
-import type { ReplyTarget } from "@/components/comments/comment-replies";
+import type { ReplyTarget } from "@/components/comments/parts/comment-replies";
 import { PageContainer } from "@/components/common/page-container";
 
 interface GuestbookPageProps {

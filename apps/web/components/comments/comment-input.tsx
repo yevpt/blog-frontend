@@ -5,7 +5,7 @@ import { Button } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
-import type { ReplyTarget } from "./comment-item";
+import type { ReplyTarget } from "./parts/comment-item";
 
 interface CommentInputProps {
   value: string;

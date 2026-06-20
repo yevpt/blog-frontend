@@ -3,14 +3,14 @@
 import { useCallback, useState } from "react";
 import type { CommentReplyResp, GuestbookItemResp } from "@repo/api";
 import { cn } from "@repo/ui";
-import { CommentReplies } from "@/components/comments/comment-replies";
-import type { ReplyTarget } from "@/components/comments/comment-replies";
+import { CommentReplies } from "@/components/comments/parts/comment-replies";
+import type { ReplyTarget } from "@/components/comments/parts/comment-replies";
 import {
   getThreadDisplayName,
   ThreadCommentContent,
   ThreadCommentHeader,
   ThreadReplyIndent,
-} from "@/components/comments/thread-comment-item";
+} from "@/components/comments/parts/thread-comment-item";
 
 interface GuestbookItemProps {
   item: GuestbookItemResp;

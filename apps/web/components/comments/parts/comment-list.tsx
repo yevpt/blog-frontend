@@ -6,7 +6,7 @@ import type { TargetType } from "@/hooks/use-comment-like";
 import { CommentItem, type ReplyTarget } from "./comment-item";
 import { CommentListSkeleton } from "./comment-skeleton";
 
-export interface CommentListViewProps {
+export interface CommentListProps {
   comments: CommentItemResp[];
   isLoading: boolean;
   error: string | null;
@@ -18,7 +18,7 @@ export interface CommentListViewProps {
   onLoadMore: () => void;
 }
 
-export function CommentListView({
+export function CommentList({
   comments,
   isLoading,
   error,
@@ -28,7 +28,7 @@ export function CommentListView({
   onReply,
   onLike,
   onLoadMore,
-}: CommentListViewProps) {
+}: CommentListProps) {
   if (isLoading && comments.length === 0) {
     return <CommentListSkeleton />;
   }

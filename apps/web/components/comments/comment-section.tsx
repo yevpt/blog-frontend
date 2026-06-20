@@ -6,7 +6,7 @@ import { useLoginModal } from "@/store/use-login-modal";
 import { useCommentSectionState } from "@/hooks/use-comment-section-state";
 import { CommentInput } from "./comment-input";
 import { RichCommentInput } from "./rich-comment-input";
-import { CommentListView } from "./comment-list-view";
+import { CommentList } from "./parts/comment-list";
 
 type TargetType = "article" | "moment";
 
@@ -106,7 +106,7 @@ export function CommentSection({
   );
 
   const commentList = (
-    <CommentListView
+    <CommentList
       comments={comments}
       isLoading={isLoading}
       error={error}

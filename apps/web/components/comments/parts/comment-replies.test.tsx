@@ -107,7 +107,10 @@ describe("CommentReplies", () => {
   });
 
   it("回复分页不在组件内直接调用 fetch", () => {
-    const source = readFileSync(webSourcePath("components/comments/comment-replies.tsx"), "utf8");
+    const source = readFileSync(
+      webSourcePath("components/comments/parts/comment-replies.tsx"),
+      "utf8",
+    );
     expect(source).not.toContain("fetch(");
   });
 

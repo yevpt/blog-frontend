@@ -72,17 +72,17 @@ vi.mock("@/store/use-login-modal", () => ({
     return typeof selector === "function" ? selector(store) : store;
   },
 }));
-vi.mock("./comment-replies", () => ({
+vi.mock("./parts/comment-replies", () => ({
   CommentReplies: () => null,
 }));
-vi.mock("./comment-item", () => ({
+vi.mock("./parts/comment-item", () => ({
   CommentItem: ({ comment }: { comment: CommentItemResp }) => (
     <div data-testid="comment-item" data-comment-id={comment.id}>
       {comment.content}
     </div>
   ),
 }));
-vi.mock("./comment-skeleton", () => ({
+vi.mock("./parts/comment-skeleton", () => ({
   CommentListSkeleton: () => <div data-testid="comment-list-skeleton" />,
 }));
 
