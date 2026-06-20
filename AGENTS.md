@@ -22,3 +22,4 @@
 - 加后端请求 / 端点 / `*Req`·`*Resp` 类型 → `extending-api`
 - 写或跑测试、mock、环境坑 → `writing-tests`
 - 写 commit message → `git-commit`
+- 在 `apps/admin` 加/改页面或模块 → `building-admin-module`
