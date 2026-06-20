@@ -4,7 +4,7 @@ import { SvgSprite } from "@repo/icons";
 import { ToastRegion } from "@repo/ui";
 import { AuthGuard } from "./components/AuthGuard";
 import { AdminLayout } from "./components/layout/AdminLayout";
-import { LoginPage } from "./pages/LoginPage";
+import { LoginPage } from "./app/LoginPage";
 import { renderModuleRoutes } from "./app/routes";
 import { ThemeProvider } from "./providers/theme-provider";
 import { initSessionFromRefreshToken } from "./lib/session-init";
