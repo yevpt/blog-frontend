@@ -29,6 +29,10 @@ vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
 }));
 
+vi.mock("@/lib/format-time", () => ({
+  formatDateTime: () => "2022-01-03 20:56",
+}));
+
 vi.mock("./comment-replies", () => ({
   CommentReplies: (props: {
     replyCount: number;
@@ -82,11 +86,11 @@ describe("CommentItem", () => {
 
   it("显示点赞数和爱心图标", () => {
     render(<CommentItem comment={baseComment} targetType="article" />);
-    expect(screen.getByTestId("icon-heart")).toBeTruthy();
+    expect(screen.getByTestId("icon-heart-fill")).toBeTruthy();
     expect(screen.getByText("5")).toBeTruthy();
   });
 
-  it("is_liked=true 时爱心图标显示为实心", () => {
+  it("is_liked=true 时爱心仍为实心样式", () => {
     const liked = { ...baseComment, is_liked: true };
     render(<CommentItem comment={liked} targetType="article" />);
     expect(screen.getByTestId("icon-heart-fill")).toBeTruthy();
@@ -97,7 +101,7 @@ describe("CommentItem", () => {
     const onLike = vi.fn();
     render(<CommentItem comment={baseComment} targetType="article" onLike={onLike} />);
 
-    await user.click(screen.getByTestId("icon-heart").closest("button")!);
+    await user.click(screen.getByRole("button", { name: /点赞/ }));
     expect(onLike).toHaveBeenCalledWith(1);
   });
 

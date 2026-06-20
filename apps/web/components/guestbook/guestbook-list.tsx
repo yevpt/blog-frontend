@@ -10,23 +10,21 @@ import type { ReplyTarget } from "@/components/comments/comment-replies";
 function SkeletonItem() {
   return (
     <div className="animate-pulse py-4">
-      <div className="flex gap-2.5">
+      <div className="mb-2 flex gap-2.5">
         {/* 头像 */}
-        <div className="size-8 shrink-0 rounded-full bg-border" />
+        <div className="size-[30px] shrink-0 rounded-full bg-border" />
         <div className="flex-1 space-y-2">
           {/* 用户名 + 时间 */}
           <div className="flex items-center gap-2">
             <div className="h-3 w-20 rounded bg-border" />
             <div className="h-3 w-14 rounded bg-border" />
           </div>
-          {/* 内容行 */}
-          <div className="space-y-1.5">
-            <div className="h-3 w-full rounded bg-border" />
-            <div className="h-3 w-4/5 rounded bg-border" />
-          </div>
-          {/* 回复按钮占位 */}
-          <div className="h-3 w-8 rounded bg-border" />
         </div>
+      </div>
+      {/* 正文占满卡片宽度 */}
+      <div className="space-y-1.5">
+        <div className="h-3 w-full rounded bg-border" />
+        <div className="h-3 w-4/5 rounded bg-border" />
       </div>
     </div>
   );
@@ -100,8 +98,13 @@ export function GuestbookList({
         )}
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-center px-[18px] py-3">
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={onPageChange} />
+          <div className="px-[18px]">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={onPageChange}
+              className="pt-3 pb-3 md:pt-3"
+            />
           </div>
         )}
       </div>

@@ -25,7 +25,11 @@ const VARIANT_CLASSES: Record<"article" | "comment", string> = {
     "prose-p:my-0.5 prose-p:leading-relaxed",
     "prose-headings:text-sm prose-headings:font-semibold prose-headings:mt-2 prose-headings:mb-0.5",
     "prose-ul:my-1 prose-ol:my-1 prose-li:my-0",
-    "prose-blockquote:my-1 prose-pre:my-1 prose-code:text-xs",
+    "prose-blockquote:my-2 prose-code:text-xs",
+    // 代码块被 .md-code-wrapper 包裹，且内部 pre 被 base.css 用 margin:0!important 锁死，
+    // 故间距只能加在 wrapper 本身（仅评论紧凑模式需要，文章正文靠段落大边距已足够）。
+    // 首/尾代码块的外边距对齐段落（prose-p:my-0.5），否则会顶飞「回复」按钮造成上下间距失衡。
+    "[&_.md-code-wrapper]:my-2.5 [&_.md-code-wrapper:first-child]:mt-0.5 [&_.md-code-wrapper:last-child]:mb-0.5",
     "prose-img:max-w-[240px] prose-img:rounded-md",
     "prose-pre:bg-[var(--editor-code-bg)] prose-pre:text-[var(--editor-code-fg)]",
     "prose-pre:border prose-pre:border-[var(--color-border)] prose-pre:rounded-lg",

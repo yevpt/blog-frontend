@@ -28,7 +28,9 @@ vi.mock("@repo/markdown", () => ({
 }));
 
 vi.mock("@repo/icons", () => ({
-  SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
+  SvgIcon: ({ name, className }: { name: string; className?: string }) => (
+    <span data-testid={`icon-${name}`} className={className} />
+  ),
 }));
 
 vi.mock("@/app/providers/session-provider", () => ({
@@ -48,8 +50,17 @@ vi.mock("@/hooks/use-comment-like", () => ({
   }),
 }));
 
+vi.mock("@/lib/format-time", () => ({
+  formatRelativeTime: () => "5 分钟前",
+  formatDateTime: () => "2026-06-17 13:19",
+}));
+
 vi.mock("@/components/common/user-avatar", () => ({
-  UserAvatar: ({ name }: { name: string }) => <span data-testid="user-avatar">{name}</span>,
+  UserAvatar: ({ name, src }: { name: string; src?: string }) => (
+    <span data-testid="user-avatar" data-src={src ?? ""}>
+      {name}
+    </span>
+  ),
 }));
 
 function makeReply(id: number, overrides?: Partial<CommentReplyResp>): CommentReplyResp {
@@ -172,8 +183,23 @@ describe("CommentReplies", () => {
     await user.click(screen.getByText(/展开 1 条回复/));
     await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
 
-    expect(screen.getByTestId("icon-heart")).toBeTruthy();
+    expect(screen.getByTestId("icon-heart-fill")).toBeTruthy();
     expect(screen.getByText("3")).toBeTruthy();
+  });
+
+  it("回复项点赞图标有心跳动效", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
+
+    const { container } = render(
+      <CommentReplies commentId={1} targetType="guestbook" replyCount={1} onReply={vi.fn()} />,
+    );
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+
+    expect(
+      container.querySelector(".animate-\\[heartbeat_3s_ease-in-out_infinite\\]"),
+    ).toBeTruthy();
   });
 
   it("点击回复点赞按钮调用 toggleReplyLike 并更新状态", async () => {
@@ -244,6 +270,104 @@ describe("CommentReplies", () => {
     await waitFor(() => expect(screen.getByText("加载中")).toBeTruthy());
   });
 
+  it("加载更多回复时复用同一用户已知头像", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch)
+      .mockResolvedValueOnce(
+        jsonResponse({
+          total: 2,
+          pages: 2,
+          page: 1,
+          page_size: 5,
+          list: [
+            makeReply(1, {
+              from_user: {
+                id: 7,
+                username: "vpt",
+                nickname: "Vpt1",
+                avatar_url: "https://blog-oss.yevpt.com/avatars/vpt.png",
+              },
+            }),
+          ],
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          total: 2,
+          pages: 2,
+          page: 2,
+          page_size: 5,
+          list: [
+            makeReply(2, {
+              from_user: { id: 7, username: "vpt", nickname: "Vpt1" },
+            }),
+          ],
+        }),
+      );
+
+    render(<CommentReplies commentId={1} targetType="article" replyCount={2} onReply={vi.fn()} />);
+    await user.click(screen.getByText(/展开 2 条回复/));
+    await waitFor(() => expect(screen.getByText("查看更多回复")).toBeTruthy());
+
+    await user.click(screen.getByText("查看更多回复"));
+    await waitFor(() => expect(screen.getByText("回复 2")).toBeTruthy());
+
+    const avatars = screen.getAllByTestId("user-avatar");
+    expect(avatars.map((avatar) => avatar.getAttribute("data-src"))).toEqual([
+      "https://blog-oss.yevpt.com/avatars/vpt.png",
+      "https://blog-oss.yevpt.com/avatars/vpt.png",
+    ]);
+  });
+
+  it("不同回复块之间复用同一用户已知头像", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch)
+      .mockResolvedValueOnce(
+        jsonResponse(
+          mockPage([
+            makeReply(1, {
+              from_user: {
+                id: 77,
+                username: "vpt-cross",
+                nickname: "Vpt1",
+                avatar_url: "https://blog-oss.yevpt.com/avatars/vpt-cross.png",
+              },
+            }),
+          ]),
+        ),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse(
+          mockPage([
+            makeReply(2, {
+              comment_id: 2,
+              from_user: { id: 77, username: "vpt-cross", nickname: "Vpt1" },
+            }),
+          ]),
+        ),
+      );
+
+    render(
+      <>
+        <CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />
+        <CommentReplies commentId={2} targetType="article" replyCount={1} onReply={vi.fn()} />
+      </>,
+    );
+
+    const expandButtons = screen.getAllByText(/展开 1 条回复/);
+    await user.click(expandButtons[0]);
+    await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+
+    await user.click(expandButtons[1]);
+    await waitFor(() => expect(screen.getByText("回复 2")).toBeTruthy());
+
+    const avatars = screen.getAllByTestId("user-avatar");
+    expect(avatars.map((avatar) => avatar.getAttribute("data-src"))).toEqual([
+      "https://blog-oss.yevpt.com/avatars/vpt-cross.png",
+      "https://blog-oss.yevpt.com/avatars/vpt-cross.png",
+    ]);
+  });
+
   it("is_liked=true 时回复爱心为实心", async () => {
     vi.mocked(global.fetch).mockResolvedValue(
       jsonResponse(mockPage([makeReply(1, { is_liked: true })])),
@@ -263,6 +387,41 @@ describe("CommentReplies", () => {
     );
     await user.click(screen.getByText(/展开 1 条回复/));
     await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+  });
+
+  it("回复布局与留言板一致", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch).mockResolvedValue(
+      jsonResponse(mockPage([makeReply(1, { like_count: 0 })])),
+    );
+
+    render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />);
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+
+    expect(screen.getByText("2026-06-17 13:19")).toBeTruthy();
+    expect(screen.getByTestId("like-count").textContent).toBe("0");
+    expect(screen.getByTestId("icon-heart-fill")).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: "回复" })).toHaveLength(1);
+  });
+
+  it("targetType=guestbook 时点击回复按钮触发 onReply", async () => {
+    const user = userEvent.setup();
+    const onReply = vi.fn();
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
+
+    render(
+      <CommentReplies commentId={1} targetType="guestbook" replyCount={1} onReply={onReply} />,
+    );
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => screen.getByText("回复 1"));
+    await user.click(screen.getByRole("button", { name: "回复" }));
+
+    expect(onReply).toHaveBeenCalledWith({
+      commentId: 1,
+      parentReplyId: 1,
+      toUsername: "Alice",
+    });
   });
 
   it("targetType=guestbook 时 fetch URL 包含 guestbook 路径", async () => {

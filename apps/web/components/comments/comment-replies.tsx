@@ -1,20 +1,15 @@
 // apps/web/components/comments/comment-replies.tsx
 "use client";
 
-import { memo, useState, useCallback, useMemo } from "react";
-import Link from "next/link";
-import { Button, cn } from "@repo/ui";
-import { SvgIcon } from "@repo/icons";
-import type { CommentReplyResp, CommentReplyPageResp } from "@repo/api";
+import { memo, useState, useCallback, useEffect } from "react";
+import { Button } from "@repo/ui";
+import type { CommentReplyResp, CommentReplyPageResp, CommentUserResp } from "@repo/api";
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
 import { useCommentLike } from "@/hooks/use-comment-like";
-import { formatRelativeTime } from "@/lib/format-time";
 import { apiJson } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
-import { UserAvatar } from "@/components/common/user-avatar";
-import { markdownToHtmlSync } from "@repo/markdown";
-import { PreviewableMarkdown } from "@/components/common/previewable-markdown";
+import { ThreadReplyItem } from "./thread-comment-item";
 import type { ReplyTarget } from "./comment-item";
 
 export type { ReplyTarget };
@@ -23,9 +18,48 @@ const PAGE_SIZE = 5;
 
 export type TargetType = "article" | "moment" | "guestbook";
 
-function getDisplayName(user: { username: string; nickname?: string } | undefined): string {
-  if (!user) return "匿名";
-  return user.nickname ?? user.username;
+// 后端分页偶尔漏掉 avatar_url，同一会话内按用户复用已知头像。
+const replyAvatarByUser = new Map<string, string>();
+
+function commentUserKey(user: CommentUserResp | undefined): string | null {
+  if (!user) return null;
+  if (typeof user.id === "number") return `id:${user.id}`;
+  return user.username ? `username:${user.username}` : null;
+}
+
+function hydrateUserAvatar(
+  user: CommentUserResp | undefined,
+  avatarByUser: Map<string, string>,
+): CommentUserResp | undefined {
+  const key = commentUserKey(user);
+  if (!user || !key) return user;
+
+  const cachedAvatar = avatarByUser.get(key) ?? replyAvatarByUser.get(key);
+  if (user.avatar_url) return user;
+  return cachedAvatar ? { ...user, avatar_url: cachedAvatar } : user;
+}
+
+function rememberUserAvatar(user: CommentUserResp | undefined, avatarByUser: Map<string, string>) {
+  const key = commentUserKey(user);
+  if (key && user?.avatar_url) {
+    avatarByUser.set(key, user.avatar_url);
+    replyAvatarByUser.set(key, user.avatar_url);
+  }
+}
+
+function hydrateReplyAvatars(replies: CommentReplyResp[]): CommentReplyResp[] {
+  const avatarByUser = new Map(replyAvatarByUser);
+
+  for (const reply of replies) {
+    rememberUserAvatar(reply.from_user, avatarByUser);
+    rememberUserAvatar(reply.to_user, avatarByUser);
+  }
+
+  return replies.map((reply) => ({
+    ...reply,
+    from_user: hydrateUserAvatar(reply.from_user, avatarByUser),
+    to_user: hydrateUserAvatar(reply.to_user, avatarByUser),
+  }));
 }
 
 function replyUrl(targetType: TargetType, commentId: number, page: number): string {
@@ -39,17 +73,13 @@ function replyUrl(targetType: TargetType, commentId: number, page: number): stri
   return `${base}?${qs}`;
 }
 
-function ReplyBody({ content }: { content: string }) {
-  const html = useMemo(() => markdownToHtmlSync(content), [content]);
-  return <PreviewableMarkdown html={html} variant="comment" />;
-}
-
 interface ReplyItemProps {
   reply: CommentReplyResp;
   commentId: number;
   targetType: TargetType;
   onReply?: (target: ReplyTarget) => void;
   onLikeResult?: (replyId: number, isLiked: boolean, likeCount: number) => void;
+  linkProfile?: boolean;
 }
 
 const ReplyItem = memo(function ReplyItem({
@@ -58,15 +88,11 @@ const ReplyItem = memo(function ReplyItem({
   targetType,
   onReply,
   onLikeResult,
+  linkProfile = false,
 }: ReplyItemProps) {
   const { userId } = useSession();
-  // selector 写法：仅订阅 open 函数，modal 开关时不触发重渲
   const openLoginModal = useLoginModal((s) => s.open);
   const { toggleReplyLike } = useCommentLike(targetType);
-
-  const fromName = getDisplayName(reply.from_user);
-  const toName = reply.to_user ? getDisplayName(reply.to_user) : null;
-  const time = formatRelativeTime(new Date(reply.created_at));
 
   const handleLike = useCallback(async () => {
     if (!userId) {
@@ -80,77 +106,22 @@ const ReplyItem = memo(function ReplyItem({
   }, [userId, openLoginModal, toggleReplyLike, commentId, reply.id, onLikeResult]);
 
   const handleReply = useCallback(() => {
+    const fromName = reply.from_user?.nickname ?? reply.from_user?.username ?? "匿名";
     onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName });
-  }, [onReply, commentId, reply.id, fromName]);
+  }, [onReply, commentId, reply.id, reply.from_user]);
 
   return (
-    <div className="flex gap-2 [animation:replyFadeIn_0.2s_ease-out_both]">
-      {reply.from_user ? (
-        <Link href={`/users/${reply.from_user.id}`} className="shrink-0">
-          <UserAvatar src={reply.from_user.avatar_url} name={fromName} size="sm" />
-        </Link>
-      ) : (
-        <UserAvatar src={undefined} name={fromName} size="sm" />
-      )}
-      <div className="min-w-0 flex-1">
-        <div className="mb-1 flex items-center gap-2">
-          {reply.from_user ? (
-            <Link
-              href={`/users/${reply.from_user.id}`}
-              className="text-xs font-bold text-foreground "
-            >
-              {fromName}
-            </Link>
-          ) : (
-            <span className="text-xs font-bold text-foreground">{fromName}</span>
-          )}
-          <span className="text-[11px] text-(--fg3)">{time}</span>
-        </div>
-        <div className="relative">
-          <div className="min-w-0 pr-7.5 text-[13px] leading-[1.65] text-(--fg2)">
-            {toName &&
-              (reply.to_user ? (
-                <Link
-                  href={`/users/${reply.to_user.id}`}
-                  className="mr-1 text-[11px] font-semibold text-primary "
-                >
-                  @{toName}
-                </Link>
-              ) : (
-                <span className="mr-1 text-[11px] font-semibold text-primary">@{toName}</span>
-              ))}
-            <ReplyBody content={reply.content} />
-          </div>
-          <Button
-            variant="text"
-            type="button"
-            onClick={handleLike}
-            aria-label={reply.is_liked ? "取消点赞" : "点赞"}
-            className={cn(
-              "absolute top-0 right-1.75 flex shrink-0 flex-col items-center gap-0.5 self-start pt-0.5",
-              reply.is_liked ? "text-red-500 hover:text-red-500" : "text-foreground/40",
-            )}
-          >
-            <SvgIcon name={reply.is_liked ? "heart-fill" : "heart"} size={14} />
-            {reply.like_count > 0 && (
-              <span
-                className={`text-[10px] font-medium ${reply.is_liked ? "text-red-500" : "text-(--fg3)"}`}
-              >
-                {reply.like_count}
-              </span>
-            )}
-          </Button>
-        </div>
-        <Button
-          type="button"
-          variant="text"
-          onPress={handleReply}
-          className="mt-3 text-[11px] font-medium text-(--fg3) transition-colors hover:text-foreground"
-        >
-          回复
-        </Button>
-      </div>
-    </div>
+    <ThreadReplyItem
+      user={reply.from_user}
+      createdAt={reply.created_at}
+      content={reply.content}
+      mentionUser={reply.to_user}
+      likeCount={reply.like_count}
+      isLiked={reply.is_liked}
+      onLike={() => void handleLike()}
+      onReply={onReply ? handleReply : undefined}
+      linkProfile={linkProfile}
+    />
   );
 });
 
@@ -160,6 +131,8 @@ export interface CommentRepliesProps {
   replyCount: number;
   pendingReply?: CommentReplyResp | null;
   onReply: (target: ReplyTarget) => void;
+  onOpenChange?: (open: boolean) => void;
+  linkProfile?: boolean;
 }
 
 export const CommentReplies = memo(function CommentReplies({
@@ -168,6 +141,8 @@ export const CommentReplies = memo(function CommentReplies({
   replyCount,
   pendingReply,
   onReply,
+  onOpenChange,
+  linkProfile = targetType !== "guestbook",
 }: CommentRepliesProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [replies, setReplies] = useState<CommentReplyResp[]>([]);
@@ -176,13 +151,17 @@ export const CommentReplies = memo(function CommentReplies({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    onOpenChange?.(isOpen);
+  }, [isOpen, onOpenChange]);
+
   const fetchReplies = useCallback(
     async (pageNum: number, append: boolean) => {
       setIsLoading(true);
       setError(null);
       try {
         const data = await apiJson<CommentReplyPageResp>(replyUrl(targetType, commentId, pageNum));
-        setReplies((prev) => (append ? [...prev, ...data.list] : data.list));
+        setReplies((prev) => hydrateReplyAvatars(append ? [...prev, ...data.list] : data.list));
         setPage(pageNum);
         setHasMore(pageNum < data.pages);
         if (!append) setIsOpen(true);
@@ -216,20 +195,20 @@ export const CommentReplies = memo(function CommentReplies({
 
   if (replyCount <= 0) return null;
 
-  const displayReplies = pendingReply
-    ? [...replies.filter((r) => r.id !== pendingReply.id), pendingReply]
-    : replies;
+  const displayReplies = hydrateReplyAvatars(
+    pendingReply ? [...replies.filter((r) => r.id !== pendingReply.id), pendingReply] : replies,
+  );
 
   if (!isOpen) {
     return (
-      <div className="mt-3">
+      <div>
         <Button
           variant="text"
-          onClick={handleToggle}
+          onPress={handleToggle}
           isDisabled={isLoading}
-          className="flex items-center gap-1.5 text-xs text-(--fg2) transition-colors"
+          className="flex h-auto min-h-0 items-center gap-1.5 p-0 text-xs leading-none text-(--fg2) transition-colors"
         >
-          <div className="h-px w-4 bg-accent-foreground/15"></div>
+          <div className="h-px w-4 bg-accent-foreground/15" />
           {isLoading ? (
             <>
               <span className="inline-block size-3 animate-spin rounded-full border-[1.5px] border-current border-t-transparent" />
@@ -245,8 +224,8 @@ export const CommentReplies = memo(function CommentReplies({
   }
 
   return (
-    <div className="mt-3">
-      <div className="flex flex-col gap-3">
+    <div>
+      <div className="flex flex-col gap-4">
         {displayReplies.map((reply) => (
           <ReplyItem
             key={reply.id}
@@ -255,13 +234,14 @@ export const CommentReplies = memo(function CommentReplies({
             targetType={targetType}
             onReply={onReply}
             onLikeResult={updateReplyLike}
+            linkProfile={linkProfile}
           />
         ))}
       </div>
 
       {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
 
-      <div className="mt-2 flex gap-3">
+      <div className="mt-3 flex gap-3">
         {hasMore && (
           <Button
             variant="text"

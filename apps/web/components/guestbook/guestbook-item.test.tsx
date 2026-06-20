@@ -21,7 +21,7 @@ vi.mock("@/components/common/user-avatar", () => ({
 }));
 
 vi.mock("@/lib/format-time", () => ({
-  formatRelativeTime: () => "刚刚",
+  formatDateTime: () => "2020-04-17 15:54",
 }));
 
 const mockItem: GuestbookItemResp = {
@@ -49,6 +49,11 @@ describe("GuestbookItem", () => {
     expect(screen.getByText("3")).toBeTruthy();
   });
 
+  it("like_count 为 0 时显示 0", () => {
+    render(<GuestbookItem item={{ ...mockItem, like_count: 0 }} />);
+    expect(screen.getByTestId("like-count").textContent).toBe("0");
+  });
+
   it("点击点赞按钮调用 onLike", async () => {
     const onLike = vi.fn();
     render(<GuestbookItem item={mockItem} onLike={onLike} />);
@@ -63,13 +68,57 @@ describe("GuestbookItem", () => {
     expect(onReply).toHaveBeenCalledWith(expect.objectContaining({ commentId: 1 }));
   });
 
-  it("is_liked 时显示 heart-fill 图标", () => {
-    render(<GuestbookItem item={{ ...mockItem, is_liked: true }} />);
-    expect(screen.getByTestId("icon-heart-fill")).toBeTruthy();
+  it("无论是否点赞均有心跳动效", () => {
+    const { container, rerender } = render(
+      <GuestbookItem item={{ ...mockItem, is_liked: false }} />,
+    );
+    expect(
+      container.querySelector(".animate-\\[heartbeat_3s_ease-in-out_infinite\\]"),
+    ).toBeTruthy();
+
+    rerender(<GuestbookItem item={{ ...mockItem, is_liked: true }} />);
+    expect(
+      container.querySelector(".animate-\\[heartbeat_3s_ease-in-out_infinite\\]"),
+    ).toBeTruthy();
   });
 
-  it("有 mark 时显示身份标签", () => {
-    render(<GuestbookItem item={{ ...mockItem, user: { ...mockItem.user!, mark: "博主" } }} />);
-    expect(screen.getByText("博主")).toBeTruthy();
+  it("点赞与未点赞均使用 heart-fill 图标", () => {
+    const { rerender } = render(<GuestbookItem item={{ ...mockItem, is_liked: false }} />);
+    expect(screen.getByTestId("icon-heart-fill")).toBeTruthy();
+    expect(screen.queryByTestId("icon-heart")).toBeNull();
+
+    rerender(<GuestbookItem item={{ ...mockItem, is_liked: true }} />);
+    expect(screen.getByTestId("icon-heart-fill")).toBeTruthy();
+    expect(screen.queryByTestId("icon-heart")).toBeNull();
+  });
+
+  it("显示格式化的发布时间", () => {
+    render(<GuestbookItem item={mockItem} />);
+    expect(screen.getByText("2020-04-17 15:54")).toBeTruthy();
+  });
+
+  it("不显示用户身份标签和站点链接", () => {
+    render(
+      <GuestbookItem
+        item={{
+          ...mockItem,
+          user: { ...mockItem.user!, mark: "ADMIN", site: "https://blog.ncgame.cc/" },
+        }}
+      />,
+    );
+    expect(screen.queryByText("ADMIN")).toBeNull();
+    expect(screen.queryByText("blog.ncgame.cc/")).toBeNull();
+  });
+
+  it("无回复时使用 pb-2，有回复时使用 pb-5", () => {
+    const { container, rerender } = render(<GuestbookItem item={mockItem} />);
+    expect(container.firstElementChild?.className).toContain("pt-4");
+    expect(container.firstElementChild?.className).toContain("pb-2");
+    expect(container.firstElementChild?.className).not.toContain("pb-5");
+
+    rerender(<GuestbookItem item={{ ...mockItem, reply_count: 3 }} />);
+    expect(container.firstElementChild?.className).toContain("pt-4");
+    expect(container.firstElementChild?.className).toContain("pb-5");
+    expect(container.firstElementChild?.className).not.toContain("pb-2");
   });
 });
