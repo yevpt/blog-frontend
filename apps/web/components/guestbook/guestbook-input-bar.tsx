@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { RichCommentInput } from "@/components/comments/rich-comment-input";
+import { RichCommentInput } from "@/components/comments/inputs/rich-comment-input";
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
 import type { ReplyTarget } from "@/components/comments/parts/comment-replies";

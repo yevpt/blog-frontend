@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
-import { CommentInput } from "./comment-input";
+import { PillCommentInput } from "./pill-comment-input";
 
 vi.mock("@repo/ui", () => ({
   Button: ({
@@ -40,31 +40,31 @@ vi.mock("@/store/use-login-modal", () => ({
 
 import { useSession } from "@/app/providers/session-provider";
 
-describe("CommentInput（已登录）", () => {
+describe("PillCommentInput（已登录）", () => {
   beforeEach(() => {
     vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
   });
 
   it("渲染文本框", () => {
-    render(<CommentInput value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
+    render(<PillCommentInput value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
     expect(screen.getByPlaceholderText("写下你的评论...")).toBeTruthy();
   });
 
   it("value 为空时发送按钮不渲染", () => {
-    render(<CommentInput value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
+    render(<PillCommentInput value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
     // 设计要求：按钮仅在有内容时出现，空值时完全不渲染
     expect(screen.queryByTestId("icon-arrow-up")).toBeNull();
   });
 
   it("value 非空时发送按钮出现", () => {
-    render(<CommentInput value="有内容" onChange={vi.fn()} onSubmit={vi.fn()} />);
+    render(<PillCommentInput value="有内容" onChange={vi.fn()} onSubmit={vi.fn()} />);
     expect(screen.getByTestId("icon-arrow-up")).toBeTruthy();
   });
 
   it("value 非空时点击发送触发 onSubmit", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-    render(<CommentInput value="有内容" onChange={vi.fn()} onSubmit={onSubmit} />);
+    render(<PillCommentInput value="有内容" onChange={vi.fn()} onSubmit={onSubmit} />);
 
     await user.click(screen.getByTestId("icon-arrow-up").closest("button")!);
 
@@ -73,7 +73,7 @@ describe("CommentInput（已登录）", () => {
 
   it("回复模式下显示正在回复 @用户名 和取消按钮", () => {
     render(
-      <CommentInput
+      <PillCommentInput
         value=""
         onChange={vi.fn()}
         onSubmit={vi.fn()}
@@ -89,7 +89,7 @@ describe("CommentInput（已登录）", () => {
 
   it("回复模式下 placeholder 变为「写下你的回复...」", () => {
     render(
-      <CommentInput
+      <PillCommentInput
         value=""
         onChange={vi.fn()}
         onSubmit={vi.fn()}
@@ -103,7 +103,7 @@ describe("CommentInput（已登录）", () => {
 
   it("submitError 非空时显示错误信息", () => {
     render(
-      <CommentInput
+      <PillCommentInput
         value=""
         onChange={vi.fn()}
         onSubmit={vi.fn()}
@@ -115,20 +115,20 @@ describe("CommentInput（已登录）", () => {
   });
 
   it("isSubmitting 时发送按钮禁用", () => {
-    render(<CommentInput value="内容" onChange={vi.fn()} onSubmit={vi.fn()} isSubmitting />);
+    render(<PillCommentInput value="内容" onChange={vi.fn()} onSubmit={vi.fn()} isSubmitting />);
 
     const btn = screen.getByTestId("icon-arrow-up").closest("button");
     expect(btn?.disabled).toBe(true);
   });
 });
 
-describe("CommentInput（未登录）", () => {
+describe("PillCommentInput（未登录）", () => {
   beforeEach(() => {
     vi.mocked(useSession).mockReturnValue({ userId: null, profile: null });
   });
 
   it("未登录时显示登录提示 pill，不显示输入框", () => {
-    render(<CommentInput value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
+    render(<PillCommentInput value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
 
     expect(screen.getByText("请先登录，参与评论")).toBeTruthy();
     expect(screen.queryByPlaceholderText("写下你的评论...")).toBeNull();

@@ -4,8 +4,8 @@
 import { useCallback, useRef, useLayoutEffect, type RefObject } from "react";
 import { useLoginModal } from "@/store/use-login-modal";
 import { useCommentSectionState } from "@/hooks/use-comment-section-state";
-import { CommentInput } from "./comment-input";
-import { RichCommentInput } from "./rich-comment-input";
+import { PillCommentInput } from "./inputs/pill-comment-input";
+import { RichCommentInput } from "./inputs/rich-comment-input";
 import { CommentList } from "./parts/comment-list";
 
 type TargetType = "article" | "moment";
@@ -120,7 +120,7 @@ export function CommentSection({
   );
 
   const input = (
-    <CommentInput
+    <PillCommentInput
       value={content}
       onChange={setContent}
       onSubmit={handleSubmit}

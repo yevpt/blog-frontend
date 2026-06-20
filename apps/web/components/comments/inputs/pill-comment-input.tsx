@@ -1,11 +1,11 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { Button } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
-import type { ReplyTarget } from "./parts/comment-item";
+import type { ReplyTarget } from "../parts/comment-item";
+import { ReplyBanner } from "./reply-banner";
 
 interface CommentInputProps {
   value: string;
@@ -17,7 +17,7 @@ interface CommentInputProps {
   submitError?: string | null;
 }
 
-export function CommentInput({
+export function PillCommentInput({
   value,
   onChange,
   onSubmit,
@@ -54,20 +54,7 @@ export function CommentInput({
   // 已登录：回复提示行 + 输入 pill（↑ 按钮嵌入式）
   return (
     <div className="flex shrink-0 flex-col gap-2 border-t border-border px-[18px] py-3 pb-4">
-      {replyTarget && (
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-(--fg3)">正在回复</span>
-          <span className="font-semibold text-primary">@{replyTarget.toUsername}</span>
-          <Button
-            type="button"
-            variant="ghost"
-            onPress={onCancelReply}
-            className="h-auto p-0 text-[11px] text-(--fg3) hover:text-foreground"
-          >
-            取消
-          </Button>
-        </div>
-      )}
+      {replyTarget && <ReplyBanner toUsername={replyTarget.toUsername} onCancel={onCancelReply} />}
       <div className="relative flex items-center">
         <input
           ref={inputRef}
