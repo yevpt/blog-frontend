@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { CommentSection } from "@/components/comments";
+import { InlineComments } from "@/components/comments";
 
 interface ArticleCommentsProps {
   articleId: number;
@@ -24,10 +24,9 @@ export function ArticleComments({ articleId, commentCount: initialCount }: Artic
         评论{" "}
         <span className="ml-1 text-sm font-normal text-muted-foreground">{commentCount} 条</span>
       </h2>
-      <CommentSection
+      <InlineComments
         targetType="article"
         targetId={articleId}
-        layout="inline"
         onCommentAdded={handleCommentAdded}
       />
     </section>

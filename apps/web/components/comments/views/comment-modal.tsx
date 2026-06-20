@@ -5,7 +5,7 @@ import type { CSSProperties, RefObject } from "react";
 import { SvgIcon } from "@repo/icons";
 import { Modal, cn } from "@repo/ui";
 import { useSheetGesture } from "@/hooks/use-sheet-gesture";
-import { CommentSection } from "./comment-section";
+import { ModalComments } from "./modal-comments";
 
 type TargetType = "article" | "moment";
 
@@ -132,10 +132,9 @@ function CommentDialog({ targetType, targetId, onClose, onCommentAdded }: Commen
               <SvgIcon name="close" size={16} />
             </button>
           </header>
-          <CommentSection
+          <ModalComments
             targetType={targetType}
             targetId={targetId}
-            layout="modal"
             onCommentAdded={onCommentAdded}
             onContentResize={measurePanelHeight}
           />
@@ -227,10 +226,9 @@ function CommentSheet({ targetType, targetId, onClose, onCommentAdded }: Comment
               <SvgIcon name="close" size={16} />
             </button>
           </header>
-          <CommentSection
+          <ModalComments
             targetType={targetType}
             targetId={targetId}
-            layout="modal"
             scrollRef={scrollRef}
             onCommentAdded={onCommentAdded}
           />
@@ -242,7 +240,7 @@ function CommentSheet({ targetType, targetId, onClose, onCommentAdded }: Comment
 
 // ── Export: switch between desktop and mobile ────────────────────────────
 export function CommentModal(props: CommentModalProps) {
-  // 弹窗打开时锁定布局，避免媒体查询初始值抖动导致 Sheet/Dialog 切换、重复挂载 CommentSection
+  // 弹窗打开时锁定布局，避免媒体查询初始值抖动导致 Sheet/Dialog 切换、重复挂载 ModalComments
   const [isDesktop] = useState(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
       return false;

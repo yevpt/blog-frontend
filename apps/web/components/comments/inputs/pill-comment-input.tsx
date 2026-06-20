@@ -7,7 +7,7 @@ import { useLoginModal } from "@/store/use-login-modal";
 import type { ReplyTarget } from "../parts/comment-item";
 import { ReplyBanner } from "./reply-banner";
 
-interface CommentInputProps {
+interface PillCommentInputProps {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
@@ -25,7 +25,7 @@ export function PillCommentInput({
   onCancelReply,
   isSubmitting = false,
   submitError,
-}: CommentInputProps) {
+}: PillCommentInputProps) {
   const { userId } = useSession();
   const openLogin = useLoginModal((s) => s.open);
   const inputRef = useRef<HTMLInputElement>(null);

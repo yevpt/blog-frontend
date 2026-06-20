@@ -3,7 +3,7 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import type { CommentItemResp, CommentPageResp } from "@repo/api";
-import { CommentSection } from "./comment-section";
+import { ModalComments } from "./modal-comments";
 
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
@@ -72,17 +72,17 @@ vi.mock("@/store/use-login-modal", () => ({
     return typeof selector === "function" ? selector(store) : store;
   },
 }));
-vi.mock("./parts/comment-replies", () => ({
+vi.mock("../parts/comment-replies", () => ({
   CommentReplies: () => null,
 }));
-vi.mock("./parts/comment-item", () => ({
+vi.mock("../parts/comment-item", () => ({
   CommentItem: ({ comment }: { comment: CommentItemResp }) => (
     <div data-testid="comment-item" data-comment-id={comment.id}>
       {comment.content}
     </div>
   ),
 }));
-vi.mock("./parts/comment-skeleton", () => ({
+vi.mock("../parts/comment-skeleton", () => ({
   CommentListSkeleton: () => <div data-testid="comment-list-skeleton" />,
 }));
 
@@ -111,7 +111,7 @@ function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status });
 }
 
-describe("CommentSection", () => {
+describe("ModalComments", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     global.fetch = vi
@@ -119,53 +119,48 @@ describe("CommentSection", () => {
       .mockResolvedValue(jsonResponse(mockPage([makeComment(1), makeComment(2)])));
   });
 
-  it("modal layout：加载并渲染评论列表", async () => {
-    render(<CommentSection targetType="article" targetId={1} layout="modal" />);
+  it("加载并渲染评论列表", async () => {
+    render(<ModalComments targetType="article" targetId={1} />);
     await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
     expect(screen.getByText("评论内容 2")).toBeTruthy();
-  });
-
-  it("inline layout：评论列表仍然渲染", async () => {
-    render(<CommentSection targetType="article" targetId={1} layout="inline" />);
-    await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
   });
 
   it("moment targetType 正常工作", async () => {
     vi.mocked(global.fetch).mockResolvedValue(
       jsonResponse(mockPage([makeComment(1, { target_type: "moment" })])),
     );
-    render(<CommentSection targetType="moment" targetId={5} />);
+    render(<ModalComments targetType="moment" targetId={5} />);
     await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
   });
 
   it("暂无评论时显示提示文案", async () => {
     vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([])));
-    render(<CommentSection targetType="article" targetId={1} />);
+    render(<ModalComments targetType="article" targetId={1} />);
     await waitFor(() => expect(screen.getByText(/暂无评论/)).toBeTruthy());
   });
 
   it("加载中时显示骨架屏", () => {
     vi.mocked(global.fetch).mockImplementation(() => new Promise(() => {}));
-    render(<CommentSection targetType="article" targetId={1} />);
+    render(<ModalComments targetType="article" targetId={1} />);
     expect(screen.getByTestId("comment-list-skeleton")).toBeTruthy();
   });
 
   it("hasMore 时显示「查看更多评论」按钮", async () => {
     vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeComment(1)], 3)));
 
-    render(<CommentSection targetType="article" targetId={1} />);
+    render(<ModalComments targetType="article" targetId={1} />);
     await waitFor(() => expect(screen.getByText("查看更多评论")).toBeTruthy());
   });
 
   it("无更多时不显示「查看更多评论」", async () => {
     vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeComment(1)], 1)));
 
-    render(<CommentSection targetType="article" targetId={1} />);
+    render(<ModalComments targetType="article" targetId={1} />);
     await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
     expect(screen.queryByText("查看更多评论")).toBeNull();
   });
 
-  it("modal layout：滚动区域尺寸变化时触发 onContentResize", async () => {
+  it("滚动区域尺寸变化时触发 onContentResize", async () => {
     const onContentResize = vi.fn();
     // eslint-disable-next-line no-undef -- TS global type not a runtime var
     const callbacks: Array<ResizeObserverCallback> = [];
@@ -182,14 +177,7 @@ describe("CommentSection", () => {
     const originalRO = window.ResizeObserver;
     window.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
-    render(
-      <CommentSection
-        targetType="article"
-        targetId={1}
-        layout="modal"
-        onContentResize={onContentResize}
-      />,
-    );
+    render(<ModalComments targetType="article" targetId={1} onContentResize={onContentResize} />);
     await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
 
     // useLayoutEffect 在加载完成后会触发一次

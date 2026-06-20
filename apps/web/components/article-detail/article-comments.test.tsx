@@ -4,22 +4,19 @@ import userEvent from "@testing-library/user-event";
 import { ArticleComments } from "./article-comments";
 
 vi.mock("@/components/comments", () => ({
-  CommentSection: ({
+  InlineComments: ({
     targetId,
     targetType,
-    layout,
     onCommentAdded,
   }: {
     targetId: number;
     targetType: string;
-    layout?: string;
     onCommentAdded?: () => void;
   }) => (
     <div
       data-testid="comment-section"
       data-target-id={String(targetId)}
       data-target-type={targetType}
-      data-layout={layout}
     >
       <button data-testid="trigger-comment-added" onClick={onCommentAdded}>
         模拟添加评论
@@ -40,10 +37,9 @@ describe("ArticleComments", () => {
     expect(container.querySelector("#article-comments")).toBeInTheDocument();
   });
 
-  it("向 CommentSection 传入正确的 targetId 和 targetType", () => {
+  it("向 InlineComments 传入正确的 targetId 和 targetType", () => {
     render(<ArticleComments articleId={42} commentCount={7} />);
     const section = screen.getByTestId("comment-section");
-    expect(section.dataset.layout).toBe("inline");
     expect(section).toHaveAttribute("data-target-id", "42");
     expect(section).toHaveAttribute("data-target-type", "article");
   });
