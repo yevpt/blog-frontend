@@ -5,14 +5,7 @@ import { ToastRegion } from "@repo/ui";
 import { AuthGuard } from "./components/AuthGuard";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { LoginPage } from "./pages/LoginPage";
-import { DashboardPage } from "./modules/dashboard/DashboardPage";
-import { ArticlesPage } from "./modules/articles";
-import { ArticleEditorPage } from "./modules/articles/ArticleEditorPage";
-import { PinnedArticlesPage } from "./modules/articles/PinnedArticlesPage";
-import { CategoriesPage } from "./modules/categories/CategoriesPage";
-import { TagsPage } from "./modules/tags/TagsPage";
-import { MusicPage } from "./modules/music/MusicPage";
-import { LinksPage } from "./modules/links/LinksPage";
+import { renderModuleRoutes } from "./app/routes";
 import { ThemeProvider } from "./providers/theme-provider";
 import { initSessionFromRefreshToken } from "./lib/session-init";
 import { toastQueue } from "./lib/toast";
@@ -63,17 +56,7 @@ export default function App() {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route element={<AuthGuard />}>
-                <Route element={<AdminLayout />}>
-                  <Route index element={<DashboardPage />} />
-                  <Route path="/articles" element={<ArticlesPage />} />
-                  <Route path="/articles/new" element={<ArticleEditorPage />} />
-                  <Route path="/articles/pinned" element={<PinnedArticlesPage />} />
-                  <Route path="/articles/:articleId/edit" element={<ArticleEditorPage />} />
-                  <Route path="/categories" element={<CategoriesPage />} />
-                  <Route path="/tags" element={<TagsPage />} />
-                  <Route path="/music" element={<MusicPage />} />
-                  <Route path="/links" element={<LinksPage />} />
-                </Route>
+                <Route element={<AdminLayout />}>{renderModuleRoutes()}</Route>
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

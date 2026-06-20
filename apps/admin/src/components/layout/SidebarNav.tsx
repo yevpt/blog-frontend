@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { SvgIcon } from "@repo/icons";
 import { Tooltip, cn } from "@repo/ui";
-import { adminNavItems } from "../../config/nav";
+import { adminNavItems } from "../../config/modules";
 
 interface SidebarNavProps {
   isCollapsed: boolean;

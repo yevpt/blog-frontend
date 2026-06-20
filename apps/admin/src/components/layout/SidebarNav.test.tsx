@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { SidebarNav } from "./SidebarNav";
-import { adminNavItems } from "../../config/nav";
+import { adminNavItems } from "../../config/modules";
 
 describe("SidebarNav", () => {
   it("渲染全部后台菜单项", () => {
