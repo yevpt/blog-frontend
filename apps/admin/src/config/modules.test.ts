@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adminModules, adminNavItems, adminRoutes, getNavItemByPath } from "./modules";
+import { adminNavItems, adminRoutes, getNavItemByPath } from "./modules";
 
 describe("admin 模块注册表", () => {
   it("nav 项仅来自带 nav 的模块，路径与顺序符合预期", () => {
@@ -41,7 +41,9 @@ describe("admin 模块注册表", () => {
     expect(getNavItemByPath("/not-exist")).toBe(adminNavItems[0]);
   });
 
-  it("注册表模块数量与导出的派生集合自洽", () => {
-    expect(adminModules.length).toBeGreaterThanOrEqual(adminNavItems.length);
+  it("路由唯一：无重复 path 且至多一个 index 路由（兜住 React key 策略）", () => {
+    const paths = adminRoutes.filter((route) => !route.index).map((route) => route.path);
+    expect(new Set(paths).size).toBe(paths.length);
+    expect(adminRoutes.filter((route) => route.index).length).toBe(1);
   });
 });
