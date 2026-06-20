@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { formatDate, formatRelativeTime } from "./format-time";
+import { formatDate, formatDateTime, formatRelativeTime } from "./format-time";
 
 describe("formatDate", () => {
   it("中文格式：六月 24, 2021", () => {
@@ -25,6 +25,16 @@ describe("formatDate", () => {
   it("接受字符串类型的日期", () => {
     expect(formatDate("2021-06-24T00:00:00", "zh")).toBe("六月 24, 2021");
     expect(formatDate("2025-12-26T00:00:00", "en")).toBe("December 26, 2025");
+  });
+});
+
+describe("formatDateTime", () => {
+  it("格式化为 YYYY-MM-DD HH:mm", () => {
+    expect(formatDateTime(new Date(2020, 3, 17, 15, 54))).toBe("2020-04-17 15:54");
+  });
+
+  it("接受字符串类型的日期", () => {
+    expect(formatDateTime("2020-04-17T15:54:00")).toBe("2020-04-17 15:54");
   });
 });
 

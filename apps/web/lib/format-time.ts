@@ -36,6 +36,17 @@ export function formatDate(date: Date | string, locale: Locale): string {
   return `${month} ${day}, ${year}`;
 }
 
+/** 将日期格式化为 YYYY-MM-DD HH:mm（本地时区） */
+export function formatDateTime(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
 /**
  * 将日期转换为相对时间字符串（中文）
  * 例如：刚刚、5 分钟前、2 小时前、3 天前、1 个月前、2 年前
