@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -115,12 +116,19 @@ describe("ArticlesPage", () => {
     renderArticlesPage();
 
     expect(screen.getByRole("heading", { name: "文章管理" })).toBeInTheDocument();
-    expect(screen.getByRole("searchbox", { name: "搜索标题或摘要" })).toBeInTheDocument();
+    expect(
+      screen.queryByText("集中查看文章、按表头筛选排序，并从标题直接进入编辑页面。"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "置顶管理" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "新建" })).toHaveAttribute("href", "/articles/new");
+    expect(screen.getByText("全部 42")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /筛选分类/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "更多筛选" })).toBeDisabled();
     expect(screen.getByText("共 42 条")).toBeInTheDocument();
 
     const table = screen.getByRole("grid", { name: "文章列表" });
     expect(within(table).getByRole("columnheader", { name: /创建时间/ })).toBeInTheDocument();
-    expect(within(table).getByRole("button", { name: "筛选分类" })).toBeInTheDocument();
+    expect(within(table).queryByRole("button", { name: "筛选分类" })).not.toBeInTheDocument();
     expect(within(table).queryByRole("button", { name: "筛选推荐" })).not.toBeInTheDocument();
     expect(
       within(table).getByRole("button", { name: "创建时间排序：降序，点击切换为升序" }),
@@ -152,13 +160,37 @@ describe("ArticlesPage", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("加载文章列表失败");
   });
 
-  it("搜索输入交给服务端查询", async () => {
+  it("展开搜索后将输入交给服务端查询", async () => {
     const user = userEvent.setup();
+    vi.mocked(useAdminArticleList).mockImplementation(() => {
+      const [search, setSearchState] = useState("");
+
+      return {
+        rows: mockRows,
+        pageData: { total: 42, pages: 3, page: 1, page_size: 10, list: [] },
+        isLoading: false,
+        error: null,
+        page: 1,
+        setPage: mockSetPage,
+        filters: {
+          categoryId: "all",
+          search,
+        },
+        sort: { column: "createdAt", direction: "descending" },
+        setSort: mockSetSort,
+        setSearch: (value: string) => {
+          mockSetSearch(value);
+          setSearchState(value);
+        },
+        setCategoryId: mockSetCategoryId,
+        refetch: mockRefetch,
+      };
+    });
     renderArticlesPage();
 
+    await user.click(screen.getByRole("button", { name: "展开搜索" }));
     const searchbox = screen.getByRole("searchbox", { name: "搜索标题或摘要" });
-    await user.click(searchbox);
-    await user.paste("Vite");
+    await user.type(searchbox, "Vite");
 
     expect(mockSetSearch).toHaveBeenCalled();
     expect(mockSetSearch.mock.calls.some(([value]) => String(value).includes("Vite"))).toBe(true);
@@ -168,8 +200,8 @@ describe("ArticlesPage", () => {
     const user = userEvent.setup();
     renderArticlesPage();
 
-    await user.click(screen.getByRole("button", { name: "筛选分类" }));
-    await user.click(screen.getByRole("menuitemradio", { name: "前端" }));
+    await user.click(screen.getByRole("button", { name: /筛选分类/ }));
+    await user.click(screen.getByRole("option", { name: "前端" }));
 
     expect(mockSetCategoryId).toHaveBeenCalledWith("2");
   });

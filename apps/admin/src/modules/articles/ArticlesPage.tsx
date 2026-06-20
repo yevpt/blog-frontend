@@ -7,22 +7,19 @@ import {
   Button,
   DataTable,
   Pagination,
+  Select,
   cn,
   type DataTableColumn,
   type DataTableState,
 } from "@repo/ui";
 import { ArticleDeleteButton } from "./components/ArticleDeleteButton";
+import { ArticleListSearch } from "./components/ArticleListSearch";
 import { ArticleStatusBadge } from "./components/ArticleStatusBadge";
 import { useAdminArticleFilterOptions } from "./hooks/use-article-filter-options";
 import { useAdminArticleList } from "./hooks/use-article-list";
 import { apiClient } from "../../lib/api";
 import { addToast } from "../../lib/toast";
-import {
-  passThroughFilter,
-  serverSideColumnSort,
-  type ArticleRow,
-  type ArticleTableSort,
-} from "./model";
+import { serverSideColumnSort, type ArticleRow, type ArticleTableSort } from "./model";
 
 function isSameSort(a: ArticleTableSort, b?: DataTableState["sort"]) {
   return b?.column === a.column && b.direction === a.direction;
@@ -49,6 +46,10 @@ export function ArticlesPage() {
     error: filterOptionsError,
   } = useAdminArticleFilterOptions();
   const [deletingArticleId, setDeletingArticleId] = useState<string | null>(null);
+  const categorySelectItems = useMemo(
+    () => categoryOptions.map((option) => ({ id: option.value, label: option.label })),
+    [categoryOptions],
+  );
 
   const handleDeleteArticle = useCallback(
     async (articleId: string) => {
@@ -116,14 +117,6 @@ export function ArticlesPage() {
         className: "text-muted-foreground",
         cell: (article) => article.category,
         sort: serverSideColumnSort,
-        filter: {
-          type: "single",
-          defaultValue: "all",
-          value: filters.categoryId,
-          options: categoryOptions,
-          onChange: setCategoryId,
-          match: passThroughFilter,
-        },
       },
       {
         id: "pinned",
@@ -167,49 +160,78 @@ export function ArticlesPage() {
         ),
       },
     ],
-    [categoryOptions, deletingArticleId, filters.categoryId, handleDeleteArticle, setCategoryId],
+    [deletingArticleId, handleDeleteArticle],
   );
 
   const listError = error ?? filterOptionsError;
 
-  const toolbarActions = (
-    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-      <Button href="/articles/pinned" variant="outline" className="w-full sm:w-auto">
-        <SvgIcon name="arrow-up" size={18} />
-        置顶管理
-      </Button>
-      <Button href="/articles/new" className="w-full sm:w-auto">
-        <SvgIcon name="plus" size={18} />
-        新建文章
-      </Button>
-    </div>
-  );
-
   return (
-    <div className="grid gap-6">
-      <section className="min-w-0">
-        <div className="mb-3 flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <SvgIcon name="pen" size={22} />
-        </div>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground">文章管理</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          集中查看文章、按表头筛选排序，并从标题直接进入编辑页面。
-        </p>
+    <div className="grid h-[calc(100dvh-6.5rem)] min-h-0 grid-rows-[64px_auto_minmax(0,1fr)] overflow-hidden lg:h-[calc(100dvh-3rem)]">
+      <section className="flex min-w-0 items-center justify-between gap-3">
+        <h2 className="truncate text-2xl font-semibold tracking-normal text-foreground">
+          文章管理
+        </h2>
+        <Button href="/articles/new" size="sm" className="shrink-0">
+          <SvgIcon name="plus" size={15} />
+          新建
+        </Button>
       </section>
 
-      {listError ? (
-        <p role="alert" className="text-sm text-destructive">
-          {listError.message}
-        </p>
-      ) : null}
+      <section
+        className="flex min-w-0 flex-col gap-3 border-b border-border pb-3 sm:flex-row sm:items-center sm:justify-between"
+        aria-label="文章列表筛选"
+      >
+        <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
+          <Badge variant="secondary" className="shrink-0 rounded-full px-3 py-1">
+            全部 {pageData?.total ?? 0}
+          </Badge>
+          <Select
+            aria-label="筛选分类"
+            placeholder="筛选分类"
+            selectedKey={filters.categoryId === "all" ? undefined : filters.categoryId}
+            onSelectionChange={(key) => {
+              if (key == null) return;
+              setCategoryId(String(key));
+            }}
+            items={categorySelectItems}
+            size="sm"
+            className="w-[132px] shrink-0"
+            popoverClassName="w-44"
+          >
+            {(item) => <Select.Item id={item.id} label={item.label} />}
+          </Select>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            aria-label="更多筛选"
+            className="shrink-0 rounded-full"
+            isDisabled
+          >
+            更多筛选
+          </Button>
+        </div>
+        <div className="flex justify-end">
+          <ArticleListSearch value={filters.search} onChange={setSearch} />
+        </div>
+      </section>
 
-      <section className="grid gap-3" aria-label="文章列表工具栏">
+      <section
+        className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-3 pt-3"
+        aria-label="文章列表工具栏"
+      >
+        <div>
+          {listError ? (
+            <p role="alert" className="text-sm text-destructive">
+              {listError.message}
+            </p>
+          ) : null}
+        </div>
         <DataTable
           aria-label="文章列表"
           items={rows}
           columns={columns}
           getRowId={(article) => article.id}
-          actions={toolbarActions}
           showTotal={false}
           state={{
             searchValue: filters.search,
@@ -219,17 +241,14 @@ export function ArticlesPage() {
             sort,
           }}
           onStateChange={handleTableStateChange}
-          search={{
-            value: filters.search,
-            onChange: setSearch,
-            placeholder: "搜索标题或摘要",
-            match: passThroughFilter,
-          }}
           total={pageData?.total}
           emptyText="暂无文章"
           isLoading={isLoading || isLoadingFilterOptions}
           maxHeightClassName={false}
-          classNames={{ container: "shadow-sm" }}
+          classNames={{
+            root: "min-h-0 h-full",
+            container: "min-h-0 h-full shadow-sm",
+          }}
         />
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
