@@ -158,6 +158,24 @@ describe("DataTable", () => {
     expect(screen.queryByText("共 3 条")).not.toBeInTheDocument();
   });
 
+  it("没有搜索、操作和总数时不渲染空工具栏", () => {
+    const { container } = render(
+      <DataTable
+        aria-label="文章"
+        items={rows}
+        columns={columns}
+        getRowId={(article) => article.id}
+        showTotal={false}
+      />,
+    );
+
+    const root = container.firstElementChild;
+    expect(root?.children).toHaveLength(1);
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(screen.queryByText("共 3 条")).not.toBeInTheDocument();
+    expect(screen.getByRole("grid", { name: "文章" })).toBeInTheDocument();
+  });
+
   it("支持 root className 与内部 slot classNames 定制", async () => {
     const user = userEvent.setup();
     const { container } = render(

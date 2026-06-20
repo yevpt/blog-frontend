@@ -35,6 +35,7 @@ export function DataTable<T extends object>({
     search,
     isLoading,
   });
+  const hasToolbar = Boolean(search) || Boolean(actions) || showTotal;
 
   return (
     <div
@@ -42,15 +43,17 @@ export function DataTable<T extends object>({
       aria-busy={isLoading || undefined}
       className={cn("grid gap-3", classNames?.root, className)}
     >
-      <DataTableToolbar
-        search={search}
-        searchValue={table.tableState.searchValue}
-        total={total ?? table.visibleItems.length}
-        showTotal={showTotal}
-        actions={actions}
-        onSearchChange={table.onSearchChange}
-        classNames={classNames}
-      />
+      {hasToolbar ? (
+        <DataTableToolbar
+          search={search}
+          searchValue={table.tableState.searchValue}
+          total={total ?? table.visibleItems.length}
+          showTotal={showTotal}
+          actions={actions}
+          onSearchChange={table.onSearchChange}
+          classNames={classNames}
+        />
+      ) : null}
 
       <DataTableView
         labelProps={labelProps}
