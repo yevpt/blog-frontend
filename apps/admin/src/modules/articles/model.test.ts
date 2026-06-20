@@ -31,7 +31,7 @@ function createArticle(
   };
 }
 
-describe("articles-page-data helpers", () => {
+describe("model helpers", () => {
   it("buildIdFilterOptions 生成带全部选项的 id 列表", () => {
     expect(buildIdFilterOptions([{ id: 2, name: "前端" }])).toEqual([
       { value: "all", label: "全部" },
