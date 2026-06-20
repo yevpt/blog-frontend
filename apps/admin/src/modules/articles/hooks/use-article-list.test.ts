@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { AdminArticlePageResp } from "@repo/api";
-import { useAdminArticleList } from "./use-admin-article-list";
-import { apiClient } from "../lib/api";
+import { useAdminArticleList } from "./use-article-list";
+import { apiClient } from "../../../lib/api";
 
-vi.mock("../lib/api", () => ({
+vi.mock("../../../lib/api", () => ({
   apiClient: {
     articles: {
       listAdmin: vi.fn(),

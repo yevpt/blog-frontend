@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { apiClient } from "../lib/api";
-import { buildIdFilterOptions, type FilterOption } from "../pages/articles-page-data";
+import { apiClient } from "../../../lib/api";
+import { buildIdFilterOptions, type FilterOption } from "../model";
 
 export function useAdminArticleFilterOptions() {
   const [categoryOptions, setCategoryOptions] = useState<FilterOption[]>([

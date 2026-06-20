@@ -7,9 +7,9 @@ import { ApiError } from "@repo/api";
 import { ArticlesPage } from "./ArticlesPage";
 import { apiClient } from "../lib/api";
 import { toastQueue } from "../lib/toast";
-import type { ArticleRow } from "./articles-page-data";
-import { useAdminArticleFilterOptions } from "../hooks/use-admin-article-filter-options";
-import { useAdminArticleList } from "../hooks/use-admin-article-list";
+import type { ArticleRow } from "../modules/articles/model";
+import { useAdminArticleFilterOptions } from "../modules/articles/hooks/use-article-filter-options";
+import { useAdminArticleList } from "../modules/articles/hooks/use-article-list";
 
 const mockRows: ArticleRow[] = [
   {
@@ -40,11 +40,11 @@ const mockSetCategoryId = vi.fn();
 const mockSetSort = vi.fn();
 const mockSetPage = vi.fn();
 
-vi.mock("../hooks/use-admin-article-list", () => ({
+vi.mock("../modules/articles/hooks/use-article-list", () => ({
   useAdminArticleList: vi.fn(),
 }));
 
-vi.mock("../hooks/use-admin-article-filter-options", () => ({
+vi.mock("../modules/articles/hooks/use-article-filter-options", () => ({
   useAdminArticleFilterOptions: vi.fn(),
 }));
 

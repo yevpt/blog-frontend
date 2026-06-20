@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AdminArticlePageResp } from "@repo/api";
-import { apiClient } from "../lib/api";
+import { apiClient } from "../../../lib/api";
 import {
   DEFAULT_ARTICLE_TABLE_SORT,
   mapAdminArticleToRow,
@@ -9,7 +9,7 @@ import {
   toArticleListSortOrder,
   type ArticleRow,
   type ArticleTableSort,
-} from "../pages/articles-page-data";
+} from "../model";
 
 export interface AdminArticleListFilters {
   categoryId: string;

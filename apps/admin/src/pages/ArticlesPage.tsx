@@ -15,8 +15,8 @@ import {
   type DataTableColumn,
   type DataTableState,
 } from "@repo/ui";
-import { useAdminArticleFilterOptions } from "../hooks/use-admin-article-filter-options";
-import { useAdminArticleList } from "../hooks/use-admin-article-list";
+import { useAdminArticleFilterOptions } from "../modules/articles/hooks/use-article-filter-options";
+import { useAdminArticleList } from "../modules/articles/hooks/use-article-list";
 import { apiClient } from "../lib/api";
 import { addToast } from "../lib/toast";
 import {
@@ -27,7 +27,7 @@ import {
   type ArticleRow,
   type ArticleStatus,
   type ArticleTableSort,
-} from "./articles-page-data";
+} from "../modules/articles/model";
 
 function ArticleStatusBadge({ status }: { status: ArticleStatus }) {
   return <Badge variant={articleStatusVariant[status]}>{articleStatusText[status]}</Badge>;

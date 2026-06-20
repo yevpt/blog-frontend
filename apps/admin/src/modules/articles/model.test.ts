@@ -6,7 +6,7 @@ import {
   parseOptionalIdFilter,
   toArticleListSortBy,
   toArticleListSortOrder,
-} from "./articles-page-data";
+} from "./model";
 
 function createArticle(
   overrides: Partial<AdminArticleListItemResp> = {},

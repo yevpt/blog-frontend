@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { useAdminArticleFilterOptions } from "./use-admin-article-filter-options";
-import { apiClient } from "../lib/api";
+import { useAdminArticleFilterOptions } from "./use-article-filter-options";
+import { apiClient } from "../../../lib/api";
 
-vi.mock("../lib/api", () => ({
+vi.mock("../../../lib/api", () => ({
   apiClient: {
     categories: { listTabs: vi.fn() },
   },
