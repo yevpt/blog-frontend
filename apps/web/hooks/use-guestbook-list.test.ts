@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+/* global window */
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useGuestbookList } from "./use-guestbook-list";
@@ -53,6 +54,7 @@ describe("useGuestbookList", () => {
   });
 
   it("fetchPage 替换列表并更新分页状态", async () => {
+    window.history.replaceState(null, "", "/guestbook");
     const page2: GuestbookPageResp = {
       total: 11,
       pages: 2,
@@ -70,6 +72,34 @@ describe("useGuestbookList", () => {
     expect(result.current.items[0].id).toBe(2);
     expect(result.current.page).toBe(2);
     expect(result.current.totalPages).toBe(2);
+    expect(window.location.search).toBe("?page=2");
+  });
+
+  it("fetchPage 回到第一页时移除 URL 中的 page 参数", async () => {
+    window.history.replaceState(null, "", "/guestbook?page=2");
+    const page1: GuestbookPageResp = {
+      total: 11,
+      pages: 2,
+      page: 1,
+      page_size: 10,
+      list: [mockItem],
+    };
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(page1));
+
+    const multiPage: GuestbookPageResp = {
+      total: 11,
+      pages: 2,
+      page: 2,
+      page_size: 10,
+      list: [{ ...mockItem, id: 2 }],
+    };
+    const { result } = renderHook(() => useGuestbookList(multiPage));
+    await act(async () => {
+      await result.current.fetchPage(1);
+    });
+
+    expect(result.current.page).toBe(1);
+    expect(window.location.search).toBe("");
   });
 
   it("fetchPage 网络失败时设置 error", async () => {

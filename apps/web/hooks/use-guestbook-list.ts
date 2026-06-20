@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import type { GuestbookItemResp, GuestbookPageResp } from "@repo/api";
 import { apiJson } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
+import { replacePageSearchParam } from "@/lib/url-search";
 
 const PAGE_SIZE = 10;
 
@@ -38,6 +39,7 @@ export function useGuestbookList(initialPage: GuestbookPageResp) {
         setPage(data.page);
         setTotalPages(data.pages);
         setTotal(data.total);
+        replacePageSearchParam(data.page);
       }
     } catch (err) {
       if (isAbortError(err)) {
