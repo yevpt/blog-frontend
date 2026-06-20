@@ -1,9 +1,10 @@
 // apps/web/components/comments/comment-section.tsx
 "use client";
 
-import { useCallback, useRef, useLayoutEffect, type RefObject } from "react";
+import { useLayoutEffect, type RefObject } from "react";
 import { useLoginModal } from "@/store/use-login-modal";
-import { useCommentSectionState } from "@/hooks/use-comment-section-state";
+import { useCommentSectionState } from "./hooks/use-comment-section-state";
+import { useCommentScroll } from "./hooks/use-comment-scroll";
 import { PillCommentInput } from "./inputs/pill-comment-input";
 import { RichCommentInput } from "./inputs/rich-comment-input";
 import { CommentList } from "./parts/comment-list";
@@ -30,23 +31,10 @@ export function CommentSection({
 }: CommentSectionProps) {
   const openLoginModal = useLoginModal((state) => state.open);
 
-  const internalScrollRef = useRef<HTMLDivElement>(null);
-  const resizeObserverRef = useRef<ResizeObserver | null>(null);
-  const onContentResizeRef = useRef(onContentResize);
-  onContentResizeRef.current = onContentResize;
-
-  const scrollToListTop = useCallback(() => {
-    requestAnimationFrame(() => {
-      internalScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-    });
-  }, []);
-
-  const scrollToComment = useCallback((commentId: number) => {
-    requestAnimationFrame(() => {
-      const element = internalScrollRef.current?.querySelector(`[data-comment-id="${commentId}"]`);
-      element?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
-  }, []);
+  const { scrollRef, scrollToListTop, scrollToComment } = useCommentScroll({
+    externalScrollRef,
+    onContentResize,
+  });
 
   const {
     userId,
@@ -78,33 +66,6 @@ export function CommentSection({
     onContentResize?.();
   }, [comments.length, error, hasMore, isLoading, onContentResize, replyTarget]);
 
-  const mergeRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (resizeObserverRef.current) {
-        resizeObserverRef.current.disconnect();
-        resizeObserverRef.current = null;
-      }
-
-      internalScrollRef.current = node;
-      if (externalScrollRef) {
-        externalScrollRef.current = node;
-      }
-
-      if (node && typeof window !== "undefined" && "ResizeObserver" in window) {
-        const observer = new ResizeObserver(() => {
-          onContentResizeRef.current?.();
-        });
-        observer.observe(node);
-        const contentNode = node.firstElementChild;
-        if (contentNode) {
-          observer.observe(contentNode);
-        }
-        resizeObserverRef.current = observer;
-      }
-    },
-    [externalScrollRef],
-  );
-
   const commentList = (
     <CommentList
       comments={comments}
@@ -135,7 +96,7 @@ export function CommentSection({
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
         <div
-          ref={mergeRef}
+          ref={scrollRef}
           className="flex-1 overflow-y-auto px-[18px] py-4"
           style={{ overscrollBehavior: "contain" }}
         >
