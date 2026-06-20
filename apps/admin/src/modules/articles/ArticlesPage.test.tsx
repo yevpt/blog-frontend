@@ -125,7 +125,7 @@ describe("ArticlesPage", () => {
     expect(
       screen.getByRole("button", { name: /全部.*筛选分类|筛选分类.*全部/ }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "更多筛选" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "更多筛选" })).not.toBeInTheDocument();
     expect(screen.getByText("共 42 条")).toBeInTheDocument();
 
     const listRegion = screen.getByRole("region", { name: "文章列表工具栏" });

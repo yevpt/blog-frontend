@@ -200,16 +200,6 @@ export function ArticlesPage() {
           >
             {(item) => <Select.Item id={item.id} label={item.label} />}
           </Select>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            aria-label="更多筛选"
-            className="shrink-0 rounded-full"
-            isDisabled
-          >
-            更多筛选
-          </Button>
         </div>
         <div className="flex justify-end">
           <ArticleListSearch value={filters.search} onChange={setSearch} />
