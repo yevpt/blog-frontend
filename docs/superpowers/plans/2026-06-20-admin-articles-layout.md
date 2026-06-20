@@ -270,7 +270,7 @@ expect(screen.queryByRole("link", { name: "置顶管理" })).not.toBeInTheDocume
 expect(screen.getByRole("link", { name: "新建" })).toHaveAttribute("href", "/articles/new");
 expect(screen.getByText("全部 42")).toBeInTheDocument();
 expect(screen.getByRole("button", { name: "筛选分类" })).toBeInTheDocument();
-expect(screen.getByRole("button", { name: "更多筛选" })).toBeDisabled();
+expect(screen.queryByRole("button", { name: "更多筛选" })).not.toBeInTheDocument();
 ```
 
 Replace the existing search test with:
@@ -361,16 +361,6 @@ return (
         >
           {(item) => <Select.Item id={item.id} label={item.label} />}
         </Select>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          aria-label="更多筛选"
-          className="shrink-0 rounded-full"
-          isDisabled
-        >
-          更多筛选
-        </Button>
       </div>
 
       <div className="flex justify-end">
@@ -520,5 +510,5 @@ git commit -m "fix(admin): 修正文章页布局细节"
 ## Self-Review
 
 - Spec coverage: The plan covers title scale, description removal, removed pinned-management button, smaller new button, expandable search, filter row, and table-internal scrolling.
-- API honesty: Status chips are not implemented because `ArticleListReq` has no `status` parameter. The first implementation keeps only real filters.
+- API honesty: Status chips and `更多筛选` are not implemented because `ArticleListReq` has no `status` parameter and there is no additional real filter yet. The first implementation keeps only real filters.
 - Test coverage: Shared table behavior, new search component, and articles page behavior all get focused tests before implementation.
