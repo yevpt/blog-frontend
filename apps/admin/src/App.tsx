@@ -6,15 +6,13 @@ import { AuthGuard } from "./components/AuthGuard";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { LoginPage } from "./pages/LoginPage";
 import { DashboardPage } from "./modules/dashboard/DashboardPage";
-import {
-  ArticleEditorPage,
-  ArticlesPage,
-  CategoriesPage,
-  LinksPage,
-  MusicPage,
-  PinnedArticlesPage,
-  TagsPage,
-} from "./pages/module-pages";
+import { ArticlesPage } from "./modules/articles";
+import { ArticleEditorPage } from "./modules/articles/ArticleEditorPage";
+import { PinnedArticlesPage } from "./modules/articles/PinnedArticlesPage";
+import { CategoriesPage } from "./modules/categories/CategoriesPage";
+import { TagsPage } from "./modules/tags/TagsPage";
+import { MusicPage } from "./modules/music/MusicPage";
+import { LinksPage } from "./modules/links/LinksPage";
 import { ThemeProvider } from "./providers/theme-provider";
 import { initSessionFromRefreshToken } from "./lib/session-init";
 import { toastQueue } from "./lib/toast";
