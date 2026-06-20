@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@repo/ui";
 import Image from "next/image";
 
@@ -8,6 +8,7 @@ const SIZE = {
   xs: "h-5 w-5 text-[9px]",
   sm: "h-[22px] w-[22px] text-[10px]",
   md: "h-7 w-7 text-xs",
+  ml: "h-[30px] w-[30px] text-[11px]",
   lg: "h-9 w-9 text-sm",
   xl: "h-12 w-12 text-base",
   "2xl": "h-16 w-16 text-lg",
@@ -17,6 +18,7 @@ const SIZE_PX: Record<keyof typeof SIZE, number> = {
   xs: 20,
   sm: 22,
   md: 28,
+  ml: 30,
   lg: 36,
   xl: 48,
   "2xl": 64,
@@ -32,6 +34,7 @@ interface UserAvatarProps {
 export function UserAvatar({ src, name, size = "md", className }: UserAvatarProps) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const imageRef = useRef<HTMLImageElement | null>(null);
   const px = SIZE_PX[size];
   const initial = name[0]?.toUpperCase() ?? "?";
   const base = cn("shrink-0 rounded-full overflow-hidden", SIZE[size], className);
@@ -45,7 +48,8 @@ export function UserAvatar({ src, name, size = "md", className }: UserAvatarProp
 
   useEffect(() => {
     setFailed(false);
-    setLoaded(false);
+    const image = imageRef.current;
+    setLoaded(Boolean(image?.complete && image.naturalWidth > 0));
   }, [validSrc]);
 
   if (validSrc && !failed) {
@@ -64,6 +68,7 @@ export function UserAvatar({ src, name, size = "md", className }: UserAvatarProp
           {initial}
         </span>
         <Image
+          ref={imageRef}
           src={validSrc}
           alt={name}
           width={px}
