@@ -6,8 +6,8 @@ import {
   Badge,
   Button,
   DataTable,
+  Dropdown,
   Pagination,
-  Select,
   cn,
   type DataTableColumn,
   type DataTableState,
@@ -164,6 +164,8 @@ export function ArticlesPage() {
   );
 
   const listError = error ?? filterOptionsError;
+  const selectedCategoryLabel =
+    categoryOptions.find((option) => option.value === filters.categoryId)?.label ?? "全部";
 
   return (
     <div className="grid h-[calc(100dvh-6.5rem)] min-h-0 grid-rows-[64px_auto_minmax(0,1fr)] overflow-hidden lg:h-[calc(100dvh-3rem)]">
@@ -182,24 +184,36 @@ export function ArticlesPage() {
         aria-label="文章列表筛选"
       >
         <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
-          <Badge variant="secondary" className="shrink-0 rounded-full px-3 py-1">
+          <Badge
+            variant="secondary"
+            className="h-8 shrink-0 rounded-full bg-foreground px-3 text-sm font-semibold text-background"
+          >
             全部 {pageData?.total ?? 0}
           </Badge>
-          <Select
-            aria-label="筛选分类"
-            placeholder="筛选分类"
-            selectedKey={filters.categoryId}
-            onSelectionChange={(key) => {
-              if (key == null) return;
-              setCategoryId(String(key));
-            }}
-            items={categorySelectItems}
-            size="sm"
-            className="w-[132px] shrink-0"
-            popoverClassName="w-44"
-          >
-            {(item) => <Select.Item id={item.id} label={item.label} />}
-          </Select>
+          <Dropdown.Root>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              aria-label={`筛选分类：${selectedCategoryLabel}`}
+              className="h-8 shrink-0 rounded-full border-dashed border-border bg-background px-3 text-sm font-semibold shadow-none"
+            >
+              {selectedCategoryLabel}
+              <SvgIcon name="chevron-down" size={14} />
+            </Button>
+            <Dropdown.Popover className="w-44">
+              <Dropdown.Menu
+                aria-label="筛选分类"
+                selectionMode="single"
+                selectedKeys={new Set([filters.categoryId])}
+                onAction={(key) => setCategoryId(String(key))}
+              >
+                {categorySelectItems.map((item) => (
+                  <Dropdown.Item key={item.id} id={item.id} label={item.label} />
+                ))}
+              </Dropdown.Menu>
+            </Dropdown.Popover>
+          </Dropdown.Root>
         </div>
         <div className="flex justify-end">
           <ArticleListSearch value={filters.search} onChange={setSearch} />
@@ -242,8 +256,10 @@ export function ArticlesPage() {
           }}
         />
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted-foreground">共 {pageData?.total ?? 0} 条</p>
+        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border pt-3">
+          <p className="whitespace-nowrap text-sm text-muted-foreground">
+            共 {pageData?.total ?? 0} 条
+          </p>
           {pageData && pageData.pages > 1 ? (
             <Pagination
               currentPage={page}

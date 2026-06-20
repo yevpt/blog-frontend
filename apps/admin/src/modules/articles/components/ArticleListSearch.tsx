@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { SvgIcon } from "@repo/icons";
-import { Button, SearchField } from "@repo/ui";
+import { Button, SearchField, cn } from "@repo/ui";
 
 interface ArticleListSearchProps {
   value: string;
@@ -46,7 +46,7 @@ export function ArticleListSearch({
   }
 
   return (
-    <div ref={searchContainerRef}>
+    <div ref={searchContainerRef} className="w-full sm:w-[360px]">
       <SearchField
         aria-label={placeholder}
         placeholder={placeholder}
@@ -55,8 +55,14 @@ export function ArticleListSearch({
         onBlur={() => {
           if (value.trim().length === 0) setIsExpanded(false);
         }}
-        className="w-full sm:w-[300px]"
-        inputClassName="px-2"
+        className={cn(
+          "w-full",
+          "[&>div]:h-9 [&>div]:rounded-full [&>div]:border-primary [&>div]:bg-background [&>div]:shadow-sm",
+          "[&>div]:focus-within:border-primary [&>div]:focus-within:ring-primary/20",
+          "[&[data-empty]_[aria-label='清除搜索']]:hidden",
+          "[&_[aria-label='清除搜索']]:mr-2",
+        )}
+        inputClassName="px-2 text-sm"
         clearLabel="清除搜索"
         size="sm"
       />

@@ -122,11 +122,9 @@ describe("ArticlesPage", () => {
     expect(screen.queryByRole("link", { name: "置顶管理" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "新建" })).toHaveAttribute("href", "/articles/new");
     expect(screen.getByText("全部 42")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /全部.*筛选分类|筛选分类.*全部/ }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "筛选分类：全部" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "更多筛选" })).not.toBeInTheDocument();
-    expect(screen.getByText("共 42 条")).toBeInTheDocument();
+    expect(screen.getByText("共 42 条")).toHaveClass("whitespace-nowrap");
 
     const listRegion = screen.getByRole("region", { name: "文章列表工具栏" });
     expect(
@@ -210,8 +208,8 @@ describe("ArticlesPage", () => {
     const user = userEvent.setup();
     renderArticlesPage();
 
-    await user.click(screen.getByRole("button", { name: /筛选分类/ }));
-    await user.click(screen.getByRole("option", { name: "前端" }));
+    await user.click(screen.getByRole("button", { name: "筛选分类：全部" }));
+    await user.click(screen.getByRole("menuitemradio", { name: "前端" }));
 
     expect(mockSetCategoryId).toHaveBeenCalledWith("2");
   });
