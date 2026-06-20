@@ -166,6 +166,7 @@ export function ArticlesPage() {
   const listError = error ?? filterOptionsError;
   const selectedCategoryLabel =
     categoryOptions.find((option) => option.value === filters.categoryId)?.label ?? "全部";
+  const categoryChipText = filters.categoryId === "all" ? "分类" : `分类：${selectedCategoryLabel}`;
 
   return (
     <div className="grid h-[calc(100dvh-6.5rem)] min-h-0 grid-rows-[64px_auto_minmax(0,1fr)] overflow-hidden lg:h-[calc(100dvh-3rem)]">
@@ -186,7 +187,7 @@ export function ArticlesPage() {
         <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
           <Badge
             variant="secondary"
-            className="h-8 shrink-0 rounded-full bg-foreground px-3 text-sm font-semibold text-background"
+            className="h-8 shrink-0 rounded-full bg-foreground px-3 text-sm font-semibold text-background shadow-sm"
           >
             全部 {pageData?.total ?? 0}
           </Badge>
@@ -196,9 +197,9 @@ export function ArticlesPage() {
               variant="outline"
               size="sm"
               aria-label={`筛选分类：${selectedCategoryLabel}`}
-              className="h-8 shrink-0 rounded-full border-dashed border-border bg-background px-3 text-sm font-semibold shadow-none"
+              className="h-8 shrink-0 rounded-full border-dashed border-border bg-background px-3 text-sm font-semibold shadow-none hover:border-primary/40 hover:bg-accent/60"
             >
-              {selectedCategoryLabel}
+              {categoryChipText}
               <SvgIcon name="chevron-down" size={14} />
             </Button>
             <Dropdown.Popover className="w-44">
