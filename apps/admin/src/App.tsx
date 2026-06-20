@@ -5,7 +5,7 @@ import { ToastRegion } from "@repo/ui";
 import { AuthGuard } from "./components/AuthGuard";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { LoginPage } from "./pages/LoginPage";
-import { DashboardPage } from "./pages/DashboardPage";
+import { DashboardPage } from "./modules/dashboard/DashboardPage";
 import {
   ArticleEditorPage,
   ArticlesPage,

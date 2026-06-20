@@ -10,8 +10,8 @@ import {
   CardTitle,
   cn,
 } from "@repo/ui";
-import { adminNavItems } from "../config/nav";
-import { useAuthStore } from "../store/auth";
+import { adminNavItems } from "../../config/nav";
+import { useAuthStore } from "../../store/auth";
 
 // TODO(api): 待后端提供后台概览统计接口。
 const stats: Array<{
