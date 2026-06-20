@@ -1,4 +1,4 @@
-import { ArticlesPage } from "./ArticlesPage";
+import { ArticlesPage } from "../modules/articles";
 import { ModulePlaceholder } from "./ModulePlaceholder";
 
 export { ArticlesPage };

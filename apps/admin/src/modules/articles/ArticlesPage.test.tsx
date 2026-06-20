@@ -5,11 +5,11 @@ import { MemoryRouter } from "react-router-dom";
 import { ToastRegion } from "@repo/ui";
 import { ApiError } from "@repo/api";
 import { ArticlesPage } from "./ArticlesPage";
-import { apiClient } from "../lib/api";
-import { toastQueue } from "../lib/toast";
-import type { ArticleRow } from "../modules/articles/model";
-import { useAdminArticleFilterOptions } from "../modules/articles/hooks/use-article-filter-options";
-import { useAdminArticleList } from "../modules/articles/hooks/use-article-list";
+import { apiClient } from "../../lib/api";
+import { toastQueue } from "../../lib/toast";
+import type { ArticleRow } from "./model";
+import { useAdminArticleFilterOptions } from "./hooks/use-article-filter-options";
+import { useAdminArticleList } from "./hooks/use-article-list";
 
 const mockRows: ArticleRow[] = [
   {
@@ -40,15 +40,15 @@ const mockSetCategoryId = vi.fn();
 const mockSetSort = vi.fn();
 const mockSetPage = vi.fn();
 
-vi.mock("../modules/articles/hooks/use-article-list", () => ({
+vi.mock("./hooks/use-article-list", () => ({
   useAdminArticleList: vi.fn(),
 }));
 
-vi.mock("../modules/articles/hooks/use-article-filter-options", () => ({
+vi.mock("./hooks/use-article-filter-options", () => ({
   useAdminArticleFilterOptions: vi.fn(),
 }));
 
-vi.mock("../lib/api", () => ({
+vi.mock("../../lib/api", () => ({
   apiClient: {
     articles: {
       deleteAdmin: vi.fn(),
