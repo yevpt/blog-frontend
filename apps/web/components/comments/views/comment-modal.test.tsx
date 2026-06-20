@@ -79,7 +79,7 @@ vi.mock("@repo/ui", () => ({
 
 vi.mock("./modal-comments", () => ({
   ModalComments: ({ targetType, targetId }: { targetType: string; targetId: number }) => (
-    <div data-testid="comment-section" data-target-type={targetType} data-target-id={targetId} />
+    <div data-testid="modal-comments" data-target-type={targetType} data-target-id={targetId} />
   ),
 }));
 
@@ -144,7 +144,7 @@ describe("CommentModal", () => {
 
   it("渲染 ModalComments 并传入正确 targetType/targetId", () => {
     render(<CommentModal targetType="moment" targetId={7} onClose={vi.fn()} />);
-    const section = screen.getByTestId("comment-section");
+    const section = screen.getByTestId("modal-comments");
     expect(section.dataset.targetType).toBe("moment");
     expect(section.dataset.targetId).toBe("7");
   });

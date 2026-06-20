@@ -14,7 +14,7 @@ vi.mock("@/components/comments", () => ({
     onCommentAdded?: () => void;
   }) => (
     <div
-      data-testid="comment-section"
+      data-testid="inline-comments"
       data-target-id={String(targetId)}
       data-target-type={targetType}
     >
@@ -39,7 +39,7 @@ describe("ArticleComments", () => {
 
   it("向 InlineComments 传入正确的 targetId 和 targetType", () => {
     render(<ArticleComments articleId={42} commentCount={7} />);
-    const section = screen.getByTestId("comment-section");
+    const section = screen.getByTestId("inline-comments");
     expect(section).toHaveAttribute("data-target-id", "42");
     expect(section).toHaveAttribute("data-target-type", "article");
   });
