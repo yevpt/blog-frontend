@@ -104,6 +104,7 @@ export {
   type DataTableColumn,
   type DataTableColumnSize,
   type DataTableColumnStaticSize,
+  type DataTableEmptyState,
   type DataTableState,
   type DataTableSortState,
   type DataTableSortDirection,

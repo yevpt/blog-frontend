@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, type MouseEvent } from "react";
 import {
   Button as AriaButton,
   FieldError,
@@ -23,12 +24,22 @@ export function SearchField({
   className,
   inputClassName,
   clearLabel = "清除搜索",
+  clearButtonClassName,
   isInvalid,
   "aria-label": ariaLabel,
   ...props
 }: SearchFieldProps) {
   // 无可见 label 时，用 placeholder 或 aria-label 满足无障碍要求
   const resolvedAriaLabel = ariaLabel ?? (!label ? placeholder : undefined);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleGroupMouseDown = (event: MouseEvent<HTMLDivElement>) => {
+    if (props.isDisabled) return;
+    if (event.target instanceof Element && event.target.closest("button,input")) return;
+
+    event.preventDefault();
+    inputRef.current?.focus();
+  };
 
   return (
     <AriaSearchField
@@ -40,6 +51,7 @@ export function SearchField({
       {label ? <Label className="text-sm font-medium text-foreground">{label}</Label> : null}
 
       <Group
+        onMouseDown={handleGroupMouseDown}
         className={cn(
           "flex items-center rounded-md border border-input bg-background",
           "transition-colors",
@@ -53,6 +65,7 @@ export function SearchField({
           <SvgIcon name="search" size={16} />
         </span>
         <AriaInput
+          ref={inputRef}
           placeholder={placeholder}
           className={cn(
             "flex-1 min-w-0 bg-transparent text-sm px-2 h-full outline-none",
@@ -71,6 +84,7 @@ export function SearchField({
             "disabled:pointer-events-none",
             "group-data-[empty]:invisible",
             size === "sm" ? "size-7" : "size-8",
+            clearButtonClassName,
           )}
         >
           <SvgIcon name="close" size={14} />

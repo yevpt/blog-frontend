@@ -39,9 +39,40 @@ describe("SearchField", () => {
     expect(onChange).toHaveBeenCalledWith("");
   });
 
+  it("点击输入框壳层时聚焦搜索输入", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <SearchField placeholder="搜索文章" defaultValue="React" />
+        <button type="button">外部按钮</button>
+      </>,
+    );
+
+    const input = screen.getByRole("searchbox", { name: "搜索文章" });
+    const inputFrame = input.parentElement;
+    expect(inputFrame).not.toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "外部按钮" }));
+    await user.click(inputFrame as HTMLElement);
+
+    expect(input).toHaveFocus();
+  });
+
   it("显示搜索和清除图标", () => {
     render(<SearchField placeholder="搜索文章" defaultValue="React" />);
     expect(screen.getByTestId("icon-search")).toBeTruthy();
     expect(screen.getByTestId("icon-close")).toBeTruthy();
+  });
+
+  it("clearButtonClassName 透传到清除按钮", () => {
+    render(
+      <SearchField
+        placeholder="搜索文章"
+        defaultValue="React"
+        clearButtonClassName="ghost-clear-button"
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "清除搜索" })).toHaveClass("ghost-clear-button");
   });
 });

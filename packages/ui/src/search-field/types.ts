@@ -19,4 +19,6 @@ export interface SearchFieldProps extends Omit<AriaSearchFieldProps, "className"
   inputClassName?: string;
   /** 清除按钮的无障碍标签 */
   clearLabel?: string;
+  /** 清除按钮的额外 className */
+  clearButtonClassName?: string;
 }
