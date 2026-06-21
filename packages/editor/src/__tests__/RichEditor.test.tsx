@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RichEditor } from "../RichEditor";
 
@@ -80,5 +80,35 @@ describe("RichEditor", () => {
     const btn = screen.getByRole("button", { name: "插入图片" });
     await user.click(btn);
     expect(handler).toHaveBeenCalledOnce();
+  });
+
+  it("插入带标题链接时在编辑器内渲染为链接并输出 Markdown 链接", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    let insertLink: ((url: string, title?: string) => void) | undefined;
+
+    const { container } = render(
+      <RichEditor
+        value=""
+        onChange={onChange}
+        onInsertLink={(insert) => {
+          insertLink = insert;
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "插入链接" }));
+    expect(insertLink).toBeTypeOf("function");
+
+    await act(async () => {
+      insertLink?.("http://localhost:3000/guestbook", "test");
+    });
+
+    const link = container.querySelector(".tiptap a");
+    expect(link).toHaveTextContent("test");
+    expect(link).toHaveAttribute("href", "http://localhost:3000/guestbook");
+    await waitFor(() => {
+      expect(onChange).toHaveBeenLastCalledWith("[test](http://localhost:3000/guestbook)");
+    });
   });
 });

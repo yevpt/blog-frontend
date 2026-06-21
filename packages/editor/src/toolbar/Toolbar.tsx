@@ -20,7 +20,7 @@
  * 所有颜色使用 Tailwind 语义色令牌，分隔线用 bg-border，
  * 提交按钮用 bg-primary / text-primary-foreground 跟随主题。
  */
-import type { Editor } from "@tiptap/core";
+import type { Editor, JSONContent } from "@tiptap/core";
 import { useEditorState } from "@tiptap/react";
 import { clsx } from "clsx";
 import { ToolbarButton } from "./ToolbarButton";
@@ -32,6 +32,82 @@ interface ToolbarProps extends InsertHandlers {
   isSubmitting?: boolean;
   isLoggedIn?: boolean;
   onLoginRequired?: () => void;
+}
+
+function insertLink(editor: Editor | null, url: string, title?: string) {
+  if (!editor) return;
+
+  const linkText = title?.trim();
+  const chain = editor.chain().focus();
+
+  if (linkText) {
+    chain
+      .insertContent({
+        type: "text",
+        text: linkText,
+        marks: [{ type: "link", attrs: { href: url } }],
+      })
+      .run();
+    return;
+  }
+
+  if (editor.state.selection.empty) {
+    chain
+      .insertContent({
+        type: "text",
+        text: url,
+        marks: [{ type: "link", attrs: { href: url } }],
+      })
+      .run();
+    return;
+  }
+
+  chain.setLink({ href: url }).run();
+}
+
+function makeTextNode(text: string): JSONContent[] | undefined {
+  return text ? [{ type: "text", text }] : undefined;
+}
+
+function currentTextBlockIsEmpty(editor: Editor) {
+  const { selection } = editor.state;
+  return (
+    selection.empty &&
+    selection.$from.parent.isTextblock &&
+    selection.$from.parent.content.size === 0
+  );
+}
+
+function insertCodeBlock(editor: Editor | null, code: string, lang: string) {
+  if (!editor) return;
+
+  const { $from } = editor.state.selection;
+  const codeBlock: JSONContent = {
+    type: "codeBlock",
+    attrs: { language: lang },
+    content: makeTextNode(code),
+  };
+  const content: JSONContent[] = [codeBlock, { type: "paragraph" }];
+
+  if (editor.isEmpty) {
+    editor
+      .chain()
+      .focus()
+      .insertContentAt({ from: 0, to: editor.state.doc.content.size }, content)
+      .run();
+    return;
+  }
+
+  if (currentTextBlockIsEmpty(editor)) {
+    editor
+      .chain()
+      .focus()
+      .insertContentAt({ from: $from.before(), to: $from.after() }, content)
+      .run();
+    return;
+  }
+
+  editor.chain().focus().insertContentAt($from.after(), content).run();
 }
 
 export function Toolbar({
@@ -108,11 +184,7 @@ export function Toolbar({
             disabled={disabled}
             onClick={() => {
               onInsertLink((url, title) => {
-                if (title) {
-                  editor?.chain().focus().insertContent(`[${title}](${url})`).run();
-                } else {
-                  editor?.chain().focus().setLink({ href: url }).run();
-                }
+                insertLink(editor, url, title);
               });
             }}
           />
@@ -142,7 +214,7 @@ export function Toolbar({
             disabled={disabled}
             onClick={() => {
               onInsertCode((code, lang) => {
-                editor?.chain().focus().setCodeBlock({ language: lang }).insertContent(code).run();
+                insertCodeBlock(editor, code, lang);
               });
             }}
           />
