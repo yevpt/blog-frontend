@@ -39,6 +39,7 @@ export function GuestbookItem({ item, onReply, onLike, pendingReply }: Guestbook
         isLiked={item.is_liked}
         onLike={handleLike}
         onReply={onReply ? handleReply : undefined}
+        linkProfile
       />
 
       <ThreadCommentContent
@@ -55,6 +56,7 @@ export function GuestbookItem({ item, onReply, onLike, pendingReply }: Guestbook
             pendingReply={pendingReply}
             onReply={onReply ?? (() => undefined)}
             onOpenChange={setRepliesOpen}
+            linkProfile
           />
         </ThreadReplyIndent>
       )}

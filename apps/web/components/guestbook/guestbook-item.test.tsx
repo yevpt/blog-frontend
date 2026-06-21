@@ -1,9 +1,22 @@
 // @vitest-environment jsdom
+import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 import { GuestbookItem } from "./guestbook-item";
 import type { GuestbookItemResp } from "@repo/api";
+
+vi.mock("next/link", () => ({
+  default: ({
+    href,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
 
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
@@ -42,6 +55,12 @@ describe("GuestbookItem", () => {
     render(<GuestbookItem item={mockItem} />);
     expect(screen.getByText("这是一条留言")).toBeTruthy();
     expect(screen.getByText("Alice")).toBeTruthy();
+  });
+
+  it("用户名和头像可跳转至用户主页", () => {
+    render(<GuestbookItem item={mockItem} />);
+    const links = screen.getAllByRole("link", { name: "Alice" });
+    expect(links.some((link) => link.getAttribute("href") === "/users/1")).toBe(true);
   });
 
   it("显示 like_count", () => {

@@ -36,8 +36,6 @@ export const CommentItem = memo(function CommentItem({
 }: CommentItemProps) {
   const [repliesOpen, setRepliesOpen] = useState(false);
   const hasReplies = comment.reply_count > 0;
-  const linkProfile = targetType !== "guestbook";
-
   const handleLike = useCallback(() => {
     onLike?.(comment.id);
   }, [onLike, comment.id]);
@@ -56,7 +54,7 @@ export const CommentItem = memo(function CommentItem({
         isLiked={comment.is_liked}
         onLike={handleLike}
         onReply={onReply ? handleReply : undefined}
-        linkProfile={linkProfile}
+        linkProfile
       />
 
       <ThreadCommentContent
@@ -73,7 +71,7 @@ export const CommentItem = memo(function CommentItem({
             pendingReply={pendingReply}
             onReply={onReply ?? NOOP_REPLY}
             onOpenChange={setRepliesOpen}
-            linkProfile={linkProfile}
+            linkProfile
           />
         </ThreadReplyIndent>
       )}

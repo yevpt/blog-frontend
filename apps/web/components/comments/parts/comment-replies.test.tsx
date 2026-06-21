@@ -454,4 +454,18 @@ describe("CommentReplies", () => {
       expect(links.every((l) => l.getAttribute("href") === "/users/1")).toBe(true);
     });
   });
+
+  it("targetType=guestbook 时回复昵称也可跳转", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
+
+    render(
+      <CommentReplies commentId={1} targetType="guestbook" replyCount={1} onReply={vi.fn()} />,
+    );
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => {
+      const links = screen.getAllByRole("link", { name: "Alice" });
+      expect(links.every((l) => l.getAttribute("href") === "/users/1")).toBe(true);
+    });
+  });
 });

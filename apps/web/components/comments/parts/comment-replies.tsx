@@ -142,7 +142,7 @@ export const CommentReplies = memo(function CommentReplies({
   pendingReply,
   onReply,
   onOpenChange,
-  linkProfile = targetType !== "guestbook",
+  linkProfile = true,
 }: CommentRepliesProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [replies, setReplies] = useState<CommentReplyResp[]>([]);
