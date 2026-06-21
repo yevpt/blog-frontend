@@ -71,7 +71,12 @@ describe("ArticleListSearch", () => {
 
   it("空值输入框失焦后收起为搜索按钮", async () => {
     const user = userEvent.setup();
-    render(<ArticleListSearch value="" onChange={vi.fn()} />);
+    render(
+      <>
+        <ArticleListSearch value="" onChange={vi.fn()} />
+        <button type="button">外部按钮</button>
+      </>,
+    );
 
     await user.click(screen.getByRole("button", { name: "展开搜索" }));
     await user.tab();
