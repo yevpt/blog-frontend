@@ -244,10 +244,8 @@ body {
   --editor-hl-builtin: #7c3aed; /* primary 紫 */
   --editor-hl-attr: #0f766e; /* 青绿 */
   --editor-hl-meta: #71717a; /* 中灰 */
-  /* 浅色模式下加深代码块背景，避免与编辑器 bg-muted(#f4f4f5) 难以区分 */
-  --editor-code-bg: #e6e6ef;
   --editor-code-fg: #18181b;
-  /* Markdown 渲染代码块（ChatGPT 风格，独立于编辑器配色，避免误伤 tiptap） */
+  /* 代码块底色 / 边框：编辑器与渲染后的 markdown（评论 + 文章详情）共用同一套，保证所见即所得 */
   --md-code-bg: #f9f9f9;
   --md-code-border: #e5e5e5;
 
@@ -260,7 +258,6 @@ body {
     --editor-hl-builtin: #c084fc; /* 浅紫 */
     --editor-hl-attr: #34d399; /* 浅绿 */
     --editor-hl-meta: #9ca3af; /* 浅灰 */
-    --editor-code-bg: #1c1c28;
     --editor-code-fg: #e4e4f0;
     --md-code-bg: #171717;
     --md-code-border: #2a2a2a;
@@ -275,11 +272,11 @@ body {
 
 .tiptap .rich-editor-code-block {
   position: relative;
-  background-color: var(--editor-code-bg) !important;
+  /* 底色 / 边框 / 圆角与评论 + 文章详情渲染后的 markdown 代码块（.md-code-wrapper）共用同一套令牌，保证所见即所得 */
+  background-color: var(--md-code-bg) !important;
   color: var(--editor-code-fg);
-  border-radius: 0.5rem;
-  /* 浅色模式下用细边框让代码块与编辑器背景区分开 */
-  border: 1px solid var(--color-border) !important;
+  border-radius: 0.75rem;
+  border: 1px solid var(--md-code-border) !important;
   padding: 0.625rem 0.875rem !important;
   font-size: 0.8125rem !important;
   line-height: 1.6 !important;

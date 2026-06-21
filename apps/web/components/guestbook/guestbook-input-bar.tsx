@@ -60,7 +60,7 @@ export function GuestbookInputBar({
         placeholder={placeholder}
         header={replyBanner}
         focusTrigger={replyTarget}
-        className="border border-border/50 focus-within:border-primary/40 focus-within:shadow-[0_0_0_3px_hsl(var(--color-primary)/0.07)] transition-[border-color,box-shadow] duration-200"
+        className="focus-within:border-foreground/15 transition-colors duration-200"
       />
       {submitError && <p className="text-xs text-red-500">{submitError}</p>}
     </div>
