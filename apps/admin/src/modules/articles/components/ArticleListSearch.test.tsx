@@ -26,6 +26,8 @@ describe("ArticleListSearch", () => {
     await waitFor(() => {
       expect(input).toHaveFocus();
     });
+    expect(input).toHaveClass("text-base");
+    expect(input.closest(".origin-top-right")).not.toBeNull();
   });
 
   it("有值时直接保持展开但不自动聚焦，输入内容停止后再提交 onChange", async () => {

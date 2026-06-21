@@ -55,8 +55,6 @@ describe("useAdminArticleList", () => {
     expect(apiClient.articles.listAdmin).toHaveBeenCalledWith({
       page: 1,
       page_size: 10,
-      sort_by: "created_at",
-      sort_order: "desc",
     });
     expect(result.current.rows).toHaveLength(1);
     expect(result.current.rows[0]?.title).toBe("后台文章");
@@ -78,8 +76,6 @@ describe("useAdminArticleList", () => {
         page: 1,
         page_size: 10,
         category_id: 3,
-        sort_by: "created_at",
-        sort_order: "desc",
       });
     });
   });

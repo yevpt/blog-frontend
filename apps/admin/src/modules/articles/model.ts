@@ -45,11 +45,6 @@ export const articleStatusVariant: Record<
   archived: "outline",
 };
 
-export const DEFAULT_ARTICLE_TABLE_SORT: ArticleTableSort = {
-  column: "createdAt",
-  direction: "descending",
-};
-
 const COLUMN_TO_SORT_BY: Record<ArticleTableSortColumn, ArticleListSortBy> = {
   createdAt: "created_at",
   updatedAt: "updated_at",

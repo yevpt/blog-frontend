@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AdminArticlePageResp } from "@repo/api";
 import { apiClient } from "../../../lib/api";
 import {
-  DEFAULT_ARTICLE_TABLE_SORT,
   mapAdminArticleToRow,
   parseOptionalIdFilter,
   toArticleListSortBy,
@@ -42,7 +41,7 @@ const DEFAULT_FILTERS: AdminArticleListFilters = {
 export function useAdminArticleList(): UseAdminArticleListResult {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<AdminArticleListFilters>(DEFAULT_FILTERS);
-  const [sort, setSortState] = useState<ArticleTableSort | undefined>(DEFAULT_ARTICLE_TABLE_SORT);
+  const [sort, setSortState] = useState<ArticleTableSort | undefined>();
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [pageData, setPageData] = useState<AdminArticlePageResp | null>(null);
   const [isLoading, setIsLoading] = useState(true);

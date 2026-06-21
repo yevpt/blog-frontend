@@ -8,7 +8,7 @@ interface ArticleListSearchProps {
   placeholder?: string;
 }
 
-const EXPANDED_WIDTH_CLASS = "w-[min(100%,240px)]";
+const EXPANDED_WIDTH_CLASS = "w-[240px]";
 const COLLAPSED_WIDTH_CLASS = "w-6";
 const TRANSITION_MS = 300;
 const SEARCH_COMMIT_DELAY_MS = 200;
@@ -104,13 +104,9 @@ export function ArticleListSearch({
   };
 
   return (
-    <div
-      className={cn(
-        "relative h-7 overflow-hidden transition-[width] duration-300 ease-out motion-reduce:transition-none",
-        isExpanded ? EXPANDED_WIDTH_CLASS : COLLAPSED_WIDTH_CLASS,
-      )}
-      onTransitionEnd={handleTransitionEnd}
-    >
+    // 外层保持固定的折叠态尺寸（仅占图标宽度）并留在表格流内，作为绝对定位锚点；
+    // 真正展开的输入框移出流外（absolute），宽度动画不再触发整张表格逐帧回流。
+    <div className="relative h-7 w-6">
       <ButtonUtility
         type="button"
         size="xs"
@@ -130,8 +126,12 @@ export function ArticleListSearch({
       {isSearchMounted ? (
         <div
           ref={searchContainerRef}
+          onTransitionEnd={handleTransitionEnd}
+          // 不再裁切：输入框随面板宽度自然生长，focus 的柔和外发光得以完整渲染、圆角平滑
           className={cn(
-            "absolute inset-0 transition-opacity duration-200 motion-reduce:transition-none",
+            "absolute top-0 right-0 z-10 h-7",
+            "transition-[width,opacity] duration-300 ease-out motion-reduce:transition-none",
+            isExpanded ? EXPANDED_WIDTH_CLASS : COLLAPSED_WIDTH_CLASS,
             isExpanded ? "opacity-100" : "pointer-events-none opacity-0",
           )}
         >
@@ -143,13 +143,17 @@ export function ArticleListSearch({
             onBlur={() => {
               if (!hasValue) handleCollapse();
             }}
-            className={cn(
-              "w-full",
-              "[&>div]:h-7 [&>div]:rounded-full [&>div]:border-border [&>div]:bg-background",
-              "[&>div]:focus-within:border-primary [&>div]:focus-within:ring-primary/20",
-              "[&[data-empty]_[aria-label='清除搜索']]:hidden",
+            className={cn("w-full", "[&[data-empty]_[aria-label='清除搜索']]:hidden")}
+            // 现代审美：静息态极简细描边 + 微填充底；focus 态用细描边 + 大半径低透明柔光环（halo），
+            // 经 cn / tailwind-merge 干净覆盖默认样式，过渡平滑，无硬边、无毛刺
+            groupClassName={cn(
+              "rounded-full border border-border/60 bg-muted/40 shadow-none",
+              "transition-[background-color,border-color,box-shadow] duration-200 ease-out",
+              "focus-within:border-primary/50 focus-within:bg-background",
+              "focus-within:ring-[3px] focus-within:ring-primary/15",
             )}
-            inputClassName="px-2 text-xs"
+            compact
+            inputClassName="px-2"
             clearLabel="清除搜索"
             clearButtonClassName={ghostClearButtonClassName}
             size="sm"

@@ -82,7 +82,7 @@ describe("ArticlesPage", () => {
         categoryId: "all",
         search: "",
       },
-      sort: { column: "createdAt", direction: "descending" },
+      sort: undefined,
       setSort: mockSetSort,
       setSearch: mockSetSearch,
       setCategoryId: mockSetCategoryId,
@@ -139,7 +139,7 @@ describe("ArticlesPage", () => {
     expect(within(table).getByRole("button", { name: "筛选分类" })).toBeInTheDocument();
     expect(within(table).queryByRole("button", { name: "筛选推荐" })).not.toBeInTheDocument();
     expect(
-      within(table).getByRole("button", { name: "创建时间排序：降序，点击切换为升序" }),
+      within(table).getByRole("button", { name: "创建时间排序：未排序，点击排序" }),
     ).toBeInTheDocument();
     expect(within(table).getByRole("link", { name: "React Query 与后台表格状态" })).toHaveAttribute(
       "href",
@@ -156,7 +156,7 @@ describe("ArticlesPage", () => {
       page: 1,
       setPage: mockSetPage,
       filters: { categoryId: "all", search: "" },
-      sort: { column: "createdAt", direction: "descending" },
+      sort: undefined,
       setSort: mockSetSort,
       setSearch: mockSetSearch,
       setCategoryId: mockSetCategoryId,
@@ -184,7 +184,7 @@ describe("ArticlesPage", () => {
           categoryId: "all",
           search,
         },
-        sort: { column: "createdAt", direction: "descending" },
+        sort: undefined,
         setSort: mockSetSort,
         setSearch: (value: string) => {
           mockSetSearch(value);
@@ -267,7 +267,7 @@ describe("ArticlesPage", () => {
       page: 1,
       setPage: mockSetPage,
       filters: { categoryId: "all", search: "12" },
-      sort: { column: "createdAt", direction: "descending" },
+      sort: undefined,
       setSort: mockSetSort,
       setSearch: mockSetSearch,
       setCategoryId: mockSetCategoryId,
@@ -291,7 +291,7 @@ describe("ArticlesPage", () => {
       page: 1,
       setPage: mockSetPage,
       filters: { categoryId: "all", search: "" },
-      sort: { column: "createdAt", direction: "descending" },
+      sort: undefined,
       setSort: mockSetSort,
       setSearch: mockSetSearch,
       setCategoryId: mockSetCategoryId,
