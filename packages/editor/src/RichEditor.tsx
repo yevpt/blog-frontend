@@ -18,7 +18,7 @@
  * └─────────────────────────────────────────────────┘
  *
  * 【暗黑模式】
- * 容器背景/文字/占位符均使用 Tailwind 语义色令牌（bg-muted、text-foreground 等），
+ * 容器背景/文字/占位符均使用 Tailwind 语义色令牌（bg-card、text-foreground 等），
  * 自动跟随系统/页面的明暗切换，无需额外代码。
  *
  * 【Tiptap EditorContent 说明】
@@ -82,7 +82,7 @@ export function RichEditor({
   }, [value, editor]);
 
   const shell = clsx(
-    "overflow-hidden rounded-xl bg-muted px-3 py-3 sm:px-4 sm:py-3.5",
+    "overflow-hidden rounded-xl border border-border bg-card px-3 py-3 sm:px-4 sm:py-3.5",
     disabled && "opacity-60",
     className,
   );

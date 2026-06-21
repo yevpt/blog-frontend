@@ -2,7 +2,7 @@
  * Toolbar — 底部工具栏
  *
  * 【布局】
- * [ B ][ I ][ U ][ ─ ][ 🔗 ][ 🖼 ][ </> ][ @ ]   →→→   [ 提交 ]
+ * [ B ][ I ][ U ][ ─ ][ 🔗 ][ 🖼 ][ </> ]   →→→   [ 提交 ]
  * 左侧格式按钮区（横向可滚动）            固定右侧发送按钮
  *
  * 【响应式策略】
@@ -147,15 +147,6 @@ export function Toolbar({
             }}
           />
         )}
-
-        <ToolbarButton
-          title="@提及用户"
-          icon="at"
-          disabled={disabled}
-          onClick={() => {
-            editor?.chain().focus().insertContent("@").run();
-          }}
-        />
       </div>
 
       {onSubmit &&

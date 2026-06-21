@@ -35,7 +35,7 @@ describe("RichEditor", () => {
     const root = container.firstElementChild;
     const editorArea = root?.querySelector("[data-rich-editor-area]");
 
-    expect(root).toHaveClass("rounded-xl", "bg-muted");
+    expect(root).toHaveClass("rounded-xl", "border", "bg-card");
     expect(root?.className).not.toContain("focus-within:border-primary");
     expect(editorArea).toHaveClass("min-h-[88px]");
     expect(editorArea?.className).toContain("[&_.tiptap]:min-h-[88px]");
