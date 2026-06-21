@@ -4,8 +4,22 @@ import { useState } from "react";
 import { SvgIcon } from "@repo/icons";
 import { cn } from "@repo/ui";
 
+/** 友链申请模板，供展示与一键复制共用 */
+export const FRIEND_LINK_TEMPLATE = `博客名字: YEVPT
+博客地址: https://www.yevpt.com
+博客简介: 我喜欢要么极度悲伤要么淡淡温暖。
+博客头像: https://www.yevpt.com/logo.jpg`;
+
 export function FriendLinksRulesCard() {
   const [open, setOpen] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyTemplate = () => {
+    navigator.clipboard.writeText(FRIEND_LINK_TEMPLATE).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   return (
     <div className="rounded-xl border border-border bg-secondary px-5 py-4">
@@ -42,21 +56,29 @@ export function FriendLinksRulesCard() {
               </a>
             </p>
 
-            <div className="mb-3 rounded-md border-l-[3px] border-primary bg-background px-3.5 py-3 font-mono text-xs leading-loose text-foreground">
-              <div>
-                <span className="text-muted-foreground">博客名字:</span> YEVPT
-              </div>
-              <div>
-                <span className="text-muted-foreground">博客地址:</span> https://www.yevpt.com
-              </div>
-              <div>
-                <span className="text-muted-foreground">博客简介:</span>{" "}
-                我喜欢要么极度悲伤要么淡淡温暖。
-              </div>
-              <div>
-                <span className="text-muted-foreground">博客头像:</span>{" "}
-                https://www.yevpt.com/logo.jpg
-              </div>
+            <div className="relative mb-3 rounded-md border-l-[3px] border-primary bg-background px-3.5 py-3 font-mono text-xs leading-loose text-foreground">
+              <button
+                type="button"
+                onClick={handleCopyTemplate}
+                className="md-copy-btn md-copy-btn-abs"
+                aria-label={copied ? "已复制" : "复制模板"}
+              >
+                <SvgIcon
+                  name={copied ? "check" : "copy"}
+                  size={13}
+                  className={copied ? "text-green-600" : undefined}
+                />
+              </button>
+              {FRIEND_LINK_TEMPLATE.split("\n").map((line) => {
+                const colonIndex = line.indexOf(":");
+                const label = line.slice(0, colonIndex + 1);
+                const value = line.slice(colonIndex + 1).trimStart();
+                return (
+                  <div key={line}>
+                    <span className="text-muted-foreground">{label}</span> {value}
+                  </div>
+                );
+              })}
             </div>
 
             <ul className="mb-2.5 space-y-1 text-xs leading-relaxed text-muted-foreground">
