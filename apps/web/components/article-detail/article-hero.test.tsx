@@ -5,9 +5,17 @@ import { useImageViewer } from "@/store/use-image-viewer";
 import type { ArticleDetailResp } from "@repo/api";
 
 vi.mock("next/image", () => ({
-  default: ({ src, alt, className }: { src: string; alt: string; className?: string }) => (
-    <img src={src} alt={alt} className={className} />
-  ),
+  default: ({
+    src,
+    alt,
+    className,
+    sizes,
+  }: {
+    src: string;
+    alt: string;
+    className?: string;
+    sizes?: string;
+  }) => <img src={src} alt={alt} className={className} sizes={sizes} />,
 }));
 
 const base: ArticleDetailResp = {
@@ -47,6 +55,11 @@ describe("ArticleHero", () => {
     const img = screen.getByRole("img");
     expect(img).toHaveAttribute("src", expect.stringContaining("img.jpg"));
     expect(img).toHaveAttribute("alt", "Rust Web 框架");
+  });
+
+  it("封面 fill 图片带响应式 sizes，避免 Next Image 告警", () => {
+    render(<ArticleHero article={{ ...base, cover_img_url: "https://example.com/img.jpg" }} />);
+    expect(screen.getByRole("img")).toHaveAttribute("sizes", "(max-width: 768px) 100vw, 720px");
   });
 
   it("显示分类标签", () => {

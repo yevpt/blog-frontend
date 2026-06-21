@@ -33,6 +33,7 @@ export function FriendLinkCard({ link }: FriendLinkCardProps) {
             alt={link.name}
             fill
             className="object-cover"
+            sizes="44px"
             skeletonClassName="rounded-[10px]"
             fallbackClassName="rounded-[10px]"
           />

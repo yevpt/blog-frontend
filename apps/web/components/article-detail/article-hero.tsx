@@ -40,6 +40,7 @@ export function ArticleHero({ article }: ArticleHeroProps) {
             fill
             className="object-cover object-center"
             priority
+            sizes="(max-width: 768px) 100vw, 720px"
           />
         </button>
       )}

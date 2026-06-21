@@ -1,7 +1,21 @@
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import type { FriendLinkItemResp } from "@repo/api";
 import { FriendLinkCard } from "./friend-link-card";
+
+vi.mock("next/image", () => ({
+  default: ({
+    src,
+    alt,
+    className,
+    sizes,
+  }: {
+    src: string;
+    alt: string;
+    className?: string;
+    sizes?: string;
+  }) => <img src={src} alt={alt} className={className} sizes={sizes} />,
+}));
 
 const base: FriendLinkItemResp = {
   id: 1,
@@ -48,6 +62,11 @@ describe("FriendLinkCard", () => {
   it("无 avatar_url 时渲染首字母占位", () => {
     render(<FriendLinkCard link={{ ...base, avatar_url: undefined }} />);
     expect(screen.getByText("Y")).toBeTruthy();
+  });
+
+  it("头像 fill 图片带固定尺寸 sizes，避免 Next Image 告警", () => {
+    render(<FriendLinkCard link={{ ...base, avatar_url: "https://example.com/avatar.png" }} />);
+    expect(screen.getByRole("img", { name: "YEVPT Blog" })).toHaveAttribute("sizes", "44px");
   });
 
   it("status=0 不渲染任何内容", () => {
