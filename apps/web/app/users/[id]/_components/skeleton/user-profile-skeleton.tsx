@@ -1,4 +1,4 @@
-import { cn } from "@repo/ui";
+import { Card, cn } from "@repo/ui";
 
 function Bone({ className }: { className?: string }) {
   return <div className={cn("animate-pulse rounded bg-muted", className)} />;
@@ -10,7 +10,7 @@ export function UserProfileSkeleton() {
       <div className="h-16" />
       <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
         {/* Card 1: 用户信息头 */}
-        <div className="rounded-xl border border-border bg-card px-6 py-8 shadow-sm">
+        <Card className="px-6 py-8">
           <div className="flex flex-col items-center text-center">
             <Bone className="h-20 w-20 rounded-full" />
             <Bone className="mt-3 h-6 w-32" />
@@ -23,10 +23,10 @@ export function UserProfileSkeleton() {
             </div>
             <Bone className="mt-4 h-9 w-28 rounded-lg" />
           </div>
-        </div>
+        </Card>
 
         {/* Card 2: Tabs + 内容 */}
-        <div className="rounded-xl border border-border bg-card shadow-sm">
+        <Card>
           {/* Tab 栏 */}
           <div className="flex gap-1 border-b border-border px-4 pt-2">
             {[1, 2, 3].map((i) => (
@@ -43,7 +43,7 @@ export function UserProfileSkeleton() {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

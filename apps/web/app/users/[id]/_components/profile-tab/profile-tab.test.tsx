@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { ProfileTab } from "./profile-tab";
 import type { UserPublicProfileResp } from "@repo/api";
 
@@ -42,9 +42,89 @@ describe("ProfileTab", () => {
     expect(screen.queryByText("联系方式")).not.toBeInTheDocument();
   });
 
-  it("只读模式下有 site 时显示联系方式行", () => {
-    render(<ProfileTab {...baseProps} profile={{ ...baseProfile, site: "https://example.com" }} />);
+  it("只读模式下点击邮箱图标打开外部邮件客户端", () => {
+    const assign = vi.fn();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { ...window.location, assign },
+    });
+
+    render(
+      <ProfileTab
+        {...baseProps}
+        profile={{
+          ...baseProfile,
+          display_email: "hello@example.com",
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "邮箱" }));
+    expect(assign).toHaveBeenCalledWith("mailto:hello@example.com");
+  });
+
+  it("只读模式下后端 sina 平台显示微博联系方式", () => {
+    render(
+      <ProfileTab
+        {...baseProps}
+        profile={{
+          ...baseProfile,
+          social_links: [{ platform: "sina", url: "https://weibo.com/u/123" }],
+        }}
+      />,
+    );
+
     expect(screen.getByText("联系方式")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "微博" })).toBeInTheDocument();
+  });
+
+  it("窄屏下联系方式内容独占第二行", () => {
+    render(
+      <ProfileTab
+        {...baseProps}
+        profile={{
+          ...baseProfile,
+          site: "https://example.com",
+          social_links: [
+            { platform: "github", url: "https://github.com/test" },
+            { platform: "gitee", url: "https://gitee.com/test" },
+            { platform: "sina", url: "https://weibo.com/u/1" },
+            { platform: "bili", url: "https://bilibili.com/u/1" },
+            { platform: "zhihu", url: "https://zhihu.com/people/test" },
+          ],
+        }}
+      />,
+    );
+
+    const row = screen.getByTestId("profile-contact-row");
+    const container = screen.getByTestId("profile-contact-links");
+
+    expect(row.className).toContain("items-start");
+    expect(row.className).toContain("flex-wrap");
+    expect(container.className).toContain("min-w-fit");
+    expect(container.className).toContain("flex-1");
+    expect(screen.getAllByRole("button").length + screen.getAllByRole("link").length).toBe(6);
+  });
+
+  it("只读模式下联系方式按钮使用 ghost 样式", () => {
+    render(
+      <ProfileTab
+        {...baseProps}
+        profile={{
+          ...baseProfile,
+          site: "https://example.com",
+          social_links: [{ platform: "github", url: "https://github.com/test" }],
+        }}
+      />,
+    );
+
+    const siteLink = screen.getByRole("link", { name: "个人站点" });
+    const githubButton = screen.getByRole("button", { name: "GitHub" });
+
+    expect(siteLink.className).toContain("hover:bg-accent");
+    expect(siteLink.className).not.toContain("bg-foreground/");
+    expect(githubButton.className).toContain("hover:bg-accent");
+    expect(githubButton.className).not.toContain("bg-foreground/");
   });
 
   it("只读模式下性别为 null 时显示 -", () => {

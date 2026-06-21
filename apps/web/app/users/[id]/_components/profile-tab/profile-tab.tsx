@@ -9,6 +9,7 @@ import {
   GENDER_OPTIONS,
   SOCIAL_FIELD_LIST,
   SOCIAL_FIELD_VALIDATORS,
+  findSocialLink,
   validateDescription,
   validateMark,
   validateNickname,
@@ -138,7 +139,7 @@ export function ProfileTab({
       <SectionHeader className="mt-2">社交账号</SectionHeader>
       <div className="border-t border-border">
         {SOCIAL_FIELD_LIST.map(({ field, label, icon, color, type }) => {
-          const socialLink = profile.social_links.find((link) => link.platform === field);
+          const socialLink = findSocialLink(profile.social_links, field);
           return (
             <FieldRow
               key={field}

@@ -1,6 +1,7 @@
 "use client";
 
 import type { UserPublicProfileResp } from "@repo/api";
+import { Card } from "@repo/ui";
 import { useProfileEditor } from "@/hooks/use-profile-editor";
 import { UserInfoHeader } from "./user-info-header";
 import { UserProfileTabs } from "./user-profile-tabs";
@@ -43,7 +44,7 @@ export function UserProfilePage({ profile: initialProfile }: UserProfilePageProp
           onAvatarChange={changeAvatar}
         />
 
-        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+        <Card className="overflow-hidden">
           <UserProfileTabs
             profile={profile}
             isOwner={isOwner}
@@ -51,7 +52,7 @@ export function UserProfilePage({ profile: initialProfile }: UserProfilePageProp
             onSaveField={saveField}
             onActiveEditingChange={setIsAnyFieldEditing}
           />
-        </div>
+        </Card>
 
         <div className="pb-8" />
       </div>

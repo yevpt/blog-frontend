@@ -3,6 +3,10 @@
 import { useCallback, useState } from "react";
 import type { UserPublicProfileResp } from "@repo/api";
 import { useSession } from "@/app/providers/session-provider";
+import {
+  normalizeSocialPlatform,
+  toBackendSocialPlatform,
+} from "@/app/users/[id]/_components/profile-tab/profile-config";
 import { apiForm, apiJson, ApiClientError } from "@/lib/client-fetch";
 
 const PROFILE_FIELDS = ["mark", "description"] as const;
@@ -91,7 +95,8 @@ export function useProfileEditor(initialProfile: UserPublicProfileResp) {
       }
 
       if (SOCIAL_PLATFORMS.includes(field as (typeof SOCIAL_PLATFORMS)[number])) {
-        await apiJson(`/api/users/me/social/${field}`, {
+        const apiPlatform = toBackendSocialPlatform(field);
+        await apiJson(`/api/users/me/social/${apiPlatform}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: value || null }),
@@ -99,7 +104,9 @@ export function useProfileEditor(initialProfile: UserPublicProfileResp) {
         setProfile((current) => ({
           ...current,
           social_links: [
-            ...current.social_links.filter((link) => link.platform !== field),
+            ...current.social_links.filter(
+              (link) => normalizeSocialPlatform(link.platform) !== field,
+            ),
             ...(value ? [{ platform: field, url: value }] : []),
           ],
         }));

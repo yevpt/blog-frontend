@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, type ChangeEvent } from "react";
-import { cn } from "@repo/ui";
+import { Card, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { InlineFieldEditor } from "./inline-field-editor";
@@ -68,7 +68,7 @@ export function UserInfoHeader({
   const isAdmin = roles.includes("admin");
 
   return (
-    <div className="relative rounded-xl border border-border bg-card px-6 py-8 shadow-sm">
+    <Card className="relative px-6 py-8">
       {/* 三点菜单 — 左上角 */}
       {isOwner && (
         <button
@@ -209,6 +209,6 @@ export function UserInfoHeader({
           </button>
         )}
       </div>
-    </div>
+    </Card>
   );
 }

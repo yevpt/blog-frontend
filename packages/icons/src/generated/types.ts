@@ -23,6 +23,7 @@ export type IconName =
   | "download"
   | "droplet-filled"
   | "edit"
+  | "email"
   | "eye-off"
   | "eye"
   | "filter"

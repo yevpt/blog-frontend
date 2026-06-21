@@ -168,6 +168,28 @@ describe("useProfileEditor", () => {
     ]);
   });
 
+  it("saving weibo PATCHes /api/users/me/social/sina", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({}));
+
+    const { result } = renderHook(() => useProfileEditor(baseProfile));
+
+    await act(async () => {
+      await result.current.saveField("weibo", "https://weibo.com/u/new");
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/users/me/social/sina",
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ url: "https://weibo.com/u/new" }),
+      }),
+    );
+    expect(result.current.profile.social_links).toEqual([
+      { platform: "github", url: "https://github.com/test" },
+      { platform: "weibo", url: "https://weibo.com/u/new" },
+    ]);
+  });
+
   it("avatar upload sends FormData to /api/users/me/avatar and updates avatar URL", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       jsonResponse({ avatar_url: "https://cdn.test/avatar.png" }),

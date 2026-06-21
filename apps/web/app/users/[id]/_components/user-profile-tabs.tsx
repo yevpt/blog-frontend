@@ -5,6 +5,7 @@ import { cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import type { UserPublicProfileResp } from "@repo/api";
 import { ProfileTab } from "./profile-tab/profile-tab";
+import { ProfileTabEmptyState } from "./profile-tab-empty-state";
 import { SecurityTab } from "./security-tab/security-tab";
 
 type TabKey = "profile" | "moments" | "likes" | "security";
@@ -51,15 +52,24 @@ export function UserProfileTabs({
   return (
     <div>
       {/* Tab 导航栏 */}
-      <div className="relative flex border-b border-border">
-        {tabs.map((tab) => (
+      <div className="relative flex border-b border-border" role="tablist">
+        {tabs.map((tab, index) => (
           <button
             key={tab.id}
             type="button"
+            role="tab"
+            aria-selected={validTab === tab.id}
+            onMouseDown={(event) => {
+              // 鼠标切换 Tab 不保留 focus，避免点击后按修饰键触发 focus ring
+              event.preventDefault();
+            }}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
               "flex flex-1 items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium select-none",
-              "text-foreground rounded-t-lg transition-colors duration-200 hover:bg-foreground/[0.08]",
+              "text-muted-foreground outline-none [-webkit-tap-highlight-color:transparent]",
+              "transition-colors duration-200 hover:bg-foreground/[0.08] focus-visible:bg-foreground/[0.08]",
+              index === 0 && "rounded-tl-lg",
+              index === tabs.length - 1 && "rounded-tr-lg",
             )}
           >
             <SvgIcon name={tab.icon} size={17} className={cn("shrink-0", tab.iconColor)} />
@@ -67,9 +77,11 @@ export function UserProfileTabs({
           </button>
         ))}
 
-        {/* 滑动指示线 — 单一元素，translateX 动效 */}
+        {/* 滑动指示线 — 下移 1px 覆盖 tablist 的 border-b */}
         <span
-          className="pointer-events-none absolute bottom-0 h-[2px] bg-primary transition-transform duration-300 ease-in-out"
+          aria-hidden
+          data-testid="user-profile-tab-indicator"
+          className="pointer-events-none absolute -bottom-px left-0 z-10 h-[2px] bg-primary transition-transform duration-300 ease-in-out"
           style={{
             width: `${100 / tabs.length}%`,
             transform: `translateX(${activeIndex * 100}%)`,
@@ -89,10 +101,22 @@ export function UserProfileTabs({
           />
         )}
         {validTab === "moments" && (
-          <p className="py-12 text-center text-sm text-muted-foreground/50">暂无碎语</p>
+          <ProfileTabEmptyState
+            icon="message-circle"
+            iconClassName="text-sky-500"
+            iconBgClassName="bg-gradient-to-br from-sky-500/15 to-sky-500/5"
+            title="暂无碎语"
+            description={isOwner ? "你还没有发布过碎语，去分享生活的碎片吧" : "TA 还没有发布过碎语"}
+          />
         )}
         {validTab === "likes" && (
-          <p className="py-12 text-center text-sm text-muted-foreground/50">暂无点赞内容</p>
+          <ProfileTabEmptyState
+            icon="heart-fill"
+            iconClassName="text-rose-500"
+            iconBgClassName="bg-gradient-to-br from-rose-500/15 to-rose-500/5"
+            title="暂无点赞"
+            description={isOwner ? "你还没有点赞过任何内容" : "TA 还没有点赞过任何内容"}
+          />
         )}
         {validTab === "security" && isOwner && isEditMode && <SecurityTab userId={profile.id} />}
       </div>

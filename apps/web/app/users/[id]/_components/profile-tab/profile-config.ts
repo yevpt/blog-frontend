@@ -1,10 +1,85 @@
+import type { UserPublicProfileResp, UserSocialLinkResp } from "@repo/api";
 import type { SvgIcon } from "@repo/icons";
+
+/** 后端 user_social_link.platform → 前端 canonical key */
+const SOCIAL_PLATFORM_ALIASES: Record<string, string> = {
+  sina: "weibo",
+  bili: "bilibili",
+};
+
+/** 前端 field → 后端 PATCH /users/me/social/:platform 路径参数 */
+const SOCIAL_PLATFORM_API_KEYS: Record<string, string> = {
+  weibo: "sina",
+  bilibili: "bili",
+};
+
+export function normalizeSocialPlatform(platform: string): string {
+  return SOCIAL_PLATFORM_ALIASES[platform] ?? platform;
+}
+
+export function toBackendSocialPlatform(platform: string): string {
+  return SOCIAL_PLATFORM_API_KEYS[platform] ?? platform;
+}
+
+/** 按前端 field 查找社交链接（兼容后端 platform 别名） */
+export function findSocialLink(
+  links: UserSocialLinkResp[] | undefined,
+  field: string,
+): UserSocialLinkResp | undefined {
+  return (links ?? []).find((link) => normalizeSocialPlatform(link.platform) === field);
+}
+
+/** 过滤并归一化可展示的社交链接 */
+export function getDisplaySocialLinks(
+  links: UserSocialLinkResp[] | undefined,
+): Array<{ platform: string; url: string }> {
+  return (links ?? [])
+    .filter((link) => link.url && SOCIAL_PLATFORMS[normalizeSocialPlatform(link.platform)])
+    .map((link) => ({
+      platform: normalizeSocialPlatform(link.platform),
+      url: link.url,
+    }));
+}
+
+export interface ProfileContactLink {
+  key: string;
+  platform: string;
+  url: string;
+  tooltipDescription?: string;
+}
+
+/** 资料页「联系方式」行：站点、对外邮箱、社交链接（顺序对齐旧版） */
+export function getProfileContactLinks(
+  profile: Pick<UserPublicProfileResp, "site" | "display_email" | "social_links">,
+): ProfileContactLink[] {
+  const links: ProfileContactLink[] = [];
+
+  if (profile.site) {
+    links.push({ key: "site", platform: "site", url: profile.site });
+  }
+
+  if (profile.display_email) {
+    links.push({
+      key: "email",
+      platform: "email",
+      url: `mailto:${profile.display_email}`,
+      tooltipDescription: profile.display_email,
+    });
+  }
+
+  for (const link of getDisplaySocialLinks(profile.social_links)) {
+    links.push({ key: link.platform, platform: link.platform, url: link.url });
+  }
+
+  return links;
+}
 
 export const SOCIAL_PLATFORMS: Record<
   string,
   { icon: Parameters<typeof SvgIcon>[0]["name"]; label: string; color: string }
 > = {
   site: { icon: "link", label: "个人站点", color: "text-muted-foreground" },
+  email: { icon: "email", label: "邮箱", color: "" },
   github: { icon: "github", label: "GitHub", color: "text-foreground" },
   gitee: { icon: "gitee", label: "Gitee", color: "text-orange-500" },
   bilibili: { icon: "bilibili", label: "Bilibili", color: "text-sky-400" },
