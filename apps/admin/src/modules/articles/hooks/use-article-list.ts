@@ -24,8 +24,8 @@ export interface UseAdminArticleListResult {
   page: number;
   setPage: (page: number) => void;
   filters: AdminArticleListFilters;
-  sort: ArticleTableSort;
-  setSort: (sort: ArticleTableSort) => void;
+  sort?: ArticleTableSort;
+  setSort: (sort?: ArticleTableSort) => void;
   setSearch: (value: string) => void;
   setCategoryId: (value: string) => void;
   refetch: () => Promise<void>;
@@ -42,7 +42,7 @@ const DEFAULT_FILTERS: AdminArticleListFilters = {
 export function useAdminArticleList(): UseAdminArticleListResult {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<AdminArticleListFilters>(DEFAULT_FILTERS);
-  const [sort, setSortState] = useState<ArticleTableSort>(DEFAULT_ARTICLE_TABLE_SORT);
+  const [sort, setSortState] = useState<ArticleTableSort | undefined>(DEFAULT_ARTICLE_TABLE_SORT);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [pageData, setPageData] = useState<AdminArticlePageResp | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,10 +74,14 @@ export function useAdminArticleList(): UseAdminArticleListResult {
     () => ({
       category_id: parseOptionalIdFilter(filters.categoryId),
       search: debouncedSearch || undefined,
-      sort_by: toArticleListSortBy(sort.column),
-      sort_order: toArticleListSortOrder(sort.direction),
+      ...(sort
+        ? {
+            sort_by: toArticleListSortBy(sort.column),
+            sort_order: toArticleListSortOrder(sort.direction),
+          }
+        : {}),
     }),
-    [debouncedSearch, filters.categoryId, sort.column, sort.direction],
+    [debouncedSearch, filters.categoryId, sort],
   );
 
   useEffect(() => {
@@ -122,7 +126,7 @@ export function useAdminArticleList(): UseAdminArticleListResult {
     setFilters((current) => ({ ...current, categoryId: value }));
   }, []);
 
-  const setSort = useCallback((nextSort: ArticleTableSort) => {
+  const setSort = useCallback((nextSort?: ArticleTableSort) => {
     setPage(1);
     setSortState(nextSort);
   }, []);

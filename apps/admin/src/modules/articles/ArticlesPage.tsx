@@ -6,10 +6,10 @@ import {
   Badge,
   Button,
   DataTable,
-  Dropdown,
   Pagination,
   cn,
   type DataTableColumn,
+  type DataTableEmptyState,
   type DataTableState,
 } from "@repo/ui";
 import { ArticleDeleteButton } from "./components/ArticleDeleteButton";
@@ -19,10 +19,16 @@ import { useAdminArticleFilterOptions } from "./hooks/use-article-filter-options
 import { useAdminArticleList } from "./hooks/use-article-list";
 import { apiClient } from "../../lib/api";
 import { addToast } from "../../lib/toast";
-import { serverSideColumnSort, type ArticleRow, type ArticleTableSort } from "./model";
+import {
+  passThroughFilter,
+  serverSideColumnSort,
+  type ArticleRow,
+  type ArticleTableSort,
+} from "./model";
 
-function isSameSort(a: ArticleTableSort, b?: DataTableState["sort"]) {
-  return b?.column === a.column && b.direction === a.direction;
+function isSameSort(a: ArticleTableSort | undefined, b?: DataTableState["sort"]) {
+  if (!a || !b) return false;
+  return b.column === a.column && b.direction === a.direction;
 }
 
 export function ArticlesPage() {
@@ -46,10 +52,6 @@ export function ArticlesPage() {
     error: filterOptionsError,
   } = useAdminArticleFilterOptions();
   const [deletingArticleId, setDeletingArticleId] = useState<string | null>(null);
-  const categorySelectItems = useMemo(
-    () => categoryOptions.map((option) => ({ id: option.value, label: option.label })),
-    [categoryOptions],
-  );
 
   const handleDeleteArticle = useCallback(
     async (articleId: string) => {
@@ -71,7 +73,12 @@ export function ArticlesPage() {
 
   const handleTableStateChange = useCallback(
     (nextState: DataTableState) => {
-      if (!nextState.sort || isSameSort(sort, nextState.sort)) return;
+      if (!nextState.sort) {
+        if (sort) setSort(undefined);
+        return;
+      }
+
+      if (isSameSort(sort, nextState.sort)) return;
       setSort({
         column: nextState.sort.column as ArticleTableSort["column"],
         direction: nextState.sort.direction,
@@ -88,6 +95,7 @@ export function ArticlesPage() {
         isRowHeader: true,
         width: "1fr",
         minWidth: 360,
+        headerAction: <ArticleListSearch value={filters.search} onChange={setSearch} />,
         cell: (article) => (
           <>
             <Link
@@ -113,10 +121,17 @@ export function ArticlesPage() {
       {
         id: "category",
         header: "分类",
-        width: 148,
+        width: 128,
         className: "text-muted-foreground",
         cell: (article) => article.category,
         sort: serverSideColumnSort,
+        filter: {
+          type: "single",
+          value: filters.categoryId,
+          options: categoryOptions,
+          onChange: setCategoryId,
+          match: passThroughFilter,
+        },
       },
       {
         id: "pinned",
@@ -160,16 +175,43 @@ export function ArticlesPage() {
         ),
       },
     ],
-    [deletingArticleId, handleDeleteArticle],
+    [
+      deletingArticleId,
+      handleDeleteArticle,
+      filters.search,
+      filters.categoryId,
+      categoryOptions,
+      setSearch,
+      setCategoryId,
+    ],
   );
 
   const listError = error ?? filterOptionsError;
-  const selectedCategoryLabel =
-    categoryOptions.find((option) => option.value === filters.categoryId)?.label ?? "全部";
-  const categoryChipText = filters.categoryId === "all" ? "分类" : `分类：${selectedCategoryLabel}`;
+  const totalCount = pageData?.total ?? 0;
+  const totalPages = pageData?.pages ?? 0;
+  const showFooterTotal = totalCount > 0;
+  const showPagination = totalPages > 1;
+  const hasActiveArticleFilters = filters.search.trim().length > 0 || filters.categoryId !== "all";
+  const articleEmptyState: DataTableEmptyState = hasActiveArticleFilters
+    ? {
+        icon: "search",
+        title: "未找到匹配的文章",
+        description: "调整搜索关键词或分类筛选后再试。",
+      }
+    : {
+        icon: "folder",
+        title: "还没有文章",
+        description: "新建第一篇文章后，它会显示在这里。",
+        action: (
+          <Button href="/articles/new" size="sm">
+            <SvgIcon name="plus" size={15} />
+            新建文章
+          </Button>
+        ),
+      };
 
   return (
-    <div className="grid h-[calc(100dvh-6.5rem)] min-h-0 grid-rows-[64px_auto_minmax(0,1fr)] overflow-hidden lg:h-[calc(100dvh-3rem)]">
+    <div className="grid max-h-[calc(100dvh-6.5rem)] min-h-0 grid-rows-[64px_minmax(0,1fr)] overflow-hidden lg:-mt-6 lg:max-h-[calc(100dvh-1.5rem)]">
       <section className="flex min-w-0 items-center justify-between gap-3">
         <h2 className="truncate text-2xl font-semibold tracking-normal text-foreground">
           文章管理
@@ -178,47 +220,6 @@ export function ArticlesPage() {
           <SvgIcon name="plus" size={15} />
           新建
         </Button>
-      </section>
-
-      <section
-        className="flex min-w-0 flex-col gap-3 border-b border-border pb-3 sm:flex-row sm:items-center sm:justify-between"
-        aria-label="文章列表筛选"
-      >
-        <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
-          <Badge
-            variant="secondary"
-            className="h-8 shrink-0 rounded-full bg-foreground px-3 text-sm font-semibold text-background shadow-sm"
-          >
-            全部 {pageData?.total ?? 0}
-          </Badge>
-          <Dropdown.Root>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              aria-label={`筛选分类：${selectedCategoryLabel}`}
-              className="h-8 shrink-0 rounded-full border-dashed border-border bg-background px-3 text-sm font-semibold shadow-none hover:border-primary/40 hover:bg-accent/60"
-            >
-              {categoryChipText}
-              <SvgIcon name="chevron-down" size={14} />
-            </Button>
-            <Dropdown.Popover className="w-44">
-              <Dropdown.Menu
-                aria-label="筛选分类"
-                selectionMode="single"
-                selectedKeys={new Set([filters.categoryId])}
-                onAction={(key) => setCategoryId(String(key))}
-              >
-                {categorySelectItems.map((item) => (
-                  <Dropdown.Item key={item.id} id={item.id} label={item.label} />
-                ))}
-              </Dropdown.Menu>
-            </Dropdown.Popover>
-          </Dropdown.Root>
-        </div>
-        <div className="flex justify-end">
-          <ArticleListSearch value={filters.search} onChange={setSearch} />
-        </div>
       </section>
 
       <section
@@ -248,28 +249,33 @@ export function ArticlesPage() {
           }}
           onStateChange={handleTableStateChange}
           total={pageData?.total}
-          emptyText="暂无文章"
+          emptyState={articleEmptyState}
           isLoading={isLoading || isLoadingFilterOptions}
           maxHeightClassName={false}
           classNames={{
             root: "min-h-0 h-full",
             container: "min-h-0 h-full shadow-sm",
+            headerAction: "min-w-0 flex-1 shrink justify-end",
           }}
         />
 
-        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border pt-3">
-          <p className="whitespace-nowrap text-sm text-muted-foreground">
-            共 {pageData?.total ?? 0} 条
-          </p>
-          {pageData && pageData.pages > 1 ? (
-            <Pagination
-              currentPage={page}
-              totalPages={pageData.pages}
-              onPageChange={setPage}
-              className="justify-end"
-            />
-          ) : null}
-        </div>
+        {showFooterTotal || showPagination ? (
+          <div className="flex shrink-0 items-center justify-between gap-3 pt-3">
+            {showFooterTotal ? (
+              <p className="whitespace-nowrap text-sm text-muted-foreground">共 {totalCount} 条</p>
+            ) : (
+              <span aria-hidden="true" />
+            )}
+            {showPagination ? (
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                className="justify-end border-t-0 pt-0 md:pt-0"
+              />
+            ) : null}
+          </div>
+        ) : null}
       </section>
     </div>
   );

@@ -121,10 +121,7 @@ describe("ArticlesPage", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "置顶管理" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "新建" })).toHaveAttribute("href", "/articles/new");
-    expect(screen.getByText("全部 42")).toBeInTheDocument();
-    expect(
-      within(screen.getByRole("button", { name: "筛选分类：全部" })).getByText("分类"),
-    ).toBeInTheDocument();
+    expect(screen.queryByText("全部 42")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "更多筛选" })).not.toBeInTheDocument();
     expect(screen.getByText("共 42 条")).toHaveClass("whitespace-nowrap");
 
@@ -138,7 +135,8 @@ describe("ArticlesPage", () => {
 
     const table = screen.getByRole("grid", { name: "文章列表" });
     expect(within(table).getByRole("columnheader", { name: /创建时间/ })).toBeInTheDocument();
-    expect(within(table).queryByRole("button", { name: "筛选分类" })).not.toBeInTheDocument();
+    expect(within(table).getByRole("button", { name: "展开搜索" })).toBeInTheDocument();
+    expect(within(table).getByRole("button", { name: "筛选分类" })).toBeInTheDocument();
     expect(within(table).queryByRole("button", { name: "筛选推荐" })).not.toBeInTheDocument();
     expect(
       within(table).getByRole("button", { name: "创建时间排序：降序，点击切换为升序" }),
@@ -202,7 +200,9 @@ describe("ArticlesPage", () => {
     const searchbox = screen.getByRole("searchbox", { name: "搜索标题或摘要" });
     await user.type(searchbox, "Vite");
 
-    expect(mockSetSearch).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(mockSetSearch).toHaveBeenCalled();
+    });
     expect(mockSetSearch.mock.calls.some(([value]) => String(value).includes("Vite"))).toBe(true);
   });
 
@@ -210,7 +210,8 @@ describe("ArticlesPage", () => {
     const user = userEvent.setup();
     renderArticlesPage();
 
-    await user.click(screen.getByRole("button", { name: "筛选分类：全部" }));
+    const table = screen.getByRole("grid", { name: "文章列表" });
+    await user.click(within(table).getByRole("button", { name: "筛选分类" }));
     await user.click(screen.getByRole("menuitemradio", { name: "前端" }));
 
     expect(mockSetCategoryId).toHaveBeenCalledWith("2");
@@ -225,10 +226,83 @@ describe("ArticlesPage", () => {
     expect(mockSetSort).toHaveBeenCalledWith({ column: "status", direction: "descending" });
   });
 
+  it("再次点击升序列时清除表格排序", async () => {
+    const user = userEvent.setup();
+    vi.mocked(useAdminArticleList).mockReturnValue({
+      rows: mockRows,
+      pageData: { total: 42, pages: 3, page: 1, page_size: 10, list: [] },
+      isLoading: false,
+      error: null,
+      page: 1,
+      setPage: mockSetPage,
+      filters: {
+        categoryId: "all",
+        search: "",
+      },
+      sort: { column: "createdAt", direction: "ascending" },
+      setSort: mockSetSort,
+      setSearch: mockSetSearch,
+      setCategoryId: mockSetCategoryId,
+      refetch: mockRefetch,
+    });
+    renderArticlesPage();
+
+    await user.click(screen.getByRole("button", { name: "创建时间排序：升序，点击取消排序" }));
+
+    expect(mockSetSort).toHaveBeenCalledWith(undefined);
+  });
+
   it("多页时展示分页控件", () => {
     renderArticlesPage();
 
     expect(screen.getByRole("navigation", { name: "分页导航" })).toBeInTheDocument();
+  });
+
+  it("无匹配文章时展示友好的空态并隐藏底部总数统计", () => {
+    vi.mocked(useAdminArticleList).mockReturnValue({
+      rows: [],
+      pageData: { total: 0, pages: 0, page: 1, page_size: 10, list: [] },
+      isLoading: false,
+      error: null,
+      page: 1,
+      setPage: mockSetPage,
+      filters: { categoryId: "all", search: "12" },
+      sort: { column: "createdAt", direction: "descending" },
+      setSort: mockSetSort,
+      setSearch: mockSetSearch,
+      setCategoryId: mockSetCategoryId,
+      refetch: mockRefetch,
+    });
+
+    renderArticlesPage();
+
+    expect(screen.getByText("未找到匹配的文章")).toBeInTheDocument();
+    expect(screen.getByText("调整搜索关键词或分类筛选后再试。")).toBeInTheDocument();
+    expect(screen.queryByText("暂无文章")).not.toBeInTheDocument();
+    expect(screen.queryByText(/^共 \d+ 条$/)).not.toBeInTheDocument();
+  });
+
+  it("完全没有文章时引导新建第一篇文章", () => {
+    vi.mocked(useAdminArticleList).mockReturnValue({
+      rows: [],
+      pageData: { total: 0, pages: 0, page: 1, page_size: 10, list: [] },
+      isLoading: false,
+      error: null,
+      page: 1,
+      setPage: mockSetPage,
+      filters: { categoryId: "all", search: "" },
+      sort: { column: "createdAt", direction: "descending" },
+      setSort: mockSetSort,
+      setSearch: mockSetSearch,
+      setCategoryId: mockSetCategoryId,
+      refetch: mockRefetch,
+    });
+
+    renderArticlesPage();
+
+    expect(screen.getByText("还没有文章")).toBeInTheDocument();
+    expect(screen.getByText("新建第一篇文章后，它会显示在这里。")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "新建文章" })).toHaveAttribute("href", "/articles/new");
   });
 
   it("删除文章前弹出二次确认，确认后调用删除接口并刷新列表", async () => {

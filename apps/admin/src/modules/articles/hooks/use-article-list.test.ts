@@ -105,6 +105,25 @@ describe("useAdminArticleList", () => {
     });
   });
 
+  it("setSort 清空排序时不携带排序 query 参数", async () => {
+    const { result } = renderHook(() => useAdminArticleList());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    act(() => {
+      result.current.setSort(undefined);
+    });
+
+    await waitFor(() => {
+      expect(apiClient.articles.listAdmin).toHaveBeenLastCalledWith({
+        page: 1,
+        page_size: 10,
+      });
+    });
+  });
+
   it("setSearch 更新 filters.search", async () => {
     const { result } = renderHook(() => useAdminArticleList());
 
