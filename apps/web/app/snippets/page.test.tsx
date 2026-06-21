@@ -4,7 +4,8 @@ import Page from "./page";
 
 const mockState = vi.hoisted(() => {
   const listPublic = vi.fn();
-  return { listPublic };
+  const renderSnippetsList = vi.fn();
+  return { listPublic, renderSnippetsList };
 });
 
 vi.mock("@/lib/server-api", () => ({
@@ -14,19 +15,22 @@ vi.mock("@/lib/server-api", () => ({
 }));
 
 vi.mock("@/components/snippets/snippets-list-loader", () => ({
-  SnippetsListLoader: ({
-    initialPage,
-  }: {
+  SnippetsListLoader: (props: {
     initialPage: { list: Array<{ id: number; content: string }> };
-  }) => (
-    <div data-testid="snippets-list">
-      {initialPage.list.map((snippet) => (
-        <div key={snippet.id} data-testid="snippet-card">
-          {snippet.content}
-        </div>
-      ))}
-    </div>
-  ),
+    ownerUserId?: number;
+    friendRoleId?: number;
+  }) => {
+    mockState.renderSnippetsList(props);
+    return (
+      <div data-testid="snippets-list">
+        {props.initialPage.list.map((snippet) => (
+          <div key={snippet.id} data-testid="snippet-card">
+            {snippet.content}
+          </div>
+        ))}
+      </div>
+    );
+  },
 }));
 
 const MOCK_SNIPPET = {
@@ -41,6 +45,7 @@ const MOCK_SNIPPET = {
 describe("SnippetsPage", () => {
   beforeEach(() => {
     mockState.listPublic.mockReset();
+    mockState.renderSnippetsList.mockReset();
     mockState.listPublic.mockResolvedValue({
       total: 0,
       pages: 0,
@@ -85,5 +90,12 @@ describe("SnippetsPage", () => {
     expect(mockState.listPublic).toHaveBeenCalledWith(
       expect.objectContaining({ page: 1, page_size: 20 }),
     );
+  });
+
+  it("不再传入朋友们筛选参数", async () => {
+    render(await Page());
+
+    const props = mockState.renderSnippetsList.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(props).not.toHaveProperty("friendRoleId");
   });
 });
