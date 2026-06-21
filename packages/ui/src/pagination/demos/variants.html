@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pagination 样式方案 Demo</title>
+    <style>
+      /* 对齐 packages/styles/src/base.css 设计令牌 */
+      :root {
+        --background: #ffffff;
+        --foreground: #18181b;
+        --card: #ffffff;
+        --primary: #7c3aed;
+        --primary-fg: #ffffff;
+        --muted: #f4f4f5;
+        --muted-fg: #71717a;
+        --accent: #f4f4f5;
+        --accent-fg: #18181b;
+        --border: rgba(0, 0, 0, 0.06);
+        --ring: #7c3aed;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      :root.dark {
+        --background: #09090b;
+        --foreground: #fafafa;
+        --card: #18181b;
+        --primary: #a78bfa;
+        --primary-fg: #09090b;
+        --muted: #27272a;
+        --muted-fg: #a1a1aa;
+        --accent: #27272a;
+        --accent-fg: #fafafa;
+        --border: rgba(255, 255, 255, 0.08);
+        --ring: #a78bfa;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+        background: var(--background);
+        color: var(--foreground);
+        line-height: 1.5;
+        transition:
+          background 0.2s,
+          color 0.2s;
+      }
+
+      .page {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 32px 20px 64px;
+      }
+
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 40px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 1.5rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .subtitle {
+        margin: 0;
+        color: var(--muted-fg);
+        font-size: 0.875rem;
+      }
+
+      .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--card);
+        color: var(--foreground);
+        font-size: 0.8125rem;
+        cursor: pointer;
+        box-shadow: var(--shadow);
+      }
+
+      .theme-toggle:hover {
+        background: var(--accent);
+      }
+
+      .demo-card {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--card);
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: var(--shadow);
+      }
+
+      .demo-card h2 {
+        margin: 0 0 4px;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      .demo-card .desc {
+        margin: 0 0 20px;
+        color: var(--muted-fg);
+        font-size: 0.8125rem;
+      }
+
+      .demo-area {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 72px;
+        padding: 16px;
+        border-radius: 12px;
+        background: var(--muted);
+      }
+
+      .demo-area.admin {
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .total-label {
+        font-size: 0.875rem;
+        color: var(--muted-fg);
+        white-space: nowrap;
+      }
+
+      /* ---- 通用分页按钮 reset ---- */
+      .pg-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+        outline: none;
+        transition:
+          background 0.15s,
+          color 0.15s,
+          box-shadow 0.15s,
+          border-color 0.15s;
+      }
+
+      .pg-btn:focus-visible {
+        box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+      }
+
+      .pg-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+
+      .pg-btn svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      /* ---- 方案 A: Segmented Pill ---- */
+      .variant-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        padding: 4px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--muted) 80%, transparent);
+      }
+
+      .variant-pill .pg-btn {
+        min-width: 32px;
+        height: 32px;
+        padding: 0 8px;
+        border-radius: 999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--muted-fg);
+      }
+
+      .variant-pill .pg-btn:hover:not(:disabled):not([aria-current="page"]) {
+        background: color-mix(in srgb, var(--background) 70%, transparent);
+        color: var(--foreground);
+      }
+
+      .variant-pill .pg-btn[aria-current="page"] {
+        background: var(--background);
+        color: var(--foreground);
+        font-weight: 600;
+        box-shadow: var(--shadow);
+        outline: 1px solid var(--border);
+      }
+
+      .variant-pill .pg-btn.nav {
+        padding: 0 6px;
+      }
+
+      .variant-pill .ellipsis {
+        min-width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted-fg);
+        font-size: 0.875rem;
+        user-select: none;
+      }
+
+      /* ---- 方案 B: Minimal Ghost ---- */
+      .variant-ghost {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+      }
+
+      .variant-ghost .pg-btn {
+        min-width: 36px;
+        height: 36px;
+        padding: 0 10px;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--muted-fg);
+      }
+
+      .variant-ghost .pg-btn:hover:not(:disabled):not([aria-current="page"]) {
+        background: var(--accent);
+        color: var(--accent-fg);
+      }
+
+      .variant-ghost .pg-btn[aria-current="page"] {
+        color: var(--foreground);
+        font-weight: 600;
+        border-bottom: 2px solid var(--primary);
+        border-radius: 0;
+        padding-bottom: calc(0.5rem - 2px);
+      }
+
+      .variant-ghost .pg-btn.nav {
+        border-radius: 8px;
+        min-width: 32px;
+        width: 32px;
+        padding: 0;
+      }
+
+      .variant-ghost .ellipsis {
+        min-width: 28px;
+        text-align: center;
+        color: color-mix(in srgb, var(--muted-fg) 60%, transparent);
+        font-size: 0.875rem;
+        user-select: none;
+      }
+
+      /* ---- 方案 C: Compact Bar ---- */
+      .variant-bar-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        gap: 12px;
+      }
+
+      .variant-bar {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .variant-bar .pg-btn {
+        height: 32px;
+        min-width: 32px;
+        padding: 0 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--foreground);
+        box-shadow: var(--shadow);
+      }
+
+      .variant-bar .pg-btn:hover:not(:disabled) {
+        background: var(--accent);
+      }
+
+      .variant-bar .pg-btn[aria-current="page"] {
+        background: var(--primary);
+        color: var(--primary-fg);
+        border-color: transparent;
+      }
+
+      .variant-bar .pg-btn.nav {
+        padding: 0 8px;
+      }
+
+      .variant-bar .summary {
+        font-size: 0.8125rem;
+        color: var(--muted-fg);
+        white-space: nowrap;
+        padding: 0 4px;
+      }
+
+      .variant-bar .summary strong {
+        color: var(--foreground);
+        font-weight: 600;
+      }
+
+      .variant-bar .pages-inline {
+        display: none;
+        align-items: center;
+        gap: 4px;
+      }
+
+      @media (min-width: 640px) {
+        .variant-bar .pages-inline {
+          display: inline-flex;
+        }
+
+        .variant-bar .summary {
+          display: none;
+        }
+      }
+
+      .variant-bar .ellipsis {
+        min-width: 24px;
+        text-align: center;
+        color: var(--muted-fg);
+        font-size: 0.8125rem;
+      }
+
+      /* ---- 方案 D: Floating Capsule ---- */
+      .variant-capsule {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        padding: 6px 8px;
+        border-radius: 16px;
+        border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+        background: color-mix(in srgb, var(--card) 85%, transparent);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow: var(--shadow-md);
+      }
+
+      .variant-capsule .pg-btn {
+        min-width: 34px;
+        height: 34px;
+        padding: 0 8px;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--muted-fg);
+      }
+
+      .variant-capsule .pg-btn:hover:not(:disabled):not([aria-current="page"]) {
+        background: var(--accent);
+        color: var(--accent-fg);
+      }
+
+      .variant-capsule .pg-btn[aria-current="page"] {
+        background: var(--primary);
+        color: var(--primary-fg);
+        font-weight: 600;
+      }
+
+      .variant-capsule .pg-btn.nav {
+        padding: 0 6px;
+      }
+
+      .variant-capsule .ellipsis {
+        min-width: 34px;
+        text-align: center;
+        color: var(--muted-fg);
+        font-size: 0.875rem;
+      }
+
+      /* ---- 当前方案（对照组）---- */
+      .variant-current {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        gap: 12px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+      }
+
+      .variant-current .nav-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--background);
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--foreground);
+        box-shadow: var(--shadow);
+        cursor: pointer;
+      }
+
+      .variant-current .nav-btn:hover:not(:disabled) {
+        background: var(--accent);
+      }
+
+      .variant-current .nav-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .variant-current .pages {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
+
+      .variant-current .page-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--muted-fg);
+        cursor: pointer;
+      }
+
+      .variant-current .page-btn:hover:not([aria-current="page"]) {
+        color: var(--foreground);
+      }
+
+      .variant-current .page-btn[aria-current="page"] {
+        background: var(--primary);
+        color: var(--primary-fg);
+      }
+
+      .variant-current .ellipsis {
+        width: 36px;
+        text-align: center;
+        color: var(--muted-fg);
+      }
+
+      .badge {
+        display: inline-block;
+        margin-left: 8px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--primary) 15%, transparent);
+        color: var(--primary);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        vertical-align: middle;
+      }
+
+      footer {
+        margin-top: 32px;
+        text-align: center;
+        font-size: 0.75rem;
+        color: var(--muted-fg);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div>
+          <h1>Pagination 样式方案</h1>
+          <p class="subtitle">点击页码或箭头切换，右上角可切换明暗主题。颜色令牌对齐 @repo/styles。</p>
+        </div>
+        <button type="button" class="theme-toggle" id="themeToggle" aria-label="切换主题">
+          <span id="themeIcon">🌙</span>
+          <span id="themeLabel">深色模式</span>
+        </button>
+      </header>
+
+      <!-- 对照：当前实现 -->
+      <section class="demo-card">
+        <h2>当前实现 <span class="badge">对照组</span></h2>
+        <p class="desc">Untitled UI Page default：prev/next 带边框，页码 ghost + 选中实心 primary，顶部 border-t。</p>
+        <div class="demo-area">
+          <nav class="variant-current" data-pagination="current" aria-label="分页导航"></nav>
+        </div>
+      </section>
+
+      <!-- A: Pill -->
+      <section class="demo-card">
+        <h2>方案 A · Segmented Pill <span class="badge">推荐 admin</span></h2>
+        <p class="desc">单一圆角容器包裹全部控件，选中项浮起（background + shadow），视觉语言统一。</p>
+        <div class="demo-area">
+          <nav class="variant-pill" data-pagination="pill" aria-label="分页导航"></nav>
+        </div>
+      </section>
+
+      <!-- B: Ghost -->
+      <section class="demo-card">
+        <h2>方案 B · Minimal Ghost <span class="badge">推荐 web</span></h2>
+        <p class="desc">无背景容器，当前页用下划线 + 字重表达，轻量不抢内容。</p>
+        <div class="demo-area">
+          <nav class="variant-ghost" data-pagination="ghost" aria-label="分页导航"></nav>
+        </div>
+      </section>
+
+      <!-- C: Bar -->
+      <section class="demo-card">
+        <h2>方案 C · Compact Bar <span class="badge">推荐 DataTable</span></h2>
+        <p class="desc">左侧总数 + 右侧分页；小屏显示摘要，大屏展开页码。</p>
+        <div class="demo-area admin">
+          <span class="total-label">共 128 条</span>
+          <nav class="variant-bar-wrap" data-pagination="bar" aria-label="分页导航"></nav>
+        </div>
+      </section>
+
+      <!-- D: Capsule -->
+      <section class="demo-card">
+        <h2>方案 D · Floating Capsule</h2>
+        <p class="desc">毛玻璃胶囊 + 阴影，适合 C 端独立分页区（留言板、归档页）。</p>
+        <div class="demo-area">
+          <nav class="variant-capsule" data-pagination="capsule" aria-label="分页导航"></nav>
+        </div>
+      </section>
+
+      <footer>打开方式：直接用浏览器打开此 HTML 文件，或运行下方命令启动本地预览。</footer>
+    </div>
+
+    <script>
+      const TOTAL = 10;
+      const states = { current: 3, pill: 3, ghost: 5, bar: 3, capsule: 2 };
+
+      const chevronLeft =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>';
+      const chevronRight =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>';
+
+      /** 与 usePaginationItems 相同逻辑 */
+      function getPages(total, page, siblingCount = 1) {
+        const totalPageNumbers = siblingCount * 2 + 5;
+        if (total <= totalPageNumbers) {
+          return Array.from({ length: total }, (_, i) => ({ type: "page", value: i + 1 }));
+        }
+        const left = Math.max(page - siblingCount, 1);
+        const right = Math.min(page + siblingCount, total);
+        const showLeftEllipsis = left > 2;
+        const showRightEllipsis = right < total - 1;
+        const items = [];
+
+        items.push({ type: "page", value: 1 });
+        if (showLeftEllipsis) items.push({ type: "ellipsis" });
+
+        const start = showLeftEllipsis ? left : 2;
+        const end = showRightEllipsis ? right : total - 1;
+        for (let i = start; i <= end; i++) items.push({ type: "page", value: i });
+
+        if (showRightEllipsis) items.push({ type: "ellipsis" });
+        items.push({ type: "page", value: total });
+
+        return items;
+      }
+
+      function pageBtn(value, current, extraClass = "") {
+        const selected = value === current;
+        return `<button type="button" class="pg-btn ${extraClass}" data-page="${value}" aria-label="第 ${value} 页"${selected ? ' aria-current="page"' : ""}>${value}</button>`;
+      }
+
+      function ellipsis() {
+        return '<span class="ellipsis" aria-hidden="true">…</span>';
+      }
+
+      function navBtn(dir, disabled, label) {
+        return `<button type="button" class="pg-btn nav" data-dir="${dir}" aria-label="${label}"${disabled ? " disabled" : ""}>${dir === "prev" ? chevronLeft : chevronRight}</button>`;
+      }
+
+      function renderCurrent(el, page) {
+        const pages = getPages(TOTAL, page);
+        const prevDisabled = page <= 1;
+        const nextDisabled = page >= TOTAL;
+
+        el.innerHTML = `
+          <button type="button" class="nav-btn" data-dir="prev" aria-label="上一页"${prevDisabled ? " disabled" : ""}>
+            ${chevronLeft}<span>上一页</span>
+          </button>
+          <div class="pages">
+            ${pages
+              .map((item) =>
+                item.type === "page"
+                  ? `<button type="button" class="page-btn" data-page="${item.value}" aria-label="第 ${item.value} 页"${item.value === page ? ' aria-current="page"' : ""}>${item.value}</button>`
+                  : '<span class="ellipsis">…</span>',
+              )
+              .join("")}
+          </div>
+          <button type="button" class="nav-btn" data-dir="next" aria-label="下一页"${nextDisabled ? " disabled" : ""}>
+            <span>下一页</span>${chevronRight}
+          </button>
+        `;
+      }
+
+      function renderPill(el, page) {
+        const pages = getPages(TOTAL, page);
+        el.innerHTML =
+          navBtn("prev", page <= 1, "上一页") +
+          pages
+            .map((item) => (item.type === "page" ? pageBtn(item.value, page) : ellipsis()))
+            .join("") +
+          navBtn("next", page >= TOTAL, "下一页");
+      }
+
+      function renderGhost(el, page) {
+        renderPill(el, page);
+      }
+
+      function renderBar(el, page) {
+        const pages = getPages(TOTAL, page);
+        const inlinePages = pages
+          .map((item) => (item.type === "page" ? pageBtn(item.value, page) : '<span class="ellipsis">…</span>'))
+          .join("");
+
+        el.innerHTML = `
+          <div class="variant-bar">
+            ${navBtn("prev", page <= 1, "上一页")}
+            <span class="summary">第 <strong>${page}</strong> / <strong>${TOTAL}</strong> 页</span>
+            <div class="pages-inline">${inlinePages}</div>
+            ${navBtn("next", page >= TOTAL, "下一页")}
+          </div>
+        `;
+      }
+
+      function renderCapsule(el, page) {
+        renderPill(el, page);
+      }
+
+      const renderers = {
+        current: renderCurrent,
+        pill: renderPill,
+        ghost: renderGhost,
+        bar: renderBar,
+        capsule: renderCapsule,
+      };
+
+      function renderAll() {
+        document.querySelectorAll("[data-pagination]").forEach((el) => {
+          const key = el.dataset.pagination;
+          renderers[key](el, states[key]);
+        });
+      }
+
+      function go(key, page) {
+        states[key] = Math.max(1, Math.min(TOTAL, page));
+        renderers[key](document.querySelector(`[data-pagination="${key}"]`), states[key]);
+      }
+
+      document.addEventListener("click", (e) => {
+        const nav = e.target.closest("[data-pagination]");
+        if (!nav) return;
+        const key = nav.dataset.pagination;
+        const dirBtn = e.target.closest("[data-dir]");
+        const pageBtnEl = e.target.closest("[data-page]");
+
+        if (dirBtn) {
+          const delta = dirBtn.dataset.dir === "prev" ? -1 : 1;
+          go(key, states[key] + delta);
+        } else if (pageBtnEl) {
+          go(key, Number(pageBtnEl.dataset.page));
+        }
+      });
+
+      /* 主题切换 */
+      const themeToggle = document.getElementById("themeToggle");
+      const themeIcon = document.getElementById("themeIcon");
+      const themeLabel = document.getElementById("themeLabel");
+
+      function applyTheme(dark) {
+        document.documentElement.classList.toggle("dark", dark);
+        themeIcon.textContent = dark ? "☀️" : "🌙";
+        themeLabel.textContent = dark ? "浅色模式" : "深色模式";
+        localStorage.setItem("pagination-demo-theme", dark ? "dark" : "light");
+      }
+
+      const saved = localStorage.getItem("pagination-demo-theme");
+      if (saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        applyTheme(true);
+      }
+
+      themeToggle.addEventListener("click", () => {
+        applyTheme(!document.documentElement.classList.contains("dark"));
+      });
+
+      renderAll();
+    </script>
+  </body>
+</html>
