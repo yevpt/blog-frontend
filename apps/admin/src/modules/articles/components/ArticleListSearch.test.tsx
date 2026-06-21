@@ -81,7 +81,7 @@ describe("ArticleListSearch", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "展开搜索" }));
-    await user.tab();
+    await user.click(screen.getByRole("button", { name: "外部按钮" }));
 
     await waitFor(() => {
       expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
