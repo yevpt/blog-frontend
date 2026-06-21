@@ -28,6 +28,7 @@ function DataTableHeaderAction({
 
   return (
     <div
+      role="none"
       className={className}
       onBlur={handleInteractiveEvent}
       onClick={handleInteractiveEvent}

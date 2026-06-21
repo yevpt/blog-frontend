@@ -404,6 +404,7 @@ describe("DataTable", () => {
     );
 
     render(
+      // eslint-disable-next-line jsx-a11y/no-static-element-interactions
       <div onKeyDown={onKeyDown}>
         <DataTable
           aria-label="文章"
