@@ -45,7 +45,7 @@ export function AdminLayout() {
             <SvgIcon name="menu" size={20} />
           </Button>
         </div>
-        <main className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 lg:px-8">
+        <main className="w-full px-4 py-6 md:px-6 lg:px-8">
           <Outlet />
         </main>
       </div>
