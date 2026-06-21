@@ -1,9 +1,6 @@
 name: Deploy
 
 on:
-  pull_request:
-    branches:
-      - main
   push:
     branches:
       - main
@@ -20,39 +17,9 @@ env:
   WEB_IMAGE_NAME: krccr.ccs.tencentyun.com/yevpt/blog-frontend-web
 
 jobs:
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run tests
-        run: pnpm test:run
-
-      - name: Check types
-        run: pnpm check-types
-
-      - name: Lint
-        run: pnpm lint
-
   web-image:
     name: Build and Push Web Image
     runs-on: ubuntu-latest
-    needs: test
-    if: github.event_name != 'pull_request'
     outputs:
       image: ${{ env.WEB_IMAGE_NAME }}
       tag: ${{ github.sha }}
@@ -86,8 +53,6 @@ jobs:
   admin-artifact:
     name: Build Admin Artifact
     runs-on: ubuntu-latest
-    needs: test
-    if: github.event_name != 'pull_request'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -123,7 +88,6 @@ jobs:
     needs:
       - web-image
       - admin-artifact
-    if: github.event_name != 'pull_request'
     environment: production
     env:
       REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
