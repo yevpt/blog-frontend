@@ -29,9 +29,11 @@ import type {
   CommentReplyPageResp,
   CommentReplyResp,
   CommentLikeResp,
+  CommentDeleteResp,
 } from "./types/comment";
 import type {
   GuestbookCreateReq,
+  GuestbookDeleteResp,
   GuestbookItemResp,
   GuestbookListReq,
   GuestbookLikeResp,
@@ -400,6 +402,22 @@ export function createApiClient(config: ApiClientConfig) {
         fetchAuthed<CommentLikeResp>(`/moments/comments/${commentId}/replies/${replyId}/like`, {
           method: "POST",
         }),
+      /** 删除文章评论（需登录；作者或管理员） */
+      deleteArticle: (commentId: number) =>
+        fetchAuthed<CommentDeleteResp>(`/articles/comments/${commentId}`, { method: "DELETE" }),
+      /** 删除碎语评论（需登录；作者或管理员） */
+      deleteMoment: (commentId: number) =>
+        fetchAuthed<CommentDeleteResp>(`/moments/comments/${commentId}`, { method: "DELETE" }),
+      /** 删除文章评论回复（需登录；回复作者或管理员） */
+      deleteArticleReply: (replyId: number) =>
+        fetchAuthed<CommentDeleteResp>(`/articles/comment-replies/${replyId}`, {
+          method: "DELETE",
+        }),
+      /** 删除碎语评论回复（需登录；回复作者或管理员） */
+      deleteMomentReply: (replyId: number) =>
+        fetchAuthed<CommentDeleteResp>(`/moments/comment-replies/${replyId}`, {
+          method: "DELETE",
+        }),
     },
     guestbook: {
       /** 分页查询留言（可选登录） */
@@ -443,6 +461,14 @@ export function createApiClient(config: ApiClientConfig) {
       toggleReplyLike: (guestbookId: number, replyId: number) =>
         fetchAuthed<CommentLikeResp>(`/guestbook/comments/${guestbookId}/replies/${replyId}/like`, {
           method: "POST",
+        }),
+      /** 删除留言（需登录；留言作者或管理员） */
+      delete: (id: number) =>
+        fetchAuthed<GuestbookDeleteResp>(`/guestbook/${id}`, { method: "DELETE" }),
+      /** 删除留言回复（需登录；回复作者或管理员） */
+      deleteReply: (replyId: number) =>
+        fetchAuthed<CommentDeleteResp>(`/guestbook/comment-replies/${replyId}`, {
+          method: "DELETE",
         }),
     },
     friendLinks: {

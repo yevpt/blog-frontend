@@ -8,10 +8,14 @@ import { useCommentSectionState } from "./use-comment-section-state";
 const mockOpenLoginModal = vi.fn();
 const mockAddComment = vi.fn();
 const mockIncrementReplyCount = vi.fn();
+const mockDecrementReplyCount = vi.fn();
 const mockUpdateCommentLike = vi.fn();
+const mockRemoveComment = vi.fn();
 const mockSubmitComment = vi.fn();
 const mockSubmitReply = vi.fn();
 const mockToggleCommentLike = vi.fn();
+const mockDeleteComment = vi.fn();
+const mockDeleteReply = vi.fn();
 const mockClearError = vi.fn();
 
 let mockSessionUserId: number | null = 1;
@@ -35,7 +39,9 @@ vi.mock("@/hooks/use-comment-list", () => ({
     loadMore: vi.fn(),
     addComment: mockAddComment,
     incrementReplyCount: mockIncrementReplyCount,
+    decrementReplyCount: mockDecrementReplyCount,
     updateCommentLike: mockUpdateCommentLike,
+    removeComment: mockRemoveComment,
   }),
 }));
 
@@ -52,6 +58,13 @@ vi.mock("@/hooks/use-comment-submit", () => ({
 vi.mock("@/hooks/use-comment-like", () => ({
   useCommentLike: () => ({
     toggleCommentLike: mockToggleCommentLike,
+  }),
+}));
+
+vi.mock("@/hooks/use-comment-delete", () => ({
+  useCommentDelete: () => ({
+    deleteComment: mockDeleteComment,
+    deleteReply: mockDeleteReply,
   }),
 }));
 
@@ -95,6 +108,8 @@ describe("useCommentSectionState", () => {
     mockSubmitComment.mockResolvedValue(makeComment(99));
     mockSubmitReply.mockResolvedValue(makeReply(10));
     mockToggleCommentLike.mockResolvedValue({ is_liked: true, like_count: 3 });
+    mockDeleteComment.mockResolvedValue(true);
+    mockDeleteReply.mockResolvedValue(true);
   });
 
   it("reply action opens login modal when logged out", () => {
@@ -191,5 +206,35 @@ describe("useCommentSectionState", () => {
 
     expect(mockToggleCommentLike).toHaveBeenCalledWith(1);
     expect(mockUpdateCommentLike).toHaveBeenCalledWith(1, true, 3);
+  });
+
+  it("successful comment delete removes the matching comment", async () => {
+    const { result } = renderHook(() =>
+      useCommentSectionState({ targetType: "article", targetId: 1 }),
+    );
+
+    let ok = false;
+    await act(async () => {
+      ok = await result.current.handleCommentDelete(1);
+    });
+
+    expect(ok).toBe(true);
+    expect(mockDeleteComment).toHaveBeenCalledWith(1);
+    expect(mockRemoveComment).toHaveBeenCalledWith(1);
+  });
+
+  it("successful reply delete decrements reply count", async () => {
+    const { result } = renderHook(() =>
+      useCommentSectionState({ targetType: "article", targetId: 1 }),
+    );
+
+    let ok = false;
+    await act(async () => {
+      ok = await result.current.handleReplyDelete(1, 10);
+    });
+
+    expect(ok).toBe(true);
+    expect(mockDeleteReply).toHaveBeenCalledWith(10);
+    expect(mockDecrementReplyCount).toHaveBeenCalledWith(1);
   });
 });

@@ -7,6 +7,7 @@ import { useLoginModal } from "@/store/use-login-modal";
 import { useGuestbookList } from "@/hooks/use-guestbook-list";
 import { useGuestbookSubmit } from "@/hooks/use-guestbook-submit";
 import { useGuestbookLike } from "@/hooks/use-guestbook-like";
+import { useGuestbookDelete } from "@/hooks/use-guestbook-delete";
 import { GuestbookList } from "./guestbook-list";
 import { GuestbookInputBar } from "./guestbook-input-bar";
 import type { ReplyTarget } from "@/components/comments";
@@ -30,6 +31,8 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
     fetchPage,
     addItem,
     incrementReplyCount,
+    decrementReplyCount,
+    removeItem,
     updateLike,
   } = useGuestbookList(initialPage);
 
@@ -42,6 +45,7 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
   } = useGuestbookSubmit();
 
   const { toggleEntryLike } = useGuestbookLike();
+  const { deleteItem, deleteReply } = useGuestbookDelete();
 
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
   const [pendingReplies, setPendingReplies] = useState<Record<number, CommentReplyResp | null>>({});
@@ -91,6 +95,28 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
     [userId, openLoginModal],
   );
 
+  const handleDelete = useCallback(
+    async (id: number) => {
+      const ok = await deleteItem(id);
+      if (ok) {
+        removeItem(id);
+      }
+      return ok;
+    },
+    [deleteItem, removeItem],
+  );
+
+  const handleReplyDelete = useCallback(
+    async (itemId: number, replyId: number) => {
+      const ok = await deleteReply(replyId);
+      if (ok) {
+        decrementReplyCount(itemId);
+      }
+      return ok;
+    },
+    [decrementReplyCount, deleteReply],
+  );
+
   const handleCancelReply = useCallback(() => {
     setReplyTarget(null);
     clearError();
@@ -117,6 +143,9 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
         onPageChange={fetchPage}
         onReply={handleReply}
         onLike={handleLike}
+        currentUserId={userId}
+        onDelete={handleDelete}
+        onDeleteReply={handleReplyDelete}
         pendingReplies={pendingReplies}
       />
     </PageContainer>

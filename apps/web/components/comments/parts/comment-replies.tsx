@@ -79,6 +79,8 @@ interface ReplyItemProps {
   targetType: TargetType;
   onReply?: (target: ReplyTarget) => void;
   onLikeResult?: (replyId: number, isLiked: boolean, likeCount: number) => void;
+  currentUserId?: number | null;
+  onDeleteReply?: (replyId: number) => Promise<boolean>;
   linkProfile?: boolean;
 }
 
@@ -88,11 +90,14 @@ const ReplyItem = memo(function ReplyItem({
   targetType,
   onReply,
   onLikeResult,
+  currentUserId,
+  onDeleteReply,
   linkProfile = false,
 }: ReplyItemProps) {
   const { userId } = useSession();
   const openLoginModal = useLoginModal((s) => s.open);
   const { toggleReplyLike } = useCommentLike(targetType);
+  const isOwnReply = currentUserId != null && currentUserId === reply.from_user_id;
 
   const handleLike = useCallback(async () => {
     if (!userId) {
@@ -110,6 +115,10 @@ const ReplyItem = memo(function ReplyItem({
     onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName });
   }, [onReply, commentId, reply.id, reply.from_user]);
 
+  const handleDelete = useCallback(() => {
+    return onDeleteReply?.(reply.id) ?? false;
+  }, [onDeleteReply, reply.id]);
+
   return (
     <ThreadReplyItem
       user={reply.from_user}
@@ -120,6 +129,9 @@ const ReplyItem = memo(function ReplyItem({
       isLiked={reply.is_liked}
       onLike={() => void handleLike()}
       onReply={onReply ? handleReply : undefined}
+      onDelete={isOwnReply && onDeleteReply ? handleDelete : undefined}
+      deleteLabel="删除回复"
+      deleteConfirmMessage="确定删除这条回复吗？"
       linkProfile={linkProfile}
     />
   );
@@ -131,6 +143,9 @@ export interface CommentRepliesProps {
   replyCount: number;
   pendingReply?: CommentReplyResp | null;
   onReply: (target: ReplyTarget) => void;
+  currentUserId?: number | null;
+  onDeleteReply?: (replyId: number) => Promise<boolean>;
+  onReplyDeleted?: (replyId: number) => void;
   onOpenChange?: (open: boolean) => void;
   linkProfile?: boolean;
 }
@@ -141,6 +156,9 @@ export const CommentReplies = memo(function CommentReplies({
   replyCount,
   pendingReply,
   onReply,
+  currentUserId,
+  onDeleteReply,
+  onReplyDeleted,
   onOpenChange,
   linkProfile = true,
 }: CommentRepliesProps) {
@@ -150,6 +168,7 @@ export const CommentReplies = memo(function CommentReplies({
   const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deletedReplyIds, setDeletedReplyIds] = useState<Set<number>>(() => new Set());
 
   useEffect(() => {
     onOpenChange?.(isOpen);
@@ -193,11 +212,28 @@ export const CommentReplies = memo(function CommentReplies({
     );
   }, []);
 
+  const handleDeleteReply = useCallback(
+    async (replyId: number) => {
+      if (!onDeleteReply) return false;
+      const ok = await onDeleteReply(replyId);
+      if (!ok) return false;
+      setReplies((prev) => prev.filter((reply) => reply.id !== replyId));
+      setDeletedReplyIds((prev) => {
+        const next = new Set(prev);
+        next.add(replyId);
+        return next;
+      });
+      onReplyDeleted?.(replyId);
+      return true;
+    },
+    [onDeleteReply, onReplyDeleted],
+  );
+
   if (replyCount <= 0) return null;
 
   const displayReplies = hydrateReplyAvatars(
     pendingReply ? [...replies.filter((r) => r.id !== pendingReply.id), pendingReply] : replies,
-  );
+  ).filter((reply) => !deletedReplyIds.has(reply.id));
 
   if (!isOpen) {
     return (
@@ -234,6 +270,8 @@ export const CommentReplies = memo(function CommentReplies({
             targetType={targetType}
             onReply={onReply}
             onLikeResult={updateReplyLike}
+            currentUserId={currentUserId}
+            onDeleteReply={onDeleteReply ? handleDeleteReply : undefined}
             linkProfile={linkProfile}
           />
         ))}

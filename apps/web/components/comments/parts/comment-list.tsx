@@ -15,6 +15,9 @@ export interface CommentListProps {
   targetType: TargetType;
   onReply: (target: ReplyTarget) => void;
   onLike: (commentId: number) => void;
+  currentUserId?: number | null;
+  onDelete?: (commentId: number) => Promise<boolean>;
+  onDeleteReply?: (commentId: number, replyId: number) => Promise<boolean>;
   onLoadMore: () => void;
 }
 
@@ -27,6 +30,9 @@ export function CommentList({
   targetType,
   onReply,
   onLike,
+  currentUserId,
+  onDelete,
+  onDeleteReply,
   onLoadMore,
 }: CommentListProps) {
   if (isLoading && comments.length === 0) {
@@ -51,6 +57,9 @@ export function CommentList({
             targetType={targetType}
             onReply={onReply}
             onLike={onLike}
+            currentUserId={currentUserId}
+            onDelete={onDelete}
+            onDeleteReply={onDeleteReply}
             pendingReply={pendingReplies[comment.id] ?? null}
           />
         ))}

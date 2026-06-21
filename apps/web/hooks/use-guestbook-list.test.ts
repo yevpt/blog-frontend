@@ -128,6 +128,20 @@ describe("useGuestbookList", () => {
     expect(result.current.items[0].reply_count).toBe(1);
   });
 
+  it("decrementReplyCount 更新对应条目且不小于 0", () => {
+    const { result } = renderHook(() =>
+      useGuestbookList({
+        ...initialPage,
+        list: [{ ...mockItem, reply_count: 1 }],
+      }),
+    );
+    act(() => {
+      result.current.decrementReplyCount(1);
+      result.current.decrementReplyCount(1);
+    });
+    expect(result.current.items[0].reply_count).toBe(0);
+  });
+
   it("updateLike 更新对应条目的点赞状态", () => {
     const { result } = renderHook(() => useGuestbookList(initialPage));
     act(() => {
@@ -135,5 +149,14 @@ describe("useGuestbookList", () => {
     });
     expect(result.current.items[0].is_liked).toBe(true);
     expect(result.current.items[0].like_count).toBe(5);
+  });
+
+  it("removeItem 删除对应留言并让 total-1", () => {
+    const { result } = renderHook(() => useGuestbookList(initialPage));
+    act(() => {
+      result.current.removeItem(1);
+    });
+    expect(result.current.items).toHaveLength(0);
+    expect(result.current.total).toBe(0);
   });
 });

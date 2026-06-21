@@ -176,6 +176,55 @@ describe("CommentReplies", () => {
     });
   });
 
+  it("当前用户是回复作者时显示删除按钮并二次确认", async () => {
+    const user = userEvent.setup();
+    const onDeleteReply = vi.fn().mockResolvedValue(true);
+    const onReplyDeleted = vi.fn();
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
+
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={1}
+        currentUserId={1}
+        onReply={vi.fn()}
+        onDeleteReply={onDeleteReply}
+        onReplyDeleted={onReplyDeleted}
+      />,
+    );
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+
+    await user.click(screen.getByRole("button", { name: "删除回复" }));
+    expect(screen.getByText("确定删除这条回复吗？")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "删除" }));
+
+    expect(onDeleteReply).toHaveBeenCalledWith(1);
+    expect(onReplyDeleted).toHaveBeenCalledWith(1);
+    await waitFor(() => expect(screen.queryByText("回复 1")).toBeNull());
+  });
+
+  it("当前用户不是回复作者时不显示删除按钮", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
+
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={1}
+        currentUserId={99}
+        onReply={vi.fn()}
+        onDeleteReply={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+
+    expect(screen.queryByRole("button", { name: "删除回复" })).toBeNull();
+  });
+
   it("回复项显示点赞按钮", async () => {
     const user = userEvent.setup();
     vi.mocked(global.fetch).mockResolvedValue(

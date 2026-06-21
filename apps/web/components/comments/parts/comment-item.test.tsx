@@ -117,6 +117,37 @@ describe("CommentItem", () => {
     });
   });
 
+  it("当前用户是评论作者时显示删除按钮并二次确认", async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn().mockResolvedValue(undefined);
+    render(
+      <CommentItem
+        comment={baseComment}
+        targetType="article"
+        currentUserId={10}
+        onDelete={onDelete}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "删除评论" }));
+    expect(screen.getByText("确定删除这条评论吗？")).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: "删除" }));
+    expect(onDelete).toHaveBeenCalledWith(1);
+  });
+
+  it("当前用户不是评论作者时不显示删除按钮", () => {
+    render(
+      <CommentItem
+        comment={baseComment}
+        targetType="article"
+        currentUserId={99}
+        onDelete={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "删除评论" })).toBeNull();
+  });
+
   it("reply_count>0 时渲染 CommentReplies", () => {
     render(<CommentItem comment={baseComment} targetType="article" />);
     expect(screen.getByTestId("comment-replies")).toBeTruthy();

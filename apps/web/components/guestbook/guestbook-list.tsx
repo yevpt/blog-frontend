@@ -50,6 +50,9 @@ interface GuestbookListProps {
   onPageChange: (page: number) => void;
   onReply: (target: ReplyTarget) => void;
   onLike: (id: number) => void;
+  currentUserId?: number | null;
+  onDelete?: (id: number) => Promise<boolean>;
+  onDeleteReply?: (itemId: number, replyId: number) => Promise<boolean>;
   pendingReplies: Record<number, CommentReplyResp | null>;
   listRef?: RefObject<HTMLDivElement | null>;
 }
@@ -64,6 +67,9 @@ export function GuestbookList({
   onPageChange,
   onReply,
   onLike,
+  currentUserId,
+  onDelete,
+  onDeleteReply,
   pendingReplies,
   listRef,
 }: GuestbookListProps) {
@@ -88,6 +94,9 @@ export function GuestbookList({
                 item={item}
                 onReply={onReply}
                 onLike={onLike}
+                currentUserId={currentUserId}
+                onDelete={onDelete}
+                onDeleteReply={onDeleteReply}
                 pendingReply={pendingReplies[item.id] ?? null}
               />
             ))}

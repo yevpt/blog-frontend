@@ -33,6 +33,8 @@ export function InlineComments({ targetType, targetId, onCommentAdded }: InlineC
     handleCancelReply,
     handleSubmit,
     handleCommentLike,
+    handleCommentDelete,
+    handleReplyDelete,
     handleChange,
   } = useCommentSectionState({ targetType, targetId, onCommentAdded });
 
@@ -61,6 +63,9 @@ export function InlineComments({ targetType, targetId, onCommentAdded }: InlineC
           targetType={targetType}
           onReply={handleReply}
           onLike={handleCommentLike}
+          currentUserId={userId}
+          onDelete={handleCommentDelete}
+          onDeleteReply={handleReplyDelete}
           onLoadMore={loadMore}
         />
       </div>

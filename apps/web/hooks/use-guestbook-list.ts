@@ -64,6 +64,19 @@ export function useGuestbookList(initialPage: GuestbookPageResp) {
     );
   }, []);
 
+  const decrementReplyCount = useCallback((itemId: number) => {
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === itemId ? { ...i, reply_count: Math.max(0, i.reply_count - 1) } : i,
+      ),
+    );
+  }, []);
+
+  const removeItem = useCallback((itemId: number) => {
+    setItems((prev) => prev.filter((i) => i.id !== itemId));
+    setTotal((prev) => Math.max(0, prev - 1));
+  }, []);
+
   const updateLike = useCallback((itemId: number, isLiked: boolean, likeCount: number) => {
     setItems((prev) =>
       prev.map((i) => (i.id === itemId ? { ...i, is_liked: isLiked, like_count: likeCount } : i)),
@@ -80,6 +93,8 @@ export function useGuestbookList(initialPage: GuestbookPageResp) {
     fetchPage,
     addItem,
     incrementReplyCount,
+    decrementReplyCount,
+    removeItem,
     updateLike,
   };
 }

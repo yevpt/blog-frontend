@@ -589,6 +589,94 @@ describe("createApiClient", () => {
         expect.objectContaining({ method: "POST" }),
       );
     });
+
+    it("deleteArticle 使用 fetchAuthed 调用 DELETE /articles/comments/{id}", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({ code: 0, message: "ok", data: { id: 9 } }),
+      );
+      const client = createApiClient({
+        baseUrl: "http://api",
+        getAccessToken: () => "token123",
+      });
+
+      const result = await client.comments.deleteArticle(9);
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/articles/comments/9",
+        expect.objectContaining({
+          method: "DELETE",
+          headers: expect.objectContaining({ Authorization: "Bearer token123" }),
+        }),
+      );
+      expect(result.id).toBe(9);
+    });
+
+    it("deleteArticleReply 使用后端扁平回复删除路径", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({ code: 0, message: "ok", data: { id: 12 } }),
+      );
+      const client = createApiClient({
+        baseUrl: "http://api",
+        getAccessToken: () => "token123",
+      });
+
+      await client.comments.deleteArticleReply(12);
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/articles/comment-replies/12",
+        expect.objectContaining({ method: "DELETE" }),
+      );
+    });
+
+    it("deleteMoment 和 deleteMomentReply 调用碎语评论删除路径", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({ code: 0, message: "ok", data: { id: 7 } }),
+      );
+      const client = createApiClient({
+        baseUrl: "http://api",
+        getAccessToken: () => "token123",
+      });
+
+      await client.comments.deleteMoment(7);
+      await client.comments.deleteMomentReply(8);
+
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        1,
+        "http://api/moments/comments/7",
+        expect.objectContaining({ method: "DELETE" }),
+      );
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        2,
+        "http://api/moments/comment-replies/8",
+        expect.objectContaining({ method: "DELETE" }),
+      );
+    });
+  });
+
+  describe("guestbook", () => {
+    it("delete 和 deleteReply 调用留言删除路径", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({ code: 0, message: "ok", data: { id: 5 } }),
+      );
+      const client = createApiClient({
+        baseUrl: "http://api",
+        getAccessToken: () => "token123",
+      });
+
+      await client.guestbook.delete(5);
+      await client.guestbook.deleteReply(6);
+
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        1,
+        "http://api/guestbook/5",
+        expect.objectContaining({ method: "DELETE" }),
+      );
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        2,
+        "http://api/guestbook/comment-replies/6",
+        expect.objectContaining({ method: "DELETE" }),
+      );
+    });
   });
 
   it("articles.getDetail 调用正确的端点", async () => {

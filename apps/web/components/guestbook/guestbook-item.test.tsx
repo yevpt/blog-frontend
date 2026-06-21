@@ -87,6 +87,22 @@ describe("GuestbookItem", () => {
     expect(onReply).toHaveBeenCalledWith(expect.objectContaining({ commentId: 1 }));
   });
 
+  it("当前用户是留言作者时显示删除按钮并二次确认", async () => {
+    const onDelete = vi.fn().mockResolvedValue(undefined);
+    render(<GuestbookItem item={mockItem} currentUserId={1} onDelete={onDelete} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "删除留言" }));
+    expect(screen.getByText("确定删除这条留言吗？")).toBeTruthy();
+
+    await userEvent.click(screen.getByRole("button", { name: "删除" }));
+    expect(onDelete).toHaveBeenCalledWith(1);
+  });
+
+  it("当前用户不是留言作者时不显示删除按钮", () => {
+    render(<GuestbookItem item={mockItem} currentUserId={99} onDelete={vi.fn()} />);
+    expect(screen.queryByRole("button", { name: "删除留言" })).toBeNull();
+  });
+
   it("无论是否点赞均有心跳动效", () => {
     const { container, rerender } = render(
       <GuestbookItem item={{ ...mockItem, is_liked: false }} />,

@@ -84,6 +84,18 @@ export function useCommentList(targetType: TargetType, targetId: number) {
     );
   }, []);
 
+  const decrementReplyCount = useCallback((commentId: number) => {
+    setComments((prev) =>
+      prev.map((c) =>
+        c.id === commentId ? { ...c, reply_count: Math.max(0, c.reply_count - 1) } : c,
+      ),
+    );
+  }, []);
+
+  const removeComment = useCallback((commentId: number) => {
+    setComments((prev) => prev.filter((c) => c.id !== commentId));
+  }, []);
+
   const updateCommentLike = useCallback(
     (commentId: number, isLiked: boolean, likeCount: number) => {
       setComments((prev) =>
@@ -103,6 +115,8 @@ export function useCommentList(targetType: TargetType, targetId: number) {
     loadMore,
     addComment,
     incrementReplyCount,
+    decrementReplyCount,
+    removeComment,
     updateCommentLike,
   };
 }

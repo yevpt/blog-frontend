@@ -24,6 +24,9 @@ interface CommentItemProps {
   targetType: TargetType;
   onReply?: (target: ReplyTarget) => void;
   onLike?: (commentId: number) => void;
+  currentUserId?: number | null;
+  onDelete?: (commentId: number) => Promise<boolean>;
+  onDeleteReply?: (commentId: number, replyId: number) => Promise<boolean>;
   pendingReply?: CommentReplyResp | null;
 }
 
@@ -32,10 +35,14 @@ export const CommentItem = memo(function CommentItem({
   targetType,
   onReply,
   onLike,
+  currentUserId,
+  onDelete,
+  onDeleteReply,
   pendingReply,
 }: CommentItemProps) {
   const [repliesOpen, setRepliesOpen] = useState(false);
   const hasReplies = comment.reply_count > 0;
+  const isOwnComment = currentUserId != null && currentUserId === comment.user_id;
   const handleLike = useCallback(() => {
     onLike?.(comment.id);
   }, [onLike, comment.id]);
@@ -44,6 +51,15 @@ export const CommentItem = memo(function CommentItem({
     const displayName = comment.user?.nickname ?? comment.user?.username ?? "匿名";
     onReply?.({ commentId: comment.id, toUsername: displayName });
   }, [onReply, comment.id, comment.user]);
+
+  const handleDelete = useCallback(() => {
+    return onDelete?.(comment.id) ?? false;
+  }, [onDelete, comment.id]);
+
+  const handleDeleteReply = useCallback(
+    (replyId: number) => onDeleteReply?.(comment.id, replyId) ?? Promise.resolve(false),
+    [onDeleteReply, comment.id],
+  );
 
   return (
     <div className="comment-item" data-comment-id={comment.id}>
@@ -54,6 +70,9 @@ export const CommentItem = memo(function CommentItem({
         isLiked={comment.is_liked}
         onLike={handleLike}
         onReply={onReply ? handleReply : undefined}
+        onDelete={isOwnComment && onDelete ? handleDelete : undefined}
+        deleteLabel="删除评论"
+        deleteConfirmMessage="确定删除这条评论吗？"
         linkProfile
       />
 
@@ -70,6 +89,8 @@ export const CommentItem = memo(function CommentItem({
             replyCount={comment.reply_count}
             pendingReply={pendingReply}
             onReply={onReply ?? NOOP_REPLY}
+            currentUserId={currentUserId}
+            onDeleteReply={onDeleteReply ? handleDeleteReply : undefined}
             onOpenChange={setRepliesOpen}
             linkProfile
           />

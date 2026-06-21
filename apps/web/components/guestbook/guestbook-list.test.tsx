@@ -1,9 +1,17 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GuestbookList } from "./guestbook-list";
 import type { GuestbookItemResp } from "@repo/api";
+
+const mockState = vi.hoisted(() => ({
+  guestbookItemProps: [] as Array<{
+    item: GuestbookItemResp;
+    currentUserId?: number | null;
+    onDelete?: (id: number) => Promise<boolean>;
+  }>,
+}));
 
 vi.mock("@repo/ui", async (importOriginal) => {
   const actual = (await importOriginal()) as object;
@@ -26,9 +34,14 @@ vi.mock("@repo/ui", async (importOriginal) => {
 });
 
 vi.mock("@/components/guestbook/guestbook-item", () => ({
-  GuestbookItem: ({ item }: { item: GuestbookItemResp }) => (
-    <div data-testid="guestbook-item">{item.content}</div>
-  ),
+  GuestbookItem: (props: {
+    item: GuestbookItemResp;
+    currentUserId?: number | null;
+    onDelete?: (id: number) => Promise<boolean>;
+  }) => {
+    mockState.guestbookItemProps.push(props);
+    return <div data-testid="guestbook-item">{props.item.content}</div>;
+  },
 }));
 
 const items: GuestbookItemResp[] = [
@@ -56,8 +69,14 @@ describe("GuestbookList", () => {
     onPageChange: vi.fn(),
     onReply: vi.fn(),
     onLike: vi.fn(),
+    currentUserId: 1,
+    onDelete: vi.fn(),
     pendingReplies: {},
   };
+
+  beforeEach(() => {
+    mockState.guestbookItemProps = [];
+  });
 
   it("渲染留言条目", () => {
     render(<GuestbookList {...defaultProps} />);
@@ -101,5 +120,12 @@ describe("GuestbookList", () => {
     );
     await userEvent.click(screen.getByText("下一页"));
     expect(onPageChange).toHaveBeenCalledWith(2);
+  });
+
+  it("向留言项透传当前用户和删除回调", () => {
+    const onDelete = vi.fn();
+    render(<GuestbookList {...defaultProps} currentUserId={7} onDelete={onDelete} />);
+    expect(mockState.guestbookItemProps[0].currentUserId).toBe(7);
+    expect(mockState.guestbookItemProps[0].onDelete).toBe(onDelete);
   });
 });

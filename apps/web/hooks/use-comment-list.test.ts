@@ -103,6 +103,21 @@ describe("useCommentList", () => {
     expect(result.current.comments[0].reply_count).toBe(1);
   });
 
+  it("decrementReplyCount 将指定评论 reply_count -1 且不小于 0", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      jsonResponse(mockPage([{ ...makeComment(1), reply_count: 1 }])),
+    );
+
+    const { result } = renderHook(() => useCommentList("article", 1));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => {
+      result.current.decrementReplyCount(1);
+      result.current.decrementReplyCount(1);
+    });
+    expect(result.current.comments[0].reply_count).toBe(0);
+  });
+
   it("updateCommentLike 更新指定评论的 is_liked 和 like_count", async () => {
     vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeComment(1)])));
 
@@ -112,6 +127,18 @@ describe("useCommentList", () => {
     act(() => result.current.updateCommentLike(1, true, 5));
     expect(result.current.comments[0].is_liked).toBe(true);
     expect(result.current.comments[0].like_count).toBe(5);
+  });
+
+  it("removeComment 从列表中移除指定评论", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      jsonResponse(mockPage([makeComment(1), makeComment(2)])),
+    );
+
+    const { result } = renderHook(() => useCommentList("article", 1));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => result.current.removeComment(1));
+    expect(result.current.comments.map((comment) => comment.id)).toEqual([2]);
   });
 
   it("卸载时中止进行中的首屏请求", async () => {

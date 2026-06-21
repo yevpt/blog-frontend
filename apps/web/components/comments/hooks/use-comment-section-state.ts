@@ -7,6 +7,7 @@ import { useLoginModal } from "@/store/use-login-modal";
 import { useCommentList } from "@/hooks/use-comment-list";
 import { useCommentSubmit } from "@/hooks/use-comment-submit";
 import { useCommentLike } from "@/hooks/use-comment-like";
+import { useCommentDelete } from "@/hooks/use-comment-delete";
 import type { ReplyTarget } from "@/components/comments/parts/comment-item";
 
 export type CommentSectionTargetType = "article" | "moment";
@@ -37,7 +38,9 @@ export function useCommentSectionState({
     loadMore,
     addComment,
     incrementReplyCount,
+    decrementReplyCount,
     updateCommentLike,
+    removeComment,
   } = useCommentList(targetType, targetId);
 
   const {
@@ -49,6 +52,7 @@ export function useCommentSectionState({
   } = useCommentSubmit(targetType, targetId);
 
   const { toggleCommentLike } = useCommentLike(targetType);
+  const { deleteComment, deleteReply } = useCommentDelete(targetType);
 
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
   const [content, setContent] = useState("");
@@ -130,6 +134,28 @@ export function useCommentSectionState({
     [openLoginModal, toggleCommentLike, updateCommentLike, userId],
   );
 
+  const handleCommentDelete = useCallback(
+    async (commentId: number) => {
+      const ok = await deleteComment(commentId);
+      if (ok) {
+        removeComment(commentId);
+      }
+      return ok;
+    },
+    [deleteComment, removeComment],
+  );
+
+  const handleReplyDelete = useCallback(
+    async (commentId: number, replyId: number) => {
+      const ok = await deleteReply(replyId);
+      if (ok) {
+        decrementReplyCount(commentId);
+      }
+      return ok;
+    },
+    [decrementReplyCount, deleteReply],
+  );
+
   const handleChange = useCallback(
     (value: string) => {
       setContent(value);
@@ -155,6 +181,8 @@ export function useCommentSectionState({
     handleCancelReply,
     handleSubmit,
     handleCommentLike,
+    handleCommentDelete,
+    handleReplyDelete,
     handleChange,
   };
 }

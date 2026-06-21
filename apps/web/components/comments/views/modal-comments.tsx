@@ -30,6 +30,7 @@ export function ModalComments({
   });
 
   const {
+    userId,
     comments,
     isLoading,
     hasMore,
@@ -45,6 +46,8 @@ export function ModalComments({
     handleCancelReply,
     handleSubmit,
     handleCommentLike,
+    handleCommentDelete,
+    handleReplyDelete,
   } = useCommentSectionState({
     targetType,
     targetId,
@@ -74,6 +77,9 @@ export function ModalComments({
             targetType={targetType}
             onReply={handleReply}
             onLike={handleCommentLike}
+            currentUserId={userId}
+            onDelete={handleCommentDelete}
+            onDeleteReply={handleReplyDelete}
             onLoadMore={loadMore}
           />
         </div>

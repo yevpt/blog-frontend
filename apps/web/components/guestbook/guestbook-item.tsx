@@ -16,18 +16,35 @@ interface GuestbookItemProps {
   item: GuestbookItemResp;
   onReply?: (target: ReplyTarget) => void;
   onLike?: (id: number) => void;
+  currentUserId?: number | null;
+  onDelete?: (id: number) => Promise<boolean>;
+  onDeleteReply?: (itemId: number, replyId: number) => Promise<boolean>;
   pendingReply?: CommentReplyResp | null;
 }
 
-export function GuestbookItem({ item, onReply, onLike, pendingReply }: GuestbookItemProps) {
+export function GuestbookItem({
+  item,
+  onReply,
+  onLike,
+  currentUserId,
+  onDelete,
+  onDeleteReply,
+  pendingReply,
+}: GuestbookItemProps) {
   const displayName = getThreadDisplayName(item.user);
   const [repliesOpen, setRepliesOpen] = useState(false);
   const hasReplies = item.reply_count > 0;
+  const isOwnItem = currentUserId != null && currentUserId === item.from_user_id;
 
   const handleLike = useCallback(() => onLike?.(item.id), [onLike, item.id]);
   const handleReply = useCallback(
     () => onReply?.({ commentId: item.id, toUsername: displayName }),
     [onReply, item.id, displayName],
+  );
+  const handleDelete = useCallback(() => onDelete?.(item.id) ?? false, [onDelete, item.id]);
+  const handleDeleteReply = useCallback(
+    (replyId: number) => onDeleteReply?.(item.id, replyId) ?? Promise.resolve(false),
+    [onDeleteReply, item.id],
   );
 
   return (
@@ -39,6 +56,9 @@ export function GuestbookItem({ item, onReply, onLike, pendingReply }: Guestbook
         isLiked={item.is_liked}
         onLike={handleLike}
         onReply={onReply ? handleReply : undefined}
+        onDelete={isOwnItem && onDelete ? handleDelete : undefined}
+        deleteLabel="删除留言"
+        deleteConfirmMessage="确定删除这条留言吗？"
         linkProfile
       />
 
@@ -55,6 +75,8 @@ export function GuestbookItem({ item, onReply, onLike, pendingReply }: Guestbook
             replyCount={item.reply_count}
             pendingReply={pendingReply}
             onReply={onReply ?? (() => undefined)}
+            currentUserId={currentUserId}
+            onDeleteReply={onDeleteReply ? handleDeleteReply : undefined}
             onOpenChange={setRepliesOpen}
             linkProfile
           />

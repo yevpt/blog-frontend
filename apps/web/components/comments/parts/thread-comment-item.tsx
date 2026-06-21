@@ -1,8 +1,8 @@
 "use client";
 
-import { memo, useMemo, type ReactNode } from "react";
+import { memo, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { Button, cn } from "@repo/ui";
+import { Button, Popover, PopoverDialog, PopoverTrigger, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import { markdownToHtmlSync } from "@repo/markdown";
 import { UserAvatar } from "@/components/common/user-avatar";
@@ -99,6 +99,61 @@ export const ThreadLikeButton = memo(function ThreadLikeButton({
   );
 });
 
+type DeleteResult = void | boolean | Promise<void | boolean>;
+
+interface ThreadDeleteButtonProps {
+  ariaLabel: string;
+  confirmMessage: string;
+  onConfirm: () => DeleteResult;
+}
+
+function ThreadDeleteButton({ ariaLabel, confirmMessage, onConfirm }: ThreadDeleteButtonProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  return (
+    <PopoverTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
+      <Button
+        variant="text"
+        aria-label={ariaLabel}
+        onPress={() => setIsOpen(true)}
+        className="h-auto min-h-0 shrink-0 p-0 text-xs leading-none font-medium text-destructive transition-colors hover:text-destructive"
+      >
+        删除
+      </Button>
+      <Popover placement="bottom start" offset={6} className="w-56">
+        <PopoverDialog aria-label={ariaLabel} className="p-3 outline-none">
+          <div className="grid gap-3">
+            <p className="text-sm leading-6 text-foreground">{confirmMessage}</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" size="sm" slot="close" isDisabled={isDeleting}>
+                取消
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                isDisabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onPress={() => {
+                  setIsDeleting(true);
+                  void Promise.resolve(onConfirm())
+                    .then((ok) => {
+                      if (ok !== false) setIsOpen(false);
+                    })
+                    .catch(() => undefined)
+                    .finally(() => setIsDeleting(false));
+                }}
+              >
+                {isDeleting ? "删除中..." : "删除"}
+              </Button>
+            </div>
+          </div>
+        </PopoverDialog>
+      </Popover>
+    </PopoverTrigger>
+  );
+}
+
 export interface ThreadCommentHeaderProps {
   user?: ThreadUserInfo | null;
   createdAt: string;
@@ -106,6 +161,9 @@ export interface ThreadCommentHeaderProps {
   isLiked: boolean;
   onLike: () => void;
   onReply?: () => void;
+  onDelete?: () => DeleteResult;
+  deleteLabel?: string;
+  deleteConfirmMessage?: string;
   linkProfile?: boolean;
 }
 
@@ -117,6 +175,9 @@ export const ThreadCommentHeader = memo(function ThreadCommentHeader({
   isLiked,
   onLike,
   onReply,
+  onDelete,
+  deleteLabel = "删除评论",
+  deleteConfirmMessage = "确定删除这条评论吗？",
   linkProfile = false,
 }: ThreadCommentHeaderProps) {
   const displayName = getThreadDisplayName(user);
@@ -146,6 +207,13 @@ export const ThreadCommentHeader = memo(function ThreadCommentHeader({
                 >
                   回复
                 </Button>
+              )}
+              {onDelete && (
+                <ThreadDeleteButton
+                  ariaLabel={deleteLabel}
+                  confirmMessage={deleteConfirmMessage}
+                  onConfirm={onDelete}
+                />
               )}
             </div>
             <span className="mt-1.5 block text-[12px] text-(--fg1)">{time}</span>
@@ -180,6 +248,9 @@ export interface ThreadReplyItemProps {
   isLiked: boolean;
   onLike: () => void;
   onReply?: () => void;
+  onDelete?: () => DeleteResult;
+  deleteLabel?: string;
+  deleteConfirmMessage?: string;
   linkProfile?: boolean;
 }
 
@@ -193,6 +264,9 @@ export const ThreadReplyItem = memo(function ThreadReplyItem({
   isLiked,
   onLike,
   onReply,
+  onDelete,
+  deleteLabel = "删除回复",
+  deleteConfirmMessage = "确定删除这条回复吗？",
   linkProfile = false,
 }: ThreadReplyItemProps) {
   const displayName = getThreadDisplayName(user);
@@ -223,6 +297,13 @@ export const ThreadReplyItem = memo(function ThreadReplyItem({
                 >
                   回复
                 </Button>
+              )}
+              {onDelete && (
+                <ThreadDeleteButton
+                  ariaLabel={deleteLabel}
+                  confirmMessage={deleteConfirmMessage}
+                  onConfirm={onDelete}
+                />
               )}
             </div>
             <span className="mt-1.5 block text-[12px] text-(--fg1)">{time}</span>
