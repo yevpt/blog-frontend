@@ -67,6 +67,7 @@ vi.mock("@repo/hooks", () => ({
         "snippet.share": "转发",
         "snippet.postNew": "发表碎语",
         "snippet.viewMore": "查看更多",
+        "snippet.shuffle": "换一批",
       };
       return messages[key] ?? key;
     },
@@ -239,14 +240,16 @@ describe("SnippetsSection", () => {
     expect(commentLabels).toHaveLength(mockMoments.length);
   });
 
-  it("渲染 shuffle 图标按钮", () => {
+  it("渲染换一批文字动作与 refresh 图标", () => {
     render(<SnippetsSection snippets={mockMoments} />);
-    expect(screen.getByTestId("icon-shuffle")).toBeTruthy();
+    expect(screen.getByText("换一批")).toBeTruthy();
+    expect(screen.getByTestId("icon-refresh-cw")).toBeTruthy();
+    expect(screen.getByTestId("icon-refresh-cw").dataset.size).toBe("12");
   });
 
-  it("渲染渐变 header 图标", () => {
+  it("不渲染渐变 header 图标", () => {
     render(<SnippetsSection snippets={mockMoments} />);
-    expect(screen.getByText("✦")).toBeTruthy();
+    expect(screen.queryByText("✦")).toBeNull();
   });
 
   it("snippets 为空时仍渲染区块标题和操作按钮", () => {

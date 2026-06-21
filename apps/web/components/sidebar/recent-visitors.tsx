@@ -3,6 +3,7 @@
 import { useLocale } from "@repo/hooks";
 import { Button } from "@repo/ui";
 import { BaseUserCard } from "@/components/common/base-user-card";
+import { SidebarSectionHeader } from "@/components/sidebar";
 import type { Visitor } from "../../app/_mock/types";
 
 interface RecentVisitorsProps {
@@ -13,12 +14,10 @@ export function RecentVisitors({ visitors }: RecentVisitorsProps) {
   const { t } = useLocale();
 
   return (
-    <section className="rounded-2xl bg-card p-[15px] shadow-card">
-      <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.09em] text-(--fg3)">
-        {t("sidebar.recentVisitors")}
-      </h3>
+    <section className="rounded-2xl bg-card shadow-card">
+      <SidebarSectionHeader title={t("sidebar.recentVisitors")} />
 
-      <div className="mb-3 grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2 px-4 pb-3">
         {visitors.slice(0, 9).map((visitor) => (
           <BaseUserCard
             key={visitor.id}
@@ -35,7 +34,7 @@ export function RecentVisitors({ visitors }: RecentVisitorsProps) {
         ))}
       </div>
 
-      <div className="mt-3 flex gap-2">
+      <div className="flex gap-2 px-4 pb-[15px]">
         <Button variant="outline" size="sm" className="h-8 flex-1 rounded-full text-[11px]">
           {t("sidebar.joinQQ")}
         </Button>

@@ -35,7 +35,8 @@
     "comment": "Comment",
     "share": "Share",
     "postNew": "Write",
-    "viewMore": "View More"
+    "viewMore": "View More",
+    "shuffle": "Shuffle"
   },
   "sidebar": {
     "recentVisitors": "Recent Visitors",

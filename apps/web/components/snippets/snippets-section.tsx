@@ -6,6 +6,7 @@ import { SvgIcon } from "@repo/icons";
 import { Button } from "@repo/ui";
 import type { MomentItemResp, MomentPageResp } from "@repo/api";
 import { CommentModal } from "@/components/comments";
+import { SidebarSectionAction, SidebarSectionHeader } from "@/components/sidebar";
 import { useMomentList } from "@/hooks/use-moment-list";
 import { SnippetCard } from "./snippet-card";
 import { SnippetCardSkeleton } from "./snippet-card-skeleton";
@@ -62,24 +63,15 @@ export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSect
   return (
     <>
       <section className="overflow-hidden rounded-2xl bg-card shadow-card">
-        <div className="flex items-center justify-between px-4 pb-3 pt-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-[10px] bg-gradient-to-br from-primary to-primary/80 text-[13px] text-primary-foreground">
-              ✦
-            </div>
-            <h3 className="text-sm font-bold tracking-[-0.01em] text-foreground">
-              {t("home.snippets")}
-            </h3>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label="随机换一批"
-            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-[10px] border border-border p-0 text-(--fg3) transition-colors hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
-          >
-            <SvgIcon name="shuffle" size={16} />
-          </Button>
-        </div>
+        <SidebarSectionHeader
+          title={t("home.snippets")}
+          action={
+            <SidebarSectionAction aria-label={t("snippet.shuffle")}>
+              <SvgIcon name="refresh-cw" size={12} />
+              {t("snippet.shuffle")}
+            </SidebarSectionAction>
+          }
+        />
 
         <div className="flex flex-col px-3 pb-3">
           {loading

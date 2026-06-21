@@ -51,6 +51,7 @@ export type IconName =
   | "phone"
   | "plus"
   | "qq"
+  | "refresh-cw"
   | "rotate-cw"
   | "search"
   | "share"

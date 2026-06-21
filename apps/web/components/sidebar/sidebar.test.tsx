@@ -131,7 +131,7 @@ describe("RecentVisitors", () => {
 
   it("显示区块标题", () => {
     render(<RecentVisitors visitors={mockVisitors} />);
-    expect(screen.getByText("最近来访")).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 3, name: "最近来访" })).toBeInTheDocument();
   });
 
   it("两个底部按钮（入驻 QQ 群 / 查看更多）存在", () => {
@@ -177,7 +177,7 @@ describe("TagsCloud", () => {
 
   it("显示区块标题", () => {
     render(<TagsCloud tags={mockTags} />);
-    expect(screen.getByText("标签")).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 3, name: "标签" })).toBeInTheDocument();
   });
 
   it("显示每个标签的计数", () => {

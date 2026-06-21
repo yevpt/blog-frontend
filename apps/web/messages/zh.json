@@ -35,7 +35,8 @@
     "comment": "评论",
     "share": "转发",
     "postNew": "写碎语",
-    "viewMore": "查看更多"
+    "viewMore": "查看更多",
+    "shuffle": "换一批"
   },
   "sidebar": {
     "recentVisitors": "最近来访",
