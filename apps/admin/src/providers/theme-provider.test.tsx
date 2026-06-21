@@ -116,4 +116,80 @@ describe("admin ThemeProvider", () => {
     expect(document.documentElement.classList.contains("dark")).toBe(false);
     expect(document.documentElement.classList.contains("light")).toBe(false);
   });
+
+  it("用户显式选 light 后系统切到 dark：清空 cookie 回到 system 并跟随系统", async () => {
+    let darkMatches = false;
+    let changeHandler: (() => void) | null = null;
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        get matches() {
+          return query === "(prefers-color-scheme: dark)" && darkMatches;
+        },
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn((event: string, cb: () => void) => {
+          if (event === "change") changeHandler = cb;
+        }),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+
+    renderThemeProbe();
+
+    await act(async () => {
+      screen.getByRole("button", { name: "light" }).click();
+    });
+    expect(screen.getByTestId("theme")).toHaveTextContent("light");
+
+    // 系统主题切到 dark，触发 change：清空 cookie 回到 system，由媒体查询跟随
+    await act(async () => {
+      darkMatches = true;
+      changeHandler?.();
+    });
+
+    expect(screen.getByTestId("theme")).toHaveTextContent("system");
+    expect(screen.getByTestId("resolved-theme")).toHaveTextContent("dark");
+    expect(document.documentElement.classList.contains("dark")).toBe(false);
+    expect(document.documentElement.classList.contains("light")).toBe(false);
+    expect(document.cookie).not.toContain("theme=");
+  });
+
+  it("已在 system 模式下系统切到 dark：resolvedTheme 实时更新（按钮同步）", async () => {
+    let darkMatches = false;
+    let changeHandler: (() => void) | null = null;
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        get matches() {
+          return query === "(prefers-color-scheme: dark)" && darkMatches;
+        },
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn((event: string, cb: () => void) => {
+          if (event === "change") changeHandler = cb;
+        }),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+
+    renderThemeProbe();
+
+    expect(screen.getByTestId("theme")).toHaveTextContent("system");
+    expect(screen.getByTestId("resolved-theme")).toHaveTextContent("light");
+
+    await act(async () => {
+      darkMatches = true;
+      changeHandler?.();
+    });
+
+    expect(screen.getByTestId("theme")).toHaveTextContent("system");
+    expect(screen.getByTestId("resolved-theme")).toHaveTextContent("dark");
+  });
 });

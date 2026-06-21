@@ -69,18 +69,22 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
   const isInitialMount = useRef(true);
 
+  // 监听系统主题变化：一旦系统偏好切换，就清空用户的显式覆盖（cookie），
+  // 回到 system 模式，让 CSS 媒体查询自动跟随新的系统主题。
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
 
     const handleChange = () => {
-      if (theme === "system") {
-        setResolvedTheme(media.matches ? "dark" : "light");
-      }
+      writeThemeCookie("system");
+      setThemeState("system");
+      // 本来就在 system 模式时 setThemeState 不会触发 apply effect，
+      // 故在此直接同步 resolvedTheme，保证主题按钮等 UI 实时更新。
+      setResolvedTheme(media.matches ? "dark" : "light");
     };
 
     media.addEventListener("change", handleChange);
     return () => media.removeEventListener("change", handleChange);
-  }, [theme]);
+  }, []);
 
   useEffect(() => {
     const mode = isInitialMount.current ? readThemeCookie() : theme;
