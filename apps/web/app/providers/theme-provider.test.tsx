@@ -262,4 +262,91 @@ describe("ThemeProvider", () => {
       expect.stringContaining("theme=; path=/; SameSite=Lax; Max-Age=0"),
     );
   });
+
+  it("用户显式选 light 后系统切到 dark：清空 cookie 回到 system 并跟随系统", async () => {
+    let darkMatches = false;
+    let changeHandler: (() => void) | null = null;
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        get matches() {
+          return query === "(prefers-color-scheme: dark)" && darkMatches;
+        },
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn((event: string, cb: () => void) => {
+          if (event === "change") changeHandler = cb;
+        }),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+
+    render(
+      <ThemeProvider>
+        <ThemeDisplay />
+      </ThemeProvider>,
+    );
+
+    // 用户显式切到 light（写入 cookie）
+    await act(async () => {
+      screen.getByText("set light").click();
+    });
+    expect(screen.getByTestId("theme").textContent).toBe("light");
+
+    // 系统主题切到 dark，触发 change：清空 cookie 回到 system，由媒体查询跟随
+    await act(async () => {
+      darkMatches = true;
+      changeHandler?.();
+    });
+
+    expect(screen.getByTestId("theme").textContent).toBe("system");
+    expect(screen.getByTestId("resolved-theme").textContent).toBe("dark");
+    expect(document.documentElement.classList.contains("dark")).toBe(false);
+    expect(document.documentElement.classList.contains("light")).toBe(false);
+    expect(document.cookie).not.toContain("theme=");
+  });
+
+  it("已在 system 模式下系统切到 dark：resolvedTheme 实时更新（按钮同步）", async () => {
+    let darkMatches = false;
+    let changeHandler: (() => void) | null = null;
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        get matches() {
+          return query === "(prefers-color-scheme: dark)" && darkMatches;
+        },
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn((event: string, cb: () => void) => {
+          if (event === "change") changeHandler = cb;
+        }),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+
+    render(
+      <ThemeProvider>
+        <ThemeDisplay />
+      </ThemeProvider>,
+    );
+
+    // 初始无 cookie，处于 system 模式且系统为亮色
+    expect(screen.getByTestId("theme").textContent).toBe("system");
+    expect(screen.getByTestId("resolved-theme").textContent).toBe("light");
+
+    // 系统切到 dark：theme 仍是 system，但 resolvedTheme 必须更新
+    await act(async () => {
+      darkMatches = true;
+      changeHandler?.();
+    });
+
+    expect(screen.getByTestId("theme").textContent).toBe("system");
+    expect(screen.getByTestId("resolved-theme").textContent).toBe("dark");
+  });
 });
