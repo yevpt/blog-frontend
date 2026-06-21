@@ -26,9 +26,16 @@ describe("styles mobile form controls", () => {
   it("移动端表单控件使用 16px 字号避免 iOS 聚焦自动缩放", () => {
     const css = readFileSync("packages/styles/src/base.css", "utf8");
     const mobileFormControlBlock = css.match(
-      /@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*?input\[class\][\s\S]*?textarea\[class\][\s\S]*?select\[class\][\s\S]*?font-size:\s*16px;[\s\S]*?\}/,
+      /@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*?input\[class\]:not\(\[data-compact-input\]\)[\s\S]*?font-size:\s*16px;[\s\S]*?\}/,
     )?.[0];
 
     expect(mobileFormControlBlock).toBeTruthy();
+  });
+
+  it("紧凑输入框可通过 data-compact-input 豁免移动端 16px 强制字号", () => {
+    const css = readFileSync("packages/styles/src/base.css", "utf8");
+
+    expect(css).toContain("input:not([data-compact-input])");
+    expect(css).toContain("input[class]:not([data-compact-input])");
   });
 });

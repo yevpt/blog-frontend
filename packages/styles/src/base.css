@@ -198,12 +198,12 @@ body {
 }
 
 @media (max-width: 767px) {
-  input,
-  textarea,
-  select,
-  input[class],
-  textarea[class],
-  select[class] {
+  input:not([data-compact-input]),
+  textarea:not([data-compact-input]),
+  select:not([data-compact-input]),
+  input[class]:not([data-compact-input]),
+  textarea[class]:not([data-compact-input]),
+  select[class]:not([data-compact-input]) {
     font-size: 16px;
   }
 }
