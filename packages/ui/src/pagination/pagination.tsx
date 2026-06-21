@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { SvgIcon } from "@repo/icons";
 
 import { cn } from "../lib/utils";
@@ -56,11 +57,28 @@ export function Pagination({
   prevLabel = "上一页",
   nextLabel = "下一页",
 }: PaginationProps) {
+  const [optimisticPage, setOptimisticPage] = useState(currentPage);
+  const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    setOptimisticPage(currentPage);
+  }, [currentPage]);
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      setOptimisticPage(page);
+      startTransition(() => {
+        onPageChange(page);
+      });
+    },
+    [onPageChange],
+  );
+
   return (
     <PaginationBase.Root
-      page={currentPage}
+      page={optimisticPage}
       total={totalPages}
-      onPageChange={onPageChange}
+      onPageChange={handlePageChange}
       className={cn(
         "flex w-full items-center justify-between gap-3 border-t border-border pt-4 md:pt-5",
         className,

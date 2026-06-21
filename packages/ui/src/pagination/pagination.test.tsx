@@ -55,6 +55,18 @@ describe("Pagination", () => {
     expect(onPageChange).toHaveBeenCalledWith(3);
   });
 
+  it("父级页码更新较慢时先本地切换高亮", async () => {
+    const user = userEvent.setup();
+    const onPageChange = vi.fn();
+    render(<Pagination currentPage={1} totalPages={5} onPageChange={onPageChange} />);
+
+    await user.click(screen.getByRole("button", { name: "第 3 页" }));
+
+    expect(screen.getByRole("button", { name: "第 3 页" })).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByRole("button", { name: "第 1 页" })).not.toHaveAttribute("aria-current");
+    expect(onPageChange).toHaveBeenCalledWith(3);
+  });
+
   it("点击下一页触发 onPageChange(currentPage + 1)", async () => {
     const user = userEvent.setup();
     const onPageChange = vi.fn();
