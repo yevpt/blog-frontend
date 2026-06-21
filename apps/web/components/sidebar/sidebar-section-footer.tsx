@@ -33,6 +33,8 @@ export function SidebarFooterButton({
       variant="ghost"
       size="sm"
       className={cn("flex-1 gap-1 font-medium", TONE_CLASSES[tone], className)}
+      // Omit 在 ButtonProps 这个判别联合（button/link）上会分发，丢失 href 判别符；
+      // 此处断言回原联合类型以保留 href→链接 的能力（非 any，仅窄化还原）
       {...(props as ButtonProps)}
     >
       {children}
