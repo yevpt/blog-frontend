@@ -18,6 +18,7 @@ export type IconName =
   | "chevron-right"
   | "close"
   | "code-block"
+  | "copy"
   | "dots-vertical"
   | "download"
   | "droplet-filled"
