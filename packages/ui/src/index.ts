@@ -1,6 +1,14 @@
 export { Badge, type BadgeProps } from "./badge";
 export { Button, type ButtonProps } from "./button";
-export { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./card";
+export {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  type CardProps,
+} from "./card";
 export { cn } from "./lib/utils";
 export { Pagination, PaginationBase, type PaginationProps } from "./pagination";
 export {

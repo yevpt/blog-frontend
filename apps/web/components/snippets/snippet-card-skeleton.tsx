@@ -60,11 +60,7 @@ export function SnippetCardSkeleton({
   }
 
   return (
-    <Card
-      className="rounded-2xl border-border p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.04)]"
-      style={{ minHeight: h }}
-      aria-hidden="true"
-    >
+    <Card className="p-4" style={{ minHeight: h }} aria-hidden="true">
       <SkeletonBody variant={variant} />
     </Card>
   );

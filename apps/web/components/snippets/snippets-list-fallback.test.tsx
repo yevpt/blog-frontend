@@ -18,8 +18,8 @@ describe("SnippetsListFallback", () => {
 
   it("显示 8 个骨架卡片", () => {
     const { container } = render(<SnippetsListFallback />);
-    // SnippetCardSkeleton 根节点带 aria-hidden
-    const skeletons = container.querySelectorAll(".rounded-2xl.border-border");
+    // SnippetCardSkeleton 根节点为统一 Card，带 shadow-card 令牌类
+    const skeletons = container.querySelectorAll(".shadow-card");
     expect(skeletons.length).toBe(8);
   });
 });

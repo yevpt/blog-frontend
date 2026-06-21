@@ -96,7 +96,7 @@ export function ArticleToc({ items, variant }: ArticleTocProps) {
         </nav>
       )}
       {showMobile && (
-        <details className="mb-6 rounded-lg border border-border bg-card">
+        <details className="mb-6 rounded-lg bg-card shadow-card">
           <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-foreground">
             目录
           </summary>

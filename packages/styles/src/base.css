@@ -83,6 +83,17 @@
 
   --color-destructive: #ef4444;
   --color-destructive-foreground: #fafafa;
+
+  /*
+    卡片阴影令牌（生成 shadow-card / shadow-card-hover 工具类）。
+    第一层 0 0 0 1px 充当“边缘”，代替实心 border，让卡片边更柔和。
+  */
+  --shadow-card:
+    0 0 0 1px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.04),
+    0 10px 28px -10px rgba(0, 0, 0, 0.12);
+  --shadow-card-hover:
+    0 0 0 1px rgba(0, 0, 0, 0.05), 0 4px 10px -2px rgba(0, 0, 0, 0.08),
+    0 18px 40px -12px rgba(0, 0, 0, 0.16);
 }
 
 /*
@@ -119,6 +130,14 @@
 
     --color-destructive: #f87171;
     --color-destructive-foreground: #09090b;
+
+    /* 暗色：白色半透明环 + 更深环境阴影，避免灰边在深色面板上发灰 */
+    --shadow-card:
+      0 0 0 1px rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.4),
+      0 10px 28px -10px rgba(0, 0, 0, 0.6);
+    --shadow-card-hover:
+      0 0 0 1px rgba(255, 255, 255, 0.1), 0 4px 10px -2px rgba(0, 0, 0, 0.5),
+      0 18px 40px -12px rgba(0, 0, 0, 0.7);
   }
 }
 

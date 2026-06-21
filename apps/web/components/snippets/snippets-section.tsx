@@ -61,7 +61,7 @@ export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSect
 
   return (
     <>
-      <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.04)]">
+      <section className="overflow-hidden rounded-2xl bg-card shadow-card">
         <div className="flex items-center justify-between px-4 pb-3 pt-4">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-[10px] bg-gradient-to-br from-primary to-primary/80 text-[13px] text-primary-foreground">

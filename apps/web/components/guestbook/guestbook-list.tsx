@@ -1,7 +1,7 @@
 "use client";
 
 import type { CommentReplyResp, GuestbookItemResp } from "@repo/api";
-import { Pagination } from "@repo/ui";
+import { Card, Pagination } from "@repo/ui";
 import type { RefObject } from "react";
 import { GuestbookItem } from "./guestbook-item";
 import type { ReplyTarget } from "@/components/comments";
@@ -69,10 +69,7 @@ export function GuestbookList({
 }: GuestbookListProps) {
   return (
     <>
-      <div
-        ref={listRef}
-        className="overflow-hidden rounded-2xl border border-border bg-white dark:bg-card"
-      >
+      <Card ref={listRef} className="overflow-hidden">
         {isLoading ? (
           <GuestbookSkeleton />
         ) : error ? (
@@ -107,7 +104,7 @@ export function GuestbookList({
             />
           </div>
         )}
-      </div>
+      </Card>
 
       {total > 0 && (
         <div className="flex items-center justify-center gap-3 pt-4 text-[12px] tracking-[0.02em] text-(--fg3)">

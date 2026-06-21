@@ -2,12 +2,23 @@ import * as React from "react";
 
 import { cn } from "../lib/utils";
 
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** 可交互卡片：加 hover 浮起 + 过渡。默认 false（静态展示卡片）。 */
+  interactive?: boolean;
+}
+
 // Card 被拆成多个小组件，页面可以像搭积木一样组合标题、描述和内容区域。
-export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
+// 边缘由 shadow-card 的第一层 0 0 0 1px 承担，不再使用实心 border，边更柔和。
+export const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, interactive = false, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("rounded-xl border bg-card text-card-foreground shadow-sm", className)}
+      className={cn(
+        "rounded-2xl bg-card text-card-foreground shadow-card",
+        interactive &&
+          "transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-card-hover",
+        className,
+      )}
       {...props}
     />
   ),
@@ -45,3 +56,10 @@ export const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes
   ),
 );
 CardContent.displayName = "CardContent";
+
+export const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("flex items-center p-6 pt-0", className)} {...props} />
+  ),
+);
+CardFooter.displayName = "CardFooter";

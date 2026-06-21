@@ -12,7 +12,7 @@ export function TagsCloud({ tags }: TagsCloudProps) {
   const { t } = useLocale();
 
   return (
-    <section className="rounded-[14px] border border-border bg-card p-[15px] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.04)]">
+    <section className="rounded-2xl bg-card p-[15px] shadow-card">
       <TagGroup label={t("sidebar.tags")} selectionMode="none">
         <TagList className="flex flex-wrap gap-1.5">
           {tags.map((tag) => (
