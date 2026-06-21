@@ -48,6 +48,7 @@ import { createMentionExtension } from "../extensions/mention";
 import { PlaceholderExtension } from "../extensions/placeholder";
 import { CodeBlockExtension } from "../extensions/code-block";
 import { AtomParagraphMergeExtension } from "../extensions/atom-paragraph-merge";
+import { MarkBoundaryExtension } from "../extensions/mark-boundary";
 import type { MentionItem } from "../types";
 
 interface UseRichEditorOptions {
@@ -131,12 +132,15 @@ export function useRichEditor({
         // ⑥ 修复空段落与图片相邻时 Backspace/Delete 无法删除空段落的问题（见该扩展内注释）
         AtomParagraphMergeExtension,
 
-        // ⑦ 占位文字：空编辑器时在首个空段落上生成 data-placeholder
+        // ⑦ 修复链接/行内代码处于文档开头时，左边界继续输入仍继承格式的问题
+        MarkBoundaryExtension,
+
+        // ⑧ 占位文字：空编辑器时在首个空段落上生成 data-placeholder
         PlaceholderExtension.configure({
           placeholder: placeholder ?? "",
         }),
 
-        // ⑧ @提及（候选列表由外部传入）
+        // ⑨ @提及（候选列表由外部传入）
         // TODO(mention-api): 后端 /users/search 就绪后，在调用方填充 mentionSuggestions
         createMentionExtension(mentionSuggestions),
       ],
