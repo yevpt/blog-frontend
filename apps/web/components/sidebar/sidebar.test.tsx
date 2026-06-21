@@ -35,16 +35,23 @@ vi.mock("@repo/ui", () => ({
   Button: ({
     children,
     variant,
+    href,
     ...props
   }: {
     children: ReactNode;
     variant?: string;
+    href?: string;
     [key: string]: unknown;
-  }) => (
-    <button data-variant={variant} {...props}>
-      {children}
-    </button>
-  ),
+  }) =>
+    href !== undefined ? (
+      <a href={href} data-variant={variant} {...props}>
+        {children}
+      </a>
+    ) : (
+      <button data-variant={variant} {...props}>
+        {children}
+      </button>
+    ),
   TagGroup: ({
     children,
     label,
@@ -137,9 +144,14 @@ describe("RecentVisitors", () => {
   it("底部渲染入驻 QQ 群（主操作）与查看更多（次操作）", () => {
     render(<RecentVisitors visitors={mockVisitors} />);
     expect(screen.getByRole("button", { name: /入驻 QQ 群/ })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /查看更多/ })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /查看更多/ })).toBeTruthy();
     expect(screen.getByTestId("icon-qq")).toBeTruthy();
     expect(screen.getByTestId("icon-arrow-forward")).toBeTruthy();
+  });
+
+  it("查看更多跳转到圈子页", () => {
+    render(<RecentVisitors visitors={mockVisitors} />);
+    expect(screen.getByRole("link", { name: /查看更多/ }).getAttribute("href")).toBe("/circle");
   });
 
   it("Tooltip 包含访客名称", () => {

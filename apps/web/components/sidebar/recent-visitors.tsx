@@ -43,7 +43,7 @@ export function RecentVisitors({ visitors }: RecentVisitorsProps) {
           <SvgIcon name="qq" size={12} />
           {t("sidebar.joinQQ")}
         </SidebarFooterButton>
-        <SidebarFooterButton tone="ghost">
+        <SidebarFooterButton tone="ghost" href="/circle">
           {t("sidebar.viewMore")}
           <SvgIcon name="arrow-forward" size={12} />
         </SidebarFooterButton>

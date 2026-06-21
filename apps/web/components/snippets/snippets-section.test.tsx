@@ -27,18 +27,25 @@ vi.mock("@repo/ui", () => ({
     variant,
     onPress,
     isDisabled,
+    href,
     ...props
   }: {
     children: ReactNode;
     variant?: string;
     onPress?: () => void;
     isDisabled?: boolean;
+    href?: string;
     [key: string]: unknown;
-  }) => (
-    <button data-variant={variant} onClick={onPress} disabled={isDisabled} {...props}>
-      {children}
-    </button>
-  ),
+  }) =>
+    href !== undefined ? (
+      <a href={href} data-variant={variant} {...props}>
+        {children}
+      </a>
+    ) : (
+      <button data-variant={variant} onClick={onPress} disabled={isDisabled} {...props}>
+        {children}
+      </button>
+    ),
   Card: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
     <div {...props}>{children}</div>
   ),
@@ -218,9 +225,14 @@ describe("SnippetsSection", () => {
   it("底部渲染发表碎语（主操作）与查看更多（次操作）", () => {
     render(<SnippetsSection snippets={mockMoments} />);
     expect(screen.getByRole("button", { name: /发表碎语/ })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /查看更多/ })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /查看更多/ })).toBeTruthy();
     expect(screen.getByTestId("icon-plus")).toBeTruthy();
     expect(screen.getByTestId("icon-arrow-forward")).toBeTruthy();
+  });
+
+  it("查看更多跳转到碎语页", () => {
+    render(<SnippetsSection snippets={mockMoments} />);
+    expect(screen.getByRole("link", { name: /查看更多/ }).getAttribute("href")).toBe("/snippets");
   });
 
   it("短内容不显示展开按钮", () => {

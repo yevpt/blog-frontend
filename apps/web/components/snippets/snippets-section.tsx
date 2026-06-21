@@ -99,7 +99,7 @@ export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSect
             <SvgIcon name="plus" size={12} />
             {t("snippet.postNew")}
           </SidebarFooterButton>
-          <SidebarFooterButton tone="ghost">
+          <SidebarFooterButton tone="ghost" href="/snippets">
             {t("snippet.viewMore")}
             <SvgIcon name="arrow-forward" size={12} />
           </SidebarFooterButton>

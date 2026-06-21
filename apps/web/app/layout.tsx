@@ -12,6 +12,7 @@ import { ThemeProvider } from "./providers/theme-provider";
 import { LocaleProvider } from "./providers/locale-provider";
 import { SessionProvider } from "./providers/session-provider";
 import { GlobalModals } from "./providers/global-modals";
+import { BfcacheRecovery } from "./providers/bfcache-recovery";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
@@ -70,6 +71,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               <div className="flex flex-col min-h-screen">
                 {/* SvgSprite 将雪碧图注入 DOM，必须在所有使用 SvgIcon 的组件之前渲染 */}
                 <SvgSprite />
+                <BfcacheRecovery />
                 <GlobalModals />
                 <SiteNavbar />
                 <main className="flex-1 pt-0">{children}</main>
