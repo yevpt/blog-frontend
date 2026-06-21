@@ -14,7 +14,11 @@ export interface SearchFieldProps extends Omit<AriaSearchFieldProps, "className"
   /** 校验错误文案 */
   errorMessage?: string | ((validation: ValidationResult) => string);
   size?: "sm" | "md";
+  /** 紧凑模式：h-7 视觉尺寸；内部 16px 防 iOS 缩放，外层 scale 缩小至 text-xs 视觉 */
+  compact?: boolean;
   className?: string;
+  /** 输入框外壳 Group 的额外 className（用于干净覆盖边框 / focus 环等样式） */
+  groupClassName?: string;
   /** input 元素自身的额外 className */
   inputClassName?: string;
   /** 清除按钮的无障碍标签 */

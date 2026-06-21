@@ -64,6 +64,16 @@ describe("SearchField", () => {
     expect(screen.getByTestId("icon-close")).toBeTruthy();
   });
 
+  it("groupClassName 透传到输入框外壳并能覆盖默认样式", () => {
+    render(<SearchField placeholder="搜索文章" groupClassName="rounded-full custom-group" />);
+
+    const group = screen.getByRole("searchbox").parentElement;
+    expect(group).not.toBeNull();
+    expect(group).toHaveClass("custom-group", "rounded-full");
+    // tailwind-merge 应去掉与 rounded-full 冲突的默认 rounded-md
+    expect(group).not.toHaveClass("rounded-md");
+  });
+
   it("clearButtonClassName 透传到清除按钮", () => {
     render(
       <SearchField
@@ -74,5 +84,23 @@ describe("SearchField", () => {
     );
 
     expect(screen.getByRole("button", { name: "清除搜索" })).toHaveClass("ghost-clear-button");
+  });
+
+  it("compact 模式内部 16px，通过 origin-top-right scale 对齐 h-7 视觉槽位", () => {
+    render(<SearchField placeholder="搜索文章" compact />);
+
+    const input = screen.getByRole("searchbox", { name: "搜索文章" });
+    const scaleShell = input.closest(".origin-top-right");
+    const visualSlot = scaleShell?.parentElement;
+
+    expect(input).toHaveClass("text-base");
+    expect(input).not.toHaveAttribute("data-compact-input");
+    expect(scaleShell).toHaveClass(
+      "scale-[0.75]",
+      "origin-top-right",
+      "h-[2.333rem]",
+      "w-[133.333%]",
+    );
+    expect(visualSlot).toHaveClass("h-7");
   });
 });
