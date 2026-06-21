@@ -47,7 +47,9 @@ describe("PillCommentInput（已登录）", () => {
 
   it("渲染文本框", () => {
     render(<PillCommentInput value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
-    expect(screen.getByPlaceholderText("写下你的评论...")).toBeTruthy();
+    const field = screen.getByPlaceholderText("写下你的评论...");
+    expect(field).toBeTruthy();
+    expect(field.tagName).toBe("TEXTAREA");
   });
 
   it("value 为空时发送按钮不渲染", () => {

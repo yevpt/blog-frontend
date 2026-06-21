@@ -1,11 +1,25 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { SvgIcon } from "@repo/icons";
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
 import type { ReplyTarget } from "../parts/comment-item";
 import { ReplyBanner } from "./reply-banner";
+
+/** 与 text-[13px] leading-normal + py-2.5 对齐，用于限制最高约 4 行 */
+const PILL_TEXTAREA_LINE_HEIGHT_PX = 20;
+const PILL_TEXTAREA_VERTICAL_PADDING_PX = 20;
+const PILL_TEXTAREA_MAX_ROWS = 4;
+const PILL_TEXTAREA_MAX_HEIGHT_PX =
+  PILL_TEXTAREA_LINE_HEIGHT_PX * PILL_TEXTAREA_MAX_ROWS + PILL_TEXTAREA_VERTICAL_PADDING_PX;
+
+function resizePillTextarea(el: HTMLTextAreaElement) {
+  el.style.height = "auto";
+  const nextHeight = Math.min(el.scrollHeight, PILL_TEXTAREA_MAX_HEIGHT_PX);
+  el.style.height = `${nextHeight}px`;
+  el.style.overflowY = el.scrollHeight > PILL_TEXTAREA_MAX_HEIGHT_PX ? "auto" : "hidden";
+}
 
 interface PillCommentInputProps {
   value: string;
@@ -28,11 +42,22 @@ export function PillCommentInput({
 }: PillCommentInputProps) {
   const { userId } = useSession();
   const openLogin = useLoginModal((s) => s.open);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const syncTextareaHeight = useCallback(() => {
+    const el = textareaRef.current;
+    if (el) {
+      resizePillTextarea(el);
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    syncTextareaHeight();
+  }, [value, syncTextareaHeight]);
 
   useEffect(() => {
     if (replyTarget) {
-      inputRef.current?.focus();
+      textareaRef.current?.focus();
     }
   }, [replyTarget]);
 
@@ -55,24 +80,26 @@ export function PillCommentInput({
   return (
     <div className="flex shrink-0 flex-col gap-2 border-t border-border px-[18px] py-3 pb-4">
       {replyTarget && <ReplyBanner toUsername={replyTarget.toUsername} onCancel={onCancelReply} />}
-      <div className="relative flex items-center">
-        <input
-          ref={inputRef}
-          type="text"
+      <div
+        className={`relative w-full overflow-hidden rounded-[20px] border border-input bg-background transition-colors focus-within:border-primary ${isSubmitting ? "opacity-60" : ""}`}
+      >
+        <textarea
+          ref={textareaRef}
+          rows={1}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={replyTarget ? "写下你的回复..." : "写下你的评论..."}
           disabled={isSubmitting}
-          className={`w-full rounded-full border border-input bg-background py-2.5 pl-4 text-[13px] leading-normal text-foreground outline-none transition-colors placeholder:text-(--fg3) focus:border-primary disabled:cursor-not-allowed disabled:opacity-60 ${value.trim() ? "pr-10" : "pr-4"}`}
+          className={`block w-full resize-none border-0 bg-transparent py-2.5 pl-4 text-[13px] leading-normal text-foreground outline-none placeholder:text-(--fg3) disabled:cursor-not-allowed ${value.trim() ? "pr-10" : "pr-4"}`}
         />
-        {/* ↑ 发送按钮：仅在有内容时出现，嵌入 pill 右侧 */}
+        {/* 外壳圆角 20px = 按钮半径 14px + 内缩 6px，右下角弧线与按钮同心 */}
         {value.trim() && (
           <button
             type="button"
             onClick={onSubmit}
             disabled={isSubmitting}
             aria-label="发送评论"
-            className="absolute right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-primary/85 disabled:cursor-not-allowed disabled:opacity-60"
+            className="absolute right-1.5 bottom-1.5 flex size-7 items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-primary/85 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <SvgIcon name="arrow-up" size={16} />
           </button>
