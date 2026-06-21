@@ -31,8 +31,8 @@ const VARIANT_CLASSES: Record<"article" | "comment", string> = {
     // 首/尾代码块的外边距对齐段落（prose-p:my-0.5），否则会顶飞「回复」按钮造成上下间距失衡。
     "[&_.md-code-wrapper]:my-2.5 [&_.md-code-wrapper:first-child]:mt-0.5 [&_.md-code-wrapper:last-child]:mb-0.5",
     "prose-img:max-w-[240px] prose-img:rounded-md",
-    "prose-pre:bg-[var(--editor-code-bg)] prose-pre:text-[var(--editor-code-fg)]",
-    "prose-pre:border prose-pre:border-[var(--color-border)] prose-pre:rounded-lg",
+    "prose-pre:bg-[var(--md-code-bg)] prose-pre:text-[var(--editor-code-fg)]",
+    "prose-pre:border prose-pre:border-[var(--md-code-border)] prose-pre:rounded-lg",
     "prose-code:text-[var(--editor-code-fg)]",
   ].join(" "),
 };
