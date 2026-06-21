@@ -33,13 +33,6 @@ export default async function CirclePage() {
 
   return (
     <PageContainer size="default">
-      <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-primary">
-        Members
-      </p>
-      <h1 className="mb-8 text-[22px] font-extrabold tracking-[-0.03em] text-foreground">
-        圈子成员
-      </h1>
-
       <CircleList initialPage={initialPage} />
     </PageContainer>
   );

@@ -31,12 +31,9 @@ vi.mock("@/lib/server-api", () => ({
   }),
 }));
 
-test("CirclePage renders header and sorts users by role", async () => {
+test("CirclePage sorts users by role", async () => {
   const jsx = await CirclePage();
   render(jsx);
-
-  // 标题
-  expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("圈子成员");
 
   // 用户卡片，排序 Admin > VIP > Regular
   const headings = await screen.findAllByRole("heading", { level: 3 });
