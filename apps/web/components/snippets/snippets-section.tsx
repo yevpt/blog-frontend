@@ -3,10 +3,14 @@
 import { useCallback, useMemo, useState } from "react";
 import { useLocale } from "@repo/hooks";
 import { SvgIcon } from "@repo/icons";
-import { Button } from "@repo/ui";
 import type { MomentItemResp, MomentPageResp } from "@repo/api";
 import { CommentModal } from "@/components/comments";
-import { SidebarSectionAction, SidebarSectionHeader } from "@/components/sidebar";
+import {
+  SidebarFooterButton,
+  SidebarSectionAction,
+  SidebarSectionFooter,
+  SidebarSectionHeader,
+} from "@/components/sidebar";
 import { useMomentList } from "@/hooks/use-moment-list";
 import { SnippetCard } from "./snippet-card";
 import { SnippetCardSkeleton } from "./snippet-card-skeleton";
@@ -21,7 +25,7 @@ interface SnippetsSectionProps {
 /** 右侧栏最多展示的碎语条数 */
 const MAX_SNIPPETS = 3;
 
-// 碎语区块容器：渐变图标 header + 卡片堆叠 + 渐变 CTA 按钮
+// 碎语区块容器：统一标题 header + 卡片堆叠 + 双等宽 CTA 按钮
 export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSectionProps) {
   const { t } = useLocale();
   const initialPage = useMemo<MomentPageResp>(
@@ -90,22 +94,16 @@ export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSect
               ))}
         </div>
 
-        <div className="flex gap-2 border-t border-border/40 px-4 py-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 flex-1 rounded-xl border-none bg-gradient-to-r from-primary to-primary/90 text-xs font-semibold text-primary-foreground shadow-[0_2px_8px_rgba(124,58,237,0.25)] hover:opacity-90"
-          >
+        <SidebarSectionFooter>
+          <SidebarFooterButton tone="primary">
+            <SvgIcon name="plus" size={12} />
             {t("snippet.postNew")}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-9 flex-1 rounded-xl border border-border/60 text-xs font-medium text-(--fg2) hover:border-primary/30 hover:text-primary"
-          >
-            {t("snippet.viewMore")} →
-          </Button>
-        </div>
+          </SidebarFooterButton>
+          <SidebarFooterButton tone="ghost">
+            {t("snippet.viewMore")}
+            <SvgIcon name="arrow-forward" size={12} />
+          </SidebarFooterButton>
+        </SidebarSectionFooter>
       </section>
 
       {activeComment !== null && (

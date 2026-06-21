@@ -215,10 +215,12 @@ describe("SnippetsSection", () => {
     expect(screen.getAllByText("展开").length).toBeGreaterThan(0);
   });
 
-  it("发表碎语和查看更多按钮存在", () => {
+  it("底部渲染发表碎语（主操作）与查看更多（次操作）", () => {
     render(<SnippetsSection snippets={mockMoments} />);
-    expect(screen.getByText("发表碎语")).toBeTruthy();
-    expect(screen.getByText((content) => content.includes("查看更多"))).toBeTruthy();
+    expect(screen.getByRole("button", { name: /发表碎语/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /查看更多/ })).toBeTruthy();
+    expect(screen.getByTestId("icon-plus")).toBeTruthy();
+    expect(screen.getByTestId("icon-arrow-forward")).toBeTruthy();
   });
 
   it("短内容不显示展开按钮", () => {
