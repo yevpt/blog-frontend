@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { MomentItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
-import { Avatar, Badge, Button, Card, CardContent } from "@repo/ui";
+import { Avatar, Badge, Button, Card, CardContent, cn } from "@repo/ui";
 import { LoadingImage } from "@/components/common/loading-image";
 import { useImageViewer } from "@/store/use-image-viewer";
 import { formatRelativeTime } from "../../lib/format-time";
@@ -99,25 +99,30 @@ export function SnippetCard({
       <SnippetContent content={snippet.content} />
 
       {visibleImages.length > 0 && (
-        <div
-          className={`mt-2.5 grid gap-1 overflow-hidden rounded-[10px] ${
-            visibleImages.length === 1 ? "grid-cols-1" : "grid-cols-2"
-          }`}
-        >
+        <div className="mt-2.5 flex flex-wrap justify-start gap-1">
           {visibleImages.map((img, idx) => (
             <button
               key={img.id}
               type="button"
               aria-label={`查看图片 ${img.name}`}
               onClick={() => openViewer(viewerImages, idx)}
-              className="relative block aspect-[3/2] w-full cursor-zoom-in overflow-hidden rounded-[6px]"
+              className={cn(
+                "relative inline-flex max-w-full cursor-zoom-in overflow-hidden rounded-[6px]",
+                visibleImages.length > 1 && "max-w-[calc(50%-2px)]",
+              )}
             >
               <LoadingImage
                 src={img.access_url}
                 alt={img.name}
-                fill
-                className="object-contain"
-                sizes="(max-width: 768px) 100vw, 50vw"
+                width={1200}
+                height={900}
+                className="block h-auto max-h-48 w-auto max-w-full"
+                sizes={
+                  visibleImages.length === 1
+                    ? "(max-width: 768px) 100vw, 50vw"
+                    : "(max-width: 768px) 50vw, 25vw"
+                }
+                skeletonClassName="rounded-[6px]"
               />
             </button>
           ))}
@@ -126,7 +131,7 @@ export function SnippetCard({
               type="button"
               aria-label="查看更多图片"
               onClick={() => openViewer(viewerImages, visibleImages.length)}
-              className="flex cursor-zoom-in items-center justify-center bg-muted text-xs text-(--fg3)"
+              className="flex h-24 w-24 shrink-0 cursor-zoom-in items-center justify-center overflow-hidden rounded-[6px] bg-muted text-xs text-(--fg3)"
             >
               +{hiddenCount}
             </button>
@@ -187,9 +192,10 @@ export function SnippetCard({
 
   return (
     <Card
+      interactive
       data-testid="snippet-card"
       data-layout="standalone"
-      className="snippet-card-raised min-w-0 overflow-hidden rounded-2xl border border-border p-0 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.04)]"
+      className="min-w-0 overflow-hidden"
       style={{ contentVisibility: "auto", containIntrinsicSize: "auto 200px" }}
     >
       <CardContent className="p-4">{body}</CardContent>

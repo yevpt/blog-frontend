@@ -154,7 +154,7 @@ describe("SnippetCard", () => {
     expect(screen.getByText("博主")).toBeTruthy();
   });
 
-  it("有图片时使用 object-contain 完整展示", () => {
+  it("有图片时左对齐展示且圆角包裹图片", () => {
     const snippet = makeMoment({
       images: [
         {
@@ -172,7 +172,10 @@ describe("SnippetCard", () => {
     const imgs = screen
       .getAllByRole("img")
       .filter((el) => el.tagName === "IMG" && el.getAttribute("src")?.startsWith("/"));
-    expect(imgs[0].className).toContain("object-contain");
+    const button = imgs[0].closest("button");
+    expect(button?.className).toContain("rounded-[6px]");
+    expect(button?.className).toContain("overflow-hidden");
+    expect(imgs[0].className).toContain("max-w-full");
   });
 
   it("显示点赞和评论数字（ArticleCardStats 风格）", () => {
