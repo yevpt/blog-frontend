@@ -625,6 +625,31 @@ describe("DataTable", () => {
     expect(scrollContainer).toHaveClass("h-full");
   });
 
+  it("移动端横向滚动被限制在表格容器内", () => {
+    const { container } = render(
+      <DataTable
+        aria-label="文章"
+        items={rows}
+        columns={columns}
+        getRowId={(article) => article.id}
+        classNames={{ container: "table-scroll-container" }}
+      />,
+    );
+
+    const scrollContainer = container.querySelector<HTMLElement>(".table-scroll-container");
+    const clippingWrapper = scrollContainer?.parentElement;
+
+    expect(clippingWrapper).toHaveClass("overflow-hidden");
+    expect(clippingWrapper).toHaveClass("rounded-lg");
+    expect(clippingWrapper).toHaveClass("[contain:paint]");
+    expect(scrollContainer).toHaveClass("overflow-auto");
+    expect(scrollContainer).toHaveClass("overscroll-none");
+    expect(scrollContainer).toHaveClass("touch-pan-x");
+    expect(scrollContainer).toHaveClass("touch-pan-y");
+    expect(scrollContainer).toHaveClass("[-webkit-overflow-scrolling:auto]");
+    expect(screen.getByRole("grid", { name: "文章" })).toHaveStyle({ minWidth: "670px" });
+  });
+
   it("首屏无数据加载时渲染骨架占位行而非空态文案", () => {
     const { container } = renderArticleTable({ items: [], isLoading: true, skeletonRows: 4 });
 

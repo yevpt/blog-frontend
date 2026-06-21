@@ -3,6 +3,7 @@
 import { Column, TableHeader } from "react-aria-components";
 import { cn } from "../../lib/utils";
 import { DataTableHeaderCell } from "./header-cell";
+import { toCssMinWidth, toCssWidth } from "../utils/column-size";
 import type { DataTableClassNames, DataTableColumn, DataTableState } from "../types";
 
 interface DataTableHeaderProps<T extends object> {
@@ -40,8 +41,8 @@ export function DataTableHeader<T extends object>({
           key={column.id}
           id={column.id}
           isRowHeader={column.isRowHeader}
-          width={column.width}
-          minWidth={column.minWidth}
+          // 列宽走 CSS（配合表格 table-layout: fixed），不用 react-aria 的列宽布局状态机
+          style={{ width: toCssWidth(column.width), minWidth: toCssMinWidth(column.minWidth) }}
           aria-sort={getColumnAriaSort(column, tableState)}
           onClick={(event) => {
             // 表头整体可排序，但筛选/排序按钮自身的点击不应该冒泡成第二次排序。

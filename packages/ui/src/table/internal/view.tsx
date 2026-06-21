@@ -1,10 +1,11 @@
 "use client";
 
-import { Table as AriaTable, ResizableTableContainer } from "react-aria-components";
+import { Table as AriaTable } from "react-aria-components";
 import { cn } from "../../lib/utils";
 import { DataTableBody } from "./body";
 import { DataTableHeader } from "./header";
 import { DataTableOverlay } from "./overlay";
+import { getMinTableWidth } from "../utils/column-size";
 import type {
   DataTableAccessibleName,
   DataTableClassNames,
@@ -48,19 +49,26 @@ export function DataTableView<T extends object>({
   onSortChange,
   onFilterChange,
 }: DataTableViewProps<T>) {
+  // 列宽改用纯 CSS（table-layout: fixed）而非 react-aria 的 ResizableTableContainer：
+  // 后者会给表格强加 width: min-content，使每次渲染都对所有单元格做固有宽度量算，
+  // 排序/翻页等无关 state 变化也会触发整表重排，导致交互 INP 飙高。
+  const minTableWidth = getMinTableWidth(columns);
+
   return (
-    <div className="relative h-full min-h-0 min-w-0 w-full">
-      <ResizableTableContainer
+    <div className="relative h-full min-h-0 min-w-0 w-full overflow-hidden rounded-lg [contain:paint]">
+      <div
         className={cn(
-          "w-full overflow-auto rounded-lg border border-border bg-card outline-none focus:outline-none focus-visible:outline-none",
+          "w-full overflow-auto overscroll-none touch-pan-x touch-pan-y rounded-lg border border-border bg-card outline-none [-webkit-overflow-scrolling:auto] focus:outline-none focus-visible:outline-none",
           maxHeightClassName || undefined,
           classNames?.container,
         )}
       >
         <AriaTable
           {...labelProps}
+          // 容器更窄时由 minWidth 撑出横向滚动，避免内容被压缩裁切
+          style={{ minWidth: minTableWidth || undefined }}
           className={cn(
-            "w-full border-separate border-spacing-0 box-border text-sm has-[>[data-empty]]:h-full",
+            "w-full table-fixed border-separate border-spacing-0 box-border text-sm has-[>[data-empty]]:h-full",
             classNames?.table,
           )}
         >
@@ -82,7 +90,7 @@ export function DataTableView<T extends object>({
             classNames={classNames}
           />
         </AriaTable>
-      </ResizableTableContainer>
+      </div>
 
       {showOverlay ? <DataTableOverlay loadingText={loadingText} classNames={classNames} /> : null}
     </div>
