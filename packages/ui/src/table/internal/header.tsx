@@ -33,7 +33,7 @@ export function DataTableHeader<T extends object>({
 }: DataTableHeaderProps<T>) {
   return (
     <TableHeader
-      className={cn("sticky top-0 z-10 bg-muted text-muted-foreground", classNames?.header)}
+      className={cn("sticky top-0 z-30 bg-muted text-muted-foreground", classNames?.header)}
     >
       {columns.map((column) => (
         <Column

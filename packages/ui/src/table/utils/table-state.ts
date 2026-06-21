@@ -1,10 +1,4 @@
-import type {
-  DataTableColumn,
-  DataTableSearch,
-  DataTableSort,
-  DataTableSortDirection,
-  DataTableState,
-} from "../types";
+import type { DataTableColumn, DataTableSearch, DataTableSort, DataTableState } from "../types";
 
 function isSortConfig<T>(sort: DataTableColumn<T>["sort"]): sort is DataTableSort<T> {
   return typeof sort === "object" && sort !== null;
@@ -89,18 +83,15 @@ export function getNextSort<T>({
 }): DataTableState["sort"] {
   if (!column.sort) return current;
 
-  const fallbackDirection: DataTableSortDirection =
-    getSortConfig(column)?.defaultDirection ?? "ascending";
-
   if (current?.column !== column.id) {
-    return { column: column.id, direction: fallbackDirection };
+    return { column: column.id, direction: "descending" };
   }
 
-  // 排序交互维持双态循环，未排序状态由切换到其它列或外部受控 state 决定。
-  return {
-    column: column.id,
-    direction: current.direction === "ascending" ? "descending" : "ascending",
-  };
+  if (current.direction === "descending") {
+    return { column: column.id, direction: "ascending" };
+  }
+
+  return undefined;
 }
 
 export function getFilteredSortedRows<T>({

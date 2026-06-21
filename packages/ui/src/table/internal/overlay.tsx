@@ -18,8 +18,8 @@ export function DataTableOverlay({ loadingText, classNames }: DataTableOverlayPr
   return (
     <div
       className={cn(
-        "pointer-events-none absolute inset-0 z-10 flex items-center justify-center gap-2",
-        "bg-card/60 backdrop-blur-[1px]",
+        "pointer-events-none absolute inset-0 z-20 flex items-center justify-center gap-2",
+        "rounded-lg bg-card/60",
         classNames?.overlay,
       )}
     >

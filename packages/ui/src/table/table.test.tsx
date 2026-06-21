@@ -204,6 +204,34 @@ describe("DataTable", () => {
     expect(screen.getByRole("dialog", { name: "筛选状态" })).toHaveClass("table-filter-popover");
   });
 
+  it("滚动容器不在内部控件聚焦时显示浏览器焦点边框", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <DataTable
+        aria-label="文章"
+        items={rows}
+        columns={columns}
+        getRowId={(article) => article.id}
+        search={{
+          placeholder: "搜索文章",
+          match: (article, keyword) =>
+            [article.title, article.category]
+              .join(" ")
+              .toLowerCase()
+              .includes(keyword.toLowerCase()),
+        }}
+        classNames={{ container: "table-scroll-container" }}
+      />,
+    );
+
+    await user.click(screen.getByRole("searchbox", { name: "搜索文章" }));
+
+    const scrollContainer = container.querySelector<HTMLElement>(".table-scroll-container");
+
+    expect(scrollContainer).toHaveClass("outline-none");
+    expect(scrollContainer).toHaveClass("focus-visible:outline-none");
+  });
+
   it("通过内置搜索过滤可见行", async () => {
     const user = userEvent.setup();
     renderArticleTable();
@@ -269,9 +297,64 @@ describe("DataTable", () => {
     await user.click(screen.getByRole("columnheader", { name: /更新时间/ }));
 
     expect(
-      screen.getByRole("button", { name: "更新时间排序：升序，点击切换为降序" }),
+      screen.getByRole("button", { name: "更新时间排序：升序，点击取消排序" }),
     ).not.toHaveAttribute("aria-pressed");
     expect(getArticleLinks()[0]).toHaveTextContent("旧友链清理记录");
+  });
+
+  it("点击同一列排序按钮按降序、升序、未排序循环", async () => {
+    const user = userEvent.setup();
+
+    function StatefulArticleTable() {
+      const [state, setState] = React.useState<DataTableState>({
+        searchValue: "",
+        filters: { status: "all" },
+        sort: undefined,
+      });
+
+      return (
+        <DataTable
+          aria-label="文章"
+          items={rows}
+          columns={columns}
+          getRowId={(article) => article.id}
+          state={state}
+          onStateChange={setState}
+          search={{
+            placeholder: "搜索文章",
+            match: (article, keyword) =>
+              [article.title, article.category]
+                .join(" ")
+                .toLowerCase()
+                .includes(keyword.toLowerCase()),
+          }}
+        />
+      );
+    }
+
+    render(<StatefulArticleTable />);
+
+    await user.click(screen.getByRole("button", { name: "更新时间排序：未排序，点击排序" }));
+
+    expect(getArticleLinks()[0]).toHaveTextContent("React Query 与后台表格状态");
+    expect(
+      screen.getByRole("button", { name: "更新时间排序：降序，点击切换为升序" }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "更新时间排序：降序，点击切换为升序" }));
+
+    expect(getArticleLinks()[0]).toHaveTextContent("旧友链清理记录");
+    expect(
+      screen.getByRole("button", { name: "更新时间排序：升序，点击取消排序" }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "更新时间排序：升序，点击取消排序" }));
+
+    expect(getArticleLinks()[0]).toHaveTextContent("React Query 与后台表格状态");
+    expect(
+      screen.getByRole("button", { name: "更新时间排序：未排序，点击排序" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /更新时间/ })).not.toHaveAttribute("aria-sort");
   });
 
   it("点击筛选按钮不会触发表头排序", async () => {
@@ -281,6 +364,63 @@ describe("DataTable", () => {
     await user.click(screen.getByRole("button", { name: "筛选状态" }));
 
     expect(getArticleLinks()[0]).toHaveTextContent("React Query 与后台表格状态");
+  });
+
+  it("表头操作区渲染在最右侧，点击不冒泡触发排序，并支持 slot className 定制", async () => {
+    const user = userEvent.setup();
+    const columnsWithHeaderAction = columns.map((column) =>
+      column.id === "updatedAt"
+        ? { ...column, headerAction: <button type="button">列内搜索</button> }
+        : column,
+    );
+
+    const { container } = render(
+      <DataTable
+        aria-label="文章"
+        items={rows}
+        columns={columnsWithHeaderAction}
+        getRowId={(article) => article.id}
+        classNames={{ headerAction: "table-header-action" }}
+      />,
+    );
+
+    expect(container.querySelector(".table-header-action")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "列内搜索" }));
+
+    expect(getArticleLinks()[0]).toHaveTextContent("React Query 与后台表格状态");
+  });
+
+  it("表头操作区隔离键盘事件，避免输入框按键冒泡到表格焦点管理", async () => {
+    const user = userEvent.setup();
+    const onKeyDown = vi.fn();
+    const columnsWithHeaderAction = columns.map((column) =>
+      column.id === "title"
+        ? {
+            ...column,
+            headerAction: <input aria-label="列内搜索" />,
+          }
+        : column,
+    );
+
+    render(
+      <div onKeyDown={onKeyDown}>
+        <DataTable
+          aria-label="文章"
+          items={rows}
+          columns={columnsWithHeaderAction}
+          getRowId={(article) => article.id}
+        />
+      </div>,
+    );
+
+    const input = screen.getByRole("textbox", { name: "列内搜索" });
+
+    await user.type(input, "Vite");
+
+    expect(onKeyDown).not.toHaveBeenCalled();
+    expect(input).toHaveFocus();
+    expect(input).toHaveValue("Vite");
   });
 
   it("未排序状态下排序按钮提供准确的无障碍文案", () => {
@@ -298,7 +438,7 @@ describe("DataTable", () => {
     await user.click(screen.getByRole("columnheader", { name: /更新时间/ }));
 
     const sortButton = screen.getByRole("button", {
-      name: "更新时间排序：升序，点击切换为降序",
+      name: "更新时间排序：升序，点击取消排序",
     });
     expect(sortButton).not.toHaveClass("bg-primary/10");
     expect(sortButton.querySelector(".text-primary")).toBeTruthy();
@@ -367,6 +507,123 @@ describe("DataTable", () => {
     expect(screen.getByText("加载中")).toBeInTheDocument();
   });
 
+  it("已有数据加载时遮罩覆盖滚动视口而不是滚动内容", () => {
+    const { container } = render(
+      <DataTable
+        aria-label="文章"
+        items={rows}
+        columns={columns}
+        getRowId={(article) => article.id}
+        isLoading
+        classNames={{
+          container: "table-scroll-container",
+          overlay: "table-loading-overlay",
+        }}
+      />,
+    );
+
+    const scrollContainer = container.querySelector<HTMLElement>(".table-scroll-container");
+    const overlay = container.querySelector<HTMLElement>(".table-loading-overlay");
+
+    expect(scrollContainer).toBeInTheDocument();
+    expect(overlay).toBeInTheDocument();
+    expect(scrollContainer).not.toContainElement(overlay);
+  });
+
+  it("加载遮罩不使用 backdrop blur，避免分页时触发大面积重绘", () => {
+    const { container } = render(
+      <DataTable
+        aria-label="文章"
+        items={rows}
+        columns={columns}
+        getRowId={(article) => article.id}
+        isLoading
+        classNames={{ overlay: "table-loading-overlay" }}
+      />,
+    );
+
+    const overlay = container.querySelector<HTMLElement>(".table-loading-overlay");
+
+    expect(overlay).toBeInTheDocument();
+    expect(overlay?.className).not.toContain("backdrop-blur");
+  });
+
+  it("加载遮罩层级低于 sticky 表头，避免表头随加载态闪烁", () => {
+    const { container } = render(
+      <DataTable
+        aria-label="文章"
+        items={rows}
+        columns={columns}
+        getRowId={(article) => article.id}
+        isLoading
+        classNames={{
+          header: "table-sticky-header",
+          overlay: "table-loading-overlay",
+        }}
+      />,
+    );
+
+    const header = container.querySelector<HTMLElement>(".table-sticky-header");
+    const overlay = container.querySelector<HTMLElement>(".table-loading-overlay");
+
+    expect(header).toHaveClass("z-30");
+    expect(overlay).toHaveClass("z-20");
+  });
+
+  it("加载刷新期间上游短暂清空数据时保留上一帧行并只显示覆盖层", () => {
+    const { container, rerender } = render(
+      <DataTable
+        aria-label="文章"
+        items={rows}
+        columns={columns}
+        getRowId={(article) => article.id}
+        loadingText="加载中"
+      />,
+    );
+
+    rerender(
+      <DataTable
+        aria-label="文章"
+        items={[]}
+        columns={columns}
+        getRowId={(article) => article.id}
+        isLoading
+        loadingText="加载中"
+      />,
+    );
+
+    const grid = screen.getByRole("grid", { name: "文章" });
+    expect(
+      within(grid).getByRole("rowheader", { name: "React Query 与后台表格状态" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("progressbar", { name: "加载中" })).toBeInTheDocument();
+    expect(container.querySelectorAll("[data-skeleton-bar]")).toHaveLength(0);
+  });
+
+  it("遮罩外层保留表格在弹性布局中的横向滚动与满高约束", () => {
+    const { container } = render(
+      <DataTable
+        aria-label="文章"
+        items={rows}
+        columns={columns}
+        getRowId={(article) => article.id}
+        maxHeightClassName={false}
+        classNames={{
+          container: "min-h-0 h-full table-scroll-container",
+        }}
+      />,
+    );
+
+    const scrollContainer = container.querySelector<HTMLElement>(".table-scroll-container");
+    const viewportWrapper = scrollContainer?.parentElement;
+
+    expect(viewportWrapper).toHaveClass("min-w-0");
+    expect(viewportWrapper).toHaveClass("min-h-0");
+    expect(viewportWrapper).toHaveClass("h-full");
+    expect(scrollContainer).toHaveClass("min-h-0");
+    expect(scrollContainer).toHaveClass("h-full");
+  });
+
   it("首屏无数据加载时渲染骨架占位行而非空态文案", () => {
     const { container } = renderArticleTable({ items: [], isLoading: true, skeletonRows: 4 });
 
@@ -381,6 +638,31 @@ describe("DataTable", () => {
     renderArticleTable({ items: [] });
 
     expect(screen.getByText("暂无文章")).toBeInTheDocument();
+  });
+
+  it("非加载且无数据时支持友好的空态面板", () => {
+    const { container } = render(
+      <DataTable
+        aria-label="文章"
+        items={[]}
+        columns={columns}
+        getRowId={(article) => article.id}
+        emptyState={{
+          icon: "folder",
+          title: "未找到匹配的文章",
+          description: "调整搜索或筛选条件后再试。",
+        }}
+        classNames={{ emptyState: "table-empty-state" }}
+      />,
+    );
+
+    const emptyState = container.querySelector<HTMLElement>(".table-empty-state");
+
+    expect(emptyState).toBeInTheDocument();
+    expect(emptyState).toHaveClass("min-h-[220px]");
+    expect(within(emptyState as HTMLElement).getByTestId("icon-folder")).toBeInTheDocument();
+    expect(screen.getByText("未找到匹配的文章")).toBeInTheDocument();
+    expect(screen.getByText("调整搜索或筛选条件后再试。")).toBeInTheDocument();
   });
 
   it("无匹配结果时展示空态文案", async () => {

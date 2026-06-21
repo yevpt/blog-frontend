@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import type { IconName } from "@repo/icons";
+import type { ReactElement, ReactNode } from "react";
 
 export type DataTableSortDirection = "ascending" | "descending";
 
@@ -62,6 +63,8 @@ export interface DataTableColumn<T> {
   isRowHeader?: boolean;
   sort?: boolean | DataTableSort<T>;
   filter?: DataTableFilter<T>;
+  /** 渲染在表头单元格最右侧的操作区（如内嵌搜索框），点击不会触发该列排序 */
+  headerAction?: ReactNode;
 }
 
 export interface DataTableClassNames {
@@ -85,6 +88,19 @@ export interface DataTableClassNames {
   filterMenu?: string;
   filterMenuTitle?: string;
   filterMenuItem?: string;
+  headerAction?: string;
+  emptyState?: string;
+  emptyStateIcon?: string;
+  emptyStateTitle?: string;
+  emptyStateDescription?: string;
+  emptyStateAction?: string;
+}
+
+export interface DataTableEmptyState {
+  icon?: IconName | ReactElement | false;
+  title?: ReactNode;
+  description?: ReactNode;
+  action?: ReactNode;
 }
 
 export type DataTableAccessibleName =
@@ -111,6 +127,7 @@ export type DataTableProps<T> = DataTableAccessibleName & {
   total?: number;
   /** 是否在工具栏显示「共 N 条」总数，默认 true；置 false 可改由外部（如分页栏）承载 */
   showTotal?: boolean;
+  emptyState?: DataTableEmptyState;
   emptyText?: ReactNode;
   loadingText?: ReactNode;
   isLoading?: boolean;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getDefaultTableState,
   getFilteredSortedRows,
@@ -45,14 +45,27 @@ export function useDataTable<T extends object>({
     () => getFilteredSortedRows({ items, columns, state: tableState, search }),
     [columns, items, search, tableState],
   );
+  const previousVisibleItemsRef = useRef<T[]>([]);
+
+  useEffect(() => {
+    if (visibleItems.length > 0) {
+      previousVisibleItemsRef.current = visibleItems;
+      return;
+    }
+
+    if (!isLoading) {
+      previousVisibleItemsRef.current = [];
+    }
+  }, [isLoading, visibleItems]);
 
   // 区分两种加载形态：
   // - 首屏无数据 → 骨架屏（清空行，由 body 渲染占位行）
   // - 已有数据刷新/翻页 → 覆盖层（保留旧行，叠加遮罩）
-  const hasData = visibleItems.length > 0;
-  const showSkeleton = isLoading && !hasData;
-  const showOverlay = isLoading && hasData;
-  const rowItems = showSkeleton ? [] : visibleItems;
+  const hasCurrentData = visibleItems.length > 0;
+  const hasPreviousData = previousVisibleItemsRef.current.length > 0;
+  const showSkeleton = isLoading && !hasCurrentData && !hasPreviousData;
+  const showOverlay = isLoading && (hasCurrentData || hasPreviousData);
+  const rowItems = isLoading && !hasCurrentData ? previousVisibleItemsRef.current : visibleItems;
 
   function updateTableState(patch: Partial<DataTableState>) {
     const nextState = mergeTableState(tableState, patch);

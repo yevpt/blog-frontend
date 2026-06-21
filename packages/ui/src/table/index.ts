@@ -4,6 +4,7 @@ export type {
   DataTableColumn,
   DataTableColumnSize,
   DataTableColumnStaticSize,
+  DataTableEmptyState,
   DataTableFilter,
   DataTableOption,
   DataTableProps,

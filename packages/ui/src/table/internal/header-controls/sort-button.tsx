@@ -23,7 +23,7 @@ export function DataTableSortButton<T extends object>({
 }: DataTableSortButtonProps<T>) {
   const label =
     sortDirection === "ascending"
-      ? `${headerText}排序：升序，点击切换为降序`
+      ? `${headerText}排序：升序，点击取消排序`
       : sortDirection === "descending"
         ? `${headerText}排序：降序，点击切换为升序`
         : `${headerText}排序：未排序，点击排序`;

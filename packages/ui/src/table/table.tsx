@@ -17,6 +17,7 @@ export function DataTable<T extends object>({
   actions,
   total,
   showTotal = true,
+  emptyState,
   emptyText = "暂无数据",
   loadingText = "加载中",
   isLoading = false,
@@ -61,6 +62,7 @@ export function DataTable<T extends object>({
         rowItems={table.rowItems}
         getRowId={getRowId}
         tableState={table.tableState}
+        emptyState={emptyState}
         emptyText={emptyText}
         loadingText={loadingText}
         showSkeleton={table.showSkeleton}
