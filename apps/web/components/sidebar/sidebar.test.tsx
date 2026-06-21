@@ -134,10 +134,12 @@ describe("RecentVisitors", () => {
     expect(screen.getByRole("heading", { level: 3, name: "最近来访" })).toBeInTheDocument();
   });
 
-  it("两个底部按钮（入驻 QQ 群 / 查看更多）存在", () => {
+  it("底部渲染入驻 QQ 群（主操作）与查看更多（次操作）", () => {
     render(<RecentVisitors visitors={mockVisitors} />);
-    expect(screen.getByText("入驻 QQ 群")).toBeTruthy();
-    expect(screen.getByText("查看更多")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /入驻 QQ 群/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /查看更多/ })).toBeTruthy();
+    expect(screen.getByTestId("icon-qq")).toBeTruthy();
+    expect(screen.getByTestId("icon-arrow-forward")).toBeTruthy();
   });
 
   it("Tooltip 包含访客名称", () => {

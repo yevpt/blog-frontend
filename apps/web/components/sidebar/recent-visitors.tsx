@@ -1,9 +1,13 @@
 "use client";
 
 import { useLocale } from "@repo/hooks";
-import { Button } from "@repo/ui";
+import { SvgIcon } from "@repo/icons";
 import { BaseUserCard } from "@/components/common/base-user-card";
-import { SidebarSectionHeader } from "@/components/sidebar";
+import {
+  SidebarFooterButton,
+  SidebarSectionFooter,
+  SidebarSectionHeader,
+} from "@/components/sidebar";
 import type { Visitor } from "../../app/_mock/types";
 
 interface RecentVisitorsProps {
@@ -34,14 +38,16 @@ export function RecentVisitors({ visitors }: RecentVisitorsProps) {
         ))}
       </div>
 
-      <div className="flex gap-2 px-4 pb-[15px]">
-        <Button variant="outline" size="sm" className="h-8 flex-1 rounded-full text-[11px]">
+      <SidebarSectionFooter>
+        <SidebarFooterButton tone="primary">
+          <SvgIcon name="qq" size={12} />
           {t("sidebar.joinQQ")}
-        </Button>
-        <Button variant="ghost" size="sm" className="h-8 flex-1 rounded-full text-[11px]">
+        </SidebarFooterButton>
+        <SidebarFooterButton tone="ghost">
           {t("sidebar.viewMore")}
-        </Button>
-      </div>
+          <SvgIcon name="arrow-forward" size={12} />
+        </SidebarFooterButton>
+      </SidebarSectionFooter>
     </section>
   );
 }
