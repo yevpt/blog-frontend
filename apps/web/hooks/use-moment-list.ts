@@ -14,6 +14,7 @@ import { useSnippetModal } from "@/store/use-snippet-modal";
 import { addToast } from "@/lib/toast";
 import { apiForm, apiJson, ApiClientError } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
+import type { SnippetImageItem } from "@/components/snippets/types";
 
 export type MomentTab = "all" | "owner" | "friends";
 export type MomentSort = "latest" | "popular";
@@ -267,7 +268,7 @@ export function useMomentList({
   );
 
   const updateMoment = useCallback(
-    async (snippet: MomentItemResp, content: string) => {
+    async (snippet: MomentItemResp, content: string, images: SnippetImageItem[]) => {
       if (pendingActionIdsRef.current.has(snippet.id)) {
         return snippet;
       }
@@ -279,9 +280,16 @@ export function useMomentList({
         form.append("content", content);
         form.append("status", String(snippet.status));
         form.append("comment_status", String(snippet.comment_status));
-        snippet.images.forEach((image, index) => {
-          form.append("image_urls", image.url);
-          form.append("image_order", `url:${index}`);
+
+        // 后端要求：images 传新文件，image_urls 传已有图片 URL，image_order 标记最终顺序
+        images.forEach((image) => {
+          if (image.file) {
+            form.append("images", image.file, image.file.name);
+            form.append("image_order", `file:${form.getAll("images").length - 1}`);
+          } else if (image.remoteUrl) {
+            form.append("image_urls", image.remoteUrl);
+            form.append("image_order", `url:${form.getAll("image_urls").length - 1}`);
+          }
         });
 
         const updated = await apiForm<MomentItemResp>("/api/moments", form, { method: "POST" });

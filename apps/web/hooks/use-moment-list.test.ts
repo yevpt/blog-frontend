@@ -319,14 +319,32 @@ describe("useMomentList", () => {
       useMomentList({ initialPage: makePageResp({ list: [makeMoment(1)] }) }),
     );
 
+    const images = [
+      {
+        id: "r1",
+        remoteUrl: "https://example.com/old.png",
+        previewUrl: "https://example.com/old.png",
+      },
+      {
+        id: "f1",
+        file: new File([new Uint8Array(1)], "new.png", { type: "image/png" }),
+        previewUrl: "blob:new",
+      },
+    ];
+
     await act(async () => {
-      await result.current.updateMoment(makeMoment(1), "更新后的碎语");
+      await result.current.updateMoment(makeMoment(1), "更新后的碎语", images);
     });
 
     const [url, init] = vi.mocked(fetch).mock.calls[0] ?? [];
     expect(url).toBe("/api/moments");
     expect(init).toMatchObject({ method: "POST" });
-    expect(init?.body).toBeInstanceOf(FormData);
+    const body = init?.body as FormData;
+    expect(body).toBeInstanceOf(FormData);
+    expect(body.get("content")).toBe("更新后的碎语");
+    expect(body.getAll("image_urls")).toEqual(["https://example.com/old.png"]);
+    expect(body.getAll("images").length).toBe(1);
+    expect(body.getAll("image_order")).toEqual(["url:0", "file:0"]);
     expect(result.current.moments[0]?.content).toBe("更新后的碎语");
   });
 });

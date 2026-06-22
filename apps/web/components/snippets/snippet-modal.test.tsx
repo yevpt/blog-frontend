@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { ChangeEvent, Dispatch, SetStateAction } from "react";
 import { SnippetModal } from "./snippet-modal";
 import { useSnippetModal } from "@/store/use-snippet-modal";
-import type { SnippetImageItem } from "./snippet-image-uploader";
+import type { SnippetImageItem } from "./types";
 import type { MomentItemResp } from "@repo/api";
 
 interface MockSnippetTextInputProps {
@@ -14,7 +14,9 @@ interface MockSnippetTextInputProps {
 }
 
 interface MockSnippetImageUploaderProps {
+  items: SnippetImageItem[];
   onChange: Dispatch<SetStateAction<SnippetImageItem[]>>;
+  readOnly?: boolean;
 }
 
 vi.mock("@/lib/toast", () => ({ addToast: vi.fn() }));
@@ -32,27 +34,35 @@ vi.mock("./snippet-text-input", () => ({
   ),
 }));
 vi.mock("./snippet-image-uploader", () => ({
-  SnippetImageUploader: function MockUploader({ onChange }: MockSnippetImageUploaderProps) {
+  SnippetImageUploader: function MockUploader({
+    items,
+    onChange,
+    readOnly,
+  }: MockSnippetImageUploaderProps) {
     return (
-      <button
-        type="button"
-        onClick={() =>
-          onChange([
-            {
-              id: "1",
-              file: new File([new Uint8Array(1)], "a.png", { type: "image/png" }),
-              previewUrl: "blob:1",
-            },
-            {
-              id: "2",
-              file: new File([new Uint8Array(1)], "b.png", { type: "image/png" }),
-              previewUrl: "blob:2",
-            },
-          ])
-        }
-      >
-        inject
-      </button>
+      <div data-testid="snippet-image-uploader" data-readonly={readOnly ? "true" : undefined}>
+        <span data-testid="snippet-image-count">{items.length}</span>
+        <button
+          type="button"
+          onClick={() =>
+            onChange([
+              ...items,
+              {
+                id: String(items.length + 1),
+                file: new File([new Uint8Array(1)], "a.png", { type: "image/png" }),
+                previewUrl: "blob:1",
+              },
+              {
+                id: String(items.length + 2),
+                file: new File([new Uint8Array(1)], "b.png", { type: "image/png" }),
+                previewUrl: "blob:2",
+              },
+            ])
+          }
+        >
+          inject
+        </button>
+      </div>
     );
   },
 }));
@@ -164,8 +174,75 @@ describe("SnippetModal", () => {
     await user.type(editor, "改好了");
     await user.click(screen.getByRole("button", { name: "保存" }));
 
-    await waitFor(() => expect(submitEdit).toHaveBeenCalledWith("改好了"));
+    await waitFor(() => expect(submitEdit).toHaveBeenCalledWith("改好了", expect.any(Array)));
     expect(useSnippetModal.getState().isOpen).toBe(false);
+  });
+
+  it("编辑保存失败时不在弹窗层重复 toast", async () => {
+    const user = userEvent.setup();
+    const { addToast } = await import("@/lib/toast");
+    const submitEdit = vi.fn().mockRejectedValue(new Error("请求过于频繁，请稍后再试"));
+    useSnippetModal.setState({
+      isOpen: true,
+      editingSnippet: makeMoment(),
+      submitEdit,
+    });
+
+    render(<SnippetModal />);
+
+    await screen.findByRole("dialog", { name: "编辑碎语" });
+    await user.click(screen.getByRole("button", { name: "保存" }));
+
+    await waitFor(() => expect(submitEdit).toHaveBeenCalled());
+    expect(addToast).not.toHaveBeenCalled();
+    expect(useSnippetModal.getState().isOpen).toBe(true);
+  });
+
+  it("编辑碎语时回显已有图片并可继续添加", async () => {
+    const user = userEvent.setup();
+    const submitEdit = vi.fn().mockResolvedValue(makeMoment());
+    useSnippetModal.setState({
+      isOpen: true,
+      editingSnippet: makeMoment({
+        images: [
+          {
+            id: 1,
+            name: "a.png",
+            file_type: "image/png",
+            url: "https://example.com/a.png",
+            access_url: "https://example.com/a.png",
+            size: 100,
+            seq: 0,
+          },
+          {
+            id: 2,
+            name: "b.png",
+            file_type: "image/png",
+            url: "https://example.com/b.png",
+            access_url: "https://example.com/b.png",
+            size: 100,
+            seq: 1,
+          },
+        ],
+      }),
+      submitEdit,
+    });
+
+    render(<SnippetModal />);
+
+    expect(await screen.findByRole("dialog", { name: "编辑碎语" })).toBeInTheDocument();
+    expect(screen.getByTestId("snippet-image-count")).toHaveTextContent("2");
+    expect(screen.getByTestId("snippet-image-uploader")).not.toHaveAttribute("data-readonly");
+
+    await user.click(screen.getByRole("button", { name: "inject" }));
+    expect(screen.getByTestId("snippet-image-count")).toHaveTextContent("4");
+
+    await user.click(screen.getByRole("button", { name: "保存" }));
+    await waitFor(() => expect(submitEdit).toHaveBeenCalledWith("原来的碎语", expect.any(Array)));
+    const passedImages = submitEdit.mock.calls[0][1] as SnippetImageItem[];
+    expect(passedImages.length).toBe(4);
+    expect(passedImages.filter((it) => it.remoteUrl).length).toBe(2);
+    expect(passedImages.filter((it) => it.file).length).toBe(2);
   });
 
   it("超过 800 字时发布禁用", async () => {

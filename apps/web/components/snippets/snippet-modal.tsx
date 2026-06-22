@@ -14,11 +14,8 @@ import { useSnippetModal } from "@/store/use-snippet-modal";
 import { addToast } from "@/lib/toast";
 import { ResponsiveModalShell } from "@/components/modal-shell/responsive-modal";
 import { SnippetTextInput } from "./snippet-text-input";
-import {
-  SnippetImageUploader,
-  type SnippetImageItem,
-  type SnippetImageUploaderHandle,
-} from "./snippet-image-uploader";
+import { SnippetImageUploader, type SnippetImageUploaderHandle } from "./snippet-image-uploader";
+import type { SnippetImageItem } from "./types";
 
 const MAX_CONTENT = 800;
 const MAX_IMAGES = 9;
@@ -41,12 +38,20 @@ export function SnippetModal() {
       return;
     }
     setContent(editingSnippet?.content ?? "");
-    setImages([]);
+    setImages(
+      editingSnippet?.images.map((image) => ({
+        id: `remote-${image.id}`,
+        remoteUrl: image.access_url || image.url,
+        previewUrl: image.access_url || image.url,
+      })) ?? [],
+    );
   }, [editingSnippet, isOpen]);
 
   function reset() {
     setImages((prev) => {
-      prev.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+      prev.forEach((it) => {
+        if (it.file) URL.revokeObjectURL(it.previewUrl);
+      });
       return [];
     });
     setContent("");
@@ -68,7 +73,7 @@ export function SnippetModal() {
         if (!submitEdit) {
           throw new Error("编辑失败");
         }
-        await submitEdit(content);
+        await submitEdit(content, images);
         reset();
         close();
         return;
@@ -79,6 +84,7 @@ export function SnippetModal() {
       form.append("status", "1");
       form.append("comment_status", "1");
       images.forEach((it, i) => {
+        if (!it.file) return;
         form.append("images", it.file, it.file.name);
         form.append("image_order", `file:${i}`);
       });
@@ -92,7 +98,11 @@ export function SnippetModal() {
       reset();
       close();
     } catch (err) {
-      addToast(err instanceof Error ? err.message : "发布失败", "error");
+      if (!isEditing) {
+        addToast(err instanceof Error ? err.message : "发布失败", "error");
+      } else if (!submitEdit) {
+        addToast("编辑失败", "error");
+      }
     } finally {
       submittingRef.current = false;
       setSubmitting(false);
@@ -112,10 +122,8 @@ export function SnippetModal() {
               type="button"
               aria-label="添加图片"
               onClick={() => uploaderRef.current?.openPicker()}
-              disabled={isEditing || submitting || images.length >= MAX_IMAGES}
-              className={`flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40 ${
-                isEditing ? "hidden" : ""
-              }`}
+              disabled={submitting || images.length >= MAX_IMAGES}
+              className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
             >
               <SvgIcon name="image" size={18} />
               <span>
@@ -193,17 +201,16 @@ function ModalBody({
         onChange={onChangeContent}
         placeholder={isEditing ? "修改这条碎语" : "此刻有什么想法？"}
         disabled={submitting}
+        onReady={() => requestAnimationFrame(onContentResize)}
       />
-      {!isEditing && (
-        <div className="px-[18px] py-3">
-          <SnippetImageUploader
-            ref={uploaderRef}
-            items={images}
-            onChange={onChangeImages}
-            disabled={submitting}
-          />
-        </div>
-      )}
+      <div className="px-[18px] py-3">
+        <SnippetImageUploader
+          ref={uploaderRef}
+          items={images}
+          onChange={onChangeImages}
+          disabled={submitting}
+        />
+      </div>
     </div>
   );
 }
