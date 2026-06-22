@@ -163,4 +163,18 @@ describe("useCommentList", () => {
 
     expect(result.current.error).toBeTruthy();
   });
+
+  it("业务错误时 error 展示后端返回的具体原因", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse({ error: "评论功能已关闭" }, 403));
+
+    const { result } = renderHook(() => useCommentList("article", 1));
+    await waitFor(() => expect(result.current.error).toBe("评论功能已关闭"));
+  });
+
+  it("网络异常时 error 展示兜底文案", async () => {
+    vi.mocked(global.fetch).mockRejectedValue(new TypeError("Failed to fetch"));
+
+    const { result } = renderHook(() => useCommentList("article", 1));
+    await waitFor(() => expect(result.current.error).toBe("加载评论失败，请稍后重试"));
+  });
 });

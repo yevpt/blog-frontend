@@ -7,7 +7,7 @@ import type { CommentReplyResp, CommentReplyPageResp, CommentUserResp } from "@r
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
 import { useCommentLike } from "@/hooks/use-comment-like";
-import { apiJson } from "@/lib/client-fetch";
+import { apiJson, getApiErrorMessage } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
 import { ThreadReplyItem } from "./thread-comment-item";
 import type { ReplyTarget } from "./comment-item";
@@ -184,8 +184,8 @@ export const CommentReplies = memo(function CommentReplies({
         setPage(pageNum);
         setHasMore(pageNum < data.pages);
         if (!append) setIsOpen(true);
-      } catch {
-        setError("加载回复失败");
+      } catch (err) {
+        setError(getApiErrorMessage(err, "加载回复失败"));
       } finally {
         setIsLoading(false);
       }

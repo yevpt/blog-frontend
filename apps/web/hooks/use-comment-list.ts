@@ -1,7 +1,7 @@
 // apps/web/hooks/use-comment-list.ts
 import { useState, useEffect, useCallback } from "react";
 import type { CommentItemResp, CommentPageResp } from "@repo/api";
-import { apiJson } from "@/lib/client-fetch";
+import { apiJson, getApiErrorMessage } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
 
 const PAGE_SIZE = 10;
@@ -49,7 +49,7 @@ export function useCommentList(targetType: TargetType, targetId: number) {
         if (isAbortError(err)) {
           return;
         }
-        setError("加载评论失败，请稍后重试");
+        setError(getApiErrorMessage(err, "加载评论失败，请稍后重试"));
       } finally {
         if (!signal?.aborted) {
           setIsLoading(false);

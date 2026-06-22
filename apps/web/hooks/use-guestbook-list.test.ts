@@ -111,6 +111,24 @@ describe("useGuestbookList", () => {
     expect(result.current.error).toBeTruthy();
   });
 
+  it("fetchPage 业务错误时 error 展示后端返回的具体原因", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "留言板维护中" }, 403));
+    const { result } = renderHook(() => useGuestbookList(emptyPage));
+    await act(async () => {
+      await result.current.fetchPage(1);
+    });
+    expect(result.current.error).toBe("留言板维护中");
+  });
+
+  it("fetchPage 网络异常时 error 展示兜底文案", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    const { result } = renderHook(() => useGuestbookList(emptyPage));
+    await act(async () => {
+      await result.current.fetchPage(1);
+    });
+    expect(result.current.error).toBe("加载留言失败，请稍后重试");
+  });
+
   it("addItem 前插新条目并 total+1", () => {
     const { result } = renderHook(() => useGuestbookList(initialPage));
     act(() => {

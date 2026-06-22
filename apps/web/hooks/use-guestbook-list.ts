@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import type { GuestbookItemResp, GuestbookPageResp } from "@repo/api";
-import { apiJson } from "@/lib/client-fetch";
+import { apiJson, getApiErrorMessage } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
 import { replacePageSearchParam } from "@/lib/url-search";
 
@@ -45,7 +45,7 @@ export function useGuestbookList(initialPage: GuestbookPageResp) {
       if (isAbortError(err)) {
         return;
       }
-      setError("加载留言失败，请稍后重试");
+      setError(getApiErrorMessage(err, "加载留言失败，请稍后重试"));
     } finally {
       if (!controller.signal.aborted) {
         setIsLoading(false);

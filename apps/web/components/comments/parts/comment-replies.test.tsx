@@ -306,6 +306,16 @@ describe("CommentReplies", () => {
     expect(screen.getByText(/展开 2 条回复/)).toBeTruthy();
   });
 
+  it("业务错误时错误提示展示后端返回的具体原因", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse({ error: "评论已关闭" }, 403));
+
+    render(<CommentReplies commentId={1} targetType="article" replyCount={2} onReply={vi.fn()} />);
+    await user.click(screen.getByText(/展开 2 条回复/));
+
+    await waitFor(() => expect(screen.getByText("评论已关闭")).toBeTruthy());
+  });
+
   it("加载更多时按钮显示加载中文案", async () => {
     const user = userEvent.setup();
     vi.mocked(global.fetch)

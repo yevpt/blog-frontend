@@ -104,7 +104,7 @@ addToast(getApiErrorMessage(err, "<动作>失败，请稍后重试"), "error");
   - 步骤：`setError("...写死...")` 的兜底分支改用 `getApiErrorMessage(err, "...原兜底...")`；已用 `json.message || "..."` 的保留。
   - 测试：更新相关测试断言。
 
-- [ ] **C2 · 列表加载失败**
+- [x] **C2 · 列表加载失败**
   - 文件：`apps/web/hooks/use-comment-list.ts:52`、`apps/web/hooks/use-guestbook-list.ts:48`、`apps/web/components/comments/parts/comment-replies.tsx:188`
   - 步骤：加载失败 `setError("...")` 改用 `getApiErrorMessage(err, "...原兜底...")`，保留内联展示。
   - 测试：更新相关测试。
