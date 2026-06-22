@@ -467,6 +467,91 @@ describe("createApiClient", () => {
     expect(url.searchParams.get("user_id")).toBe("2");
   });
 
+  it("moments.save 使用 fetchAuthed 调用 POST /moments", async () => {
+    const moment = {
+      id: 7,
+      user_id: 1,
+      content: "更新",
+      status: 1,
+      comment_status: 1,
+      read_count: 0,
+      is_top: false,
+      like_count: 0,
+      comment_count: 0,
+      is_liked: false,
+      images: [],
+      created_at: "2026-05-30T09:00:00Z",
+      updated_at: "2026-05-30T09:00:00Z",
+    };
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: moment }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token" });
+
+    await client.moments.save({
+      id: 7,
+      content: "更新",
+      status: 1,
+      comment_status: 1,
+      image_urls: ["moments/a.jpg"],
+      image_order: ["url:0"],
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/moments",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          id: 7,
+          content: "更新",
+          status: 1,
+          comment_status: 1,
+          image_urls: ["moments/a.jpg"],
+          image_order: ["url:0"],
+        }),
+      }),
+    );
+  });
+
+  it("moments.delete 使用 fetchAuthed 调用 DELETE /moments/{id}", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: { id: 7 } }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token" });
+
+    await client.moments.delete(7);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/moments/7",
+      expect.objectContaining({ method: "DELETE" }),
+    );
+  });
+
+  it("moments.setTop 和 removeTop 调用置顶端点", async () => {
+    vi.mocked(global.fetch)
+      .mockResolvedValueOnce(
+        mockResponse({ code: 0, message: "ok", data: { id: 7, is_top: true } }),
+      )
+      .mockResolvedValueOnce(
+        mockResponse({ code: 0, message: "ok", data: { id: 7, is_top: false } }),
+      );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token" });
+
+    await client.moments.setTop(7);
+    await client.moments.removeTop(7);
+
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      1,
+      "http://api/moments/7/top",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      2,
+      "http://api/moments/7/top",
+      expect.objectContaining({ method: "DELETE" }),
+    );
+  });
+
   // ── 用户接口 ─────────────────────────────────────────────────────
 
   describe("users", () => {

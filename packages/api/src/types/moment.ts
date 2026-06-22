@@ -5,6 +5,16 @@ export interface MomentListReq {
   page_size?: number;
 }
 
+export interface MomentSaveReq {
+  id?: number;
+  user_id?: number;
+  content: string;
+  status: 0 | 1;
+  comment_status: 0 | 1;
+  image_urls?: string[];
+  image_order?: string[];
+}
+
 export interface MomentUserResp {
   id: number;
   username: string;
@@ -48,6 +58,15 @@ export interface MomentLikeResp {
   is_liked: boolean;
   /** Go int64 — safe as JS number for blog-scale counts */
   like_count: number;
+}
+
+export interface MomentDeleteResp {
+  id: number;
+}
+
+export interface MomentTopResp {
+  id: number;
+  is_top: boolean;
 }
 
 export interface MomentPageResp {

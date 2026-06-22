@@ -35,10 +35,13 @@ export type { CategoryTabItem, CategoryTabsResp } from "./types/category";
 export type { TagItemResp, TagListResp } from "./types/tag";
 export type {
   MomentListReq,
+  MomentSaveReq,
   MomentUserResp,
   MomentMediaResp,
   MomentItemResp,
   MomentLikeResp,
+  MomentDeleteResp,
+  MomentTopResp,
   MomentPageResp,
 } from "./types/moment";
 export type {

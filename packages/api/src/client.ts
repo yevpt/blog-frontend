@@ -18,7 +18,14 @@ import type {
 } from "./types/article";
 import type { TagListResp } from "./types/tag";
 import type { CategoryTabsResp } from "./types/category";
-import type { MomentItemResp, MomentListReq, MomentPageResp } from "./types/moment";
+import type {
+  MomentDeleteResp,
+  MomentItemResp,
+  MomentListReq,
+  MomentPageResp,
+  MomentSaveReq,
+  MomentTopResp,
+} from "./types/moment";
 import type {
   CommentCreateReq,
   CommentItemResp,
@@ -249,6 +256,19 @@ export function createApiClient(config: ApiClientConfig) {
         fetchAuthed<MomentItemResp>(`/moments/${id}/like`, {
           method: "POST",
         }),
+      /** 新增或更新碎语，需登录；图片 multipart 上传由 web route handler 单独转发 */
+      save: (req: MomentSaveReq) =>
+        fetchAuthed<MomentItemResp>("/moments", {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 删除自己的碎语，需登录；管理员也可删除 */
+      delete: (id: number) => fetchAuthed<MomentDeleteResp>(`/moments/${id}`, { method: "DELETE" }),
+      /** 置顶自己的碎语，需登录；每个作者最多三条 */
+      setTop: (id: number) => fetchAuthed<MomentTopResp>(`/moments/${id}/top`, { method: "POST" }),
+      /** 取消置顶自己的碎语，需登录 */
+      removeTop: (id: number) =>
+        fetchAuthed<MomentTopResp>(`/moments/${id}/top`, { method: "DELETE" }),
     },
     users: {
       /** 获取当前登录用户详情（需登录） */
