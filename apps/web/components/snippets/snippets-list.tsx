@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { MomentPageResp, MomentItemResp } from "@repo/api";
 import dynamic from "next/dynamic";
 import { useMomentList } from "@/hooks/use-moment-list";
+import { useSnippetModal } from "@/store/use-snippet-modal";
 import { Card } from "@repo/ui";
 import { SnippetCard } from "./snippet-card";
 import { SnippetCardSkeleton } from "./snippet-card-skeleton";
@@ -73,12 +74,17 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
     endReached,
     fetchError,
     pendingLikeIds,
+    pendingActionIds,
     changeTab,
     changeSort,
     loadMore,
     toggleLike,
+    updateMoment,
+    toggleTop,
+    deleteMoment,
     setMoments,
   } = useMomentList({ initialPage, ownerUserId, friendRoleId });
+  const openSnippetModal = useSnippetModal((state) => state.open);
 
   const [activeComment, setActiveComment] = useState<{ momentId: number } | null>(null);
 
@@ -88,14 +94,26 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
 
   const prevAssignmentsRef = useRef<Map<number, number>>(new Map());
   const prevColumnCountRef = useRef<number>(columnCount);
+  const prevFirstPageKeyRef = useRef<string | null>(null);
+  const prevPageRef = useRef(pageData.page);
 
   loadMoreRef.current = loadMore;
 
   const columnItems = useMemo(() => {
-    if (prevColumnCountRef.current !== columnCount) {
+    const page = pageData.page || 1;
+    const firstPageKey =
+      page === 1 ? `${activeTab}:${sortedMoments.map((item) => item.id).join(",")}` : null;
+    const shouldResetForFirstPage =
+      firstPageKey !== null &&
+      (prevPageRef.current !== 1 || prevFirstPageKeyRef.current !== firstPageKey);
+
+    if (prevColumnCountRef.current !== columnCount || shouldResetForFirstPage) {
       prevAssignmentsRef.current = new Map();
       prevColumnCountRef.current = columnCount;
     }
+    prevPageRef.current = page;
+    prevFirstPageKeyRef.current = firstPageKey;
+
     const { cols, assignments } = distributeToColumns(
       sortedMoments,
       columnCount,
@@ -104,7 +122,7 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
     );
     prevAssignmentsRef.current = assignments;
     return cols;
-  }, [sortedMoments, columnCount, pageData.page_size]);
+  }, [activeTab, sortedMoments, columnCount, pageData.page, pageData.page_size]);
 
   const showSentinel = !endReached && !isLoadingMore && !fetchError;
 
@@ -130,6 +148,13 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
   const openComment = useCallback((snippet: MomentItemResp) => {
     setActiveComment({ momentId: snippet.id });
   }, []);
+
+  const openEdit = useCallback(
+    (snippet: MomentItemResp) => {
+      openSnippetModal(snippet, (content) => updateMoment(snippet, content));
+    },
+    [openSnippetModal, updateMoment],
+  );
 
   const closeComment = useCallback(() => {
     setActiveComment(null);
@@ -191,6 +216,10 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
                       onLike={toggleLike}
                       likeDisabled={pendingLikeIds.has(snippet.id)}
                       onComment={openComment}
+                      onEdit={openEdit}
+                      onToggleTop={toggleTop}
+                      onDelete={deleteMoment}
+                      actionDisabled={pendingActionIds.has(snippet.id)}
                     />
                   </div>
                 ))}

@@ -11,7 +11,10 @@ import {
   SidebarSectionFooter,
   SidebarSectionHeader,
 } from "@/components/sidebar";
+import { useSession } from "@/app/providers/session-provider";
 import { useMomentList } from "@/hooks/use-moment-list";
+import { useLoginModal } from "@/store/use-login-modal";
+import { useSnippetModal } from "@/store/use-snippet-modal";
 import { SnippetCard } from "./snippet-card";
 import { SnippetCardSkeleton } from "./snippet-card-skeleton";
 
@@ -28,6 +31,9 @@ const MAX_SNIPPETS = 3;
 // 碎语区块容器：统一标题 header + 卡片堆叠 + 双等宽 CTA 按钮
 export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSectionProps) {
   const { t } = useLocale();
+  const { profile } = useSession();
+  const { open: openLoginModal } = useLoginModal();
+  const openSnippetModal = useSnippetModal((state) => state.open);
   const initialPage = useMemo<MomentPageResp>(
     () => ({
       total: snippets.length,
@@ -39,7 +45,16 @@ export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSect
     [snippets],
   );
 
-  const { moments, pendingLikeIds, toggleLike, setMoments } = useMomentList({
+  const {
+    moments,
+    pendingLikeIds,
+    pendingActionIds,
+    toggleLike,
+    updateMoment,
+    toggleTop,
+    deleteMoment,
+    setMoments,
+  } = useMomentList({
     initialPage,
     ownerUserId,
     initialTab: ownerUserId === undefined ? "all" : "owner",
@@ -50,9 +65,22 @@ export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSect
   const openComment = useCallback((snippet: MomentItemResp) => {
     setActiveComment({ momentId: snippet.id });
   }, []);
+  const openEdit = useCallback(
+    (snippet: MomentItemResp) => {
+      openSnippetModal(snippet, (content) => updateMoment(snippet, content));
+    },
+    [openSnippetModal, updateMoment],
+  );
   const closeComment = useCallback(() => {
     setActiveComment(null);
   }, []);
+  const handlePostNew = useCallback(() => {
+    if (!profile) {
+      openLoginModal();
+      return;
+    }
+    openSnippetModal();
+  }, [openLoginModal, openSnippetModal, profile]);
   const handleCommentAdded = useCallback(() => {
     if (!activeComment) return;
     setMoments((current) =>
@@ -90,12 +118,16 @@ export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSect
                   onLike={toggleLike}
                   likeDisabled={pendingLikeIds.has(snippet.id)}
                   onComment={openComment}
+                  onEdit={openEdit}
+                  onToggleTop={toggleTop}
+                  onDelete={deleteMoment}
+                  actionDisabled={pendingActionIds.has(snippet.id)}
                 />
               ))}
         </div>
 
         <SidebarSectionFooter>
-          <SidebarFooterButton tone="primary">
+          <SidebarFooterButton tone="primary" onPress={handlePostNew}>
             <SvgIcon name="plus" size={12} />
             {t("snippet.postNew")}
           </SidebarFooterButton>

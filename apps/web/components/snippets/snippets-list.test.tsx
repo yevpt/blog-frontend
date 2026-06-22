@@ -83,7 +83,13 @@ vi.mock("@/store/use-login-modal", () => ({
 }));
 
 vi.mock("@/store/use-snippet-modal", () => ({
-  useSnippetModal: () => ({ open: vi.fn() }),
+  useSnippetModal: <T,>(
+    selector: (state: {
+      publishCount: number;
+      lastPublishedUserId: number | null;
+      open: () => void;
+    }) => T,
+  ) => selector({ publishCount: 0, lastPublishedUserId: null, open: vi.fn() }),
 }));
 
 vi.mock("@repo/hooks", () => ({
@@ -121,31 +127,48 @@ vi.mock("./snippet-card", () => ({
   ),
 }));
 
+type TestMoment = MomentPageResp["list"][number];
+
+function makeMoment(
+  id: number,
+  content = "列表碎语",
+  overrides: Partial<TestMoment> = {},
+): TestMoment {
+  return {
+    id,
+    user_id: 1,
+    content,
+    status: 1,
+    comment_status: 1,
+    read_count: 0,
+    is_top: false,
+    like_count: 2,
+    comment_count: 1,
+    is_liked: false,
+    images: [],
+    created_at: "2026-05-30T09:00:00Z",
+    updated_at: "2026-05-30T09:00:00Z",
+    ...overrides,
+  };
+}
+
 function makePageResp(overrides: Partial<MomentPageResp> = {}): MomentPageResp {
   return {
     total: 1,
     pages: 1,
     page: 1,
     page_size: 20,
-    list: [
-      {
-        id: 1,
-        user_id: 1,
-        content: "列表碎语",
-        status: 1,
-        comment_status: 1,
-        read_count: 0,
-        is_top: false,
-        like_count: 2,
-        comment_count: 1,
-        is_liked: false,
-        images: [],
-        created_at: "2026-05-30T09:00:00Z",
-        updated_at: "2026-05-30T09:00:00Z",
-      },
-    ],
+    list: [makeMoment(1)],
     ...overrides,
   };
+}
+
+function getSnippetColumns(): HTMLElement[] {
+  return Array.from(
+    document.querySelectorAll<HTMLElement>(
+      '[class*="min-w-0"][class*="flex-1"][class*="flex-col"]',
+    ),
+  );
 }
 
 beforeEach(() => {
@@ -216,6 +239,43 @@ describe("SnippetsList", () => {
 
     await waitFor(() => {
       expect(screen.getByText("暂无碎语")).toBeTruthy();
+    });
+  });
+
+  it("从全部切到博主时重算瀑布流列分配", async () => {
+    const user = userEvent.setup();
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 1024 });
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(
+        JSON.stringify(
+          makePageResp({
+            list: [makeMoment(2, "博主碎语 2"), makeMoment(4, "博主碎语 4")],
+          }),
+        ),
+        { status: 200 },
+      ),
+    );
+
+    render(
+      <SnippetsList
+        ownerUserId={1}
+        initialPage={makePageResp({
+          list: [
+            makeMoment(1, "朋友长碎语".repeat(180)),
+            makeMoment(2, "博主碎语 2"),
+            makeMoment(3, "朋友长碎语".repeat(180)),
+            makeMoment(4, "博主碎语 4"),
+          ],
+        })}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "博主" }));
+
+    await waitFor(() => {
+      const [firstColumn, secondColumn] = getSnippetColumns();
+      expect(firstColumn).toHaveTextContent("博主碎语 2");
+      expect(secondColumn).toHaveTextContent("博主碎语 4");
     });
   });
 });

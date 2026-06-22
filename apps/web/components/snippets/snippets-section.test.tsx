@@ -5,13 +5,21 @@ import type { ReactNode } from "react";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { SnippetsSection } from "./snippets-section";
-import type { MomentItemResp } from "@repo/api";
+import type { MomentItemResp, UserDetailResp } from "@repo/api";
 
 const mockOpenLoginModal = vi.fn();
+const mockOpenSnippetModal = vi.fn();
 const toastMockState = vi.hoisted(() => ({
   addToast: vi.fn(),
 }));
 let mockSessionUserId: number | null = 7;
+let mockSessionProfile: UserDetailResp | null = {
+  id: 7,
+  username: "test",
+  nickname: "Test",
+  status: 0,
+  roles: ["user"],
+};
 
 // Mock @repo/icons
 vi.mock("@repo/icons", () => ({
@@ -82,11 +90,24 @@ vi.mock("@repo/hooks", () => ({
 }));
 
 vi.mock("@/app/providers/session-provider", () => ({
-  useSession: () => ({ userId: mockSessionUserId, profile: null }),
+  useSession: () => ({ userId: mockSessionUserId, profile: mockSessionProfile }),
 }));
 
 vi.mock("@/store/use-login-modal", () => ({
   useLoginModal: () => ({ open: mockOpenLoginModal }),
+}));
+
+vi.mock("@/store/use-snippet-modal", () => ({
+  useSnippetModal: <T,>(
+    selector?: (state: {
+      open: () => void;
+      publishCount: number;
+      lastPublishedUserId: number | null;
+    }) => T,
+  ) => {
+    const state = { open: mockOpenSnippetModal, publishCount: 0, lastPublishedUserId: null };
+    return selector ? selector(state) : state;
+  },
 }));
 
 vi.mock("@/lib/toast", () => ({
@@ -160,12 +181,20 @@ function jsonResponse(body: unknown, status = 200): Response {
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn());
   mockSessionUserId = 7;
+  mockSessionProfile = {
+    id: 7,
+    username: "test",
+    nickname: "Test",
+    status: 0,
+    roles: ["user"],
+  };
 });
 
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.clearAllMocks();
   mockOpenLoginModal.mockReset();
+  mockOpenSnippetModal.mockReset();
   toastMockState.addToast.mockReset();
 });
 
@@ -233,6 +262,30 @@ describe("SnippetsSection", () => {
   it("查看更多跳转到碎语页", () => {
     render(<SnippetsSection snippets={mockMoments} />);
     expect(screen.getByRole("link", { name: /查看更多/ }).getAttribute("href")).toBe("/snippets");
+  });
+
+  it("未登录时点击发表碎语会打开登录弹窗", async () => {
+    const user = userEvent.setup();
+    mockSessionUserId = null;
+    mockSessionProfile = null;
+
+    render(<SnippetsSection snippets={mockMoments} />);
+
+    await user.click(screen.getByRole("button", { name: /发表碎语/ }));
+
+    expect(mockOpenLoginModal).toHaveBeenCalledOnce();
+    expect(mockOpenSnippetModal).not.toHaveBeenCalled();
+  });
+
+  it("已登录时点击发表碎语会打开写碎语弹窗", async () => {
+    const user = userEvent.setup();
+
+    render(<SnippetsSection snippets={mockMoments} />);
+
+    await user.click(screen.getByRole("button", { name: /发表碎语/ }));
+
+    expect(mockOpenSnippetModal).toHaveBeenCalledOnce();
+    expect(mockOpenLoginModal).not.toHaveBeenCalled();
   });
 
   it("短内容不显示展开按钮", () => {
