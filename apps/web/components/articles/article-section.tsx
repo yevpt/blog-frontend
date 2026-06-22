@@ -114,10 +114,11 @@ export function ArticleSection({
       <div className="mt-6 grid grid-cols-1 gap-0 md:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:gap-5">
         {isLoading
           ? Array.from({ length: skeletonCount }, (_, i) => <ArticleCardSkeleton key={i} />)
-          : pageData.list.map((article) => (
+          : pageData.list.map((article, index) => (
               <ArticleCard
                 key={article.id}
                 article={article}
+                priority={index === 0}
                 onLike={toggleLike}
                 likeDisabled={pendingLikeIds.has(article.id)}
                 onComment={openComment}

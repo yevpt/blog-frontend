@@ -37,13 +37,23 @@ vi.mock("next/image", () => ({
     src,
     alt,
     className,
+    priority,
   }: {
     src: string;
     alt: string;
     fill?: boolean;
     className?: string;
     sizes?: string;
-  }) => <img src={src} alt={alt} className={className} />,
+    priority?: boolean;
+  }) => (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      loading={priority ? "eager" : "lazy"}
+      data-priority={priority ?? false}
+    />
+  ),
 }));
 
 vi.mock("@repo/hooks", () => ({
@@ -281,6 +291,29 @@ describe("SnippetCard", () => {
     expect(images.length).toBe(2);
   });
 
+  it("GIF 图片用原生 img 渲染，避免 Next 图片优化破坏动图", () => {
+    const snippet = makeMoment({
+      images: [
+        {
+          id: 1,
+          name: "motion.gif",
+          file_type: "image/gif",
+          url: "/motion.gif",
+          access_url: "/motion.gif",
+          size: 1000,
+          seq: 1,
+        },
+      ],
+    });
+
+    render(<SnippetCard snippet={snippet} />);
+
+    const img = screen.getByRole("img", { name: "motion.gif" });
+    expect(img).toHaveAttribute("src", "/motion.gif");
+    expect(img).not.toHaveAttribute("loading");
+    expect(img).not.toHaveAttribute("data-priority");
+  });
+
   it("无图片时不渲染图片网格", () => {
     render(<SnippetCard snippet={makeMoment({ images: [] })} />);
     const allImgs = screen.queryAllByRole("img");
@@ -505,5 +538,58 @@ describe("SnippetCard", () => {
     render(<SnippetCard snippet={makeMoment({ content: "短碎语" })} />);
     expect(screen.getByText("短碎语")).toBeTruthy();
     expect(screen.queryByText("snippet.expand")).toBeNull();
+  });
+
+  it("priority 为 true 时首图 eager 加载", () => {
+    const snippet = makeMoment({
+      images: [
+        {
+          id: 1,
+          name: "p1",
+          file_type: "image/jpeg",
+          url: "/1.jpg",
+          access_url: "/1.jpg",
+          size: 1,
+          seq: 1,
+        },
+        {
+          id: 2,
+          name: "p2",
+          file_type: "image/jpeg",
+          url: "/2.jpg",
+          access_url: "/2.jpg",
+          size: 1,
+          seq: 2,
+        },
+      ],
+    });
+    render(<SnippetCard snippet={snippet} priority />);
+    const imgs = screen
+      .getAllByRole("img")
+      .filter((el) => el.tagName === "IMG" && el.getAttribute("src")?.startsWith("/"));
+    expect(imgs[0]).toHaveAttribute("loading", "eager");
+    // 多图时仅首图 eager，其余仍 lazy
+    expect(imgs[1]).toHaveAttribute("loading", "lazy");
+  });
+
+  it("默认 priority 为 false 时图片 lazy 加载", () => {
+    const snippet = makeMoment({
+      images: [
+        {
+          id: 1,
+          name: "p1",
+          file_type: "image/jpeg",
+          url: "/1.jpg",
+          access_url: "/1.jpg",
+          size: 1,
+          seq: 1,
+        },
+      ],
+    });
+    render(<SnippetCard snippet={snippet} />);
+    const img = screen
+      .getAllByRole("img")
+      .find((el) => el.tagName === "IMG" && el.getAttribute("src")?.startsWith("/"));
+    expect(img).toHaveAttribute("loading", "lazy");
   });
 });

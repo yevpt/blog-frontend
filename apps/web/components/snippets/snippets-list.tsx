@@ -151,7 +151,7 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
 
   const openEdit = useCallback(
     (snippet: MomentItemResp) => {
-      openSnippetModal(snippet, (content) => updateMoment(snippet, content));
+      openSnippetModal(snippet, (content, images) => updateMoment(snippet, content, images));
     },
     [openSnippetModal, updateMoment],
   );
@@ -205,7 +205,7 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
           <div className="flex gap-[14px]">
             {columnItems.map((col, colIdx) => (
               <div key={colIdx} className="flex min-w-0 flex-1 flex-col gap-[14px]">
-                {col.map(({ snippet, delay }) => (
+                {col.map(({ snippet, delay }, idx) => (
                   <div
                     key={snippet.id}
                     className="animate-[snippetCardEnter_0.4s_cubic-bezier(0.16,1,0.3,1)_both]"
@@ -213,6 +213,7 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
                   >
                     <SnippetCard
                       snippet={snippet}
+                      priority={idx === 0}
                       onLike={toggleLike}
                       likeDisabled={pendingLikeIds.has(snippet.id)}
                       onComment={openComment}

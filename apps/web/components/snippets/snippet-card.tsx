@@ -27,6 +27,8 @@ interface SnippetCardProps {
   snippet: MomentItemResp;
   /** standalone：碎语页独立卡片；embedded：首页区块内嵌条目（无 Card 包裹） */
   layout?: SnippetCardLayout;
+  /** 首屏可见时设为 true，使首图 eager 加载，避免 LCP 警告 */
+  priority?: boolean;
   onLike?: (snippet: MomentItemResp) => void;
   likeDisabled?: boolean;
   onComment?: (snippet: MomentItemResp) => void;
@@ -52,6 +54,7 @@ function formatCount(count: number): string {
 export function SnippetCard({
   snippet,
   layout = "standalone",
+  priority = false,
   onLike,
   likeDisabled = false,
   onComment,
@@ -120,7 +123,11 @@ export function SnippetCard({
 
       <SnippetContent content={snippet.content} collapsible={layout === "embedded"} />
 
-      <SnippetImageGrid images={images} onOpen={(idx) => openViewer(viewerImages, idx)} />
+      <SnippetImageGrid
+        images={images}
+        priority={priority}
+        onOpen={(idx) => openViewer(viewerImages, idx)}
+      />
 
       <div className="mt-3 flex items-end justify-between gap-2 text-xs text-(--fg3)">
         {isOwner ? (

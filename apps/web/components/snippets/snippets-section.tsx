@@ -67,7 +67,7 @@ export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSect
   }, []);
   const openEdit = useCallback(
     (snippet: MomentItemResp) => {
-      openSnippetModal(snippet, (content) => updateMoment(snippet, content));
+      openSnippetModal(snippet, (content, images) => updateMoment(snippet, content, images));
     },
     [openSnippetModal, updateMoment],
   );
@@ -110,11 +110,12 @@ export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSect
             ? Array.from({ length: MAX_SNIPPETS }, (_, i) => (
                 <SnippetCardSkeleton key={i} variant={i} layout="embedded" />
               ))
-            : visibleSnippets.map((snippet) => (
+            : visibleSnippets.map((snippet, index) => (
                 <SnippetCard
                   key={snippet.id}
                   layout="embedded"
                   snippet={snippet}
+                  priority={index === 0}
                   onLike={toggleLike}
                   likeDisabled={pendingLikeIds.has(snippet.id)}
                   onComment={openComment}
