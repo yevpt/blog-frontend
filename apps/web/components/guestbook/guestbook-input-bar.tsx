@@ -58,6 +58,7 @@ export function GuestbookInputBar({
         placeholder={placeholder}
         header={replyBanner}
         focusTrigger={replyTarget}
+        maxLength={2000}
         className="focus-within:border-foreground/15 transition-colors duration-200"
       />
     </div>

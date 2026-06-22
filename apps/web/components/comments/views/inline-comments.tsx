@@ -47,6 +47,7 @@ export function InlineComments({ targetType, targetId, onCommentAdded }: InlineC
         isLoggedIn={!!userId}
         onLoginRequired={openLoginModal}
         placeholder={replyTarget ? "写下你的回复..." : "写下你的评论..."}
+        maxLength={2000}
       />
       {replyTarget && (
         <ReplyBanner toUsername={replyTarget.toUsername} onCancel={handleCancelReply} />

@@ -77,7 +77,7 @@ addToast(getApiErrorMessage(err, "<动作>失败，请稍后重试"), "error");
 
 ## B 组 · 前端校验补齐（镜像后端约束，上限见 §0）
 
-- [ ] **B1 · inline 评论输入**
+- [x] **B1 · inline 评论输入**
   - 文件：`apps/web/components/comments/inputs/rich-comment-input.tsx`
   - 步骤：加 `maxLength={2000}` + 接近上限计数器（与 `pill-comment-input.tsx` 一致）。
   - 测试：补 `rich-comment-input.test.tsx` 的 maxLength/计数器用例。
