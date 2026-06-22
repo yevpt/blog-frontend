@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import {
   DndContext,
+  KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
@@ -12,6 +13,7 @@ import {
 import {
   SortableContext,
   rectSortingStrategy,
+  sortableKeyboardCoordinates,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -31,7 +33,7 @@ export interface SnippetImageItem {
 
 interface Props {
   items: SnippetImageItem[];
-  onChange: (next: SnippetImageItem[]) => void;
+  onChange: Dispatch<SetStateAction<SnippetImageItem[]>>;
   disabled?: boolean;
 }
 
@@ -40,12 +42,13 @@ export function SnippetImageUploader({ items, onChange, disabled }: Props) {
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { delay: 120, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   async function handleFiles(fileList: FileList | null) {
     if (!fileList) return;
-    const room = MAX_IMAGES - items.length;
-    const picked = Array.from(fileList).slice(0, Math.max(0, room));
+    // 先按当前列表粗略限量，避免压缩过多必然被丢弃的图
+    const picked = Array.from(fileList).slice(0, Math.max(0, MAX_IMAGES - items.length));
     const added: SnippetImageItem[] = [];
     for (const file of picked) {
       try {
@@ -53,14 +56,21 @@ export function SnippetImageUploader({ items, onChange, disabled }: Props) {
         added.push({
           id: crypto.randomUUID(),
           file: compressed,
+          // 预览 URL 由本组件创建：删除时即时 revoke；其余在父组件关闭/提交时统一释放（父组件持有 items）
           previewUrl: URL.createObjectURL(compressed),
         });
       } catch (err) {
         addToast(err instanceof Error ? err.message : "图片处理失败", "error");
       }
     }
-    if (added.length > 0) onChange([...items, ...added]);
     if (inputRef.current) inputRef.current.value = "";
+    if (added.length === 0) return;
+    // 函数式更新：以最新列表为准做权威限量，丢弃超额项并释放其预览 URL
+    onChange((prev) => {
+      const accepted = added.slice(0, Math.max(0, MAX_IMAGES - prev.length));
+      added.slice(accepted.length).forEach((it) => URL.revokeObjectURL(it.previewUrl));
+      return [...prev, ...accepted];
+    });
   }
 
   function removeAt(index: number) {
@@ -153,7 +163,7 @@ function SortableThumb({
         {...listeners}
         className="block h-full w-full overflow-hidden rounded-md"
       >
-        <img src={item.previewUrl} alt="" className="h-full w-full object-cover" />
+        <img src={item.previewUrl} alt={item.file.name} className="h-full w-full object-cover" />
       </button>
       <button
         type="button"
