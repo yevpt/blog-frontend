@@ -1,43 +1,92 @@
 "use client";
 
-import type { FormEvent } from "react";
-import { Modal, Button } from "@repo/ui";
+import { useState } from "react";
+import { Button } from "@repo/ui";
 import { useSnippetModal } from "@/store/use-snippet-modal";
 import { addToast } from "@/lib/toast";
+import { ResponsiveModalShell } from "@/components/modal-shell/responsive-modal";
+import { SnippetTextInput } from "./snippet-text-input";
+import { SnippetImageUploader, type SnippetImageItem } from "./snippet-image-uploader";
+
+const MAX_CONTENT = 800;
 
 export function SnippetModal() {
   const { isOpen, close } = useSnippetModal();
+  const [content, setContent] = useState("");
+  const [images, setImages] = useState<SnippetImageItem[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    // TODO: 接入发布碎语的 API
-    addToast("发布成功（前端演示）", "success");
+  const overLimit = content.length > MAX_CONTENT;
+  const canSubmit = content.trim().length > 0 && !overLimit && !submitting;
+
+  function reset() {
+    setImages((prev) => {
+      prev.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+      return [];
+    });
+    setContent("");
+  }
+
+  function handleClose() {
+    reset();
     close();
   }
 
+  async function handleSubmit() {
+    if (!canSubmit) return;
+    setSubmitting(true);
+    try {
+      const form = new FormData();
+      form.append("content", content);
+      form.append("status", "1");
+      form.append("comment_status", "1");
+      images.forEach((it, i) => {
+        form.append("images", it.file, it.file.name);
+        form.append("image_order", `file:${i}`);
+      });
+      const res = await fetch("/api/moments", { method: "POST", body: form });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "发布失败");
+      }
+      addToast("发布成功", "success");
+      reset();
+      close();
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "发布失败", "error");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
-    <Modal
+    <ResponsiveModalShell
       isOpen={isOpen}
-      onOpenChange={(open) => !open && close()}
-      placement="center"
-      size="md"
-      aria-label="写碎语"
+      title="写碎语"
+      onClose={handleClose}
+      desktopMaxWidthClassName="max-w-[480px]"
+      footer={
+        <div className="flex items-center justify-between px-[18px] py-3">
+          <span className={`text-xs ${overLimit ? "text-destructive" : "text-muted-foreground"}`}>
+            {content.length}/{MAX_CONTENT}
+          </span>
+          <Button type="button" isDisabled={!canSubmit} onPress={handleSubmit}>
+            {submitting ? "发布中…" : "发布"}
+          </Button>
+        </div>
+      }
     >
-      <div className="p-5">
-        <h2 className="mb-4 text-lg font-bold text-foreground">写碎语</h2>
-        <form onSubmit={handleSubmit}>
-          <textarea
-            placeholder="此刻的想法..."
-            className="mb-4 min-h-[140px] w-full resize-none rounded-md bg-muted/50 p-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+      {() => (
+        <div className="flex flex-col gap-1 px-[18px] py-3">
+          <SnippetTextInput
+            value={content}
+            onChange={setContent}
+            placeholder="此刻有什么想法？"
+            disabled={submitting}
           />
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onPress={close}>
-              取消
-            </Button>
-            <Button type="submit">发布</Button>
-          </div>
-        </form>
-      </div>
-    </Modal>
+          <SnippetImageUploader items={images} onChange={setImages} disabled={submitting} />
+        </div>
+      )}
+    </ResponsiveModalShell>
   );
 }
