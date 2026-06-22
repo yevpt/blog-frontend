@@ -109,9 +109,10 @@ addToast(getApiErrorMessage(err, "<动作>失败，请稍后重试"), "error");
   - 步骤：加载失败 `setError("...")` 改用 `getApiErrorMessage(err, "...原兜底...")`，保留内联展示。
   - 测试：更新相关测试。
 
-- [ ] **C3 · OAuth**
+- [x] **C3 · OAuth**
   - 文件：`apps/web/components/auth/oauth-grid.tsx:92,123,133`、`apps/web/app/oauth/[source]/callback/page.tsx:60,64,71`
   - 步骤：已用 `data.message ?? "..."` 的保留；纯写死兜底（如 `:133`、`:71` 的「网络异常」）保持不变（属网络层兜底，合理）。本任务以核对为主，**无明显改动时直接勾选并说明「已核对，无需改动」**。
+  - **已核对，无需改动**——`:92`/`:123`/`:60` 均已用 `data.message ?? "..."` 提取后端原因；`:133`/`:71` 网络异常兜底合理；`:64` 响应形状守卫保留。
 
 ---
 
