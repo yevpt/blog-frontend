@@ -12,6 +12,7 @@ import { SvgIcon } from "@repo/icons";
 import { useSession } from "@/app/providers/session-provider";
 import { useSnippetModal } from "@/store/use-snippet-modal";
 import { addToast } from "@/lib/toast";
+import { ApiClientError, getApiErrorMessage } from "@/lib/client-fetch";
 import { ResponsiveModalShell } from "@/components/modal-shell/responsive-modal";
 import { SnippetTextInput } from "./snippet-text-input";
 import { SnippetImageUploader, type SnippetImageUploaderHandle } from "./snippet-image-uploader";
@@ -71,7 +72,7 @@ export function SnippetModal() {
     try {
       if (isEditing) {
         if (!submitEdit) {
-          throw new Error("编辑失败");
+          throw new ApiClientError("编辑失败", 0);
         }
         await submitEdit(content, images);
         reset();
@@ -91,7 +92,7 @@ export function SnippetModal() {
       const res = await fetch("/api/moments", { method: "POST", body: form });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? "发布失败");
+        throw new ApiClientError(data.error ?? "发布失败", res.status);
       }
       addToast("发布成功", "success");
       markPublished(userId);
@@ -99,9 +100,9 @@ export function SnippetModal() {
       close();
     } catch (err) {
       if (!isEditing) {
-        addToast(err instanceof Error ? err.message : "发布失败", "error");
+        addToast(getApiErrorMessage(err, "发布失败"), "error");
       } else if (!submitEdit) {
-        addToast("编辑失败", "error");
+        addToast(getApiErrorMessage(err, "编辑失败"), "error");
       }
     } finally {
       submittingRef.current = false;

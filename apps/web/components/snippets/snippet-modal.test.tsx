@@ -198,6 +198,23 @@ describe("SnippetModal", () => {
     expect(useSnippetModal.getState().isOpen).toBe(true);
   });
 
+  it("编辑时 submitEdit 缺失则 toast 提示编辑失败", async () => {
+    const user = userEvent.setup();
+    const { addToast } = await import("@/lib/toast");
+    useSnippetModal.setState({
+      isOpen: true,
+      editingSnippet: makeMoment(),
+      submitEdit: null,
+    });
+
+    render(<SnippetModal />);
+
+    await screen.findByRole("dialog", { name: "编辑碎语" });
+    await user.click(screen.getByRole("button", { name: "保存" }));
+
+    await waitFor(() => expect(addToast).toHaveBeenCalledWith("编辑失败", "error"));
+  });
+
   it("编辑碎语时回显已有图片并可继续添加", async () => {
     const user = userEvent.setup();
     const submitEdit = vi.fn().mockResolvedValue(makeMoment());

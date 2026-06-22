@@ -68,7 +68,7 @@ addToast(getApiErrorMessage(err, "<动作>失败，请稍后重试"), "error");
   - 步骤：把 `err instanceof ApiClientError ? err.message : "..."` 统一替换为 `getApiErrorMessage(err, "...")`（保留原兜底文案与「取消点赞/点赞」分支文案）。
   - 测试：更新相关测试。
 
-- [ ] **A4 · 碎语弹窗（snippet-modal）**
+- [x] **A4 · 碎语弹窗（snippet-modal）**
   - 文件：`apps/web/components/snippets/snippet-modal.tsx:74,94,102,104`
   - 步骤：`addToast(err instanceof Error ? err.message : "...")` → `addToast(getApiErrorMessage(err, "..."))`；`throw new Error("编辑失败")` 改为透传 `data.error ?? "编辑失败"`（与 `:94` 发布分支一致）。
   - 测试：`snippet-modal.test.tsx`。
