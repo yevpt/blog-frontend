@@ -58,7 +58,7 @@ addToast(getApiErrorMessage(err, "<动作>失败，请稍后重试"), "error");
   - 测试：改 `guestbook-input-bar.test.tsx`、`use-guestbook-submit` 测试；新增「业务错误 toast 展示后端 message」用例（参照 `use-comment-submit.test.ts`）。
   - **注：步骤3（maxLength+计数器）经确认归入 B1 一起做**——留言用的 `RichCommentInput` 是 Tiptap 编辑器非 textarea，需改 `rich-comment-input.tsx`（B1 的文件），统一在 B1 落地。
 
-- [ ] **A2 · 文章点赞**
+- [x] **A2 · 文章点赞**
   - 文件：`apps/web/hooks/use-article-engagement.ts:41`
   - 步骤：`addToast("点赞失败，请稍后重试","error")` → `addToast(getApiErrorMessage(err, "点赞失败，请稍后重试"),"error")`。
   - 测试：更新该 hook 测试断言。

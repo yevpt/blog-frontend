@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import type { ArticleLikeResp } from "@repo/api";
 import { useSession } from "@/app/providers/session-provider";
 import { addToast } from "@/lib/toast";
-import { apiJson, ApiClientError } from "@/lib/client-fetch";
+import { apiJson, ApiClientError, getApiErrorMessage } from "@/lib/client-fetch";
 import { useActiveArticle } from "@/store/use-active-article";
 import { useLoginModal } from "@/store/use-login-modal";
 
@@ -38,7 +38,7 @@ export function useArticleEngagement() {
         openLoginModal();
         return;
       }
-      addToast("点赞失败，请稍后重试", "error");
+      addToast(getApiErrorMessage(err, "点赞失败，请稍后重试"), "error");
     } finally {
       setIsLiking(false);
     }

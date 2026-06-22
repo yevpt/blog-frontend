@@ -89,4 +89,32 @@ describe("useArticleEngagement", () => {
 
     expect(mockOpenLoginModal).toHaveBeenCalledOnce();
   });
+
+  it("业务错误时 toast 展示后端返回的具体原因", async () => {
+    mockUserId = 1;
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify({ error: "文章已锁定，无法点赞" }), { status: 400 }),
+    );
+
+    const { result } = renderHook(() => useArticleEngagement());
+
+    await act(async () => {
+      await result.current.toggleLike();
+    });
+
+    expect(mockAddToast).toHaveBeenCalledWith("文章已锁定，无法点赞", "error");
+  });
+
+  it("网络异常时 toast 展示兜底文案", async () => {
+    mockUserId = 1;
+    mockFetch.mockRejectedValue(new TypeError("Failed to fetch"));
+
+    const { result } = renderHook(() => useArticleEngagement());
+
+    await act(async () => {
+      await result.current.toggleLike();
+    });
+
+    expect(mockAddToast).toHaveBeenCalledWith("点赞失败，请稍后重试", "error");
+  });
 });
