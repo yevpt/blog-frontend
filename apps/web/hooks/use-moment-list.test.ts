@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import type { MomentItemResp, MomentPageResp } from "@repo/api";
 import { useMomentList } from "./use-moment-list";
+import { useSnippetModal } from "@/store/use-snippet-modal";
 
 const mockOpenLoginModal = vi.fn();
 let mockSessionUserId: number | null = 7;
@@ -62,6 +63,7 @@ describe("useMomentList", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
     mockSessionUserId = 7;
+    useSnippetModal.setState({ isOpen: false, publishCount: 0, lastPublishedUserId: null });
     mockOpenLoginModal.mockReset();
   });
 
@@ -163,6 +165,87 @@ describe("useMomentList", () => {
     });
   });
 
+  it("refreshes from first page after session change even when more pages were loaded", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(
+        jsonResponse(
+          makePageResp({
+            page: 2,
+            pages: 3,
+            list: [makeMoment(2)],
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse(
+          makePageResp({
+            page: 1,
+            pages: 3,
+            list: [makeMoment(10), makeMoment(11)],
+          }),
+        ),
+      );
+
+    const { result, rerender } = renderHook(() =>
+      useMomentList({
+        initialPage: makePageResp({ total: 3, pages: 3, page: 1, list: [makeMoment(1)] }),
+      }),
+    );
+
+    await act(async () => {
+      await result.current.loadMore();
+    });
+
+    mockSessionUserId = 8;
+    rerender();
+
+    await waitFor(() => {
+      const url = getLastFetchUrl();
+      expect(url).toContain("page=1");
+      expect(result.current.moments.map((item) => item.id)).toEqual([10, 11]);
+    });
+  });
+
+  it("owner 列表在 ownerUserId 用户发布碎语后刷新第一页", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(makePageResp({ list: [makeMoment(10, { user_id: 5 })] })),
+    );
+
+    const { result } = renderHook(() =>
+      useMomentList({
+        initialPage: makePageResp({ page_size: 3, list: [makeMoment(1)] }),
+        ownerUserId: 5,
+        initialTab: "owner",
+      }),
+    );
+
+    act(() => {
+      useSnippetModal.getState().markPublished(5);
+    });
+
+    await waitFor(() => {
+      expect(getLastFetchUrl()).toContain("user_id=5");
+      expect(getLastFetchUrl()).toContain("page_size=3");
+      expect(result.current.moments.map((item) => item.id)).toEqual([10]);
+    });
+  });
+
+  it("owner 列表在非 ownerUserId 用户发布碎语后不刷新", async () => {
+    renderHook(() =>
+      useMomentList({
+        initialPage: makePageResp({ page_size: 3, list: [makeMoment(1)] }),
+        ownerUserId: 5,
+        initialTab: "owner",
+      }),
+    );
+
+    act(() => {
+      useSnippetModal.getState().markPublished(6);
+    });
+
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("failed load sets fetchError without dropping existing items", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "failed" }, 500));
 
@@ -178,5 +261,72 @@ describe("useMomentList", () => {
       expect(result.current.moments).toEqual(initialPage.list);
       expect(result.current.endReached).toBe(false);
     });
+  });
+
+  it("toggleTop posts top endpoint and updates is_top", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ id: 1, is_top: true }));
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [makeMoment(1)] }) }),
+    );
+
+    await act(async () => {
+      await result.current.toggleTop(makeMoment(1));
+    });
+
+    expect(fetch).toHaveBeenCalledWith("/api/moments/1/top", { method: "POST" });
+    expect(result.current.moments[0]?.is_top).toBe(true);
+  });
+
+  it("toggleTop deletes top endpoint when snippet is already top", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ id: 1, is_top: false }));
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [makeMoment(1, { is_top: true })] }) }),
+    );
+
+    await act(async () => {
+      await result.current.toggleTop(makeMoment(1, { is_top: true }));
+    });
+
+    expect(fetch).toHaveBeenCalledWith("/api/moments/1/top", { method: "DELETE" });
+    expect(result.current.moments[0]?.is_top).toBe(false);
+  });
+
+  it("deleteMoment deletes endpoint and removes the snippet locally", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ id: 1 }));
+
+    const { result } = renderHook(() =>
+      useMomentList({
+        initialPage: makePageResp({ total: 2, list: [makeMoment(1), makeMoment(2)] }),
+      }),
+    );
+
+    await act(async () => {
+      await result.current.deleteMoment(makeMoment(1));
+    });
+
+    expect(fetch).toHaveBeenCalledWith("/api/moments/1", { method: "DELETE" });
+    expect(result.current.moments.map((item) => item.id)).toEqual([2]);
+    expect(result.current.pageData.total).toBe(1);
+  });
+
+  it("updateMoment saves through multipart endpoint and replaces snippet locally", async () => {
+    const updated = makeMoment(1, { content: "更新后的碎语" });
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(updated));
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [makeMoment(1)] }) }),
+    );
+
+    await act(async () => {
+      await result.current.updateMoment(makeMoment(1), "更新后的碎语");
+    });
+
+    const [url, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    expect(url).toBe("/api/moments");
+    expect(init).toMatchObject({ method: "POST" });
+    expect(init?.body).toBeInstanceOf(FormData);
+    expect(result.current.moments[0]?.content).toBe("更新后的碎语");
   });
 });
