@@ -8,61 +8,65 @@ import { InlineComments } from "./inline-comments";
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
 }));
-vi.mock("@repo/ui", () => ({
-  Button: ({
-    children,
-    onPress,
-    isDisabled,
-    ...props
-  }: {
-    children: React.ReactNode;
-    onPress?: () => void;
-    isDisabled?: boolean;
-    [key: string]: unknown;
-  }) => (
-    <button type="button" onClick={onPress} disabled={isDisabled} {...props}>
-      {children}
-    </button>
-  ),
-  Modal: ({
-    isOpen,
-    children,
-    onOpenChange,
-    "aria-label": ariaLabel,
-  }: {
-    isOpen?: boolean;
-    children: React.ReactNode | ((opts: { close: () => void }) => React.ReactNode);
-    onOpenChange?: (open: boolean) => void;
-    "aria-label"?: string;
-  }) =>
-    isOpen ? (
-      <div role="dialog" aria-label={ariaLabel}>
-        {typeof children === "function"
-          ? children({ close: () => onOpenChange?.(false) })
-          : children}
-      </div>
-    ) : null,
-  Select: Object.assign(
-    ({
+vi.mock("@repo/ui", async () => {
+  const actual = await vi.importActual("@repo/ui");
+  return {
+    ...actual,
+    Button: ({
       children,
-      "aria-label": ariaLabel,
+      onPress,
+      isDisabled,
+      ...props
     }: {
       children: React.ReactNode;
-      "aria-label"?: string;
+      onPress?: () => void;
+      isDisabled?: boolean;
+      [key: string]: unknown;
     }) => (
-      <div role="listbox" aria-label={ariaLabel}>
+      <button type="button" onClick={onPress} disabled={isDisabled} {...props}>
         {children}
-      </div>
+      </button>
     ),
-    {
-      Item: ({ id, label }: { id: string; label: string }) => (
-        <div role="option" aria-selected="false" data-select-id={id}>
-          {label}
+    Modal: ({
+      isOpen,
+      children,
+      onOpenChange,
+      "aria-label": ariaLabel,
+    }: {
+      isOpen?: boolean;
+      children: React.ReactNode | ((opts: { close: () => void }) => React.ReactNode);
+      onOpenChange?: (open: boolean) => void;
+      "aria-label"?: string;
+    }) =>
+      isOpen ? (
+        <div role="dialog" aria-label={ariaLabel}>
+          {typeof children === "function"
+            ? children({ close: () => onOpenChange?.(false) })
+            : children}
+        </div>
+      ) : null,
+    Select: Object.assign(
+      ({
+        children,
+        "aria-label": ariaLabel,
+      }: {
+        children: React.ReactNode;
+        "aria-label"?: string;
+      }) => (
+        <div role="listbox" aria-label={ariaLabel}>
+          {children}
         </div>
       ),
-    },
-  ),
-}));
+      {
+        Item: ({ id, label }: { id: string; label: string }) => (
+          <div role="option" aria-selected="false" data-select-id={id}>
+            {label}
+          </div>
+        ),
+      },
+    ),
+  };
+});
 vi.mock("@/app/providers/session-provider", () => ({
   useSession: () => ({ userId: 1 }),
 }));
