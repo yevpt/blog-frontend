@@ -127,11 +127,12 @@ addToast(getApiErrorMessage(err, "<动作>失败，请稍后重试"), "error");
   - 期望：空输出（所有响应都走 `pkg/response`）。若有命中，改为对应 `response.*`；改完跑 `go test ./internal/handler/...`。
   - **已核对，无需改动**——`c.JSON(` 零命中（grep 唯一匹配是 `func JSON(c *gin.Context)` 函数定义，非方法调用）；`go test ./internal/handler/...` 全通过。
 
-- [ ] **D3 · BFF 路由透传后端 message**
+- [x] **D3 · BFF 路由透传后端 message**
   - 仓库：`blog-frontend`，文件：`apps/web/app/api/**/route.ts`
   - 检查：每个 route handler 在后端非 2xx 时，是否把后端 `message` 写进返回的 `{ error: <message> }`（供 `throwApiClientError` 读取）。找出**丢弃后端 message、只回写死文案或状态码**的路由并补齐。
   - 命令辅助：`grep -rn 'NextResponse.json' apps/web/app/api --include='route.ts'`
   - 测试：对补齐的 route 补/改其 `route.test.ts`。
+  - **改动**：`backend-proxy.ts` `parseBackendJson` 401/403/404 原先写死 "Unauthorized"/"Forbidden"/"Not found" 不读 body，改为读取后端 `{ code, message }` 信封并透传 `message`（无 message 时回退默认文案）；同时为这些状态补 `forwardCookies`。新建 `backend-proxy.test.ts` 覆盖各状态 message 透传与回退。
 
 ---
 

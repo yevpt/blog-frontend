@@ -27,9 +27,15 @@ function forwardCookies(res: Response, response: NextResponse): void {
 }
 
 async function parseBackendJson(res: Response): Promise<NextResponse> {
-  if (res.status === 401) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (res.status === 403) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  if (res.status === 404) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  // 401/403/404 后端仍以统一信封 { code, message } 返回具体原因，读取并透传供 throwApiClientError 使用
+  if (res.status === 401 || res.status === 403 || res.status === 404) {
+    const json = (await res.json().catch(() => ({ message: "" }))) as { message?: string };
+    const fallback =
+      res.status === 401 ? "Unauthorized" : res.status === 403 ? "Forbidden" : "Not found";
+    const errRes = NextResponse.json({ error: json.message || fallback }, { status: res.status });
+    forwardCookies(res, errRes);
+    return errRes;
+  }
   const json = await res.json();
   if (json.code !== 0) {
     const errRes = NextResponse.json({ error: json.message }, { status: 400 });
