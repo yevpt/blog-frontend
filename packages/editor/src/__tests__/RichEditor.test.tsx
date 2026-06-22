@@ -10,6 +10,14 @@ describe("RichEditor", () => {
     expect(container.querySelector("[contenteditable]")).toBeTruthy();
   });
 
+  it("Markdown 初始值被正确解析为段落", async () => {
+    const value = "第一段\n\n第二段\n\n第三段";
+    const { container } = render(<RichEditor value={value} onChange={() => {}} />);
+    await waitFor(() => {
+      expect(container.querySelectorAll(".tiptap > p").length).toBe(3);
+    });
+  });
+
   it("传入 placeholder 时在空段落上有对应 data-placeholder 属性和空态 class", () => {
     const { container } = render(
       <RichEditor value="" onChange={() => {}} placeholder="写下你的评论..." />,

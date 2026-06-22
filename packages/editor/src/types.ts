@@ -56,6 +56,9 @@ export interface RichEditorProps extends InsertHandlers {
   /** 渲染在编辑区上方（容器内部）的自定义内容，常用于回复指示条 */
   header?: React.ReactNode;
 
+  /** 编辑器实例首次创建完成时触发；弹窗等需要依据编辑器真实高度重测布局的场景使用 */
+  onReady?: () => void;
+
   /** 变化时触发编辑器 focus，适用于切换回复对象后自动聚焦 */
   focusTrigger?: unknown;
 

@@ -54,6 +54,7 @@ export function RichEditor({
   onInsertLink,
   onInsertCode,
   className,
+  onReady,
   header,
   focusTrigger,
 }: RichEditorProps) {
@@ -71,6 +72,15 @@ export function RichEditor({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusTrigger]);
+
+  // 编辑器实例从骨架屏切换到真实编辑器后高度会发生变化，
+  // 通知父组件（如碎语弹窗）重新测量布局。
+  useEffect(() => {
+    if (editor) {
+      onReady?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor]);
 
   // 当外部将 value 重置为空字符串（如提交成功后），同步清空编辑器内容。
   // useRichEditor 的 content 只在首次创建时读取，之后不自动跟随 value 变化，

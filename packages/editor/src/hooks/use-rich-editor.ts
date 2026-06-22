@@ -38,10 +38,11 @@
  * 避免 React hydration 报错（服务端 HTML 与客户端渲染不匹配）。
  * ================================================================
  */
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useMemo } from "react";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
+import { marked } from "marked";
 import Image from "@tiptap/extension-image";
 import { UnderlineExtension } from "../extensions/underline";
 import { createMentionExtension } from "../extensions/mention";
@@ -59,6 +60,21 @@ interface UseRichEditorOptions {
   disabled?: boolean;
 }
 
+/**
+ * 把 Markdown 字符串转成 HTML，供 Tiptap `content` 选项使用。
+ * - 空字符串直接返回空，避免 marked 生成空 <p>。
+ * - 若内容本身已是 HTML（以标签开头），直接返回原串，避免二次转义。
+ * - 其余情况用 marked 同步解析为 HTML。
+ */
+function markdownToHtml(markdown: string): string {
+  const trimmed = markdown.trim();
+  if (!trimmed) return "";
+  if (/^<[a-z][\s\S]*>/i.test(trimmed)) {
+    return markdown;
+  }
+  return (marked.parse(markdown, { async: false }) as string).trim();
+}
+
 export function useRichEditor({
   initialValue,
   onChange,
@@ -74,6 +90,9 @@ export function useRichEditor({
 
   // 序列化为字符串作为稳定的 dep key，避免每次渲染传入新数组引用导致无限循环
   const mentionsJson = JSON.stringify(mentionSuggestions);
+
+  // 初始 Markdown 转 HTML 只需在 initialValue 变化时执行一次
+  const initialHtml = useMemo(() => markdownToHtml(initialValue), [initialValue]);
 
   return useEditor(
     {
@@ -146,9 +165,10 @@ export function useRichEditor({
       ],
 
       // ── 初始内容 ──────────────────────────────────────────────
-      // Markdown 扩展自动将字符串解析为 Tiptap 内部 JSON 格式
-      // 注意：content 仅在 editor 首次创建时读取，后续通过 onUpdate 回调同步
-      content: initialValue,
+      // useEditor 的 content 按 HTML/JSON 解析，不是 Markdown。
+      // 先把传入的 Markdown 初始值转成 HTML，再交给 Tiptap，避免段落、换行等格式丢失。
+      // 注意：content 只在 editor 首次创建时读取，之后不自动跟随 value 变化
+      content: initialHtml,
 
       editable: !disabled,
 
