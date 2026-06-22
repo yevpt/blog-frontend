@@ -3,7 +3,10 @@ import { describe, it, expect, vi } from "vitest";
 
 const richEditorProps = vi.fn();
 vi.mock("@repo/editor", () => ({
-  RichEditor: (props: any) => { richEditorProps(props); return <textarea aria-label="编辑器" />; },
+  RichEditor: (props: Record<string, unknown>) => {
+    richEditorProps(props);
+    return <textarea aria-label="编辑器" />;
+  },
   LinkDialog: () => null,
   CodeDialog: () => null,
 }));
