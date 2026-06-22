@@ -27,6 +27,15 @@
 - 依赖未安装：`@dnd-kit/core`、`@dnd-kit/sortable`、`@dnd-kit/utilities`、`browser-image-compression`。
 - **正文必填**：后端 `Content` 为 required，故有图也不能空正文。发布禁用条件 = `content.trim()==="" || content.length>800 || 上传中`。字数按 `content`（Markdown 串）长度计。
 
+### 后端契约对照（2026-06-22 复核）
+
+- 本计划仅实现**新建**：只用 `content`/`status="1"`/`comment_status="1"`/`images`/`image_order`。不传 `id`、`image_urls`、`user_id`（与 spec「不做编辑已发布碎语」一致）。
+- `image_order` 完整覆盖：每张图 `append("image_order", "file:" + i)`（`i` 从 0），新建场景全部为 `file:N`，无漏/重/越界。
+- 总数约束 `image_urls + images <= 9`：新建仅 `images`，上限 9，由 `SnippetImageUploader` 的 `MAX_IMAGES=9` 保证。
+- 单图原始 ≤1MB：客户端压到 ~500KB 满足上限；后端会再压到 500KB 保存（不影响前端）。
+- 限流 429：后端 `response.TooManyRequests` 返 JSON，经 `proxyPostForm`→`parseBackendJson` 被映射为 HTTP 400 + `{error:"请求过于频繁，请稍后再试"}`；Task 7 的 `if(!res.ok){ data.error }` 会原文 toast，无需额外代码。
+- **未来编辑扩展点**：支持编辑已发布碎语时，`SnippetImageItem` 需扩为「保留旧图(url/key)」与「新文件」两种变体，混排时 `image_order` 才会出现 `url:N`，并补传 `id`；本期不实现。
+
 测试命令（在 `apps/web` 下）：`pnpm vitest run <file>`。全量类型检查：`pnpm -r --if-present check-types`（注意：仓库当前存在与本功能无关的既有类型错误 `components/sidebar/recent-visitors.tsx`，不阻塞本功能，提交用 `--no-verify` 并单独修复）。
 
 ---
