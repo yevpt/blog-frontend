@@ -103,6 +103,19 @@ describe("LoginView", () => {
     expect(mockSuccess).not.toHaveBeenCalled();
   });
 
+  it("网络异常时显示兜底错误信息", async () => {
+    const user = userEvent.setup();
+    mockFetch.mockRejectedValue(new TypeError("Failed to fetch"));
+    render(<LoginView onSwitchToRegister={mockSwitch} onSuccess={mockSuccess} />);
+    await user.type(screen.getByPlaceholderText("账号 / 邮箱 / 手机号"), "test@example.com");
+    await user.type(screen.getByPlaceholderText("密码"), "password123");
+    await user.click(screen.getByRole("button", { name: /继续/ }));
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent("网络异常，请稍后重试"),
+    );
+    expect(mockSuccess).not.toHaveBeenCalled();
+  });
+
   it('loading 期间按钮文字变为"登录中…"', async () => {
     const user = userEvent.setup();
     mockFetch.mockReturnValue(new Promise(() => {})); // 永不 resolve

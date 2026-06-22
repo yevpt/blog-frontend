@@ -39,6 +39,19 @@ describe("web LoginPage", () => {
     });
   });
 
+  it("网络异常：展示兜底错误消息", async () => {
+    vi.mocked(global.fetch).mockRejectedValue(new TypeError("Failed to fetch"));
+
+    render(<LoginPage />);
+    await userEvent.type(screen.getByPlaceholderText("用户名 / 邮箱"), "vpt");
+    await userEvent.type(screen.getByPlaceholderText("密码"), "password123");
+    await userEvent.click(screen.getByRole("button", { name: "登录" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent("网络错误，请稍后重试");
+    });
+  });
+
   it("登录成功：调用 router.refresh() 并跳转", async () => {
     vi.mocked(global.fetch).mockResolvedValue({
       json: () =>

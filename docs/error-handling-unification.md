@@ -99,7 +99,7 @@ addToast(getApiErrorMessage(err, "<动作>失败，请稍后重试"), "error");
 
 > 这些场景**保留内联提示**（表单/列表更适合就地展示），仅把硬编码兜底替换为 `getApiErrorMessage(err, fallback)`。
 
-- [ ] **C1 · 登录/注册**
+- [x] **C1 · 登录/注册**
   - 文件：`apps/web/components/auth/login-view.tsx:61,65,70`、`apps/web/app/(auth)/register/page.tsx:31,54`、`apps/web/app/(auth)/login/page.tsx:33`、`apps/web/hooks/use-register-form.tsx:148,217`
   - 步骤：`setError("...写死...")` 的兜底分支改用 `getApiErrorMessage(err, "...原兜底...")`；已用 `json.message || "..."` 的保留。
   - 测试：更新相关测试断言。

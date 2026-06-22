@@ -5,6 +5,7 @@ import { SvgIcon } from "@repo/icons";
 import { Button, cn } from "@repo/ui";
 import type { UserResp } from "@repo/api";
 import { OAuthGrid } from "./oauth-grid";
+import { getApiErrorMessage } from "@/lib/client-fetch";
 
 function inputCls(hasError?: boolean) {
   return cn(
@@ -66,8 +67,8 @@ export function LoginView({ onSwitchToRegister, onSuccess }: LoginViewProps) {
         return;
       }
       onSuccess(json.data.user as UserResp);
-    } catch {
-      setError("网络异常，请稍后重试");
+    } catch (err) {
+      setError(getApiErrorMessage(err, "网络异常，请稍后重试"));
     } finally {
       setLoading(false);
     }

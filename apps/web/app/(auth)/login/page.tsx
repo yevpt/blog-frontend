@@ -2,6 +2,7 @@
 import { type FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@repo/ui";
+import { getApiErrorMessage } from "@/lib/client-fetch";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,8 +30,8 @@ export default function LoginPage() {
       // refresh() 触发 Server Component（layout.tsx）重新执行，读取新设置的 cookie
       router.refresh();
       router.push(searchParams.get("from") ?? "/");
-    } catch {
-      setError("网络错误，请稍后重试");
+    } catch (err) {
+      setError(getApiErrorMessage(err, "网络错误，请稍后重试"));
     } finally {
       setLoading(false);
     }

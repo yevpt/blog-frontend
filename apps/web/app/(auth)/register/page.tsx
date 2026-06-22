@@ -2,6 +2,7 @@
 import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@repo/ui";
+import { getApiErrorMessage } from "@/lib/client-fetch";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -27,8 +28,8 @@ export default function RegisterPage() {
         return;
       }
       setCodeSent(true);
-    } catch {
-      setError("发送失败，请稍后重试");
+    } catch (err) {
+      setError(getApiErrorMessage(err, "发送失败，请稍后重试"));
     } finally {
       setLoading(false);
     }
@@ -50,8 +51,8 @@ export default function RegisterPage() {
         return;
       }
       router.push("/login");
-    } catch {
-      setError("注册失败，请稍后重试");
+    } catch (err) {
+      setError(getApiErrorMessage(err, "注册失败，请稍后重试"));
     } finally {
       setLoading(false);
     }
