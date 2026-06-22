@@ -10,6 +10,8 @@ interface SnippetImageGridProps {
   images: SnippetImage[];
   /** 点击第 index 张（从 0 起）时回调，用于打开全屏画廊 */
   onOpen: (index: number) => void;
+  /** 首屏可见时设为 true，使首图 eager 加载，避免 LCP 警告 */
+  priority?: boolean;
 }
 
 /** 最多展示的格子数，超出在最后一格叠加 +N */
@@ -23,12 +25,21 @@ function gridColumns(count: number): 2 | 3 {
   return count === 2 || count === 4 ? 2 : 3;
 }
 
+function isGifImage(img: SnippetImage): boolean {
+  const fileType = img.file_type.toLowerCase();
+  const name = img.name.toLowerCase();
+  const url = img.access_url.toLowerCase().split(/[?#]/, 1)[0] ?? "";
+  return (
+    fileType === "gif" || fileType === "image/gif" || name.endsWith(".gif") || url.endsWith(".gif")
+  );
+}
+
 /**
  * 碎语图片九宫格。
  * - 单图：保留原始宽高比、限制最大高度，不裁剪。
  * - 多图：等大正方形格子 + object-cover 裁剪，低宽度下也不会变形。
  */
-export function SnippetImageGrid({ images, onOpen }: SnippetImageGridProps) {
+export function SnippetImageGrid({ images, onOpen, priority = false }: SnippetImageGridProps) {
   if (images.length === 0) {
     return null;
   }
@@ -43,15 +54,24 @@ export function SnippetImageGrid({ images, onOpen }: SnippetImageGridProps) {
         className="relative mt-2.5 flex max-w-full cursor-zoom-in overflow-hidden rounded-[6px]"
       >
         {/* width/height 设 0 + sizes：next/image 的「未知尺寸」用法，按原始比例自适应 */}
-        <LoadingImage
-          src={img.access_url}
-          alt={img.name}
-          width={0}
-          height={0}
-          sizes="(max-width: 768px) 90vw, 480px"
-          className="block h-auto max-h-[320px] w-auto max-w-full object-contain"
-          skeletonClassName="rounded-[6px]"
-        />
+        {isGifImage(img) ? (
+          <img
+            src={img.access_url}
+            alt={img.name}
+            className="block h-auto max-h-[320px] w-auto max-w-full object-contain"
+          />
+        ) : (
+          <LoadingImage
+            src={img.access_url}
+            alt={img.name}
+            width={0}
+            height={0}
+            priority={priority}
+            sizes="(max-width: 768px) 90vw, 480px"
+            className="block h-auto max-h-[320px] w-auto max-w-full object-contain"
+            skeletonClassName="rounded-[6px]"
+          />
+        )}
       </button>
     );
   }
@@ -77,14 +97,19 @@ export function SnippetImageGrid({ images, onOpen }: SnippetImageGridProps) {
             onClick={() => onOpen(idx)}
             className="relative aspect-square cursor-zoom-in overflow-hidden rounded-[6px] bg-muted"
           >
-            <LoadingImage
-              src={img.access_url}
-              alt={img.name}
-              fill
-              sizes="(max-width: 768px) 33vw, 160px"
-              className="object-cover"
-              skeletonClassName="rounded-[6px]"
-            />
+            {isGifImage(img) ? (
+              <img src={img.access_url} alt={img.name} className="h-full w-full object-cover" />
+            ) : (
+              <LoadingImage
+                src={img.access_url}
+                alt={img.name}
+                fill
+                priority={priority && idx === 0}
+                sizes="(max-width: 768px) 33vw, 160px"
+                className="object-cover"
+                skeletonClassName="rounded-[6px]"
+              />
+            )}
             {showOverflow && (
               <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-sm font-medium text-white">
                 +{overflow}
