@@ -76,13 +76,22 @@ export function RichCommentInput({
     setCodeDialog({ open: true, insert });
   }, []);
 
+  // 内容超出上限时禁用提交并兜底拦截，确保富文本输入不会把超长内容提交到后端
+  const isOverLimit = maxLength != null && value.length > maxLength;
+
+  const handleSubmit = useCallback(() => {
+    if (isOverLimit) return;
+    onSubmit();
+  }, [isOverLimit, onSubmit]);
+
   return (
     <>
       <RichEditor
         value={value}
         onChange={onChange}
-        onSubmit={onSubmit}
+        onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
+        submitDisabled={isOverLimit}
         isLoggedIn={isLoggedIn}
         onLoginRequired={onLoginRequired}
         placeholder={placeholder}
@@ -96,7 +105,7 @@ export function RichCommentInput({
       />
 
       {maxLength != null && value.length >= maxLength - COMMENT_COUNTER_THRESHOLD && (
-        <p className="mt-1.5 text-right text-xs text-(--fg3)">
+        <p className={`mt-1.5 text-right text-xs ${isOverLimit ? "text-red-500" : "text-(--fg3)"}`}>
           {value.length}/{maxLength}
         </p>
       )}

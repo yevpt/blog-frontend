@@ -26,18 +26,22 @@ vi.mock("@repo/editor", () => ({
   RichEditor: ({
     value,
     onSubmit,
+    submitDisabled,
     onInsertImage,
     onInsertLink,
     onInsertCode,
   }: {
     value?: string;
     onSubmit?: () => void;
+    submitDisabled?: boolean;
     onInsertImage?: (insert: (url: string, alt?: string) => void) => void;
     onInsertLink?: (insert: (url: string, title?: string) => void) => void;
     onInsertCode?: (insert: (code: string, lang: string) => void) => void;
   }) => (
     <div data-testid="rich-editor" data-value={value}>
-      <button onClick={onSubmit}>发送</button>
+      <button onClick={onSubmit} disabled={submitDisabled}>
+        发送
+      </button>
       <button onClick={() => onInsertImage?.((_url, _alt) => {})}>插入图片</button>
       <button onClick={() => onInsertLink?.((_url, _title) => {})}>插入链接</button>
       <button onClick={() => onInsertCode?.((_code, _lang) => {})}>插入代码</button>
@@ -103,5 +107,40 @@ describe("RichCommentInput", () => {
       <RichCommentInput value={atLimit} maxLength={2000} onChange={() => {}} onSubmit={() => {}} />,
     );
     expect(screen.getByText("2000/2000")).toBeInTheDocument();
+  });
+
+  it("达到上限内（含等于）不禁用发送", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    const atLimit = "x".repeat(2000);
+    render(
+      <RichCommentInput value={atLimit} maxLength={2000} onChange={() => {}} onSubmit={onSubmit} />,
+    );
+    const sendBtn = screen.getByText("发送");
+    expect(sendBtn).not.toBeDisabled();
+    await user.click(sendBtn);
+    expect(onSubmit).toHaveBeenCalledOnce();
+  });
+
+  it("超出上限时禁用发送、计数器变红，且点击不触发提交", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    const overLimit = "x".repeat(2001);
+    render(
+      <RichCommentInput
+        value={overLimit}
+        maxLength={2000}
+        onChange={() => {}}
+        onSubmit={onSubmit}
+      />,
+    );
+    const sendBtn = screen.getByText("发送");
+    expect(sendBtn).toBeDisabled();
+
+    const counter = screen.getByText("2001/2000");
+    expect(counter.className).toContain("text-red-500");
+
+    await user.click(sendBtn);
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });

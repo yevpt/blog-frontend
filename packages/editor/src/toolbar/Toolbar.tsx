@@ -30,6 +30,8 @@ interface ToolbarProps extends InsertHandlers {
   editor: Editor | null;
   onSubmit?: () => void;
   isSubmitting?: boolean;
+  /** 业务层额外的提交禁用条件（如内容超出字数上限） */
+  submitDisabled?: boolean;
   isLoggedIn?: boolean;
   onLoginRequired?: () => void;
 }
@@ -114,6 +116,7 @@ export function Toolbar({
   editor,
   onSubmit,
   isSubmitting,
+  submitDisabled: submitDisabledProp,
   isLoggedIn,
   onLoginRequired,
   onInsertImage,
@@ -144,8 +147,9 @@ export function Toolbar({
   /* 未登录且提供了 onLoginRequired 时，提交区域切换为登录引导按钮 */
   const needLogin = isLoggedIn === false && typeof onLoginRequired === "function";
 
-  /* 已登录时，编辑器为空或正在提交时禁用按钮 */
-  const submitDisabled = isSubmitting === true || disabled || isEmpty;
+  /* 已登录时，编辑器为空、正在提交、或业务层禁用（如超出字数上限）时禁用按钮 */
+  const submitDisabled =
+    isSubmitting === true || disabled || isEmpty || submitDisabledProp === true;
 
   return (
     <div className="mt-1.5 flex items-center gap-1.5">

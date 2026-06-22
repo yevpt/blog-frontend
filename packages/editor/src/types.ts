@@ -90,6 +90,9 @@ export interface RichEditorProps extends InsertHandlers {
   /** 发送中状态，传 true 时发送按钮显示 loading 并禁用 */
   isSubmitting?: boolean;
 
+  /** 业务层额外的提交禁用条件（如内容超出字数上限）；传 true 时禁用发送按钮 */
+  submitDisabled?: boolean;
+
   /**
    * 当前用户是否已登录。
    * - 未提供时（undefined）：向后兼容，按已登录处理

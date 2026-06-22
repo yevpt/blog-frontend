@@ -48,6 +48,7 @@ export function RichEditor({
   mentionSuggestions = [],
   onSubmit,
   isSubmitting,
+  submitDisabled,
   isLoggedIn,
   onLoginRequired,
   onInsertImage,
@@ -160,6 +161,7 @@ export function RichEditor({
         editor={editor}
         onSubmit={onSubmit}
         isSubmitting={isSubmitting}
+        submitDisabled={submitDisabled}
         isLoggedIn={isLoggedIn}
         onLoginRequired={onLoginRequired}
         onInsertImage={onInsertImage}

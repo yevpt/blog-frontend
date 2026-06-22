@@ -16,6 +16,8 @@ interface ToolbarHarnessProps extends Pick<InsertHandlers, "onInsertCode" | "onI
   content: string;
   onMarkdownChange: (markdown: string) => void;
   onEditorReady?: (editor: Editor) => void;
+  onSubmit?: () => void;
+  submitDisabled?: boolean;
 }
 
 function ToolbarHarness({
@@ -24,6 +26,8 @@ function ToolbarHarness({
   onEditorReady,
   onInsertCode,
   onInsertLink,
+  onSubmit,
+  submitDisabled,
 }: ToolbarHarnessProps) {
   const [selectionReady, setSelectionReady] = useState(false);
   const editor = useEditor({
@@ -55,7 +59,13 @@ function ToolbarHarness({
   return (
     <>
       <EditorContent editor={editor} />
-      <Toolbar editor={editor} onInsertCode={onInsertCode} onInsertLink={onInsertLink} />
+      <Toolbar
+        editor={editor}
+        onInsertCode={onInsertCode}
+        onInsertLink={onInsertLink}
+        onSubmit={onSubmit}
+        submitDisabled={submitDisabled}
+      />
     </>
   );
 }
@@ -79,6 +89,47 @@ describe("Toolbar", () => {
     await waitFor(() => {
       expect(button).toHaveAttribute("aria-pressed", "true");
     });
+  });
+
+  it("submitDisabled 为 true 时禁用提交按钮，即使有内容", async () => {
+    const onMarkdownChange = vi.fn();
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <ToolbarHarness
+        content="<p>hello</p>"
+        onMarkdownChange={onMarkdownChange}
+        onSubmit={onSubmit}
+        submitDisabled
+      />,
+    );
+
+    const submitBtn = screen.getByRole("button", { name: "发送评论" });
+    expect(submitBtn).toBeDisabled();
+
+    await user.click(submitBtn);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("有内容且未禁用时提交按钮可点击触发 onSubmit", async () => {
+    const onMarkdownChange = vi.fn();
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <ToolbarHarness
+        content="<p>hello</p>"
+        onMarkdownChange={onMarkdownChange}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    const submitBtn = screen.getByRole("button", { name: "发送评论" });
+    expect(submitBtn).not.toBeDisabled();
+
+    await user.click(submitBtn);
+    expect(onSubmit).toHaveBeenCalledOnce();
   });
 
   it("混合粗体选区点击 B 后会统一应用粗体", async () => {
