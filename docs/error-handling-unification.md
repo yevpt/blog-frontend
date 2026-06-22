@@ -63,7 +63,7 @@ addToast(getApiErrorMessage(err, "<动作>失败，请稍后重试"), "error");
   - 步骤：`addToast("点赞失败，请稍后重试","error")` → `addToast(getApiErrorMessage(err, "点赞失败，请稍后重试"),"error")`。
   - 测试：更新该 hook 测试断言。
 
-- [ ] **A3 · 列表内点赞/更新/删除**
+- [x] **A3 · 列表内点赞/更新/删除**
   - 文件：`apps/web/hooks/use-article-list.ts:125`、`apps/web/hooks/use-moment-list.ts:258,305,375`
   - 步骤：把 `err instanceof ApiClientError ? err.message : "..."` 统一替换为 `getApiErrorMessage(err, "...")`（保留原兜底文案与「取消点赞/点赞」分支文案）。
   - 测试：更新相关测试。

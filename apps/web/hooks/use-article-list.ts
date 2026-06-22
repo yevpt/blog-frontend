@@ -5,7 +5,7 @@ import type { ArticleLikeResp, ArticleListItemResp, ArticlePageResp } from "@rep
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
 import { addToast } from "@/lib/toast";
-import { apiJson, ApiClientError } from "@/lib/client-fetch";
+import { apiJson, ApiClientError, getApiErrorMessage } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
 
 export const ALL_CATEGORY_ID = 0;
@@ -122,7 +122,13 @@ export function useArticleList({ initialPage, controlledCategoryId }: UseArticle
           openLoginModal();
           return;
         }
-        addToast(article.is_liked ? "取消点赞失败，请稍后重试" : "点赞失败，请稍后重试", "error");
+        addToast(
+          getApiErrorMessage(
+            err,
+            article.is_liked ? "取消点赞失败，请稍后重试" : "点赞失败，请稍后重试",
+          ),
+          "error",
+        );
       } finally {
         setPendingLikeIds((current) => {
           const next = new Set(current);

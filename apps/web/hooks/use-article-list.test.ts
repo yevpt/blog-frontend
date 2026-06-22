@@ -4,7 +4,10 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import type { ArticleListItemResp, ArticlePageResp } from "@repo/api";
 import { useArticleList } from "./use-article-list";
 
-const mockOpenLoginModal = vi.fn();
+const { mockOpenLoginModal, mockAddToast } = vi.hoisted(() => ({
+  mockOpenLoginModal: vi.fn(),
+  mockAddToast: vi.fn(),
+}));
 let mockSessionUserId: number | null = 7;
 
 vi.mock("@/app/providers/session-provider", () => ({
@@ -16,7 +19,7 @@ vi.mock("@/store/use-login-modal", () => ({
 }));
 
 vi.mock("@/lib/toast", () => ({
-  addToast: vi.fn(),
+  addToast: mockAddToast,
 }));
 
 function makeArticle(id: number, title: string): ArticleListItemResp {
@@ -52,6 +55,7 @@ describe("useArticleList", () => {
     vi.stubGlobal("fetch", vi.fn());
     mockSessionUserId = 7;
     mockOpenLoginModal.mockReset();
+    mockAddToast.mockReset();
   });
 
   afterEach(() => {
@@ -212,5 +216,47 @@ describe("useArticleList", () => {
       expect(result.current.pageData.list[1]?.is_liked).toBe(false);
       expect(result.current.pageData.list[1]?.like_count).toBe(2);
     });
+  });
+
+  it("toggleLike 业务错误时 toast 展示后端返回的具体原因", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: "文章已锁定，无法点赞" }), { status: 400 }),
+    );
+
+    const { result } = renderHook(() => useArticleList({ initialPage: makePageResp() }));
+
+    await act(async () => {
+      await result.current.toggleLike(makeArticle(1, "文章一"));
+    });
+
+    expect(mockAddToast).toHaveBeenCalledWith("文章已锁定，无法点赞", "error");
+  });
+
+  it("toggleLike 网络异常时 toast 展示点赞兜底文案", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+
+    const { result } = renderHook(() => useArticleList({ initialPage: makePageResp() }));
+
+    await act(async () => {
+      await result.current.toggleLike(makeArticle(1, "文章一"));
+    });
+
+    expect(mockAddToast).toHaveBeenCalledWith("点赞失败，请稍后重试", "error");
+  });
+
+  it("toggleLike 取消点赞网络异常时 toast 展示取消点赞兜底文案", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+
+    const liked = makeArticle(1, "文章一");
+    liked.is_liked = true;
+    const { result } = renderHook(() =>
+      useArticleList({ initialPage: makePageResp({ list: [liked] }) }),
+    );
+
+    await act(async () => {
+      await result.current.toggleLike(liked);
+    });
+
+    expect(mockAddToast).toHaveBeenCalledWith("取消点赞失败，请稍后重试", "error");
   });
 });

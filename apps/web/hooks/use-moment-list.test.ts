@@ -5,7 +5,10 @@ import type { MomentItemResp, MomentPageResp } from "@repo/api";
 import { useMomentList } from "./use-moment-list";
 import { useSnippetModal } from "@/store/use-snippet-modal";
 
-const mockOpenLoginModal = vi.fn();
+const { mockOpenLoginModal, mockAddToast } = vi.hoisted(() => ({
+  mockOpenLoginModal: vi.fn(),
+  mockAddToast: vi.fn(),
+}));
 let mockSessionUserId: number | null = 7;
 
 vi.mock("@/app/providers/session-provider", () => ({
@@ -17,7 +20,7 @@ vi.mock("@/store/use-login-modal", () => ({
 }));
 
 vi.mock("@/lib/toast", () => ({
-  addToast: vi.fn(),
+  addToast: mockAddToast,
 }));
 
 function makeMoment(id: number, overrides: Partial<MomentItemResp> = {}): MomentItemResp {
@@ -65,6 +68,7 @@ describe("useMomentList", () => {
     mockSessionUserId = 7;
     useSnippetModal.setState({ isOpen: false, publishCount: 0, lastPublishedUserId: null });
     mockOpenLoginModal.mockReset();
+    mockAddToast.mockReset();
   });
 
   afterEach(() => {
@@ -346,5 +350,135 @@ describe("useMomentList", () => {
     expect(body.getAll("images").length).toBe(1);
     expect(body.getAll("image_order")).toEqual(["url:0", "file:0"]);
     expect(result.current.moments[0]?.content).toBe("更新后的碎语");
+  });
+
+  it("toggleLike 业务错误时 toast 展示后端返回的具体原因", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "碎语已锁定，无法点赞" }, 400));
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [makeMoment(1)] }) }),
+    );
+
+    await act(async () => {
+      await result.current.toggleLike(makeMoment(1));
+    });
+
+    expect(mockAddToast).toHaveBeenCalledWith("碎语已锁定，无法点赞", "error");
+  });
+
+  it("toggleLike 网络异常时 toast 展示点赞兜底文案", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [makeMoment(1)] }) }),
+    );
+
+    await act(async () => {
+      await result.current.toggleLike(makeMoment(1));
+    });
+
+    expect(mockAddToast).toHaveBeenCalledWith("点赞失败，请稍后重试", "error");
+  });
+
+  it("toggleLike 取消点赞网络异常时 toast 展示取消点赞兜底文案", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+
+    const liked = makeMoment(1, { is_liked: true });
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [liked] }) }),
+    );
+
+    await act(async () => {
+      await result.current.toggleLike(liked);
+    });
+
+    expect(mockAddToast).toHaveBeenCalledWith("取消点赞失败，请稍后重试", "error");
+  });
+
+  it("updateMoment 业务错误时 toast 展示后端返回的具体原因并抛出", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({ error: "内容长度不能超过 800 个字符" }, 400),
+    );
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [makeMoment(1)] }) }),
+    );
+
+    await act(async () => {
+      await expect(result.current.updateMoment(makeMoment(1), "超长", [])).rejects.toThrow();
+    });
+
+    expect(mockAddToast).toHaveBeenCalledWith("内容长度不能超过 800 个字符", "error");
+  });
+
+  it("toggleTop 业务错误时 toast 展示后端返回的具体原因", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "置顶数量已达上限" }, 400));
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [makeMoment(1)] }) }),
+    );
+
+    await act(async () => {
+      await result.current.toggleTop(makeMoment(1));
+    });
+
+    expect(mockAddToast).toHaveBeenCalledWith("置顶数量已达上限", "error");
+  });
+
+  it("toggleTop 网络异常时 toast 展示置顶兜底文案", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [makeMoment(1)] }) }),
+    );
+
+    await act(async () => {
+      await result.current.toggleTop(makeMoment(1));
+    });
+
+    expect(mockAddToast).toHaveBeenCalledWith("置顶失败，请稍后重试", "error");
+  });
+
+  it("toggleTop 取消置顶网络异常时 toast 展示取消置顶兜底文案", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+
+    const topped = makeMoment(1, { is_top: true });
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [topped] }) }),
+    );
+
+    await act(async () => {
+      await result.current.toggleTop(topped);
+    });
+
+    expect(mockAddToast).toHaveBeenCalledWith("取消置顶失败，请稍后重试", "error");
+  });
+
+  it("deleteMoment 业务错误时 toast 展示后端返回的具体原因并抛出", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "无权删除该碎语" }, 403));
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [makeMoment(1)] }) }),
+    );
+
+    await act(async () => {
+      await expect(result.current.deleteMoment(makeMoment(1))).rejects.toThrow();
+    });
+
+    expect(mockAddToast).toHaveBeenCalledWith("无权删除该碎语", "error");
+  });
+
+  it("deleteMoment 网络异常时 toast 展示删除兜底文案并抛出", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [makeMoment(1)] }) }),
+    );
+
+    await act(async () => {
+      await expect(result.current.deleteMoment(makeMoment(1))).rejects.toThrow();
+    });
+
+    expect(mockAddToast).toHaveBeenCalledWith("删除失败，请稍后重试", "error");
   });
 });

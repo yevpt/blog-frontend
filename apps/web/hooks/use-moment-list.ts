@@ -12,7 +12,7 @@ import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
 import { useSnippetModal } from "@/store/use-snippet-modal";
 import { addToast } from "@/lib/toast";
-import { apiForm, apiJson, ApiClientError } from "@/lib/client-fetch";
+import { apiForm, apiJson, ApiClientError, getApiErrorMessage } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
 import type { SnippetImageItem } from "@/components/snippets/types";
 
@@ -255,7 +255,13 @@ export function useMomentList({
           openLoginModal();
           return;
         }
-        addToast(snippet.is_liked ? "取消点赞失败，请稍后重试" : "点赞失败，请稍后重试", "error");
+        addToast(
+          getApiErrorMessage(
+            err,
+            snippet.is_liked ? "取消点赞失败，请稍后重试" : "点赞失败，请稍后重试",
+          ),
+          "error",
+        );
       } finally {
         setPendingLikeIds((current) => {
           const next = new Set(current);
@@ -302,7 +308,7 @@ export function useMomentList({
         if (err instanceof ApiClientError && err.status === 401) {
           openLoginModal();
         } else {
-          addToast(err instanceof ApiClientError ? err.message : "更新失败，请稍后重试", "error");
+          addToast(getApiErrorMessage(err, "更新失败，请稍后重试"), "error");
         }
         throw err;
       } finally {
@@ -337,11 +343,10 @@ export function useMomentList({
           return;
         }
         addToast(
-          err instanceof ApiClientError
-            ? err.message
-            : snippet.is_top
-              ? "取消置顶失败，请稍后重试"
-              : "置顶失败，请稍后重试",
+          getApiErrorMessage(
+            err,
+            snippet.is_top ? "取消置顶失败，请稍后重试" : "置顶失败，请稍后重试",
+          ),
           "error",
         );
       } finally {
@@ -372,7 +377,7 @@ export function useMomentList({
           openLoginModal();
           return;
         }
-        addToast(err instanceof ApiClientError ? err.message : "删除失败，请稍后重试", "error");
+        addToast(getApiErrorMessage(err, "删除失败，请稍后重试"), "error");
         throw err;
       } finally {
         setPendingActionIds((current) => {
