@@ -270,7 +270,12 @@ export function ResponsiveModalShell({ isOpen, ...rest }: ResponsiveModalShellPr
       setIsDesktop(true);
       return;
     }
-    setIsDesktop(window.matchMedia("(min-width: 768px)").matches);
+    // 打开期间实时监听视口变化：桌面缩到移动宽度时即时切到底部 sheet，反之亦然
+    const mql = window.matchMedia("(min-width: 768px)");
+    setIsDesktop(mql.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
   }, [isOpen]);
 
   if (!isOpen || isDesktop === null) return null;

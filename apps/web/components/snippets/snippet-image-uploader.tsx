@@ -66,7 +66,16 @@ export const SnippetImageUploader = forwardRef<SnippetImageUploaderHandle, Props
       if (!fileList) return;
       // 名额需同时扣除已入列与压缩中的占位，避免超过上限
       const room = MAX_IMAGES - items.length - pendingCount;
-      const picked = Array.from(fileList).slice(0, Math.max(0, room));
+      // 去重：跳过与已添加或本次批量内重名的文件，避免同一张图被重复上传
+      const existingNames = new Set(items.map((it) => it.file.name));
+      const seen = new Set<string>();
+      const picked = Array.from(fileList)
+        .filter((f) => {
+          if (existingNames.has(f.name) || seen.has(f.name)) return false;
+          seen.add(f.name);
+          return true;
+        })
+        .slice(0, Math.max(0, room));
       if (inputRef.current) inputRef.current.value = "";
       if (picked.length === 0) return;
 

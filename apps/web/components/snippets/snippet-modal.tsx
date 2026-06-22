@@ -1,6 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type RefObject,
+  type SetStateAction,
+} from "react";
 import { SvgIcon } from "@repo/icons";
 import { useSnippetModal } from "@/store/use-snippet-modal";
 import { addToast } from "@/lib/toast";
@@ -109,22 +116,62 @@ export function SnippetModal() {
         </div>
       }
     >
-      {() => (
-        <div className="flex flex-col gap-1 px-[18px] py-3">
-          <SnippetTextInput
-            value={content}
-            onChange={setContent}
-            placeholder="此刻有什么想法？"
-            disabled={submitting}
-          />
-          <SnippetImageUploader
-            ref={uploaderRef}
-            items={images}
-            onChange={setImages}
-            disabled={submitting}
-          />
-        </div>
+      {({ onContentResize }) => (
+        <ModalBody
+          content={content}
+          images={images}
+          submitting={submitting}
+          uploaderRef={uploaderRef}
+          onContentResize={onContentResize}
+          onChangeContent={setContent}
+          onChangeImages={setImages}
+        />
       )}
     </ResponsiveModalShell>
+  );
+}
+
+interface ModalBodyProps {
+  content: string;
+  images: SnippetImageItem[];
+  submitting: boolean;
+  uploaderRef: RefObject<SnippetImageUploaderHandle | null>;
+  onContentResize: () => void;
+  onChangeContent: (value: string) => void;
+  onChangeImages: Dispatch<SetStateAction<SnippetImageItem[]>>;
+}
+
+/**
+ * 弹窗主体。内容或图片数量变化时通知外壳重测桌面高度，
+ * 使弹窗随内容增高（修复：长文本/加图后区域被挤出需滚动）。
+ */
+function ModalBody({
+  content,
+  images,
+  submitting,
+  uploaderRef,
+  onContentResize,
+  onChangeContent,
+  onChangeImages,
+}: ModalBodyProps) {
+  useEffect(() => {
+    onContentResize();
+  }, [content, images.length, onContentResize]);
+
+  return (
+    <div className="flex flex-col gap-2 px-[18px] py-3">
+      <SnippetTextInput
+        value={content}
+        onChange={onChangeContent}
+        placeholder="此刻有什么想法？"
+        disabled={submitting}
+      />
+      <SnippetImageUploader
+        ref={uploaderRef}
+        items={images}
+        onChange={onChangeImages}
+        disabled={submitting}
+      />
+    </div>
   );
 }

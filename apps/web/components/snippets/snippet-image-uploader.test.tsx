@@ -76,6 +76,19 @@ describe("SnippetImageUploader", () => {
     await waitFor(() => expect(screen.getAllByRole("button", { name: "删除图片" })).toHaveLength(9));
   });
 
+  it("重复选择同名文件不会重复添加", async () => {
+    const user = userEvent.setup();
+    compressImage.mockImplementation(async (f: File) => f);
+    render(<Harness />);
+    const input = screen.getByTestId("snippet-image-input") as HTMLInputElement;
+    await user.upload(input, img("dup.png"));
+    expect(await screen.findByRole("button", { name: "删除图片" })).toBeInTheDocument();
+    await user.upload(input, img("dup.png"));
+    await waitFor(() =>
+      expect(screen.getAllByRole("button", { name: "删除图片" })).toHaveLength(1),
+    );
+  });
+
   it("已有 9 张时不再渲染「添加」格", () => {
     const nine: SnippetImageItem[] = Array.from({ length: 9 }, (_, i) => ({ id: String(i), file: img(), previewUrl: "blob:" + i }));
     render(<SnippetImageUploader items={nine} onChange={() => {}} />);
