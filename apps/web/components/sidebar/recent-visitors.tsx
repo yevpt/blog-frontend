@@ -39,7 +39,12 @@ export function RecentVisitors({ visitors }: RecentVisitorsProps) {
       </div>
 
       <SidebarSectionFooter>
-        <SidebarFooterButton tone="primary">
+        <SidebarFooterButton
+          tone="primary"
+          href="https://jq.qq.com/?_wv=1027&k=Qo26kEUX"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <SvgIcon name="qq" size={12} />
           {t("sidebar.joinQQ")}
         </SidebarFooterButton>

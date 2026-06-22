@@ -143,10 +143,17 @@ describe("RecentVisitors", () => {
 
   it("底部渲染入驻 QQ 群（主操作）与查看更多（次操作）", () => {
     render(<RecentVisitors visitors={mockVisitors} />);
-    expect(screen.getByRole("button", { name: /入驻 QQ 群/ })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /入驻 QQ 群/ })).toBeTruthy();
     expect(screen.getByRole("link", { name: /查看更多/ })).toBeTruthy();
     expect(screen.getByTestId("icon-qq")).toBeTruthy();
     expect(screen.getByTestId("icon-arrow-forward")).toBeTruthy();
+  });
+
+  it("入驻 QQ 群在新标签页打开 QQ 加群页", () => {
+    render(<RecentVisitors visitors={mockVisitors} />);
+    const link = screen.getByRole("link", { name: /入驻 QQ 群/ });
+    expect(link.getAttribute("href")).toBe("https://jq.qq.com/?_wv=1027&k=Qo26kEUX");
+    expect(link.getAttribute("target")).toBe("_blank");
   });
 
   it("查看更多跳转到圈子页", () => {
