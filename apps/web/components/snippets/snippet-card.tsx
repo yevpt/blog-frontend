@@ -1,13 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import type { MomentItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
-import { Avatar, Badge, Button, Card, CardContent, cn } from "@repo/ui";
-import { LoadingImage } from "@/components/common/loading-image";
+import {
+  Avatar,
+  Badge,
+  Button,
+  ButtonUtility,
+  Card,
+  CardContent,
+  Popover,
+  PopoverDialog,
+  PopoverTrigger,
+} from "@repo/ui";
+import { useSession } from "@/app/providers/session-provider";
 import { useImageViewer } from "@/store/use-image-viewer";
 import { formatRelativeTime } from "../../lib/format-time";
 import { SnippetContent } from "./snippet-content";
+import { SnippetImageGrid } from "./snippet-image-grid";
 
 export type SnippetCardLayout = "standalone" | "embedded";
 
@@ -18,6 +30,10 @@ interface SnippetCardProps {
   onLike?: (snippet: MomentItemResp) => void;
   likeDisabled?: boolean;
   onComment?: (snippet: MomentItemResp) => void;
+  onEdit?: (snippet: MomentItemResp) => void;
+  onToggleTop?: (snippet: MomentItemResp) => void;
+  onDelete?: (snippet: MomentItemResp) => Promise<void> | void;
+  actionDisabled?: boolean;
 }
 
 /**
@@ -39,7 +55,13 @@ export function SnippetCard({
   onLike,
   likeDisabled = false,
   onComment,
+  onEdit,
+  onToggleTop,
+  onDelete,
+  actionDisabled = false,
 }: SnippetCardProps) {
+  const { userId } = useSession();
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const relativeTime = formatRelativeTime(new Date(snippet.created_at));
   const authorName = snippet.user?.nickname ?? snippet.user?.username ?? "匿名";
   const authorAvatar = snippet.user?.avatar_url ?? "";
@@ -49,10 +71,10 @@ export function SnippetCard({
   const openViewer = useImageViewer((s) => s.open);
 
   const images = snippet.images ?? [];
-  const visibleImages = images.slice(0, 2);
-  const hiddenCount = Math.max(0, images.length - 2);
-  // 预览画廊包含该碎语全部图片（含被折叠的），点击任意图从对应索引打开
+  // 预览画廊包含该碎语全部图片（含九宫格中被折叠的），点击任意图从对应索引打开
   const viewerImages = images.map((img) => ({ src: img.access_url, alt: img.name }));
+  const isOwner = userId !== null && userId === (snippet.user?.id ?? snippet.user_id);
+  const topLabel = snippet.is_top ? "取消置顶" : "置顶";
 
   const body = (
     <>
@@ -96,83 +118,125 @@ export function SnippetCard({
         </div>
       </div>
 
-      <SnippetContent content={snippet.content} />
+      <SnippetContent content={snippet.content} collapsible={layout === "embedded"} />
 
-      {visibleImages.length > 0 && (
-        <div className="mt-2.5 flex flex-wrap justify-start gap-1">
-          {visibleImages.map((img, idx) => (
-            <button
-              key={img.id}
+      <SnippetImageGrid images={images} onOpen={(idx) => openViewer(viewerImages, idx)} />
+
+      <div className="mt-3 flex items-end justify-between gap-2 text-xs text-(--fg3)">
+        {isOwner ? (
+          <div
+            data-testid="snippet-owner-actions"
+            className="flex min-w-0 flex-wrap items-center gap-0.5"
+          >
+            <ButtonUtility
               type="button"
-              aria-label={`查看图片 ${img.name}`}
-              onClick={() => openViewer(viewerImages, idx)}
-              className={cn(
-                "relative inline-flex max-w-full cursor-zoom-in overflow-hidden rounded-[6px]",
-                visibleImages.length > 1 && "max-w-[calc(50%-2px)]",
-              )}
-            >
-              <LoadingImage
-                src={img.access_url}
-                alt={img.name}
-                width={1200}
-                height={900}
-                className="block h-auto max-h-48 w-auto max-w-full"
-                sizes={
-                  visibleImages.length === 1
-                    ? "(max-width: 768px) 100vw, 50vw"
-                    : "(max-width: 768px) 50vw, 25vw"
-                }
-                skeletonClassName="rounded-[6px]"
+              size="xs"
+              color="tertiary"
+              tooltip="编辑碎语"
+              tooltipPlacement="top"
+              isDisabled={actionDisabled}
+              onClick={() => onEdit?.(snippet)}
+              icon={<SvgIcon name="edit" size={16} />}
+              className="size-7 rounded-full"
+            />
+            <ButtonUtility
+              type="button"
+              size="xs"
+              color="tertiary"
+              tooltip={`${topLabel}碎语`}
+              tooltipPlacement="top"
+              aria-pressed={snippet.is_top}
+              isDisabled={actionDisabled}
+              onClick={() => onToggleTop?.(snippet)}
+              icon={<SvgIcon name={snippet.is_top ? "pin-off" : "pin"} size={16} />}
+              className={`size-7 rounded-full ${
+                snippet.is_top
+                  ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+                  : ""
+              }`}
+            />
+            <PopoverTrigger isOpen={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+              <ButtonUtility
+                type="button"
+                size="xs"
+                color="tertiary"
+                tooltip="删除碎语"
+                tooltipPlacement="top"
+                isDisabled={actionDisabled}
+                icon={<SvgIcon name="trash" size={16} />}
+                className="size-7 rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
               />
-            </button>
-          ))}
-          {hiddenCount > 0 && (
-            <button
-              type="button"
-              aria-label="查看更多图片"
-              onClick={() => openViewer(viewerImages, visibleImages.length)}
-              className="flex h-24 w-24 shrink-0 cursor-zoom-in items-center justify-center overflow-hidden rounded-[6px] bg-muted text-xs text-(--fg3)"
-            >
-              +{hiddenCount}
-            </button>
-          )}
+              <Popover placement="bottom start" offset={6} className="w-60">
+                <PopoverDialog aria-label="确认删除碎语" className="p-3 outline-none">
+                  <div className="grid gap-3">
+                    <p className="text-sm leading-6 text-foreground">
+                      确定删除这条碎语吗？删除后不可在列表中恢复。
+                    </p>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" slot="close" isDisabled={actionDisabled}>
+                        取消
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        aria-label="确认删除"
+                        isDisabled={actionDisabled}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        onPress={() => {
+                          void Promise.resolve(onDelete?.(snippet))
+                            .then(() => setIsDeleteOpen(false))
+                            .catch(() => undefined);
+                        }}
+                      >
+                        删除
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverDialog>
+              </Popover>
+            </PopoverTrigger>
+          </div>
+        ) : (
+          <div />
+        )}
+
+        <div className="flex shrink-0 items-center justify-end gap-0.5">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-label="喜欢"
+            aria-pressed={snippet.is_liked}
+            isDisabled={likeDisabled}
+            onPress={() => {
+              onLike?.(snippet);
+            }}
+            className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 font-medium transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 ${
+              snippet.is_liked
+                ? "text-red-500 hover:text-red-500"
+                : "text-black/54 dark:text-(--fg3)"
+            }`}
+          >
+            <span className="inline-flex transform-gpu animate-[heartbeat_3s_ease-in-out_infinite] will-change-transform">
+              <SvgIcon name={snippet.is_liked ? "heart-fill" : "heart"} size={18} />
+            </span>
+            <span>{formatCount(snippet.like_count)}</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-label="评论"
+            onPress={() => {
+              onComment?.(snippet);
+            }}
+            className="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 font-medium text-black/54 transition-colors hover:bg-primary/10 hover:text-primary dark:text-(--fg3)"
+          >
+            <SvgIcon name="message-circle" size={18} />
+            <span>{formatCount(snippet.comment_count)}</span>
+          </Button>
         </div>
-      )}
-
-      <div className="mt-3 flex items-center justify-end gap-0.5 text-xs text-(--fg3)">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          aria-label="喜欢"
-          aria-pressed={snippet.is_liked}
-          isDisabled={likeDisabled}
-          onPress={() => {
-            onLike?.(snippet);
-          }}
-          className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 font-medium transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 ${
-            snippet.is_liked ? "text-red-500 hover:text-red-500" : "text-black/54 dark:text-(--fg3)"
-          }`}
-        >
-          <span className="inline-flex transform-gpu animate-[heartbeat_3s_ease-in-out_infinite] will-change-transform">
-            <SvgIcon name={snippet.is_liked ? "heart-fill" : "heart"} size={18} />
-          </span>
-          <span>{formatCount(snippet.like_count)}</span>
-        </Button>
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          aria-label="评论"
-          onPress={() => {
-            onComment?.(snippet);
-          }}
-          className="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 font-medium text-black/54 transition-colors hover:bg-primary/10 hover:text-primary dark:text-(--fg3)"
-        >
-          <SvgIcon name="message-circle" size={18} />
-          <span>{formatCount(snippet.comment_count)}</span>
-        </Button>
       </div>
     </>
   );

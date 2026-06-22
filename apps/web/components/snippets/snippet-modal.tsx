@@ -9,6 +9,7 @@ import {
   type SetStateAction,
 } from "react";
 import { SvgIcon } from "@repo/icons";
+import { useSession } from "@/app/providers/session-provider";
 import { useSnippetModal } from "@/store/use-snippet-modal";
 import { addToast } from "@/lib/toast";
 import { ResponsiveModalShell } from "@/components/modal-shell/responsive-modal";
@@ -23,15 +24,25 @@ const MAX_CONTENT = 800;
 const MAX_IMAGES = 9;
 
 export function SnippetModal() {
-  const { isOpen, close } = useSnippetModal();
+  const { isOpen, editingSnippet, submitEdit, close, markPublished } = useSnippetModal();
+  const { userId } = useSession();
   const [content, setContent] = useState("");
   const [images, setImages] = useState<SnippetImageItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
   const uploaderRef = useRef<SnippetImageUploaderHandle>(null);
 
+  const isEditing = editingSnippet !== null;
   const overLimit = content.length > MAX_CONTENT;
   const canSubmit = content.trim().length > 0 && !overLimit && !submitting;
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    setContent(editingSnippet?.content ?? "");
+    setImages([]);
+  }, [editingSnippet, isOpen]);
 
   function reset() {
     setImages((prev) => {
@@ -53,6 +64,16 @@ export function SnippetModal() {
     submittingRef.current = true;
     setSubmitting(true);
     try {
+      if (isEditing) {
+        if (!submitEdit) {
+          throw new Error("编辑失败");
+        }
+        await submitEdit(content);
+        reset();
+        close();
+        return;
+      }
+
       const form = new FormData();
       form.append("content", content);
       form.append("status", "1");
@@ -67,6 +88,7 @@ export function SnippetModal() {
         throw new Error(data.error ?? "发布失败");
       }
       addToast("发布成功", "success");
+      markPublished(userId);
       reset();
       close();
     } catch (err) {
@@ -80,7 +102,7 @@ export function SnippetModal() {
   return (
     <ResponsiveModalShell
       isOpen={isOpen}
-      title="写碎语"
+      title={isEditing ? "编辑碎语" : "写碎语"}
       onClose={handleClose}
       desktopMaxWidthClassName="max-w-[480px]"
       footer={
@@ -90,8 +112,10 @@ export function SnippetModal() {
               type="button"
               aria-label="添加图片"
               onClick={() => uploaderRef.current?.openPicker()}
-              disabled={submitting || images.length >= MAX_IMAGES}
-              className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+              disabled={isEditing || submitting || images.length >= MAX_IMAGES}
+              className={`flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40 ${
+                isEditing ? "hidden" : ""
+              }`}
             >
               <SvgIcon name="image" size={18} />
               <span>
@@ -111,7 +135,7 @@ export function SnippetModal() {
             onClick={handleSubmit}
             className="rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/85 disabled:opacity-40"
           >
-            {submitting ? "发布中…" : "发布"}
+            {submitting ? (isEditing ? "保存中…" : "发布中…") : isEditing ? "保存" : "发布"}
           </button>
         </div>
       }
@@ -121,6 +145,7 @@ export function SnippetModal() {
           content={content}
           images={images}
           submitting={submitting}
+          isEditing={isEditing}
           uploaderRef={uploaderRef}
           onContentResize={onContentResize}
           onChangeContent={setContent}
@@ -135,6 +160,7 @@ interface ModalBodyProps {
   content: string;
   images: SnippetImageItem[];
   submitting: boolean;
+  isEditing: boolean;
   uploaderRef: RefObject<SnippetImageUploaderHandle | null>;
   onContentResize: () => void;
   onChangeContent: (value: string) => void;
@@ -149,6 +175,7 @@ function ModalBody({
   content,
   images,
   submitting,
+  isEditing,
   uploaderRef,
   onContentResize,
   onChangeContent,
@@ -164,17 +191,19 @@ function ModalBody({
       <SnippetTextInput
         value={content}
         onChange={onChangeContent}
-        placeholder="此刻有什么想法？"
+        placeholder={isEditing ? "修改这条碎语" : "此刻有什么想法？"}
         disabled={submitting}
       />
-      <div className="px-[18px] py-3">
-        <SnippetImageUploader
-          ref={uploaderRef}
-          items={images}
-          onChange={onChangeImages}
-          disabled={submitting}
-        />
-      </div>
+      {!isEditing && (
+        <div className="px-[18px] py-3">
+          <SnippetImageUploader
+            ref={uploaderRef}
+            items={images}
+            onChange={onChangeImages}
+            disabled={submitting}
+          />
+        </div>
+      )}
     </div>
   );
 }

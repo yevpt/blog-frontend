@@ -1,11 +1,17 @@
 import React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { SnippetCard } from "./snippet-card";
 import { useImageViewer } from "@/store/use-image-viewer";
 import type { MomentItemResp } from "@repo/api";
+
+let mockSessionUserId: number | null = null;
+
+vi.mock("@/app/providers/session-provider", () => ({
+  useSession: () => ({ userId: mockSessionUserId }),
+}));
 
 vi.mock("next/link", () => ({
   default: ({
@@ -40,6 +46,10 @@ vi.mock("next/image", () => ({
   }) => <img src={src} alt={alt} className={className} />,
 }));
 
+vi.mock("@repo/hooks", () => ({
+  useLocale: () => ({ t: (key: string) => key }),
+}));
+
 vi.mock("@repo/ui", () => ({
   cn: (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" "),
   Button: ({
@@ -57,11 +67,52 @@ vi.mock("@repo/ui", () => ({
       {children}
     </button>
   ),
+  ButtonUtility: ({
+    icon,
+    tooltip,
+    tooltipPlacement: _tooltipPlacement,
+    color: _color,
+    size: _size,
+    isDisabled,
+    onClick,
+    className,
+    ...props
+  }: {
+    icon?: ReactNode;
+    tooltip?: string;
+    tooltipPlacement?: string;
+    color?: string;
+    size?: string;
+    isDisabled?: boolean;
+    onClick?: () => void;
+    className?: string;
+    [key: string]: unknown;
+  }) => (
+    <button
+      aria-label={tooltip}
+      data-tooltip={tooltip}
+      className={className}
+      disabled={isDisabled}
+      onClick={onClick}
+      {...props}
+    >
+      {icon}
+    </button>
+  ),
   Card: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
     <div {...props}>{children}</div>
   ),
   CardContent: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
     <div {...props}>{children}</div>
+  ),
+  PopoverTrigger: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Popover: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
+    <div {...props}>{children}</div>
+  ),
+  PopoverDialog: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
+    <div role="dialog" {...props}>
+      {children}
+    </div>
   ),
   Avatar: ({ src, alt, initials }: { src?: string; alt?: string; initials?: string }) =>
     src ? <img src={src} alt={alt} /> : <span>{initials}</span>,
@@ -97,6 +148,10 @@ function makeMoment(overrides: Partial<MomentItemResp> = {}): MomentItemResp {
 }
 
 describe("SnippetCard", () => {
+  beforeEach(() => {
+    mockSessionUserId = null;
+  });
+
   it("渲染不崩溃", () => {
     expect(() => render(<SnippetCard snippet={makeMoment()} />)).not.toThrow();
   });
@@ -264,6 +319,73 @@ describe("SnippetCard", () => {
     expect(onComment).toHaveBeenCalledWith(snippet);
   });
 
+  it("当前用户是作者时在左下角显示纯图标管理按钮，并通过 tooltip 提示", () => {
+    mockSessionUserId = 1;
+    render(<SnippetCard snippet={makeMoment()} />);
+
+    expect(screen.getByTestId("snippet-owner-actions")).toBeTruthy();
+    const editButton = screen.getByRole("button", { name: "编辑碎语" });
+    const topButton = screen.getByRole("button", { name: "置顶碎语" });
+    const deleteButton = screen.getByRole("button", { name: "删除碎语" });
+
+    expect(editButton).toHaveTextContent("");
+    expect(topButton).toHaveTextContent("");
+    expect(deleteButton).toHaveTextContent("");
+    expect(editButton).toHaveAttribute("data-tooltip", "编辑碎语");
+    expect(topButton).toHaveAttribute("data-tooltip", "置顶碎语");
+    expect(deleteButton).toHaveAttribute("data-tooltip", "删除碎语");
+    expect(screen.getByTestId("icon-edit")).toBeTruthy();
+    expect(screen.getByTestId("icon-pin")).toBeTruthy();
+    expect(screen.getByTestId("icon-trash")).toBeTruthy();
+  });
+
+  it("非作者不显示碎语管理按钮", () => {
+    mockSessionUserId = 2;
+    render(<SnippetCard snippet={makeMoment()} />);
+
+    expect(screen.queryByTestId("snippet-owner-actions")).toBeNull();
+    expect(screen.queryByRole("button", { name: "编辑碎语" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "删除碎语" })).toBeNull();
+  });
+
+  it("已置顶的作者碎语显示取消置顶按钮", () => {
+    mockSessionUserId = 1;
+    render(<SnippetCard snippet={makeMoment({ is_top: true })} />);
+
+    expect(screen.getByRole("button", { name: "取消置顶碎语" })).toBeTruthy();
+    expect(screen.getByTestId("icon-pin-off")).toBeTruthy();
+  });
+
+  it("点击作者操作按钮触发对应回调，删除需二次确认", async () => {
+    const user = userEvent.setup();
+    const snippet = makeMoment();
+    const onEdit = vi.fn();
+    const onToggleTop = vi.fn();
+    const onDelete = vi.fn().mockResolvedValue(undefined);
+    mockSessionUserId = 1;
+
+    render(
+      <SnippetCard
+        snippet={snippet}
+        onEdit={onEdit}
+        onToggleTop={onToggleTop}
+        onDelete={onDelete}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "编辑碎语" }));
+    await user.click(screen.getByRole("button", { name: "置顶碎语" }));
+    expect(onEdit).toHaveBeenCalledWith(snippet);
+    expect(onToggleTop).toHaveBeenCalledWith(snippet);
+
+    await user.click(screen.getByRole("button", { name: "删除碎语" }));
+    expect(screen.getByRole("dialog", { name: "确认删除碎语" })).toBeTruthy();
+    expect(onDelete).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "确认删除" }));
+    expect(onDelete).toHaveBeenCalledWith(snippet);
+  });
+
   it("有 user 时昵称渲染为跳转用户详情的链接", () => {
     render(<SnippetCard snippet={makeMoment()} />);
     const links = screen.getAllByRole("link");
@@ -306,6 +428,20 @@ describe("SnippetCard", () => {
     });
   }
 
+  function makeOverflowImageMoment() {
+    return makeMoment({
+      images: Array.from({ length: 10 }, (_, index) => ({
+        id: index + 1,
+        name: `p${index + 1}`,
+        file_type: "image/jpeg",
+        url: `/${index + 1}.jpg`,
+        access_url: `/${index + 1}.jpg`,
+        size: 1,
+        seq: index + 1,
+      })),
+    });
+  }
+
   it("点击碎语图片打开全屏预览，且画廊含全部图片", async () => {
     const user = userEvent.setup();
     useImageViewer.setState({ isOpen: false, images: [], index: 0 });
@@ -323,12 +459,51 @@ describe("SnippetCard", () => {
   it("点击 +N 折叠块从第一张被折叠图片打开预览", async () => {
     const user = userEvent.setup();
     useImageViewer.setState({ isOpen: false, images: [], index: 0 });
-    render(<SnippetCard snippet={makeImageMoment()} />);
+    render(<SnippetCard snippet={makeOverflowImageMoment()} />);
 
     await user.click(screen.getByRole("button", { name: "查看更多图片" }));
 
     const s = useImageViewer.getState();
     expect(s.isOpen).toBe(true);
-    expect(s.index).toBe(2); // 第一张被折叠的图片
+    expect(s.index).toBe(8); // 第一张被折叠的图片
+  });
+
+  // ── 长文本展开/收起：仅首页内嵌条目（embedded）折叠，独立页（standalone）完整展示 ──
+  const LONG_CONTENT =
+    "这是一条很长的碎语内容，超过了一百二十个字符的限制，需要显示展开按钮。" +
+    "这是一条很长的碎语内容，超过了一百二十个字符的限制，需要显示展开按钮。" +
+    "这是一条很长的碎语内容，超过了一百二十个字符的限制，需要显示展开按钮。" +
+    "这是尾部补充内容用于确保超过阈值。";
+
+  it("embedded 布局长文本默认折叠并显示展开按钮", () => {
+    render(<SnippetCard snippet={makeMoment({ content: LONG_CONTENT })} layout="embedded" />);
+    // 展开按钮文案直接走 mock 的 t(key)
+    const expandBtn = screen.getByText("snippet.expand");
+    expect(expandBtn).toBeTruthy();
+    // 折叠时正文截断，不包含完整内容
+    expect(screen.queryByText(LONG_CONTENT)).toBeNull();
+  });
+
+  it("embedded 布局点击展开按钮后显示完整正文并切换为收起按钮", async () => {
+    const user = userEvent.setup();
+    render(<SnippetCard snippet={makeMoment({ content: LONG_CONTENT })} layout="embedded" />);
+
+    await user.click(screen.getByText("snippet.expand"));
+
+    expect(screen.getByText(LONG_CONTENT)).toBeTruthy();
+    expect(screen.getByText("snippet.collapse")).toBeTruthy();
+  });
+
+  it("standalone 布局长文本完整展示且不渲染展开/收起按钮", () => {
+    render(<SnippetCard snippet={makeMoment({ content: LONG_CONTENT })} />);
+    expect(screen.getByText(LONG_CONTENT)).toBeTruthy();
+    expect(screen.queryByText("snippet.expand")).toBeNull();
+    expect(screen.queryByText("snippet.collapse")).toBeNull();
+  });
+
+  it("standalone 布局短文本同样不渲染展开/收起按钮", () => {
+    render(<SnippetCard snippet={makeMoment({ content: "短碎语" })} />);
+    expect(screen.getByText("短碎语")).toBeTruthy();
+    expect(screen.queryByText("snippet.expand")).toBeNull();
   });
 });

@@ -6,15 +6,20 @@ import { Button } from "@repo/ui";
 
 interface SnippetContentProps {
   content: string;
+  /**
+   * 是否允许折叠长文本并显示展开/收起按钮。
+   * 首页内嵌条目需要 true，碎语独立页完整展示传 false。默认 true。
+   */
+  collapsible?: boolean;
 }
 
 // 超过此字符数时显示展开按钮
 const MAX_CHARS = 120;
 
 // 正文截断 + 展开/收起，纯客户端交互组件
-export function SnippetContent({ content }: SnippetContentProps) {
+export function SnippetContent({ content, collapsible = true }: SnippetContentProps) {
   const { t } = useLocale();
-  const isLong = content.length > MAX_CHARS;
+  const isLong = collapsible && content.length > MAX_CHARS;
   const [expanded, setExpanded] = useState(false);
 
   // 未展开时截断到 MAX_CHARS 并加省略号
