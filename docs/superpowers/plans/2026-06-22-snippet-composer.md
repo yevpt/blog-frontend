@@ -947,9 +947,17 @@ git commit --no-verify -m "feat(web): 重写碎语弹窗，接入富文本/图�
 
 ---
 
-## Task 8（可选，隔离）：评论弹窗迁移到 `ResponsiveModalShell`
+## Task 8（已暂缓）：评论弹窗迁移到 `ResponsiveModalShell`
 
-兑现「外壳公用」：用 `ResponsiveModalShell` 重写 `comment-modal.tsx`，body 渲染 `ModalComments`，行为不变。既有 `comment-modal.test.tsx` 作为回归护栏。本任务独立于碎语主功能，可单独 PR。
+> 状态：**暂缓，未实施**。决策于 2026-06-22 执行阶段。
+
+兑现「外壳公用」：用 `ResponsiveModalShell` 重写 `comment-modal.tsx`，body 渲染 `ModalComments`。
+
+**为何暂缓**：`ResponsiveModalShell` 设计为**外壳自带滚动容器**（适配碎语弹窗——其 body 无独立滚动区），并把该容器的 `scrollRef` 同时交给 children 和移动端 `useSheetGesture`。但 `ModalComments` **自身就拥有滚动容器**（`modal-comments.tsx:64-67` 的 `<div ref={scrollRef} className="flex-1 overflow-y-auto">`，配合 `useCommentScroll` 做滚动定位）。直接套用会产生**双层滚动**与 `scrollRef` 归属冲突，破坏评论的滚动定位与移动端拖拽手势；而这些在 jsdom 测不到，`comment-modal.test.tsx` 护栏覆盖不足，存在让已上线评论功能悄悄回归的风险。
+
+**干净迁移所需（未来）**：给 `ResponsiveModalShell` 增加可选 `bodyOwnsScroll?: boolean`：为 true 时外壳**不**包裹自己的滚动容器，改由 children 持有滚动区，并把外壳的 `scrollRef` 透传给 children 去 attach（移动端 `useSheetGesture` 仍用同一 ref）。然后 `comment-modal` 以 `bodyOwnsScroll` 模式渲染 `ModalComments`，并**人工在移动端验证**拖拽展开/收起/关闭与滚动定位无回归。碎语弹窗维持默认（外壳持有滚动区）。
+
+此项独立于碎语主功能，作为带移动端手动验证的单独 PR 推进。下方步骤为未来实施时的参考骨架（当前不执行）：
 
 **Files:**
 - Modify: `apps/web/components/comments/views/comment-modal.tsx`
