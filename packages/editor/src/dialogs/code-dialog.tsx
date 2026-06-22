@@ -71,6 +71,7 @@ export function CodeDialog({ open, onClose, onConfirm }: CodeDialogProps) {
       }}
       aria-label="插入代码块"
       size="lg"
+      overlayClassName="z-[400]"
       modalClassName="w-[min(90vw,520px)]"
       dialogClassName="p-5"
     >

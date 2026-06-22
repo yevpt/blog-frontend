@@ -49,7 +49,7 @@ export function ImageViewer({ images, index, isOpen, onClose, onIndexChange }: I
       isDismissable
       role="dialog"
       aria-label="图片预览"
-      overlayClassName="bg-black/80 backdrop-blur-md"
+      overlayClassName="z-[400] bg-black/80 backdrop-blur-md"
       positionerClassName="items-center justify-center p-0"
       modalClassName="!h-dvh !w-screen !max-w-none !rounded-none !border-0 !bg-transparent !shadow-none"
       dialogClassName="relative h-dvh w-screen"

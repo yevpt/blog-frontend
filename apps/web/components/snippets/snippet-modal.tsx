@@ -159,19 +159,22 @@ function ModalBody({
   }, [content, images.length, onContentResize]);
 
   return (
-    <div className="flex flex-col gap-2 px-[18px] py-3">
+    <div className="flex flex-col">
+      {/* 编辑器撑满宽度 → 其底边框成为全宽分隔线；文字由内部 px-[18px] 内缩 */}
       <SnippetTextInput
         value={content}
         onChange={onChangeContent}
         placeholder="此刻有什么想法？"
         disabled={submitting}
       />
-      <SnippetImageUploader
-        ref={uploaderRef}
-        items={images}
-        onChange={onChangeImages}
-        disabled={submitting}
-      />
+      <div className="px-[18px] py-3">
+        <SnippetImageUploader
+          ref={uploaderRef}
+          items={images}
+          onChange={onChangeImages}
+          disabled={submitting}
+        />
+      </div>
     </div>
   );
 }

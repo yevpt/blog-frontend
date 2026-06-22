@@ -11,7 +11,8 @@ import {
 import {
   DndContext,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   closestCenter,
@@ -56,7 +57,10 @@ export const SnippetImageUploader = forwardRef<SnippetImageUploaderHandle, Props
     // 正在压缩中的图片数量：选图后立即占位显示 spinner，压缩完成后落入 items。
     const [pendingCount, setPendingCount] = useState(0);
     const sensors = useSensors(
-      useSensor(PointerSensor, { activationConstraint: { delay: 120, tolerance: 6 } }),
+      // 桌面：移动 8px 即开始拖拽（避免 delay+tolerance 把鼠标拖动误判为滚动而无法排序）
+      useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+      // 触屏：长按 150ms 触发拖拽，区分于页面滚动
+      useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
       useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
     );
 

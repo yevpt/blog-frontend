@@ -27,8 +27,9 @@ export function SnippetTextInput({ value, onChange, placeholder, disabled }: Pro
         disabled={disabled}
         onInsertLink={handleInsertLink}
         onInsertCode={handleInsertCode}
-        // 去掉默认的卡片盒子（四边框/圆角/背景/横向内边距），只保留底部分隔线
-        className="border-x-0! border-t-0! rounded-none! bg-transparent! px-0!"
+        // 去掉默认卡片盒子（四边框/圆角/背景），只保留满宽底部分隔线；
+        // 文字用 px-[18px] 内缩与头部对齐，盒子本身撑满弹窗宽度以使底边框全宽
+        className="border-x-0! border-t-0! rounded-none! bg-transparent! px-[18px]!"
       />
       <LinkDialog
         open={linkDialog.open}

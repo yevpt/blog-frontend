@@ -35,6 +35,7 @@ export function ImageDialog({ open, onClose, onConfirm }: ImageDialogProps) {
       }}
       aria-label="插入图片"
       size="md"
+      overlayClassName="z-[400]"
       modalClassName="w-[min(90vw,400px)]"
       dialogClassName="p-5"
     >

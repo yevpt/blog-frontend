@@ -35,6 +35,7 @@ export function LinkDialog({ open, onClose, onConfirm }: LinkDialogProps) {
       }}
       aria-label="插入链接"
       size="md"
+      overlayClassName="z-[400]"
       modalClassName="w-[min(90vw,400px)]"
       dialogClassName="p-5"
     >
