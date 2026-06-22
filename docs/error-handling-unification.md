@@ -88,7 +88,7 @@ addToast(getApiErrorMessage(err, "<动作>失败，请稍后重试"), "error");
   - 测试：`snippet-modal.test.tsx` 补 maxLength 用例。
   - **注：已核对，无需改动代码**——`MAX_CONTENT=800` 常量、`overLimit` 提交前拦截、footer `{content.length}/{MAX_CONTENT}` 计数器（超限变红）均已存在。补计数器显示用例。
 
-- [ ] **B3 · 用户资料内联编辑器**
+- [x] **B3 · 用户资料内联编辑器**
   - 文件：`apps/web/app/users/[id]/_components/inline-field-editor.tsx`、`select-inline-editor.tsx`、`inline-date-editor.tsx`
   - 步骤：按字段加 `maxLength`——昵称 150 / 身份标签 mark 200 / 简介 description 1000 / 站点 site 500。各编辑器若已通过 prop 区分字段，则把上限作为 prop 传入；否则在调用处按字段指定。
   - 测试：对应组件测试补 maxLength 断言。

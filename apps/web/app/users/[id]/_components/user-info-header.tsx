@@ -145,6 +145,7 @@ export function UserInfoHeader({
                 }}
                 onCancel={() => setIsEditingNickname(false)}
                 validate={(v) => (v.trim().length < 1 ? "昵称不能为空" : null)}
+                maxLength={150}
               />
             </div>
           ) : (

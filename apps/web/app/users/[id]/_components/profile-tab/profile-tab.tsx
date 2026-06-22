@@ -70,6 +70,7 @@ export function ProfileTab({
           value={profile.nickname}
           emptyText="未填写"
           validate={validateNickname}
+          maxLength={150}
           {...fieldProps("nickname")}
         />
         <FieldRow
@@ -79,6 +80,7 @@ export function ProfileTab({
           value={profile.mark}
           emptyText="未填写"
           validate={validateMark}
+          maxLength={200}
           {...fieldProps("mark")}
         />
         <FieldRow
@@ -88,6 +90,7 @@ export function ProfileTab({
           value={profile.description}
           emptyText="未填写"
           validate={validateDescription}
+          maxLength={1000}
           {...fieldProps("description")}
         />
         <FieldRow
@@ -122,6 +125,7 @@ export function ProfileTab({
           inputType="url"
           isLink={!!profile.site}
           validate={validateUrlLen}
+          maxLength={500}
           {...fieldProps("site")}
         />
         <FieldRow

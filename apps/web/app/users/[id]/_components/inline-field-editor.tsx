@@ -11,6 +11,8 @@ interface InlineFieldEditorProps {
   validate?: (value: string) => string | null;
   placeholder?: string;
   inputType?: "text" | "email" | "tel" | "url";
+  /** 输入字符硬上限，镜像后端 binding:"max=..."，浏览器原生拦截避免无谓往返 */
+  maxLength?: number;
   className?: string;
 }
 
@@ -23,6 +25,7 @@ export function InlineFieldEditor({
   validate,
   placeholder,
   inputType = "text",
+  maxLength,
   className,
 }: InlineFieldEditorProps) {
   const [value, setValue] = useState(initialValue);
@@ -77,6 +80,7 @@ export function InlineFieldEditor({
           }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
+          maxLength={maxLength}
           disabled={isDisabled}
           className="min-w-0 flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/40 outline-none"
         />

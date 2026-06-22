@@ -44,4 +44,14 @@ describe("InlineFieldEditor", () => {
     await userEvent.click(screen.getByLabelText("保存"));
     await waitFor(() => expect(screen.getByText("服务器错误")).toBeInTheDocument());
   });
+
+  it("传入 maxLength 时 input 元素带 maxLength 属性", () => {
+    render(<InlineFieldEditor initialValue="hi" onSave={noop} onCancel={noop} maxLength={150} />);
+    expect(screen.getByDisplayValue("hi")).toHaveAttribute("maxLength", "150");
+  });
+
+  it("未传 maxLength 时 input 不带 maxLength 属性", () => {
+    render(<InlineFieldEditor initialValue="hi" onSave={noop} onCancel={noop} />);
+    expect(screen.getByDisplayValue("hi")).not.toHaveAttribute("maxLength");
+  });
 });

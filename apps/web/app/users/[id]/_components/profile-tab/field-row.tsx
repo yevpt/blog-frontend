@@ -19,6 +19,8 @@ export interface FieldRowProps {
   onSave: (value: string) => Promise<void>;
   validate?: (value: string) => string | null;
   inputType?: "text" | "email" | "tel" | "url" | "date";
+  /** 输入字符硬上限，透传给 InlineFieldEditor（日期/下拉无需传） */
+  maxLength?: number;
   options?: SelectOption[];
   isLink?: boolean;
   isActiveEditing: boolean;
@@ -39,6 +41,7 @@ export function FieldRow({
   onSave,
   validate,
   inputType = "text",
+  maxLength,
   options,
   isLink,
   isActiveEditing,
@@ -112,6 +115,7 @@ export function FieldRow({
             onCancel={onDeactivate}
             validate={validate}
             inputType={inputType}
+            maxLength={maxLength}
           />
         )}
       </div>
