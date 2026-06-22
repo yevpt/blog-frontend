@@ -116,6 +116,32 @@ function useAnimatedPanelHeight(panelRef: RefObject<HTMLDivElement | null>) {
   return { modalStyle, measurePanelHeight };
 }
 
+function useScrollContentResizeObserver(
+  scrollRef: RefObject<HTMLDivElement | null>,
+  onContentResize: () => void,
+) {
+  const onContentResizeRef = useRef(onContentResize);
+  onContentResizeRef.current = onContentResize;
+
+  useLayoutEffect(() => {
+    const scrollNode = scrollRef.current;
+    if (!scrollNode || typeof window === "undefined" || !("ResizeObserver" in window)) {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => {
+      onContentResizeRef.current();
+    });
+    observer.observe(scrollNode);
+    const contentNode = scrollNode.firstElementChild;
+    if (contentNode) {
+      observer.observe(contentNode);
+    }
+
+    return () => observer.disconnect();
+  }, [scrollRef]);
+}
+
 // ── 头部（标题居中 + 关闭按钮） ──────────────────────────────────────────────
 function ShellHeader({ title, onRequestClose }: { title: ReactNode; onRequestClose: () => void }) {
   return (
@@ -139,6 +165,7 @@ function DesktopDialog({ title, onClose, desktopMaxWidthClassName, children, foo
   const panelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null!);
   const { modalStyle, measurePanelHeight } = useAnimatedPanelHeight(panelRef);
+  useScrollContentResizeObserver(scrollRef, measurePanelHeight);
 
   return (
     <Modal
@@ -188,9 +215,13 @@ function MobileSheet({ title, onClose, children, footer }: InnerProps) {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  const { sheetStyle, isDragging, isExpanded, expandOffset } = useSheetGesture(sheetRef, scrollRef, {
-    onDismiss: requestClose,
-  });
+  const { sheetStyle, isDragging, isExpanded, expandOffset } = useSheetGesture(
+    sheetRef,
+    scrollRef,
+    {
+      onDismiss: requestClose,
+    },
+  );
 
   const activeHeight =
     expandOffset > 0

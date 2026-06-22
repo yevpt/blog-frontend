@@ -102,4 +102,36 @@ describe("ResponsiveModalShell", () => {
     await user.click(await screen.findByRole("button", { name: "关闭" }));
     await waitFor(() => expect(onClose).toHaveBeenCalled());
   });
+
+  it("桌面内容尺寸变化时自动重测面板高度", async () => {
+    if (window.visualViewport) {
+      Object.defineProperty(window.visualViewport, "height", {
+        configurable: true,
+        value: 1000,
+      });
+    }
+    let resizeCallback: (() => void) | undefined;
+    const observe = vi.fn();
+    const disconnect = vi.fn();
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: () => void) {
+          resizeCallback = callback;
+        }
+        observe = observe;
+        disconnect = disconnect;
+      },
+    );
+    render(
+      <ResponsiveModalShell isOpen title="写碎语" onClose={() => {}}>
+        {() => <div>会变高的内容</div>}
+      </ResponsiveModalShell>,
+    );
+
+    await screen.findByTestId("modal-panel");
+    expect(resizeCallback).toBeDefined();
+    expect(observe).toHaveBeenCalledTimes(2);
+    vi.unstubAllGlobals();
+  });
 });
