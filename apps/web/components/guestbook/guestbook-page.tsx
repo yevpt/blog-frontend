@@ -36,13 +36,7 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
     updateLike,
   } = useGuestbookList(initialPage);
 
-  const {
-    isSubmitting,
-    error: submitError,
-    clearError,
-    submitEntry,
-    submitReply,
-  } = useGuestbookSubmit();
+  const { isSubmitting, submitEntry, submitReply } = useGuestbookSubmit();
 
   const { toggleEntryLike } = useGuestbookLike();
   const { deleteItem, deleteReply } = useGuestbookDelete();
@@ -119,8 +113,7 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
 
   const handleCancelReply = useCallback(() => {
     setReplyTarget(null);
-    clearError();
-  }, [clearError]);
+  }, []);
 
   return (
     <PageContainer size="default" className="min-h-dvh">
@@ -128,7 +121,6 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
         <GuestbookInputBar
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
-          submitError={submitError}
           replyTarget={replyTarget}
           onCancelReply={handleCancelReply}
         />

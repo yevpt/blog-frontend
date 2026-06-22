@@ -73,9 +73,4 @@ describe("GuestbookInputBar", () => {
     await userEvent.click(screen.getByText("×"));
     expect(onCancelReply).toHaveBeenCalled();
   });
-
-  it("submitError 显示错误信息", () => {
-    render(<GuestbookInputBar onSubmit={vi.fn()} submitError="提交失败" />);
-    expect(screen.getByText("提交失败")).toBeTruthy();
-  });
 });

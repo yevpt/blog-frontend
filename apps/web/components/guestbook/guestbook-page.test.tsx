@@ -40,8 +40,6 @@ vi.mock("@/hooks/use-guestbook-list", () => ({
 vi.mock("@/hooks/use-guestbook-submit", () => ({
   useGuestbookSubmit: () => ({
     isSubmitting: false,
-    error: null,
-    clearError: vi.fn(),
     submitEntry: vi.fn().mockResolvedValue(null),
     submitReply: vi.fn().mockResolvedValue(null),
   }),

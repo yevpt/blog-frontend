@@ -4,6 +4,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useGuestbookSubmit } from "./use-guestbook-submit";
 import type { GuestbookItemResp, CommentReplyResp } from "@repo/api";
 
+const addToastMock = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/toast", () => ({ addToast: addToastMock }));
+
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status });
 }
@@ -36,16 +39,16 @@ const mockReply: CommentReplyResp = {
 
 describe("useGuestbookSubmit", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.stubGlobal("fetch", vi.fn());
   });
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it("初始状态：非提交中，无错误", () => {
+  it("初始状态：非提交中", () => {
     const { result } = renderHook(() => useGuestbookSubmit());
     expect(result.current.isSubmitting).toBe(false);
-    expect(result.current.error).toBeNull();
   });
 
   it("submitEntry 成功返回新条目", async () => {
@@ -58,10 +61,10 @@ describe("useGuestbookSubmit", () => {
     });
     expect((returned as GuestbookItemResp | null)?.id).toBe(1);
     expect(result.current.isSubmitting).toBe(false);
-    expect(result.current.error).toBeNull();
+    expect(addToastMock).not.toHaveBeenCalled();
   });
 
-  it("submitEntry 401 时设置登录错误", async () => {
+  it("submitEntry 401 时返回 null 并 toast 提示登录", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "Unauthorized" }, 401));
     const { result } = renderHook(() => useGuestbookSubmit());
     let returned: GuestbookItemResp | null = null;
@@ -69,16 +72,29 @@ describe("useGuestbookSubmit", () => {
       returned = await result.current.submitEntry("Hi");
     });
     expect(returned).toBeNull();
-    expect(result.current.error).toMatch(/登录/);
+    expect(addToastMock).toHaveBeenCalledWith("请先登录", "error");
   });
 
-  it("submitEntry 网络失败时设置错误", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "failed" }, 500));
+  it("submitEntry 业务错误时 toast 展示后端返回的具体原因", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({ error: "内容长度不能超过 2000 个字符" }, 400),
+    );
+    const { result } = renderHook(() => useGuestbookSubmit());
+    let returned: GuestbookItemResp | null = null;
+    await act(async () => {
+      returned = await result.current.submitEntry("超长内容");
+    });
+    expect(returned).toBeNull();
+    expect(addToastMock).toHaveBeenCalledWith("内容长度不能超过 2000 个字符", "error");
+  });
+
+  it("submitEntry 网络异常时 toast 展示兜底文案", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
     const { result } = renderHook(() => useGuestbookSubmit());
     await act(async () => {
       await result.current.submitEntry("Hi");
     });
-    expect(result.current.error).toBeTruthy();
+    expect(addToastMock).toHaveBeenCalledWith("发布失败，请稍后重试", "error");
   });
 
   it("submitReply 成功返回回复", async () => {
@@ -89,9 +105,10 @@ describe("useGuestbookSubmit", () => {
       returned = await result.current.submitReply(1, "Hi!");
     });
     expect((returned as CommentReplyResp | null)?.id).toBe(10);
+    expect(addToastMock).not.toHaveBeenCalled();
   });
 
-  it("submitReply 401 时设置登录错误", async () => {
+  it("submitReply 401 时返回 null 并 toast 提示登录", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "Unauthorized" }, 401));
     const { result } = renderHook(() => useGuestbookSubmit());
     let returned: CommentReplyResp | null = null;
@@ -99,19 +116,28 @@ describe("useGuestbookSubmit", () => {
       returned = await result.current.submitReply(1, "Hi");
     });
     expect(returned).toBeNull();
-    expect(result.current.error).toMatch(/登录/);
+    expect(addToastMock).toHaveBeenCalledWith("请先登录", "error");
   });
 
-  it("clearError 清除错误状态", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "failed" }, 500));
+  it("submitReply 业务错误时 toast 展示后端返回的具体原因", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({ error: "内容长度不能超过 2000 个字符" }, 400),
+    );
+    const { result } = renderHook(() => useGuestbookSubmit());
+    let returned: CommentReplyResp | null = null;
+    await act(async () => {
+      returned = await result.current.submitReply(1, "超长内容");
+    });
+    expect(returned).toBeNull();
+    expect(addToastMock).toHaveBeenCalledWith("内容长度不能超过 2000 个字符", "error");
+  });
+
+  it("submitReply 网络异常时 toast 展示兜底文案", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
     const { result } = renderHook(() => useGuestbookSubmit());
     await act(async () => {
-      await result.current.submitEntry("Hi");
+      await result.current.submitReply(1, "Hi");
     });
-    expect(result.current.error).toBeTruthy();
-    act(() => {
-      result.current.clearError();
-    });
-    expect(result.current.error).toBeNull();
+    expect(addToastMock).toHaveBeenCalledWith("回复失败，请稍后重试", "error");
   });
 });

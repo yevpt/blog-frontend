@@ -49,13 +49,14 @@ addToast(getApiErrorMessage(err, "<动作>失败，请稍后重试"), "error");
 
 ## A 组 · 提交类 hook 改 toast（与评论同构，优先做 A1）
 
-- [ ] **A1 · 留言提交（与评论完全同构，最大一块）**
+- [x] **A1 · 留言提交（与评论完全同构，最大一块）**
   - 文件：`apps/web/hooks/use-guestbook-submit.ts`、`apps/web/components/guestbook/guestbook-input-bar.tsx`，及其引用视图。
   - 步骤：完全照搬评论样板——
     1. hook 的 catch（`:27`、`:59`）改为 `addToast(getApiErrorMessage(err, "发布失败，请稍后重试"/"回复失败，请稍后重试"), "error")`；401 → `addToast("请先登录","error")`。
     2. 删除 hook 的 `error`/`clearError` 返回，及 `guestbook-input-bar` 的 `submitError` 内联红字与上游 plumbing。
     3. 输入框加 `maxLength={2000}` + 接近上限计数器（抄 `pill-comment-input.tsx`）。
   - 测试：改 `guestbook-input-bar.test.tsx`、`use-guestbook-submit` 测试；新增「业务错误 toast 展示后端 message」用例（参照 `use-comment-submit.test.ts`）。
+  - **注：步骤3（maxLength+计数器）经确认归入 B1 一起做**——留言用的 `RichCommentInput` 是 Tiptap 编辑器非 textarea，需改 `rich-comment-input.tsx`（B1 的文件），统一在 B1 落地。
 
 - [ ] **A2 · 文章点赞**
   - 文件：`apps/web/hooks/use-article-engagement.ts:41`

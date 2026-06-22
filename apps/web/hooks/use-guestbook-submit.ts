@@ -1,10 +1,22 @@
 import { useState, useCallback } from "react";
 import type { GuestbookItemResp, CommentReplyResp, CommentReplyCreateReq } from "@repo/api";
-import { apiJson, ApiClientError } from "@/lib/client-fetch";
+import { apiJson, ApiClientError, getApiErrorMessage } from "@/lib/client-fetch";
+import { addToast } from "@/lib/toast";
+
+/**
+ * 统一处理留言提交类请求的失败：401 提示登录，其余业务/网络错误一律走右下角 toast，
+ * 并优先展示后端返回的具体原因（如「内容长度不能超过 2000 个字符」）。
+ */
+function notifySubmitError(err: unknown, fallback: string): void {
+  if (err instanceof ApiClientError && err.status === 401) {
+    addToast("请先登录", "error");
+    return;
+  }
+  addToast(getApiErrorMessage(err, fallback), "error");
+}
 
 export function useGuestbookSubmit() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const submitEntry = useCallback(
     async (content: string): Promise<GuestbookItemResp | null> => {
@@ -12,7 +24,6 @@ export function useGuestbookSubmit() {
         return null;
       }
       setIsSubmitting(true);
-      setError(null);
       try {
         return await apiJson<GuestbookItemResp>("/api/guestbook", {
           method: "POST",
@@ -20,11 +31,7 @@ export function useGuestbookSubmit() {
           body: JSON.stringify({ content }),
         });
       } catch (err) {
-        if (err instanceof ApiClientError && err.status === 401) {
-          setError("请先登录");
-          return null;
-        }
-        setError("发布失败，请稍后重试");
+        notifySubmitError(err, "发布失败，请稍后重试");
         return null;
       } finally {
         setIsSubmitting(false);
@@ -43,7 +50,6 @@ export function useGuestbookSubmit() {
         return null;
       }
       setIsSubmitting(true);
-      setError(null);
       try {
         const body: CommentReplyCreateReq = { parent_reply_id: parentReplyId, content };
         return await apiJson<CommentReplyResp>(`/api/guestbook/comments/${guestbookId}/replies`, {
@@ -52,11 +58,7 @@ export function useGuestbookSubmit() {
           body: JSON.stringify(body),
         });
       } catch (err) {
-        if (err instanceof ApiClientError && err.status === 401) {
-          setError("请先登录");
-          return null;
-        }
-        setError("回复失败，请稍后重试");
+        notifySubmitError(err, "回复失败，请稍后重试");
         return null;
       } finally {
         setIsSubmitting(false);
@@ -65,7 +67,5 @@ export function useGuestbookSubmit() {
     [isSubmitting],
   );
 
-  const clearError = useCallback(() => setError(null), []);
-
-  return { isSubmitting, error, clearError, submitEntry, submitReply };
+  return { isSubmitting, submitEntry, submitReply };
 }

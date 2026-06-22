@@ -8,7 +8,6 @@ import { useLoginModal } from "@/store/use-login-modal";
 interface GuestbookInputBarProps {
   onSubmit: (content: string) => Promise<boolean>;
   isSubmitting?: boolean;
-  submitError?: string | null;
   replyTarget?: ReplyTarget | null;
   onCancelReply?: () => void;
 }
@@ -16,7 +15,6 @@ interface GuestbookInputBarProps {
 export function GuestbookInputBar({
   onSubmit,
   isSubmitting,
-  submitError,
   replyTarget,
   onCancelReply,
 }: GuestbookInputBarProps) {
@@ -62,7 +60,6 @@ export function GuestbookInputBar({
         focusTrigger={replyTarget}
         className="focus-within:border-foreground/15 transition-colors duration-200"
       />
-      {submitError && <p className="text-xs text-red-500">{submitError}</p>}
     </div>
   );
 }
