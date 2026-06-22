@@ -49,6 +49,8 @@ export function RichEditor({
   onSubmit,
   isSubmitting,
   submitDisabled,
+  maxLength,
+  characterCountThreshold,
   isLoggedIn,
   onLoginRequired,
   onInsertImage,
@@ -65,6 +67,7 @@ export function RichEditor({
     mentionSuggestions,
     placeholder,
     disabled,
+    maxLength,
   });
 
   useEffect(() => {
@@ -97,6 +100,12 @@ export function RichEditor({
     disabled && "opacity-60",
     className,
   );
+  const currentLength = value.length;
+  const isOverLimit = maxLength != null && currentLength > maxLength;
+  const showCharacterCount =
+    maxLength != null &&
+    (characterCountThreshold == null || currentLength >= maxLength - characterCountThreshold);
+  const characterCountLabel = showCharacterCount ? `${currentLength}/${maxLength}` : undefined;
 
   // Tiptap 就绪前显示骨架屏，高度与真实编辑器完全一致，防止布局跳动
   if (!editor) {
@@ -162,6 +171,8 @@ export function RichEditor({
         onSubmit={onSubmit}
         isSubmitting={isSubmitting}
         submitDisabled={submitDisabled}
+        characterCountLabel={characterCountLabel}
+        characterCountOverLimit={isOverLimit}
         isLoggedIn={isLoggedIn}
         onLoginRequired={onLoginRequired}
         onInsertImage={onInsertImage}

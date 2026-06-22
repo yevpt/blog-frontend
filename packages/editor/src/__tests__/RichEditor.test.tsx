@@ -60,6 +60,113 @@ describe("RichEditor", () => {
     expect(submitButton.className).toContain("bg-primary/50");
   });
 
+  it("传入 maxLength 时在工具栏内渲染字数胶囊", () => {
+    render(<RichEditor value="hello" onChange={() => {}} onSubmit={() => {}} maxLength={20} />);
+
+    const counter = screen.getByText("5/20");
+    expect(counter).toBeInTheDocument();
+    expect(counter).toHaveClass("rounded-full", "text-muted-foreground");
+  });
+
+  it("字数超出 maxLength 时计数胶囊使用 destructive 样式", () => {
+    render(<RichEditor value="hello!" onChange={() => {}} onSubmit={() => {}} maxLength={5} />);
+
+    const counter = screen.getByText("6/5");
+    expect(counter).toHaveClass("text-destructive");
+  });
+
+  it("传入 characterCountThreshold 时未接近上限不渲染字数胶囊", () => {
+    render(
+      <RichEditor
+        value="hello"
+        onChange={() => {}}
+        onSubmit={() => {}}
+        maxLength={2000}
+        characterCountThreshold={100}
+      />,
+    );
+
+    expect(screen.queryByText("5/2000")).toBeNull();
+  });
+
+  it("达到 maxLength 后阻止继续输入", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const { container } = render(
+      <RichEditor value="hello" onChange={onChange} onSubmit={() => {}} maxLength={5} />,
+    );
+    const editor = screen.getByRole("textbox");
+
+    await user.click(editor);
+    await user.type(editor, "!");
+
+    expect(container.querySelector(".tiptap")).toHaveTextContent("hello");
+    expect(onChange).not.toHaveBeenCalledWith("hello!");
+  });
+
+  it("达到 maxLength 后仍允许删除内容", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const { container } = render(
+      <RichEditor value="hello" onChange={onChange} onSubmit={() => {}} maxLength={5} />,
+    );
+    const editor = screen.getByRole("textbox");
+
+    await user.click(editor);
+    await user.keyboard("{Backspace}");
+
+    expect(container.querySelector(".tiptap")).toHaveTextContent("hell");
+    await waitFor(() => {
+      expect(onChange).toHaveBeenLastCalledWith("hell");
+    });
+  });
+
+  it("按提交的 Markdown 长度限制输入，而不是按纯文本长度", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const { container } = render(
+      <RichEditor value={"a\n\nb"} onChange={onChange} onSubmit={() => {}} maxLength={4} />,
+    );
+    const editor = screen.getByRole("textbox");
+
+    await user.click(editor);
+    await user.type(editor, "!");
+
+    expect(container.querySelector(".tiptap")).toHaveTextContent("ab");
+    expect(onChange).not.toHaveBeenCalledWith(expect.stringMatching(/!/));
+  });
+
+  it("粘贴内容超出 maxLength 时插入可容纳部分", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const { container } = render(
+      <RichEditor value="" onChange={onChange} onSubmit={() => {}} maxLength={3} />,
+    );
+    const editor = screen.getByRole("textbox");
+
+    await user.click(editor);
+    await user.paste("hello");
+
+    expect(container.querySelector(".tiptap")).toHaveTextContent("hel");
+    await waitFor(() => {
+      expect(onChange).toHaveBeenLastCalledWith("hel");
+    });
+  });
+
+  it("超长多行粘贴后删除，提交 Markdown 长度仍不超过 maxLength", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<RichEditor value="" onChange={onChange} onSubmit={() => {}} maxLength={20} />);
+    const editor = screen.getByRole("textbox");
+
+    await user.click(editor);
+    await user.paste(Array.from({ length: 20 }, (_, index) => `line-${index}`).join("\n"));
+    await user.keyboard("{Backspace}");
+
+    const latestValue = onChange.mock.lastCall?.[0] as string;
+    expect(latestValue.length).toBeLessThanOrEqual(20);
+  });
+
   it("未登录时提交区域渲染「请先登录」按钮", () => {
     const onLoginRequired = vi.fn();
     render(

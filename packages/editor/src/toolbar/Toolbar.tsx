@@ -32,6 +32,8 @@ interface ToolbarProps extends InsertHandlers {
   isSubmitting?: boolean;
   /** 业务层额外的提交禁用条件（如内容超出字数上限） */
   submitDisabled?: boolean;
+  characterCountLabel?: string;
+  characterCountOverLimit?: boolean;
   isLoggedIn?: boolean;
   onLoginRequired?: () => void;
 }
@@ -117,6 +119,8 @@ export function Toolbar({
   onSubmit,
   isSubmitting,
   submitDisabled: submitDisabledProp,
+  characterCountLabel,
+  characterCountOverLimit,
   isLoggedIn,
   onLoginRequired,
   onInsertImage,
@@ -224,6 +228,19 @@ export function Toolbar({
           />
         )}
       </div>
+
+      {characterCountLabel && (
+        <span
+          className={clsx(
+            "shrink-0 rounded-full border px-2 py-0.5 text-[11px] leading-5 tabular-nums",
+            characterCountOverLimit
+              ? "border-destructive/20 bg-destructive/10 text-destructive"
+              : "border-border bg-foreground/[0.04] text-muted-foreground",
+          )}
+        >
+          {characterCountLabel}
+        </span>
+      )}
 
       {onSubmit &&
         (needLogin ? (

@@ -93,6 +93,15 @@ export interface RichEditorProps extends InsertHandlers {
   /** 业务层额外的提交禁用条件（如内容超出字数上限）；传 true 时禁用发送按钮 */
   submitDisabled?: boolean;
 
+  /** 内容字符上限；传入后可在编辑器工具栏内显示 `当前长度/上限` */
+  maxLength?: number;
+
+  /**
+   * 字数提示提前展示阈值。
+   * 未传时只要有 maxLength 就显示；传入 100 表示剩余 100 字以内才显示。
+   */
+  characterCountThreshold?: number;
+
   /**
    * 当前用户是否已登录。
    * - 未提供时（undefined）：向后兼容，按已登录处理

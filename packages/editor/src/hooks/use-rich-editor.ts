@@ -50,6 +50,7 @@ import { PlaceholderExtension } from "../extensions/placeholder";
 import { CodeBlockExtension } from "../extensions/code-block";
 import { AtomParagraphMergeExtension } from "../extensions/atom-paragraph-merge";
 import { MarkBoundaryExtension } from "../extensions/mark-boundary";
+import { CharacterLimitExtension } from "../extensions/character-limit";
 import type { MentionItem } from "../types";
 
 interface UseRichEditorOptions {
@@ -58,6 +59,7 @@ interface UseRichEditorOptions {
   mentionSuggestions: MentionItem[];
   placeholder?: string;
   disabled?: boolean;
+  maxLength?: number;
 }
 
 /**
@@ -81,6 +83,7 @@ export function useRichEditor({
   mentionSuggestions,
   placeholder,
   disabled = false,
+  maxLength,
 }: UseRichEditorOptions) {
   // 通过 ref 持有最新 onChange，避免 stale closure 问题
   const onChangeRef = useRef(onChange);
@@ -154,12 +157,15 @@ export function useRichEditor({
         // ⑦ 修复链接/行内代码处于文档开头时，左边界继续输入仍继承格式的问题
         MarkBoundaryExtension,
 
-        // ⑧ 占位文字：空编辑器时在首个空段落上生成 data-placeholder
+        // ⑧ 字符上限：富文本没有原生 maxLength，需要在 ProseMirror 层拦截输入
+        CharacterLimitExtension.configure({ maxLength }),
+
+        // ⑨ 占位文字：空编辑器时在首个空段落上生成 data-placeholder
         PlaceholderExtension.configure({
           placeholder: placeholder ?? "",
         }),
 
-        // ⑨ @提及（候选列表由外部传入）
+        // ⑩ @提及（候选列表由外部传入）
         // TODO(mention-api): 后端 /users/search 就绪后，在调用方填充 mentionSuggestions
         createMentionExtension(mentionSuggestions),
       ],
@@ -180,6 +186,6 @@ export function useRichEditor({
     },
     // deps 数组：mentionsJson 是序列化后的字符串，仅在候选列表实际变化时才重建 editor
     // 直接用 mentionSuggestions 数组引用会导致每次渲染创建新引用 → 无限循环
-    [mentionsJson],
+    [mentionsJson, maxLength],
   );
 }
