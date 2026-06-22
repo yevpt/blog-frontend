@@ -149,16 +149,16 @@ export const SOCIAL_FIELD_LIST = [
 
 export function validateNickname(value: string): string | null {
   if (!value.trim()) return "昵称不能为空";
-  if (value.length > 150) return "最多 150 个字符";
+  if (value.length > 30) return "最多 30 个字符";
   return null;
 }
 
 export function validateMark(value: string): string | null {
-  return value.length > 200 ? "最多 200 个字符" : null;
+  return value.length > 30 ? "最多 30 个字符" : null;
 }
 
 export function validateDescription(value: string): string | null {
-  return value.length > 1000 ? "最多 1000 个字符" : null;
+  return value.length > 200 ? "最多 200 个字符" : null;
 }
 
 export function validateUrl(value: string): string | null {
@@ -172,7 +172,7 @@ export function validateUrl(value: string): string | null {
 }
 
 export function validateUrlLen(value: string): string | null {
-  return validateUrl(value) ?? (value.length > 500 ? "最多 500 个字符" : null);
+  return validateUrl(value) ?? (value.length > 200 ? "最多 200 个字符" : null);
 }
 
 export function validateQq(value: string): string | null {
