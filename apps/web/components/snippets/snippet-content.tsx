@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocale } from "@repo/hooks";
+import { markdownToHtmlSync } from "@repo/markdown";
 import { Button } from "@repo/ui";
+import { PreviewableMarkdown } from "@/components/common/previewable-markdown";
 
 interface SnippetContentProps {
   content: string;
@@ -24,12 +26,15 @@ export function SnippetContent({ content, collapsible = true }: SnippetContentPr
 
   // 未展开时截断到 MAX_CHARS 并加省略号
   const displayText = isLong && !expanded ? content.slice(0, MAX_CHARS) + "..." : content;
+  const html = useMemo(() => markdownToHtmlSync(displayText), [displayText]);
 
   return (
     <div className="mt-0.5">
-      <p className="whitespace-pre-line break-words text-[13px] leading-relaxed text-(--fg2)">
-        {displayText}
-      </p>
+      <PreviewableMarkdown
+        html={html}
+        variant="comment"
+        className="break-words text-[13px] leading-relaxed text-(--fg2)"
+      />
       {isLong && (
         <Button
           variant="text"
