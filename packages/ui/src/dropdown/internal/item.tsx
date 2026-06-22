@@ -17,6 +17,7 @@ export const DropdownItem = ({
   avatarUrl,
   unstyled,
   selectionIndicator = "checkmark",
+  danger,
   ...props
 }: DropdownItemProps) => {
   if (unstyled) {
@@ -42,8 +43,10 @@ export const DropdownItem = ({
         <div
           className={cn(
             "relative flex items-center rounded-md px-2.5 py-2 outline-none transition duration-100 ease-linear",
-            !state.isDisabled && "group-hover:bg-accent",
-            state.isFocused && "bg-accent",
+            !state.isDisabled && !danger && "group-hover:bg-accent",
+            !state.isDisabled && danger && "group-hover:bg-destructive/10",
+            state.isFocused && !danger && "bg-accent",
+            state.isFocused && danger && "bg-destructive/10",
             state.isFocusVisible && "ring-2 ring-ring ring-inset -ring-offset-2",
             state.hasSubmenu && "pr-1.5",
           )}
@@ -59,15 +62,22 @@ export const DropdownItem = ({
           )}
 
           {Icon && (
-            <Icon aria-hidden="true" className="mr-2 size-4 shrink-0 text-muted-foreground" />
+            <Icon
+              aria-hidden="true"
+              className={cn(
+                "mr-2 size-4 shrink-0",
+                danger ? "text-destructive" : "text-muted-foreground",
+              )}
+            />
           )}
 
           <div className="min-w-0 grow">
             <Text
               slot="label"
               className={cn(
-                "block truncate text-sm font-semibold text-foreground",
-                state.isFocused && "text-accent-foreground",
+                "block truncate text-sm font-semibold",
+                danger ? "text-destructive" : "text-foreground",
+                state.isFocused && !danger && "text-accent-foreground",
               )}
             >
               {label || (typeof children === "function" ? children(state) : children)}

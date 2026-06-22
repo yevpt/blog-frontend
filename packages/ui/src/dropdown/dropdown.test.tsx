@@ -82,6 +82,54 @@ describe("Dropdown", () => {
     expect(screen.getByTestId("icon-dots-vertical")).toBeTruthy();
   });
 
+  it("Dropdown.DotsButton 支持 icon 切换为横向三点", () => {
+    render(
+      <Dropdown.Root>
+        <Dropdown.DotsButton icon="dots-horizontal" aria-label="打开菜单" />
+        <Dropdown.Popover>
+          <Dropdown.Menu aria-label="菜单">
+            <Dropdown.Item label="删除" id="delete" />
+          </Dropdown.Menu>
+        </Dropdown.Popover>
+      </Dropdown.Root>,
+    );
+    expect(screen.getByTestId("icon-dots-horizontal")).toBeTruthy();
+  });
+
+  it("Dropdown.DotsButton variant=ghost 使用圆形 hover 背景样式", () => {
+    render(
+      <Dropdown.Root>
+        <Dropdown.DotsButton variant="ghost" aria-label="打开菜单" />
+        <Dropdown.Popover>
+          <Dropdown.Menu aria-label="菜单">
+            <Dropdown.Item label="删除" id="delete" />
+          </Dropdown.Menu>
+        </Dropdown.Popover>
+      </Dropdown.Root>,
+    );
+    const button = screen.getByRole("button", { name: "打开菜单" });
+    // ghost 变体走圆形背景路径，并借 aria-expanded 在菜单打开时保持高亮
+    expect(button.className).toContain("rounded-full");
+    expect(button.className).toContain("aria-expanded:bg-accent");
+  });
+
+  it("danger 菜单项使用危险样式文案", async () => {
+    const user = userEvent.setup();
+    render(
+      <Dropdown.Root>
+        <Dropdown.DotsButton aria-label="打开菜单" />
+        <Dropdown.Popover>
+          <Dropdown.Menu aria-label="菜单">
+            <Dropdown.Item label="删除" id="delete" danger />
+          </Dropdown.Menu>
+        </Dropdown.Popover>
+      </Dropdown.Root>,
+    );
+    await user.click(screen.getByRole("button", { name: "打开菜单" }));
+    const item = await screen.findByText("删除");
+    expect(item.className).toContain("text-destructive");
+  });
+
   it("unstyled 菜单项保留自定义内容和可访问名称", async () => {
     const user = userEvent.setup();
     render(

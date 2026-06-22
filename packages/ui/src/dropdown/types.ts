@@ -26,6 +26,8 @@ export interface DropdownItemProps extends AriaMenuItemProps {
   avatarUrl?: string;
   /** 选中态指示器形态，默认 checkmark。 */
   selectionIndicator?: DropdownSelectionIndicator;
+  /** 危险操作样式（红色文字、红色 hover 背景）。 */
+  danger?: boolean;
 }
 
 /** `Dropdown.Menu` 的 props。 */
