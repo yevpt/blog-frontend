@@ -8,12 +8,20 @@ interface Props {
   onChange: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
+  maxLength?: number;
   /** 编辑器实例首次就绪（从骨架屏切换到真实编辑器）时触发 */
   onReady?: () => void;
 }
 
 /** 碎语富文本输入：RichEditor + 链接/代码对话框；不含图片按钮（图片走下方插入区），不含工具栏提交。 */
-export function SnippetTextInput({ value, onChange, placeholder, disabled, onReady }: Props) {
+export function SnippetTextInput({
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  maxLength,
+  onReady,
+}: Props) {
   const [linkDialog, setLinkDialog] = useState<{
     open: boolean;
     insert?: (url: string, title?: string) => void;
@@ -39,6 +47,7 @@ export function SnippetTextInput({ value, onChange, placeholder, disabled, onRea
         onChange={onChange}
         placeholder={placeholder}
         disabled={disabled}
+        maxLength={maxLength}
         onReady={onReady}
         onInsertLink={handleInsertLink}
         onInsertCode={handleInsertCode}

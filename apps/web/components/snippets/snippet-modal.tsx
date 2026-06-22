@@ -202,6 +202,7 @@ function ModalBody({
         onChange={onChangeContent}
         placeholder={isEditing ? "修改这条碎语" : "此刻有什么想法？"}
         disabled={submitting}
+        maxLength={MAX_CONTENT}
         onReady={() => requestAnimationFrame(onContentResize)}
       />
       <div className="px-[18px] py-3">

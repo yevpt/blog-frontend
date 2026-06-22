@@ -11,6 +11,7 @@ interface MockSnippetTextInputProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  maxLength?: number;
 }
 
 interface MockSnippetImageUploaderProps {
@@ -24,10 +25,11 @@ vi.mock("@/app/providers/session-provider", () => ({
   useSession: () => ({ userId: 7, profile: null }),
 }));
 vi.mock("./snippet-text-input", () => ({
-  SnippetTextInput: ({ value, onChange, placeholder }: MockSnippetTextInputProps) => (
+  SnippetTextInput: ({ value, onChange, placeholder, maxLength }: MockSnippetTextInputProps) => (
     <textarea
       aria-label="编辑器"
       placeholder={placeholder}
+      maxLength={maxLength}
       value={value}
       onChange={(event: ChangeEvent<HTMLTextAreaElement>) => onChange(event.target.value)}
     />
@@ -262,16 +264,19 @@ describe("SnippetModal", () => {
     expect(passedImages.filter((it) => it.file).length).toBe(2);
   });
 
-  it("超过 800 字时发布禁用", async () => {
+  it("向输入框传入 800 字上限，超长粘贴会在输入层截断", async () => {
     const user = userEvent.setup();
     render(<SnippetModal />);
     const editor = screen.getByLabelText("编辑器");
+    expect(editor).toHaveAttribute("maxLength", "800");
     await user.click(editor);
     await user.paste("a".repeat(801));
-    expect(screen.getByRole("button", { name: "发布" })).toBeDisabled();
+    expect(editor).toHaveValue("a".repeat(800));
+    expect(screen.getByText("800/800")).toHaveClass("text-muted-foreground");
+    expect(screen.getByRole("button", { name: "发布" })).toBeEnabled();
   });
 
-  it("底栏计数器始终展示 当前长度/800 且超限时变红", async () => {
+  it("底栏计数器始终展示 当前长度/800，输入层限制后保持原 UI", async () => {
     const user = userEvent.setup();
     render(<SnippetModal />);
     await screen.findByRole("dialog", { name: "写碎语" });
@@ -284,10 +289,11 @@ describe("SnippetModal", () => {
     await user.paste("a".repeat(800));
     expect(screen.getByText("800/800")).toHaveClass("text-muted-foreground");
     expect(screen.getByRole("button", { name: "发布" })).toBeEnabled();
-    // 再多 1 字：超限，计数器变 destructive 且发布禁用
+    // 再多 1 字：输入层截断，底栏 UI 保持 800/800
     await user.type(editor, "b");
-    expect(screen.getByText("801/800")).toHaveClass("text-destructive");
-    expect(screen.getByRole("button", { name: "发布" })).toBeDisabled();
+    expect(screen.getByText("800/800")).toHaveClass("text-muted-foreground");
+    expect(screen.queryByText("801/800")).toBeNull();
+    expect(screen.getByRole("button", { name: "发布" })).toBeEnabled();
   });
 
   it("发布失败时 toast 报错且不关闭弹窗", async () => {
