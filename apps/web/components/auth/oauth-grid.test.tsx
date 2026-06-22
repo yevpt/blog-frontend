@@ -10,11 +10,27 @@ vi.stubGlobal("open", mockWindowOpen);
 
 import { OAuthGrid, _resetProvidersCache } from "./oauth-grid";
 
+// jsdom 缺 window.matchMedia，OAuthGrid handleOAuthLogin 用它判断移动端 features，
+// 不补会导致 TypeError 被 catch 吞掉、window.open 永不调用
+function mockMatchMedia() {
+  window.matchMedia = vi.fn().mockImplementation((q: string) => ({
+    matches: q.includes("max-width: 768px"),
+    media: q,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    onchange: null,
+    dispatchEvent: vi.fn(),
+  }));
+}
+
 // 每个测试前重置模块级 providers 缓存，确保 fetch 重新触发
 beforeEach(() => {
   _resetProvidersCache();
   mockFetch.mockClear();
   mockWindowOpen.mockClear();
+  mockMatchMedia();
 });
 
 /** 默认 providers 接口 mock：只启用 github */
@@ -66,6 +82,9 @@ describe("OAuthGrid — OAuth Popup 登录流程", () => {
 
     render(<OAuthGrid onSuccess={mockSuccess} />);
     await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/oauth/providers"));
+    // 等 providers 状态落地（GitHub 按钮启用、不再是 opacity-40 占位态）后再点击，
+    // 否则点击会早于 enabledProviders 更新而被忽略
+    await waitFor(() => expect(screen.getByLabelText("GitHub")).not.toHaveClass("opacity-40"));
     await user.click(screen.getByLabelText("GitHub"));
 
     await waitFor(() =>
@@ -90,6 +109,9 @@ describe("OAuthGrid — OAuth Popup 登录流程", () => {
 
     render(<OAuthGrid onSuccess={mockSuccess} />);
     await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/oauth/providers"));
+    // 等 providers 状态落地（GitHub 按钮启用、不再是 opacity-40 占位态）后再点击，
+    // 否则点击会早于 enabledProviders 更新而被忽略
+    await waitFor(() => expect(screen.getByLabelText("GitHub")).not.toHaveClass("opacity-40"));
     await user.click(screen.getByLabelText("GitHub"));
     await waitFor(() => expect(mockWindowOpen).toHaveBeenCalled());
 
@@ -112,6 +134,9 @@ describe("OAuthGrid — OAuth Popup 登录流程", () => {
 
     render(<OAuthGrid onSuccess={mockSuccess} />);
     await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/oauth/providers"));
+    // 等 providers 状态落地（GitHub 按钮启用、不再是 opacity-40 占位态）后再点击，
+    // 否则点击会早于 enabledProviders 更新而被忽略
+    await waitFor(() => expect(screen.getByLabelText("GitHub")).not.toHaveClass("opacity-40"));
     await user.click(screen.getByLabelText("GitHub"));
 
     await waitFor(() => expect(mockWindowOpen).toHaveBeenCalled());
@@ -127,6 +152,9 @@ describe("OAuthGrid — OAuth Popup 登录流程", () => {
 
     render(<OAuthGrid onSuccess={mockSuccess} />);
     await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/oauth/providers"));
+    // 等 providers 状态落地（GitHub 按钮启用、不再是 opacity-40 占位态）后再点击，
+    // 否则点击会早于 enabledProviders 更新而被忽略
+    await waitFor(() => expect(screen.getByLabelText("GitHub")).not.toHaveClass("opacity-40"));
     await user.click(screen.getByLabelText("GitHub"));
     await waitFor(() => expect(mockWindowOpen).toHaveBeenCalled());
 

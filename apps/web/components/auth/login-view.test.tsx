@@ -8,6 +8,21 @@ import { LoginView } from "./login-view";
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
+// jsdom 缺 window.matchMedia，OAuthGrid handleOAuthLogin 用它判断移动端 features，
+// 不补会导致 TypeError 被 catch 吞掉、OAuth popup 流程静默失败
+function mockMatchMedia() {
+  window.matchMedia = vi.fn().mockImplementation((q: string) => ({
+    matches: q.includes("max-width: 768px"),
+    media: q,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    onchange: null,
+    dispatchEvent: vi.fn(),
+  }));
+}
+
 function mockProviders(providers: string[] = ["github", "qq", "weibo", "gitee", "baidu"]) {
   return { json: () => Promise.resolve({ code: 0, data: providers }) };
 }
@@ -22,6 +37,7 @@ describe("LoginView", () => {
     mockSuccess.mockClear();
     mockFetch.mockClear();
     mockFetch.mockResolvedValue(mockProviders());
+    mockMatchMedia();
   });
 
   it("渲染账号、密码输入框和继续按钮", () => {
@@ -141,7 +157,11 @@ describe("LoginView", () => {
     vi.stubGlobal("open", vi.fn().mockReturnValue({ closed: false }));
 
     render(<LoginView onSwitchToRegister={mockSwitch} onSuccess={mockSuccess} />);
+    // 等 providers 状态落地（GitHub 按钮启用）后再点击，否则点击早于 enabledProviders 更新被忽略
+    await waitFor(() => expect(screen.getByLabelText("GitHub")).not.toHaveClass("opacity-40"));
     await user.click(screen.getByLabelText("GitHub"));
+    // 等 popup 打开、postMessage 监听器注册后再派发消息
+    await waitFor(() => expect(vi.mocked(window.open)).toHaveBeenCalled());
 
     // 模拟 popup 发来的成功消息
     window.dispatchEvent(
