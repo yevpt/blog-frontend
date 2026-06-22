@@ -16,10 +16,11 @@ vi.mock("next/image", async () => {
         src: string;
         alt: string;
         className?: string;
+        unoptimized?: boolean;
         onLoad?: () => void;
         onError?: () => void;
       }
-    >(function MockImage({ src, alt, className, onLoad, onError }, ref) {
+    >(function MockImage({ src, alt, className, unoptimized, onLoad, onError }, ref) {
       return (
         <img
           ref={(node) => {
@@ -43,6 +44,7 @@ vi.mock("next/image", async () => {
           src={src}
           alt={alt}
           className={className}
+          data-unoptimized={unoptimized ?? false}
           onLoad={onLoad}
           onError={onError}
         />
@@ -61,6 +63,11 @@ describe("UserAvatar", () => {
     const img = screen.getByRole("img", { name: "Alice" });
     expect(img).toBeInTheDocument();
     expect(img).toHaveAttribute("src", "https://example.com/a.jpg");
+  });
+
+  it("头像图设为 unoptimized 跳过 Next.js 优化器", () => {
+    render(<UserAvatar src="https://example.com/a.jpg" name="Alice" />);
+    expect(screen.getByRole("img", { name: "Alice" })).toHaveAttribute("data-unoptimized", "true");
   });
 
   it("有 src 时加载前显示首字母占位，加载完成后图片淡入", () => {

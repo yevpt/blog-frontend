@@ -32,6 +32,7 @@ export function FriendLinkCard({ link }: FriendLinkCardProps) {
             src={link.avatar_url}
             alt={link.name}
             fill
+            unoptimized
             className="object-cover"
             sizes="44px"
             skeletonClassName="rounded-[10px]"

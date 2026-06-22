@@ -177,6 +177,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      heic2any:
+        specifier: 0.0.4
+        version: 0.0.4
       jose:
         specifier: ^5.10.0
         version: 5.10.0
@@ -274,6 +277,9 @@ importers:
       lowlight:
         specifier: ^3.3.0
         version: 3.3.0
+      marked:
+        specifier: ^17.0.1
+        version: 17.0.6
       react:
         specifier: ^19.0.0
         version: 19.2.6
@@ -2113,6 +2119,9 @@ packages:
 
   hastscript@9.0.1:
     resolution: {integrity: sha512-g7df9rMFX/SPi34tyGCyUBREQoKkapwdY/T04Qn9TDWfHhAYt4/I0gMVirzK5wEzeUqIjEB+LXC/ypb7Aqno5w==}
+
+  heic2any@0.0.4:
+    resolution: {integrity: sha512-3lLnZiDELfabVH87htnRolZ2iehX9zwpRyGNz22GKXIu0fznlblf0/ftppXKNqS26dqFSeqfIBhAmAj/uSp0cA==}
 
   highlight.js@11.11.1:
     resolution: {integrity: sha512-Xwwo44whKBVCYoliBQwaPvtd/2tYFkRQtXDWj1nackaV2JPXx3L0+Jvd8/qCJ2p+ML0/XVkJ2q+Mr+UVdpJK5w==}
@@ -5196,6 +5205,8 @@ snapshots:
       hast-util-parse-selector: 4.0.0
       property-information: 7.2.0
       space-separated-tokens: 2.0.2
+
+  heic2any@0.0.4: {}
 
   highlight.js@11.11.1: {}
 

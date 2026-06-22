@@ -73,6 +73,8 @@ export function UserAvatar({ src, name, size = "md", className }: UserAvatarProp
           alt={name}
           width={px}
           height={px}
+          // 用户头像格式不可控（.php/.asp 动态脚本、.gif 动图），跳过优化器
+          unoptimized
           className={cn(
             "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
             loaded ? "opacity-100" : "opacity-0",

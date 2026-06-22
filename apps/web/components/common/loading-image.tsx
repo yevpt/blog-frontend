@@ -19,6 +19,7 @@ export function LoadingImage({
   fallbackClassName,
   onLoad,
   onError,
+  priority,
   ...props
 }: LoadingImageProps) {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
@@ -65,12 +66,14 @@ export function LoadingImage({
       <Image
         {...props}
         ref={imageRef}
+        priority={priority}
         className={cn(
           className,
           "transition-opacity duration-300",
           isLoading || isError ? "opacity-0" : "opacity-100",
         )}
-        fetchPriority="low"
+        // 非优先图片降低抓取优先级；priority 图片交由 Next.js 设为 "high"
+        fetchPriority={priority ? undefined : "low"}
         onLoad={(event) => {
           setStatus("loaded");
           onLoad?.(event);

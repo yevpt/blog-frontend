@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { LoadingImage } from "./loading-image";
 
 // next/image mock 需转发 ref，组件才能读取底层 <img> 的 complete/naturalWidth。
+// 模拟 Next.js 真实行为：priority → loading="eager" + fetchPriority="high"
 vi.mock("next/image", () => ({
   default: forwardRef<
     HTMLImageElement,
@@ -11,12 +12,27 @@ vi.mock("next/image", () => ({
       src: string;
       alt: string;
       className?: string;
+      priority?: boolean;
+      fetchPriority?: "high" | "low" | "auto";
+      loading?: "eager" | "lazy";
       onLoad?: () => void;
       onError?: () => void;
     }
-  >(function MockImage({ src, alt, className, onLoad, onError }, ref) {
+  >(function MockImage(
+    { src, alt, className, priority, fetchPriority, loading, onLoad, onError },
+    ref,
+  ) {
     return (
-      <img ref={ref} src={src} alt={alt} className={className} onLoad={onLoad} onError={onError} />
+      <img
+        ref={ref}
+        src={src}
+        alt={alt}
+        className={className}
+        loading={priority ? "eager" : loading}
+        fetchPriority={priority ? "high" : fetchPriority}
+        onLoad={onLoad}
+        onError={onError}
+      />
     );
   }),
 }));
@@ -112,5 +128,19 @@ describe("LoadingImage", () => {
     );
 
     expect(screen.getByRole("img", { name: "封面" })).toHaveClass("object-cover");
+  });
+
+  it("默认（无 priority）设置 fetchPriority=low", () => {
+    render(<LoadingImage src="https://example.com/cover.jpg" alt="封面" fill />);
+
+    expect(screen.getByRole("img", { name: "封面" })).toHaveAttribute("fetchpriority", "low");
+  });
+
+  it("priority 模式下不覆盖 fetchPriority，由 Next.js 设为 high 并 eager 加载", () => {
+    render(<LoadingImage src="https://example.com/cover.jpg" alt="封面" fill priority />);
+
+    const img = screen.getByRole("img", { name: "封面" });
+    expect(img).toHaveAttribute("fetchpriority", "high");
+    expect(img).toHaveAttribute("loading", "eager");
   });
 });
