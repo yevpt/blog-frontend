@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@repo/ui";
 import { useSnippetModal } from "@/store/use-snippet-modal";
 import { addToast } from "@/lib/toast";
@@ -15,6 +15,7 @@ export function SnippetModal() {
   const [content, setContent] = useState("");
   const [images, setImages] = useState<SnippetImageItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
   const overLimit = content.length > MAX_CONTENT;
   const canSubmit = content.trim().length > 0 && !overLimit && !submitting;
@@ -25,6 +26,8 @@ export function SnippetModal() {
       return [];
     });
     setContent("");
+    submittingRef.current = false;
+    setSubmitting(false);
   }
 
   function handleClose() {
@@ -33,7 +36,8 @@ export function SnippetModal() {
   }
 
   async function handleSubmit() {
-    if (!canSubmit) return;
+    if (!canSubmit || submittingRef.current) return;
+    submittingRef.current = true;
     setSubmitting(true);
     try {
       const form = new FormData();
@@ -55,6 +59,7 @@ export function SnippetModal() {
     } catch (err) {
       addToast(err instanceof Error ? err.message : "发布失败", "error");
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   }
@@ -67,7 +72,7 @@ export function SnippetModal() {
       desktopMaxWidthClassName="max-w-[480px]"
       footer={
         <div className="flex items-center justify-between px-[18px] py-3">
-          <span className={`text-xs ${overLimit ? "text-destructive" : "text-muted-foreground"}`}>
+          <span aria-live="polite" className={`text-xs ${overLimit ? "text-destructive" : "text-muted-foreground"}`}>
             {content.length}/{MAX_CONTENT}
           </span>
           <Button type="button" isDisabled={!canSubmit} onPress={handleSubmit}>
