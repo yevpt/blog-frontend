@@ -21,7 +21,7 @@ interface RichCommentInputProps {
   className?: string;
   /**
    * 内容字符上限，镜像后端 dto 的 binding:"max=..."，提交前即提示避免无谓往返。
-   * 传入后接近上限时在编辑器下方显示 `当前长度/上限` 计数器。
+   * 传入后接近上限时在编辑器工具栏内显示 `当前长度/上限` 计数器。
    */
   maxLength?: number;
 }
@@ -102,13 +102,9 @@ export function RichCommentInput({
         header={header}
         focusTrigger={focusTrigger}
         className={className}
+        maxLength={maxLength}
+        characterCountThreshold={COMMENT_COUNTER_THRESHOLD}
       />
-
-      {maxLength != null && value.length >= maxLength - COMMENT_COUNTER_THRESHOLD && (
-        <p className={`mt-1.5 text-right text-xs ${isOverLimit ? "text-red-500" : "text-(--fg3)"}`}>
-          {value.length}/{maxLength}
-        </p>
-      )}
 
       <ImageDialog
         open={imageDialog.open}

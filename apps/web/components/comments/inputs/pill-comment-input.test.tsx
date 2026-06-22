@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { PillCommentInput } from "./pill-comment-input";
 
 vi.mock("@repo/ui", () => ({
+  cn: (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" "),
   Button: ({
     children,
     onPress,
@@ -109,10 +110,18 @@ describe("PillCommentInput（已登录）", () => {
     expect(field.getAttribute("maxlength")).toBe("2000");
   });
 
-  it("接近字数上限时显示计数器", () => {
+  it("接近字数上限时在输入框内部显示计数胶囊", () => {
     const nearLimit = "a".repeat(1950);
     render(<PillCommentInput value={nearLimit} onChange={vi.fn()} onSubmit={vi.fn()} />);
-    expect(screen.getByText("1950/2000")).toBeTruthy();
+    const counter = screen.getByText("1950/2000");
+    expect(counter.tagName).toBe("SPAN");
+    expect(counter).toHaveClass("rounded-full", "text-muted-foreground");
+  });
+
+  it("超出字数上限时计数胶囊使用 destructive 样式", () => {
+    const overLimit = "a".repeat(2001);
+    render(<PillCommentInput value={overLimit} onChange={vi.fn()} onSubmit={vi.fn()} />);
+    expect(screen.getByText("2001/2000")).toHaveClass("text-destructive");
   });
 
   it("远未到上限时不显示计数器", () => {

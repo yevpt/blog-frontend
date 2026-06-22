@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { SvgIcon } from "@repo/icons";
+import { cn } from "@repo/ui";
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
 import type { ReplyTarget } from "../parts/comment-item";
@@ -46,6 +47,8 @@ export function PillCommentInput({
   const { userId } = useSession();
   const openLogin = useLoginModal((s) => s.open);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const showCounter = value.length >= COMMENT_CONTENT_MAX_LENGTH - COMMENT_COUNTER_THRESHOLD;
+  const isOverLimit = value.length > COMMENT_CONTENT_MAX_LENGTH;
 
   const syncTextareaHeight = useCallback(() => {
     const el = textareaRef.current;
@@ -94,14 +97,29 @@ export function PillCommentInput({
           placeholder={replyTarget ? "写下你的回复..." : "写下你的评论..."}
           maxLength={COMMENT_CONTENT_MAX_LENGTH}
           disabled={isSubmitting}
-          className={`block w-full resize-none border-0 bg-transparent py-2.5 pl-4 text-[13px] leading-normal text-foreground outline-none placeholder:text-(--fg3) disabled:cursor-not-allowed ${value.trim() ? "pr-10" : "pr-4"}`}
+          className={cn(
+            "block w-full resize-none border-0 bg-transparent py-2.5 pl-4 text-[13px] leading-normal text-foreground outline-none placeholder:text-(--fg3) disabled:cursor-not-allowed",
+            showCounter ? "pr-28" : value.trim() ? "pr-10" : "pr-4",
+          )}
         />
+        {showCounter && (
+          <span
+            className={cn(
+              "absolute right-10 bottom-2 inline-flex h-6 shrink-0 items-center rounded-full border px-2 text-[11px] leading-none tabular-nums",
+              isOverLimit
+                ? "border-destructive/20 bg-destructive/10 text-destructive"
+                : "border-border bg-foreground/[0.04] text-muted-foreground",
+            )}
+          >
+            {value.length}/{COMMENT_CONTENT_MAX_LENGTH}
+          </span>
+        )}
         {/* 外壳圆角 20px = 按钮半径 14px + 内缩 6px，右下角弧线与按钮同心 */}
         {value.trim() && (
           <button
             type="button"
             onClick={onSubmit}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isOverLimit}
             aria-label="发送评论"
             className="absolute right-1.5 bottom-1.5 flex size-7 items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-primary/85 disabled:cursor-not-allowed disabled:opacity-60"
           >
@@ -109,11 +127,6 @@ export function PillCommentInput({
           </button>
         )}
       </div>
-      {value.length >= COMMENT_CONTENT_MAX_LENGTH - COMMENT_COUNTER_THRESHOLD && (
-        <p className="text-right text-xs text-(--fg3)">
-          {value.length}/{COMMENT_CONTENT_MAX_LENGTH}
-        </p>
-      )}
     </div>
   );
 }
