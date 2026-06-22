@@ -122,9 +122,10 @@ addToast(getApiErrorMessage(err, "<动作>失败，请稍后重试"), "error");
 
 - [x] **D1 · 碎语图片上传错误映射** — 已核对：`bindMomentSaveReq` → `response.Fail(CodeBadRequest, err.Error())`，走统一信封 400 + 具体文案（如「图片不能超过 1MB」「GIF 图片过大…」），**无需改动**。
 
-- [ ] **D2 · 全量 handler 无裸 `c.JSON`**
+- [x] **D2 · 全量 handler 无裸 `c.JSON`**
   - 命令：`grep -rn 'c.JSON(' internal/handler --include='*.go' | grep -v _test.go | grep -v 'response\.'`
   - 期望：空输出（所有响应都走 `pkg/response`）。若有命中，改为对应 `response.*`；改完跑 `go test ./internal/handler/...`。
+  - **已核对，无需改动**——`c.JSON(` 零命中（grep 唯一匹配是 `func JSON(c *gin.Context)` 函数定义，非方法调用）；`go test ./internal/handler/...` 全通过。
 
 - [ ] **D3 · BFF 路由透传后端 message**
   - 仓库：`blog-frontend`，文件：`apps/web/app/api/**/route.ts`
