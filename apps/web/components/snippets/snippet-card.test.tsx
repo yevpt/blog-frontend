@@ -77,53 +77,81 @@ vi.mock("@repo/ui", () => ({
       {children}
     </button>
   ),
-  ButtonUtility: ({
-    icon,
-    tooltip,
-    tooltipPlacement: _tooltipPlacement,
-    color: _color,
-    size: _size,
-    isDisabled,
-    onClick,
-    className,
-    ...props
-  }: {
-    icon?: ReactNode;
-    tooltip?: string;
-    tooltipPlacement?: string;
-    color?: string;
-    size?: string;
-    isDisabled?: boolean;
-    onClick?: () => void;
-    className?: string;
-    [key: string]: unknown;
-  }) => (
-    <button
-      aria-label={tooltip}
-      data-tooltip={tooltip}
-      className={className}
-      disabled={isDisabled}
-      onClick={onClick}
-      {...props}
-    >
-      {icon}
-    </button>
-  ),
   Card: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
     <div {...props}>{children}</div>
   ),
   CardContent: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
     <div {...props}>{children}</div>
   ),
-  PopoverTrigger: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  Popover: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
-    <div {...props}>{children}</div>
-  ),
-  PopoverDialog: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
-    <div role="dialog" {...props}>
-      {children}
-    </div>
-  ),
+  Dropdown: {
+    Root: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+    DotsButton: ({ isDisabled, ...props }: { isDisabled?: boolean; [key: string]: unknown }) => (
+      <button aria-label="Open menu" disabled={isDisabled} {...props}>
+        ⋮
+      </button>
+    ),
+    Popover: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
+      <div {...props}>{children}</div>
+    ),
+    Menu: ({
+      children,
+      onAction,
+      ...props
+    }: {
+      children: ReactNode;
+      onAction?: (key: string) => void;
+      [key: string]: unknown;
+    }) => {
+      const enhanced = React.Children.map(children, (child) => {
+        if (React.isValidElement(child)) {
+          const childProps = child.props as { id?: string; onClick?: () => void };
+          if (childProps.id && onAction) {
+            return React.cloneElement(child as React.ReactElement<{ onClick?: () => void }>, {
+              onClick: () => onAction(childProps.id!),
+            });
+          }
+        }
+        return child;
+      });
+      return (
+        <div role="menu" {...props}>
+          {enhanced}
+        </div>
+      );
+    },
+    Item: ({
+      id,
+      label,
+      icon: Icon,
+      onClick,
+      ...props
+    }: {
+      id: string;
+      label: string;
+      icon?: React.ComponentType<{ className?: string }>;
+      onClick?: () => void;
+      [key: string]: unknown;
+    }) => (
+      <button role="menuitem" aria-label={label} data-id={id} onClick={onClick} {...props}>
+        {Icon && <Icon className="" />}
+        {label}
+      </button>
+    ),
+  },
+  Modal: ({
+    children,
+    isOpen,
+    ...props
+  }: {
+    children: ReactNode;
+    isOpen?: boolean;
+    [key: string]: unknown;
+  }) =>
+    isOpen ? (
+      <div role="dialog" {...props}>
+        {children}
+      </div>
+    ) : null,
   Avatar: ({ src, alt, initials }: { src?: string; alt?: string; initials?: string }) =>
     src ? <img src={src} alt={alt} /> : <span>{initials}</span>,
   Badge: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
@@ -352,21 +380,15 @@ describe("SnippetCard", () => {
     expect(onComment).toHaveBeenCalledWith(snippet);
   });
 
-  it("当前用户是作者时在左下角显示纯图标管理按钮，并通过 tooltip 提示", () => {
+  it("当前用户是作者时显示更多菜单，包含编辑/置顶/删除选项", () => {
     mockSessionUserId = 1;
     render(<SnippetCard snippet={makeMoment()} />);
 
     expect(screen.getByTestId("snippet-owner-actions")).toBeTruthy();
-    const editButton = screen.getByRole("button", { name: "编辑碎语" });
-    const topButton = screen.getByRole("button", { name: "置顶碎语" });
-    const deleteButton = screen.getByRole("button", { name: "删除碎语" });
-
-    expect(editButton).toHaveTextContent("");
-    expect(topButton).toHaveTextContent("");
-    expect(deleteButton).toHaveTextContent("");
-    expect(editButton).toHaveAttribute("data-tooltip", "编辑碎语");
-    expect(topButton).toHaveAttribute("data-tooltip", "置顶碎语");
-    expect(deleteButton).toHaveAttribute("data-tooltip", "删除碎语");
+    expect(screen.getByRole("button", { name: "更多操作" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "编辑" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "置顶" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "删除" })).toBeTruthy();
     expect(screen.getByTestId("icon-edit")).toBeTruthy();
     expect(screen.getByTestId("icon-pin")).toBeTruthy();
     expect(screen.getByTestId("icon-trash")).toBeTruthy();
@@ -377,19 +399,18 @@ describe("SnippetCard", () => {
     render(<SnippetCard snippet={makeMoment()} />);
 
     expect(screen.queryByTestId("snippet-owner-actions")).toBeNull();
-    expect(screen.queryByRole("button", { name: "编辑碎语" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "删除碎语" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "更多操作" })).toBeNull();
   });
 
-  it("已置顶的作者碎语显示取消置顶按钮", () => {
+  it("已置顶的作者碎语菜单中显示取消置顶选项", () => {
     mockSessionUserId = 1;
     render(<SnippetCard snippet={makeMoment({ is_top: true })} />);
 
-    expect(screen.getByRole("button", { name: "取消置顶碎语" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "取消置顶" })).toBeTruthy();
     expect(screen.getByTestId("icon-pin-off")).toBeTruthy();
   });
 
-  it("点击作者操作按钮触发对应回调，删除需二次确认", async () => {
+  it("点击菜单项触发对应回调，删除需二次确认", async () => {
     const user = userEvent.setup();
     const snippet = makeMoment();
     const onEdit = vi.fn();
@@ -406,12 +427,12 @@ describe("SnippetCard", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "编辑碎语" }));
-    await user.click(screen.getByRole("button", { name: "置顶碎语" }));
+    await user.click(screen.getByRole("menuitem", { name: "编辑" }));
+    await user.click(screen.getByRole("menuitem", { name: "置顶" }));
     expect(onEdit).toHaveBeenCalledWith(snippet);
     expect(onToggleTop).toHaveBeenCalledWith(snippet);
 
-    await user.click(screen.getByRole("button", { name: "删除碎语" }));
+    await user.click(screen.getByRole("menuitem", { name: "删除" }));
     expect(screen.getByRole("dialog", { name: "确认删除碎语" })).toBeTruthy();
     expect(onDelete).not.toHaveBeenCalled();
 

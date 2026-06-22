@@ -3,18 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { MomentItemResp } from "@repo/api";
+import type { IconName } from "@repo/icons";
 import { SvgIcon } from "@repo/icons";
-import {
-  Avatar,
-  Badge,
-  Button,
-  ButtonUtility,
-  Card,
-  CardContent,
-  Popover,
-  PopoverDialog,
-  PopoverTrigger,
-} from "@repo/ui";
+import { Avatar, Badge, Button, Card, CardContent, Dropdown, Modal } from "@repo/ui";
 import { useSession } from "@/app/providers/session-provider";
 import { useImageViewer } from "@/store/use-image-viewer";
 import { formatRelativeTime } from "../../lib/format-time";
@@ -50,6 +41,18 @@ function formatCount(count: number): string {
   return String(count);
 }
 
+/** 将 SvgIcon name 包装为 Dropdown.Item 所需的 icon 组件 */
+function DropdownIcon({ name }: { name: IconName }) {
+  return function Icon({ className }: { className?: string }) {
+    return <SvgIcon name={name} size={16} className={className} />;
+  };
+}
+
+const editIcon = DropdownIcon({ name: "edit" });
+const pinIcon = DropdownIcon({ name: "pin" });
+const pinOffIcon = DropdownIcon({ name: "pin-off" });
+const trashIcon = DropdownIcon({ name: "trash" });
+
 // 单条碎语：双行 header + 图片网格 + ArticleCardStats 风格操作区
 export function SnippetCard({
   snippet,
@@ -65,6 +68,7 @@ export function SnippetCard({
 }: SnippetCardProps) {
   const { userId } = useSession();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const relativeTime = formatRelativeTime(new Date(snippet.created_at));
   const authorName = snippet.user?.nickname ?? snippet.user?.username ?? "匿名";
   const authorAvatar = snippet.user?.avatar_url ?? "";
@@ -131,77 +135,75 @@ export function SnippetCard({
 
       <div className="mt-3 flex items-end justify-between gap-2 text-xs text-(--fg3)">
         {isOwner ? (
-          <div
-            data-testid="snippet-owner-actions"
-            className="flex min-w-0 flex-wrap items-center gap-0.5"
-          >
-            <ButtonUtility
-              type="button"
-              size="xs"
-              color="tertiary"
-              tooltip="编辑碎语"
-              tooltipPlacement="top"
-              isDisabled={actionDisabled}
-              onClick={() => onEdit?.(snippet)}
-              icon={<SvgIcon name="edit" size={16} />}
-              className="size-7 rounded-full"
-            />
-            <ButtonUtility
-              type="button"
-              size="xs"
-              color="tertiary"
-              tooltip={`${topLabel}碎语`}
-              tooltipPlacement="top"
-              aria-pressed={snippet.is_top}
-              isDisabled={actionDisabled}
-              onClick={() => onToggleTop?.(snippet)}
-              icon={<SvgIcon name={snippet.is_top ? "pin-off" : "pin"} size={16} />}
-              className={`size-7 rounded-full ${
-                snippet.is_top
-                  ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
-                  : ""
-              }`}
-            />
-            <PopoverTrigger isOpen={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-              <ButtonUtility
-                type="button"
-                size="xs"
-                color="tertiary"
-                tooltip="删除碎语"
-                tooltipPlacement="top"
+          <div data-testid="snippet-owner-actions" className="flex items-center">
+            <Dropdown.Root onOpenChange={setIsMenuOpen}>
+              <Dropdown.DotsButton
+                variant="ghost"
+                icon="dots-horizontal"
+                aria-label="更多操作"
                 isDisabled={actionDisabled}
-                icon={<SvgIcon name="trash" size={16} />}
-                className="size-7 rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                className="size-8 p-0"
               />
-              <Popover placement="bottom start" offset={6} className="w-60">
-                <PopoverDialog aria-label="确认删除碎语" className="p-3 outline-none">
-                  <div className="grid gap-3">
-                    <p className="text-sm leading-6 text-foreground">
-                      确定删除这条碎语吗？删除后不可在列表中恢复。
-                    </p>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" slot="close" isDisabled={actionDisabled}>
-                        取消
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        aria-label="确认删除"
-                        isDisabled={actionDisabled}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        onPress={() => {
-                          void Promise.resolve(onDelete?.(snippet))
-                            .then(() => setIsDeleteOpen(false))
-                            .catch(() => undefined);
-                        }}
-                      >
-                        删除
-                      </Button>
-                    </div>
-                  </div>
-                </PopoverDialog>
-              </Popover>
-            </PopoverTrigger>
+              <Dropdown.Popover placement="bottom start" className="min-w-32 w-auto">
+                <Dropdown.Menu
+                  aria-label="碎语操作"
+                  onAction={(key) => {
+                    switch (key) {
+                      case "edit":
+                        onEdit?.(snippet);
+                        break;
+                      case "toggle-top":
+                        onToggleTop?.(snippet);
+                        break;
+                      case "delete":
+                        setIsDeleteOpen(true);
+                        break;
+                    }
+                  }}
+                >
+                  <Dropdown.Item id="edit" label="编辑" icon={editIcon} />
+                  <Dropdown.Item
+                    id="toggle-top"
+                    label={topLabel}
+                    icon={snippet.is_top ? pinOffIcon : pinIcon}
+                  />
+                  <Dropdown.Item id="delete" label="删除" icon={trashIcon} danger />
+                </Dropdown.Menu>
+              </Dropdown.Popover>
+            </Dropdown.Root>
+
+            <Modal
+              isOpen={isDeleteOpen}
+              onOpenChange={setIsDeleteOpen}
+              isDismissable
+              size="sm"
+              aria-label="确认删除碎语"
+            >
+              <div className="p-5">
+                <p className="text-sm leading-6 text-foreground">
+                  确定删除这条碎语吗？删除后不可在列表中恢复。
+                </p>
+                <div className="mt-4 flex justify-end gap-2">
+                  <Button variant="outline" size="sm" slot="close" isDisabled={actionDisabled}>
+                    取消
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    aria-label="确认删除"
+                    isDisabled={actionDisabled}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onPress={() => {
+                      void Promise.resolve(onDelete?.(snippet))
+                        .then(() => setIsDeleteOpen(false))
+                        .catch(() => undefined);
+                    }}
+                  >
+                    删除
+                  </Button>
+                </div>
+              </div>
+            </Modal>
           </div>
         ) : (
           <div />
@@ -266,7 +268,8 @@ export function SnippetCard({
       interactive
       data-testid="snippet-card"
       data-layout="standalone"
-      className="min-w-0 overflow-hidden"
+      // 菜单打开时浮层 underlay 会盖住卡片致其失去 :hover，用无条件位移把卡片钉在浮起态，避免回落抖动
+      className={`min-w-0 overflow-hidden${isMenuOpen ? " -translate-y-0.5 shadow-card-hover" : ""}`}
       style={{ contentVisibility: "auto", containIntrinsicSize: "auto 200px" }}
     >
       <CardContent className="p-4">{body}</CardContent>
