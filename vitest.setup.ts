@@ -3,6 +3,24 @@ import "@testing-library/jest-dom/vitest";
 // 告知 React 测试环境支持 act()，消除 "not configured to support act" 警告
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
+// jsdom 不实现 IntersectionObserver；为依赖它做入场动画的组件（如友链列表）提供无操作 polyfill，
+// 避免渲染即抛 ReferenceError。仅在缺失时安装，不覆盖真实实现。
+if (typeof globalThis.IntersectionObserver === "undefined") {
+  class IntersectionObserverStub implements IntersectionObserver {
+    readonly root = null;
+    readonly rootMargin = "";
+    readonly thresholds: ReadonlyArray<number> = [];
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+    takeRecords(): IntersectionObserverEntry[] {
+      return [];
+    }
+  }
+  globalThis.IntersectionObserver =
+    IntersectionObserverStub as unknown as typeof IntersectionObserver;
+}
+
 process.env.BLOG_USER_ID = "1";
 
 // Node.js ≥22 adds an experimental `localStorage` to globalThis, which causes
