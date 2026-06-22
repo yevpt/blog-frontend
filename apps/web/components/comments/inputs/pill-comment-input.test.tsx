@@ -103,17 +103,21 @@ describe("PillCommentInput（已登录）", () => {
     expect(screen.getByPlaceholderText("写下你的回复...")).toBeTruthy();
   });
 
-  it("submitError 非空时显示错误信息", () => {
-    render(
-      <PillCommentInput
-        value=""
-        onChange={vi.fn()}
-        onSubmit={vi.fn()}
-        submitError="发布失败，请稍后重试"
-      />,
-    );
+  it("textarea 设置 maxLength 为 2000，提交前拦截超长内容", () => {
+    render(<PillCommentInput value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
+    const field = screen.getByPlaceholderText("写下你的评论...");
+    expect(field.getAttribute("maxlength")).toBe("2000");
+  });
 
-    expect(screen.getByText("发布失败，请稍后重试")).toBeTruthy();
+  it("接近字数上限时显示计数器", () => {
+    const nearLimit = "a".repeat(1950);
+    render(<PillCommentInput value={nearLimit} onChange={vi.fn()} onSubmit={vi.fn()} />);
+    expect(screen.getByText("1950/2000")).toBeTruthy();
+  });
+
+  it("远未到上限时不显示计数器", () => {
+    render(<PillCommentInput value="短内容" onChange={vi.fn()} onSubmit={vi.fn()} />);
+    expect(screen.queryByText(/\/2000$/)).toBeNull();
   });
 
   it("isSubmitting 时发送按钮禁用", () => {

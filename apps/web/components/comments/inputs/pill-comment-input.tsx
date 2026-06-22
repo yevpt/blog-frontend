@@ -7,6 +7,11 @@ import { useLoginModal } from "@/store/use-login-modal";
 import type { ReplyTarget } from "../parts/comment-item";
 import { ReplyBanner } from "./reply-banner";
 
+/** 评论/回复内容上限，镜像后端 dto 的 binding:"max=2000"，提交前即拦截避免无谓往返 */
+const COMMENT_CONTENT_MAX_LENGTH = 2000;
+/** 剩余字数少于该阈值时显示计数器，提前提示用户接近上限 */
+const COMMENT_COUNTER_THRESHOLD = 100;
+
 /** 与 text-[13px] leading-normal + py-2.5 对齐，用于限制最高约 4 行 */
 const PILL_TEXTAREA_LINE_HEIGHT_PX = 20;
 const PILL_TEXTAREA_VERTICAL_PADDING_PX = 20;
@@ -28,7 +33,6 @@ interface PillCommentInputProps {
   replyTarget?: ReplyTarget | null;
   onCancelReply?: () => void;
   isSubmitting?: boolean;
-  submitError?: string | null;
 }
 
 export function PillCommentInput({
@@ -38,7 +42,6 @@ export function PillCommentInput({
   replyTarget,
   onCancelReply,
   isSubmitting = false,
-  submitError,
 }: PillCommentInputProps) {
   const { userId } = useSession();
   const openLogin = useLoginModal((s) => s.open);
@@ -89,6 +92,7 @@ export function PillCommentInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={replyTarget ? "写下你的回复..." : "写下你的评论..."}
+          maxLength={COMMENT_CONTENT_MAX_LENGTH}
           disabled={isSubmitting}
           className={`block w-full resize-none border-0 bg-transparent py-2.5 pl-4 text-[13px] leading-normal text-foreground outline-none placeholder:text-(--fg3) disabled:cursor-not-allowed ${value.trim() ? "pr-10" : "pr-4"}`}
         />
@@ -105,7 +109,11 @@ export function PillCommentInput({
           </button>
         )}
       </div>
-      {submitError && <p className="text-xs text-red-500">{submitError}</p>}
+      {value.length >= COMMENT_CONTENT_MAX_LENGTH - COMMENT_COUNTER_THRESHOLD && (
+        <p className="text-right text-xs text-(--fg3)">
+          {value.length}/{COMMENT_CONTENT_MAX_LENGTH}
+        </p>
+      )}
     </div>
   );
 }

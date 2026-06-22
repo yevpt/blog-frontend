@@ -1,5 +1,32 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { apiJson, apiForm, ApiClientError } from "./client-fetch";
+import { ApiError } from "@repo/api";
+import { apiJson, apiForm, ApiClientError, getApiErrorMessage } from "./client-fetch";
+
+describe("getApiErrorMessage", () => {
+  it("透传 ApiClientError 的后端 message", () => {
+    const err = new ApiClientError("内容长度不能超过 2000 个字符", 400);
+    expect(getApiErrorMessage(err, "兜底")).toBe("内容长度不能超过 2000 个字符");
+  });
+
+  it("透传 ApiError 的后端 message", () => {
+    const err = new ApiError(400, "评论已关闭");
+    expect(getApiErrorMessage(err, "兜底")).toBe("评论已关闭");
+  });
+
+  it("message 为空白时回退到 fallback", () => {
+    const err = new ApiClientError("   ", 500);
+    expect(getApiErrorMessage(err, "服务器开小差了")).toBe("服务器开小差了");
+  });
+
+  it("网络异常等未知错误回退到 fallback，不暴露英文细节", () => {
+    const err = new TypeError("Failed to fetch");
+    expect(getApiErrorMessage(err, "网络异常，请稍后重试")).toBe("网络异常，请稍后重试");
+  });
+
+  it("非 Error 值回退到 fallback", () => {
+    expect(getApiErrorMessage("boom", "兜底")).toBe("兜底");
+  });
+});
 
 describe("apiJson", () => {
   beforeEach(() => {

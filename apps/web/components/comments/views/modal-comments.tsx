@@ -41,7 +41,6 @@ export function ModalComments({
     setContent,
     pendingReplies,
     isSubmitting,
-    submitError,
     handleReply,
     handleCancelReply,
     handleSubmit,
@@ -91,7 +90,6 @@ export function ModalComments({
         replyTarget={replyTarget}
         onCancelReply={handleCancelReply}
         isSubmitting={isSubmitting}
-        submitError={submitError}
       />
     </div>
   );

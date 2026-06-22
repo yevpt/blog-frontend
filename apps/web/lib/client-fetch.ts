@@ -1,3 +1,5 @@
+import { ApiError } from "@repo/api";
+
 export class ApiClientError extends Error {
   constructor(
     message: string,
@@ -6,6 +8,21 @@ export class ApiClientError extends Error {
     super(message);
     this.name = "ApiClientError";
   }
+}
+
+/**
+ * 从异常中提取可直接展示给用户的错误文案。
+ * 仅信任后端经统一信封 / BFF 返回的业务错误（ApiClientError·ApiError）的 message；
+ * 网络异常等未知错误回退到 fallback，避免把 "Failed to fetch" 这类英文细节暴露给用户。
+ */
+export function getApiErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof ApiClientError || err instanceof ApiError) {
+    const message = err.message.trim();
+    if (message) {
+      return message;
+    }
+  }
+  return fallback;
 }
 
 async function parseJsonBody<T>(res: Response): Promise<T> {

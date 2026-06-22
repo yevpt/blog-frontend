@@ -43,13 +43,7 @@ export function useCommentSectionState({
     removeComment,
   } = useCommentList(targetType, targetId);
 
-  const {
-    isSubmitting,
-    error: submitError,
-    clearError,
-    submitComment,
-    submitReply,
-  } = useCommentSubmit(targetType, targetId);
+  const { isSubmitting, submitComment, submitReply } = useCommentSubmit(targetType, targetId);
 
   const { toggleCommentLike } = useCommentLike(targetType);
   const { deleteComment, deleteReply } = useCommentDelete(targetType);
@@ -69,16 +63,14 @@ export function useCommentSectionState({
       }
       setReplyTarget(target);
       setContent("");
-      clearError();
     },
-    [clearError, openLoginModal, userId],
+    [openLoginModal, userId],
   );
 
   const handleCancelReply = useCallback(() => {
     setReplyTarget(null);
     setContent("");
-    clearError();
-  }, [clearError]);
+  }, []);
 
   const handleSubmit = useCallback(async () => {
     const currentContent = contentRef.current;
@@ -156,13 +148,9 @@ export function useCommentSectionState({
     [decrementReplyCount, deleteReply],
   );
 
-  const handleChange = useCallback(
-    (value: string) => {
-      setContent(value);
-      clearError();
-    },
-    [clearError],
-  );
+  const handleChange = useCallback((value: string) => {
+    setContent(value);
+  }, []);
 
   return {
     userId,
@@ -176,7 +164,6 @@ export function useCommentSectionState({
     setContent,
     pendingReplies,
     isSubmitting,
-    submitError,
     handleReply,
     handleCancelReply,
     handleSubmit,

@@ -3,6 +3,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useCommentSubmit } from "./use-comment-submit";
 
+const addToastMock = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/toast", () => ({ addToast: addToastMock }));
+
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status });
 }
@@ -89,7 +92,7 @@ describe("useCommentSubmit", () => {
     );
   });
 
-  it("401 时返回 null 并设置 error", async () => {
+  it("401 时返回 null 并 toast 提示登录", async () => {
     vi.mocked(global.fetch).mockResolvedValue(jsonResponse({ error: "Unauthorized" }, 401));
 
     const { result } = renderHook(() => useCommentSubmit("article", 1));
@@ -99,6 +102,21 @@ describe("useCommentSubmit", () => {
     });
 
     expect(ret).toBeNull();
-    expect(result.current.error).toBe("请先登录");
+    expect(addToastMock).toHaveBeenCalledWith("请先登录", "error");
+  });
+
+  it("业务错误时 toast 展示后端返回的具体原因", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      jsonResponse({ error: "内容长度不能超过 2000 个字符" }, 400),
+    );
+
+    const { result } = renderHook(() => useCommentSubmit("article", 1));
+    let ret: unknown;
+    await act(async () => {
+      ret = await result.current.submitComment("超长内容");
+    });
+
+    expect(ret).toBeNull();
+    expect(addToastMock).toHaveBeenCalledWith("内容长度不能超过 2000 个字符", "error");
   });
 });

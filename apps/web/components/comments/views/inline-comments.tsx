@@ -28,7 +28,6 @@ export function InlineComments({ targetType, targetId, onCommentAdded }: InlineC
     content,
     pendingReplies,
     isSubmitting,
-    submitError,
     handleReply,
     handleCancelReply,
     handleSubmit,
@@ -49,7 +48,6 @@ export function InlineComments({ targetType, targetId, onCommentAdded }: InlineC
         onLoginRequired={openLoginModal}
         placeholder={replyTarget ? "写下你的回复..." : "写下你的评论..."}
       />
-      {submitError && <p className="text-xs text-red-500">{submitError}</p>}
       {replyTarget && (
         <ReplyBanner toUsername={replyTarget.toUsername} onCancel={handleCancelReply} />
       )}
