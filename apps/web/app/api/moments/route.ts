@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerApiClient } from "@/lib/server-api";
+import { proxyPostForm } from "@/lib/backend-proxy";
 import type { MomentListReq } from "@repo/api";
 
 export async function GET(request: NextRequest) {
@@ -28,4 +29,9 @@ export async function GET(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Failed to fetch moments" }, { status: 500 });
   }
+}
+
+/** 新增碎语：转发 multipart/form-data 到后端，需登录 */
+export async function POST(request: NextRequest) {
+  return proxyPostForm(request, "/moments");
 }
