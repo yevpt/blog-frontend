@@ -29,6 +29,35 @@ describe("ResponsiveModalShell", () => {
     expect(screen.getByText("底栏")).toBeInTheDocument();
   });
 
+  it("移动端视口渲染底部 sheet（含拖拽抓手）", async () => {
+    mockMatch(false);
+    render(
+      <ResponsiveModalShell isOpen title="写碎语" onClose={() => {}}>
+        {() => <p>正文</p>}
+      </ResponsiveModalShell>,
+    );
+    expect(await screen.findByRole("dialog", { name: "写碎语" })).toBeInTheDocument();
+    await waitFor(() => expect(document.querySelector(".cursor-grab")).toBeTruthy());
+  });
+
+  it("isOpen 从关到开时按当前视口判定（不在挂载时锁死）", async () => {
+    const props = { title: "写碎语", onClose: () => {} };
+    const { rerender } = render(
+      <ResponsiveModalShell isOpen={false} {...props}>
+        {() => <p>正文</p>}
+      </ResponsiveModalShell>,
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    mockMatch(false);
+    rerender(
+      <ResponsiveModalShell isOpen {...props}>
+        {() => <p>正文</p>}
+      </ResponsiveModalShell>,
+    );
+    expect(await screen.findByRole("dialog", { name: "写碎语" })).toBeInTheDocument();
+    await waitFor(() => expect(document.querySelector(".cursor-grab")).toBeTruthy());
+  });
+
   it("点击关闭键触发 onClose", async () => {
     const onClose = vi.fn();
     const user = userEvent.setup();

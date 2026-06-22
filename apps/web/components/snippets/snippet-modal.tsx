@@ -1,14 +1,19 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Button } from "@repo/ui";
+import { SvgIcon } from "@repo/icons";
 import { useSnippetModal } from "@/store/use-snippet-modal";
 import { addToast } from "@/lib/toast";
 import { ResponsiveModalShell } from "@/components/modal-shell/responsive-modal";
 import { SnippetTextInput } from "./snippet-text-input";
-import { SnippetImageUploader, type SnippetImageItem } from "./snippet-image-uploader";
+import {
+  SnippetImageUploader,
+  type SnippetImageItem,
+  type SnippetImageUploaderHandle,
+} from "./snippet-image-uploader";
 
 const MAX_CONTENT = 800;
+const MAX_IMAGES = 9;
 
 export function SnippetModal() {
   const { isOpen, close } = useSnippetModal();
@@ -16,6 +21,7 @@ export function SnippetModal() {
   const [images, setImages] = useState<SnippetImageItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
+  const uploaderRef = useRef<SnippetImageUploaderHandle>(null);
 
   const overLimit = content.length > MAX_CONTENT;
   const canSubmit = content.trim().length > 0 && !overLimit && !submitting;
@@ -72,12 +78,34 @@ export function SnippetModal() {
       desktopMaxWidthClassName="max-w-[480px]"
       footer={
         <div className="flex items-center justify-between px-[18px] py-3">
-          <span aria-live="polite" className={`text-xs ${overLimit ? "text-destructive" : "text-muted-foreground"}`}>
-            {content.length}/{MAX_CONTENT}
-          </span>
-          <Button type="button" isDisabled={!canSubmit} onPress={handleSubmit}>
+          <div className="flex items-center gap-3.5">
+            <button
+              type="button"
+              aria-label="添加图片"
+              onClick={() => uploaderRef.current?.openPicker()}
+              disabled={submitting || images.length >= MAX_IMAGES}
+              className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+            >
+              <SvgIcon name="image" size={18} />
+              <span>
+                {images.length}/{MAX_IMAGES}
+              </span>
+            </button>
+            <span
+              aria-live="polite"
+              className={`text-xs ${overLimit ? "text-destructive" : "text-muted-foreground"}`}
+            >
+              {content.length}/{MAX_CONTENT}
+            </span>
+          </div>
+          <button
+            type="button"
+            disabled={!canSubmit}
+            onClick={handleSubmit}
+            className="rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/85 disabled:opacity-40"
+          >
             {submitting ? "发布中…" : "发布"}
-          </Button>
+          </button>
         </div>
       }
     >
@@ -89,7 +117,12 @@ export function SnippetModal() {
             placeholder="此刻有什么想法？"
             disabled={submitting}
           />
-          <SnippetImageUploader items={images} onChange={setImages} disabled={submitting} />
+          <SnippetImageUploader
+            ref={uploaderRef}
+            items={images}
+            onChange={setImages}
+            disabled={submitting}
+          />
         </div>
       )}
     </ResponsiveModalShell>

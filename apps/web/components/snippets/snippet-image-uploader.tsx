@@ -1,6 +1,13 @@
 "use client";
 
-import { useRef, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import {
   DndContext,
   KeyboardSensor,
@@ -31,109 +38,143 @@ export interface SnippetImageItem {
   previewUrl: string;
 }
 
+/** 暴露给父组件的命令式句柄：底栏「添加图片」按钮调用 openPicker 触发选图。 */
+export interface SnippetImageUploaderHandle {
+  openPicker: () => void;
+}
+
 interface Props {
   items: SnippetImageItem[];
   onChange: Dispatch<SetStateAction<SnippetImageItem[]>>;
   disabled?: boolean;
 }
 
-export function SnippetImageUploader({ items, onChange, disabled }: Props) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { delay: 120, tolerance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
+export const SnippetImageUploader = forwardRef<SnippetImageUploaderHandle, Props>(
+  function SnippetImageUploader({ items, onChange, disabled }, ref) {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+    // 正在压缩中的图片数量：选图后立即占位显示 spinner，压缩完成后落入 items。
+    const [pendingCount, setPendingCount] = useState(0);
+    const sensors = useSensors(
+      useSensor(PointerSensor, { activationConstraint: { delay: 120, tolerance: 6 } }),
+      useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    );
 
-  async function handleFiles(fileList: FileList | null) {
-    if (!fileList) return;
-    // 先按当前列表粗略限量，避免压缩过多必然被丢弃的图
-    const picked = Array.from(fileList).slice(0, Math.max(0, MAX_IMAGES - items.length));
-    const added: SnippetImageItem[] = [];
-    for (const file of picked) {
-      try {
-        const compressed = await compressImage(file);
-        added.push({
-          id: crypto.randomUUID(),
-          file: compressed,
-          // 预览 URL 由本组件创建：删除时即时 revoke；其余在父组件关闭/提交时统一释放（父组件持有 items）
-          previewUrl: URL.createObjectURL(compressed),
-        });
-      } catch (err) {
-        addToast(err instanceof Error ? err.message : "图片处理失败", "error");
+    useImperativeHandle(ref, () => ({ openPicker: () => inputRef.current?.click() }), []);
+
+    async function handleFiles(fileList: FileList | null) {
+      if (!fileList) return;
+      // 名额需同时扣除已入列与压缩中的占位，避免超过上限
+      const room = MAX_IMAGES - items.length - pendingCount;
+      const picked = Array.from(fileList).slice(0, Math.max(0, room));
+      if (inputRef.current) inputRef.current.value = "";
+      if (picked.length === 0) return;
+
+      setPendingCount((c) => c + picked.length);
+      for (const file of picked) {
+        try {
+          const compressed = await compressImage(file);
+          const item: SnippetImageItem = {
+            id: crypto.randomUUID(),
+            file: compressed,
+            // 预览 URL 由本组件创建：删除时即时 revoke；其余在父组件关闭/提交时统一释放
+            previewUrl: URL.createObjectURL(compressed),
+          };
+          // 函数式更新：以最新列表为准做权威限量，超额则丢弃并释放其预览 URL
+          onChange((prev) => {
+            if (prev.length >= MAX_IMAGES) {
+              URL.revokeObjectURL(item.previewUrl);
+              return prev;
+            }
+            return [...prev, item];
+          });
+        } catch (err) {
+          addToast(err instanceof Error ? err.message : "图片处理失败", "error");
+        } finally {
+          setPendingCount((c) => Math.max(0, c - 1));
+        }
       }
     }
-    if (inputRef.current) inputRef.current.value = "";
-    if (added.length === 0) return;
-    // 函数式更新：以最新列表为准做权威限量，丢弃超额项并释放其预览 URL
-    onChange((prev) => {
-      const accepted = added.slice(0, Math.max(0, MAX_IMAGES - prev.length));
-      added.slice(accepted.length).forEach((it) => URL.revokeObjectURL(it.previewUrl));
-      return [...prev, ...accepted];
-    });
-  }
 
-  function removeAt(index: number) {
-    const target = items[index];
-    if (target) URL.revokeObjectURL(target.previewUrl);
-    onChange(items.filter((_, i) => i !== index));
-  }
+    function removeAt(index: number) {
+      const target = items[index];
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      onChange(items.filter((_, i) => i !== index));
+    }
 
-  function handleDragEnd(e: DragEndEvent) {
-    const { active, over } = e;
-    if (!over || active.id === over.id) return;
-    const from = items.findIndex((it) => it.id === active.id);
-    const to = items.findIndex((it) => it.id === over.id);
-    onChange(moveItem(items, from, to));
-  }
+    function handleDragEnd(e: DragEndEvent) {
+      const { active, over } = e;
+      if (!over || active.id === over.id) return;
+      const from = items.findIndex((it) => it.id === active.id);
+      const to = items.findIndex((it) => it.id === over.id);
+      onChange(moveItem(items, from, to));
+    }
 
-  return (
-    <div className="px-[2px] py-1">
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={items.map((it) => it.id)} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-[repeat(3,80px)] justify-start gap-[10px]">
-            {items.map((it, index) => (
-              <SortableThumb
-                key={it.id}
-                item={it}
-                onPreview={() => setViewerIndex(index)}
-                onRemove={() => removeAt(index)}
-              />
-            ))}
-            {items.length < MAX_IMAGES && (
-              <button
-                type="button"
-                aria-label="添加图片"
-                disabled={disabled}
-                onClick={() => inputRef.current?.click()}
-                className="flex h-20 w-20 items-center justify-center rounded-md border border-dashed border-border text-muted-foreground hover:border-foreground/40 hover:bg-muted/40"
-              >
-                <SvgIcon name="plus" size={22} />
-              </button>
-            )}
-          </div>
-        </SortableContext>
-      </DndContext>
+    const canAddMore = items.length + pendingCount < MAX_IMAGES;
 
-      <input
-        ref={inputRef}
-        data-testid="snippet-image-input"
-        type="file"
-        accept="image/*"
-        multiple
-        hidden
-        onChange={(e) => handleFiles(e.target.files)}
-      />
+    return (
+      <div className="px-[2px] py-1">
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={items.map((it) => it.id)} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-[repeat(3,80px)] justify-start gap-[10px]">
+              {items.map((it, index) => (
+                <SortableThumb
+                  key={it.id}
+                  item={it}
+                  onPreview={() => setViewerIndex(index)}
+                  onRemove={() => removeAt(index)}
+                />
+              ))}
+              {Array.from({ length: pendingCount }).map((_, i) => (
+                <LoadingTile key={`pending-${i}`} />
+              ))}
+              {canAddMore && (
+                <button
+                  type="button"
+                  aria-label="添加图片"
+                  disabled={disabled}
+                  onClick={() => inputRef.current?.click()}
+                  className="flex h-20 w-20 items-center justify-center rounded-md border border-dashed border-border text-muted-foreground hover:border-foreground/40 hover:bg-muted/40"
+                >
+                  <SvgIcon name="plus" size={22} />
+                </button>
+              )}
+            </div>
+          </SortableContext>
+        </DndContext>
 
-      {viewerIndex !== null && (
-        <ImageViewer
-          images={items.map((it) => ({ src: it.previewUrl }))}
-          index={viewerIndex}
-          isOpen
-          onClose={() => setViewerIndex(null)}
-          onIndexChange={setViewerIndex}
+        <input
+          ref={inputRef}
+          data-testid="snippet-image-input"
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onChange={(e) => handleFiles(e.target.files)}
         />
-      )}
+
+        {viewerIndex !== null && (
+          <ImageViewer
+            images={items.map((it) => ({ src: it.previewUrl }))}
+            index={viewerIndex}
+            isOpen
+            onClose={() => setViewerIndex(null)}
+            onIndexChange={setViewerIndex}
+          />
+        )}
+      </div>
+    );
+  },
+);
+
+/** 压缩中的占位格：固定 80px，居中转圈。 */
+function LoadingTile() {
+  return (
+    <div
+      aria-label="图片处理中"
+      className="flex h-20 w-20 items-center justify-center rounded-md bg-muted/60"
+    >
+      <span className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-foreground" />
     </div>
   );
 }
@@ -169,7 +210,7 @@ function SortableThumb({
         type="button"
         aria-label="删除图片"
         onClick={onRemove}
-        className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[#15171a] shadow-sm hover:bg-zinc-100"
+        className="absolute right-1 top-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white p-0 leading-none text-[#15171a] shadow-sm hover:bg-zinc-100"
       >
         <SvgIcon name="close" size={12} />
       </button>

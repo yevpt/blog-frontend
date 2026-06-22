@@ -39,6 +39,23 @@ describe("SnippetImageUploader", () => {
     expect(await screen.findByRole("button", { name: "删除图片" })).toBeInTheDocument();
   });
 
+  it("选图后立即显示加载占位，压缩完成后替换为缩略图", async () => {
+    const user = userEvent.setup();
+    let resolveCompress!: () => void;
+    compressImage.mockImplementation(
+      (f: File) => new Promise<File>((r) => { resolveCompress = () => r(f); }),
+    );
+    render(<Harness />);
+    await user.upload(screen.getByTestId("snippet-image-input") as HTMLInputElement, img());
+    // 压缩未完成：加载占位出现，缩略图尚未出现
+    expect(await screen.findByLabelText("图片处理中")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "删除图片" })).not.toBeInTheDocument();
+    // 压缩完成：占位消失，缩略图出现
+    resolveCompress();
+    expect(await screen.findByRole("button", { name: "删除图片" })).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByLabelText("图片处理中")).not.toBeInTheDocument());
+  });
+
   it("连续两次选图各一张应累计 2 张缩略图（不因过期闭包丢图）", async () => {
     const user = userEvent.setup();
     compressImage.mockImplementation(async (f: File) => f);

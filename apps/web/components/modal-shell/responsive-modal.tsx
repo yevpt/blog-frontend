@@ -254,16 +254,26 @@ function MobileSheet({ title, onClose, children, footer }: InnerProps) {
   );
 }
 
-// ── 导出：打开时锁定桌面/移动端布局，避免媒体查询初始值抖动重复挂载 ───────────
+// ── 导出：每次打开时按当前视口判定桌面/移动端 ───────────────────────────────
+// 注意：本组件常驻挂载（见 global-modals），不能在挂载时一次性锁定布局，
+// 否则会停留在 app 加载时的视口判定、移动端无法弹出 sheet。改为在 isOpen
+// 变为 true 的那次重新判定；首帧 isDesktop 为 null 时不渲染，effect 落定后再挂载对应变体。
 export function ResponsiveModalShell({ isOpen, ...rest }: ResponsiveModalShellProps) {
-  const [isDesktop] = useState(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-      return false;
-    }
-    return window.matchMedia("(min-width: 768px)").matches;
-  });
+  const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (!isOpen) {
+      setIsDesktop(null);
+      return;
+    }
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      setIsDesktop(true);
+      return;
+    }
+    setIsDesktop(window.matchMedia("(min-width: 768px)").matches);
+  }, [isOpen]);
+
+  if (!isOpen || isDesktop === null) return null;
 
   return isDesktop ? <DesktopDialog {...rest} /> : <MobileSheet {...rest} />;
 }

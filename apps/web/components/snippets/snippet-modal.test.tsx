@@ -10,14 +10,19 @@ vi.mock("./snippet-text-input", () => ({
     <textarea aria-label="编辑器" placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} />
   ),
 }));
-vi.mock("./snippet-image-uploader", () => ({
-  SnippetImageUploader: ({ onChange }: any) => (
-    <button type="button" onClick={() => onChange([
-      { id: "1", file: new File([new Uint8Array(1)], "a.png", { type: "image/png" }), previewUrl: "blob:1" },
-      { id: "2", file: new File([new Uint8Array(1)], "b.png", { type: "image/png" }), previewUrl: "blob:2" },
-    ])}>inject</button>
-  ),
-}));
+vi.mock("./snippet-image-uploader", async () => {
+  const { forwardRef } = await vi.importActual<typeof import("react")>("react");
+  return {
+    SnippetImageUploader: forwardRef(function MockUploader({ onChange }: any, _ref) {
+      return (
+        <button type="button" onClick={() => onChange([
+          { id: "1", file: new File([new Uint8Array(1)], "a.png", { type: "image/png" }), previewUrl: "blob:1" },
+          { id: "2", file: new File([new Uint8Array(1)], "b.png", { type: "image/png" }), previewUrl: "blob:2" },
+        ])}>inject</button>
+      );
+    }),
+  };
+});
 
 function mockDesktop() {
   window.matchMedia = vi.fn().mockImplementation((q: string) => ({
@@ -41,6 +46,16 @@ describe("SnippetModal", () => {
     expect(await screen.findByRole("dialog", { name: "写碎语" })).toBeInTheDocument();
     expect(screen.getByLabelText("编辑器")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "发布" })).toBeDisabled();
+  });
+
+  it("底栏展示图片计数并提供添加按钮", async () => {
+    const user = userEvent.setup();
+    render(<SnippetModal />);
+    await screen.findByRole("dialog", { name: "写碎语" });
+    const addBtn = screen.getByRole("button", { name: "添加图片" });
+    expect(addBtn).toHaveTextContent("0/9");
+    await user.click(screen.getByRole("button", { name: "inject" }));
+    expect(screen.getByRole("button", { name: "添加图片" })).toHaveTextContent("2/9");
   });
 
   it("填写正文后发布：以 multipart 提交到 /api/moments 并关闭", async () => {
