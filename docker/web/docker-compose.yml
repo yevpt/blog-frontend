@@ -3,7 +3,9 @@
 
 services:
   blog-web:
-    image: ${BLOG_WEB_IMAGE:?BLOG_WEB_IMAGE is required}
+    # BLOG_WEB_IMAGE 由部署脚本写入 .deploy.env，格式示例：
+    # krccr.ccs.tencentyun.com/yevpt/blog-frontend-web:<commit-sha>
+    image: ${BLOG_WEB_IMAGE}
     container_name: blog-web
     restart: unless-stopped
     environment:
