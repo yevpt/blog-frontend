@@ -8,9 +8,10 @@
 
 - `main`、`dev` 推送和手动触发会部署。
 - PR 只做测试、类型检查和 lint，不部署。
-- 远端根目录通过 GitHub Actions 变量 `DEPLOY_ROOT` 配置，默认 `/root/docker/blog-frontend`。
-- `web` 部署到 `$DEPLOY_ROOT/web`，保留服务器上的 `.env`。
-- `admin` 部署到 `$DEPLOY_ROOT/admin`，上传并解压静态包。
+- 远端目录通过 GitHub Actions 变量 `DEPLOY_WEB_ROOT` 和 `DEPLOY_ADMIN_ROOT` 分别配置。
+- `web` 直接部署到 `$DEPLOY_WEB_ROOT`，保留服务器上的 `.env`。
+- `admin` 直接部署到 `$DEPLOY_ADMIN_ROOT`，上传并解压静态包。
+- 镜像仓库通过 GitHub Actions 变量 `REGISTRY_HOST`、`REGISTRY_USERNAME`、`REGISTRY_NAMESPACE` 配置。
 
 ## Architecture
 

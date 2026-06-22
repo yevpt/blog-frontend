@@ -1,5 +1,8 @@
 name: Deploy
 
+# 部署入口：
+# - push 到 main/dev 会自动部署。
+# - workflow_dispatch 允许在 GitHub Actions 页面手动触发部署。
 on:
   push:
     branches:
@@ -10,33 +13,59 @@ on:
 permissions:
   contents: read
 
+# 全局变量说明：
+# - FORCE_JAVASCRIPT_ACTIONS_TO_NODE24：强制部分 JS Action 使用 Node 24 运行。
+# - REGISTRY_HOST：容器镜像仓库域名，例如 krccr.ccs.tencentyun.com。
+# - REGISTRY_USERNAME：容器镜像仓库登录用户名，例如腾讯云账号 ID。
+# - REGISTRY_NAMESPACE：镜像命名空间/项目路径，例如 krccr.ccs.tencentyun.com/yevpt。
+# - WEB_IMAGE_NAME：Web 镜像完整仓库名，由 REGISTRY_NAMESPACE 拼出，最终会推送 latest 和 commit sha 两个 tag。
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  REGISTRY: krccr.ccs.tencentyun.com
-  REGISTRY_USERNAME: "462703445"
-  WEB_IMAGE_NAME: krccr.ccs.tencentyun.com/yevpt/blog-frontend-web
+  REGISTRY_HOST: ${{ vars.REGISTRY_HOST }}
+  REGISTRY_USERNAME: ${{ vars.REGISTRY_USERNAME }}
+  REGISTRY_NAMESPACE: ${{ vars.REGISTRY_NAMESPACE }}
+  WEB_IMAGE_NAME: ${{ vars.REGISTRY_NAMESPACE }}/blog-frontend-web
 
 jobs:
+  # 构建 apps/web 的 Docker 镜像，并推送到容器镜像仓库。
   web-image:
     name: Build and Push Web Image
     runs-on: ubuntu-latest
+    env:
+      # REGISTRY_PASSWORD：容器镜像仓库登录密码/访问令牌。
+      # 新环境建议配置 secret REGISTRY_PASSWORD；TENCENT_REGISTRY_PASSWORD 仅用于兼容旧配置。
+      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD || secrets.TENCENT_REGISTRY_PASSWORD }}
     outputs:
+      # 提供给 deploy job 使用，确保远端部署的是本次构建出的 commit sha 镜像。
       image: ${{ env.WEB_IMAGE_NAME }}
       tag: ${{ github.sha }}
     steps:
+      # 拉取仓库代码，Docker build 需要读取 Dockerfile、apps/web 和 workspace 依赖。
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 提前检查镜像仓库相关变量/密钥，避免 build 到一半才因为空值失败。
+      - name: Validate registry variables
+        run: |
+          set -euo pipefail
+          : "${REGISTRY_HOST:?Missing GitHub Actions variable REGISTRY_HOST}"
+          : "${REGISTRY_USERNAME:?Missing GitHub Actions variable REGISTRY_USERNAME}"
+          : "${REGISTRY_NAMESPACE:?Missing GitHub Actions variable REGISTRY_NAMESPACE}"
+          : "${REGISTRY_PASSWORD:?Missing GitHub Actions secret REGISTRY_PASSWORD}"
+
+      # 启用 Docker Buildx，用于跨平台构建、缓存和推送镜像。
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Tencent Registry
+      # 登录容器镜像仓库，后续 docker/build-push-action 才能 push 镜像。
+      - name: Login to Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ${{ env.REGISTRY_HOST }}
           username: ${{ env.REGISTRY_USERNAME }}
-          password: ${{ secrets.TENCENT_REGISTRY_PASSWORD }}
+          password: ${{ env.REGISTRY_PASSWORD }}
 
+      # 使用 docker/web/Dockerfile 构建 Web 镜像，并推送 latest 与当前 commit sha 两个 tag。
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -50,31 +79,39 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # 构建 apps/admin 的静态文件，并把 dist 打包成 artifact，交给 deploy job 上传到服务器。
   admin-artifact:
     name: Build Admin Artifact
     runs-on: ubuntu-latest
     steps:
+      # 拉取仓库代码，admin build 需要读取 apps/admin 和 workspace 依赖。
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 安装 pnpm，版本来自仓库的 packageManager 配置。
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
 
+      # 安装 Node.js 24，并开启 pnpm 依赖缓存。
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
 
+      # 严格按 pnpm-lock.yaml 安装依赖，避免 CI 和本地依赖树不一致。
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # 构建 admin 静态产物，输出目录为 apps/admin/dist。
       - name: Build admin
         run: pnpm --filter admin build
 
+      # 将 admin dist 目录内容打包，后续 scp 到远端静态目录。
       - name: Pack admin dist
         run: tar -czf admin-dist.tar.gz -C apps/admin/dist .
 
+      # 上传 artifact，让 deploy job 可以下载同一份 admin-dist.tar.gz。
       - name: Upload admin artifact
         uses: actions/upload-artifact@v4
         with:
@@ -82,6 +119,7 @@ jobs:
           path: admin-dist.tar.gz
           if-no-files-found: error
 
+  # 部署阶段：更新 Web Docker Compose 服务，并替换 Admin 静态文件目录。
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
@@ -90,20 +128,46 @@ jobs:
       - admin-artifact
     environment: production
     env:
+      # REMOTE_HOST：远端服务器地址/IP，放在 Secrets 中避免公开。
       REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+      # REMOTE_USER：SSH 登录用户，放在 Secrets 中避免暴露服务器账号。
       REMOTE_USER: ${{ secrets.REMOTE_USER }}
+      # REMOTE_PORT：SSH 端口，放在 Variables 中；未配置时脚本默认使用 22。
       REMOTE_PORT: ${{ vars.REMOTE_PORT }}
-      DEPLOY_ROOT: ${{ vars.DEPLOY_ROOT }}
+      # DEPLOY_WEB_ROOT：Web 服务部署目录；docker-compose.yml、.env、.deploy.env 都直接位于此目录。
+      DEPLOY_WEB_ROOT: ${{ vars.DEPLOY_WEB_ROOT }}
+      # DEPLOY_ADMIN_ROOT：Admin 静态文件部署目录；构建产物会直接解压到此目录。
+      DEPLOY_ADMIN_ROOT: ${{ vars.DEPLOY_ADMIN_ROOT }}
+      # WEB_IMAGE_REF：本次要部署的 Web 镜像，来自 web-image job 的输出，格式为 镜像名:commit_sha。
       WEB_IMAGE_REF: ${{ needs.web-image.outputs.image }}:${{ needs.web-image.outputs.tag }}
+      # REGISTRY_PASSWORD：远端服务器 docker login 使用的仓库密码/访问令牌。
+      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD || secrets.TENCENT_REGISTRY_PASSWORD }}
     steps:
+      # 拉取仓库代码，deploy job 需要把 docker/web/docker-compose.yml 同步到远端。
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 下载 admin-artifact job 上传的 admin-dist.tar.gz，准备 scp 到服务器。
       - name: Download admin artifact
         uses: actions/download-artifact@v4
         with:
           name: admin-dist
 
+      # 检查部署所需的服务器、目录、镜像仓库变量是否都已配置。
+      - name: Validate deploy variables
+        run: |
+          set -euo pipefail
+          : "${REMOTE_HOST:?Missing secret REMOTE_HOST}"
+          : "${REMOTE_USER:?Missing secret REMOTE_USER}"
+          : "${DEPLOY_WEB_ROOT:?Missing GitHub Actions variable DEPLOY_WEB_ROOT}"
+          : "${DEPLOY_ADMIN_ROOT:?Missing GitHub Actions variable DEPLOY_ADMIN_ROOT}"
+          : "${REGISTRY_HOST:?Missing GitHub Actions variable REGISTRY_HOST}"
+          : "${REGISTRY_USERNAME:?Missing GitHub Actions variable REGISTRY_USERNAME}"
+          : "${REGISTRY_PASSWORD:?Missing GitHub Actions secret REGISTRY_PASSWORD}"
+
+      # 准备 SSH 私钥和 known_hosts：
+      # - SSH_PRIVATE_KEY：部署服务器私钥，必须配置为 GitHub Secret。
+      # - ssh-keyscan：预先信任远端主机指纹，避免 scp/ssh 交互式确认卡住。
       - name: Prepare SSH
         run: |
           set -euo pipefail
@@ -114,46 +178,55 @@ jobs:
           REMOTE_PORT="${REMOTE_PORT:-22}"
           ssh-keyscan -p "$REMOTE_PORT" "$REMOTE_HOST" >> ~/.ssh/known_hosts
 
+      # 同步部署所需文件：
+      # - 创建 Web/Admin 两个独立部署目录。
+      # - Web 只上传 docker-compose.yml，运行时 .env 保留在服务器上。
+      # - Admin 上传本次构建出的 admin-dist.tar.gz。
       - name: Sync deploy files
         run: |
           set -euo pipefail
           REMOTE_PORT="${REMOTE_PORT:-22}"
-          DEPLOY_ROOT="${DEPLOY_ROOT:-/root/docker/blog-frontend}"
           ssh -i ~/.ssh/deploy_key -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" \
-            "mkdir -p '$DEPLOY_ROOT/web' '$DEPLOY_ROOT/admin'"
+            "mkdir -p '$DEPLOY_WEB_ROOT' '$DEPLOY_ADMIN_ROOT'"
           scp -i ~/.ssh/deploy_key -P "$REMOTE_PORT" docker/web/docker-compose.yml \
-            "$REMOTE_USER@$REMOTE_HOST:$DEPLOY_ROOT/web/docker-compose.yml"
+            "$REMOTE_USER@$REMOTE_HOST:$DEPLOY_WEB_ROOT/docker-compose.yml"
           scp -i ~/.ssh/deploy_key -P "$REMOTE_PORT" admin-dist.tar.gz \
-            "$REMOTE_USER@$REMOTE_HOST:$DEPLOY_ROOT/admin/admin-dist.tar.gz"
+            "$REMOTE_USER@$REMOTE_HOST:$DEPLOY_ADMIN_ROOT/admin-dist.tar.gz"
 
+      # 登录远端服务器并执行实际部署：
+      # - Web：写入本次镜像 tag，docker compose pull/up 更新容器。
+      # - Admin：解压新静态文件，清理旧文件后复制新版本到部署目录。
       - name: Deploy with Docker Compose and static files
         run: |
           set -euo pipefail
           REMOTE_PORT="${REMOTE_PORT:-22}"
-          DEPLOY_ROOT="${DEPLOY_ROOT:-/root/docker/blog-frontend}"
           ssh -i ~/.ssh/deploy_key -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" \
-            "DEPLOY_ROOT='$DEPLOY_ROOT' \
+            "DEPLOY_WEB_ROOT='$DEPLOY_WEB_ROOT' \
+             DEPLOY_ADMIN_ROOT='$DEPLOY_ADMIN_ROOT' \
              WEB_IMAGE_REF='$WEB_IMAGE_REF' \
-             REGISTRY='${{ env.REGISTRY }}' \
-             REGISTRY_USERNAME='${{ env.REGISTRY_USERNAME }}' \
-             REGISTRY_PASSWORD='${{ secrets.TENCENT_REGISTRY_PASSWORD }}' \
+             REGISTRY_HOST='$REGISTRY_HOST' \
+             REGISTRY_USERNAME='$REGISTRY_USERNAME' \
+             REGISTRY_PASSWORD='$REGISTRY_PASSWORD' \
              bash -s" <<'REMOTE'
           set -euo pipefail
 
-          cd "$DEPLOY_ROOT/web"
+          # Web 目录必须已有 .env，里面放 API_BASE_URL、BLOG_USER_ID、WEB_PORT 等运行时配置。
+          cd "$DEPLOY_WEB_ROOT"
           if [ ! -f .env ]; then
-            echo "缺少 $DEPLOY_ROOT/web/.env，请先在服务器创建 Web 运行时环境变量文件。"
+            echo "缺少 $DEPLOY_WEB_ROOT/.env，请先在服务器创建 Web 运行时环境变量文件。"
             exit 1
           fi
 
+          # .deploy.env 只保存本次部署的镜像 tag，避免改动服务器上人工维护的 .env。
           printf 'BLOG_WEB_IMAGE=%s\n' "$WEB_IMAGE_REF" > .deploy.env
-          printf '%s\n' "$REGISTRY_PASSWORD" | docker login "$REGISTRY" -u "$REGISTRY_USERNAME" --password-stdin
+          printf '%s\n' "$REGISTRY_PASSWORD" | docker login "$REGISTRY_HOST" -u "$REGISTRY_USERNAME" --password-stdin
           docker compose --env-file .env --env-file .deploy.env pull blog-web
           docker compose --env-file .env --env-file .deploy.env up -d --remove-orphans blog-web
           docker compose --env-file .env --env-file .deploy.env ps blog-web
           docker image prune -f
 
-          cd "$DEPLOY_ROOT/admin"
+          # Admin 是静态文件部署：先解压到临时 .release，再替换目录内容；.env 会被保留。
+          cd "$DEPLOY_ADMIN_ROOT"
           rm -rf .release
           mkdir -p .release
           tar -xzf admin-dist.tar.gz -C .release

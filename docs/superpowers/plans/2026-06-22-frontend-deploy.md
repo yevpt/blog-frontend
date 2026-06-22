@@ -42,7 +42,7 @@
 - Create: `.github/workflows/deploy.yml`
 
 - [ ] Add test job matching existing CI checks.
-- [ ] Add `web-image` job that builds and pushes `krccr.ccs.tencentyun.com/yevpt/blog-frontend-web:latest` and `:${{ github.sha }}`.
+- [ ] Add `web-image` job that builds and pushes `${{ vars.REGISTRY_NAMESPACE }}/blog-frontend-web:latest` and `:${{ github.sha }}`.
 - [ ] Add `admin-artifact` job that builds admin and uploads `admin-dist.tar.gz`.
 - [ ] Add deploy job that prepares SSH, syncs web compose, deploys the web container, uploads and extracts the admin static archive.
 - [ ] Validate workflow YAML syntax with a parser.

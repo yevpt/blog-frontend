@@ -3,7 +3,7 @@
 
 services:
   blog-web:
-    image: ${BLOG_WEB_IMAGE:-krccr.ccs.tencentyun.com/yevpt/blog-frontend-web:latest}
+    image: ${BLOG_WEB_IMAGE:?BLOG_WEB_IMAGE is required}
     container_name: blog-web
     restart: unless-stopped
     environment:
