@@ -452,9 +452,9 @@ describe("ArticleSection", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it("取消点赞失败时提示取消点赞失败", async () => {
+  it("取消点赞失败时 toast 展示后端返回的具体原因", async () => {
     const user = userEvent.setup();
-    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "failed" }, 500));
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "操作太频繁，请稍后再试" }, 500));
 
     render(
       <ArticleSection
@@ -468,7 +468,7 @@ describe("ArticleSection", () => {
     await user.click(screen.getByRole("button", { name: "喜欢" }));
 
     await waitFor(() => {
-      expect(toastMockState.addToast).toHaveBeenCalledWith("取消点赞失败，请稍后重试", "error");
+      expect(toastMockState.addToast).toHaveBeenCalledWith("操作太频繁，请稍后再试", "error");
     });
   });
 
