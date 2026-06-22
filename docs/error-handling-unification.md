@@ -82,10 +82,11 @@ addToast(getApiErrorMessage(err, "<动作>失败，请稍后重试"), "error");
   - 步骤：加 `maxLength={2000}` + 接近上限计数器（与 `pill-comment-input.tsx` 一致）。
   - 测试：补 `rich-comment-input.test.tsx` 的 maxLength/计数器用例。
 
-- [ ] **B2 · 碎语正文**
+- [x] **B2 · 碎语正文**
   - 文件：`apps/web/components/snippets/snippet-modal.tsx`
   - 步骤：正文输入加 `maxLength={800}`（碎语上限 800）+ 计数器。
   - 测试：`snippet-modal.test.tsx` 补 maxLength 用例。
+  - **注：已核对，无需改动代码**——`MAX_CONTENT=800` 常量、`overLimit` 提交前拦截、footer `{content.length}/{MAX_CONTENT}` 计数器（超限变红）均已存在。补计数器显示用例。
 
 - [ ] **B3 · 用户资料内联编辑器**
   - 文件：`apps/web/app/users/[id]/_components/inline-field-editor.tsx`、`select-inline-editor.tsx`、`inline-date-editor.tsx`

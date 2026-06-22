@@ -271,6 +271,25 @@ describe("SnippetModal", () => {
     expect(screen.getByRole("button", { name: "发布" })).toBeDisabled();
   });
 
+  it("底栏计数器始终展示 当前长度/800 且超限时变红", async () => {
+    const user = userEvent.setup();
+    render(<SnippetModal />);
+    await screen.findByRole("dialog", { name: "写碎语" });
+    // 初始 0/800，颜色为 muted
+    const counter = screen.getByText("0/800");
+    expect(counter).toHaveClass("text-muted-foreground");
+    // 输入 800 字：仍可发布，计数器保持 muted
+    const editor = screen.getByLabelText("编辑器");
+    await user.click(editor);
+    await user.paste("a".repeat(800));
+    expect(screen.getByText("800/800")).toHaveClass("text-muted-foreground");
+    expect(screen.getByRole("button", { name: "发布" })).toBeEnabled();
+    // 再多 1 字：超限，计数器变 destructive 且发布禁用
+    await user.type(editor, "b");
+    expect(screen.getByText("801/800")).toHaveClass("text-destructive");
+    expect(screen.getByRole("button", { name: "发布" })).toBeDisabled();
+  });
+
   it("发布失败时 toast 报错且不关闭弹窗", async () => {
     const user = userEvent.setup();
     const { addToast } = await import("@/lib/toast");
