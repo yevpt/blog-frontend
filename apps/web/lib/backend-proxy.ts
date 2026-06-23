@@ -36,13 +36,23 @@ async function parseBackendJson(res: Response): Promise<NextResponse> {
     forwardCookies(res, errRes);
     return errRes;
   }
-  const json = await res.json();
-  if (json.code !== 0) {
+
+  const text = await res.text();
+  let json: { code?: number; message?: string; data?: unknown } = {};
+  if (text) {
+    try {
+      json = JSON.parse(text) as { code?: number; message?: string; data?: unknown };
+    } catch {
+      // 后端返回非 JSON（如空体）时按空对象处理，避免抛错
+    }
+  }
+
+  if (json.code !== undefined && json.code !== 0) {
     const errRes = NextResponse.json({ error: json.message }, { status: 400 });
     forwardCookies(res, errRes);
     return errRes;
   }
-  const okRes = NextResponse.json(json.data);
+  const okRes = NextResponse.json(json.data || {});
   forwardCookies(res, okRes);
   return okRes;
 }
@@ -55,7 +65,7 @@ export async function proxyGet(req: NextRequest, path: string): Promise<NextResp
       method: "GET",
       headers: { ...authHeader(token(req)), ...cookieHeader(req) },
     });
-    return parseBackendJson(res);
+    return await parseBackendJson(res);
   } catch {
     return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
   }
@@ -76,7 +86,7 @@ export async function proxySseGet(req: NextRequest, path: string): Promise<Respo
         ...cookieHeader(req),
       },
     });
-    if (!res.ok) return parseBackendJson(res);
+    if (!res.ok) return await parseBackendJson(res);
 
     return new Response(res.body, {
       status: res.status,
@@ -108,7 +118,7 @@ export async function proxyPost(
       headers: { "Content-Type": "application/json", ...authHeader(t), ...cookieHeader(req) },
       body,
     });
-    return parseBackendJson(res);
+    return await parseBackendJson(res);
   } catch {
     return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
   }
@@ -125,7 +135,7 @@ export async function proxyPatch(req: NextRequest, path: string): Promise<NextRe
       headers: { "Content-Type": "application/json", ...authHeader(t), ...cookieHeader(req) },
       body,
     });
-    return parseBackendJson(res);
+    return await parseBackendJson(res);
   } catch {
     return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
   }
@@ -142,7 +152,7 @@ export async function proxyPostForm(req: NextRequest, path: string): Promise<Nex
       headers: { ...authHeader(t), ...cookieHeader(req) },
       body: formData,
     });
-    return parseBackendJson(res);
+    return await parseBackendJson(res);
   } catch {
     return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
   }
@@ -157,7 +167,7 @@ export async function proxyDelete(req: NextRequest, path: string): Promise<NextR
       method: "DELETE",
       headers: { ...authHeader(t), ...cookieHeader(req) },
     });
-    return parseBackendJson(res);
+    return await parseBackendJson(res);
   } catch {
     return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
   }
