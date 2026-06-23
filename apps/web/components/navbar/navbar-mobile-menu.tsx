@@ -166,7 +166,7 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
             <div className="mt-2 border-t border-border/60 pt-2">
               {userId != null && (
                 <Link
-                  href="/messages"
+                  href="/notifications"
                   onClick={onClose}
                   aria-label="我的消息"
                   className={listRowClass}

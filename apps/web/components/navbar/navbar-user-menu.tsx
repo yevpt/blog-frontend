@@ -170,7 +170,7 @@ export function NavbarUserMenu({ isGlass = false, unreadCount = 0 }: NavbarUserM
         aria-expanded={open}
         onPress={handleToggle}
         className={cn(
-          "relative h-auto cursor-pointer overflow-hidden rounded-full bg-transparent p-0 ring-2 ring-transparent transition-shadow",
+          "relative h-auto cursor-pointer rounded-full bg-transparent p-0 ring-2 ring-transparent transition-shadow",
           "hover:bg-transparent hover:text-inherit hover:ring-primary/30",
           "focus:bg-transparent focus:outline-none focus:ring-primary/40 focus-visible:ring-primary/40 focus-visible:ring-offset-0",
           isGlass && "hover:ring-white/30",
@@ -180,7 +180,7 @@ export function NavbarUserMenu({ isGlass = false, unreadCount = 0 }: NavbarUserM
         {unreadCount > 0 && (
           <span
             data-testid="avatar-unread-dot"
-            className="absolute right-0 top-0 h-3 w-3 rounded-full border-2 border-background bg-destructive"
+            className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-background bg-destructive"
           />
         )}
       </Button>

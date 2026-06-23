@@ -47,7 +47,7 @@ function NavbarMobileMenuButton({
       {unreadCount > 0 && (
         <span
           data-testid="mobile-menu-unread-dot"
-          className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-background"
+          className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-background"
         />
       )}
       <span
