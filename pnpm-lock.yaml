@@ -98,6 +98,9 @@ importers:
       '@repo/api':
         specifier: workspace:*
         version: link:../../packages/api
+      '@repo/editor':
+        specifier: workspace:*
+        version: link:../../packages/editor
       '@repo/hooks':
         specifier: workspace:*
         version: link:../../packages/hooks
