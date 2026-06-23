@@ -19,4 +19,11 @@ describe("useNotificationStore", () => {
     useNotificationStore.getState().setUnreadCount(-3);
     expect(useNotificationStore.getState().unreadCount).toBe(0);
   });
+
+  it("bumpListSync 递增 listSyncVersion，reset 归零", () => {
+    useNotificationStore.getState().bumpListSync();
+    expect(useNotificationStore.getState().listSyncVersion).toBe(1);
+    useNotificationStore.getState().reset();
+    expect(useNotificationStore.getState().listSyncVersion).toBe(0);
+  });
 });

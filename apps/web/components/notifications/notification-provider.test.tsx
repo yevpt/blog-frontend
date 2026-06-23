@@ -59,6 +59,8 @@ function notification(overrides: Partial<NotificationItemResp>): NotificationIte
     source_id: 2,
     root_type: "article",
     root_id: 3,
+    source_deleted: false,
+    root_deleted: false,
     ...overrides,
   };
 }
@@ -117,6 +119,8 @@ describe("NotificationProvider", () => {
     await act(async () => {
       MockEventSource.instances[0]?.emit("notification");
     });
+
+    await waitFor(() => expect(useNotificationStore.getState().listSyncVersion).toBe(1));
 
     const toast = await screen.findByRole("button", { name: /新的碎语回复/ });
     await userEvent.click(toast);
