@@ -98,15 +98,32 @@
 - 选中已读 / 全部已读：`POST /notifications/read-all`，body `NotificationReadAllReq`（`{ ids }` 或 `{ all: true }`）→ 对应条目置已读、刷新 `unreadCount`。
 - 写操作后统一通过 store 的 `setUnreadCount` 同步角标（与 navbar、provider 一致）。
 
-## 需新增的客户端方法（packages/api/src/client.ts）
+## 客户端取数：沿用 apiJson（不新增 typed client 方法）
 
-在 `notifications` 命名空间下新增，使用 `fetchAuthed`：
+本仓库通知的客户端取数已有既定模式：`NotificationProvider` 用 `apiJson`（`@/lib/client-fetch`）直打 BFF 路由 `/api/notifications/...`；typed `@repo/api` client 仅在**服务端**用（`layout.tsx` 的 `api.notifications.unreadCount()`）。typed `list` 当前无客户端消费者。
 
-- `read(id: number)` → `PATCH /notifications/{id}/read`，返回 `NotificationReadResp`
-- `readAll(req: NotificationReadAllReq)` → `POST /notifications/read-all`，返回 `NotificationReadResp`
-- `remove(id: number)` → `DELETE /notifications/{id}`（返回体待后端确认，默认无内容）
+因此页面 Hook 沿用 `apiJson`，**不**给 `@repo/api` 新增 `read/readAll/remove`（否则是无人调用的死代码，违反 YAGNI）：
 
-> 注意：路径前缀、HTTP 方法以后端实际实现为准，实现前与后端核对 `read-all` / 删除端点。
+- 列表：`apiJson<NotificationPageResp>(\`/api/notifications?page=&page_size=&unread_only=\`)`
+- 标记已读：`apiJson<NotificationReadResp>(\`/api/notifications/${id}/read\`, { method: "PATCH" })`
+- 批量已读：`apiJson<NotificationReadResp>("/api/notifications/read-all", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(req) })`
+- 删除：`apiJson<NotificationReadResp>(\`/api/notifications/${id}\`, { method: "DELETE" })`
+
+> 注意：BFF 之后的真后端路径/方法以后端实际为准，实现前与后端核对 `read-all` / 删除端点。
+> 若未来出现服务端消费者，再按 extending-api 给 typed client 补对应方法。
+
+## 后端对接：两层职责
+
+真正的 Go 后端是独立仓库，**不在本仓库范围**。本仓库的「后端对接」指 Next.js BFF 代理层（`apps/web/app/api/notifications/**`），由 `apps/web/lib/backend-proxy.ts` 的现成 helper 转发请求。
+
+- 真后端依赖（外部）：`PATCH /notifications/{id}/read`（已确认）、`POST /notifications/read-all`、`DELETE /notifications/{id}`（后两者待核对）。
+- 本仓库需新增的 BFF 代理路由（helper 已就绪，仅加 route 文件）：
+  - `apps/web/app/api/notifications/[id]/read/route.ts` → `PATCH` → `proxyPatch(req, \`/notifications/${id}/read\`)`
+  - `apps/web/app/api/notifications/read-all/route.ts` → `POST` → `proxyPost(req, "/notifications/read-all")`
+  - `apps/web/app/api/notifications/[id]/route.ts` → `DELETE` → `proxyDelete(req, \`/notifications/${id}\`)`
+- 动态段 `[id]` 由 route handler 的 `params` 取出拼进 path。
+- 每个 route 配套 `route.test.ts`（mock backend-proxy helper，断言转发路径与方法）。
+- client 方法（上一节）调用的是这些 BFF 路径（如 `/api/notifications/{id}/read`），经 `fetchAuthed` 走同源代理，与现有 `list`/`unreadCount` 一致。
 
 ## 跳转规则（沿用并修正 getNotificationHref）
 
