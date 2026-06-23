@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import clsx from "clsx";
+import { attachMarkdownImageFallbacks, MD_IMAGE_FALLBACK_CLASS } from "./image-fallback";
 
 export interface MarkdownContentProps {
   /** 已由 markdownToHtml 渲染好的 HTML 字符串 */
@@ -16,7 +17,26 @@ export interface MarkdownContentProps {
   className?: string;
   /** 点击正文图片时回调（已渲染的原生 img 用事件委托捕获）。 */
   onImagePreview?: (images: { src: string; alt?: string }[], index: number) => void;
+  /**
+   * 图片加载失败时展示占位图标；comment 模式默认开启。
+   * 无效 src 需在渲染前通过 stripInvalidImages 预处理。
+   */
+  imageErrorFallback?: boolean;
 }
+
+const IMAGE_FALLBACK_VARIANT_CLASSES = [
+  `[&_.${MD_IMAGE_FALLBACK_CLASS}]:inline-flex`,
+  `[&_.${MD_IMAGE_FALLBACK_CLASS}]:items-center`,
+  `[&_.${MD_IMAGE_FALLBACK_CLASS}]:justify-center`,
+  `[&_.${MD_IMAGE_FALLBACK_CLASS}]:size-12`,
+  `[&_.${MD_IMAGE_FALLBACK_CLASS}]:rounded-md`,
+  `[&_.${MD_IMAGE_FALLBACK_CLASS}]:border`,
+  `[&_.${MD_IMAGE_FALLBACK_CLASS}]:border-dashed`,
+  `[&_.${MD_IMAGE_FALLBACK_CLASS}]:border-border/80`,
+  `[&_.${MD_IMAGE_FALLBACK_CLASS}]:bg-muted/80`,
+  `[&_.${MD_IMAGE_FALLBACK_CLASS}]:text-muted-foreground`,
+  `[&_.${MD_IMAGE_FALLBACK_CLASS}]:align-middle`,
+].join(" ");
 
 const VARIANT_CLASSES: Record<"article" | "comment", string> = {
   article: "prose prose-neutral max-w-none dark:prose-invert",
@@ -31,6 +51,7 @@ const VARIANT_CLASSES: Record<"article" | "comment", string> = {
     // 首/尾代码块的外边距对齐段落（prose-p:my-0.5），否则会顶飞「回复」按钮造成上下间距失衡。
     "[&_.md-code-wrapper]:my-2.5 [&_.md-code-wrapper:first-child]:mt-0.5 [&_.md-code-wrapper:last-child]:mb-0.5",
     "prose-img:max-w-[240px] prose-img:rounded-md",
+    IMAGE_FALLBACK_VARIANT_CLASSES,
     "prose-pre:bg-[var(--md-code-bg)] prose-pre:text-[var(--editor-code-fg)]",
     "prose-pre:border prose-pre:border-[var(--md-code-border)] prose-pre:rounded-lg",
     "prose-code:text-[var(--editor-code-fg)]",
@@ -45,6 +66,7 @@ export function MarkdownContent({
   variant = "article",
   className,
   onImagePreview,
+  imageErrorFallback = variant === "comment",
 }: MarkdownContentProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -89,6 +111,13 @@ export function MarkdownContent({
     container.addEventListener("click", handleClick);
     return () => container.removeEventListener("click", handleClick);
   }, [onImagePreview]);
+
+  useEffect(() => {
+    if (!imageErrorFallback) return;
+    const container = containerRef.current;
+    if (!container) return;
+    attachMarkdownImageFallbacks(container);
+  }, [html, imageErrorFallback]);
 
   return (
     <div

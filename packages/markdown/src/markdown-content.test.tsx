@@ -106,3 +106,14 @@ describe("MarkdownContent 图片预览", () => {
     expect(() => fireEvent.click(screen.getByAltText("图"))).not.toThrow();
   });
 });
+
+describe("MarkdownContent 图片加载失败", () => {
+  it("comment 模式下加载失败替换为占位图标", () => {
+    const html = '<p><img src="https://example.com/broken.jpg" alt="坏图"></p>';
+    const { container } = render(<MarkdownContent html={html} variant="comment" />);
+    const img = screen.getByAltText("坏图") as HTMLImageElement;
+    fireEvent.error(img);
+    expect(container.querySelector("img")).toBeNull();
+    expect(container.querySelector(".md-image-fallback")).toBeInTheDocument();
+  });
+});

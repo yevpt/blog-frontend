@@ -8,11 +8,18 @@ import rehypeStringify from "rehype-stringify";
 import rehypeHighlight from "rehype-highlight";
 import { visit } from "unist-util-visit";
 import type { Root, Element, Properties } from "hast";
+import { isSafeImageSrc } from "./html-excerpt";
+import { buildImageFallbackHast } from "./image-fallback";
 
 export interface TocItem {
   id: string;
   text: string;
   level: 2 | 3;
+}
+
+export interface MarkdownRenderOptions {
+  /** 摘录场景：仅移除无效/相对路径图片，保留合法 http(s) 与站内绝对路径。 */
+  stripInvalidImages?: boolean;
 }
 
 // 语言显示名映射
@@ -229,31 +236,49 @@ function buildSanitizeSchema() {
   };
 }
 
+function rehypeStripInvalidImages() {
+  return (tree: Root) => {
+    visit(tree, "element", (node, index, parent) => {
+      if (node.tagName !== "img" || !parent || index == null) return;
+      if (isSafeImageSrc(node.properties?.src)) return;
+      parent.children[index] = buildImageFallbackHast();
+    });
+  };
+}
+
 /**
  * 构建统一的 unified 管线。
  * 顺序：remark-parse → remark-rehype → rehype-raw → rehype-slug
  *       → rehype-highlight → rehypeCodeWrapper → rehype-sanitize → rehype-stringify
  */
-function buildPipeline() {
-  return unified()
+function buildPipeline(options: MarkdownRenderOptions = {}) {
+  const processor = unified()
     .use(remarkParse)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeSlug)
     .use(rehypeHighlight, { detect: false, ignoreMissing: true })
     .use(rehypeCodeWrapper)
-    .use(rehypeSanitize, buildSanitizeSchema())
-    .use(rehypeStringify);
+    .use(rehypeSanitize, buildSanitizeSchema());
+
+  if (options.stripInvalidImages) {
+    processor.use(rehypeStripInvalidImages);
+  }
+
+  return processor.use(rehypeStringify);
 }
 
 /** 同步版 Markdown → HTML，适用于客户端 useMemo 实时渲染（无加载状态、无闪烁）。 */
-export function markdownToHtmlSync(markdown: string): string {
-  return String(buildPipeline().processSync(markdown));
+export function markdownToHtmlSync(markdown: string, options?: MarkdownRenderOptions): string {
+  return String(buildPipeline(options).processSync(markdown));
 }
 
 /** 异步版 Markdown → HTML，供服务端/SSR 使用（如文章详情页）。 */
-export async function markdownToHtml(markdown: string): Promise<string> {
-  return String(await buildPipeline().process(markdown));
+export async function markdownToHtml(
+  markdown: string,
+  options?: MarkdownRenderOptions,
+): Promise<string> {
+  return String(await buildPipeline(options).process(markdown));
 }
 
 /**

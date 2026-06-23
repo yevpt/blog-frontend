@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { markdownToHtml, extractTocFromHtml } from "./render";
+import { markdownToHtml, markdownToHtmlSync, extractTocFromHtml } from "./render";
 
 describe("markdownToHtml", () => {
   it("将 **bold** 转换为 <strong>bold</strong>", async () => {
@@ -25,6 +25,46 @@ describe("markdownToHtml", () => {
   it("过滤危险的 <script> 标签", async () => {
     const html = await markdownToHtml('<script>alert("xss")</script>');
     expect(html).not.toContain("<script>");
+  });
+
+  it("剥离 onerror 等危险 img 属性", async () => {
+    const html = await markdownToHtml('<img src="123" onerror="alert(1)"/>');
+    expect(html).not.toContain("onerror");
+    expect(html).toContain("<img");
+  });
+
+  it("stripInvalidImages 将无效 src 替换为占位图标", () => {
+    const html = markdownToHtmlSync('<img src="123" onerror="alert(1)"/>', {
+      stripInvalidImages: true,
+    });
+    expect(html).not.toContain("<img");
+    expect(html).toContain("md-image-fallback");
+    expect(html).toContain("#icon-image-off");
+  });
+
+  it("stripInvalidImages 保留合法 https 图片", () => {
+    const html = markdownToHtmlSync('<img src="https://example.com/a.png" alt="图"/>', {
+      stripInvalidImages: true,
+    });
+    expect(html).toContain("<img");
+    expect(html).toContain('src="https://example.com/a.png"');
+    expect(html).not.toContain("[图片]");
+  });
+
+  it("stripInvalidImages 移除 Markdown 无效相对路径图片", () => {
+    const html = markdownToHtmlSync("![截图](123)", {
+      stripInvalidImages: true,
+    });
+    expect(html).not.toContain("<img");
+    expect(html).toContain("md-image-fallback");
+  });
+
+  it("stripInvalidImages 保留 Markdown 合法 URL 图片", () => {
+    const html = markdownToHtmlSync("![截图](https://example.com/a.png)", {
+      stripInvalidImages: true,
+    });
+    expect(html).toContain("<img");
+    expect(html).toContain("https://example.com/a.png");
   });
 
   it("typescript 代码围栏生成语法高亮类名", async () => {
