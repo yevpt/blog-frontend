@@ -61,6 +61,37 @@ export async function proxyGet(req: NextRequest, path: string): Promise<NextResp
   }
 }
 
+/** SSE GET 代理：保持流式响应，携带 access token 和 Cookie */
+export async function proxySseGet(req: NextRequest, path: string): Promise<Response> {
+  const t = token(req);
+  if (!t) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const qs = req.nextUrl.searchParams.toString();
+  try {
+    const res = await fetch(`${BASE}${path}${qs ? `?${qs}` : ""}`, {
+      method: "GET",
+      headers: {
+        Accept: "text/event-stream",
+        ...authHeader(t),
+        ...cookieHeader(req),
+      },
+    });
+    if (!res.ok) return parseBackendJson(res);
+
+    return new Response(res.body, {
+      status: res.status,
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
+      },
+    });
+  } catch {
+    return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
+  }
+}
+
 /** POST 代理：转发 JSON body，携带 access token 和 Cookie（requireAuth=true 时无 token 直接 401） */
 export async function proxyPost(
   req: NextRequest,
