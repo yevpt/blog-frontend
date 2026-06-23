@@ -184,8 +184,8 @@ export function useNotifications({ pageSize = 20 }: UseNotificationsOptions = {}
 
   const markReadBatch = useCallback(
     async (ids: number[]) => {
-      await apiJson<NotificationReadResp>("/api/notifications/read-all", {
-        method: "POST",
+      await apiJson<NotificationReadResp>("/api/notifications/read", {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids }),
       });
@@ -195,8 +195,8 @@ export function useNotifications({ pageSize = 20 }: UseNotificationsOptions = {}
   );
 
   const markAllRead = useCallback(async () => {
-    await apiJson<NotificationReadResp>("/api/notifications/read-all", {
-      method: "POST",
+    await apiJson<NotificationReadResp>("/api/notifications/read", {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ all: true }),
     });
