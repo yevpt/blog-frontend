@@ -32,5 +32,4 @@ export const musicOptions: MusicOption[] = [
   { id: "midnight", label: "Midnight Drafts", artist: "Luma", duration: "03:42" },
   { id: "rain", label: "Quiet Rain", artist: "Paperroom", duration: "04:18" },
   { id: "city", label: "City Windows", artist: "Taro", duration: "02:57" },
-  { id: "none", label: "不使用背景音乐", artist: "文章详情页", duration: "静音" },
 ];
