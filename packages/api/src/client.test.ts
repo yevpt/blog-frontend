@@ -629,6 +629,48 @@ describe("createApiClient", () => {
         expect.objectContaining({ method: "GET" }),
       );
     });
+
+    it("list 返回条目保留 actor_user 与删除状态", async () => {
+      const listItem = {
+        id: 1,
+        event_id: 2,
+        type: "article_liked",
+        title: "赞了你的文章",
+        content_excerpt: "",
+        is_read: false,
+        created_at: "2026-01-01T00:00:00Z",
+        actor_user: { id: 3, nickname: "Alice", avatar_url: "https://cdn/a.png" },
+        source_type: "article",
+        source_id: 10,
+        root_type: "article",
+        root_id: 10,
+        source_deleted: true,
+        root_deleted: false,
+        like_count: 2,
+        is_liked: true,
+        reply_count: 1,
+      };
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({
+          code: 0,
+          message: "ok",
+          data: { total: 1, page: 1, page_size: 20, list: [listItem] },
+        }),
+      );
+      const client = createApiClient({
+        baseUrl: "http://api",
+        getAccessToken: () => "token123",
+      });
+
+      const result = await client.notifications.list({ page: 1, page_size: 20 });
+
+      expect(result.list[0]?.actor_user).toEqual(listItem.actor_user);
+      expect(result.list[0]?.source_deleted).toBe(true);
+      expect(result.list[0]?.root_deleted).toBe(false);
+      expect(result.list[0]?.like_count).toBe(2);
+      expect(result.list[0]?.is_liked).toBe(true);
+      expect(result.list[0]?.reply_count).toBe(1);
+    });
   });
 
   // ── 评论接口 ─────────────────────────────────────────────────────
