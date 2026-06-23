@@ -103,6 +103,12 @@ export interface RichEditorProps extends InsertHandlers {
   characterCountThreshold?: number;
 
   /**
+   * 是否在工具栏显示字数胶囊。
+   * 默认 true（有 maxLength 时）；碎语弹窗等底栏已有计数的场景传 false。
+   */
+  showToolbarCharacterCount?: boolean;
+
+  /**
    * 当前用户是否已登录。
    * - 未提供时（undefined）：向后兼容，按已登录处理
    * - false：提交按钮替换为「请先登录」，点击触发 onLoginRequired

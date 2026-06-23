@@ -47,6 +47,20 @@ describe("RichEditor", () => {
     expect(root?.className).not.toContain("focus-within:border-primary");
     expect(editorArea).toHaveClass("min-h-[88px]");
     expect(editorArea?.className).toContain("[&_.tiptap]:min-h-[88px]");
+    expect(editorArea?.className).toContain("[&_.tiptap]:w-full");
+    expect(editorArea?.className).toContain("[&_.tiptap]:!max-w-none");
+  });
+
+  it("showToolbarCharacterCount=false 时不渲染工具栏字数胶囊", () => {
+    render(
+      <RichEditor
+        value="hello"
+        onChange={() => {}}
+        maxLength={20}
+        showToolbarCharacterCount={false}
+      />,
+    );
+    expect(screen.queryByText("5/20")).not.toBeInTheDocument();
   });
 
   it("提交按钮：内容为空时呈禁用态（bg-primary/50）", () => {

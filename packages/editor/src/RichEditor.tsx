@@ -51,6 +51,7 @@ export function RichEditor({
   submitDisabled,
   maxLength,
   characterCountThreshold,
+  showToolbarCharacterCount = true,
   isLoggedIn,
   onLoginRequired,
   onInsertImage,
@@ -103,6 +104,7 @@ export function RichEditor({
   const currentLength = value.length;
   const isOverLimit = maxLength != null && currentLength > maxLength;
   const showCharacterCount =
+    showToolbarCharacterCount &&
     maxLength != null &&
     (characterCountThreshold == null || currentLength >= maxLength - characterCountThreshold);
   const characterCountLabel = showCharacterCount ? `${currentLength}/${maxLength}` : undefined;
@@ -141,18 +143,24 @@ export function RichEditor({
       <div
         data-rich-editor-area
         className={clsx(
-          "min-h-[88px]",
-          "[&_.tiptap]:block",
+          "min-h-[88px] w-full",
+          "[&_.tiptap]:block [&_.tiptap]:w-full",
           header ? "[&_.tiptap]:min-h-[64px]" : "[&_.tiptap]:min-h-[88px]",
-          "[&_.tiptap]:max-h-56 [&_.tiptap]:overflow-y-auto",
+          "[&_.tiptap]:max-h-56 [&_.tiptap]:overflow-y-auto [&_.tiptap]:overflow-x-hidden",
           "[&_.tiptap]:px-0 [&_.tiptap]:py-0 [&_.tiptap]:text-[14px] [&_.tiptap]:leading-[1.6]",
           "[&_.tiptap]:text-foreground",
           "[&_.tiptap]:outline-none",
-          "[&_.tiptap]:prose [&_.tiptap]:prose-sm [&_.tiptap]:max-w-none",
+          "[&_.tiptap]:break-words",
+          "[&_.tiptap]:prose [&_.tiptap]:prose-sm [&_.tiptap]:!max-w-none",
           "[&_.tiptap_p]:my-[0.2em]",
+          // 占位符用 absolute 叠在段落上，避免 float-left 在换行后挤占行宽导致第二行右侧留白
+          "[&_.tiptap_p.is-editor-empty:first-child]:relative",
           "[&_.tiptap_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]",
-          "[&_.tiptap_p.is-editor-empty:first-child::before]:text-muted-foreground [&_.tiptap_p.is-editor-empty:first-child::before]:float-left",
-          "[&_.tiptap_p.is-editor-empty:first-child::before]:pointer-events-none [&_.tiptap_p.is-editor-empty:first-child::before]:h-0",
+          "[&_.tiptap_p.is-editor-empty:first-child::before]:absolute",
+          "[&_.tiptap_p.is-editor-empty:first-child::before]:left-0",
+          "[&_.tiptap_p.is-editor-empty:first-child::before]:top-0",
+          "[&_.tiptap_p.is-editor-empty:first-child::before]:text-muted-foreground",
+          "[&_.tiptap_p.is-editor-empty:first-child::before]:pointer-events-none",
           "[&_.rich-editor-mention]:text-primary [&_.rich-editor-mention]:font-medium",
           // 图片为块级原子节点，方向键导航到图片时 ProseMirror 会产生 NodeSelection（节点选中态，
           // 而非文本插入光标），默认没有任何视觉样式会显得「光标消失」，这里补上选中态高亮。
@@ -163,7 +171,7 @@ export function RichEditor({
         )}
       >
         {header && <div className="flex h-6 items-center">{header}</div>}
-        <EditorContent editor={editor} data-placeholder={placeholder} />
+        <EditorContent editor={editor} data-placeholder={placeholder} className="w-full" />
       </div>
 
       <Toolbar
