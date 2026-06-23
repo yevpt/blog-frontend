@@ -127,7 +127,7 @@ export function NavbarUserMenu({ isGlass = false, unreadCount = 0 }: NavbarUserM
           type="button"
           variant={null}
           size={null}
-          onPress={() => navigate("/messages")}
+          onPress={() => navigate("/notifications")}
           className="flex h-auto w-full cursor-pointer items-center justify-start gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-foreground/[0.05]"
         >
           <SvgIcon name="bell" size={14} className="shrink-0 text-muted-foreground/60" />

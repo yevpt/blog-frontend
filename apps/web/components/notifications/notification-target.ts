@@ -10,5 +10,5 @@ export function getNotificationHref(item: NotificationItemResp): string {
   if (item.root_type === "guestbook") {
     return "/guestbook";
   }
-  return "/messages";
+  return "/notifications";
 }

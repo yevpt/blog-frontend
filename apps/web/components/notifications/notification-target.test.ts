@@ -33,6 +33,6 @@ describe("getNotificationHref", () => {
   });
 
   it("未知通知回退到消息页", () => {
-    expect(getNotificationHref(item({ root_type: "unknown", root_id: 5 }))).toBe("/messages");
+    expect(getNotificationHref(item({ root_type: "unknown", root_id: 5 }))).toBe("/notifications");
   });
 });

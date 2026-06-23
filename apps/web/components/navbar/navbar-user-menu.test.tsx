@@ -171,7 +171,7 @@ describe("NavbarUserMenu", () => {
     render(<NavbarUserMenu />);
     await user.click(screen.getByRole("button", { name: /账号菜单/ }));
     await user.click(screen.getByText("我的消息"));
-    expect(mockPush).toHaveBeenCalledWith("/messages");
+    expect(mockPush).toHaveBeenCalledWith("/notifications");
     expect(screen.queryByText("我的消息")).not.toBeInTheDocument();
   });
 
