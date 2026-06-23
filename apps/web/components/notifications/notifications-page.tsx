@@ -46,8 +46,8 @@ export default function NotificationsPage() {
   return (
     <main className="mx-auto w-full max-w-2xl px-4 pt-20 md:pt-24 pb-8">
       <header className="mb-4 flex items-center justify-between gap-3">
-        <h1 className="text-xl font-medium text-foreground">消息中心</h1>
-        <div className="flex gap-2">
+        <h1 className="hidden text-xl font-medium text-foreground md:block">消息中心</h1>
+        <div className="ml-auto flex gap-2">
           <Button
             type="button"
             variant={null}

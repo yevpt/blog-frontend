@@ -9,6 +9,7 @@ const DEFAULT_ROUTE_TITLES: Record<string, string> = {
   "/guestbook": "留言",
   "/friend-links": "友邻",
   "/circle": "圈子",
+  "/notifications": "消息中心",
 };
 
 export function matchNavbarRoute(pathname: string): NavbarRouteMatch {
