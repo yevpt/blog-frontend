@@ -49,6 +49,14 @@ describe("RichEditor", () => {
     expect(editorArea?.className).toContain("[&_.tiptap]:min-h-[88px]");
     expect(editorArea?.className).toContain("[&_.tiptap]:w-full");
     expect(editorArea?.className).toContain("[&_.tiptap]:!max-w-none");
+    expect(editorArea?.className).toContain("[&_.tiptap]:dark:prose-invert");
+  });
+
+  it("Markdown 标题被解析为 h2 节点", async () => {
+    const { container } = render(<RichEditor value="## 二级标题\n\n正文" onChange={() => {}} />);
+    await waitFor(() => {
+      expect(container.querySelector(".tiptap h2")).toHaveTextContent("二级标题");
+    });
   });
 
   it("showToolbarCharacterCount=false 时不渲染工具栏字数胶囊", () => {

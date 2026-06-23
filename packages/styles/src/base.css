@@ -449,20 +449,6 @@ body {
   background-color: color-mix(in srgb, var(--editor-hl-number) 12%, transparent);
 }
 
-/*
-  暗黑模式下 @tailwindcss/typography 的 prose 未应用 prose-invert，
-  导致 strong / b 的颜色仍使用浅色主题值（接近黑色）。
-  此处直接覆盖为主题前景色。
-*/
-:root {
-  @variant dark {
-    .tiptap strong,
-    .tiptap b {
-      color: var(--color-foreground);
-    }
-  }
-}
-
 /* -------------------------------------------------------------------------- */
 /* Markdown 渲染代码块增强                                                      */
 /* -------------------------------------------------------------------------- */

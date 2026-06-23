@@ -151,7 +151,7 @@ export function RichEditor({
           "[&_.tiptap]:text-foreground",
           "[&_.tiptap]:outline-none",
           "[&_.tiptap]:break-words",
-          "[&_.tiptap]:prose [&_.tiptap]:prose-sm [&_.tiptap]:!max-w-none",
+          "[&_.tiptap]:prose [&_.tiptap]:prose-sm [&_.tiptap]:prose-neutral [&_.tiptap]:dark:prose-invert [&_.tiptap]:!max-w-none",
           "[&_.tiptap_p]:my-[0.2em]",
           // 占位符用 absolute 叠在段落上，避免 float-left 在换行后挤占行宽导致第二行右侧留白
           "[&_.tiptap_p.is-editor-empty:first-child]:relative",
