@@ -1,6 +1,6 @@
 # 用户消息中心（/notifications）实现计划
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`-[x]`) syntax for tracking.
 
 **Goal:** 实现 `/notifications` 消息中心页面，支持全部/未读筛选、加载更多、单条标记已读/删除/跳转、批量已读，并补齐写操作的 BFF 代理路由。
 
@@ -29,14 +29,14 @@ Agent 领取前认领对应任务、完成后勾选。**A 组（T1/T2/T5/T6/T7�
 
 | 任务 | 模块 | 依赖 | 并行组 | 状态 |
 |------|------|------|--------|------|
-| T1 | BFF 代理路由（read / read-all / delete） | 无 | A | ☐ |
-| T2 | `notification-type.ts` 类型映射 | 无 | A | ☐ |
-| T5 | `notification-filter-tabs` 筛选 Tab | 无 | A | ☐ |
-| T6 | `notification-selection-bar` 选择操作条 | 无 | A | ☐ |
-| T7 | 导航入口 + 跳转兜底修正 | 无 | A | ☐ |
-| T3 | `use-notifications` 数据 Hook | T1（运行时）| B | ☐ |
-| T4 | `notification-card` 卡片组件 | T2 | B | ☐ |
-| T8 | 页面装配 `notifications-page` + 路由 | T3,T4,T5,T6 | C | ☐ |
+| T1 | BFF 代理路由（read / read-all / delete） | 无 | A | ☑ |
+| T2 | `notification-type.ts` 类型映射 | 无 | A | ☑ |
+| T5 | `notification-filter-tabs` 筛选 Tab | 无 | A | ☑ |
+| T6 | `notification-selection-bar` 选择操作条 | 无 | A | ☑ |
+| T7 | 导航入口 + 跳转兜底修正 | 无 | A | ☑ |
+| T3 | `use-notifications` 数据 Hook | T1（运行时）| B | ☑ |
+| T4 | `notification-card` 卡片组件 | T2 | B | ☑ |
+| T8 | 页面装配 `notifications-page` + 路由 | T3,T4,T5,T6 | C | ☑ |
 
 依赖图：`A 组 → T3(运行时需 T1 路由)/T4(需 T2) → T8(需 T3,T4,T5,T6)`。T3 测试用 mock `apiJson`，与 T1 无代码耦合，可在 T1 完成前编写。
 
@@ -75,7 +75,7 @@ Agent 领取前认领对应任务、完成后勾选。**A 组（T1/T2/T5/T6/T7�
 
 > Next.js 15 动态段 `params` 为 Promise，handler 需 `await`。现有 GET 路由无动态段，此处建立动态段写法基准。
 
-- [ ] **Step 1: 写失败测试**
+-[x] **Step 1: 写失败测试**
 
 `apps/web/app/api/notifications/[id]/read/route.test.ts`：
 
@@ -137,12 +137,12 @@ describe("DELETE /api/notifications/[id]", () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+-[x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter web test -- app/api/notifications`
 Expected: FAIL（route 文件不存在）
 
-- [ ] **Step 3: 实现路由**
+-[x] **Step 3: 实现路由**
 
 `apps/web/app/api/notifications/[id]/read/route.ts`：
 
@@ -179,12 +179,12 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 }
 ```
 
-- [ ] **Step 4: 跑测试确认通过**
+-[x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm --filter web test -- app/api/notifications`
 Expected: PASS
 
-- [ ] **Step 5: 提交**
+-[x] **Step 5: 提交**
 
 ```bash
 git add apps/web/app/api/notifications
@@ -205,7 +205,7 @@ git commit -m "feat(notifications): 新增已读/批量已读/删除 BFF 代理�
   - `getNotificationVisual(item: NotificationItemResp): NotificationVisual`
   - `TONE_CLASS: Record<tone, { iconWrap: string; pill: string }>`
 
-- [ ] **Step 1: 写失败测试**
+-[x] **Step 1: 写失败测试**
 
 `notification-type.test.ts`：
 
@@ -238,12 +238,12 @@ describe("getNotificationVisual", () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+-[x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter web test -- notification-type`
 Expected: FAIL
 
-- [ ] **Step 3: 实现映射**
+-[x] **Step 3: 实现映射**
 
 ```ts
 import type { NotificationItemResp } from "@repo/api";
@@ -276,12 +276,12 @@ export const TONE_CLASS: Record<NotificationVisual["tone"], { iconWrap: string; 
 };
 ```
 
-- [ ] **Step 4: 跑测试确认通过**
+-[x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm --filter web test -- notification-type`
 Expected: PASS
 
-- [ ] **Step 5: 提交**
+-[x] **Step 5: 提交**
 
 ```bash
 git add apps/web/components/notifications/notification-type.ts apps/web/components/notifications/notification-type.test.ts
@@ -300,7 +300,7 @@ git commit -m "feat(notifications): 新增通知类型映射工具"
 - Produces:
   - `useNotifications({ pageSize?: number }) => { items, unreadOnly, setUnreadOnly, loading, error, hasMore, loadMore, reload, markRead, remove, markReadBatch, markAllRead }`
 
-- [ ] **Step 1: 写失败测试**
+-[x] **Step 1: 写失败测试**
 
 `use-notifications.test.ts`（jsdom，`renderHook`，mock `apiJson` 与 store）：
 
@@ -375,12 +375,12 @@ describe("useNotifications", () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+-[x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter web test -- use-notifications`
 Expected: FAIL
 
-- [ ] **Step 3: 实现 Hook**
+-[x] **Step 3: 实现 Hook**
 
 ```ts
 import { useCallback, useEffect, useState } from "react";
@@ -510,12 +510,12 @@ export function useNotifications({ pageSize = 20 }: UseNotificationsOptions = {}
 }
 ```
 
-- [ ] **Step 4: 跑测试确认通过**
+-[x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm --filter web test -- use-notifications`
 Expected: PASS
 
-- [ ] **Step 5: 提交**
+-[x] **Step 5: 提交**
 
 ```bash
 git add apps/web/components/notifications/use-notifications.ts apps/web/components/notifications/use-notifications.test.ts
@@ -535,7 +535,7 @@ git commit -m "feat(notifications): 新增消息列表数据 Hook"
   - props `{ item: NotificationItemResp; selecting: boolean; selected: boolean; onOpen(item); onRead(id); onRemove(id); onToggleSelect(id) }`
   - default export `NotificationCard`
 
-- [ ] **Step 1: 写失败测试**
+-[x] **Step 1: 写失败测试**
 
 ```tsx
 import { describe, it, expect, vi } from "vitest";
@@ -589,12 +589,12 @@ describe("NotificationCard", () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+-[x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter web test -- notification-card`
 Expected: FAIL
 
-- [ ] **Step 3: 实现组件**
+-[x] **Step 3: 实现组件**
 
 ```tsx
 "use client";
@@ -691,12 +691,12 @@ export default function NotificationCard({
 
 > 注：`@repo/ui` 的 `Button` props（`variant`/`size`/`onPress`）对齐 navbar 现有写法；实现前确认 `cn` 是否从 `@repo/ui` 导出（grep 既有 import），不一致则改为实际来源。
 
-- [ ] **Step 4: 跑测试确认通过**
+-[x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm --filter web test -- notification-card`
 Expected: PASS
 
-- [ ] **Step 5: 提交**
+-[x] **Step 5: 提交**
 
 ```bash
 git add apps/web/components/notifications/notification-card.tsx apps/web/components/notifications/notification-card.test.tsx
@@ -714,7 +714,7 @@ git commit -m "feat(notifications): 新增通知卡片组件"
 - Consumes: `cn`（`@repo/ui`）。
 - Produces: props `{ unreadOnly: boolean; unreadCount: number; onChange(unreadOnly: boolean) }`，default export `NotificationFilterTabs`。
 
-- [ ] **Step 1: 写失败测试**
+-[x] **Step 1: 写失败测试**
 
 ```tsx
 import { describe, it, expect, vi } from "vitest";
@@ -738,12 +738,12 @@ describe("NotificationFilterTabs", () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+-[x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter web test -- notification-filter-tabs`
 Expected: FAIL
 
-- [ ] **Step 3: 实现组件**
+-[x] **Step 3: 实现组件**
 
 ```tsx
 "use client";
@@ -781,12 +781,12 @@ export default function NotificationFilterTabs({ unreadOnly, unreadCount, onChan
 }
 ```
 
-- [ ] **Step 4: 跑测试确认通过**
+-[x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm --filter web test -- notification-filter-tabs`
 Expected: PASS
 
-- [ ] **Step 5: 提交**
+-[x] **Step 5: 提交**
 
 ```bash
 git add apps/web/components/notifications/notification-filter-tabs.tsx apps/web/components/notifications/notification-filter-tabs.test.tsx
@@ -804,7 +804,7 @@ git commit -m "feat(notifications): 新增全部/未读筛选 Tab"
 - Consumes: `Button`（`@repo/ui`）、`SvgIcon`（`@repo/icons`）。
 - Produces: props `{ count: number; onMarkRead(); onCancel() }`，default export `NotificationSelectionBar`。
 
-- [ ] **Step 1: 写失败测试**
+-[x] **Step 1: 写失败测试**
 
 ```tsx
 import { describe, it, expect, vi } from "vitest";
@@ -835,12 +835,12 @@ describe("NotificationSelectionBar", () => {
 
 > 测试里把 `@repo/ui` Button 的 `isDisabled` 映射成原生 `disabled` 以便断言；实现用 `isDisabled`（与 navbar 现有 Button 用法一致）。
 
-- [ ] **Step 2: 跑测试确认失败**
+-[x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter web test -- notification-selection-bar`
 Expected: FAIL
 
-- [ ] **Step 3: 实现组件**
+-[x] **Step 3: 实现组件**
 
 ```tsx
 "use client";
@@ -874,12 +874,12 @@ export default function NotificationSelectionBar({ count, onMarkRead, onCancel }
 }
 ```
 
-- [ ] **Step 4: 跑测试确认通过**
+-[x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm --filter web test -- notification-selection-bar`
 Expected: PASS
 
-- [ ] **Step 5: 提交**
+-[x] **Step 5: 提交**
 
 ```bash
 git add apps/web/components/notifications/notification-selection-bar.tsx apps/web/components/notifications/notification-selection-bar.test.tsx
@@ -896,7 +896,7 @@ git commit -m "feat(notifications): 新增批量选择操作条"
 
 **Interfaces:** 无新增导出，仅改目标字符串。
 
-- [ ] **Step 1: 写/改失败测试**
+-[x] **Step 1: 写/改失败测试**
 
 `notification-target.test.ts` 增/改兜底断言（沿用文件里已有的 `base` 夹具；若无则参照已有用例构造一个最小 `NotificationItemResp`）：
 
@@ -908,12 +908,12 @@ it("未知 root_type 兜底到 /notifications", () => {
 
 `navbar-user-menu.test.tsx`：定位断言「我的消息」跳转 `/messages` 的用例，把期望值改为 `/notifications`。
 
-- [ ] **Step 2: 跑测试确认失败**
+-[x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter web test -- notification-target navbar-user-menu`
 Expected: FAIL（仍是 /messages）
 
-- [ ] **Step 3: 改实现**
+-[x] **Step 3: 改实现**
 
 `notification-target.ts` 兜底：
 
@@ -927,12 +927,12 @@ Expected: FAIL（仍是 /messages）
           onPress={() => navigate("/notifications")}
 ```
 
-- [ ] **Step 4: 跑测试确认通过**
+-[x] **Step 4: 跑测试确认通过**
 
 Run: `pnpm --filter web test -- notification-target navbar-user-menu`
 Expected: PASS
 
-- [ ] **Step 5: 提交**
+-[x] **Step 5: 提交**
 
 ```bash
 git add apps/web/components/notifications/notification-target.ts apps/web/components/notifications/notification-target.test.ts apps/web/components/navbar/navbar-user-menu.tsx apps/web/components/navbar/navbar-user-menu.test.tsx
@@ -951,7 +951,7 @@ git commit -m "fix(notifications): 消息入口与跳转兜底改为 /notificati
 - Consumes: `useNotifications`（T3）、`NotificationCard`（T4）、`NotificationFilterTabs`（T5）、`NotificationSelectionBar`（T6）、`useNotificationStore`、`getNotificationHref`、`useRouter`（`next/navigation`）。
 - Produces: `NotificationsPage`（default export 客户端容器）；路由 `page.tsx` 渲染它并导出 `metadata`。
 
-- [ ] **Step 1: 写失败测试（容器）**
+-[x] **Step 1: 写失败测试（容器）**
 
 `notifications-page.test.tsx`（mock Hook + 子组件 + store + router）：
 
@@ -998,12 +998,12 @@ describe("NotificationsPage", () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+-[x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter web test -- notifications-page`
 Expected: FAIL
 
-- [ ] **Step 3: 实现容器**
+-[x] **Step 3: 实现容器**
 
 ```tsx
 "use client";
@@ -1131,7 +1131,7 @@ export default function NotificationsPage() {
 
 > 注：`SvgIcon`/`Button` import 与全项目一致即可；`useNotifications` 不再注入 client，内部直连 `apiJson`。
 
-- [ ] **Step 4: 写路由 page.tsx + page.test.tsx**
+-[x] **Step 4: 写路由 page.tsx + page.test.tsx**
 
 `apps/web/app/notifications/page.tsx`：
 
@@ -1172,17 +1172,17 @@ describe("NotificationsRoute", () => {
 });
 ```
 
-- [ ] **Step 5: 跑全部相关测试确认通过**
+-[x] **Step 5: 跑全部相关测试确认通过**
 
 Run: `pnpm --filter web test -- notifications-page app/notifications`
 Expected: PASS
 
-- [ ] **Step 6: 类型与 lint 全量校验**
+-[x] **Step 6: 类型与 lint 全量校验**
 
 Run: `pnpm -r --if-present check-types && pnpm -r --if-present lint`
 Expected: 全 Done 无错误
 
-- [ ] **Step 7: 提交**
+-[x] **Step 7: 提交**
 
 ```bash
 git add apps/web/components/notifications/notifications-page.tsx apps/web/components/notifications/notifications-page.test.tsx apps/web/app/notifications
@@ -1193,10 +1193,10 @@ git commit -m "feat(notifications): 新增消息中心页面与路由"
 
 ## 验证（全部任务完成后）
 
-- [ ] `pnpm -r --if-present check-types` 全绿
-- [ ] `pnpm -r --if-present lint` 全绿
-- [ ] `pnpm --filter web test` 全绿
-- [ ] 起 dev server，登录态下访问 `/notifications`：全部/未读切换、加载更多、单条标记已读/删除/跳转、选择模式批量已读、空/错误态、导航角标随操作同步。
+-[x] `pnpm -r --if-present check-types` 全绿
+-[x] `pnpm -r --if-present lint` 全绿
+-[x] `pnpm --filter web test` 全绿
+-[x] 起 dev server，登录态下访问 `/notifications`：全部/未读切换、加载更多、单条标记已读/删除/跳转、选择模式批量已读、空/错误态、导航角标随操作同步。
 
 ## Self-Review 记录
 
