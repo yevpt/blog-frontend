@@ -12,6 +12,7 @@ interface NavbarMobileHeaderProps {
   title?: string;
   isGlass: boolean;
   menuOpen: boolean;
+  unreadCount?: number;
   onToggleMenu: () => void;
 }
 
@@ -22,10 +23,16 @@ function formatCount(count: number) {
 interface NavbarMobileMenuButtonProps {
   isGlass: boolean;
   menuOpen: boolean;
+  unreadCount?: number;
   onToggleMenu: () => void;
 }
 
-function NavbarMobileMenuButton({ isGlass, menuOpen, onToggleMenu }: NavbarMobileMenuButtonProps) {
+function NavbarMobileMenuButton({
+  isGlass,
+  menuOpen,
+  unreadCount = 0,
+  onToggleMenu,
+}: NavbarMobileMenuButtonProps) {
   return (
     <Button
       type="button"
@@ -33,10 +40,16 @@ function NavbarMobileMenuButton({ isGlass, menuOpen, onToggleMenu }: NavbarMobil
       onPress={onToggleMenu}
       aria-label={menuOpen ? "关闭导航菜单" : "打开导航菜单"}
       className={cn(
-        "flex h-[34px] w-[34px] cursor-pointer flex-col items-center justify-center gap-[5px] rounded-[9px] p-[9px] text-foreground transition-colors",
+        "relative flex h-[34px] w-[34px] cursor-pointer flex-col items-center justify-center gap-[5px] rounded-[9px] p-[9px] text-foreground transition-colors",
         isGlass ? "bg-primary/10 text-primary" : "bg-foreground/5",
       )}
     >
+      {unreadCount > 0 && (
+        <span
+          data-testid="mobile-menu-unread-dot"
+          className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-background"
+        />
+      )}
       <span
         className={cn(
           "block h-[1.5px] w-full rounded bg-current transition-transform",
@@ -102,6 +115,7 @@ export function NavbarMobileHeader({
   title,
   isGlass,
   menuOpen,
+  unreadCount = 0,
   onToggleMenu,
 }: NavbarMobileHeaderProps) {
   const router = useRouter();
@@ -110,7 +124,12 @@ export function NavbarMobileHeader({
     return (
       <div className="flex min-h-[52px] items-center justify-between px-4 md:hidden">
         <NavbarLogo isGlass={isGlass} />
-        <NavbarMobileMenuButton isGlass={isGlass} menuOpen={menuOpen} onToggleMenu={onToggleMenu} />
+        <NavbarMobileMenuButton
+          isGlass={isGlass}
+          menuOpen={menuOpen}
+          unreadCount={unreadCount}
+          onToggleMenu={onToggleMenu}
+        />
       </div>
     );
   }
@@ -135,7 +154,12 @@ export function NavbarMobileHeader({
 
       <div className="flex items-center gap-1">
         {mobileVariant === "article" ? <NavbarMobileArticleActions /> : null}
-        <NavbarMobileMenuButton isGlass={isGlass} menuOpen={menuOpen} onToggleMenu={onToggleMenu} />
+        <NavbarMobileMenuButton
+          isGlass={isGlass}
+          menuOpen={menuOpen}
+          unreadCount={unreadCount}
+          onToggleMenu={onToggleMenu}
+        />
       </div>
     </div>
   );

@@ -8,11 +8,19 @@ import { NavbarActions } from "./navbar-actions";
 import { NavbarMobileHeader } from "./navbar-mobile-header";
 import { NavbarMobileMenu } from "./navbar-mobile-menu";
 import { useNavbarContext } from "./use-navbar-context";
+import { useNotificationStore } from "@/store/use-notification-store";
 
-export function SiteNavbar() {
+interface SiteNavbarProps {
+  initialUnreadCount?: number;
+}
+
+export function SiteNavbar({ initialUnreadCount = 0 }: SiteNavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const navbarContext = useNavbarContext();
+  const liveUnreadCount = useNotificationStore((state) => state.unreadCount);
+  const hasLoadedUnreadCount = useNotificationStore((state) => state.hasLoaded);
+  const unreadCount = hasLoadedUnreadCount ? liveUnreadCount : initialUnreadCount;
   // mounted=false 时导航完全不可见（opacity-0）；
   // IO 首次回调确定正确的玻璃态后，下一帧再置为 true，导航以淡入动效整体弹出。
   // 这样无论页面停在何处刷新，弹出时都已是完整形态（胶囊或非胶囊），永不裸露。
@@ -123,6 +131,7 @@ export function SiteNavbar() {
             title={navbarContext.title}
             isGlass={isGlass}
             menuOpen={menuOpen}
+            unreadCount={unreadCount}
             onToggleMenu={() => setMenuOpen((open) => !open)}
           />
 
@@ -134,11 +143,15 @@ export function SiteNavbar() {
             </div>
 
             <div className="items-center gap-1">
-              <NavbarActions isGlass={isGlass} />
+              <NavbarActions isGlass={isGlass} unreadCount={unreadCount} />
             </div>
           </div>
 
-          <NavbarMobileMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
+          <NavbarMobileMenu
+            isOpen={menuOpen}
+            unreadCount={unreadCount}
+            onClose={() => setMenuOpen(false)}
+          />
         </div>
       </nav>
     </>

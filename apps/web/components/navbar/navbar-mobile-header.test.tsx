@@ -56,6 +56,36 @@ describe("NavbarMobileHeader", () => {
     expect(screen.queryByLabelText("返回首页")).not.toBeInTheDocument();
   });
 
+  it("unreadCount 大于 0 时菜单按钮显示红点", () => {
+    render(
+      <NavbarMobileHeader
+        mobileVariant="home"
+        title={undefined}
+        isGlass={false}
+        menuOpen={false}
+        onToggleMenu={mockToggleMenu}
+        unreadCount={2}
+      />,
+    );
+
+    expect(screen.getByTestId("mobile-menu-unread-dot")).toBeInTheDocument();
+  });
+
+  it("unreadCount 为 0 时菜单按钮不显示红点", () => {
+    render(
+      <NavbarMobileHeader
+        mobileVariant="home"
+        title={undefined}
+        isGlass={false}
+        menuOpen={false}
+        onToggleMenu={mockToggleMenu}
+        unreadCount={0}
+      />,
+    );
+
+    expect(screen.queryByTestId("mobile-menu-unread-dot")).not.toBeInTheDocument();
+  });
+
   it("非 article 变体不调用文章互动 hook", () => {
     render(
       <NavbarMobileHeader

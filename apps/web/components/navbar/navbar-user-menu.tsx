@@ -177,6 +177,12 @@ export function NavbarUserMenu({ isGlass = false, unreadCount = 0 }: NavbarUserM
         )}
       >
         <UserAvatar src={profile?.avatar_url ?? undefined} name={displayName || "?"} size="md" />
+        {unreadCount > 0 && (
+          <span
+            data-testid="avatar-unread-dot"
+            className="absolute right-0 top-0 h-3 w-3 rounded-full border-2 border-background bg-destructive"
+          />
+        )}
       </Button>
 
       {open && typeof document !== "undefined" && createPortal(dropdown, document.body)}

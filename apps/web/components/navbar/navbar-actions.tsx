@@ -21,9 +21,10 @@ function getOppositeTheme(theme: ResolvedTheme): ResolvedTheme {
 
 interface NavbarActionsProps {
   isGlass?: boolean;
+  unreadCount?: number;
 }
 
-export function NavbarActions({ isGlass = false }: NavbarActionsProps) {
+export function NavbarActions({ isGlass = false, unreadCount = 0 }: NavbarActionsProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const { t } = useLocale();
   const { open: openLoginModal } = useLoginModal();
@@ -44,7 +45,7 @@ export function NavbarActions({ isGlass = false }: NavbarActionsProps) {
 
       <div className="hidden items-center gap-3 md:flex">
         {userId != null ? (
-          <NavbarUserMenu isGlass={isGlass} />
+          <NavbarUserMenu isGlass={isGlass} unreadCount={unreadCount} />
         ) : (
           <Button
             variant="ghost"

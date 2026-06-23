@@ -13,6 +13,7 @@ import { LocaleProvider } from "./providers/locale-provider";
 import { SessionProvider } from "./providers/session-provider";
 import { GlobalModals } from "./providers/global-modals";
 import { BfcacheBoundary } from "./providers/bfcache-boundary";
+import { NotificationProvider } from "@/components/notifications/notification-provider";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
@@ -35,12 +36,18 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 
   // 每次首屏 SSR，已登录则通过 /users/me 获取完整资料（Redis 支撑，~0.2ms）
   let profile = null;
+  let initialUnreadCount = 0;
   if (session) {
+    const api = await createServerApiClient();
     try {
-      const api = await createServerApiClient();
       profile = await api.users.getMe();
     } catch {
-      // /users/me 失败不影响页面渲染，profile 降级为 null
+      // /users/me 失败不影响页面渲染，profile 降级为 null。
+    }
+    try {
+      initialUnreadCount = (await api.notifications.unreadCount()).count;
+    } catch {
+      // 首屏未读数失败不影响页面渲染，客户端通知层会继续重试。
     }
   }
 
@@ -68,18 +75,20 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <ThemeProvider>
           <LocaleProvider>
             <SessionProvider userId={session?.userId ?? null} profile={profile}>
-              <div className="flex flex-col min-h-screen">
-                {/* SvgSprite 将雪碧图注入 DOM，必须在所有使用 SvgIcon 的组件之前渲染 */}
-                <SvgSprite />
-                {/* bfcache 恢复时软重挂载导航/正文/弹层，修复卡在揭示前状态的问题。
-                    SvgSprite 与 SiteFooter 留在边界外：前者重注入会闪烁，后者无揭示门控。 */}
-                <BfcacheBoundary>
-                  <GlobalModals />
-                  <SiteNavbar />
-                  <main className="flex-1 pt-0">{children}</main>
-                </BfcacheBoundary>
-                <SiteFooter />
-              </div>
+              <NotificationProvider>
+                <div className="flex flex-col min-h-screen">
+                  {/* SvgSprite 将雪碧图注入 DOM，必须在所有使用 SvgIcon 的组件之前渲染 */}
+                  <SvgSprite />
+                  {/* bfcache 恢复时软重挂载导航/正文/弹层，修复卡在揭示前状态的问题。
+                      SvgSprite 与 SiteFooter 留在边界外：前者重注入会闪烁，后者无揭示门控。 */}
+                  <BfcacheBoundary>
+                    <GlobalModals />
+                    <SiteNavbar initialUnreadCount={initialUnreadCount} />
+                    <main className="flex-1 pt-0">{children}</main>
+                  </BfcacheBoundary>
+                  <SiteFooter />
+                </div>
+              </NotificationProvider>
             </SessionProvider>
           </LocaleProvider>
         </ThemeProvider>

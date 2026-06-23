@@ -202,6 +202,16 @@ describe("NavbarUserMenu", () => {
     expect(screen.getByTestId("unread-badge")).toHaveTextContent("10");
   });
 
+  it("unreadCount 大于 0 时头像触发按钮显示红点", () => {
+    render(<NavbarUserMenu unreadCount={1} />);
+    expect(screen.getByTestId("avatar-unread-dot")).toBeInTheDocument();
+  });
+
+  it("unreadCount 为 0 时头像触发按钮不显示红点", () => {
+    render(<NavbarUserMenu unreadCount={0} />);
+    expect(screen.queryByTestId("avatar-unread-dot")).not.toBeInTheDocument();
+  });
+
   it("unreadCount 超过 99 时显示 99+", async () => {
     const user = userEvent.setup();
     render(<NavbarUserMenu unreadCount={100} />);
