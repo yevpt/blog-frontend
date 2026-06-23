@@ -8,6 +8,23 @@ interface ArticleTagPickerProps {
   onChange: (tags: ArticleTag[]) => void;
 }
 
+function RemovableTag({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span className="inline-flex max-w-fit items-center gap-0.5 rounded-full bg-secondary py-1 pl-2.5 pr-1 text-xs font-medium text-secondary-foreground">
+      {label}
+      <Button
+        type="button"
+        variant="ghost"
+        aria-label={`移除 ${label}`}
+        className="size-4 shrink-0 rounded-full p-0 text-muted-foreground shadow-none hover:bg-foreground/8 hover:text-foreground"
+        onPress={onRemove}
+      >
+        <SvgIcon name="close" size={10} />
+      </Button>
+    </span>
+  );
+}
+
 export function ArticleTagPicker({ selectedTags, onChange }: ArticleTagPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const availableTags = useMemo(
@@ -30,21 +47,16 @@ export function ArticleTagPicker({ selectedTags, onChange }: ArticleTagPickerPro
   return (
     <div role="group" aria-label="文章标签" className="flex flex-wrap gap-2">
       {selectedTags.map((tag) => (
-        <Button
-          key={tag.id}
-          type="button"
-          variant="ghost"
-          size="sm"
-          onPress={() => handleRemoveTag(tag.id)}
-          className="h-8 rounded-full bg-primary px-3 text-xs text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
-        >
-          {tag.label}
-        </Button>
+        <RemovableTag key={tag.id} label={tag.label} onRemove={() => handleRemoveTag(tag.id)} />
       ))}
 
       <Autocomplete.Trigger isOpen={isOpen} onOpenChange={setIsOpen}>
-        <Button type="button" variant="outline" size="sm" className="h-8 rounded-full text-xs">
-          <SvgIcon name="plus" size={14} />
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-auto max-w-fit gap-1 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary shadow-none hover:bg-primary/15 hover:text-primary"
+        >
+          <SvgIcon name="plus" size={10} />
           增加标签
         </Button>
         <Autocomplete.Popover className="w-64 overflow-hidden p-2">

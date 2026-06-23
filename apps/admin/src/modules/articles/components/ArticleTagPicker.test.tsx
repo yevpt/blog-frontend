@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ArticleTagPicker } from "./ArticleTagPicker";
 import { tagOptions } from "../editor-options";
@@ -18,16 +18,12 @@ describe("ArticleTagPicker", () => {
     expect(onChange).toHaveBeenCalledWith([...tagOptions.slice(0, 3), tagOptions[4]]);
   });
 
-  it("点击已选标签时移除该标签", async () => {
+  it("点击标签右上角移除按钮时移除该标签", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(<ArticleTagPicker selectedTags={tagOptions.slice(0, 3)} onChange={onChange} />);
 
-    await user.click(
-      within(screen.getByRole("group", { name: "文章标签" })).getByRole("button", {
-        name: "后台",
-      }),
-    );
+    await user.click(screen.getByRole("button", { name: "移除 后台" }));
 
     expect(onChange).toHaveBeenCalledWith([tagOptions[0], tagOptions[2]]);
   });
