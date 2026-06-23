@@ -585,6 +585,52 @@ describe("createApiClient", () => {
     });
   });
 
+  // ── 通知接口 ─────────────────────────────────────────────────────
+
+  describe("notifications", () => {
+    it("unreadCount 使用 fetchAuthed 调用 /notifications/unread-count", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({ code: 0, message: "ok", data: { count: 7 } }),
+      );
+      const client = createApiClient({
+        baseUrl: "http://api",
+        getAccessToken: () => "token123",
+      });
+
+      const result = await client.notifications.unreadCount();
+
+      expect(result).toEqual({ count: 7 });
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/notifications/unread-count",
+        expect.objectContaining({
+          method: "GET",
+          headers: expect.objectContaining({ Authorization: "Bearer token123" }),
+        }),
+      );
+    });
+
+    it("list 构造分页和 unread_only 查询参数", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({
+          code: 0,
+          message: "ok",
+          data: { total: 0, page: 1, page_size: 5, list: [] },
+        }),
+      );
+      const client = createApiClient({
+        baseUrl: "http://api",
+        getAccessToken: () => "token123",
+      });
+
+      await client.notifications.list({ page: 1, page_size: 5, unread_only: true });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/notifications?page=1&page_size=5&unread_only=true",
+        expect.objectContaining({ method: "GET" }),
+      );
+    });
+  });
+
   // ── 评论接口 ─────────────────────────────────────────────────────
 
   describe("comments", () => {

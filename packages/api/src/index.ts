@@ -85,3 +85,11 @@ export type {
   FriendLinkPageResp,
   FriendLinkListReq,
 } from "./types/friend-link";
+export type {
+  NotificationListReq,
+  NotificationItemResp,
+  NotificationPageResp,
+  NotificationUnreadCountResp,
+  NotificationReadAllReq,
+  NotificationReadResp,
+} from "./types/notification";

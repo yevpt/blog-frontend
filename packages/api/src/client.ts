@@ -57,6 +57,11 @@ import type {
   EmailDisplaySetting,
 } from "./types/user";
 import type { FriendLinkListReq, FriendLinkPageResp } from "./types/friend-link";
+import type {
+  NotificationListReq,
+  NotificationPageResp,
+  NotificationUnreadCountResp,
+} from "./types/notification";
 
 /** createApiClient 的注入配置接口 */
 export interface ApiClientConfig {
@@ -499,6 +504,24 @@ export function createApiClient(config: ApiClientConfig) {
         if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
         const qs = p.toString();
         return fetchPublic<FriendLinkPageResp>(`/friend-links${qs ? `?${qs}` : ""}`, {
+          method: "GET",
+        });
+      },
+    },
+    notifications: {
+      /** 查询当前用户未读通知数量，需登录。 */
+      unreadCount: () =>
+        fetchAuthed<NotificationUnreadCountResp>("/notifications/unread-count", {
+          method: "GET",
+        }),
+      /** 分页查询当前用户站内通知，需登录。 */
+      list: (req: NotificationListReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        if (req.unread_only !== undefined) p.set("unread_only", String(req.unread_only));
+        const qs = p.toString();
+        return fetchAuthed<NotificationPageResp>(`/notifications${qs ? `?${qs}` : ""}`, {
           method: "GET",
         });
       },
