@@ -32,10 +32,21 @@ describe("SvgSprite", () => {
     expect(homeSymbol?.getAttribute("stroke-linejoin")).toBe("round");
   });
 
-  it("消息中心使用的心形和评论图标保持线性描边风格", () => {
+  it("通用心形和评论图标保持填充风格", () => {
     const { container } = render(<SvgSprite />);
     const heartSymbol = container.querySelector("#icon-heart");
     const messageSymbol = container.querySelector("#icon-message-circle");
+
+    for (const symbol of [heartSymbol, messageSymbol]) {
+      expect(symbol?.getAttribute("fill")).toBe("currentColor");
+      expect(symbol?.getAttribute("stroke")).toBeNull();
+    }
+  });
+
+  it("消息中心专用心形和评论图标保持线性描边风格", () => {
+    const { container } = render(<SvgSprite />);
+    const heartSymbol = container.querySelector("#icon-heart-line");
+    const messageSymbol = container.querySelector("#icon-message-circle-line");
 
     for (const symbol of [heartSymbol, messageSymbol]) {
       expect(symbol?.getAttribute("fill")).toBe("none");

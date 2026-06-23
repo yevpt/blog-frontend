@@ -131,7 +131,7 @@ describe("NotificationCard", () => {
     );
 
     expect(screen.getByText("你的碎语收到一个赞")).toBeTruthy();
-    const unreadIconWrap = getIconWrap("heart");
+    const unreadIconWrap = getIconWrap("heart-line");
     expect(unreadIconWrap?.className).toContain("bg-rose-100");
     expect(unreadIconWrap?.className).toContain("text-rose-700");
     expect(unreadIconWrap?.className).toContain("dark:bg-rose-500/20");
@@ -154,7 +154,7 @@ describe("NotificationCard", () => {
       />,
     );
 
-    const readIconWrap = getIconWrap("heart");
+    const readIconWrap = getIconWrap("heart-line");
     expect(readIconWrap?.className).toContain("bg-zinc-100");
     expect(readIconWrap?.className).toContain("text-zinc-400");
     expect(readIconWrap?.className).toContain("dark:bg-zinc-800");

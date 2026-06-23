@@ -25,28 +25,28 @@ export function getInteractionKind(item: NotificationItemResp): "like" | "commen
 
 /** root_type → 胶囊文案 / 无互动时的兜底图标（配色不在此，统一由图标语义决定）。 */
 const ROOT_VISUAL: Record<string, { label: string; icon: IconName }> = {
-  article: { label: "评论", icon: "message-circle" },
-  moment: { label: "碎语", icon: "message-circle" },
+  article: { label: "评论", icon: "message-circle-line" },
+  moment: { label: "碎语", icon: "message-circle-line" },
   guestbook: { label: "留言", icon: "pen" },
 };
 
 /** 图标 → 配色：颜色跟随图标语义（评论=紫、点赞=粉、其它=中性），保证图标与圈色一致。 */
 function toneForIcon(icon: IconName): NotificationVisual["tone"] {
-  if (icon === "heart") return "pink";
-  if (icon === "message-circle") return "purple";
+  if (icon === "heart-line") return "pink";
+  if (icon === "message-circle-line") return "purple";
   if (icon === "pen") return "sky";
   return "neutral";
 }
 
 /**
- * 图标按互动类型（赞→heart、评论/回复→message-circle）优先、root 兜底；
+ * 图标按互动类型（赞→heart-line、评论/回复→message-circle-line）优先、root 兜底；
  * 配色跟随图标语义；胶囊文案按 root 对象类型；未知类型落到系统通知兜底。
  */
 export function getNotificationVisual(item: NotificationItemResp): NotificationVisual {
   const root = ROOT_VISUAL[item.root_type] ?? { label: "通知", icon: "bell" as IconName };
   const kind = getInteractionKind(item);
   const icon: IconName =
-    kind === "like" ? "heart" : kind === "comment" ? "message-circle" : root.icon;
+    kind === "like" ? "heart-line" : kind === "comment" ? "message-circle-line" : root.icon;
   return { icon, label: root.label, tone: toneForIcon(icon) };
 }
 

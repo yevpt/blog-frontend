@@ -39,23 +39,23 @@ describe("getNotificationVisual 胶囊文案按 root", () => {
 });
 
 describe("getNotificationVisual 图标与配色按互动类型", () => {
-  it("点赞 → heart + 粉（不分 root）", () => {
+  it("点赞 → heart-line + 粉（不分 root）", () => {
     expect(getNotificationVisual(item({ root_type: "moment", type: "like" }))).toMatchObject({
-      icon: "heart",
+      icon: "heart-line",
       tone: "pink",
     });
     expect(getNotificationVisual(item({ root_type: "article", type: "like" }))).toMatchObject({
-      icon: "heart",
+      icon: "heart-line",
       tone: "pink",
     });
   });
-  it("评论/回复 → message-circle + 紫（不分 root）", () => {
+  it("评论/回复 → message-circle-line + 紫（不分 root）", () => {
     expect(getNotificationVisual(item({ root_type: "moment", type: "reply" }))).toMatchObject({
-      icon: "message-circle",
+      icon: "message-circle-line",
       tone: "purple",
     });
     expect(getNotificationVisual(item({ root_type: "article", type: "comment" }))).toMatchObject({
-      icon: "message-circle",
+      icon: "message-circle-line",
       tone: "purple",
     });
   });
@@ -63,7 +63,7 @@ describe("getNotificationVisual 图标与配色按互动类型", () => {
     expect(
       getNotificationVisual(item({ root_type: "moment", type: "", source_type: "like" })),
     ).toMatchObject({
-      icon: "heart",
+      icon: "heart-line",
       tone: "pink",
     });
   });
