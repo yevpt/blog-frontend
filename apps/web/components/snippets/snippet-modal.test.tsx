@@ -126,16 +126,6 @@ describe("SnippetModal", () => {
     expect(screen.getByRole("button", { name: "发布" })).toBeDisabled();
   });
 
-  it("底栏展示图片计数并提供添加按钮", async () => {
-    const user = userEvent.setup();
-    render(<SnippetModal />);
-    await screen.findByRole("dialog", { name: "写碎语" });
-    const addBtn = screen.getByRole("button", { name: "添加图片" });
-    expect(addBtn).toHaveTextContent("0/9");
-    await user.click(screen.getByRole("button", { name: "inject" }));
-    expect(screen.getByRole("button", { name: "添加图片" })).toHaveTextContent("2/9");
-  });
-
   it("填写正文后发布：以 multipart 提交到 /api/moments 并关闭", async () => {
     const user = userEvent.setup();
     const fetchMock = vi
@@ -272,27 +262,6 @@ describe("SnippetModal", () => {
     await user.click(editor);
     await user.paste("a".repeat(801));
     expect(editor).toHaveValue("a".repeat(800));
-    expect(screen.getByText("800/800")).toHaveClass("text-muted-foreground");
-    expect(screen.getByRole("button", { name: "发布" })).toBeEnabled();
-  });
-
-  it("底栏计数器始终展示 当前长度/800，输入层限制后保持原 UI", async () => {
-    const user = userEvent.setup();
-    render(<SnippetModal />);
-    await screen.findByRole("dialog", { name: "写碎语" });
-    // 初始 0/800，颜色为 muted
-    const counter = screen.getByText("0/800");
-    expect(counter).toHaveClass("text-muted-foreground");
-    // 输入 800 字：仍可发布，计数器保持 muted
-    const editor = screen.getByLabelText("编辑器");
-    await user.click(editor);
-    await user.paste("a".repeat(800));
-    expect(screen.getByText("800/800")).toHaveClass("text-muted-foreground");
-    expect(screen.getByRole("button", { name: "发布" })).toBeEnabled();
-    // 再多 1 字：输入层截断，底栏 UI 保持 800/800
-    await user.type(editor, "b");
-    expect(screen.getByText("800/800")).toHaveClass("text-muted-foreground");
-    expect(screen.queryByText("801/800")).toBeNull();
     expect(screen.getByRole("button", { name: "发布" })).toBeEnabled();
   });
 

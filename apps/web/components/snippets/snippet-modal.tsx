@@ -1,25 +1,16 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  type Dispatch,
-  type RefObject,
-  type SetStateAction,
-} from "react";
-import { SvgIcon } from "@repo/icons";
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useSession } from "@/app/providers/session-provider";
 import { useSnippetModal } from "@/store/use-snippet-modal";
 import { addToast } from "@/lib/toast";
 import { ApiClientError, getApiErrorMessage } from "@/lib/client-fetch";
 import { ResponsiveModalShell } from "@/components/modal-shell/responsive-modal";
 import { SnippetTextInput } from "./snippet-text-input";
-import { SnippetImageUploader, type SnippetImageUploaderHandle } from "./snippet-image-uploader";
+import { SnippetImageUploader } from "./snippet-image-uploader";
 import type { SnippetImageItem } from "./types";
 
 const MAX_CONTENT = 800;
-const MAX_IMAGES = 9;
 
 export function SnippetModal() {
   const { isOpen, editingSnippet, submitEdit, close, markPublished } = useSnippetModal();
@@ -28,7 +19,6 @@ export function SnippetModal() {
   const [images, setImages] = useState<SnippetImageItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
-  const uploaderRef = useRef<SnippetImageUploaderHandle>(null);
 
   const isEditing = editingSnippet !== null;
   const overLimit = content.length > MAX_CONTENT;
@@ -117,27 +107,7 @@ export function SnippetModal() {
       onClose={handleClose}
       desktopMaxWidthClassName="max-w-[480px]"
       footer={
-        <div className="flex items-center justify-between px-[18px] py-3">
-          <div className="flex items-center gap-3.5">
-            <button
-              type="button"
-              aria-label="添加图片"
-              onClick={() => uploaderRef.current?.openPicker()}
-              disabled={submitting || images.length >= MAX_IMAGES}
-              className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
-            >
-              <SvgIcon name="image" size={18} />
-              <span>
-                {images.length}/{MAX_IMAGES}
-              </span>
-            </button>
-            <span
-              aria-live="polite"
-              className={`text-xs ${overLimit ? "text-destructive" : "text-muted-foreground"}`}
-            >
-              {content.length}/{MAX_CONTENT}
-            </span>
-          </div>
+        <div className="flex items-center justify-end px-[18px] py-3">
           <button
             type="button"
             disabled={!canSubmit}
@@ -155,7 +125,6 @@ export function SnippetModal() {
           images={images}
           submitting={submitting}
           isEditing={isEditing}
-          uploaderRef={uploaderRef}
           onContentResize={onContentResize}
           onChangeContent={setContent}
           onChangeImages={setImages}
@@ -170,7 +139,6 @@ interface ModalBodyProps {
   images: SnippetImageItem[];
   submitting: boolean;
   isEditing: boolean;
-  uploaderRef: RefObject<SnippetImageUploaderHandle | null>;
   onContentResize: () => void;
   onChangeContent: (value: string) => void;
   onChangeImages: Dispatch<SetStateAction<SnippetImageItem[]>>;
@@ -185,7 +153,6 @@ function ModalBody({
   images,
   submitting,
   isEditing,
-  uploaderRef,
   onContentResize,
   onChangeContent,
   onChangeImages,
@@ -206,12 +173,7 @@ function ModalBody({
         onReady={() => requestAnimationFrame(onContentResize)}
       />
       <div className="px-[18px] py-3">
-        <SnippetImageUploader
-          ref={uploaderRef}
-          items={images}
-          onChange={onChangeImages}
-          disabled={submitting}
-        />
+        <SnippetImageUploader items={images} onChange={onChangeImages} disabled={submitting} />
       </div>
     </div>
   );

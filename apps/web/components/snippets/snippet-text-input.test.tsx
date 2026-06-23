@@ -32,4 +32,10 @@ describe("SnippetTextInput", () => {
     const props = richEditorProps.mock.calls[0][0];
     expect(props.maxLength).toBe(800);
   });
+
+  it("在工具栏显示字数统计", () => {
+    render(<SnippetTextInput value="" onChange={() => {}} maxLength={800} />);
+    const props = richEditorProps.mock.calls[0][0];
+    expect(props.showToolbarCharacterCount).not.toBe(false);
+  });
 });
