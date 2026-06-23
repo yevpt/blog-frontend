@@ -4,6 +4,7 @@ import {
   extractCommentIdFromMetadata,
   getNotificationActionText,
   getNotificationActorName,
+  getNotificationActorProfileHref,
   getNotificationBodyText,
   getNotificationInlineActions,
   getNotificationLikeUrl,
@@ -41,6 +42,30 @@ describe("getNotificationActorName", () => {
   });
   it("系统通知无操作人时回退系统通知", () => {
     expect(getNotificationActorName(item({ type: "system_notice" }))).toBe("系统通知");
+  });
+});
+
+describe("getNotificationActorProfileHref", () => {
+  it("有 actor_user.id 时返回个人页路径", () => {
+    expect(getNotificationActorProfileHref(item({ actor_user: { id: 2, nickname: "VPT" } }))).toBe(
+      "/users/2",
+    );
+  });
+
+  it("无 actor_user 时回退 actor_user_id", () => {
+    expect(getNotificationActorProfileHref(item({ actor_user_id: 9 }))).toBe("/users/9");
+  });
+
+  it("系统通知不返回个人页路径", () => {
+    expect(
+      getNotificationActorProfileHref(
+        item({ type: "system_notice", actor_user: { id: 1, nickname: "Admin" } }),
+      ),
+    ).toBeNull();
+  });
+
+  it("无操作人 ID 时返回 null", () => {
+    expect(getNotificationActorProfileHref(item())).toBeNull();
   });
 });
 

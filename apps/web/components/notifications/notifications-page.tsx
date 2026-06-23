@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type { CommentLikeResp, NotificationItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
-import { Button } from "@repo/ui";
+import { Button, Tooltip, cn } from "@repo/ui";
 import { useSession } from "@/app/providers/session-provider";
 import { apiJson } from "@/lib/client-fetch";
 import { useNotificationStore } from "@/store/use-notification-store";
@@ -14,9 +14,48 @@ import { getNotificationLikeUrl } from "./notification-type";
 import { NotificationVirtualList } from "./notification-virtual-list";
 import NotificationFilterTabs from "./notification-filter-tabs";
 import NotificationSelectionBar from "./notification-selection-bar";
+import { MarkAllReadButton } from "./mark-all-read-button";
 import { useNotificationInlineReply } from "./use-notification-inline-reply";
 
 const INITIAL_SKELETON_COUNT = 8;
+
+const HEADER_ICON_BTN_CLASS =
+  "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border bg-card text-foreground/70 transition-colors hover:bg-foreground/[0.04] disabled:opacity-50";
+
+interface NotificationHeaderIconButtonProps {
+  label: string;
+  icon: ReactNode;
+  isDisabled?: boolean;
+  isActive?: boolean;
+  onPress: () => void;
+}
+
+function NotificationHeaderIconButton({
+  label,
+  icon,
+  isDisabled,
+  isActive,
+  onPress,
+}: NotificationHeaderIconButtonProps) {
+  return (
+    <Tooltip title={label} placement="top" delay={200}>
+      <Button
+        type="button"
+        variant={null}
+        size={null}
+        aria-label={label}
+        isDisabled={isDisabled}
+        onPress={onPress}
+        className={cn(
+          HEADER_ICON_BTN_CLASS,
+          isActive && "border-primary bg-primary/5 text-primary hover:bg-primary/10",
+        )}
+      >
+        {icon}
+      </Button>
+    </Tooltip>
+  );
+}
 
 function NotificationSkeletonCard() {
   return (
@@ -130,6 +169,11 @@ export default function NotificationsPage() {
     }
   }
 
+  function toggleSelectMode() {
+    if (selecting) exitSelect();
+    else setSelecting(true);
+  }
+
   async function batchRead() {
     await n.markReadBatch([...selected]);
     exitSelect();
@@ -143,7 +187,7 @@ export default function NotificationsPage() {
         <h1 className="text-xl font-medium text-foreground">消息中心</h1>
       </header>
 
-      <div className="flex items-end justify-between gap-3 border-b border-border">
+      <div className="flex items-center justify-between gap-3 border-b border-border">
         <NotificationFilterTabs
           unreadOnly={n.unreadOnly}
           unreadCount={unreadCount}
@@ -152,17 +196,16 @@ export default function NotificationsPage() {
             n.setUnreadOnly(v);
           }}
         />
-        <Button
-          type="button"
-          variant={null}
-          size={null}
-          isDisabled={unreadCount === 0}
-          onPress={n.markAllRead}
-          className="mb-1.5 flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-[13px] transition-colors hover:bg-foreground/[0.03] disabled:opacity-50"
-        >
-          <SvgIcon name="check" size={14} className="stroke-[2.5]" />
-          全部已读
-        </Button>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <NotificationHeaderIconButton
+            label={selecting ? "取消选择" : "批量选择"}
+            icon={<SvgIcon name="list-checks" size={14} />}
+            isActive={selecting}
+            isDisabled={!selecting && n.items.length === 0}
+            onPress={toggleSelectMode}
+          />
+          <MarkAllReadButton unreadCount={unreadCount} onConfirm={n.markAllRead} />
+        </div>
       </div>
 
       <div className="mt-3.5 flex min-h-0 flex-1 flex-col">

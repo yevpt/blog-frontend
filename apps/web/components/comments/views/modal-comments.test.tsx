@@ -148,11 +148,9 @@ describe("ModalComments", () => {
 
   it("滚动区域尺寸变化时触发 onContentResize", async () => {
     const onContentResize = vi.fn();
-    // eslint-disable-next-line no-undef -- TS global type not a runtime var
     const callbacks: Array<ResizeObserverCallback> = [];
 
     class MockResizeObserver {
-      // eslint-disable-next-line no-undef -- TS global type not a runtime var
       constructor(cb: ResizeObserverCallback) {
         callbacks.push(cb);
       }

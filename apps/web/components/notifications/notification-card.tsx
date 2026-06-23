@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type { MouseEvent, KeyboardEvent } from "react";
+import Link from "next/link";
 import type { NotificationItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
 import { Button, cn } from "@repo/ui";
@@ -11,11 +12,13 @@ import { NotificationExcerptContent } from "./notification-excerpt-content";
 import {
   getNotificationActionText,
   getNotificationActorName,
+  getNotificationActorProfileHref,
   getNotificationBodyText,
   getNotificationInlineActions,
   getNotificationQuote,
 } from "./notification-type";
 import { NotificationInlineReplyInput } from "./notification-inline-reply-input";
+import { useNotificationCardLongPress } from "./use-notification-card-long-press";
 
 interface NotificationCardProps {
   item: NotificationItemResp;
@@ -52,10 +55,20 @@ export default function NotificationCard({
   const unread = !item.is_read;
   const created = item.created_at ? new Date(item.created_at) : null;
   const actorName = getNotificationActorName(item);
+  const actorProfileHref = getNotificationActorProfileHref(item);
   const actionText = getNotificationActionText(item);
   const bodyText = getNotificationBodyText(item);
   const quote = getNotificationQuote(item);
   const inlineActions = getNotificationInlineActions(item);
+
+  const handleLongPressSelect = useCallback(() => {
+    if (!selecting) onToggleSelect(item.id);
+  }, [item.id, onToggleSelect, selecting]);
+
+  const { longPressProps, consumeLongPressClick, isTouchPressing } = useNotificationCardLongPress({
+    disabled: selecting,
+    onLongPress: handleLongPressSelect,
+  });
 
   function handleBody() {
     if (selecting) onToggleSelect(item.id);
@@ -63,6 +76,7 @@ export default function NotificationCard({
   }
 
   function handleContentClick(event: MouseEvent<HTMLElement>) {
+    if (consumeLongPressClick()) return;
     if (shouldIgnoreCardOpenClick(event.target as HTMLElement)) return;
     handleBody();
   }
@@ -92,16 +106,25 @@ export default function NotificationCard({
 
   return (
     <div
+      data-testid="notification-card"
+      {...longPressProps}
       className={cn(
         "group grid gap-3 rounded-xl border px-3.5 py-3 transition-colors",
+        isTouchPressing && "select-none",
         showMarkRead
           ? "grid-cols-[2.625rem_minmax(0,1fr)_2rem]"
           : "grid-cols-[2.625rem_minmax(0,1fr)]",
         unread ? "border-border bg-muted/55 dark:bg-muted/60" : "border-border/60 bg-card",
       )}
     >
-      <div className="flex flex-col items-center gap-2">
-        <UserAvatar src={item.actor_user?.avatar_url} name={actorName} size="lg" />
+      <div className="flex flex-col items-center gap-3">
+        {actorProfileHref ? (
+          <Link href={actorProfileHref} className="shrink-0" aria-label={`查看${actorName}的主页`}>
+            <UserAvatar src={item.actor_user?.avatar_url} name={actorName} size="lg" />
+          </Link>
+        ) : (
+          <UserAvatar src={item.actor_user?.avatar_url} name={actorName} size="lg" />
+        )}
         <div
           className={cn(
             "flex items-center justify-center transition-opacity",
@@ -132,7 +155,16 @@ export default function NotificationCard({
             {unread && (
               <span className="h-[7px] w-[7px] shrink-0 rounded-full bg-primary" aria-hidden />
             )}
-            <span className="truncate text-sm font-medium text-foreground">{actorName}</span>
+            {actorProfileHref ? (
+              <Link
+                href={actorProfileHref}
+                className="truncate text-sm font-medium text-foreground"
+              >
+                {actorName}
+              </Link>
+            ) : (
+              <span className="truncate text-sm font-medium text-foreground">{actorName}</span>
+            )}
           </span>
           <span
             className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground"

@@ -1,8 +1,24 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import type { ReactNode } from "react";
 import type { NotificationItemResp } from "@repo/api";
 import NotificationCard from "./notification-card";
+
+vi.mock("next/link", () => ({
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: ReactNode;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
 
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-icon={name} />,
@@ -84,6 +100,14 @@ function item(over: Partial<NotificationItemResp> = {}): NotificationItemResp {
 }
 
 describe("NotificationCard", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("渲染操作人昵称与头像", () => {
     render(
       <NotificationCard
@@ -97,6 +121,52 @@ describe("NotificationCard", () => {
     );
     expect(screen.getAllByText("VPT").length).toBeGreaterThan(0);
     expect(screen.getByTestId("avatar")).toHaveAttribute("data-src", "https://cdn.example/a.png");
+  });
+
+  it("操作人头像与昵称链接到用户详情页", () => {
+    render(
+      <NotificationCard
+        item={item()}
+        selecting={false}
+        selected={false}
+        onOpen={vi.fn()}
+        onRead={vi.fn()}
+        onToggleSelect={vi.fn()}
+      />,
+    );
+    const profileLinks = screen.getAllByRole("link", { name: /VPT/ });
+    expect(profileLinks).toHaveLength(2);
+    expect(profileLinks.every((link) => link.getAttribute("href") === "/users/2")).toBe(true);
+  });
+
+  it("点击操作人昵称不触发 onOpen", () => {
+    const onOpen = vi.fn();
+    render(
+      <NotificationCard
+        item={item()}
+        selecting={false}
+        selected={false}
+        onOpen={onOpen}
+        onRead={vi.fn()}
+        onToggleSelect={vi.fn()}
+      />,
+    );
+    fireEvent.click(screen.getAllByRole("link", { name: /VPT/ })[1]!);
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it("系统通知不渲染操作人个人页链接", () => {
+    render(
+      <NotificationCard
+        item={item({ type: "system_notice", actor_user: undefined })}
+        selecting={false}
+        selected={false}
+        onOpen={vi.fn()}
+        onRead={vi.fn()}
+        onToggleSelect={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole("link", { name: /系统通知/ })).toBeNull();
   });
 
   it("渲染动作文案与时间", () => {
@@ -345,5 +415,49 @@ describe("NotificationCard", () => {
     fireEvent.click(screen.getByText("评论了你的文章"));
     expect(onToggleSelect).toHaveBeenCalledWith(1);
     expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it("移动端长按卡片触发 onToggleSelect 且不触发 onOpen", () => {
+    const onOpen = vi.fn();
+    const onToggleSelect = vi.fn();
+    render(
+      <NotificationCard
+        item={item()}
+        selecting={false}
+        selected={false}
+        onOpen={onOpen}
+        onRead={vi.fn()}
+        onToggleSelect={onToggleSelect}
+      />,
+    );
+
+    const card = screen.getByTestId("notification-card");
+    fireEvent.pointerDown(card, { pointerType: "touch" });
+    vi.advanceTimersByTime(500);
+    fireEvent.pointerUp(card, { pointerType: "touch" });
+    fireEvent.click(screen.getByText("评论了你的文章"));
+
+    expect(onToggleSelect).toHaveBeenCalledWith(1);
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it("选择模式下长按不再重复触发 onToggleSelect", () => {
+    const onToggleSelect = vi.fn();
+    render(
+      <NotificationCard
+        item={item()}
+        selecting
+        selected={false}
+        onOpen={vi.fn()}
+        onRead={vi.fn()}
+        onToggleSelect={onToggleSelect}
+      />,
+    );
+
+    const card = screen.getByTestId("notification-card");
+    fireEvent.pointerDown(card, { pointerType: "touch" });
+    vi.advanceTimersByTime(500);
+
+    expect(onToggleSelect).not.toHaveBeenCalled();
   });
 });

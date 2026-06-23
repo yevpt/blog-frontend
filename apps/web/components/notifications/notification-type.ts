@@ -49,6 +49,18 @@ export function getNotificationActorName(item: NotificationItemResp): string {
   return item.type === "system_notice" ? "系统通知" : "用户";
 }
 
+/** 操作人用户 ID；系统通知不跳转个人页。 */
+export function getNotificationActorUserId(item: NotificationItemResp): number | null {
+  if (item.type === "system_notice") return null;
+  return item.actor_user?.id ?? item.actor_user_id ?? null;
+}
+
+/** 操作人个人页路径；无有效 ID 时返回 null。 */
+export function getNotificationActorProfileHref(item: NotificationItemResp): string | null {
+  const userId = getNotificationActorUserId(item);
+  return userId != null ? `/users/${userId}` : null;
+}
+
 /** 按事件类型生成动作文案（不含操作人昵称）。 */
 export function getNotificationActionText(item: NotificationItemResp): string {
   switch (item.type) {

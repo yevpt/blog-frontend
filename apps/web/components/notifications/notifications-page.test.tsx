@@ -70,12 +70,26 @@ vi.mock("@repo/ui", () => ({
       {children}
     </button>
   ),
+  Tooltip: ({ children }: { children: ReactNode }) => <>{children}</>,
   cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
 }));
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-icon={name} />,
 }));
 vi.mock("./notification-filter-tabs", () => ({ default: () => <div data-testid="tabs" /> }));
+vi.mock("./mark-all-read-button", () => ({
+  MarkAllReadButton: ({
+    unreadCount,
+    onConfirm,
+  }: {
+    unreadCount: number;
+    onConfirm: () => void;
+  }) => (
+    <button type="button" aria-label="全部已读" disabled={unreadCount === 0} onClick={onConfirm}>
+      全部已读
+    </button>
+  ),
+}));
 vi.mock("./notification-selection-bar", () => ({ default: () => <div data-testid="bar" /> }));
 vi.mock("./notification-virtual-list", () => ({
   NotificationVirtualList: (props: {
@@ -129,12 +143,23 @@ describe("NotificationsPage", () => {
     expect(screen.queryByText("8 条未读")).toBeNull();
   });
 
-  it("不显示选择按钮，全部已读在 tabs 行右侧", () => {
+  it("tabs 行右侧显示批量选择与全部已读图标按钮", () => {
     storeState.unreadCount = 2;
+    hook.items = [listItem()];
     render(<NotificationsPage />);
     expect(screen.queryByText("选择")).toBeNull();
-    fireEvent.click(screen.getByText("全部已读"));
+    expect(screen.getByRole("button", { name: "批量选择" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "全部已读" }));
     expect(hook.markAllRead).toHaveBeenCalled();
+  });
+
+  it("点击批量选择进入选择模式，再点取消退出", () => {
+    hook.items = [listItem()];
+    render(<NotificationsPage />);
+    fireEvent.click(screen.getByRole("button", { name: "批量选择" }));
+    expect(screen.getByTestId("bar")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "取消选择" }));
+    expect(screen.queryByTestId("bar")).toBeNull();
   });
 
   it("错误态显示重试并触发 reload", () => {
