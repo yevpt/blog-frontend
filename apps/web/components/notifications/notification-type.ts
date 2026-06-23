@@ -1,170 +1,330 @@
 import type { NotificationItemResp } from "@repo/api";
-import type { IconName } from "@repo/icons";
+import { htmlExcerptToPlainText } from "@repo/markdown";
 
-export interface NotificationVisual {
-  icon: IconName;
-  label: string;
-  tone: "purple" | "pink" | "sky" | "neutral";
-}
-
-/** 从 type/source_type 判断互动类型，决定图标语义（赞 vs 评论/回复）。 */
-export function getInteractionKind(item: NotificationItemResp): "like" | "comment" | null {
-  const typeStr = (item.type || "").toLowerCase();
-  const sourceStr = (item.source_type || "").toLowerCase();
-  if (typeStr.includes("like") || sourceStr === "like") return "like";
-  if (
-    typeStr.includes("reply") ||
-    typeStr.includes("comment") ||
-    sourceStr === "comment" ||
-    sourceStr === "reply"
-  ) {
-    return "comment";
-  }
-  return null;
-}
-
-/** root_type → 胶囊文案 / 无互动时的兜底图标（配色不在此，统一由图标语义决定）。 */
-const ROOT_VISUAL: Record<string, { label: string; icon: IconName }> = {
-  article: { label: "评论", icon: "message-circle-line" },
-  moment: { label: "碎语", icon: "message-circle-line" },
-  guestbook: { label: "留言", icon: "pen" },
-};
-
-/** 图标 → 配色：颜色跟随图标语义（评论=紫、点赞=粉、其它=中性），保证图标与圈色一致。 */
-function toneForIcon(icon: IconName): NotificationVisual["tone"] {
-  if (icon === "heart-line") return "pink";
-  if (icon === "message-circle-line") return "purple";
-  if (icon === "pen") return "sky";
-  return "neutral";
-}
-
-/**
- * 图标按互动类型（赞→heart-line、评论/回复→message-circle-line）优先、root 兜底；
- * 配色跟随图标语义；胶囊文案按 root 对象类型；未知类型落到系统通知兜底。
- */
-export function getNotificationVisual(item: NotificationItemResp): NotificationVisual {
-  const root = ROOT_VISUAL[item.root_type] ?? { label: "通知", icon: "bell" as IconName };
-  const kind = getInteractionKind(item);
-  const icon: IconName =
-    kind === "like" ? "heart-line" : kind === "comment" ? "message-circle-line" : root.icon;
-  return { icon, label: root.label, tone: toneForIcon(icon) };
-}
-
-/**
- * tone → Tailwind 配色类（图标底色 + 胶囊），对齐设计稿的淡雅紫/粉，并适配深色模式。
- * 紫≈violet-100/700（demo #EEEDFE/#534AB7），粉≈rose-100/700（demo #FBEAF0/#993556）。
- */
-export const TONE_CLASS: Record<
-  NotificationVisual["tone"],
-  { iconWrap: { unread: string; read: string }; pill: string }
-> = {
-  purple: {
-    iconWrap: {
-      unread: "bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300",
-      read: "bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-400",
-    },
-    pill: "bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300",
-  },
-  pink: {
-    iconWrap: {
-      unread: "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300",
-      read: "bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-400",
-    },
-    pill: "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300",
-  },
-  sky: {
-    iconWrap: {
-      unread: "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300",
-      read: "bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-400",
-    },
-    pill: "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300",
-  },
-  neutral: {
-    iconWrap: {
-      unread: "bg-muted text-muted-foreground",
-      read: "bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-400",
-    },
-    pill: "bg-muted text-muted-foreground",
-  },
-};
-
-/** 从 metadata JSON 中尽量取出来源标题，后端字段命名不定，多 key 兜底扫描。 */
-function extractMetaTitle(metadata?: string): string | null {
-  if (!metadata) return null;
-  try {
-    const meta = JSON.parse(metadata) as Record<string, unknown>;
-    const keys = ["article_title", "root_title", "title", "post_title", "subject", "name"];
-    for (const key of keys) {
-      const value = meta[key];
-      if (typeof value === "string" && value.trim()) return value.trim();
-    }
-  } catch {
-    // 元数据非 JSON 时忽略，落到默认来源文案
-  }
-  return null;
-}
-
-export interface NotificationSourceParts {
-  prefix: string;
+export interface NotificationQuote {
   title?: string;
+  text: string;
 }
 
-export function getNotificationSourceParts(
-  item: NotificationItemResp,
-): NotificationSourceParts | null {
-  if (item.root_type === "article") {
-    const title = item.root_title || extractMetaTitle(item.metadata);
-    if (title) return { prefix: "来自", title };
-    return { prefix: "来自文章" };
+export interface NotificationInlineActions {
+  canLike: boolean;
+  canReply: boolean;
+}
+
+/** 卡片内联回复 API 目标；无法安全推断时返回 null。 */
+export interface NotificationReplyTarget {
+  url: string;
+  parent_reply_id: number;
+}
+
+interface NotificationSnapshot {
+  type?: string;
+  id?: number;
+  title?: string;
+  excerpt?: string;
+}
+
+interface NotificationMetadata {
+  comment_id?: number | string;
+  source_snapshot?: NotificationSnapshot;
+  root_snapshot?: NotificationSnapshot;
+  quote_snapshot?: NotificationSnapshot;
+}
+
+const INLINE_ACTION_TYPES = new Set(["comment_created", "reply_created", "guestbook_created"]);
+
+const BODY_TEXT_TYPES = new Set([
+  "comment_created",
+  "reply_created",
+  "guestbook_created",
+  "comment_liked",
+  "reply_liked",
+  "guestbook_liked",
+]);
+
+/** 操作人展示名；无操作人时回退为系统通知。 */
+export function getNotificationActorName(item: NotificationItemResp): string {
+  const nickname = item.actor_user?.nickname?.trim();
+  if (nickname) return nickname;
+  return item.type === "system_notice" ? "系统通知" : "用户";
+}
+
+/** 按事件类型生成动作文案（不含操作人昵称）。 */
+export function getNotificationActionText(item: NotificationItemResp): string {
+  switch (item.type) {
+    case "article_liked":
+      return "赞了你的文章";
+    case "moment_liked":
+      return "赞了你的碎语";
+    case "comment_liked":
+      if (item.root_type === "moment") return "赞了你给碎语发表的评论";
+      return "赞了你的评论";
+    case "reply_liked":
+      return "赞了你的回复";
+    case "guestbook_liked":
+      return "赞了你的留言";
+    case "guestbook_created":
+      return "发表了留言";
+    case "system_notice":
+      return "发布了系统通知";
+    case "comment_created":
+      if (item.root_type === "article") return "评论了你的文章";
+      if (item.root_type === "moment") return "评论了你的碎语";
+      if (item.root_type === "guestbook") return "发表了留言";
+      break;
+    case "reply_created":
+      if (item.root_type === "article") return "回复了文章下你的评论";
+      if (item.root_type === "moment") return "回复了碎语下你的评论";
+      if (item.root_type === "guestbook") return "回复了留言下你的评论";
+      break;
+    case "legacy_notice":
+      return item.title || "你有一条新消息";
+    default:
+      return item.title || "你有一条新消息";
   }
-  if (item.root_type === "moment") return { prefix: "来自碎语" };
-  if (item.root_type === "guestbook") return { prefix: "来自留言板" };
+  return item.title || "你有一条新消息";
+}
+
+function parseNotificationMetadata(metadata?: string): NotificationMetadata {
+  if (!metadata) return {};
+  try {
+    const parsed: unknown = JSON.parse(metadata);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    return parsed as NotificationMetadata;
+  } catch {
+    return {};
+  }
+}
+
+function snapshotText(snapshot?: NotificationSnapshot): string {
+  const raw = snapshot?.excerpt?.trim() ?? "";
+  if (!raw) return "";
+  return htmlExcerptToPlainText(raw);
+}
+
+function snapshotTitle(snapshot?: NotificationSnapshot): string {
+  return snapshot?.title?.trim() ?? "";
+}
+
+function deletedText(objectType: string): string {
+  switch (objectType) {
+    case "article":
+      return "文章已删除";
+    case "moment":
+      return "碎语已删除";
+    case "guestbook":
+      return "留言已删除";
+    case "comment":
+      return "评论已删除";
+    case "reply":
+      return "回复已删除";
+    default:
+      return "内容已删除";
+  }
+}
+
+function commentQuoteTitle(
+  item: NotificationItemResp,
+  rootSnapshot?: NotificationSnapshot,
+): string | undefined {
+  if (item.root_type === "article") {
+    const title = snapshotTitle(rootSnapshot);
+    if (title) return `《${title}》`;
+    if (rootSnapshot?.type === "article" || !rootSnapshot?.type) return "文章";
+  }
+  return undefined;
+}
+
+/** 从 metadata JSON 解析父评论 ID（reply 点赞等场景）。 */
+export function extractCommentIdFromMetadata(metadata?: string): number | null {
+  const raw = parseNotificationMetadata(metadata).comment_id;
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+  if (typeof raw === "string" && raw.trim()) {
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed)) return parsed;
+  }
   return null;
 }
 
-export function getNotificationSource(item: NotificationItemResp): string | null {
-  const parts = getNotificationSourceParts(item);
-  if (!parts) return null;
-  return parts.title ? `${parts.prefix}《${parts.title}》` : parts.prefix;
+/** 评论类引用正文：回复优先 quote_snapshot，其余展示 root_snapshot。 */
+function getCommentQuoteText(
+  item: NotificationItemResp,
+  body: string | null,
+  metadata: NotificationMetadata,
+): string {
+  if (item.root_deleted) return deletedText(item.root_type);
+
+  if (item.type === "reply_created" || item.type === "reply_liked") {
+    const quoteText = snapshotText(metadata.quote_snapshot);
+    if (quoteText && quoteText !== body) return quoteText;
+  }
+  const rootText = snapshotText(metadata.root_snapshot);
+  if (rootText && rootText !== body) return rootText;
+  return "";
 }
 
-export function getNotificationTitle(item: NotificationItemResp): string {
-  if (item.title) return item.title;
+function nonEmptyQuote(title?: string, text?: string): NotificationQuote | null {
+  const trimmedTitle = title?.trim();
+  const trimmedText = text?.trim() ?? "";
+  if (!trimmedTitle && !trimmedText) return null;
+  return { title: trimmedTitle, text: trimmedText };
+}
 
-  const kind = getInteractionKind(item);
-  const isLike = kind === "like";
-  const isReplyOrComment = kind === "comment";
+/** 发表留言类事件：正文已展示留言内容，无需再附「留言板」引用块。 */
+function isGuestbookPostNotification(item: NotificationItemResp): boolean {
+  return (
+    item.type === "guestbook_created" ||
+    (item.type === "comment_created" && item.root_type === "guestbook")
+  );
+}
 
-  const typeStr = (item.type || "").toLowerCase();
-  const sourceStr = (item.source_type || "").toLowerCase();
-  const isReply = typeStr.includes("reply") || sourceStr.includes("reply");
-
-  if (item.root_type === "article") {
-    if (isLike) return "你的文章收到一个赞";
-    if (isReplyOrComment) {
-      return isReply ? "有人回复了你的评论" : "有人评论了你的文章";
+/** 轻量引用块：点赞类展示对象标题/摘录；评论类展示根对象上下文。 */
+export function getNotificationQuote(item: NotificationItemResp): NotificationQuote | null {
+  const metadata = parseNotificationMetadata(item.metadata);
+  const rootSnapshot = metadata.root_snapshot;
+  if (item.type === "article_liked") {
+    const title = snapshotTitle(rootSnapshot);
+    const text =
+      item.root_deleted || item.source_deleted
+        ? deletedText("article")
+        : snapshotText(rootSnapshot) || htmlExcerptToPlainText(item.content_excerpt?.trim() ?? "");
+    return nonEmptyQuote(title, text);
+  }
+  if (item.type === "moment_liked") {
+    // 碎语无独立标题，引用块只展示正文摘录
+    const excerptText = item.content_excerpt?.trim()
+      ? htmlExcerptToPlainText(item.content_excerpt.trim())
+      : "";
+    const text =
+      item.root_deleted || item.source_deleted
+        ? deletedText("moment")
+        : excerptText || snapshotText(rootSnapshot);
+    return nonEmptyQuote(undefined, text);
+  }
+  if (isGuestbookPostNotification(item)) {
+    return null;
+  }
+  if (BODY_TEXT_TYPES.has(item.type)) {
+    const body = getNotificationBodyText(item);
+    if (item.root_type === "moment") {
+      // 碎语无独立标题，引用块只展示正文摘录
+      const quoteText = getCommentQuoteText(item, body, metadata);
+      return nonEmptyQuote(undefined, quoteText);
     }
-    return "你的文章有了新动态";
+    const title = commentQuoteTitle(item, rootSnapshot);
+    const quoteText = getCommentQuoteText(item, body, metadata);
+    return nonEmptyQuote(title, quoteText);
   }
-  if (item.root_type === "moment") {
-    if (isLike) return "你的碎语收到一个赞";
-    if (isReplyOrComment) {
-      return isReply ? "有人回复了你的碎语" : "有人评论了你的碎语";
-    }
-    return "你的碎语有了新互动";
-  }
-  if (item.root_type === "guestbook") {
-    if (isLike) return "你的留言收到一个赞";
-    if (isReplyOrComment || typeStr.includes("message") || sourceStr.includes("message")) {
-      return isReply ? "有人在留言板回复了你" : "有人在留言板给你留言";
-    }
-    return "留言板有了新动态";
-  }
+  return null;
+}
 
-  // 兜底：如果 root_type 为空但互动类型是留言
-  if (sourceStr === "guestbook_message" || typeStr === "guestbook_message_created") {
-    return "有人在留言板给你留言";
+/** 评论/回复/留言类事件的主体文案。 */
+export function getNotificationBodyText(item: NotificationItemResp): string | null {
+  if (!BODY_TEXT_TYPES.has(item.type)) return null;
+  if (item.source_deleted) return deletedText(item.source_type);
+  const excerpt = item.content_excerpt?.trim();
+  const sourceText = snapshotText(parseNotificationMetadata(item.metadata).source_snapshot);
+  // 评论/回复点赞：正文可从 source_snapshot 取被点赞对象快照。
+  if (item.type === "comment_liked" && item.root_type === "moment") {
+    return excerpt || sourceText || null;
   }
+  return excerpt || sourceText || null;
+}
 
-  return "你有一条新消息";
+/** 卡片内联点赞 API 路径；无法安全推断时返回 null（如 reply 缺父评论 ID）。 */
+export function getNotificationLikeUrl(item: NotificationItemResp): string | null {
+  if (item.source_type === "comment" && item.root_type === "article") {
+    return `/api/articles/comments/${item.source_id}/like`;
+  }
+  if (item.source_type === "comment" && item.root_type === "moment") {
+    return `/api/moments/comments/${item.source_id}/like`;
+  }
+  if (item.source_type === "guestbook") {
+    return `/api/guestbook/${item.source_id}/like`;
+  }
+  if (item.source_type === "reply") {
+    if (item.root_type === "guestbook") {
+      return `/api/guestbook/comments/${item.root_id}/replies/${item.source_id}/like`;
+    }
+    const commentId = extractCommentIdFromMetadata(item.metadata);
+    if (commentId == null) return null;
+    if (item.root_type === "article") {
+      return `/api/articles/comments/${commentId}/replies/${item.source_id}/like`;
+    }
+    if (item.root_type === "moment") {
+      return `/api/moments/comments/${commentId}/replies/${item.source_id}/like`;
+    }
+  }
+  return null;
+}
+
+/** 卡片内联回复 API 路径与 parent_reply_id；与点赞 URL 规则对称，reply 缺父评论 ID 时不猜测。 */
+export function getNotificationReplyTarget(
+  item: NotificationItemResp,
+): NotificationReplyTarget | null {
+  if (item.source_type === "guestbook") {
+    return {
+      url: `/api/guestbook/comments/${item.source_id}/replies`,
+      parent_reply_id: 0,
+    };
+  }
+  if (item.source_type === "comment") {
+    if (item.root_type === "article") {
+      return {
+        url: `/api/articles/comments/${item.source_id}/replies`,
+        parent_reply_id: 0,
+      };
+    }
+    if (item.root_type === "moment") {
+      return {
+        url: `/api/moments/comments/${item.source_id}/replies`,
+        parent_reply_id: 0,
+      };
+    }
+    if (item.root_type === "guestbook") {
+      return {
+        url: `/api/guestbook/comments/${item.root_id}/replies`,
+        parent_reply_id: item.source_id,
+      };
+    }
+  }
+  if (item.source_type === "reply") {
+    if (item.root_type === "guestbook") {
+      return {
+        url: `/api/guestbook/comments/${item.root_id}/replies`,
+        parent_reply_id: item.source_id,
+      };
+    }
+    const commentId = extractCommentIdFromMetadata(item.metadata);
+    if (commentId == null) return null;
+    if (item.root_type === "article") {
+      return {
+        url: `/api/articles/comments/${commentId}/replies`,
+        parent_reply_id: item.source_id,
+      };
+    }
+    if (item.root_type === "moment") {
+      return {
+        url: `/api/moments/comments/${commentId}/replies`,
+        parent_reply_id: item.source_id,
+      };
+    }
+  }
+  return null;
+}
+
+/** 是否展示卡片底部点赞/回复按钮。 */
+export function getNotificationInlineActions(
+  item: NotificationItemResp,
+): NotificationInlineActions {
+  if (item.source_deleted || item.root_deleted) {
+    return { canLike: false, canReply: false };
+  }
+  if (!INLINE_ACTION_TYPES.has(item.type)) {
+    return { canLike: false, canReply: false };
+  }
+  return {
+    canLike: getNotificationLikeUrl(item) !== null,
+    canReply: getNotificationReplyTarget(item) !== null,
+  };
 }

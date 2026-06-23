@@ -59,7 +59,7 @@ export function LoadingImage({
             fallbackClassName,
           )}
         >
-          <SvgIcon name="image" size={28} />
+          <SvgIcon name="image-off" size={28} />
         </div>
       )}
 

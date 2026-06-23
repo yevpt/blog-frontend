@@ -173,12 +173,25 @@ body::after {
   }
 }
 
+@keyframes notificationEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @theme {
   --animate-fade-in-up: fadeInUp 0.4s ease both;
+  --animate-notification-enter: notificationEnter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-in-up {
+  .animate-fade-in-up,
+  .animate-notification-enter {
     animation: none;
   }
 }

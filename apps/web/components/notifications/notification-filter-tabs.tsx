@@ -14,7 +14,7 @@ export default function NotificationFilterTabs({
   onChange,
 }: NotificationFilterTabsProps) {
   return (
-    <div role="tablist" className="flex gap-1 border-b border-border">
+    <div role="tablist" className="flex gap-1">
       <button
         type="button"
         role="tab"

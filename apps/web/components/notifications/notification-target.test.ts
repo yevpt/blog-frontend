@@ -15,6 +15,8 @@ function item(overrides: Partial<NotificationItemResp>): NotificationItemResp {
     source_id: 2,
     root_type: "article",
     root_id: 3,
+    source_deleted: false,
+    root_deleted: false,
     ...overrides,
   };
 }
@@ -34,5 +36,11 @@ describe("getNotificationHref", () => {
 
   it("未知通知回退到消息页", () => {
     expect(getNotificationHref(item({ root_type: "unknown", root_id: 5 }))).toBe("/notifications");
+  });
+
+  it("根对象已删除时回退到消息页", () => {
+    expect(
+      getNotificationHref(item({ root_type: "article", root_id: 42, root_deleted: true })),
+    ).toBe("/notifications");
   });
 });

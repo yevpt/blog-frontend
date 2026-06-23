@@ -97,7 +97,7 @@ describe("LoadingImage", () => {
 
     expect(screen.queryByTestId("loading-image-skeleton")).not.toBeInTheDocument();
     expect(screen.getByTestId("loading-image-fallback")).toBeInTheDocument();
-    expect(screen.getByTestId("icon-image")).toBeInTheDocument();
+    expect(screen.getByTestId("icon-image-off")).toBeInTheDocument();
   });
 
   // 回归用例：bfcache 恢复 / 缓存命中导致挂载即 complete 时，onLoad 不会触发，
