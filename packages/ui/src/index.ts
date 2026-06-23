@@ -1,5 +1,11 @@
 export { Badge, type BadgeProps } from "./badge";
 export { Autocomplete, type AutocompleteRootProps } from "./autocomplete";
+export {
+  Breadcrumbs,
+  BreadcrumbItem,
+  type BreadcrumbsProps,
+  type BreadcrumbItemProps,
+} from "./breadcrumbs";
 export { Button, type ButtonProps } from "./button";
 export {
   Card,
