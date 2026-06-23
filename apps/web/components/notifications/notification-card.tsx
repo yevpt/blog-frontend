@@ -4,7 +4,12 @@ import type { NotificationItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
 import { Button, cn } from "@repo/ui";
 import { formatDateTime, formatRelativeTime } from "@/lib/format-time";
-import { getNotificationVisual, TONE_CLASS } from "./notification-type";
+import {
+  getNotificationVisual,
+  getNotificationSourceParts,
+  getNotificationTitle,
+  TONE_CLASS,
+} from "./notification-type";
 
 interface NotificationCardProps {
   item: NotificationItemResp;
@@ -38,8 +43,8 @@ export default function NotificationCard({
   return (
     <div
       className={cn(
-        "group flex gap-3 rounded-xl border border-border px-3.5 py-3 transition-colors",
-        unread ? "bg-primary/5" : "bg-card opacity-90",
+        "group flex gap-3 rounded-xl border px-3.5 py-3 transition-colors",
+        unread ? "border-border bg-muted dark:bg-muted/70" : "border-border/60 bg-card",
       )}
     >
       {selecting && (
@@ -54,7 +59,7 @@ export default function NotificationCard({
       <span
         className={cn(
           "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-          tone.iconWrap,
+          unread ? tone.iconWrap.unread : tone.iconWrap.read,
         )}
       >
         <SvgIcon name={visual.icon} size={18} />
@@ -71,7 +76,7 @@ export default function NotificationCard({
               unread ? "text-foreground" : "text-muted-foreground",
             )}
           >
-            {item.title || "你有一条新消息"}
+            {getNotificationTitle(item)}
           </span>
           <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px]", tone.pill)}>
             {visual.label}
@@ -79,21 +84,38 @@ export default function NotificationCard({
         </span>
         {item.content_excerpt && (
           <span className="mt-1 line-clamp-2 block text-[13px] leading-relaxed text-muted-foreground">
-            {item.content_excerpt}
+            「{item.content_excerpt}」
           </span>
         )}
-        {created && (
-          <span
-            className="mt-1 block text-xs text-muted-foreground/80"
-            title={formatDateTime(created)}
-          >
-            {formatRelativeTime(created)}
-          </span>
-        )}
+        {created &&
+          (() => {
+            const parts = getNotificationSourceParts(item);
+            return (
+              <span
+                className="mt-1 flex items-center text-xs text-muted-foreground/80 min-w-0 gap-1"
+                title={formatDateTime(created)}
+              >
+                <span className="shrink-0">{formatRelativeTime(created)}</span>
+                {parts && (
+                  <>
+                    <span className="shrink-0">·</span>
+                    <span className="shrink-0">{parts.prefix}</span>
+                    {parts.title && (
+                      <span className="flex min-w-0 items-center text-foreground/80 hover:text-foreground hover:underline transition-colors">
+                        <span className="shrink-0">《</span>
+                        <span className="truncate">{parts.title}</span>
+                        <span className="shrink-0">》</span>
+                      </span>
+                    )}
+                  </>
+                )}
+              </span>
+            );
+          })()}
       </button>
 
       {!selecting && (
-        <span className="flex flex-col gap-1.5 self-center opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
+        <span className="flex flex-col gap-1.5 self-center">
           {unread && (
             <Button
               type="button"
@@ -101,9 +123,9 @@ export default function NotificationCard({
               size={null}
               aria-label="标记已读"
               onPress={() => onRead(item.id)}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/[0.06]"
+              className="flex h-[26px] w-[26px] items-center justify-center rounded-md border border-border bg-card text-foreground/70 hover:bg-foreground/[0.04]"
             >
-              <SvgIcon name="check" size={16} />
+              <SvgIcon name="check" size={14} />
             </Button>
           )}
           <Button
@@ -112,9 +134,9 @@ export default function NotificationCard({
             size={null}
             aria-label="删除"
             onPress={() => onRemove(item.id)}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-destructive/80 hover:bg-destructive/[0.08]"
+            className="flex h-[26px] w-[26px] items-center justify-center rounded-md border border-border bg-card text-destructive/80 hover:bg-destructive/[0.04]"
           >
-            <SvgIcon name="trash" size={16} />
+            <SvgIcon name="trash" size={14} />
           </Button>
         </span>
       )}

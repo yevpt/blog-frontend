@@ -44,22 +44,26 @@ export default function NotificationsPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-8">
+    <main className="mx-auto w-full max-w-2xl px-4 pt-20 md:pt-24 pb-8">
       <header className="mb-4 flex items-center justify-between gap-3">
-        <div className="flex items-baseline gap-2.5">
-          <h1 className="text-xl font-medium text-foreground">消息中心</h1>
-          <span className="text-[13px] text-muted-foreground">
-            {unreadCount > 0 ? `${unreadCount} 条未读` : "全部已读"}
-          </span>
-        </div>
+        <h1 className="text-xl font-medium text-foreground">消息中心</h1>
         <div className="flex gap-2">
           <Button
             type="button"
             variant={null}
             size={null}
             onPress={() => (selecting ? exitSelect() : setSelecting(true))}
-            className="rounded-lg border border-border px-3 py-1.5 text-[13px]"
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-[13px] transition-colors hover:bg-foreground/[0.03]"
           >
+            {selecting ? (
+              <span className="flex h-3.5 w-3.5 items-center justify-center rounded-[3px] border border-current">
+                <SvgIcon name="close" size={10} className="stroke-[3]" />
+              </span>
+            ) : (
+              <span className="flex h-3.5 w-3.5 items-center justify-center rounded-[3px] border border-current">
+                <SvgIcon name="check" size={10} className="stroke-[3]" />
+              </span>
+            )}
             {selecting ? "取消" : "选择"}
           </Button>
           <Button
@@ -68,9 +72,9 @@ export default function NotificationsPage() {
             size={null}
             isDisabled={unreadCount === 0}
             onPress={n.markAllRead}
-            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[13px] disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-[13px] transition-colors hover:bg-foreground/[0.03] disabled:opacity-50"
           >
-            <SvgIcon name="check" size={15} />
+            <SvgIcon name="check" size={14} className="stroke-[2.5]" />
             全部已读
           </Button>
         </div>

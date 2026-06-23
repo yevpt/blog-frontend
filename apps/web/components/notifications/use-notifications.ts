@@ -50,22 +50,16 @@ export function useNotifications({ pageSize = 20 }: UseNotificationsOptions = {}
   // 本地把若干条置已读，并按实际由未读转已读的数量递减角标
   const applyRead = useCallback(
     (ids: Set<number>) => {
-      setItems((cur) => {
-        let freshlyRead = 0;
-        const next = cur.map((it) => {
-          if (ids.has(it.id) && !it.is_read) {
-            freshlyRead += 1;
-            return { ...it, is_read: true };
-          }
-          return it;
-        });
-        if (freshlyRead > 0) {
-          setUnreadCount(useNotificationStore.getState().unreadCount - freshlyRead);
-        }
-        return next;
+      let freshlyRead = 0;
+      items.forEach((it) => {
+        if (ids.has(it.id) && !it.is_read) freshlyRead += 1;
       });
+      if (freshlyRead > 0) {
+        setUnreadCount(useNotificationStore.getState().unreadCount - freshlyRead);
+      }
+      setItems((cur) => cur.map((it) => (ids.has(it.id) ? { ...it, is_read: true } : it)));
     },
-    [setUnreadCount],
+    [items, setUnreadCount],
   );
 
   const markRead = useCallback(
@@ -101,15 +95,13 @@ export function useNotifications({ pageSize = 20 }: UseNotificationsOptions = {}
   const remove = useCallback(
     async (id: number) => {
       await apiJson<NotificationReadResp>(`/api/notifications/${id}`, { method: "DELETE" });
-      setItems((cur) => {
-        const target = cur.find((it) => it.id === id);
-        if (target && !target.is_read) {
-          setUnreadCount(useNotificationStore.getState().unreadCount - 1);
-        }
-        return cur.filter((it) => it.id !== id);
-      });
+      const target = items.find((it) => it.id === id);
+      if (target && !target.is_read) {
+        setUnreadCount(useNotificationStore.getState().unreadCount - 1);
+      }
+      setItems((cur) => cur.filter((it) => it.id !== id));
     },
-    [setUnreadCount],
+    [items, setUnreadCount],
   );
 
   const hasMore = items.length < total;
