@@ -18,6 +18,7 @@ export interface NotificationItemResp {
   source_id: number;
   root_type: string;
   root_id: number;
+  root_title?: string;
   metadata?: string;
 }
 
