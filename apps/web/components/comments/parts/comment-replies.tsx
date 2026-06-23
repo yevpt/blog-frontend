@@ -231,8 +231,12 @@ export const CommentReplies = memo(function CommentReplies({
 
   if (replyCount <= 0) return null;
 
+  // pendingReply 仅在服务端尚未返回该回复时作为占位追加；
+  // 一旦 replies 已包含同 id 回复，以服务端数据为准（点赞状态可被 updateReplyLike 正常更新）。
   const displayReplies = hydrateReplyAvatars(
-    pendingReply ? [...replies.filter((r) => r.id !== pendingReply.id), pendingReply] : replies,
+    pendingReply && !replies.some((r) => r.id === pendingReply.id)
+      ? [...replies, pendingReply]
+      : replies,
   ).filter((reply) => !deletedReplyIds.has(reply.id));
 
   if (!isOpen) {

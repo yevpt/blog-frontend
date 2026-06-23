@@ -159,6 +159,82 @@ describe("CommentReplies", () => {
     await waitFor(() => expect(screen.getByText("刚刚发布的回复")).toBeTruthy());
   });
 
+  it("pendingReply 与服务端同 id 回复共存时点赞能正常更新", async () => {
+    const user = userEvent.setup();
+    // 模拟「刚发布的回复」：pendingReply 携带 is_liked=false
+    const pending: CommentReplyResp = makeReply(99, {
+      is_liked: false,
+      like_count: 0,
+      content: "刚刚发布的回复",
+    });
+    // 服务端也返回同 id 的回复（展开后从服务器加载到 replies）
+    vi.mocked(global.fetch).mockResolvedValue(
+      jsonResponse(
+        mockPage([makeReply(99, { is_liked: false, like_count: 0, content: "刚刚发布的回复" })]),
+      ),
+    );
+
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={1}
+        pendingReply={pending}
+        onReply={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => expect(screen.getByText("刚刚发布的回复")).toBeTruthy());
+
+    // 初始未点赞
+    expect(screen.getByLabelText("点赞")).toBeTruthy();
+
+    await user.click(screen.getByLabelText("点赞"));
+    // toggleReplyLike mock 返回 { is_liked: true, like_count: 1 }
+    // 修复后应成功更新为已点赞状态
+    await waitFor(() => expect(screen.getByLabelText("取消点赞")).toBeTruthy());
+  });
+
+  it("pendingReply 与服务端同 id 回复共存时收起再展开后点赞能正常更新", async () => {
+    const user = userEvent.setup();
+    const pending: CommentReplyResp = makeReply(99, {
+      is_liked: false,
+      like_count: 0,
+      content: "刚刚发布的回复",
+    });
+    // 多次展开会发起多次 fetch，用 mockImplementation 每次返回新的 Response（body 只能读一次）
+    vi.mocked(global.fetch).mockImplementation(() =>
+      Promise.resolve(
+        jsonResponse(
+          mockPage([makeReply(99, { is_liked: false, like_count: 0, content: "刚刚发布的回复" })]),
+        ),
+      ),
+    );
+
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={1}
+        pendingReply={pending}
+        onReply={vi.fn()}
+      />,
+    );
+    // 第一次展开
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => expect(screen.getByText("刚刚发布的回复")).toBeTruthy());
+
+    // 收起
+    await user.click(screen.getByText("收起回复"));
+    // 再次展开（重新拉取服务端数据）
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => expect(screen.getByText("刚刚发布的回复")).toBeTruthy());
+
+    expect(screen.getByLabelText("点赞")).toBeTruthy();
+    await user.click(screen.getByLabelText("点赞"));
+    await waitFor(() => expect(screen.getByLabelText("取消点赞")).toBeTruthy());
+  });
+
   it("点击回复内的回复按钮触发 onReply", async () => {
     const user = userEvent.setup();
     const onReply = vi.fn();
