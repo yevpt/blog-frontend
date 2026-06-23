@@ -38,6 +38,7 @@ export type IconName =
   | "heart"
   | "help-circle"
   | "home"
+  | "image-off"
   | "image"
   | "info-circle"
   | "link"
