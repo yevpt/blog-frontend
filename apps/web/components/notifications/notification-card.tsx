@@ -47,23 +47,32 @@ export default function NotificationCard({
         unread ? "border-border bg-muted dark:bg-muted/70" : "border-border/60 bg-card",
       )}
     >
-      {selecting && (
-        <input
-          type="checkbox"
-          checked={selected}
-          onChange={() => onToggleSelect(item.id)}
-          aria-label="选择该通知"
-          className="mt-1 h-4 w-4 shrink-0 accent-primary"
-        />
-      )}
-      <span
-        className={cn(
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-          unread ? tone.iconWrap.unread : tone.iconWrap.read,
-        )}
-      >
-        <SvgIcon name={visual.icon} size={18} />
-      </span>
+      <div className="relative shrink-0">
+        <span
+          className={cn(
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+            unread ? tone.iconWrap.unread : tone.iconWrap.read,
+          )}
+        >
+          <SvgIcon name={visual.icon} size={18} />
+        </span>
+        <div
+          className={cn(
+            "absolute -bottom-1.5 left-1/2 flex -translate-x-1/2 items-center justify-center transition-opacity",
+            selecting || selected
+              ? "opacity-100"
+              : "opacity-0 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100",
+          )}
+        >
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={() => onToggleSelect(item.id)}
+            aria-label="选择该通知"
+            className="h-4 w-4 cursor-pointer accent-primary"
+          />
+        </div>
+      </div>
 
       <button type="button" onClick={handleBody} className="min-w-0 flex-1 text-left">
         <span className="flex items-center gap-2">

@@ -26,6 +26,7 @@ export default function NotificationsPage() {
       else next.add(id);
       return next;
     });
+    setSelecting(true);
   }
 
   function exitSelect() {
