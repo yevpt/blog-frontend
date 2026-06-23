@@ -20,9 +20,12 @@ export const DropdownItem = ({
   danger,
   ...props
 }: DropdownItemProps) => {
+  const textValue =
+    props.textValue ?? label ?? (typeof children === "string" ? children : undefined);
+
   if (unstyled) {
     return (
-      <AriaMenuItem id={label} textValue={label} {...props}>
+      <AriaMenuItem id={label} textValue={textValue} {...props}>
         {children}
       </AriaMenuItem>
     );
@@ -31,6 +34,7 @@ export const DropdownItem = ({
   return (
     <AriaMenuItem
       {...props}
+      textValue={textValue}
       className={(state) =>
         cn(
           "group block cursor-pointer px-1.5 py-px outline-hidden",

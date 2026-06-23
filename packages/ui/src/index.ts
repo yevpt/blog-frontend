@@ -1,4 +1,5 @@
 export { Badge, type BadgeProps } from "./badge";
+export { Autocomplete, type AutocompleteRootProps } from "./autocomplete";
 export { Button, type ButtonProps } from "./button";
 export {
   Card,
