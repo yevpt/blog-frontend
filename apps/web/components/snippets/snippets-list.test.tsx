@@ -260,7 +260,6 @@ describe("SnippetsList", () => {
 
     render(
       <SnippetsList
-        ownerUserId={1}
         initialPage={makePageResp({
           list: [
             makeMoment(1, "朋友长碎语".repeat(180)),

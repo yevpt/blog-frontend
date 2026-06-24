@@ -76,14 +76,12 @@ describe("useMomentList", () => {
     vi.clearAllMocks();
   });
 
-  it("when active tab is friends, refresh after session change requests role_id", async () => {
+  it("when active tab is friends, refresh after session change requests scope=friends", async () => {
     vi.mocked(fetch)
       .mockResolvedValueOnce(jsonResponse(makePageResp({ list: [makeMoment(2)] })))
       .mockResolvedValueOnce(jsonResponse(makePageResp({ list: [makeMoment(2)] })));
 
-    const { result, rerender } = renderHook(() =>
-      useMomentList({ initialPage: makePageResp(), ownerUserId: 5, friendRoleId: 99 }),
-    );
+    const { result, rerender } = renderHook(() => useMomentList({ initialPage: makePageResp() }));
 
     await act(async () => {
       await result.current.changeTab("friends");
@@ -94,19 +92,19 @@ describe("useMomentList", () => {
 
     await waitFor(() => {
       const url = getLastFetchUrl();
-      expect(url).toContain("role_id=99");
+      expect(url).toContain("/api/moments/feed?");
+      expect(url).toContain("scope=friends");
+      expect(url).toContain("sort=latest");
       expect(url).not.toContain("user_id=");
     });
   });
 
-  it("when active tab is owner, refresh requests user_id", async () => {
+  it("when active tab is owner, refresh requests scope=owner", async () => {
     vi.mocked(fetch)
       .mockResolvedValueOnce(jsonResponse(makePageResp({ list: [makeMoment(3)] })))
       .mockResolvedValueOnce(jsonResponse(makePageResp({ list: [makeMoment(3)] })));
 
-    const { result, rerender } = renderHook(() =>
-      useMomentList({ initialPage: makePageResp(), ownerUserId: 5, friendRoleId: 99 }),
-    );
+    const { result, rerender } = renderHook(() => useMomentList({ initialPage: makePageResp() }));
 
     await act(async () => {
       await result.current.changeTab("owner");
@@ -117,26 +115,24 @@ describe("useMomentList", () => {
 
     await waitFor(() => {
       const url = getLastFetchUrl();
-      expect(url).toContain("user_id=5");
-      expect(url).not.toContain("role_id=");
+      expect(url).toContain("scope=owner");
+      expect(url).not.toContain("user_id=");
     });
   });
 
-  it("when active tab is all, refresh requests neither user_id nor role_id", async () => {
+  it("when active tab is all, refresh requests scope=all", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(makePageResp()));
 
-    const { rerender } = renderHook(() =>
-      useMomentList({ initialPage: makePageResp(), ownerUserId: 5, friendRoleId: 99 }),
-    );
+    const { rerender } = renderHook(() => useMomentList({ initialPage: makePageResp() }));
 
     mockSessionUserId = 8;
     rerender();
 
     await waitFor(() => {
       const url = getLastFetchUrl();
-      expect(url).toContain("/api/moments?");
+      expect(url).toContain("/api/moments/feed?");
+      expect(url).toContain("scope=all");
       expect(url).not.toContain("user_id=");
-      expect(url).not.toContain("role_id=");
     });
   });
 
@@ -210,35 +206,33 @@ describe("useMomentList", () => {
     });
   });
 
-  it("owner 列表在 ownerUserId 用户发布碎语后刷新第一页", async () => {
+  it("owner Tab 在博主发布碎语后刷新第一页", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      jsonResponse(makePageResp({ list: [makeMoment(10, { user_id: 5 })] })),
+      jsonResponse(makePageResp({ list: [makeMoment(10, { user_id: 1 })] })),
     );
 
     const { result } = renderHook(() =>
       useMomentList({
         initialPage: makePageResp({ page_size: 3, list: [makeMoment(1)] }),
-        ownerUserId: 5,
         initialTab: "owner",
       }),
     );
 
     act(() => {
-      useSnippetModal.getState().markPublished(5);
+      useSnippetModal.getState().markPublished(1);
     });
 
     await waitFor(() => {
-      expect(getLastFetchUrl()).toContain("user_id=5");
+      expect(getLastFetchUrl()).toContain("scope=owner");
       expect(getLastFetchUrl()).toContain("page_size=3");
       expect(result.current.moments.map((item) => item.id)).toEqual([10]);
     });
   });
 
-  it("owner 列表在非 ownerUserId 用户发布碎语后不刷新", async () => {
+  it("owner Tab 在非博主用户发布碎语后不刷新", async () => {
     renderHook(() =>
       useMomentList({
         initialPage: makePageResp({ page_size: 3, list: [makeMoment(1)] }),
-        ownerUserId: 5,
         initialTab: "owner",
       }),
     );

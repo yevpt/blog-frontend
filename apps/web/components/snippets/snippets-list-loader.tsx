@@ -7,8 +7,6 @@ import { SnippetsListFallback } from "./snippets-list-fallback";
 
 interface SnippetsListLoaderProps {
   initialPage: MomentPageResp;
-  ownerUserId?: number;
-  friendRoleId?: number;
 }
 
 /**
@@ -16,11 +14,7 @@ interface SnippetsListLoaderProps {
  * 服务端与 hydration 首帧只渲染 Fallback，挂载后再渲染瀑布流列表，
  * 避免 next/dynamic ssr:false 的 bailout 错误，同时防止列数闪烁。
  */
-export function SnippetsListLoader({
-  initialPage,
-  ownerUserId,
-  friendRoleId,
-}: SnippetsListLoaderProps) {
+export function SnippetsListLoader({ initialPage }: SnippetsListLoaderProps) {
   const [mounted, setMounted] = useState(false);
 
   useLayoutEffect(() => {
@@ -31,7 +25,5 @@ export function SnippetsListLoader({
     return <SnippetsListFallback />;
   }
 
-  return (
-    <SnippetsList initialPage={initialPage} ownerUserId={ownerUserId} friendRoleId={friendRoleId} />
-  );
+  return <SnippetsList initialPage={initialPage} />;
 }

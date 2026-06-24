@@ -56,8 +56,8 @@ export function SnippetsSection({ snippets, loading, ownerUserId }: SnippetsSect
     setMoments,
   } = useMomentList({
     initialPage,
-    ownerUserId,
-    initialTab: ownerUserId === undefined ? "all" : "owner",
+    mode: "user",
+    userId: ownerUserId,
   });
   const [activeComment, setActiveComment] = useState<{ momentId: number } | null>(null);
 

@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   MomentDeleteResp,
+  MomentFeedSort,
   MomentItemResp,
   MomentLikeResp,
   MomentPageResp,
@@ -18,60 +19,88 @@ import type { SnippetImageItem } from "@/components/snippets/types";
 
 export type MomentTab = "all" | "owner" | "friends";
 export type MomentSort = "latest" | "popular";
+export type MomentListMode = "feed" | "user";
 
-export interface MomentListQuery {
+/** 后端博主固定 user_id=1 */
+const BLOG_OWNER_USER_ID = 1;
+
+export interface MomentFeedQuery {
   tab: MomentTab;
+  sort: MomentSort;
   page: number;
   pageSize: number;
-  ownerUserId?: number;
-  friendRoleId?: number;
+}
+
+export interface MomentUserQuery {
+  userId: number;
+  page: number;
+  pageSize: number;
 }
 
 export interface UseMomentListOptions {
   initialPage: MomentPageResp;
-  ownerUserId?: number;
-  friendRoleId?: number;
+  /** feed：独立页；user：个人页按 user_id 查询（置顶优先） */
+  mode?: MomentListMode;
+  userId?: number;
   initialTab?: MomentTab;
+  initialSort?: MomentSort;
 }
 
-export function buildMomentListUrl(query: MomentListQuery): string {
+function sortToFeedSort(sort: MomentSort): MomentFeedSort {
+  return sort === "popular" ? "hot" : "latest";
+}
+
+export function buildMomentFeedUrl(query: MomentFeedQuery): string {
   const qs = buildQuery({
+    scope: query.tab,
+    sort: sortToFeedSort(query.sort),
     page: query.page,
     page_size: query.pageSize,
-    ...(query.tab === "owner" && query.ownerUserId !== undefined
-      ? { user_id: query.ownerUserId }
-      : {}),
-    ...(query.tab === "friends" && query.friendRoleId !== undefined
-      ? { role_id: query.friendRoleId }
-      : {}),
+  });
+  return `/api/moments/feed?${qs}`;
+}
+
+export function buildMomentUserUrl(query: MomentUserQuery): string {
+  const qs = buildQuery({
+    user_id: query.userId,
+    page: query.page,
+    page_size: query.pageSize,
   });
   return `/api/moments?${qs}`;
 }
 
 function shouldRefreshForPublishedMoment(
+  mode: MomentListMode,
   tab: MomentTab,
-  ownerUserId: number | undefined,
+  userId: number | undefined,
   publishedUserId: number | null,
 ): boolean {
-  if (tab === "owner" && ownerUserId !== undefined && publishedUserId !== null) {
-    return publishedUserId === ownerUserId;
+  if (publishedUserId === null) {
+    return false;
+  }
+  if (mode === "user" && userId !== undefined) {
+    return publishedUserId === userId;
+  }
+  if (mode === "feed" && tab === "owner") {
+    return publishedUserId === BLOG_OWNER_USER_ID;
   }
   return true;
 }
 
 export function useMomentList({
   initialPage,
-  ownerUserId,
-  friendRoleId,
+  mode = "feed",
+  userId,
   initialTab = "all",
+  initialSort = "latest",
 }: UseMomentListOptions) {
-  const { userId } = useSession();
+  const { userId: sessionUserId } = useSession();
   const { open: openLoginModal } = useLoginModal();
   const publishCount = useSnippetModal((s) => s.publishCount);
   const lastPublishedUserId = useSnippetModal((s) => s.lastPublishedUserId);
 
   const [activeTab, setActiveTab] = useState<MomentTab>(initialTab);
-  const [activeSort, setActiveSort] = useState<MomentSort>("latest");
+  const [activeSort, setActiveSort] = useState<MomentSort>(initialSort);
   const [currentPage, setCurrentPage] = useState(initialPage.page);
   const [pageData, setPageData] = useState(initialPage);
   const [moments, setMoments] = useState(initialPage.list);
@@ -82,106 +111,131 @@ export function useMomentList({
   const [pendingLikeIds, setPendingLikeIds] = useState<ReadonlySet<number>>(() => new Set());
   const [pendingActionIds, setPendingActionIds] = useState<ReadonlySet<number>>(() => new Set());
 
-  const prevUserIdRef = useRef<number | null>(userId);
+  const prevUserIdRef = useRef<number | null>(sessionUserId);
   const prevPublishCountRef = useRef(publishCount);
   const pendingLikeIdsRef = useRef(pendingLikeIds);
   const pendingActionIdsRef = useRef(pendingActionIds);
   pendingLikeIdsRef.current = pendingLikeIds;
   pendingActionIdsRef.current = pendingActionIds;
 
-  const buildQueryFor = useCallback(
-    (page: number, tab: MomentTab): MomentListQuery => ({
+  const buildFeedQuery = useCallback(
+    (page: number, tab: MomentTab, sort: MomentSort): MomentFeedQuery => ({
       tab,
+      sort,
       page,
       pageSize: pageData.page_size,
-      ownerUserId,
-      friendRoleId,
     }),
-    [pageData.page_size, ownerUserId, friendRoleId],
+    [pageData.page_size],
   );
 
-  const fetchPage = useCallback(async (query: MomentListQuery): Promise<MomentPageResp | null> => {
-    try {
-      return await apiJson<MomentPageResp>(buildMomentListUrl(query));
-    } catch {
-      return null;
-    }
+  const buildUserQuery = useCallback(
+    (page: number): MomentUserQuery => ({
+      userId: userId ?? 0,
+      page,
+      pageSize: pageData.page_size,
+    }),
+    [pageData.page_size, userId],
+  );
+
+  const fetchPage = useCallback(
+    async (page: number, tab: MomentTab, sort: MomentSort): Promise<MomentPageResp | null> => {
+      try {
+        const url =
+          mode === "user"
+            ? buildMomentUserUrl(buildUserQuery(page))
+            : buildMomentFeedUrl(buildFeedQuery(page, tab, sort));
+        return await apiJson<MomentPageResp>(url);
+      } catch {
+        return null;
+      }
+    },
+    [buildFeedQuery, buildUserQuery, mode],
+  );
+
+  const applyPageData = useCallback((data: MomentPageResp) => {
+    setMoments(data.list);
+    setPageData(data);
+    setCurrentPage(data.page);
+    setEndReached(data.page >= data.pages);
   }, []);
 
   const refreshForSessionChange = useCallback(async () => {
     setFetchError(false);
-    const data = await fetchPage(buildQueryFor(1, activeTab));
+    const data = await fetchPage(1, activeTab, activeSort);
     if (!data) {
       return;
     }
-    setMoments(data.list);
-    setPageData(data);
-    setCurrentPage(1);
-    setEndReached(data.page >= data.pages);
-  }, [activeTab, buildQueryFor, fetchPage]);
+    applyPageData(data);
+  }, [activeSort, activeTab, applyPageData, fetchPage]);
 
   useEffect(() => {
-    if (prevUserIdRef.current === userId) {
+    if (prevUserIdRef.current === sessionUserId) {
       return;
     }
-    prevUserIdRef.current = userId;
+    prevUserIdRef.current = sessionUserId;
     void refreshForSessionChange();
-  }, [refreshForSessionChange, userId]);
+  }, [refreshForSessionChange, sessionUserId]);
 
-  // 刷新到当前 Tab 的第一页，丢弃已加载的后续页（用于「发布新碎语后」让其立即出现在顶部）
   const refreshToFirstPage = useCallback(async () => {
     setFetchError(false);
-    const data = await fetchPage(buildQueryFor(1, activeTab));
+    const data = await fetchPage(1, activeTab, activeSort);
     if (!data) {
       setFetchError(true);
       return;
     }
-    setMoments(data.list);
-    setPageData(data);
-    setCurrentPage(1);
-    setEndReached(data.page >= data.pages);
-  }, [activeTab, buildQueryFor, fetchPage]);
+    applyPageData(data);
+  }, [activeSort, activeTab, applyPageData, fetchPage]);
 
-  // 写碎语弹窗发布成功后会自增 publishCount，这里订阅其变化刷新列表
   useEffect(() => {
     if (prevPublishCountRef.current === publishCount) {
       return;
     }
     prevPublishCountRef.current = publishCount;
-    if (!shouldRefreshForPublishedMoment(activeTab, ownerUserId, lastPublishedUserId)) {
+    if (!shouldRefreshForPublishedMoment(mode, activeTab, userId, lastPublishedUserId)) {
       return;
     }
     void refreshToFirstPage();
-  }, [activeTab, lastPublishedUserId, ownerUserId, publishCount, refreshToFirstPage]);
+  }, [activeTab, lastPublishedUserId, mode, publishCount, refreshToFirstPage, userId]);
 
-  const changeTab = useCallback(
-    async (tab: MomentTab) => {
-      if (tab === activeTab) {
-        return;
-      }
-      setActiveTab(tab);
+  const reloadFirstPage = useCallback(
+    async (tab: MomentTab, sort: MomentSort) => {
       setIsLoadingInitial(true);
       setEndReached(false);
       setFetchError(false);
 
-      const data = await fetchPage(buildQueryFor(1, tab));
+      const data = await fetchPage(1, tab, sort);
       if (data) {
-        setMoments(data.list);
-        setPageData(data);
-        setCurrentPage(1);
-        setEndReached(data.pages <= 1);
+        applyPageData(data);
       } else {
         setFetchError(true);
       }
 
       setIsLoadingInitial(false);
     },
-    [activeTab, buildQueryFor, fetchPage],
+    [applyPageData, fetchPage],
   );
 
-  const changeSort = useCallback((sort: MomentSort) => {
-    setActiveSort(sort);
-  }, []);
+  const changeTab = useCallback(
+    async (tab: MomentTab) => {
+      if (mode !== "feed" || tab === activeTab) {
+        return;
+      }
+      setActiveTab(tab);
+      await reloadFirstPage(tab, activeSort);
+    },
+    [activeSort, activeTab, mode, reloadFirstPage],
+  );
+
+  const changeSort = useCallback(
+    async (sort: MomentSort) => {
+      if (mode !== "feed" || sort === activeSort) {
+        return;
+      }
+      setActiveSort(sort);
+      await reloadFirstPage(activeTab, sort);
+    },
+    [activeSort, activeTab, mode, reloadFirstPage],
+  );
 
   const loadMore = useCallback(async () => {
     if (isLoadingMore || endReached || isLoadingInitial) {
@@ -196,7 +250,7 @@ export function useMomentList({
     setFetchError(false);
 
     const nextPage = currentPage + 1;
-    const data = await fetchPage(buildQueryFor(nextPage, activeTab));
+    const data = await fetchPage(nextPage, activeTab, activeSort);
 
     if (data) {
       setMoments((prev) => [...prev, ...data.list]);
@@ -211,8 +265,8 @@ export function useMomentList({
 
     setIsLoadingMore(false);
   }, [
+    activeSort,
     activeTab,
-    buildQueryFor,
     currentPage,
     endReached,
     fetchPage,
@@ -221,16 +275,9 @@ export function useMomentList({
     pageData.pages,
   ]);
 
-  const sortedMoments = useMemo(() => {
-    if (activeSort === "popular") {
-      return [...moments].sort((a, b) => b.like_count - a.like_count);
-    }
-    return moments;
-  }, [activeSort, moments]);
-
   const toggleLike = useCallback(
     async (snippet: MomentItemResp) => {
-      if (userId == null) {
+      if (sessionUserId == null) {
         openLoginModal();
         return;
       }
@@ -270,7 +317,7 @@ export function useMomentList({
         });
       }
     },
-    [openLoginModal, userId],
+    [openLoginModal, sessionUserId],
   );
 
   const updateMoment = useCallback(
@@ -287,7 +334,6 @@ export function useMomentList({
         form.append("status", String(snippet.status));
         form.append("comment_status", String(snippet.comment_status));
 
-        // 后端要求：images 传新文件，image_urls 传已有图片 URL，image_order 标记最终顺序
         images.forEach((image) => {
           if (image.file) {
             form.append("images", image.file, image.file.name);
@@ -393,7 +439,7 @@ export function useMomentList({
   return {
     activeTab,
     activeSort,
-    sortedMoments,
+    sortedMoments: moments,
     moments,
     pageData,
     isLoadingInitial,

@@ -1,24 +1,22 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, it, expect, vi } from "vitest";
 import Page from "./page";
 
 const mockState = vi.hoisted(() => {
-  const listPublic = vi.fn();
+  const feed = vi.fn();
   const renderSnippetsList = vi.fn();
-  return { listPublic, renderSnippetsList };
+  return { feed, renderSnippetsList };
 });
 
 vi.mock("@/lib/server-api", () => ({
   createServerApiClient: async () => ({
-    moments: { listPublic: mockState.listPublic },
+    moments: { feed: mockState.feed },
   }),
 }));
 
 vi.mock("@/components/snippets/snippets-list-loader", () => ({
   SnippetsListLoader: (props: {
     initialPage: { list: Array<{ id: number; content: string }> };
-    ownerUserId?: number;
-    friendRoleId?: number;
   }) => {
     mockState.renderSnippetsList(props);
     return (
@@ -44,9 +42,9 @@ const MOCK_SNIPPET = {
 
 describe("SnippetsPage", () => {
   beforeEach(() => {
-    mockState.listPublic.mockReset();
+    mockState.feed.mockReset();
     mockState.renderSnippetsList.mockReset();
-    mockState.listPublic.mockResolvedValue({
+    mockState.feed.mockResolvedValue({
       total: 0,
       pages: 0,
       page: 1,
@@ -68,7 +66,7 @@ describe("SnippetsPage", () => {
   });
 
   it("有碎语时渲染 SnippetsList", async () => {
-    mockState.listPublic.mockResolvedValue({
+    mockState.feed.mockResolvedValue({
       total: 1,
       pages: 1,
       page: 1,
@@ -85,17 +83,10 @@ describe("SnippetsPage", () => {
     expect(screen.getByTestId("snippets-list")).toBeInTheDocument();
   });
 
-  it("请求时传入 page_size=20", async () => {
+  it("首屏请求 feed 接口且 scope=all、sort=latest", async () => {
     render(await Page());
-    expect(mockState.listPublic).toHaveBeenCalledWith(
-      expect.objectContaining({ page: 1, page_size: 20 }),
+    expect(mockState.feed).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: "all", sort: "latest", page: 1, page_size: 20 }),
     );
-  });
-
-  it("不再传入朋友们筛选参数", async () => {
-    render(await Page());
-
-    const props = mockState.renderSnippetsList.mock.calls[0]?.[0] as Record<string, unknown>;
-    expect(props).not.toHaveProperty("friendRoleId");
   });
 });

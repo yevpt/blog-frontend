@@ -20,14 +20,13 @@ const EMPTY_MOMENTS: MomentPageResp = {
 
 export default async function SnippetsPage() {
   const api = await createServerApiClient();
-  const ownerUserId = Number(process.env.BLOG_USER_ID) || undefined;
   const momentsPage = await api.moments
-    .listPublic({ page: 1, page_size: 20 })
+    .feed({ scope: "all", sort: "latest", page: 1, page_size: 20 })
     .catch(() => EMPTY_MOMENTS);
 
   return (
     <PageContainer size="default">
-      <SnippetsListLoader initialPage={momentsPage} ownerUserId={ownerUserId} />
+      <SnippetsListLoader initialPage={momentsPage} />
       <div className="pointer-events-none absolute inset-x-5 bottom-6 top-0 z-40 md:bottom-10">
         <div className="sticky top-[calc(100dvh-4rem)] flex justify-end md:top-[calc(100dvh-5.5rem)]">
           <WriteSnippetButton />

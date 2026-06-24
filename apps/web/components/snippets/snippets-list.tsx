@@ -20,9 +20,6 @@ const CommentModal = dynamic(() => import("@/components/comments").then((m) => m
 
 interface SnippetsListProps {
   initialPage: MomentPageResp;
-  ownerUserId?: number;
-  /** 朋友们 Tab 对应的 role_id，由页面注入 */
-  friendRoleId?: number;
 }
 
 const SKELETON_COUNT = 8;
@@ -62,7 +59,7 @@ function SnippetMasonrySkeleton({ columnCount }: { columnCount: number }) {
 /**
  * 碎语列表（flex 瀑布流 + 无限滚动 + Tab/排序筛选）
  */
-export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: SnippetsListProps) {
+export function SnippetsList({ initialPage }: SnippetsListProps) {
   const {
     activeTab,
     activeSort,
@@ -83,7 +80,7 @@ export function SnippetsList({ initialPage, ownerUserId, friendRoleId }: Snippet
     toggleTop,
     deleteMoment,
     setMoments,
-  } = useMomentList({ initialPage, ownerUserId, friendRoleId });
+  } = useMomentList({ initialPage });
   const openSnippetModal = useSnippetModal((state) => state.open);
 
   const [activeComment, setActiveComment] = useState<{ momentId: number } | null>(null);
