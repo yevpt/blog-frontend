@@ -8,8 +8,8 @@ import { SvgIcon } from "@repo/icons";
 import { Avatar, Badge, Button, Card, CardContent, Dropdown, Modal } from "@repo/ui";
 import { useSession } from "@/app/providers/session-provider";
 import { useImageViewer } from "@/store/use-image-viewer";
-import { formatRelativeTime } from "../../lib/format-time";
 import { SnippetContent } from "./snippet-content";
+import { RelativeTime } from "@/components/common/relative-time";
 import { SnippetImageGrid } from "./snippet-image-grid";
 
 export type SnippetCardLayout = "standalone" | "embedded";
@@ -69,7 +69,6 @@ export function SnippetCard({
   const { userId } = useSession();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const relativeTime = formatRelativeTime(new Date(snippet.created_at));
   const authorName = snippet.user?.nickname ?? snippet.user?.username ?? "匿名";
   const authorAvatar = snippet.user?.avatar_url ?? "";
   const authorBadge = snippet.user?.mark ?? "";
@@ -112,7 +111,10 @@ export function SnippetCard({
             >
               {authorName}
             </Link>
-            <time className="ml-auto shrink-0 text-[11px] text-(--fg3)">{relativeTime}</time>
+            <RelativeTime
+              dateTime={snippet.created_at}
+              className="ml-auto shrink-0 text-[11px] text-(--fg3)"
+            />
           </div>
           {authorBadge && (
             <Badge

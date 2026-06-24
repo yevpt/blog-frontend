@@ -62,14 +62,17 @@ describe("LocaleProvider", () => {
     expect(screen.getByTestId("locale").textContent).toBe("zh");
   });
 
-  it("localStorage 已存储 en 时，初始 locale 为 en", () => {
+  it("localStorage 已存储 en 时，挂载后 locale 为 en", async () => {
     localStorage.setItem("locale", "en");
     render(
       <LocaleProvider>
         <LocaleDisplay />
       </LocaleProvider>,
     );
-    expect(screen.getByTestId("locale").textContent).toBe("en");
+
+    await waitFor(() => {
+      expect(screen.getByTestId("locale").textContent).toBe("en");
+    });
   });
 
   it("localStorage 已存储 zh 时，初始 locale 为 zh", () => {

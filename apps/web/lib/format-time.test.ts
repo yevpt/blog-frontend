@@ -29,12 +29,12 @@ describe("formatDate", () => {
 });
 
 describe("formatDateTime", () => {
-  it("格式化为 YYYY-MM-DD HH:mm", () => {
-    expect(formatDateTime(new Date(2020, 3, 17, 15, 54))).toBe("2020-04-17 15:54");
+  it("格式化为 YYYY-MM-DD HH:mm（Asia/Shanghai）", () => {
+    expect(formatDateTime("2020-04-17T07:54:00Z")).toBe("2020-04-17 15:54");
   });
 
   it("接受字符串类型的日期", () => {
-    expect(formatDateTime("2020-04-17T15:54:00")).toBe("2020-04-17 15:54");
+    expect(formatDateTime("2020-04-17T07:54:00Z")).toBe("2020-04-17 15:54");
   });
 });
 

@@ -41,7 +41,7 @@ describe("ArticleHero", () => {
 
   it("显示阅读数（点赞/评论已下放到浮动操作区）", () => {
     render(<ArticleHero article={base} />);
-    expect(screen.getByText(/1,234/)).toBeInTheDocument();
+    expect(screen.getByText(/1234/)).toBeInTheDocument();
     expect(screen.queryByText(/88/)).not.toBeInTheDocument();
   });
 

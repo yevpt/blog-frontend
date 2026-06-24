@@ -12,14 +12,6 @@ import {
 
 type Messages = Record<string, unknown>;
 
-/** 从 localStorage 读取已持久化的 locale，默认 'zh' */
-function getInitialLocale(): Locale {
-  if (typeof window === "undefined") return "zh";
-  const stored = localStorage.getItem("locale");
-  if (stored === "zh" || stored === "en") return stored;
-  return "zh";
-}
-
 /** 动态加载对应语言的 messages JSON */
 async function loadMessages(locale: Locale): Promise<Messages> {
   if (locale === "en") {
@@ -31,13 +23,17 @@ async function loadMessages(locale: Locale): Promise<Messages> {
 }
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(getInitialLocale);
+  // SSR 与 hydration 首帧固定为 zh，避免 localStorage 导致文本不匹配（React #418）
+  const [locale, setLocaleState] = useState<Locale>("zh");
+  const [messages, setMessages] = useState<Messages>(() => zhMessages as Messages);
 
-  // zh.json 静态导入作为初始值：zh 用户首屏无闪烁；en 用户初始为空对象，等待动态加载
-  const [messages, setMessages] = useState<Messages>(() => {
-    const initialLocale = getInitialLocale();
-    return initialLocale === "zh" ? (zhMessages as Messages) : {};
-  });
+  // hydration 后从 localStorage 恢复用户语言偏好
+  useEffect(() => {
+    const stored = localStorage.getItem("locale");
+    if (stored === "en") {
+      setLocaleState("en");
+    }
+  }, []);
 
   // locale 变化时重新加载对应 messages
   useEffect(() => {

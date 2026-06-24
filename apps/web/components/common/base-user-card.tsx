@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { cn } from "@repo/ui";
+import { useHydrated } from "@repo/hooks";
 import { formatRelativeTime } from "@/lib/format-time";
 import { UserAvatar } from "@/components/common/user-avatar";
 
@@ -28,11 +29,12 @@ export function BaseUserCard({
   className,
   "data-testid": testId,
 }: BaseUserCardProps) {
+  const hydrated = useHydrated();
   const isAdmin = user.roles?.includes("admin");
   const isVip = user.roles?.includes("vip");
 
   const loginTime = user.last_login_at ? new Date(user.last_login_at) : null;
-  const isOnline = loginTime ? Date.now() - loginTime.getTime() < 3 * 60 * 1000 : false;
+  const isOnline = hydrated && loginTime ? Date.now() - loginTime.getTime() < 3 * 60 * 1000 : false;
 
   const roleLabel = isAdmin ? "Admin" : isVip ? "VIP" : null;
   const isCompact = variant === "compact";
@@ -92,9 +94,11 @@ export function BaseUserCard({
         )}
       </div>
 
-      {/* 在线状态 */}
+      {/* 在线状态：hydration 前占位，避免在线/离线分支切换导致 #418 */}
       <div className="flex w-full items-center justify-center">
-        {isOnline ? (
+        {!hydrated ? (
+          <span className="truncate text-[10px] text-(--fg3)">&nbsp;</span>
+        ) : isOnline ? (
           <span className="flex items-center gap-1 truncate text-[10px] font-semibold text-emerald-500">
             {isCompact && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>}
             在线

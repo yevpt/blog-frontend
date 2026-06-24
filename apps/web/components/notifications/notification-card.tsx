@@ -7,7 +7,7 @@ import type { NotificationItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
 import { Button, cn } from "@repo/ui";
 import { UserAvatar } from "@/components/common/user-avatar";
-import { formatDateTime, formatRelativeTime } from "@/lib/format-time";
+import { RelativeTime } from "@/components/common/relative-time";
 import { NotificationExcerptContent } from "./notification-excerpt-content";
 import {
   getNotificationActionText,
@@ -19,6 +19,7 @@ import {
 } from "./notification-type";
 import { NotificationInlineReplyInput } from "./notification-inline-reply-input";
 import { useNotificationCardLongPress } from "./use-notification-card-long-press";
+import { formatDateTime } from "@/lib/format-time";
 
 interface NotificationCardProps {
   item: NotificationItemResp;
@@ -171,7 +172,7 @@ export default function NotificationCard({
             title={created ? formatDateTime(created) : undefined}
           >
             <span className="font-medium text-foreground/75">{actionText}</span>
-            {created && <span>{formatRelativeTime(created)}</span>}
+            {created && <RelativeTime dateTime={created} />}
           </span>
           {bodyText && (
             <NotificationExcerptContent content={bodyText} className="mt-2 line-clamp-2" />

@@ -78,7 +78,7 @@ export function ArticleHero({ article }: ArticleHeroProps) {
         <span aria-hidden>·</span>
         <span>{readingMin} 分钟阅读</span>
         <span aria-hidden>·</span>
-        <span>{readCount.toLocaleString()} 阅读</span>
+        <span>{String(readCount)} 阅读</span>
       </div>
     </div>
   );

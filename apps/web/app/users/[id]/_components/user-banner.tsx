@@ -2,6 +2,7 @@
 
 import { cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
+import { useHydrated } from "@repo/hooks";
 import { formatRelativeTime } from "@/lib/format-time";
 
 interface UserBannerProps {
@@ -19,7 +20,10 @@ function getOnlineStatus(lastLoginAt: string | null): { online: boolean; label: 
 }
 
 export function UserBanner({ lastLoginAt, isOwner, isEditMode }: UserBannerProps) {
-  const { online, label } = getOnlineStatus(lastLoginAt);
+  const hydrated = useHydrated();
+  const { online, label } = hydrated
+    ? getOnlineStatus(lastLoginAt)
+    : { online: false, label: "\u00A0" };
 
   return (
     <div className="relative h-[140px] w-full overflow-hidden bg-gradient-to-br from-violet-800 via-violet-600 to-indigo-500">
@@ -33,7 +37,10 @@ export function UserBanner({ lastLoginAt, isOwner, isEditMode }: UserBannerProps
       )}
 
       {/* 在线状态 */}
-      <div className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1 text-xs text-white backdrop-blur-sm">
+      <div
+        className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1 text-xs text-white backdrop-blur-sm"
+        suppressHydrationWarning
+      >
         <span className={cn("h-2 w-2 rounded-full", online ? "bg-emerald-400" : "bg-zinc-400")} />
         {label}
       </div>

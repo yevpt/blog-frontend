@@ -1,5 +1,8 @@
 import type { Locale } from "@repo/hooks/locale";
 
+/** 展示时区：SSR（容器 UTC）与浏览器本地时区一致，避免 hydration 日期文本不匹配 */
+const DISPLAY_TIME_ZONE = "Asia/Shanghai";
+
 /** 中文月份名，索引 0 对应 1 月 */
 const ZH_MONTHS = [
   "一月",
@@ -16,6 +19,29 @@ const ZH_MONTHS = [
   "十二月",
 ];
 
+function getZonedParts(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: DISPLAY_TIME_ZONE,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: false,
+  }).formatToParts(date);
+
+  const lookup = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+
+  return {
+    year: lookup("year"),
+    month: Number(lookup("month")),
+    day: Number(lookup("day")),
+    hour: lookup("hour").padStart(2, "0"),
+    minute: lookup("minute").padStart(2, "0"),
+  };
+}
+
 /**
  * 将日期格式化为指定语言的绝对日期字符串。
  * 中文：六月 24, 2021
@@ -25,26 +51,23 @@ export function formatDate(date: Date | string, locale: Locale): string {
   const d = typeof date === "string" ? new Date(date) : date;
   if (locale === "en") {
     return new Intl.DateTimeFormat("en-US", {
+      timeZone: DISPLAY_TIME_ZONE,
       year: "numeric",
       month: "long",
       day: "numeric",
     }).format(d);
   }
-  const month = ZH_MONTHS[d.getMonth()];
-  const day = d.getDate();
-  const year = d.getFullYear();
-  return `${month} ${day}, ${year}`;
+  const { year, month, day } = getZonedParts(d);
+  return `${ZH_MONTHS[month - 1]} ${day}, ${year}`;
 }
 
-/** 将日期格式化为 YYYY-MM-DD HH:mm（本地时区） */
+/** 将日期格式化为 YYYY-MM-DD HH:mm（Asia/Shanghai） */
 export function formatDateTime(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day} ${hours}:${minutes}`;
+  const { year, month, day, hour, minute } = getZonedParts(d);
+  const monthStr = String(month).padStart(2, "0");
+  const dayStr = String(day).padStart(2, "0");
+  return `${year}-${monthStr}-${dayStr} ${hour}:${minute}`;
 }
 
 /**

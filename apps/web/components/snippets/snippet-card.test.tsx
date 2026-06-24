@@ -58,6 +58,7 @@ vi.mock("next/image", () => ({
 
 vi.mock("@repo/hooks", () => ({
   useLocale: () => ({ t: (key: string) => key }),
+  useHydrated: () => true,
 }));
 
 vi.mock("@repo/ui", () => ({

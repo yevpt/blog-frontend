@@ -3,6 +3,7 @@
 import { useState, useRef, type ChangeEvent } from "react";
 import { Card, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
+import { useHydrated } from "@repo/hooks";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { InlineFieldEditor } from "./inline-field-editor";
 import { formatRelativeTime } from "@/lib/format-time";
@@ -46,6 +47,7 @@ export function UserInfoHeader({
   onSaveNickname,
   onAvatarChange,
 }: UserInfoHeaderProps) {
+  const hydrated = useHydrated();
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const isAnyEditing = isEditingNickname || hasActiveFieldEditing;
@@ -63,7 +65,9 @@ export function UserInfoHeader({
     }
   }
 
-  const { online, label: onlineLabel } = getOnlineStatus(lastLoginAt);
+  const { online, label: onlineLabel } = hydrated
+    ? getOnlineStatus(lastLoginAt)
+    : { online: false, label: "\u00A0" };
   const isVip = roles.includes("vip");
   const isAdmin = roles.includes("admin");
 
@@ -80,11 +84,11 @@ export function UserInfoHeader({
         </button>
       )}
 
-      {/* 在线状态 — 右上角 */}
-      {onlineLabel && (
+      {/* 在线状态 — 右上角；hydration 前占位避免 #418 */}
+      {(hydrated ? onlineLabel : true) && (
         <div
-          suppressHydrationWarning
           className="absolute right-4 top-4 flex items-center gap-1.5 text-sm text-muted-foreground"
+          suppressHydrationWarning
         >
           <span className={cn("h-2 w-2 rounded-full", online ? "bg-emerald-400" : "bg-zinc-400")} />
           {onlineLabel}
