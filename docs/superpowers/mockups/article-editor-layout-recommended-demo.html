@@ -1,0 +1,1155 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>文章编辑页 · 推荐布局 Demo v4</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f0eeea;
+        --surface: #fdfbf7;
+        --surface-2: #f5f3ef;
+        --ink: #1c1917;
+        --ink-soft: #57534e;
+        --ink-faint: #a8a29e;
+        --line: rgb(28 25 23 / 8%);
+        --line-soft: rgb(28 25 23 / 5%);
+        --primary: #7c3aed;
+        --primary-veil: rgb(124 58 237 / 9%);
+        --success: #15803d;
+        --success-veil: rgb(21 128 61 / 10%);
+        --r-shell: 12px;
+        --r-inset: 8px;
+        --r-ctrl: 6px;
+        --shell-border: inset 0 0 0 1px var(--line);
+        --shadow-panel: 0 1px 2px rgb(28 25 23 / 4%), 0 12px 32px rgb(28 25 23 / 5%);
+        --sidebar-w: 232px;
+        --rail-w: 304px;
+        --page-pad: 24px;
+        --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+        --font-serif: "Source Serif 4", ui-serif, Georgia, serif;
+      }
+
+      :root.dark {
+        color-scheme: dark;
+        --bg: #100f0e;
+        --surface: #1c1a18;
+        --surface-2: #242220;
+        --ink: #f5f5f4;
+        --ink-soft: #a8a29e;
+        --ink-faint: #78716c;
+        --line: rgb(255 255 255 / 9%);
+        --line-soft: rgb(255 255 255 / 5%);
+        --primary-veil: rgb(124 58 237 / 16%);
+        --success-veil: rgb(34 197 94 / 12%);
+        --shadow-panel: 0 1px 2px rgb(0 0 0 / 30%), 0 12px 32px rgb(0 0 0 / 24%);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--font-sans);
+        font-size: 14px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+        min-height: 100dvh;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100dvh;
+        padding: 22px 16px;
+        border-right: 1px solid var(--line-soft);
+        background: color-mix(in srgb, var(--surface) 70%, transparent);
+        backdrop-filter: blur(16px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 2px 6px 28px;
+      }
+
+      .brand-mark {
+        width: 34px;
+        height: 34px;
+        border-radius: var(--r-inset);
+        background: var(--ink);
+        color: var(--surface);
+        display: grid;
+        place-items: center;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .brand strong {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .brand span {
+        display: block;
+        margin-top: 1px;
+        color: var(--ink-faint);
+        font-size: 11px;
+      }
+
+      .nav-label {
+        margin: 0 8px 8px;
+        color: var(--ink-faint);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 36px;
+        margin-bottom: 2px;
+        padding: 0 10px;
+        border-radius: var(--r-ctrl);
+        color: var(--ink-soft);
+        font-size: 13px;
+      }
+
+      .nav-item.active {
+        background: var(--surface);
+        color: var(--ink);
+        box-shadow: var(--shell-border);
+      }
+
+      .nav-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 99px;
+        background: currentColor;
+        opacity: 0.4;
+      }
+
+      .nav-item.active .nav-dot {
+        background: var(--primary);
+        opacity: 1;
+      }
+
+      .page {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        min-height: 100dvh;
+        min-width: 0;
+        background:
+          radial-gradient(ellipse 70% 45% at 100% 0%, rgb(124 58 237 / 6%), transparent 50%),
+          var(--bg);
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 14px var(--page-pad);
+        border-bottom: 1px solid var(--line-soft);
+        background: color-mix(in srgb, var(--bg) 85%, transparent);
+        backdrop-filter: blur(12px);
+      }
+
+      .topbar-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .icon-btn {
+        display: grid;
+        width: 34px;
+        height: 34px;
+        place-items: center;
+        border: 0;
+        border-radius: var(--r-ctrl);
+        background: var(--surface);
+        color: var(--ink-soft);
+        box-shadow: var(--shell-border);
+        font-size: 16px;
+      }
+
+      .icon-btn:hover {
+        color: var(--ink);
+      }
+
+      .page-heading h1 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .status-line {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 2px;
+        color: var(--ink-faint);
+        font-size: 12px;
+      }
+
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 99px;
+        background: var(--ink-faint);
+      }
+
+      .status-dot.live {
+        background: var(--success);
+        box-shadow: 0 0 0 3px var(--success-veil);
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn {
+        min-height: 34px;
+        padding: 0 15px;
+        border: 0;
+        border-radius: var(--r-ctrl);
+        background: var(--ink);
+        color: var(--surface);
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .btn:hover {
+        opacity: 0.92;
+      }
+
+      .btn.secondary {
+        background: var(--surface);
+        color: var(--ink);
+        box-shadow: var(--shell-border);
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) var(--rail-w);
+        gap: 16px;
+        align-items: stretch;
+        min-height: 0;
+        padding: 12px var(--page-pad) var(--page-pad);
+      }
+
+      .panel-shell {
+        border-radius: var(--r-shell);
+        background: var(--surface);
+        box-shadow: var(--shell-border), var(--shadow-panel);
+        overflow: hidden;
+      }
+
+      /* ---- 写作区（恢复 v2 开放布局，保留 v3 外壳圆角）---- */
+      .canvas {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        min-height: calc(100dvh - 80px);
+      }
+
+      .canvas-head {
+        padding: 32px 40px 0;
+      }
+
+      .title-input {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        color: var(--ink);
+        font-family: var(--font-serif);
+        font-size: clamp(28px, 4vw, 38px);
+        font-weight: 600;
+        line-height: 1.18;
+        letter-spacing: -0.03em;
+        outline: none;
+        padding: 0;
+      }
+
+      .title-input::placeholder {
+        color: var(--ink-faint);
+      }
+
+      .description {
+        width: 100%;
+        min-height: 56px;
+        max-height: 120px;
+        margin-top: 18px;
+        resize: none;
+        border: 0;
+        background: transparent;
+        color: var(--ink-soft);
+        font-size: 15px;
+        line-height: 1.7;
+        outline: none;
+        padding: 0;
+      }
+
+      .description::placeholder {
+        color: var(--ink-faint);
+      }
+
+      .editor-zone {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        min-height: 0;
+        margin-top: 28px;
+        border-top: 1px solid var(--line-soft);
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 10px 24px;
+      }
+
+      .tool {
+        min-width: 30px;
+        height: 30px;
+        border: 0;
+        border-radius: var(--r-ctrl);
+        background: transparent;
+        color: var(--ink-faint);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .tool:hover,
+      .tool.active {
+        background: var(--surface-2);
+        color: var(--ink);
+      }
+
+      .toolbar-gap {
+        flex: 1;
+      }
+
+      .toolbar-hint {
+        color: var(--ink-faint);
+        font-size: 11px;
+        letter-spacing: 0.02em;
+      }
+
+      .editor-scroll {
+        min-height: 0;
+        overflow: auto;
+      }
+
+      .editor-inner {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 8px 40px 40px;
+      }
+
+      .editor {
+        min-height: 320px;
+        outline: none;
+        color: var(--ink);
+        font-size: 16px;
+        line-height: 1.85;
+        letter-spacing: 0.01em;
+      }
+
+      .editor h2 {
+        margin: 0 0 16px;
+        font-family: var(--font-serif);
+        font-size: 24px;
+        font-weight: 600;
+        line-height: 1.3;
+        letter-spacing: -0.02em;
+      }
+
+      .editor p {
+        margin: 0 0 16px;
+        color: color-mix(in srgb, var(--ink) 86%, var(--ink-soft));
+      }
+
+      .editor blockquote {
+        margin: 24px 0;
+        padding: 0 0 0 18px;
+        border-left: 2px solid color-mix(in srgb, var(--primary) 55%, var(--line));
+        color: var(--ink-soft);
+        font-style: italic;
+      }
+
+      .canvas-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 24px 14px;
+        border-top: 1px solid var(--line-soft);
+        color: var(--ink-faint);
+        font-size: 12px;
+      }
+
+      .canvas-foot strong {
+        color: var(--ink-soft);
+        font-weight: 600;
+      }
+
+      /* ---- 右侧：单面板 + 上下表单项 ---- */
+      .rail {
+        position: sticky;
+        top: 68px;
+        align-self: start;
+        max-height: calc(100dvh - 84px);
+        overflow: auto;
+      }
+
+      .rail-panel {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .cover-block {
+        padding: 18px 18px 0;
+      }
+
+      .field-label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--ink-soft);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .field-label .optional {
+        color: var(--ink-faint);
+        font-weight: 400;
+      }
+
+      .cover-frame {
+        position: relative;
+        overflow: hidden;
+        aspect-ratio: 16 / 9;
+        border-radius: var(--r-inset);
+        background: var(--surface-2);
+        box-shadow: var(--shell-border);
+      }
+
+      .cover-frame img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .cover-actions {
+        position: absolute;
+        inset: auto 8px 8px;
+        display: flex;
+        gap: 4px;
+        justify-content: flex-end;
+        opacity: 0;
+        transition: opacity 140ms ease;
+      }
+
+      .cover-frame:hover .cover-actions,
+      .cover-frame:focus-within .cover-actions {
+        opacity: 1;
+      }
+
+      .chip-btn {
+        min-height: 26px;
+        padding: 0 9px;
+        border: 0;
+        border-radius: var(--r-ctrl);
+        background: rgb(0 0 0 / 55%);
+        color: #fff;
+        backdrop-filter: blur(6px);
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .cover-hint {
+        margin: 8px 0 0;
+        color: var(--ink-faint);
+        font-size: 11px;
+        line-height: 1.45;
+      }
+
+      .rail-body {
+        padding: 20px 18px 18px;
+        display: grid;
+        gap: 18px;
+      }
+
+      .field-block {
+        display: grid;
+        gap: 8px;
+      }
+
+      .select {
+        width: 100%;
+        min-height: 38px;
+        border: 0;
+        border-radius: var(--r-ctrl);
+        background: var(--surface-2);
+        color: var(--ink);
+        outline: none;
+        padding: 0 12px;
+        font-size: 13px;
+        box-shadow: var(--shell-border);
+      }
+
+      .select:focus {
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 35%, var(--line));
+      }
+
+      .tags {
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .tag {
+        min-height: 30px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: var(--r-ctrl);
+        background: var(--surface-2);
+        color: var(--ink-soft);
+        box-shadow: var(--shell-border);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .tag.on {
+        background: var(--primary-veil);
+        color: var(--primary);
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 22%, transparent);
+      }
+
+      .tag.add {
+        color: var(--ink-faint);
+      }
+
+      .tag-popover {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 6px);
+        z-index: 20;
+        display: none;
+        overflow: hidden;
+        border-radius: var(--r-inset);
+        background: var(--surface);
+        box-shadow: var(--shell-border), var(--shadow-panel);
+      }
+
+      .tag-popover.open {
+        display: block;
+      }
+
+      .tag-search {
+        width: calc(100% - 12px);
+        min-height: 34px;
+        margin: 6px;
+        border: 0;
+        border-radius: var(--r-ctrl);
+        background: var(--surface-2);
+        outline: none;
+        padding: 0 10px;
+        font-size: 13px;
+        box-shadow: var(--shell-border);
+      }
+
+      .tag-options {
+        max-height: 140px;
+        overflow-y: auto;
+        padding: 4px;
+      }
+
+      .tag-option {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 32px;
+        border: 0;
+        border-radius: var(--r-ctrl);
+        background: transparent;
+        color: var(--ink);
+        padding: 0 8px;
+        text-align: left;
+        font-size: 13px;
+      }
+
+      .tag-option:hover {
+        background: var(--surface-2);
+      }
+
+      .tag-option span {
+        color: var(--ink-faint);
+        font-size: 11px;
+      }
+
+      .music-card {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        padding: 10px 12px;
+        border-radius: var(--r-inset);
+        background: var(--surface-2);
+        box-shadow: var(--shell-border);
+      }
+
+      .vinyl {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at center, var(--surface) 0 18%, transparent 19%),
+          conic-gradient(from 210deg, #57534e, #1c1917, #57534e);
+        box-shadow: var(--shell-border);
+      }
+
+      .music-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .music-meta {
+        margin-top: 2px;
+        color: var(--ink-faint);
+        font-size: 11px;
+      }
+
+      .music-actions {
+        display: flex;
+        gap: 2px;
+      }
+
+      .mini-btn {
+        display: grid;
+        width: 30px;
+        height: 30px;
+        place-items: center;
+        border: 0;
+        border-radius: var(--r-ctrl);
+        background: var(--surface);
+        color: var(--ink-faint);
+        box-shadow: var(--shell-border);
+        font-size: 13px;
+      }
+
+      .mini-btn:hover {
+        color: var(--ink);
+      }
+
+      .mini-btn.danger:hover {
+        color: #dc2626;
+      }
+
+      .music-empty {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 44px;
+        border: 0;
+        border-radius: var(--r-inset);
+        background: transparent;
+        color: var(--ink-faint);
+        box-shadow: inset 0 0 0 1px var(--line);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .music-empty:hover {
+        color: var(--ink-soft);
+        background: var(--surface-2);
+      }
+
+      .rail-footer {
+        padding: 14px 18px 16px;
+        border-top: 1px solid var(--line-soft);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .rail-footer-label {
+        color: var(--ink-soft);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .select--compact {
+        width: auto;
+        min-width: 108px;
+        min-height: 34px;
+        padding-right: 8px;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .toast {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 50;
+        transform: translateY(8px);
+        opacity: 0;
+        padding: 10px 14px;
+        border-radius: var(--r-inset);
+        background: var(--ink);
+        color: var(--surface);
+        font-size: 13px;
+        font-weight: 500;
+        box-shadow: var(--shadow-panel);
+        transition: 160ms ease;
+        pointer-events: none;
+      }
+
+      .toast.show {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      @media (max-width: 1080px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          display: none;
+        }
+
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+
+        .rail {
+          position: static;
+          max-height: none;
+        }
+      }
+
+      @media (max-width: 720px) {
+        :root {
+          --page-pad: 14px;
+        }
+
+        .topbar {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .actions {
+          display: grid;
+          grid-template-columns: auto 1fr 1fr;
+        }
+
+        .canvas-head {
+          padding: 24px 20px 0;
+        }
+
+        .editor-inner {
+          padding-inline: 20px;
+        }
+
+        .toolbar {
+          padding-inline: 16px;
+          overflow-x: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar" aria-label="后台导航">
+        <div class="brand">
+          <div class="brand-mark">YP</div>
+          <div>
+            <strong>YEVPT</strong>
+            <span>管理后台</span>
+          </div>
+        </div>
+        <nav>
+          <p class="nav-label">内容</p>
+          <div class="nav-item active"><span class="nav-dot"></span>文章</div>
+          <div class="nav-item"><span class="nav-dot"></span>分类</div>
+          <div class="nav-item"><span class="nav-dot"></span>标签</div>
+          <div class="nav-item"><span class="nav-dot"></span>音乐</div>
+        </nav>
+      </aside>
+
+      <div class="page">
+        <header class="topbar">
+          <div class="topbar-left">
+            <button class="icon-btn" type="button" aria-label="返回文章列表">←</button>
+            <div class="page-heading">
+              <h1>编辑文章</h1>
+              <div class="status-line">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">草稿 · 尚未保存</span>
+              </div>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn secondary" id="themeBtn" type="button" aria-label="切换深浅色">◐</button>
+            <button class="btn secondary" id="draftBtn" type="button">存草稿</button>
+            <button class="btn" id="publishBtn" type="button">发布</button>
+          </div>
+        </header>
+
+        <div class="workspace">
+          <section class="panel-shell canvas" aria-label="写作区">
+            <div class="canvas-head">
+              <input
+                class="title-input"
+                id="titleInput"
+                value="把博客编辑器体验打磨到顺手"
+                aria-label="文章标题"
+                placeholder="无标题"
+              />
+              <textarea
+                class="description"
+                id="descInput"
+                aria-label="文章描述"
+                placeholder="添加摘要，会显示在列表与分享卡片上"
+              >
+从后台写作流出发，重新整理封面、分类、标签与正文，让发布过程安静、连贯。</textarea
+              >
+            </div>
+
+            <div class="editor-zone">
+              <div class="toolbar" aria-label="编辑器工具栏">
+                <button class="tool active" type="button">B</button>
+                <button class="tool" type="button">I</button>
+                <button class="tool" type="button">U</button>
+                <button class="tool" type="button">H</button>
+                <button class="tool" type="button">❝</button>
+                <button class="tool" type="button">⌁</button>
+                <button class="tool" type="button">🔗</button>
+                <button class="tool" type="button">🖼</button>
+                <span class="toolbar-gap"></span>
+                <span class="toolbar-hint">Markdown</span>
+              </div>
+
+              <div class="editor-scroll">
+                <div class="editor-inner">
+                  <article class="editor" id="editor" contenteditable="true" aria-label="文章内容编辑器">
+                    <h2>写作区应该尽量安静</h2>
+                    <p>
+                      标题、摘要与正文在同一开放画布上连续流动，不再套一层内嵌编辑框。右侧发布配置则按「上标签下控件」纵向排布，窄栏里更易扫读。
+                    </p>
+                    <blockquote>圆角尺度保持 12 / 8 / 6，但写作手感回到更舒展的上一版。</blockquote>
+                    <p>正式实现会复用 @repo/editor；本 Demo 供布局评审。</p>
+                  </article>
+                </div>
+              </div>
+
+              <footer class="canvas-foot">
+                <span><strong id="wordCount">0</strong> 字 · 约 <strong id="readTime">1</strong> 分钟</span>
+                <span id="saveHint">自动保存关闭</span>
+              </footer>
+            </div>
+          </section>
+
+          <aside class="rail" aria-label="发布配置">
+            <div class="panel-shell rail-panel">
+              <div class="cover-block">
+                <span class="field-label">封面</span>
+                <div class="cover-frame" id="coverBox">
+                  <img
+                    id="coverImg"
+                    alt="文章封面预览"
+                    src="https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=1200&q=80"
+                  />
+                  <div class="cover-actions">
+                    <label class="chip-btn">
+                      更换
+                      <input id="coverInput" class="sr-only" type="file" accept="image/*" />
+                    </label>
+                    <button class="chip-btn" id="removeCover" type="button">移除</button>
+                  </div>
+                </div>
+                <p class="cover-hint">用于文章列表卡片与详情页顶部展示</p>
+              </div>
+
+              <div class="rail-body">
+                <div class="field-block">
+                  <label class="field-label" for="category">分类</label>
+                  <select class="select" id="category">
+                    <option>前端</option>
+                    <option>工程</option>
+                    <option>随笔</option>
+                    <option>生活</option>
+                  </select>
+                </div>
+
+                <div class="field-block">
+                  <span class="field-label">标签</span>
+                  <div class="tags" id="tagGrid">
+                    <button class="tag on" type="button" data-tag="React">React</button>
+                    <button class="tag on" type="button" data-tag="后台">后台</button>
+                    <button class="tag on" type="button" data-tag="体验设计">体验设计</button>
+                    <button class="tag add" id="addTagBtn" type="button" aria-expanded="false">+ 添加</button>
+                    <div class="tag-popover" id="tagPopover">
+                      <input class="tag-search" id="tagSearch" aria-label="搜索标签" placeholder="搜索标签" />
+                      <div class="tag-options" id="tagOptions"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="field-block">
+                  <span class="field-label">背景音乐 <span class="optional">可选</span></span>
+                  <div id="musicBlock">
+                    <div class="music-card">
+                      <div class="vinyl" aria-hidden="true"></div>
+                      <div style="min-width: 0">
+                        <div class="music-title">Midnight Drafts</div>
+                        <div class="music-meta">Luma · 03:42</div>
+                      </div>
+                      <div class="music-actions">
+                        <button class="mini-btn" type="button" aria-label="更换音乐" title="更换">↻</button>
+                        <button class="mini-btn danger" id="removeMusic" type="button" aria-label="移除" title="移除">×</button>
+                      </div>
+                    </div>
+                  </div>
+                  <button class="music-empty" id="musicAdd" type="button" hidden>+ 添加背景音乐</button>
+                </div>
+              </div>
+
+              <div class="rail-footer">
+                <span class="rail-footer-label">评论</span>
+                <select class="select select--compact" aria-label="评论设置">
+                  <option>允许评论</option>
+                  <option>关闭评论</option>
+                </select>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      const editor = document.querySelector("#editor");
+      const wordCount = document.querySelector("#wordCount");
+      const readTime = document.querySelector("#readTime");
+      const tagGrid = document.querySelector("#tagGrid");
+      const addTagBtn = document.querySelector("#addTagBtn");
+      const tagPopover = document.querySelector("#tagPopover");
+      const tagSearch = document.querySelector("#tagSearch");
+      const tagOptions = document.querySelector("#tagOptions");
+      const coverInput = document.querySelector("#coverInput");
+      const coverImg = document.querySelector("#coverImg");
+      const removeCover = document.querySelector("#removeCover");
+      const toast = document.querySelector("#toast");
+      const statusDot = document.querySelector("#statusDot");
+      const statusText = document.querySelector("#statusText");
+      const saveHint = document.querySelector("#saveHint");
+      const draftBtn = document.querySelector("#draftBtn");
+      const publishBtn = document.querySelector("#publishBtn");
+      const themeBtn = document.querySelector("#themeBtn");
+      const removeMusic = document.querySelector("#removeMusic");
+      const musicBlock = document.querySelector("#musicBlock");
+      const musicAdd = document.querySelector("#musicAdd");
+
+      const allTags = [
+        { name: "TypeScript", count: 21 },
+        { name: "编辑器", count: 6 },
+        { name: "发布流", count: 4 },
+        { name: "工程化", count: 12 },
+      ];
+
+      function updateCounts() {
+        const count = editor.innerText.trim().length;
+        wordCount.textContent = String(count);
+        readTime.textContent = String(Math.max(1, Math.ceil(count / 400)));
+      }
+
+      function selectedTagNames() {
+        return Array.from(tagGrid.querySelectorAll(".tag.on")).map((t) => t.dataset.tag);
+      }
+
+      function renderTagOptions() {
+        const selected = new Set(selectedTagNames());
+        const query = tagSearch.value.trim().toLowerCase();
+        const candidates = allTags.filter(
+          (t) => !selected.has(t.name) && t.name.toLowerCase().includes(query),
+        );
+        tagOptions.innerHTML = "";
+        if (!candidates.length) {
+          const empty = document.createElement("div");
+          empty.className = "tag-option";
+          empty.style.color = "var(--ink-faint)";
+          empty.textContent = "无匹配标签";
+          tagOptions.append(empty);
+          return;
+        }
+        for (const tag of candidates) {
+          const btn = document.createElement("button");
+          btn.className = "tag-option";
+          btn.type = "button";
+          btn.dataset.tag = tag.name;
+          btn.innerHTML = `${tag.name}<span>${tag.count}</span>`;
+          tagOptions.append(btn);
+        }
+      }
+
+      function openTags() {
+        tagPopover.classList.add("open");
+        addTagBtn.setAttribute("aria-expanded", "true");
+        tagSearch.value = "";
+        renderTagOptions();
+        tagSearch.focus();
+      }
+
+      function closeTags() {
+        tagPopover.classList.remove("open");
+        addTagBtn.setAttribute("aria-expanded", "false");
+      }
+
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add("show");
+        clearTimeout(showToast.t);
+        showToast.t = setTimeout(() => toast.classList.remove("show"), 1600);
+      }
+
+      editor.addEventListener("input", updateCounts);
+      addTagBtn.addEventListener("click", () => {
+        tagPopover.classList.contains("open") ? closeTags() : openTags();
+      });
+      tagSearch.addEventListener("input", renderTagOptions);
+      tagOptions.addEventListener("click", (e) => {
+        const btn = e.target.closest(".tag-option");
+        if (!btn?.dataset.tag) return;
+        const tag = document.createElement("button");
+        tag.className = "tag on";
+        tag.type = "button";
+        tag.dataset.tag = btn.dataset.tag;
+        tag.textContent = btn.dataset.tag;
+        tagGrid.insertBefore(tag, addTagBtn);
+        closeTags();
+      });
+      tagGrid.addEventListener("click", (e) => {
+        const t = e.target.closest(".tag.on");
+        if (!t) return;
+        t.remove();
+        renderTagOptions();
+      });
+      document.addEventListener("click", (e) => {
+        if (!tagGrid.contains(e.target)) closeTags();
+      });
+
+      coverInput.addEventListener("change", () => {
+        const file = coverInput.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          coverImg.src = reader.result;
+          coverImg.style.display = "block";
+          showToast("封面已更新");
+        };
+        reader.readAsDataURL(file);
+      });
+
+      removeCover.addEventListener("click", () => {
+        coverImg.style.display = "none";
+        showToast("封面已移除");
+      });
+
+      removeMusic.addEventListener("click", () => {
+        musicBlock.hidden = true;
+        musicAdd.hidden = false;
+        showToast("音乐已移除");
+      });
+
+      musicAdd.addEventListener("click", () => {
+        musicBlock.hidden = false;
+        musicAdd.hidden = true;
+        showToast("音乐已添加");
+      });
+
+      draftBtn.addEventListener("click", () => {
+        statusDot.classList.remove("live");
+        statusText.textContent = "草稿 · 刚刚保存";
+        saveHint.textContent = "已保存";
+        showToast("草稿已保存");
+      });
+
+      publishBtn.addEventListener("click", () => {
+        statusDot.classList.add("live");
+        statusText.textContent = "已发布 · 刚刚更新";
+        saveHint.textContent = "已同步";
+        showToast("文章已发布");
+      });
+
+      themeBtn.addEventListener("click", () => {
+        document.documentElement.classList.toggle("dark");
+      });
+
+      updateCounts();
+    </script>
+  </body>
+</html>
