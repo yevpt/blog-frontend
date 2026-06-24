@@ -61,6 +61,7 @@ export type IconName =
   | "play"
   | "plus"
   | "qq"
+  | "quote"
   | "refresh-cw"
   | "rotate-cw"
   | "search"
