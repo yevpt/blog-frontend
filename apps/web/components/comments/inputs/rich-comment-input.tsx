@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useCallback, type ReactNode } from "react";
-import { ImageDialog, LinkDialog, RichEditor } from "@repo/editor";
-import type { MentionItem } from "@repo/editor";
+import { useCallback, useState, type ReactNode } from "react";
+import type { TempUploadResp } from "@repo/api";
+import { LinkDialog, RichEditor, type ImageInsertHandlers, type MentionItem } from "@repo/editor";
+import { useEditorImageUpload } from "@repo/hooks";
+import { apiForm } from "@/lib/client-fetch";
+import { addToast } from "@/lib/toast";
 
 /** 剩余字数少于该阈值时显示计数器，提前提示用户接近上限（与 pill-comment-input 一致） */
 const COMMENT_COUNTER_THRESHOLD = 100;
@@ -28,7 +31,7 @@ interface RichCommentInputProps {
 
 /**
  * 评论场景的富文本输入组件。
- * 组合 RichEditor + 图片/链接插入对话框；代码块由工具栏直接插入。
+ * 组合 RichEditor + 选图上传占位插图；代码块由工具栏直接插入。
  */
 export function RichCommentInput({
   value,
@@ -44,19 +47,34 @@ export function RichCommentInput({
   className,
   maxLength,
 }: RichCommentInputProps) {
-  const [imageDialog, setImageDialog] = useState<{
-    open: boolean;
-    insert?: (url: string, alt?: string) => void;
-  }>({ open: false });
-
   const [linkDialog, setLinkDialog] = useState<{
     open: boolean;
     insert?: (url: string, title?: string) => void;
   }>({ open: false });
 
-  const handleInsertImage = useCallback((insert: (url: string, alt?: string) => void) => {
-    setImageDialog({ open: true, insert });
-  }, []);
+  const imageUpload = useEditorImageUpload({
+    scene: "comment",
+    upload: async (file) => {
+      const formData = new FormData();
+      formData.append("dir", "images");
+      formData.append("scene", "comment");
+      formData.append("file", file);
+      const resp = await apiForm<TempUploadResp>("/api/uploads/temp", formData, { method: "POST" });
+      return resp.url || resp.key;
+    },
+    onError: (message) => addToast(message, "error"),
+  });
+
+  const handleInsertImage = useCallback(
+    (handlers: ImageInsertHandlers) => {
+      if (!isLoggedIn) {
+        onLoginRequired?.();
+        return;
+      }
+      imageUpload.handleInsertImageRequest(handlers);
+    },
+    [imageUpload, isLoggedIn, onLoginRequired],
+  );
 
   const handleInsertLink = useCallback((insert: (url: string, title?: string) => void) => {
     setLinkDialog({ open: true, insert });
@@ -90,13 +108,14 @@ export function RichCommentInput({
         characterCountThreshold={COMMENT_COUNTER_THRESHOLD}
       />
 
-      <ImageDialog
-        open={imageDialog.open}
-        onClose={() => setImageDialog({ open: false })}
-        onConfirm={(url, alt) => {
-          imageDialog.insert?.(url, alt);
-          setImageDialog({ open: false });
-        }}
+      <input
+        ref={imageUpload.inputRef}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        aria-hidden
+        tabIndex={-1}
+        onChange={(event) => void imageUpload.handleFileChange(event)}
       />
 
       <LinkDialog
