@@ -15,6 +15,12 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("@/components/common/user-avatar", () => ({
+  UserAvatar: ({ isVip }: { isVip?: boolean }) => (
+    <div data-testid="user-avatar">{isVip ? <span data-testid="icon-vip" /> : null}</div>
+  ),
+}));
+
 describe("BaseUserCard", () => {
   const mockUser = {
     id: "user-1",
@@ -45,6 +51,27 @@ describe("BaseUserCard", () => {
     render(<BaseUserCard user={{ ...mockUser, roles: ["admin", "vip"] }} variant="compact" />);
     expect(screen.queryByText("Admin")).not.toBeInTheDocument();
     expect(screen.queryByText("VIP")).not.toBeInTheDocument();
+  });
+
+  it("VIP 用户头像显示皇冠", () => {
+    render(<BaseUserCard user={{ ...mockUser, roles: ["ROLE_VIP"] }} variant="normal" />);
+    expect(screen.getByTestId("icon-vip")).toBeInTheDocument();
+  });
+
+  it("showRoleLabel=false 时不显示文字标签", () => {
+    render(
+      <BaseUserCard
+        user={{ ...mockUser, roles: ["ROLE_ADMIN"] }}
+        variant="normal"
+        showRoleLabel={false}
+      />,
+    );
+    expect(screen.queryByText("Admin")).not.toBeInTheDocument();
+  });
+
+  it("showRoleLabel=true 且无角色时保留占位高度", () => {
+    const { container } = render(<BaseUserCard user={mockUser} variant="normal" showRoleLabel />);
+    expect(container.querySelector('[aria-hidden="true"].h-\\[14px\\]')).toBeInTheDocument();
   });
 
   it("shows time ago if offline", () => {

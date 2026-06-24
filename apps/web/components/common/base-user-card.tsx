@@ -5,6 +5,7 @@ import { cn } from "@repo/ui";
 import { useHydrated } from "@repo/hooks";
 import { formatRelativeTime } from "@/lib/format-time";
 import { UserAvatar } from "@/components/common/user-avatar";
+import { isAdminUser, isVipUser } from "@/lib/user-roles";
 
 export interface BaseUserCardProps {
   user: {
@@ -15,6 +16,8 @@ export interface BaseUserCardProps {
     roles?: string[] | null;
   };
   variant?: "normal" | "compact";
+  /** 是否在昵称下显示 Admin/VIP 文字标签；网格场景建议关闭，改由头像标识 */
+  showRoleLabel?: boolean;
   animationDelay?: string;
   animateEnter?: boolean;
   className?: string;
@@ -24,14 +27,15 @@ export interface BaseUserCardProps {
 export function BaseUserCard({
   user,
   variant = "normal",
+  showRoleLabel = true,
   animationDelay = "0ms",
   animateEnter = false,
   className,
   "data-testid": testId,
 }: BaseUserCardProps) {
   const hydrated = useHydrated();
-  const isAdmin = user.roles?.includes("admin");
-  const isVip = user.roles?.includes("vip");
+  const isAdmin = isAdminUser(user.roles);
+  const isVip = isVipUser(user.roles);
 
   const loginTime = user.last_login_at ? new Date(user.last_login_at) : null;
   const isOnline = hydrated && loginTime ? Date.now() - loginTime.getTime() < 3 * 60 * 1000 : false;
@@ -45,7 +49,7 @@ export function BaseUserCard({
       data-testid={testId}
       onTouchStart={() => {}}
       className={cn(
-        "flex cursor-pointer select-none flex-col items-center gap-1.5 transition-all duration-200 hover:bg-primary/8 active:scale-95 active:bg-primary/20 active:duration-0",
+        "flex h-full cursor-pointer select-none flex-col items-center gap-1.5 transition-all duration-200 hover:bg-primary/8 active:scale-95 active:bg-primary/20 active:duration-0",
         isCompact ? "rounded-[10px] p-2" : "rounded-xl p-2.5 md:gap-2 md:p-3",
         animateEnter && "animate-view-enter",
         className,
@@ -58,6 +62,7 @@ export function BaseUserCard({
           src={user.avatar_url || undefined}
           name={user.nickname || "U"}
           size="xl"
+          isVip={isVip}
           className={cn(
             !isCompact && "md:h-16 md:w-16",
             !isCompact && isAdmin
@@ -82,7 +87,7 @@ export function BaseUserCard({
         >
           {user.nickname || "User"}
         </h3>
-        {!isCompact && roleLabel && (
+        {!isCompact && showRoleLabel && roleLabel && (
           <span
             className={cn(
               "rounded-full px-1.5 py-px text-[9px] font-bold uppercase tracking-wider",
@@ -91,6 +96,9 @@ export function BaseUserCard({
           >
             {roleLabel}
           </span>
+        )}
+        {!isCompact && showRoleLabel && !roleLabel && (
+          <span className="h-[14px]" aria-hidden="true" />
         )}
       </div>
 

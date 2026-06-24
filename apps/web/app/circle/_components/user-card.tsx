@@ -24,6 +24,8 @@ export function UserCard({ user, index, animatedIds }: UserCardProps) {
     <BaseUserCard
       user={user}
       variant="normal"
+      showRoleLabel={false}
+      className="h-full"
       animateEnter={isNewRef.current}
       animationDelay={isNewRef.current && index < 40 ? `${index * 30}ms` : "0ms"}
     />
