@@ -11,6 +11,16 @@ describe("MarkdownContent", () => {
   it("article variant（默认）包含 prose 和 prose-neutral 类", () => {
     const { container } = render(<MarkdownContent html="<p>test</p>" variant="article" />);
     expect(container.firstChild).toHaveClass("prose", "prose-neutral");
+    expect(container.firstChild).toHaveClass("prose-blockquote:quotes-none");
+  });
+
+  it("article variant 显式使用文章正文排版节奏", () => {
+    const { container } = render(<MarkdownContent html="<p>test</p>" variant="article" />);
+    const className = container.firstElementChild?.className ?? "";
+
+    expect(className).toContain("prose-p:leading-[1.85]");
+    expect(className).toContain("prose-h1:mt-[1.25em]");
+    expect(className).toContain("[&_.md-code-wrapper]:my-8");
   });
 
   it("comment variant 包含 prose 和 prose-sm 类", () => {

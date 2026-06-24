@@ -3,6 +3,7 @@
 import { useRef, useEffect } from "react";
 import clsx from "clsx";
 import { attachMarkdownImageFallbacks, MD_IMAGE_FALLBACK_CLASS } from "./image-fallback";
+import { PROSE_BLOCKQUOTE_QUOTELESS_CLASSES } from "./prose-blockquote-classes";
 
 export interface MarkdownContentProps {
   /** 已由 markdownToHtml 渲染好的 HTML 字符串 */
@@ -38,10 +39,24 @@ const IMAGE_FALLBACK_VARIANT_CLASSES = [
   `[&_.${MD_IMAGE_FALLBACK_CLASS}]:align-middle`,
 ].join(" ");
 
+const ARTICLE_PROSE_RHYTHM_CLASSES = [
+  "prose-p:leading-[1.85]",
+  "prose-h1:mt-[1.25em] prose-h1:mb-[0.65em]",
+  "prose-h2:mt-[1.35em] prose-h2:mb-[0.65em]",
+  "prose-h3:mt-[1.25em] prose-h3:mb-[0.55em]",
+  // code block 被 rehype 包成 div，不能再依赖 typography 的 pre 外边距。
+  "[&_.md-code-wrapper]:my-8 [&_.md-code-wrapper:first-child]:mt-0 [&_.md-code-wrapper:last-child]:mb-0",
+].join(" ");
+
 const VARIANT_CLASSES: Record<"article" | "comment", string> = {
-  article: "prose prose-neutral max-w-none dark:prose-invert",
+  article: [
+    "prose prose-neutral max-w-none dark:prose-invert",
+    ARTICLE_PROSE_RHYTHM_CLASSES,
+    PROSE_BLOCKQUOTE_QUOTELESS_CLASSES,
+  ].join(" "),
   comment: [
     "prose prose-sm dark:prose-invert max-w-none",
+    PROSE_BLOCKQUOTE_QUOTELESS_CLASSES,
     "prose-p:my-0.5 prose-p:leading-relaxed",
     "prose-headings:text-sm prose-headings:font-semibold prose-headings:mt-2 prose-headings:mb-0.5",
     "prose-ul:my-1 prose-ol:my-1 prose-li:my-0",
