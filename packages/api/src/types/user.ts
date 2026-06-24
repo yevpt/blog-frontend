@@ -10,6 +10,8 @@ export interface UserMetaResp {
   province?: string;
   city?: string;
   address?: string;
+  /** 副邮箱（后端在 GET /users/me 的 meta 中返回） */
+  sub_email?: string | null;
 }
 
 /** 用户偏好设置 */
@@ -48,6 +50,8 @@ export interface UserDetailResp {
   status: number;
   last_login_at?: string;
   roles: string[];
+  /** 是否已设置登录密码（第三方注册用户可能为 false） */
+  password_set?: boolean;
   meta?: UserMetaResp;
   setting?: UserSettingResp;
   social_links?: UserSocialLinkResp[];
