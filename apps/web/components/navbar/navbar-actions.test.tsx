@@ -56,7 +56,7 @@ describe("NavbarActions", () => {
     mockOpenLoginModal.mockClear();
     mockTheme = "system";
     mockResolvedTheme = "light";
-    vi.mocked(useSession).mockReturnValue({ userId: null, profile: null });
+    vi.mocked(useSession).mockReturnValue({ userId: null, profile: null, patchProfile: () => {} });
   });
 
   it("渲染不崩溃，显示主题切换和登录入口", () => {
@@ -110,7 +110,7 @@ describe("NavbarActions", () => {
   });
 
   it("已登录：显示 NavbarUserMenu，不显示登录按钮", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null, patchProfile: () => {} });
     render(<NavbarActions />);
     expect(screen.getByTestId("user-menu")).toBeInTheDocument();
     expect(screen.queryByText("登录")).not.toBeInTheDocument();

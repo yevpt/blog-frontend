@@ -56,7 +56,7 @@ const mockOnClose = vi.fn();
 describe("NavbarMobileMenu", () => {
   beforeEach(() => {
     mockResolvedTheme = "light";
-    vi.mocked(useSession).mockReturnValue({ userId: null, profile: null });
+    vi.mocked(useSession).mockReturnValue({ userId: null, profile: null, patchProfile: () => {} });
     mockRefresh.mockClear();
     mockOnClose.mockClear();
     global.fetch = vi.fn().mockResolvedValue({ json: async () => ({}) });
@@ -90,7 +90,7 @@ describe("NavbarMobileMenu", () => {
   });
 
   it("已登录：显示用户区域和头像，不显示登录提示", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null, patchProfile: () => {} });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
     expect(screen.getByTestId("user-avatar")).toBeInTheDocument();
     expect(
@@ -123,7 +123,7 @@ describe("NavbarMobileMenu", () => {
 
   it("已登录：点击退出登录调用 /api/auth/logout 并 refresh 和 onClose", async () => {
     const user = userEvent.setup();
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null, patchProfile: () => {} });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
     await user.click(screen.getByLabelText("退出登录"));
     await waitFor(() => {
@@ -134,7 +134,7 @@ describe("NavbarMobileMenu", () => {
   });
 
   it("已登录：主题切换按钮有 cursor-pointer 样式", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null, patchProfile: () => {} });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
     const themeBtn = screen.getByRole("button", {
       name: "当前生效主题：light，点击切换到 dark",
@@ -143,7 +143,7 @@ describe("NavbarMobileMenu", () => {
   });
 
   it("已登录：退出按钮在用户卡片区，aria-label 为「退出登录」", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null, patchProfile: () => {} });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
     const logoutBtn = screen.getByRole("button", { name: "退出登录" });
     expect(logoutBtn).toBeInTheDocument();
@@ -153,25 +153,25 @@ describe("NavbarMobileMenu", () => {
   });
 
   it("已登录：unreadCount 未传时不渲染徽标", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null, patchProfile: () => {} });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
     expect(screen.queryByText(/^\d+$|^99\+$/)).not.toBeInTheDocument();
   });
 
   it("已登录：unreadCount=5 时消息行渲染 '5'", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null, patchProfile: () => {} });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} unreadCount={5} />);
     expect(screen.getByText("5")).toBeInTheDocument();
   });
 
   it("已登录：unreadCount=100 时消息行渲染 '99+'", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null, patchProfile: () => {} });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} unreadCount={100} />);
     expect(screen.getByText("99+")).toBeInTheDocument();
   });
 
   it("已登录：主题行含 amber 图标（icon-sun 或 icon-moon）", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null, patchProfile: () => {} });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
     // 浅色模式下显示 sun 图标（表示可切换到 dark）
     expect(screen.getByTestId("icon-sun")).toBeInTheDocument();
