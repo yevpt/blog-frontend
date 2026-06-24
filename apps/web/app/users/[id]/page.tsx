@@ -87,6 +87,17 @@ async function fetchUserMoments(userId: number): Promise<MomentPageResp> {
   }
 }
 
+async function fetchUserLikesCount(userId: number): Promise<number> {
+  const api = await createServerApiClient();
+  try {
+    const data = await api.users.getLikesCount(userId);
+    return data.count;
+  } catch (err) {
+    console.warn(`[UserProfile] GET /users/${userId}/likes/count 失败:`, err);
+    return 0;
+  }
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const numId = Number(id);
@@ -108,6 +119,13 @@ export default async function UserProfileRoute({ params }: Props) {
   if (!profile) notFound();
 
   const initialMomentsPage = await fetchUserMoments(numId);
+  const initialLikesCount = await fetchUserLikesCount(numId);
 
-  return <UserProfilePage profile={profile} initialMomentsPage={initialMomentsPage} />;
+  return (
+    <UserProfilePage
+      profile={profile}
+      initialMomentsPage={initialMomentsPage}
+      initialLikesCount={initialLikesCount}
+    />
+  );
 }

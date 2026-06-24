@@ -5,10 +5,11 @@ import { cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import type { UserPublicProfileResp } from "@repo/api";
 import { ProfileTab } from "./profile-tab/profile-tab";
-import { ProfileTabEmptyState } from "./profile-tab-empty-state";
 import { SecurityTab } from "./security-tab/security-tab";
 import { ProfileMomentsTab } from "./profile-moments-tab/profile-moments-tab";
+import { ProfileLikesTab } from "./profile-likes-tab/profile-likes-tab";
 import { formatProfileMomentsTabLabel } from "./profile-moments-tab/constants";
+import { formatProfileLikesTabLabel } from "./profile-likes-tab/constants";
 import type { MomentPageResp } from "@repo/api";
 
 type TabKey = "profile" | "moments" | "likes" | "security";
@@ -23,6 +24,7 @@ interface TabDef {
 interface UserProfileTabsProps {
   profile: UserPublicProfileResp;
   initialMomentsPage: MomentPageResp;
+  initialLikesCount: number;
   isOwner: boolean;
   isEditMode: boolean;
   onSaveField: (field: string, value: string) => Promise<void>;
@@ -32,6 +34,7 @@ interface UserProfileTabsProps {
 export function UserProfileTabs({
   profile,
   initialMomentsPage,
+  initialLikesCount,
   isOwner,
   isEditMode,
   onSaveField,
@@ -39,6 +42,7 @@ export function UserProfileTabs({
 }: UserProfileTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("profile");
   const [momentsTotal, setMomentsTotal] = useState(initialMomentsPage.total);
+  const [likesTotal, setLikesTotal] = useState(initialLikesCount);
 
   const tabs: TabDef[] =
     isEditMode && isOwner
@@ -54,7 +58,12 @@ export function UserProfileTabs({
             icon: "message-circle",
             iconColor: "text-sky-400",
           },
-          { id: "likes", label: "点赞", icon: "heart-fill", iconColor: "text-rose-400" },
+          {
+            id: "likes",
+            label: formatProfileLikesTabLabel(likesTotal),
+            icon: "heart-fill",
+            iconColor: "text-rose-400",
+          },
         ];
 
   const validTab = tabs.find((t) => t.id === activeTab) ? activeTab : "profile";
@@ -120,12 +129,11 @@ export function UserProfileTabs({
           />
         )}
         {validTab === "likes" && (
-          <ProfileTabEmptyState
-            icon="heart-fill"
-            iconClassName="text-rose-500"
-            iconBgClassName="bg-gradient-to-br from-rose-500/15 to-rose-500/5"
-            title="暂无点赞"
-            description={isOwner ? "你还没有点赞过任何内容" : "TA 还没有点赞过任何内容"}
+          <ProfileLikesTab
+            userId={profile.id}
+            isOwner={isOwner}
+            likesCount={likesTotal}
+            onCountChange={setLikesTotal}
           />
         )}
         {validTab === "security" && isOwner && isEditMode && <SecurityTab userId={profile.id} />}

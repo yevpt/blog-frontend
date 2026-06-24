@@ -12,6 +12,10 @@ vi.mock("./profile-moments-tab/profile-moments-tab", () => ({
   },
 }));
 
+vi.mock("./profile-likes-tab/profile-likes-tab", () => ({
+  ProfileLikesTab: () => <div data-testid="profile-likes-tab">likes content</div>,
+}));
+
 const baseProfile: UserPublicProfileResp = {
   id: 1,
   nickname: "TestUser",
@@ -33,6 +37,7 @@ const emptyMomentsPage: MomentPageResp = EMPTY_MOMENTS_PAGE;
 const baseProps = {
   profile: baseProfile,
   initialMomentsPage: emptyMomentsPage,
+  initialLikesCount: 0,
   isOwner: false,
   isEditMode: false,
   onSaveField: vi.fn().mockResolvedValue(undefined),
@@ -47,7 +52,12 @@ describe("UserProfileTabs", () => {
   it("访客模式显示碎语和点赞 Tab", () => {
     render(<UserProfileTabs {...baseProps} />);
     expect(screen.getByRole("tab", { name: "碎语 (0)" })).toBeInTheDocument();
-    expect(screen.getByText("点赞")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "点赞 (0)" })).toBeInTheDocument();
+  });
+
+  it("Tab 标签展示点赞总数", () => {
+    render(<UserProfileTabs {...baseProps} initialLikesCount={12} />);
+    expect(screen.getByRole("tab", { name: "点赞 (12)" })).toBeInTheDocument();
   });
 
   it("Tab 标签展示碎语总数", () => {
@@ -74,7 +84,7 @@ describe("UserProfileTabs", () => {
 
     const profileTab = screen.getByRole("tab", { name: "资料" });
     const momentsTab = screen.getByRole("tab", { name: "碎语 (0)" });
-    const likesTab = screen.getByRole("tab", { name: "点赞" });
+    const likesTab = screen.getByRole("tab", { name: "点赞 (0)" });
 
     expect(profileTab.className).toContain("rounded-tl-lg");
     expect(profileTab.className).not.toContain("rounded-tr-lg");
@@ -171,13 +181,12 @@ describe("UserProfileTabs", () => {
     expect(screen.getByRole("tab", { name: "碎语 (3)" })).toBeInTheDocument();
   });
 
-  it("点赞 Tab 无内容时显示现代化空态", async () => {
+  it("点赞 Tab 渲染真实列表组件", async () => {
     const user = userEvent.setup();
     render(<UserProfileTabs {...baseProps} />);
 
-    await user.click(screen.getByRole("tab", { name: "点赞" }));
+    await user.click(screen.getByRole("tab", { name: "点赞 (0)" }));
 
-    expect(screen.getByText("暂无点赞")).toBeInTheDocument();
-    expect(screen.getByText("TA 还没有点赞过任何内容")).toBeInTheDocument();
+    expect(screen.getByTestId("profile-likes-tab")).toBeInTheDocument();
   });
 });

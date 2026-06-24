@@ -34,23 +34,47 @@ const emptyMomentsPage: MomentPageResp = {
 
 describe("UserProfilePage", () => {
   it("渲染不崩溃", () => {
-    render(<UserProfilePage profile={baseProfile} initialMomentsPage={emptyMomentsPage} />);
+    render(
+      <UserProfilePage
+        profile={baseProfile}
+        initialMomentsPage={emptyMomentsPage}
+        initialLikesCount={0}
+      />,
+    );
     expect(screen.getByText("TestUser")).toBeInTheDocument();
   });
 
   it("本人（id 匹配）显示编辑按钮", () => {
-    render(<UserProfilePage profile={baseProfile} initialMomentsPage={emptyMomentsPage} />);
+    render(
+      <UserProfilePage
+        profile={baseProfile}
+        initialMomentsPage={emptyMomentsPage}
+        initialLikesCount={0}
+      />,
+    );
     expect(screen.getByText("编辑个人资料")).toBeInTheDocument();
   });
 
   it("点击编辑按钮进入编辑模式", async () => {
-    render(<UserProfilePage profile={baseProfile} initialMomentsPage={emptyMomentsPage} />);
+    render(
+      <UserProfilePage
+        profile={baseProfile}
+        initialMomentsPage={emptyMomentsPage}
+        initialLikesCount={0}
+      />,
+    );
     await userEvent.click(screen.getByText("编辑个人资料"));
     expect(screen.getByText("退出编辑")).toBeInTheDocument();
   });
 
   it("退出编辑后回到只读模式", async () => {
-    render(<UserProfilePage profile={baseProfile} initialMomentsPage={emptyMomentsPage} />);
+    render(
+      <UserProfilePage
+        profile={baseProfile}
+        initialMomentsPage={emptyMomentsPage}
+        initialLikesCount={0}
+      />,
+    );
     await userEvent.click(screen.getByText("编辑个人资料"));
     await userEvent.click(screen.getByText("退出编辑"));
     expect(screen.getByText("编辑个人资料")).toBeInTheDocument();

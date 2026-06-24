@@ -27,19 +27,37 @@ const mockProfile: UserPublicProfileResp = {
 
 describe("用户详情页", () => {
   it("显示用户昵称", () => {
-    render(<UserProfilePage profile={mockProfile} initialMomentsPage={EMPTY_MOMENTS_PAGE} />);
+    render(
+      <UserProfilePage
+        profile={mockProfile}
+        initialMomentsPage={EMPTY_MOMENTS_PAGE}
+        initialLikesCount={0}
+      />,
+    );
     expect(screen.getByText("MockUser")).toBeInTheDocument();
   });
 
   it("访客不显示编辑入口", () => {
-    render(<UserProfilePage profile={mockProfile} initialMomentsPage={EMPTY_MOMENTS_PAGE} />);
+    render(
+      <UserProfilePage
+        profile={mockProfile}
+        initialMomentsPage={EMPTY_MOMENTS_PAGE}
+        initialLikesCount={0}
+      />,
+    );
     expect(screen.queryByText("编辑个人资料")).not.toBeInTheDocument();
   });
 
   it("显示资料、碎语、点赞 Tab", () => {
-    render(<UserProfilePage profile={mockProfile} initialMomentsPage={EMPTY_MOMENTS_PAGE} />);
+    render(
+      <UserProfilePage
+        profile={mockProfile}
+        initialMomentsPage={EMPTY_MOMENTS_PAGE}
+        initialLikesCount={0}
+      />,
+    );
     expect(screen.getByText("资料")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "碎语 (0)" })).toBeInTheDocument();
-    expect(screen.getByText("点赞")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "点赞 (0)" })).toBeInTheDocument();
   });
 });
