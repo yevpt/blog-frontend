@@ -241,6 +241,22 @@ describe("SnippetCard", () => {
     expect(screen.queryByText("博主")).toBeNull();
   });
 
+  it("VIP 作者头像显示皇冠", () => {
+    render(
+      <SnippetCard
+        snippet={makeMoment({
+          user: {
+            id: 1,
+            username: "vipuser",
+            nickname: "VIP用户",
+            roles: ["vip"],
+          },
+        })}
+      />,
+    );
+    expect(screen.getByTestId("icon-vip")).toBeInTheDocument();
+  });
+
   it("标签显示在昵称下方第二行", () => {
     render(<SnippetCard snippet={makeMoment()} />);
     // 昵称在第一行，标签（mark）在第二行

@@ -37,14 +37,14 @@ describe("WriteSnippetButton", () => {
   });
 
   it("渲染按钮不崩溃", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: null, profile: null });
+    vi.mocked(useSession).mockReturnValue({ userId: null, profile: null, patchProfile: () => {} });
     render(<WriteSnippetButton />);
     expect(screen.getByRole("button", { name: "写碎语" })).toBeInTheDocument();
   });
 
   it("未登录时点击弹出登录弹窗", async () => {
     const user = userEvent.setup();
-    vi.mocked(useSession).mockReturnValue({ userId: null, profile: null });
+    vi.mocked(useSession).mockReturnValue({ userId: null, profile: null, patchProfile: () => {} });
     render(<WriteSnippetButton />);
 
     await user.click(screen.getByRole("button", { name: "写碎语" }));
@@ -57,6 +57,7 @@ describe("WriteSnippetButton", () => {
     vi.mocked(useSession).mockReturnValue({
       userId: 1,
       profile: { id: 1, username: "test", nickname: "Test", status: 0, roles: ["user"] },
+      patchProfile: () => {},
     });
     render(<WriteSnippetButton />);
 

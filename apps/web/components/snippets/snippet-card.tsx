@@ -5,8 +5,10 @@ import Link from "next/link";
 import type { MomentItemResp } from "@repo/api";
 import type { IconName } from "@repo/icons";
 import { SvgIcon } from "@repo/icons";
-import { Avatar, Badge, Button, Card, CardContent, Dropdown, Modal } from "@repo/ui";
+import { Badge, Button, Card, CardContent, Dropdown, Modal } from "@repo/ui";
 import { useSession } from "@/app/providers/session-provider";
+import { UserAvatar } from "@/components/common/user-avatar";
+import { isVipUser } from "@/lib/user-roles";
 import { useImageViewer } from "@/store/use-image-viewer";
 import { SnippetContent } from "./snippet-content";
 import { RelativeTime } from "@/components/common/relative-time";
@@ -72,7 +74,6 @@ export function SnippetCard({
   const authorName = snippet.user?.nickname ?? snippet.user?.username ?? "匿名";
   const authorAvatar = snippet.user?.avatar_url ?? "";
   const authorBadge = snippet.user?.mark ?? "";
-  const authorInitial = authorName[0]?.toUpperCase() ?? "?";
 
   const openViewer = useImageViewer((s) => s.open);
 
@@ -92,12 +93,12 @@ export function SnippetCard({
             if (!snippet.user?.id) e.preventDefault();
           }}
         >
-          <Avatar
+          <UserAvatar
             src={authorAvatar || undefined}
-            alt={authorName}
-            initials={authorInitial}
-            size="sm"
-            className="size-9 shadow-[0_2px_8px_rgba(124,58,237,0.2)]"
+            name={authorName}
+            size="lg"
+            isVip={isVipUser(snippet.user?.roles)}
+            className="shadow-[0_2px_8px_rgba(124,58,237,0.2)]"
           />
         </Link>
         <div className="min-w-0 flex-1">
