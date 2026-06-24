@@ -41,6 +41,9 @@ export type { TagItemResp, TagListResp } from "./types/tag";
 export type { MusicItemResp, MusicListResp } from "./types/music";
 export type {
   MomentListReq,
+  MomentFeedScope,
+  MomentFeedSort,
+  MomentFeedListReq,
   MomentSaveReq,
   MomentUserResp,
   MomentMediaResp,

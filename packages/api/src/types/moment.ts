@@ -5,6 +5,19 @@ export interface MomentListReq {
   page_size?: number;
 }
 
+/** 碎语独立页 feed 范围 */
+export type MomentFeedScope = "all" | "owner" | "friends";
+
+/** 碎语独立页 feed 排序 */
+export type MomentFeedSort = "latest" | "hot";
+
+export interface MomentFeedListReq {
+  scope: MomentFeedScope;
+  sort: MomentFeedSort;
+  page?: number;
+  page_size?: number;
+}
+
 export interface MomentSaveReq {
   id?: number;
   user_id?: number;

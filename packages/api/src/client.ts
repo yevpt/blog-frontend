@@ -26,6 +26,7 @@ import type { MusicListResp } from "./types/music";
 import type {
   MomentDeleteResp,
   MomentItemResp,
+  MomentFeedListReq,
   MomentListReq,
   MomentPageResp,
   MomentSaveReq,
@@ -300,6 +301,16 @@ export function createApiClient(config: ApiClientConfig) {
         return fetchOptionalAuth<MomentPageResp>(`/moments${qs ? `?${qs}` : ""}`, {
           method: "GET",
         });
+      },
+      /** 碎语独立页 feed，按 scope/sort 分页；登录态可返回 is_liked */
+      feed: (req: MomentFeedListReq) => {
+        const params = new URLSearchParams();
+        params.set("scope", req.scope);
+        params.set("sort", req.sort);
+        if (req.page !== undefined) params.set("page", String(req.page));
+        if (req.page_size !== undefined) params.set("page_size", String(req.page_size));
+        const qs = params.toString();
+        return fetchOptionalAuth<MomentPageResp>(`/moments/feed?${qs}`, { method: "GET" });
       },
       /** 切换当前用户对碎语的点赞状态，返回服务端最新点赞状态与数量 */
       toggleLike: (id: number) =>

@@ -519,6 +519,27 @@ describe("createApiClient", () => {
     expect(url.searchParams.get("user_id")).toBe("2");
   });
 
+  it("moments.feed 构造 scope/sort 与分页 query string", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { total: 0, pages: 0, page: 1, page_size: 10, list: [] },
+      }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    await client.moments.feed({ scope: "friends", sort: "hot", page: 2, page_size: 20 });
+
+    const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
+    const url = new URL(calledUrl);
+    expect(url.pathname).toBe("/moments/feed");
+    expect(url.searchParams.get("scope")).toBe("friends");
+    expect(url.searchParams.get("sort")).toBe("hot");
+    expect(url.searchParams.get("page")).toBe("2");
+    expect(url.searchParams.get("page_size")).toBe("20");
+  });
+
   it("moments.save 使用 fetchAuthed 调用 POST /moments", async () => {
     const moment = {
       id: 7,
