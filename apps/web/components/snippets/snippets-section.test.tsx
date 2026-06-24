@@ -87,6 +87,7 @@ vi.mock("@repo/hooks", () => ({
       return messages[key] ?? key;
     },
   }),
+  useHydrated: () => true,
 }));
 
 vi.mock("@/app/providers/session-provider", () => ({

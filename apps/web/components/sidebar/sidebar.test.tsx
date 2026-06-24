@@ -20,6 +20,7 @@ vi.mock("@repo/hooks", () => ({
       return messages[key] ?? key;
     },
   }),
+  useHydrated: () => true,
 }));
 
 // Mock @repo/icons
