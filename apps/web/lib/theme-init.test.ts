@@ -22,7 +22,7 @@ describe("shouldUseDarkTheme", () => {
 
 describe("THEME_CRITICAL_CSS", () => {
   it("包含默认浅色背景和 color-scheme", () => {
-    expect(THEME_CRITICAL_CSS).toContain("#ffffff");
+    expect(THEME_CRITICAL_CSS).toContain("#f4f4f4");
     expect(THEME_CRITICAL_CSS).toContain("color-scheme:light");
   });
 

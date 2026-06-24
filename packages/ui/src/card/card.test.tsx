@@ -25,13 +25,13 @@ describe("Card", () => {
     expect((container.firstChild as HTMLElement).className).toContain("custom-card");
   });
 
-  it("默认使用 shadow-card 边缘且不带实心 border", () => {
+  it("默认使用 rounded-xl + shadow-card", () => {
     const { container } = render(<Card>x</Card>);
     const el = container.firstChild as HTMLElement;
+    expect(el.className).toContain("rounded-xl");
     expect(el.className).toContain("bg-card");
     expect(el.className).toContain("text-card-foreground");
     expect(el.className).toContain("shadow-card");
-    // 方案 C：边缘由阴影承担，不再使用 border 类
     expect(el.className).not.toMatch(/(^|\s)border(\s|$)/);
   });
 

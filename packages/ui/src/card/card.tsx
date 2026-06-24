@@ -8,13 +8,13 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 // Card 被拆成多个小组件，页面可以像搭积木一样组合标题、描述和内容区域。
-// 边缘由 shadow-card 的第一层 0 0 0 1px 承担，不再使用实心 border，边更柔和。
+// 外观：rounded-xl + shadow-card 环境阴影。
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, interactive = false, ...props }, ref) => (
     <div
       ref={ref}
       className={cn(
-        "rounded-2xl bg-card text-card-foreground shadow-card",
+        "rounded-xl bg-card text-card-foreground shadow-card",
         interactive &&
           "transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-card-hover",
         className,
