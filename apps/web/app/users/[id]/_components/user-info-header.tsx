@@ -5,8 +5,10 @@ import { Card, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import { useHydrated } from "@repo/hooks";
 import { UserAvatar } from "@/components/common/user-avatar";
+import { isAdminUser, isVipUser } from "@/lib/user-roles";
 import { InlineFieldEditor } from "./inline-field-editor";
 import { formatRelativeTime } from "@/lib/format-time";
+import { addToast } from "@/lib/toast";
 
 interface UserInfoHeaderProps {
   nickname: string;
@@ -59,6 +61,8 @@ export function UserInfoHeader({
     setIsUploadingAvatar(true);
     try {
       await onAvatarChange(file);
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "上传失败", "error");
     } finally {
       setIsUploadingAvatar(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -68,8 +72,8 @@ export function UserInfoHeader({
   const { online, label: onlineLabel } = hydrated
     ? getOnlineStatus(lastLoginAt)
     : { online: false, label: "\u00A0" };
-  const isVip = roles.includes("vip");
-  const isAdmin = roles.includes("admin");
+  const isVip = isVipUser(roles);
+  const isAdmin = isAdminUser(roles);
 
   return (
     <Card className="relative px-6 py-8">
@@ -108,6 +112,7 @@ export function UserInfoHeader({
             src={avatarUrl ?? undefined}
             name={nickname}
             size="xl"
+            isVip={!isEditMode && isVip}
             className="h-20 w-20"
           />
           {isOwner && isEditMode && (

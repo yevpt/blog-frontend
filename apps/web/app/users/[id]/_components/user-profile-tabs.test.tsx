@@ -2,7 +2,15 @@ import { describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { UserProfileTabs } from "./user-profile-tabs";
-import type { UserPublicProfileResp } from "@repo/api";
+import type { MomentPageResp, UserPublicProfileResp } from "@repo/api";
+import { EMPTY_MOMENTS_PAGE } from "./profile-moments-tab/constants";
+
+vi.mock("./profile-moments-tab/profile-moments-tab", () => ({
+  ProfileMomentsTab: ({ onTotalChange }: { onTotalChange?: (total: number) => void }) => {
+    onTotalChange?.(3);
+    return <div data-testid="profile-moments-tab">moments content</div>;
+  },
+}));
 
 const baseProfile: UserPublicProfileResp = {
   id: 1,
@@ -20,8 +28,11 @@ const baseProfile: UserPublicProfileResp = {
   birthday: null,
 };
 
+const emptyMomentsPage: MomentPageResp = EMPTY_MOMENTS_PAGE;
+
 const baseProps = {
   profile: baseProfile,
+  initialMomentsPage: emptyMomentsPage,
   isOwner: false,
   isEditMode: false,
   onSaveField: vi.fn().mockResolvedValue(undefined),
@@ -35,8 +46,15 @@ describe("UserProfileTabs", () => {
 
   it("访客模式显示碎语和点赞 Tab", () => {
     render(<UserProfileTabs {...baseProps} />);
-    expect(screen.getByText("碎语")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "碎语 (0)" })).toBeInTheDocument();
     expect(screen.getByText("点赞")).toBeInTheDocument();
+  });
+
+  it("Tab 标签展示碎语总数", () => {
+    render(
+      <UserProfileTabs {...baseProps} initialMomentsPage={{ ...emptyMomentsPage, total: 24 }} />,
+    );
+    expect(screen.getByRole("tab", { name: "碎语 (24)" })).toBeInTheDocument();
   });
 
   it("访客模式不显示账号安全 Tab", () => {
@@ -55,7 +73,7 @@ describe("UserProfileTabs", () => {
     render(<UserProfileTabs {...baseProps} />);
 
     const profileTab = screen.getByRole("tab", { name: "资料" });
-    const momentsTab = screen.getByRole("tab", { name: "碎语" });
+    const momentsTab = screen.getByRole("tab", { name: "碎语 (0)" });
     const likesTab = screen.getByRole("tab", { name: "点赞" });
 
     expect(profileTab.className).toContain("rounded-tl-lg");
@@ -81,7 +99,7 @@ describe("UserProfileTabs", () => {
     const user = userEvent.setup();
     render(<UserProfileTabs {...baseProps} />);
 
-    const momentsTab = screen.getByRole("tab", { name: "碎语" });
+    const momentsTab = screen.getByRole("tab", { name: "碎语 (0)" });
     await user.click(momentsTab);
 
     expect(momentsTab).not.toHaveFocus();
@@ -91,7 +109,7 @@ describe("UserProfileTabs", () => {
   it("mousedown 时阻止默认 focus 行为", () => {
     render(<UserProfileTabs {...baseProps} />);
 
-    const momentsTab = screen.getByRole("tab", { name: "碎语" });
+    const momentsTab = screen.getByRole("tab", { name: "碎语 (0)" });
     const prevented = !momentsTab.dispatchEvent(
       new MouseEvent("mousedown", { bubbles: true, cancelable: true }),
     );
@@ -109,24 +127,48 @@ describe("UserProfileTabs", () => {
     expect(indicator.className).toContain("z-10");
   });
 
-  it("碎语 Tab 无内容时显示现代化空态", async () => {
+  it("碎语 Tab 有内容时渲染列表", async () => {
+    const user = userEvent.setup();
+    render(
+      <UserProfileTabs
+        {...baseProps}
+        initialMomentsPage={{
+          ...emptyMomentsPage,
+          total: 3,
+          pages: 1,
+          list: [
+            {
+              id: 1,
+              user_id: 1,
+              content: "hello",
+              status: 1,
+              comment_status: 1,
+              read_count: 0,
+              is_top: false,
+              like_count: 0,
+              comment_count: 0,
+              is_liked: false,
+              images: [],
+              created_at: "2026-01-01T00:00:00Z",
+              updated_at: "2026-01-01T00:00:00Z",
+            },
+          ],
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole("tab", { name: "碎语 (3)" }));
+
+    expect(screen.getByTestId("profile-moments-tab")).toBeInTheDocument();
+  });
+
+  it("打开碎语 Tab 后同步更新 Tab 计数", async () => {
     const user = userEvent.setup();
     render(<UserProfileTabs {...baseProps} />);
 
-    await user.click(screen.getByRole("tab", { name: "碎语" }));
+    await user.click(screen.getByRole("tab", { name: "碎语 (0)" }));
 
-    expect(screen.getByText("暂无碎语")).toBeInTheDocument();
-    expect(screen.getByText("TA 还没有发布过碎语")).toBeInTheDocument();
-    expect(screen.getByTestId("profile-tab-empty-state")).toBeInTheDocument();
-  });
-
-  it("本人查看碎语 Tab 空态时显示引导文案", async () => {
-    const user = userEvent.setup();
-    render(<UserProfileTabs {...baseProps} isOwner />);
-
-    await user.click(screen.getByRole("tab", { name: "碎语" }));
-
-    expect(screen.getByText("你还没有发布过碎语，去分享生活的碎片吧")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "碎语 (3)" })).toBeInTheDocument();
   });
 
   it("点赞 Tab 无内容时显示现代化空态", async () => {

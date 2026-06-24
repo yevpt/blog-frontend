@@ -7,6 +7,9 @@ import type { UserPublicProfileResp } from "@repo/api";
 import { ProfileTab } from "./profile-tab/profile-tab";
 import { ProfileTabEmptyState } from "./profile-tab-empty-state";
 import { SecurityTab } from "./security-tab/security-tab";
+import { ProfileMomentsTab } from "./profile-moments-tab/profile-moments-tab";
+import { formatProfileMomentsTabLabel } from "./profile-moments-tab/constants";
+import type { MomentPageResp } from "@repo/api";
 
 type TabKey = "profile" | "moments" | "likes" | "security";
 
@@ -19,6 +22,7 @@ interface TabDef {
 
 interface UserProfileTabsProps {
   profile: UserPublicProfileResp;
+  initialMomentsPage: MomentPageResp;
   isOwner: boolean;
   isEditMode: boolean;
   onSaveField: (field: string, value: string) => Promise<void>;
@@ -27,12 +31,14 @@ interface UserProfileTabsProps {
 
 export function UserProfileTabs({
   profile,
+  initialMomentsPage,
   isOwner,
   isEditMode,
   onSaveField,
   onActiveEditingChange,
 }: UserProfileTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("profile");
+  const [momentsTotal, setMomentsTotal] = useState(initialMomentsPage.total);
 
   const tabs: TabDef[] =
     isEditMode && isOwner
@@ -42,7 +48,12 @@ export function UserProfileTabs({
         ]
       : [
           { id: "profile", label: "资料", icon: "user", iconColor: "text-pink-400" },
-          { id: "moments", label: "碎语", icon: "message-circle", iconColor: "text-sky-400" },
+          {
+            id: "moments",
+            label: formatProfileMomentsTabLabel(momentsTotal),
+            icon: "message-circle",
+            iconColor: "text-sky-400",
+          },
           { id: "likes", label: "点赞", icon: "heart-fill", iconColor: "text-rose-400" },
         ];
 
@@ -101,12 +112,11 @@ export function UserProfileTabs({
           />
         )}
         {validTab === "moments" && (
-          <ProfileTabEmptyState
-            icon="message-circle"
-            iconClassName="text-sky-500"
-            iconBgClassName="bg-gradient-to-br from-sky-500/15 to-sky-500/5"
-            title="暂无碎语"
-            description={isOwner ? "你还没有发布过碎语，去分享生活的碎片吧" : "TA 还没有发布过碎语"}
+          <ProfileMomentsTab
+            userId={profile.id}
+            isOwner={isOwner}
+            initialPage={initialMomentsPage}
+            onTotalChange={setMomentsTotal}
           />
         )}
         {validTab === "likes" && (

@@ -1,8 +1,12 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import type { UserPublicProfileResp } from "@repo/api";
+import type { MomentPageResp, UserPublicProfileResp } from "@repo/api";
 import { createServerApiClient } from "@/lib/server-api";
 import { UserProfilePage } from "./_components/user-profile-page";
+import {
+  EMPTY_MOMENTS_PAGE,
+  PROFILE_MOMENTS_PAGE_SIZE,
+} from "./_components/profile-moments-tab/constants";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -69,6 +73,20 @@ async function fetchProfile(id: number): Promise<UserPublicProfileResp | null> {
   return null;
 }
 
+async function fetchUserMoments(userId: number): Promise<MomentPageResp> {
+  const api = await createServerApiClient();
+  try {
+    return await api.moments.listPublic({
+      user_id: userId,
+      page: 1,
+      page_size: PROFILE_MOMENTS_PAGE_SIZE,
+    });
+  } catch (err) {
+    console.warn(`[UserProfile] GET /moments?user_id=${userId} 失败:`, err);
+    return EMPTY_MOMENTS_PAGE;
+  }
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const numId = Number(id);
@@ -89,5 +107,7 @@ export default async function UserProfileRoute({ params }: Props) {
   const profile = await fetchProfile(numId);
   if (!profile) notFound();
 
-  return <UserProfilePage profile={profile} />;
+  const initialMomentsPage = await fetchUserMoments(numId);
+
+  return <UserProfilePage profile={profile} initialMomentsPage={initialMomentsPage} />;
 }

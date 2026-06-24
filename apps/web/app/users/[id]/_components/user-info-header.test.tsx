@@ -1,7 +1,16 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { UserInfoHeader } from "./user-info-header";
+
+const mockAddToast = vi.fn();
+vi.mock("@/lib/toast", () => ({
+  addToast: (...args: unknown[]) => mockAddToast(...args),
+}));
+
+vi.mock("@repo/icons", () => ({
+  SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
+}));
 
 const baseProps = {
   nickname: "TestUser",
@@ -18,6 +27,10 @@ const baseProps = {
 };
 
 describe("UserInfoHeader", () => {
+  beforeEach(() => {
+    mockAddToast.mockClear();
+  });
+
   it("渲染不崩溃", () => {
     render(<UserInfoHeader {...baseProps} />);
     expect(screen.getByText("TestUser")).toBeInTheDocument();
@@ -49,8 +62,18 @@ describe("UserInfoHeader", () => {
   });
 
   it("VIP 角色显示 badge", () => {
-    render(<UserInfoHeader {...baseProps} roles={["vip"]} />);
+    render(<UserInfoHeader {...baseProps} roles={["ROLE_VIP"]} />);
     expect(screen.getByText("VIP")).toBeInTheDocument();
+  });
+
+  it("VIP 非编辑模式头像显示皇冠", () => {
+    render(<UserInfoHeader {...baseProps} roles={["ROLE_VIP"]} isEditMode={false} />);
+    expect(screen.getByTestId("icon-vip")).toBeInTheDocument();
+  });
+
+  it("VIP 编辑模式头像不显示皇冠", () => {
+    render(<UserInfoHeader {...baseProps} roles={["ROLE_VIP"]} isOwner isEditMode />);
+    expect(screen.queryByTestId("icon-vip")).not.toBeInTheDocument();
   });
 
   it("点击铅笔图标进入昵称编辑态", async () => {
@@ -62,5 +85,17 @@ describe("UserInfoHeader", () => {
   it("传入社交链接不崩溃", () => {
     const socialLinks = [{ platform: "github", url: "https://github.com/test" }];
     expect(() => render(<UserInfoHeader {...baseProps} socialLinks={socialLinks} />)).not.toThrow();
+  });
+
+  it("头像上传失败时 toast 展示后端错误", async () => {
+    const onAvatarChange = vi.fn().mockRejectedValue(new Error("缺少上传文件"));
+    render(<UserInfoHeader {...baseProps} isOwner isEditMode onAvatarChange={onAvatarChange} />);
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(["avatar"], "avatar.png", { type: "image/png" });
+    await userEvent.upload(input, file);
+
+    expect(onAvatarChange).toHaveBeenCalledWith(file);
+    expect(mockAddToast).toHaveBeenCalledWith("缺少上传文件", "error");
   });
 });

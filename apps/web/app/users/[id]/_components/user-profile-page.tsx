@@ -1,6 +1,6 @@
 "use client";
 
-import type { UserPublicProfileResp } from "@repo/api";
+import type { MomentPageResp, UserPublicProfileResp } from "@repo/api";
 import { Card } from "@repo/ui";
 import { useProfileEditor } from "@/hooks/use-profile-editor";
 import { UserInfoHeader } from "./user-info-header";
@@ -8,9 +8,13 @@ import { UserProfileTabs } from "./user-profile-tabs";
 
 interface UserProfilePageProps {
   profile: UserPublicProfileResp;
+  initialMomentsPage: MomentPageResp;
 }
 
-export function UserProfilePage({ profile: initialProfile }: UserProfilePageProps) {
+export function UserProfilePage({
+  profile: initialProfile,
+  initialMomentsPage,
+}: UserProfilePageProps) {
   const {
     profile,
     isOwner,
@@ -47,6 +51,7 @@ export function UserProfilePage({ profile: initialProfile }: UserProfilePageProp
         <Card className="overflow-hidden">
           <UserProfileTabs
             profile={profile}
+            initialMomentsPage={initialMomentsPage}
             isOwner={isOwner}
             isEditMode={isEditMode}
             onSaveField={saveField}
