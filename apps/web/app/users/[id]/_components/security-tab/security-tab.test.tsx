@@ -1,9 +1,17 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { UserDetailResp, OAuthBindingResp } from "@repo/api";
 import type * as clientFetch from "@/lib/client-fetch";
 import { SecurityTab } from "./security-tab";
+
+// 容器改名成功后走 router.refresh()；Sheet toast 走 addToast，均需 mock
+const mockRefresh = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: mockRefresh, push: vi.fn() }),
+}));
+vi.mock("@/lib/toast", () => ({ addToast: vi.fn() }));
 
 // 取数纠偏：客户端组件用 @/lib/client-fetch 的 apiJson 打 /api/**，故 mock apiJson；
 // providers 走原始 fetch（不解包信封），故另 mock global.fetch。
@@ -45,10 +53,12 @@ const bindings: OAuthBindingResp[] = [{ source: "github", social_user_id: 1 }];
 
 beforeEach(() => {
   apiJson.mockReset();
-  // apiJson 按 path 分发 me / bindings
+  mockRefresh.mockReset();
+  // apiJson 按 path 分发 me / bindings / 改名 PATCH
   apiJson.mockImplementation((path: string) => {
     if (path === "/api/users/me") return Promise.resolve(meResp());
     if (path === "/api/users/me/oauth-bindings") return Promise.resolve(bindings);
+    if (path === "/api/users/me/username") return Promise.resolve(undefined);
     return Promise.reject(new Error(`unexpected path: ${path}`));
   });
   // providers 信封
@@ -78,6 +88,25 @@ describe("SecurityTab", () => {
     expect(await screen.findByRole("button", { name: "解绑 GitHub" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "绑定 QQ" })).toBeInTheDocument();
     expect(screen.getByText("已绑定")).toBeInTheDocument();
+  });
+
+  it("点「修改用户名」改名成功后登出并 refresh", async () => {
+    const user = userEvent.setup();
+    render(<SecurityTab userId={1} />);
+
+    await user.click(await screen.findByRole("button", { name: "修改用户名" }));
+    await user.click(screen.getByRole("button", { name: "确认修改" }));
+
+    await waitFor(() =>
+      expect(apiJson).toHaveBeenCalledWith("/api/users/me/username", {
+        method: "PATCH",
+        body: JSON.stringify({ username: "yevpt" }),
+      }),
+    );
+    await waitFor(() =>
+      expect(global.fetch).toHaveBeenCalledWith("/api/auth/logout", { method: "POST" }),
+    );
+    await waitFor(() => expect(mockRefresh).toHaveBeenCalled());
   });
 
   it("取数失败时显示错误与重试", async () => {
