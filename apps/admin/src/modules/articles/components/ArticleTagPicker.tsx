@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { SvgIcon } from "@repo/icons";
 import { Autocomplete, Button } from "@repo/ui";
-import { tagOptions, type ArticleTag } from "../editor-options";
+import type { ArticleTag } from "../editor-options";
 
 interface ArticleTagPickerProps {
   selectedTags: ArticleTag[];
+  tagCandidates: ArticleTag[];
   onChange: (tags: ArticleTag[]) => void;
 }
 
@@ -25,22 +26,22 @@ function RemovableTag({ label, onRemove }: { label: string; onRemove: () => void
   );
 }
 
-export function ArticleTagPicker({ selectedTags, onChange }: ArticleTagPickerProps) {
+export function ArticleTagPicker({ selectedTags, tagCandidates, onChange }: ArticleTagPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const availableTags = useMemo(
-    () => tagOptions.filter((tag) => !selectedTags.some((selected) => selected.id === tag.id)),
-    [selectedTags],
+    () => tagCandidates.filter((tag) => !selectedTags.some((selected) => selected.id === tag.id)),
+    [selectedTags, tagCandidates],
   );
 
   const handleAddTag = (key: string | number) => {
-    const nextTag = tagOptions.find((tag) => tag.id === String(key));
+    const nextTag = tagCandidates.find((tag) => tag.id === Number(key));
     if (!nextTag) return;
 
     onChange([...selectedTags, nextTag]);
     setIsOpen(false);
   };
 
-  const handleRemoveTag = (tagId: string) => {
+  const handleRemoveTag = (tagId: number) => {
     onChange(selectedTags.filter((tag) => tag.id !== tagId));
   };
 
@@ -78,7 +79,7 @@ export function ArticleTagPicker({ selectedTags, onChange }: ArticleTagPickerPro
               )}
               className="max-h-56"
             >
-              {(tag) => <Autocomplete.Item id={tag.id} label={tag.label} />}
+              {(tag) => <Autocomplete.Item id={String(tag.id)} label={tag.label} />}
             </Autocomplete.Menu>
           </Autocomplete>
         </Autocomplete.Popover>
