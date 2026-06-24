@@ -115,9 +115,9 @@ export function RegisterView({ onSwitchToLogin, onSuccess }: RegisterViewProps) 
                 loadingText="处理中"
                 className={cn(
                   "absolute right-[5px] top-1/2 -translate-y-1/2",
-                  "px-[10px] py-[5px] rounded-lg text-[12px] font-semibold transition-colors whitespace-nowrap",
+                  "h-auto min-h-0 px-[10px] py-[5px] rounded-lg text-[12px] font-semibold leading-none transition-colors whitespace-nowrap",
                   canSendCode
-                    ? "text-primary hover:bg-primary/10 cursor-pointer"
+                    ? "text-primary hover:bg-primary/10 active:bg-primary/15 cursor-pointer"
                     : "text-muted-foreground/40 cursor-not-allowed",
                 )}
               >
