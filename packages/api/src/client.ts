@@ -7,6 +7,9 @@ import type {
   RefreshReq,
   LoginResp,
   TokenResp,
+  OAuthAuthorizeResp,
+  PasswordResetCodeReq,
+  PasswordResetReq,
 } from "./types/auth";
 import type {
   AdminArticleDetailResp,
@@ -57,6 +60,9 @@ import type {
   UpdateProfileReq,
   UpdateMetaReq,
   EmailDisplaySetting,
+  UpdateEmailReq,
+  SendAccountEmailCodeReq,
+  SetInitialPasswordReq,
 } from "./types/user";
 import type { FriendLinkListReq, FriendLinkPageResp } from "./types/friend-link";
 import type {
@@ -195,6 +201,15 @@ export function createApiClient(config: ApiClientConfig) {
       /** 换发新 token（不走 fetchAuthed 避免递归） */
       refresh: (req: RefreshReq) =>
         fetchPublic<TokenResp>("/auth/refresh", { method: "POST", body: JSON.stringify(req) }),
+      /** 找回密码·发码（公开） */
+      passwordResetCode: (req: PasswordResetCodeReq) =>
+        fetchPublic<void>("/auth/password-reset/code", {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 找回密码·重置（公开） */
+      passwordReset: (req: PasswordResetReq) =>
+        fetchPublic<void>("/auth/password-reset", { method: "POST", body: JSON.stringify(req) }),
     },
     adminAuth: {
       /** 管理后台登录，返回双 token；401 = 凭证错误，403 = 非管理员或账号禁用 */
@@ -344,6 +359,32 @@ export function createApiClient(config: ApiClientConfig) {
       /** 获取 OAuth 绑定列表 */
       getOAuthBindings: () =>
         fetchAuthed<OAuthBindingResp[]>("/users/me/oauth-bindings", { method: "GET" }),
+      /** 已启用的第三方平台列表 */
+      getProviders: () => fetchPublic<string[]>("/oauth/providers", { method: "GET" }),
+      /** 解绑第三方平台（最后登录方式时后端拒绝） */
+      unbindOAuth: (source: string) =>
+        fetchAuthed<void>(`/oauth/bindings/${source}`, { method: "DELETE" }),
+      /** 取第三方「绑定」授权地址 */
+      authorizeOAuthBind: (source: string, redirectUri: string) =>
+        fetchOptionalAuth<OAuthAuthorizeResp>(
+          `/oauth/${source}/authorize?action=bind&redirect_uri=${encodeURIComponent(redirectUri)}`,
+          { method: "GET" },
+        ),
+      /** 发送账号邮箱验证码（需图形验证码 token） */
+      sendAccountEmailCode: (req: SendAccountEmailCodeReq) =>
+        fetchAuthed<void>("/users/me/email/code", {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 绑定/换绑主或副邮箱 */
+      updateEmail: (req: UpdateEmailReq) =>
+        fetchAuthed<void>("/users/me/email", { method: "PATCH", body: JSON.stringify(req) }),
+      /** 设置初始密码（OAuth 注册无密码用户） */
+      setInitialPassword: (req: SetInitialPasswordReq) =>
+        fetchAuthed<void>("/users/me/password/initial", {
+          method: "PATCH",
+          body: JSON.stringify(req),
+        }),
       /** 设置对外展示邮箱 */
       updateEmailDisplay: (display: EmailDisplaySetting) =>
         fetchAuthed<void>("/users/me/email/display", {

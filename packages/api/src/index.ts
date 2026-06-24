@@ -13,6 +13,8 @@ export type {
   CaptchaVerifyResp,
   OAuthAuthorizeResp,
   OAuthCallbackResp,
+  PasswordResetCodeReq,
+  PasswordResetReq,
 } from "./types/auth";
 export { ApiError } from "./errors";
 export { createApiClient } from "./client";
@@ -83,6 +85,9 @@ export type {
   UpdateProfileReq,
   UpdateMetaReq,
   EmailDisplaySetting,
+  UpdateEmailReq,
+  SendAccountEmailCodeReq,
+  SetInitialPasswordReq,
 } from "./types/user";
 export type {
   FriendLinkItemResp,

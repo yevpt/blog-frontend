@@ -95,3 +95,16 @@ export interface OAuthCallbackResp {
   action: "login" | "bind";
   login?: LoginResp;
 }
+
+/** POST /auth/password-reset/code */
+export interface PasswordResetCodeReq {
+  email: string;
+  captcha_token: string;
+}
+
+/** POST /auth/password-reset */
+export interface PasswordResetReq {
+  email: string;
+  code: string;
+  new_password: string;
+}

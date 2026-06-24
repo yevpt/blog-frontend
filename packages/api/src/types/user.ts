@@ -73,11 +73,29 @@ export interface UserPublicProfileResp {
 /** PATCH /users/me/email/display */
 export type EmailDisplaySetting = "main" | "sub" | "none";
 
-/** GET /users/me/oauth-bindings */
+/** GET /users/me/oauth-bindings | GET /oauth/bindings — 已绑定的第三方 */
 export interface OAuthBindingResp {
-  provider: string;
-  bound: boolean;
-  bound_at?: string;
+  source: string;
+  social_user_id: number;
+}
+
+/** PATCH /users/me/email */
+export interface UpdateEmailReq {
+  target: "main" | "sub";
+  email: string;
+  code: string;
+}
+
+/** POST /users/me/email/code */
+export interface SendAccountEmailCodeReq {
+  email: string;
+  captcha_token: string;
+}
+
+/** PATCH /users/me/password/initial */
+export interface SetInitialPasswordReq {
+  new_password: string;
+  code: string;
 }
 
 /** PATCH /users/me/profile 请求体 */

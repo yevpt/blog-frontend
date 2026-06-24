@@ -635,6 +635,170 @@ describe("createApiClient", () => {
         }),
       );
     });
+
+    // ── 账号安全：第三方绑定 ──────────────────────────────────────
+
+    it("getProviders 使用 fetchPublic 调用 GET /oauth/providers 并返回字符串数组", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({ code: 0, message: "ok", data: ["github", "google"] }),
+      );
+      const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+      const result = await client.users.getProviders();
+
+      expect(result).toEqual(["github", "google"]);
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/oauth/providers",
+        expect.objectContaining({ method: "GET" }),
+      );
+    });
+
+    it("getOAuthBindings 返回 { source, social_user_id } 结构", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({
+          code: 0,
+          message: "ok",
+          data: [{ source: "github", social_user_id: 42 }],
+        }),
+      );
+      const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token" });
+
+      const result = await client.users.getOAuthBindings();
+
+      expect(result).toEqual([{ source: "github", social_user_id: 42 }]);
+    });
+
+    it("unbindOAuth 发 DELETE 到 /oauth/bindings/:source", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({ code: 0, message: "ok", data: null }),
+      );
+      const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token" });
+
+      await client.users.unbindOAuth("github");
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/oauth/bindings/github"),
+        expect.objectContaining({ method: "DELETE" }),
+      );
+    });
+
+    it("authorizeOAuthBind 拼接 action=bind 与编码后的 redirect_uri", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({ code: 0, message: "ok", data: { authorize_url: "https://gh/auth" } }),
+      );
+      const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token" });
+
+      const result = await client.users.authorizeOAuthBind(
+        "github",
+        "https://app.example.com/callback?x=1",
+      );
+
+      expect(result).toEqual({ authorize_url: "https://gh/auth" });
+      const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
+      const url = new URL(calledUrl);
+      expect(url.pathname).toBe("/oauth/github/authorize");
+      expect(url.searchParams.get("action")).toBe("bind");
+      expect(url.searchParams.get("redirect_uri")).toBe("https://app.example.com/callback?x=1");
+    });
+
+    // ── 账号安全：邮箱与初始密码 ───────────────────────────────────
+
+    it("sendAccountEmailCode 发 POST 到 /users/me/email/code 且携带 body", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({ code: 0, message: "ok", data: null }),
+      );
+      const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token" });
+
+      await client.users.sendAccountEmailCode({ email: "a@b.com", captcha_token: "cap" });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/users/me/email/code",
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ email: "a@b.com", captcha_token: "cap" }),
+          headers: expect.objectContaining({ Authorization: "Bearer token" }),
+        }),
+      );
+    });
+
+    it("updateEmail 发 PATCH 到 /users/me/email，body 带 target/email/code", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({ code: 0, message: "ok", data: null }),
+      );
+      const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token" });
+
+      await client.users.updateEmail({ target: "main", email: "a@b.com", code: "123456" });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/users/me/email",
+        expect.objectContaining({ method: "PATCH" }),
+      );
+      const [, init] = vi.mocked(global.fetch).mock.calls[0];
+      expect(JSON.parse(init?.body as string)).toEqual({
+        target: "main",
+        email: "a@b.com",
+        code: "123456",
+      });
+    });
+
+    it("setInitialPassword 发 PATCH 到 /users/me/password/initial 且携带 body", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({ code: 0, message: "ok", data: null }),
+      );
+      const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token" });
+
+      await client.users.setInitialPassword({ new_password: "secret123", code: "654321" });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/users/me/password/initial",
+        expect.objectContaining({
+          method: "PATCH",
+          body: JSON.stringify({ new_password: "secret123", code: "654321" }),
+        }),
+      );
+    });
+  });
+
+  // ── 找回密码（公开）──────────────────────────────────────────────
+
+  describe("auth password-reset", () => {
+    it("passwordResetCode 使用 fetchPublic 发 POST 到 /auth/password-reset/code", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({ code: 0, message: "ok", data: null }),
+      );
+      const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+      await client.auth.passwordResetCode({ email: "a@b.com", captcha_token: "cap" });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/auth/password-reset/code",
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ email: "a@b.com", captcha_token: "cap" }),
+        }),
+      );
+    });
+
+    it("passwordReset 使用 fetchPublic 发 POST 到 /auth/password-reset", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({ code: 0, message: "ok", data: null }),
+      );
+      const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+      await client.auth.passwordReset({
+        email: "a@b.com",
+        code: "123456",
+        new_password: "secret123",
+      });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/auth/password-reset",
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ email: "a@b.com", code: "123456", new_password: "secret123" }),
+        }),
+      );
+    });
   });
 
   // ── 通知接口 ─────────────────────────────────────────────────────
