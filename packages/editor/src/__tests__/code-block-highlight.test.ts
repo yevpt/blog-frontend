@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from "vitest";
 import { Editor } from "@tiptap/core";
+import { AllSelection, TextSelection } from "@tiptap/pm/state";
 import { DecorationSet } from "@tiptap/pm/view";
 import StarterKit from "@tiptap/starter-kit";
 import { CodeBlockExtension } from "../extensions/code-block";
@@ -28,6 +29,24 @@ describe("CodeBlockExtension 语法高亮", () => {
       extensions: [StarterKit.configure({ codeBlock: false }), CodeBlockExtension],
       content,
     });
+  }
+
+  /** 将光标移入第 index 个代码块（0-based） */
+  function focusCodeBlock(ed: Editor, index = 0) {
+    let codeBlockIndex = 0;
+    let pos = 0;
+    for (let i = 0; i < ed.state.doc.childCount; i += 1) {
+      const child = ed.state.doc.child(i);
+      if (child.type.name === "codeBlock") {
+        if (codeBlockIndex === index) {
+          ed.commands.setTextSelection(pos + 1);
+          return;
+        }
+        codeBlockIndex += 1;
+      }
+      pos += child.nodeSize;
+    }
+    throw new Error(`code block #${index} not found`);
   }
 
   // 收集所有 DecorationSet 插件里带 hljs-* 类名的装饰（语法高亮的标志）
@@ -62,5 +81,26 @@ describe("CodeBlockExtension 语法高亮", () => {
       '<pre><code class="language-javascript">const x = 1; function foo() { return x; }</code></pre>',
     );
     expect(hljsDecorations(editor).length).toBeGreaterThan(0);
+  });
+
+  it("在代码块内 selectCodeBlockContent 仅选中当前代码块文本", () => {
+    editor = makeEditor("<p>before</p><pre><code>const x = 1;</code></pre><p>after</p>");
+    focusCodeBlock(editor);
+
+    expect(editor.commands.selectCodeBlockContent()).toBe(true);
+
+    const { from, to, empty } = editor.state.selection;
+    expect(empty).toBe(false);
+    expect(editor.state.doc.textBetween(from, to)).toBe("const x = 1;");
+    expect(editor.state.selection).toBeInstanceOf(TextSelection);
+    expect(editor.state.selection).not.toBeInstanceOf(AllSelection);
+  });
+
+  it("不在代码块内时 selectCodeBlockContent 返回 false", () => {
+    editor = makeEditor("<p>before</p><pre><code>const x = 1;</code></pre><p>after</p>");
+    editor.commands.setTextSelection(2);
+
+    expect(editor.commands.selectCodeBlockContent()).toBe(false);
+    expect(editor.state.selection.empty).toBe(true);
   });
 });

@@ -15,6 +15,7 @@ const SelectRoot = ({
   placeholder = "Select",
   icon,
   size = "md",
+  variant = "compact",
   children,
   items,
   label,
@@ -24,7 +25,7 @@ const SelectRoot = ({
   className,
   ...rest
 }: SelectProps) => (
-  <SelectContext.Provider value={{ size }}>
+  <SelectContext.Provider value={{ size, variant }}>
     <AriaSelect
       {...rest}
       className={(state) =>

@@ -1,14 +1,16 @@
 "use client";
 
 import type { FC, ReactNode, Ref } from "react";
-import { isValidElement } from "react";
+import { isValidElement, useContext } from "react";
 import { Button as AriaButton, SelectValue as AriaSelectValue } from "react-aria-components";
 import { SvgIcon } from "@repo/icons";
 import { Avatar } from "../../avatar/avatar";
 import { cn } from "../../lib/utils";
 import { isReactComponent } from "../../lib/is-react-component";
+import { SelectContext } from "../context";
 import type { SelectItemType, SelectSize } from "../types";
-import { triggerSizes } from "../utils/sizes";
+import { minimalTriggerSizes, triggerSizes } from "../utils/sizes";
+import { chevronClasses, triggerVariantClasses } from "../utils/variants";
 
 interface SelectValueProps {
   isOpen: boolean;
@@ -29,58 +31,90 @@ export const SelectValue = ({
   placeholder,
   icon,
   ref,
-}: SelectValueProps) => (
-  <AriaButton
-    ref={ref}
-    className={cn(
-      "relative flex w-full cursor-pointer items-center rounded-lg bg-card shadow-xs ring-1 ring-input outline-hidden transition duration-100 ease-linear ring-inset",
-      (isFocused || isOpen) && "ring-2 ring-ring",
-      isDisabled && "cursor-not-allowed opacity-50",
-    )}
-  >
-    <AriaSelectValue<SelectItemType>
-      className={(_state) =>
-        cn(
-          "flex h-max w-full items-center justify-start truncate text-left align-middle",
-          triggerSizes[size].root,
-        )
-      }
+}: SelectValueProps) => {
+  const { variant } = useContext(SelectContext);
+  const variantStyle = triggerVariantClasses[variant];
+  const isMinimal = variant === "minimal";
+  const isActive = !isMinimal && (isFocused || isOpen);
+  const sizes = isMinimal ? minimalTriggerSizes : triggerSizes;
+  const chevronSize = isMinimal ? 8 : size === "lg" ? 20 : 16;
+
+  return (
+    <AriaButton
+      ref={ref}
+      className={cn(
+        "relative flex cursor-pointer items-center outline-hidden",
+        !isMinimal && "w-full",
+        variantStyle.base,
+        isActive && variantStyle.active,
+        isDisabled && "cursor-not-allowed opacity-50",
+      )}
     >
-      {(state) => {
-        const selectedItem = state.selectedItems[0];
-        const Icon = selectedItem?.icon || icon;
+      <AriaSelectValue<SelectItemType>
+        className={(_state) =>
+          cn(
+            isMinimal
+              ? "flex h-auto w-auto items-center justify-end"
+              : "flex h-max w-full items-center justify-start truncate text-left align-middle",
+            sizes[size].root,
+          )
+        }
+      >
+        {(state) => {
+          const selectedItem = state.selectedItems[0];
+          const Icon = selectedItem?.icon || icon;
 
-        return (
-          <>
-            {selectedItem?.avatarUrl ? (
-              <Avatar size="xs" src={selectedItem.avatarUrl} alt={selectedItem.label} />
-            ) : isReactComponent(Icon) ? (
-              <Icon aria-hidden="true" />
-            ) : isValidElement(Icon) ? (
-              Icon
-            ) : null}
+          return (
+            <>
+              {selectedItem?.avatarUrl ? (
+                <Avatar size="xs" src={selectedItem.avatarUrl} alt={selectedItem.label} />
+              ) : isReactComponent(Icon) ? (
+                <Icon aria-hidden="true" />
+              ) : isValidElement(Icon) ? (
+                Icon
+              ) : null}
 
-            {selectedItem ? (
-              <section className={cn("flex w-full truncate", triggerSizes[size].textContainer)}>
-                <p className={cn("truncate font-medium text-foreground", triggerSizes[size].text)}>
-                  {selectedItem.label}
-                </p>
-                {selectedItem.supportingText && (
-                  <p className={cn("text-muted-foreground", triggerSizes[size].text)}>
-                    {selectedItem.supportingText}
+              {selectedItem ? (
+                <section
+                  className={cn(
+                    isMinimal ? "flex w-auto shrink-0" : "flex w-full truncate",
+                    sizes[size].textContainer,
+                  )}
+                >
+                  <p
+                    className={cn(
+                      "truncate font-medium",
+                      isMinimal ? "font-mono text-muted-foreground" : "text-foreground",
+                      sizes[size].text,
+                    )}
+                  >
+                    {selectedItem.label}
                   </p>
-                )}
-              </section>
-            ) : (
-              <p className={cn("text-muted-foreground", triggerSizes[size].text)}>{placeholder}</p>
-            )}
+                  {selectedItem.supportingText && (
+                    <p className={cn("text-muted-foreground", sizes[size].text)}>
+                      {selectedItem.supportingText}
+                    </p>
+                  )}
+                </section>
+              ) : (
+                <p className={cn("text-muted-foreground", sizes[size].text)}>{placeholder}</p>
+              )}
 
-            <span className="ml-auto shrink-0 text-muted-foreground">
-              <SvgIcon name="chevron-down" size={size === "lg" ? 20 : 16} />
-            </span>
-          </>
-        );
-      }}
-    </AriaSelectValue>
-  </AriaButton>
-);
+              <span
+                className={cn(
+                  isMinimal
+                    ? "shrink-0 text-muted-foreground"
+                    : "ml-auto shrink-0 text-muted-foreground",
+                  chevronClasses,
+                )}
+                data-open={isOpen ? "true" : "false"}
+              >
+                <SvgIcon name="chevron-down" size={chevronSize} />
+              </span>
+            </>
+          );
+        }}
+      </AriaSelectValue>
+    </AriaButton>
+  );
+};

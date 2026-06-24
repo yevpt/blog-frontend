@@ -1,10 +1,9 @@
 "use client";
 
-import type { FC, FocusEventHandler, PointerEventHandler, ReactNode, Ref } from "react";
-import { isValidElement, useCallback, useContext, useRef, useState } from "react";
+import type { FC, ReactNode, Ref } from "react";
+import { isValidElement } from "react";
 import {
   ComboBox as AriaComboBox,
-  ComboBoxStateContext,
   Group as AriaGroup,
   Input as AriaInput,
   ListBox as AriaListBox,
@@ -14,33 +13,33 @@ import { HintText } from "../../input/hint-text";
 import { Label } from "../../input/label";
 import { cn } from "../../lib/utils";
 import { isReactComponent } from "../../lib/is-react-component";
-import { useResizeObserver } from "../../lib/use-resize-observer";
 import { SelectContext } from "../context";
-import type { ComboBoxProps, SelectSize } from "../types";
-import { triggerSizes } from "../utils/sizes";
+import type { ComboBoxProps, SelectSize, SelectVariant } from "../types";
+import { comboboxTriggerSizes } from "../utils/sizes";
+import { chevronClasses, triggerVariantClasses } from "../utils/variants";
 import { Popover } from "./popover";
 
 interface ComboBoxValueProps {
   size: SelectSize;
-  shortcut?: boolean;
+  variant: SelectVariant;
+  isOpen: boolean;
   placeholder?: string;
-  shortcutClassName?: string;
   icon?: FC | ReactNode;
-  onFocus?: FocusEventHandler;
-  onPointerEnter?: PointerEventHandler;
   ref?: Ref<HTMLDivElement>;
 }
 
 const ComboBoxValue = ({
   size,
+  variant,
+  isOpen,
   placeholder,
-  shortcut: _shortcut,
-  shortcutClassName: _shortcutClassName,
   icon: IconProp,
   ref,
   ...otherProps
 }: ComboBoxValueProps) => {
-  useContext(ComboBoxStateContext);
+  const resolvedVariant = variant === "minimal" ? "compact" : variant;
+  const variantStyle = triggerVariantClasses[resolvedVariant];
+  const chevronSize = size === "lg" ? 20 : 16;
 
   return (
     <AriaGroup
@@ -48,58 +47,60 @@ const ComboBoxValue = ({
       {...otherProps}
       className={({ isFocusWithin, isDisabled }) =>
         cn(
-          "relative flex w-full items-center gap-2 rounded-lg bg-card shadow-xs ring-1 ring-input outline-hidden transition-shadow duration-100 ease-linear ring-inset",
+          "relative flex w-full items-center outline-hidden",
+          variantStyle.base,
+          (isFocusWithin || isOpen) && variantStyle.active,
           isDisabled && "cursor-not-allowed opacity-50",
-          isFocusWithin && "ring-2 ring-ring",
-          triggerSizes[size].root,
+          comboboxTriggerSizes[size].root,
         )
       }
     >
       {isReactComponent(IconProp) ? (
-        <IconProp aria-hidden="true" />
+        <span className="shrink-0 pl-3 text-muted-foreground">
+          <IconProp aria-hidden="true" />
+        </span>
       ) : isValidElement(IconProp) ? (
-        IconProp
+        <span className="shrink-0 pl-3 text-muted-foreground">{IconProp}</span>
       ) : (
-        <span className="text-muted-foreground">
-          <SvgIcon name="search" size={size === "lg" ? 20 : 16} />
+        <span className="shrink-0 pl-3 text-muted-foreground">
+          <SvgIcon name="search" size={chevronSize} />
         </span>
       )}
       <AriaInput
         placeholder={placeholder}
         className={cn(
-          "min-w-0 flex-1 bg-transparent text-foreground placeholder:text-muted-foreground outline-none",
-          triggerSizes[size].text,
+          "min-w-0 flex-1 bg-transparent px-2 outline-none",
+          "text-foreground placeholder:text-muted-foreground",
+          comboboxTriggerSizes[size].input,
         )}
       />
+      <span
+        className={cn("shrink-0 pr-1.5 text-muted-foreground", chevronClasses)}
+        data-open={isOpen ? "true" : "false"}
+        aria-hidden="true"
+      >
+        <SvgIcon name="chevron-down" size={chevronSize} />
+      </span>
     </AriaGroup>
   );
 };
 
-/** 可搜索下拉框：输入框 + 联想列表，浮层宽度跟随触发器。 */
+/** 可搜索下拉框：输入框 + 联想列表，浮层宽度与 Select 一致跟随触发器。 */
 export const ComboBox = ({
   placeholder = "Search",
-  shortcut = true,
+  shortcut: _shortcut = true,
   size = "md",
+  variant = "compact",
   children,
   items,
-  shortcutClassName,
+  shortcutClassName: _shortcutClassName,
   icon,
   hideRequiredIndicator,
   ...otherProps
 }: ComboBoxProps) => {
-  const placeholderRef = useRef<HTMLDivElement>(null);
-  const [popoverWidth, setPopoverWidth] = useState("");
-
-  const onResize = useCallback(() => {
-    if (!placeholderRef.current) return;
-    setPopoverWidth(placeholderRef.current.getBoundingClientRect().width + "px");
-  }, []);
-
-  useResizeObserver({ ref: placeholderRef, box: "border-box", onResize });
-
   return (
-    <SelectContext.Provider value={{ size }}>
-      <AriaComboBox menuTrigger="focus" {...otherProps}>
+    <SelectContext.Provider value={{ size, variant: variant === "minimal" ? "compact" : variant }}>
+      <AriaComboBox menuTrigger="input" {...otherProps} items={items}>
         {(state) => (
           <div className="flex flex-col gap-1.5">
             {otherProps.label && (
@@ -112,22 +113,14 @@ export const ComboBox = ({
             )}
 
             <ComboBoxValue
-              ref={placeholderRef}
               placeholder={placeholder}
-              shortcut={shortcut}
-              shortcutClassName={shortcutClassName}
               icon={icon}
               size={size}
-              onFocus={onResize}
-              onPointerEnter={onResize}
+              variant={variant}
+              isOpen={state.isOpen}
             />
 
-            <Popover
-              size={size}
-              triggerRef={placeholderRef}
-              style={{ width: popoverWidth }}
-              className={otherProps.popoverClassName}
-            >
+            <Popover size={size} className={otherProps.popoverClassName}>
               <AriaListBox items={items} className="size-full outline-hidden">
                 {children}
               </AriaListBox>

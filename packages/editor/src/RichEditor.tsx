@@ -37,9 +37,24 @@ import { useEffect } from "react";
 import { EditorContent } from "@tiptap/react";
 import { clsx } from "clsx";
 import { markdownToHtml } from "./utils/markdown-to-html";
+import { EDITOR_BLOCKQUOTE_QUOTELESS_CLASSES } from "./utils/prose-blockquote-classes";
 import { useRichEditor } from "./hooks/use-rich-editor";
 import { Toolbar } from "./toolbar/Toolbar";
 import type { RichEditorProps } from "./types";
+
+/** plain 画布水平留白：标题/正文/页脚共用 */
+const PLAIN_SURFACE_INSET_X = "px-5 sm:px-10";
+/** 工具栏左缘略收，抵消方形按钮内图标/字形居中带来的视觉右移 */
+const PLAIN_TOOLBAR_INSET_X = "pl-3 pr-5 sm:pl-8 sm:pr-10";
+const PLAIN_ARTICLE_RHYTHM_CLASSES = [
+  "[&_.tiptap_p]:leading-[1.85]",
+  "[&_.tiptap_h1]:mt-[1.25em] [&_.tiptap_h1]:mb-[0.65em]",
+  "[&_.tiptap_h2]:mt-[1.35em] [&_.tiptap_h2]:mb-[0.65em]",
+  "[&_.tiptap_h3]:mt-[1.25em] [&_.tiptap_h3]:mb-[0.55em]",
+  "[&_.rich-editor-code-wrapper]:!my-8",
+  "[&_.rich-editor-code-wrapper:first-child]:!mt-0",
+  "[&_.rich-editor-code-wrapper:last-child]:!mb-0",
+].join(" ");
 
 export function RichEditor({
   value,
@@ -57,7 +72,6 @@ export function RichEditor({
   onLoginRequired,
   onInsertImage,
   onInsertLink,
-  onInsertCode,
   className,
   onReady,
   header,
@@ -65,6 +79,7 @@ export function RichEditor({
   variant = "card",
   toolbarPlacement = "bottom",
   toolbarTrailing,
+  enableBlockquote = false,
 }: RichEditorProps) {
   const editor = useRichEditor({
     initialValue: value,
@@ -73,6 +88,7 @@ export function RichEditor({
     placeholder,
     disabled,
     maxLength,
+    enableBlockquote,
   });
 
   useEffect(() => {
@@ -142,10 +158,8 @@ export function RichEditor({
     "[&_.tiptap]:break-words",
     "[&_.tiptap]:tracking-[0.01em]",
     "[&_.tiptap]:prose [&_.tiptap]:prose-neutral [&_.tiptap]:dark:prose-invert [&_.tiptap]:!max-w-none",
-    isPlain
-      ? "[&_.tiptap]:prose-base [&_.tiptap_h2]:font-serif [&_.tiptap_h2]:text-2xl [&_.tiptap_h2]:tracking-tight"
-      : "[&_.tiptap]:prose-sm",
-    "[&_.tiptap_p]:my-[0.2em]",
+    isPlain ? ["[&_.tiptap]:prose-base", PLAIN_ARTICLE_RHYTHM_CLASSES] : "[&_.tiptap]:prose-sm",
+    !isPlain && "[&_.tiptap_p]:my-[0.2em]",
     isPlain && "[&_.tiptap_p]:text-foreground/90",
     "[&_.tiptap_p.is-editor-empty:first-child]:relative",
     "[&_.tiptap_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]",
@@ -155,7 +169,10 @@ export function RichEditor({
     "[&_.tiptap_p.is-editor-empty:first-child::before]:text-muted-foreground",
     "[&_.tiptap_p.is-editor-empty:first-child::before]:pointer-events-none",
     "[&_.rich-editor-mention]:text-primary [&_.rich-editor-mention]:font-medium",
+    // 评论/碎语（card）与 MarkdownContent comment 一致；文章编辑（plain）走 prose 默认全宽。
+    !isPlain && "[&_.tiptap_img]:max-w-[240px] [&_.tiptap_img]:h-auto [&_.tiptap_img]:rounded-md",
     "[&_.tiptap_img.ProseMirror-selectednode]:outline [&_.tiptap_img.ProseMirror-selectednode]:outline-2 [&_.tiptap_img.ProseMirror-selectednode]:outline-primary [&_.tiptap_img.ProseMirror-selectednode]:-outline-offset-2",
+    enableBlockquote && EDITOR_BLOCKQUOTE_QUOTELESS_CLASSES,
   );
 
   const currentLength = value.length;
@@ -178,11 +195,11 @@ export function RichEditor({
       onLoginRequired={onLoginRequired}
       onInsertImage={onInsertImage}
       onInsertLink={onInsertLink}
-      onInsertCode={onInsertCode}
       markAsEditorToolbar={isPlain && toolbarOnTop}
+      showBlockquote={enableBlockquote}
       trailing={toolbarTrailing}
       className={clsx(
-        isPlain && toolbarOnTop && "shrink-0 px-5 py-2.5 sm:px-10",
+        isPlain && toolbarOnTop && clsx("shrink-0 py-2.5", PLAIN_TOOLBAR_INSET_X),
         !isPlain && "mt-1.5",
         isPlain &&
           toolbarOnTop &&
@@ -195,7 +212,7 @@ export function RichEditor({
     <div data-rich-editor-area className={editorAreaClassName}>
       {header && <div className="flex h-6 items-center">{header}</div>}
       {isPlain ? (
-        <div className="w-full px-5 pb-10 pt-2 sm:px-10">
+        <div className={clsx("w-full pb-10 pt-2", PLAIN_SURFACE_INSET_X)}>
           <EditorContent editor={editor} data-placeholder={placeholder} className="w-full" />
         </div>
       ) : (
@@ -210,7 +227,7 @@ export function RichEditor({
     return (
       <div className={shell} aria-hidden>
         {isPlain && toolbarOnTop ? (
-          <div className="flex shrink-0 gap-1 px-5 py-2.5 sm:px-10">
+          <div className={clsx("flex shrink-0 gap-1 py-2.5", PLAIN_TOOLBAR_INSET_X)}>
             <div className={clsx(bone, "size-[30px]")} />
             <div className={clsx(bone, "size-[30px]")} />
             <div className={clsx(bone, "size-[30px]")} />

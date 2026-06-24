@@ -74,6 +74,68 @@ describe("RichEditor", () => {
     expect(screen.getByText("Markdown")).toBeInTheDocument();
   });
 
+  it("plain + toolbarPlacement=top 时工具栏左内边距略小于正文，抵消按钮视觉右移", async () => {
+    const { container } = render(
+      <RichEditor
+        value=""
+        onChange={() => {}}
+        variant="plain"
+        toolbarPlacement="top"
+        onInsertImage={() => {}}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector("[data-rich-editor-toolbar]")).toBeTruthy();
+    });
+
+    const toolbar = container.querySelector("[data-rich-editor-toolbar]");
+    const contentInset = container.querySelector("[data-rich-editor-area] > div");
+
+    expect(toolbar?.className).toContain("pl-3");
+    expect(toolbar?.className).toContain("sm:pl-8");
+    expect(contentInset?.className).toContain("px-5");
+    expect(contentInset?.className).toContain("sm:px-10");
+  });
+
+  it("card 变体正文图片使用评论同款 240px 限宽", async () => {
+    const { container } = render(<RichEditor value="" onChange={() => {}} />);
+    await waitFor(() => {
+      expect(container.querySelector("[data-rich-editor-area]")).toBeTruthy();
+    });
+    const editorArea = container.querySelector("[data-rich-editor-area]");
+    expect(editorArea?.className).toContain("[&_.tiptap_img]:max-w-[240px]");
+  });
+
+  it("plain 变体正文图片不限宽，与文章详情 prose 一致", async () => {
+    const { container } = render(
+      <RichEditor value="" onChange={() => {}} variant="plain" toolbarPlacement="top" />,
+    );
+    await waitFor(() => {
+      expect(container.querySelector("[data-rich-editor-area]")).toBeTruthy();
+    });
+    const editorArea = container.querySelector("[data-rich-editor-area]");
+    expect(editorArea?.className).not.toContain("[&_.tiptap_img]:max-w-[240px]");
+  });
+
+  it("plain 变体使用文章详情同款正文排版节奏", async () => {
+    const { container } = render(
+      <RichEditor value="" onChange={() => {}} variant="plain" toolbarPlacement="top" />,
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector("[data-rich-editor-area]")).toBeTruthy();
+    });
+
+    const editorArea = container.querySelector("[data-rich-editor-area]");
+    const className = editorArea?.className ?? "";
+    expect(className).toContain("[&_.tiptap_p]:leading-[1.85]");
+    expect(className).toContain("[&_.tiptap_h1]:mt-[1.25em]");
+    expect(className).toContain("[&_.rich-editor-code-wrapper]:!my-8");
+    expect(className).not.toContain("[&_.tiptap_p]:my-[0.2em]");
+    expect(className).not.toContain("[&_.tiptap_h2]:font-serif");
+  });
+
   it("Markdown 标题被解析为 h2 节点", async () => {
     const { container } = render(<RichEditor value="## 二级标题\n\n正文" onChange={() => {}} />);
     await waitFor(() => {
@@ -284,6 +346,66 @@ describe("RichEditor", () => {
     expect(link).toHaveAttribute("href", "http://localhost:3000/guestbook");
     await waitFor(() => {
       expect(onChange).toHaveBeenLastCalledWith("[test](http://localhost:3000/guestbook)");
+    });
+  });
+
+  it("enableBlockquote 时渲染引用按钮", async () => {
+    render(
+      <RichEditor
+        value=""
+        onChange={() => {}}
+        variant="plain"
+        toolbarPlacement="top"
+        enableBlockquote
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "引用" })).toBeInTheDocument();
+    });
+  });
+
+  it("默认不渲染引用按钮", async () => {
+    render(<RichEditor value="" onChange={() => {}} />);
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: "引用" })).not.toBeInTheDocument();
+    });
+  });
+
+  it("enableBlockquote 时禁用 blockquote 自动弯引号样式", async () => {
+    const { container } = render(
+      <RichEditor value="" onChange={() => {}} variant="plain" enableBlockquote />,
+    );
+    await waitFor(() => {
+      const editorArea = container.querySelector("[data-rich-editor-area]");
+      expect(editorArea?.className).toContain("[&_.tiptap_blockquote]:quotes-none");
+    });
+  });
+
+  it("enableBlockquote 时正确加载并序列化 Markdown 引用", async () => {
+    const onChange = vi.fn();
+    const { container } = render(
+      <RichEditor
+        value={"> 引用内容\n\n正文"}
+        onChange={onChange}
+        variant="plain"
+        enableBlockquote
+      />,
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector(".tiptap blockquote")).toBeTruthy();
+    });
+
+    const user = userEvent.setup();
+    const editor = container.querySelector(".tiptap") as HTMLElement;
+    await act(async () => {
+      await user.click(editor);
+      await user.keyboard(" ");
+    });
+
+    await waitFor(() => {
+      expect(onChange).toHaveBeenCalled();
+      expect(onChange.mock.calls.at(-1)?.[0]).toContain("> 引用内容");
     });
   });
 });

@@ -28,11 +28,26 @@ declare module "@tiptap/core" {
     codeBlockBoundary: {
       /** 光标在代码块起点时，向左跳出到代码块左侧的普通文本位置 */
       moveCursorBeforeCodeBlock: () => ReturnType;
+      /** 光标在代码块内时，选中当前代码块的全部文本 */
+      selectCodeBlockContent: () => ReturnType;
     };
   }
 }
 
+/** 从选区向上查找 codeBlock 节点深度；不在代码块内时返回 null */
+function codeBlockDepthAtSelection(selection: Selection): number | null {
+  const { $from } = selection;
+  for (let depth = $from.depth; depth > 0; depth -= 1) {
+    if ($from.node(depth).type.name === "codeBlock") {
+      return depth;
+    }
+  }
+  return null;
+}
+
 export const CodeBlockExtension = CodeBlockLowlight.extend({
+  // 低于 StarterKit keymap（100），使代码块 keymap 插件排在数组末尾、优先于全局 Mod-a 被匹配
+  priority: 99,
   addProseMirrorPlugins() {
     return [
       ...(this.parent?.() || []),
@@ -118,6 +133,23 @@ export const CodeBlockExtension = CodeBlockLowlight.extend({
           }
           return true;
         },
+      selectCodeBlockContent:
+        () =>
+        ({ state, dispatch }: CommandProps) => {
+          const depth = codeBlockDepthAtSelection(state.selection);
+          if (depth == null) {
+            return false;
+          }
+
+          const { $from } = state.selection;
+          const from = $from.start(depth);
+          const to = $from.end(depth);
+
+          if (dispatch) {
+            dispatch(state.tr.setSelection(TextSelection.create(state.doc, from, to)));
+          }
+          return true;
+        },
     };
   },
 
@@ -125,6 +157,8 @@ export const CodeBlockExtension = CodeBlockLowlight.extend({
     return {
       ...this.parent?.(),
       ArrowLeft: () => this.editor.commands.moveCursorBeforeCodeBlock(),
+      // 代码块内全选当前块文本；不在代码块内时返回 false，交由全局 Mod-a 处理
+      "Mod-a": () => this.editor.commands.selectCodeBlockContent(),
     };
   },
 

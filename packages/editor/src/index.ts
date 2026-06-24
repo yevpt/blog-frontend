@@ -13,7 +13,6 @@
  *   onChange={setContent}
  *   onInsertImage={(insert) => openImageDialog(insert)}
  *   onInsertLink={(insert) => openLinkDialog(insert)}
- *   onInsertCode={(insert) => openCodeDialog(insert)}
  *   onSubmit={handleSubmit}
  *   isSubmitting={isSubmitting}
  * />
@@ -22,5 +21,4 @@
 export { RichEditor } from "./RichEditor";
 export { ImageDialog, type ImageDialogProps } from "./dialogs/image-dialog";
 export { LinkDialog, type LinkDialogProps } from "./dialogs/link-dialog";
-export { CodeDialog, type CodeDialogProps, SUPPORTED_LANGUAGES } from "./dialogs/code-dialog";
 export type { RichEditorProps, InsertHandlers, MentionItem } from "./types";

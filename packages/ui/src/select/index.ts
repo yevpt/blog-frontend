@@ -8,4 +8,5 @@ export type {
   SelectProps,
   SelectSelectionIndicator,
   SelectSize,
+  SelectVariant,
 } from "./types";

@@ -13,7 +13,7 @@
  */
 
 /**
- * 图片、链接、代码块的插入行为注入接口。
+ * 图片、链接的插入行为注入接口；代码块由工具栏直接插入。
  * 三者均为可选：未提供时，对应工具栏按钮不渲染。
  */
 export interface InsertHandlers {
@@ -32,12 +32,6 @@ export interface InsertHandlers {
    * @param insert 将链接插入编辑器的函数，url 必填，title 可选
    */
   onInsertLink?: (insert: (url: string, title?: string) => void) => void;
-
-  /**
-   * 工具栏点击代码块按钮时触发。
-   * @param insert 将代码块插入编辑器的函数，code 必填，lang 必填（纯文本传 "plaintext"）
-   */
-  onInsertCode?: (insert: (code: string, lang: string) => void) => void;
 }
 
 /**
@@ -132,4 +126,10 @@ export interface RichEditorProps extends InsertHandlers {
 
   /** 工具栏右侧附加内容（如「Markdown」提示） */
   toolbarTrailing?: React.ReactNode;
+
+  /**
+   * 启用 Markdown 引用块（`>`）编辑与工具栏按钮。
+   * 评论/碎语场景默认关闭；文章编辑页传 true。
+   */
+  enableBlockquote?: boolean;
 }

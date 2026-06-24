@@ -60,6 +60,7 @@ export function CodeBlockView({ node, updateAttributes }: NodeViewProps) {
             updateAttributes({ language: key as string });
           }}
           aria-label="选择代码语言"
+          variant="minimal"
           size="sm"
           popoverClassName="rich-editor-lang-popover min-w-24"
         >

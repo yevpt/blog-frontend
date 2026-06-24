@@ -20,11 +20,12 @@
  * 所有颜色使用 Tailwind 语义色令牌，分隔线用 bg-border，
  * 提交按钮用 bg-primary / text-primary-foreground 跟随主题。
  */
-import type { Editor, JSONContent } from "@tiptap/core";
+import type { Editor } from "@tiptap/core";
 import { useEditorState } from "@tiptap/react";
 import { clsx } from "clsx";
 import { ToolbarButton } from "./ToolbarButton";
 import type { InsertHandlers } from "../types";
+import { insertCodeBlock } from "./insert-code-block";
 
 interface ToolbarProps extends InsertHandlers {
   editor: Editor | null;
@@ -39,6 +40,7 @@ interface ToolbarProps extends InsertHandlers {
   className?: string;
   trailing?: React.ReactNode;
   markAsEditorToolbar?: boolean;
+  showBlockquote?: boolean;
 }
 
 function insertLink(editor: Editor | null, url: string, title?: string) {
@@ -72,51 +74,6 @@ function insertLink(editor: Editor | null, url: string, title?: string) {
   chain.setLink({ href: url }).run();
 }
 
-function makeTextNode(text: string): JSONContent[] | undefined {
-  return text ? [{ type: "text", text }] : undefined;
-}
-
-function currentTextBlockIsEmpty(editor: Editor) {
-  const { selection } = editor.state;
-  return (
-    selection.empty &&
-    selection.$from.parent.isTextblock &&
-    selection.$from.parent.content.size === 0
-  );
-}
-
-function insertCodeBlock(editor: Editor | null, code: string, lang: string) {
-  if (!editor) return;
-
-  const { $from } = editor.state.selection;
-  const codeBlock: JSONContent = {
-    type: "codeBlock",
-    attrs: { language: lang },
-    content: makeTextNode(code),
-  };
-  const content: JSONContent[] = [codeBlock, { type: "paragraph" }];
-
-  if (editor.isEmpty) {
-    editor
-      .chain()
-      .focus()
-      .insertContentAt({ from: 0, to: editor.state.doc.content.size }, content)
-      .run();
-    return;
-  }
-
-  if (currentTextBlockIsEmpty(editor)) {
-    editor
-      .chain()
-      .focus()
-      .insertContentAt({ from: $from.before(), to: $from.after() }, content)
-      .run();
-    return;
-  }
-
-  editor.chain().focus().insertContentAt($from.after(), content).run();
-}
-
 export function Toolbar({
   editor,
   onSubmit,
@@ -128,10 +85,10 @@ export function Toolbar({
   onLoginRequired,
   onInsertImage,
   onInsertLink,
-  onInsertCode,
   className,
   trailing,
   markAsEditorToolbar = false,
+  showBlockquote = false,
 }: ToolbarProps) {
   const editorState = useEditorState({
     editor,
@@ -192,6 +149,15 @@ export function Toolbar({
           onClick={() => editor?.chain().focus().toggleUnderline().run()}
         />
 
+        {showBlockquote ? (
+          <ToolbarButton
+            title="引用"
+            icon="quote"
+            disabled={disabled}
+            onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+          />
+        ) : null}
+
         <div className="mx-1 h-4 w-px shrink-0 bg-border" aria-hidden />
 
         {onInsertLink && (
@@ -224,18 +190,12 @@ export function Toolbar({
           />
         )}
 
-        {onInsertCode && (
-          <ToolbarButton
-            title="插入代码块"
-            icon="code-block"
-            disabled={disabled}
-            onClick={() => {
-              onInsertCode((code, lang) => {
-                insertCodeBlock(editor, code, lang);
-              });
-            }}
-          />
-        )}
+        <ToolbarButton
+          title="插入代码块"
+          icon="code-block"
+          disabled={disabled}
+          onClick={() => insertCodeBlock(editor)}
+        />
       </div>
 
       {trailing}

@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-// userEvent imported for future interaction tests
+import userEvent from "@testing-library/user-event";
 
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
@@ -69,7 +69,7 @@ describe("Select", () => {
     expect(screen.getByRole("button")).toBeTruthy();
   });
 
-  it("Select.ComboBox 渲染搜索框", () => {
+  it("Select.ComboBox 渲染搜索框与 chevron", () => {
     render(
       <Select.ComboBox aria-label="搜索水果">
         {items.map((item) => (
@@ -78,5 +78,63 @@ describe("Select", () => {
       </Select.ComboBox>,
     );
     expect(screen.getByRole("combobox")).toBeTruthy();
+    expect(screen.getByTestId("icon-search")).toBeTruthy();
+    expect(screen.getByTestId("icon-chevron-down")).toBeTruthy();
+  });
+
+  it("Select.ComboBox 触发器使用 compact 细边框样式", () => {
+    render(
+      <Select.ComboBox aria-label="搜索水果" size="sm">
+        {items.map((item) => (
+          <Select.Item key={item.id} id={item.id} label={item.label} />
+        ))}
+      </Select.ComboBox>,
+    );
+    const combobox = screen.getByRole("combobox");
+    expect(combobox.parentElement).toHaveClass("border-input");
+  });
+
+  it("默认 compact variant 使用细边框触发器样式", () => {
+    render(
+      <Select aria-label="水果">
+        <Select.Item id="1" label="苹果" />
+      </Select>,
+    );
+    expect(screen.getByRole("button")).toHaveClass("border-input");
+  });
+
+  it("soft variant 使用 muted 填充触发器样式", () => {
+    render(
+      <Select aria-label="水果" variant="soft">
+        <Select.Item id="1" label="苹果" />
+      </Select>,
+    );
+    expect(screen.getByRole("button")).toHaveClass("bg-muted/50");
+  });
+
+  it("minimal variant 使用无框自适应宽度触发器", () => {
+    render(
+      <Select aria-label="语言" variant="minimal" size="sm">
+        <Select.Item id="plaintext" label="Plain Text" />
+      </Select>,
+    );
+    const button = screen.getByRole("button");
+    expect(button).toHaveClass("bg-transparent", "border-0", "w-auto");
+    expect(button).not.toHaveClass("w-full");
+  });
+
+  it("展开时 chevron 旋转", async () => {
+    const user = (await import("@testing-library/user-event")).default.setup();
+    render(
+      <Select aria-label="水果">
+        {items.map((item) => (
+          <Select.Item key={item.id} id={item.id} label={item.label} />
+        ))}
+      </Select>,
+    );
+    const chevron = screen.getByTestId("icon-chevron-down").parentElement;
+    expect(chevron).toHaveAttribute("data-open", "false");
+    await user.click(screen.getByRole("button"));
+    expect(chevron).toHaveAttribute("data-open", "true");
   });
 });

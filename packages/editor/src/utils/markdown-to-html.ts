@@ -11,5 +11,6 @@ export function markdownToHtml(markdown: string): string {
   if (/^<[a-z][\s\S]*>/i.test(trimmed)) {
     return markdown;
   }
-  return (marked.parse(markdown, { async: false }) as string).trim();
+  const html = (marked.parse(markdown, { async: false }) as string).trim();
+  return html.replace(/(<pre><code(?:\s[^>]*)?>[\s\S]*?)\n(<\/code><\/pre>)/g, "$1$2");
 }

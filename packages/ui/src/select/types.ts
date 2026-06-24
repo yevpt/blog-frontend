@@ -9,6 +9,9 @@ import type {
 /** 组件尺寸档位。 */
 export type SelectSize = "sm" | "md" | "lg";
 
+/** 视觉风格：紧凑精致（默认）、轻柔填充、无框极简（编辑器代码块）。 */
+export type SelectVariant = "compact" | "soft" | "minimal";
+
 /** 选项数据结构。 */
 export type SelectItemType = {
   id: string | number;
@@ -25,6 +28,8 @@ export interface CommonProps {
   label?: string;
   tooltip?: string;
   size?: SelectSize;
+  /** 视觉风格，默认 `compact`。 */
+  variant?: SelectVariant;
   placeholder?: string;
   hideRequiredIndicator?: boolean;
 }

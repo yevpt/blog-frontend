@@ -60,6 +60,7 @@ interface UseRichEditorOptions {
   placeholder?: string;
   disabled?: boolean;
   maxLength?: number;
+  enableBlockquote?: boolean;
 }
 
 export function useRichEditor({
@@ -69,6 +70,7 @@ export function useRichEditor({
   placeholder,
   disabled = false,
   maxLength,
+  enableBlockquote = false,
 }: UseRichEditorOptions) {
   // 通过 ref 持有最新 onChange，避免 stale closure 问题
   const onChangeRef = useRef(onChange);
@@ -107,8 +109,8 @@ export function useRichEditor({
           // 代码块由 CodeBlockExtension（lowlight 高亮版）单独引入，禁用内置版本
           codeBlock: false,
 
-          // 评论场景不需要以下扩展（减少包体积）
-          blockquote: false,
+          // 引用块仅文章编辑等场景开启；评论场景关闭以减少包体积
+          blockquote: enableBlockquote ? undefined : false,
           horizontalRule: false,
         }),
 
@@ -123,17 +125,14 @@ export function useRichEditor({
         Markdown.configure({}),
 
         // ⑤ 图片（块级，仅 URL，不允许 base64）
-        // 注意：曾用 inline: true 让图片嵌入段落，但图片渲染高度（240px）远超文本行高，
+        // 注意：曾用 inline: true 让图片嵌入段落，但块级图片远高于文本行高，
         // 导致 contenteditable 对内联原子节点的点击命中测试/光标渲染严重错位
         // （点击图片右侧光标不可见、按 Left 键移动后光标位置与实际插入位置不一致）。
         // 改为块级后，图片独占一行，由 StarterKit 内置的 Gapcursor 处理光标定位，问题消失。
         Image.configure({
           inline: false,
           allowBase64: false,
-          HTMLAttributes: {
-            class: "rich-editor-image",
-            style: "max-width: 240px; height: auto; border-radius: 6px;",
-          },
+          // 图片尺寸由 RichEditor 按 variant 用 prose / Tailwind 控制，避免内联 style 覆盖 prose。
         }),
 
         // ⑥ 修复空段落与图片相邻时 Backspace/Delete 无法删除空段落的问题（见该扩展内注释）
@@ -171,6 +170,6 @@ export function useRichEditor({
     },
     // deps 数组：mentionsJson 是序列化后的字符串，仅在候选列表实际变化时才重建 editor
     // 直接用 mentionSuggestions 数组引用会导致每次渲染创建新引用 → 无限循环
-    [mentionsJson, maxLength],
+    [mentionsJson, maxLength, enableBlockquote],
   );
 }
