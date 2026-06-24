@@ -1,5 +1,5 @@
 import { useCallback, useState, type ChangeEvent, type RefObject } from "react";
-import { LinkDialog, RichEditor } from "@repo/editor";
+import { LinkDialog, RichEditor, type ImageInsertHandlers } from "@repo/editor";
 import { Card, cn } from "@repo/ui";
 
 interface ArticleEditorWritingPanelProps {
@@ -14,7 +14,7 @@ interface ArticleEditorWritingPanelProps {
   onTitleChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onContentChange: (value: string) => void;
-  onInsertImage: (insert: (url: string, alt?: string) => void) => void;
+  onInsertImage: (handlers: ImageInsertHandlers) => void;
   onContentImageFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
 

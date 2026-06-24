@@ -20,6 +20,7 @@ vi.mock("react-router-dom", async () => {
 });
 
 vi.mock("@repo/editor", () => ({
+  readImageAspectRatio: vi.fn().mockResolvedValue(16 / 9),
   RichEditor: ({
     value,
     onChange,
@@ -29,7 +30,12 @@ vi.mock("@repo/editor", () => ({
     value: string;
     onChange: (value: string) => void;
     placeholder?: string;
-    onInsertImage?: (insert: (url: string, alt?: string) => void) => void;
+    onInsertImage?: (handlers: {
+      insert: (url: string, alt?: string) => void;
+      insertLoading: (options: { uploadId: string; aspectRatio: number; alt?: string }) => void;
+      resolveLoading: (uploadId: string, url: string, alt?: string) => void;
+      removeLoading: (uploadId: string) => void;
+    }) => void;
   }) => (
     <div>
       <textarea
@@ -39,7 +45,18 @@ vi.mock("@repo/editor", () => ({
         onChange={(event) => onChange(event.target.value)}
       />
       {onInsertImage ? (
-        <button type="button" aria-label="插入图片" onClick={() => onInsertImage(() => undefined)}>
+        <button
+          type="button"
+          aria-label="插入图片"
+          onClick={() =>
+            onInsertImage?.({
+              insert: () => undefined,
+              insertLoading: () => undefined,
+              resolveLoading: () => undefined,
+              removeLoading: () => undefined,
+            })
+          }
+        >
           插入图片
         </button>
       ) : null}
@@ -393,7 +410,10 @@ describe("ArticleEditorPage", () => {
     await user.upload(coverInput, file);
 
     await waitFor(() => {
-      expect(apiClient.uploads.tempImage).toHaveBeenCalledWith(file, "covers");
+      expect(apiClient.uploads.tempImage).toHaveBeenCalledWith(file, {
+        dir: "covers",
+        scene: "article",
+      });
     });
 
     await user.click(screen.getByRole("button", { name: "存草稿" }));
@@ -423,7 +443,10 @@ describe("ArticleEditorPage", () => {
     await user.upload(contentInput, file);
 
     await waitFor(() => {
-      expect(apiClient.uploads.tempImage).toHaveBeenCalledWith(file, "images");
+      expect(apiClient.uploads.tempImage).toHaveBeenCalledWith(file, {
+        dir: "images",
+        scene: "article",
+      });
     });
   });
 
