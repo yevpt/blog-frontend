@@ -925,4 +925,117 @@ describe("createApiClient", () => {
       expect.objectContaining({ method: "POST" }),
     );
   });
+
+  it("articles.getAdminDetail 调用正确端点并携带 Authorization", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: {
+          id: 12,
+          title: "Admin",
+          content: "body",
+          user_id: 1,
+          status: 0,
+          comment_status: 1,
+          read_count: 0,
+          like_count: 0,
+          comment_count: 0,
+          is_recommended: false,
+          created_at: "2026-01-01",
+          updated_at: "2026-01-01",
+        },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    await client.articles.getAdminDetail(12);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/articles/12",
+      expect.objectContaining({
+        method: "GET",
+        headers: expect.objectContaining({ Authorization: "Bearer admin-token" }),
+      }),
+    );
+  });
+
+  it("articles.saveAdmin 发送正确 body 并携带 Authorization", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: {
+          id: 3,
+          title: "Saved",
+          content: "content",
+          user_id: 1,
+          status: 1,
+          comment_status: 1,
+          read_count: 0,
+          like_count: 0,
+          comment_count: 0,
+          is_recommended: false,
+          created_at: "2026-01-01",
+          updated_at: "2026-01-01",
+        },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    const req = {
+      title: "Saved",
+      content: "content",
+      status: 1 as const,
+      comment_status: 1 as const,
+      category_ids: [1],
+      tags: [{ tag_id: 2, seq: 0 }],
+      music_ids: [],
+    };
+    await client.articles.saveAdmin(req);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/articles",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify(req),
+        headers: expect.objectContaining({
+          Authorization: "Bearer admin-token",
+          "Content-Type": "application/json",
+        }),
+      }),
+    );
+  });
+
+  it("uploads.tempImage 使用 FormData 且不手动设置 JSON Content-Type", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { key: "temp/key.png", url: "https://cdn.example.com/key.png" },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    const file = new File(["image"], "cover.png", { type: "image/png" });
+    const result = await client.uploads.tempImage(file, "covers");
+
+    expect(result.url).toBe("https://cdn.example.com/key.png");
+    const [, init] = vi.mocked(global.fetch).mock.calls[0];
+    expect(init?.body).toBeInstanceOf(FormData);
+    expect((init?.body as FormData).get("dir")).toBe("covers");
+    expect((init?.body as FormData).get("file")).toBe(file);
+    const headers = init?.headers as Record<string, string>;
+    expect(headers.Authorization).toBe("Bearer admin-token");
+    expect(headers["Content-Type"]).toBeUndefined();
+  });
 });

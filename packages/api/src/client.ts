@@ -10,11 +10,13 @@ import type {
   TokenResp,
 } from "./types/auth";
 import type {
+  AdminArticleDetailResp,
   AdminArticlePageResp,
   ArticleDetailResp,
   ArticleLikeResp,
   ArticleListReq,
   ArticlePageResp,
+  ArticleSaveReq,
 } from "./types/article";
 import type { TagListResp } from "./types/tag";
 import type { CategoryTabsResp } from "./types/category";
@@ -63,6 +65,7 @@ import type {
   NotificationPageResp,
   NotificationUnreadCountResp,
 } from "./types/notification";
+import type { TempUploadResp } from "./types/upload";
 
 /** createApiClient 的注入配置接口 */
 export interface ApiClientConfig {
@@ -90,9 +93,12 @@ interface BackendResponse<T> {
  */
 async function request<T>(url: string, init: RequestInit, accessToken: string | null): Promise<T> {
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(init.headers as Record<string, string>),
   };
+  // FormData 由浏览器自动设置 multipart boundary，不能手动加 JSON Content-Type
+  if (!(init.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
   if (accessToken) {
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
@@ -233,6 +239,15 @@ export function createApiClient(config: ApiClientConfig) {
       /** 软删除文章，需管理员登录；返回删除后的文章详情 */
       deleteAdmin: (id: number) =>
         fetchAuthed<ArticleDetailResp>(`/admin/articles/${id}`, { method: "DELETE" }),
+      /** 获取管理端文章详情，需管理员登录 */
+      getAdminDetail: (id: number) =>
+        fetchAuthed<AdminArticleDetailResp>(`/admin/articles/${id}`, { method: "GET" }),
+      /** 新增或更新文章，需管理员登录 */
+      saveAdmin: (req: ArticleSaveReq) =>
+        fetchAuthed<ArticleDetailResp>("/admin/articles", {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
     },
     categories: {
       /** 查询分类 Tab 列表（含文章数量，按 seq/count 排序） */
@@ -528,6 +543,18 @@ export function createApiClient(config: ApiClientConfig) {
         const qs = p.toString();
         return fetchAuthed<NotificationPageResp>(`/notifications${qs ? `?${qs}` : ""}`, {
           method: "GET",
+        });
+      },
+    },
+    uploads: {
+      /** 上传文章编辑阶段的临时图片，需登录；dir 为 images 或 covers */
+      tempImage: (file: File, dir: "images" | "covers") => {
+        const formData = new FormData();
+        formData.append("dir", dir);
+        formData.append("file", file);
+        return fetchAuthed<TempUploadResp>("/uploads/temp", {
+          method: "POST",
+          body: formData,
         });
       },
     },

@@ -29,6 +29,9 @@ export type {
   AdminArticleListItemResp,
   AdminArticlePageResp,
   ArticleDetailResp,
+  AdminArticleDetailResp,
+  ArticleSaveReq,
+  ArticleTagSaveReq,
   MusicItem,
 } from "./types/article";
 export type { CategoryTabItem, CategoryTabsResp } from "./types/category";
@@ -94,3 +97,4 @@ export type {
   NotificationReadAllReq,
   NotificationReadResp,
 } from "./types/notification";
+export type { TempUploadResp } from "./types/upload";
