@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { UserDetailResp } from "@repo/api";
 
@@ -8,10 +8,16 @@ interface SessionContextValue {
   userId: number | null;
   /** 当前登录用户的完整资料；/users/me 失败或未登录时为 null */
   profile: UserDetailResp | null;
+  /** 客户端合并更新当前 session profile（如资料页编辑后同步 Navbar） */
+  patchProfile: (patch: Partial<UserDetailResp>) => void;
 }
 
 // 默认值对应未登录状态
-const SessionContext = createContext<SessionContextValue>({ userId: null, profile: null });
+const SessionContext = createContext<SessionContextValue>({
+  userId: null,
+  profile: null,
+  patchProfile: () => {},
+});
 
 /**
  * 由 layout.tsx（Server Component）注入 userId 和完整用户资料。
@@ -19,14 +25,24 @@ const SessionContext = createContext<SessionContextValue>({ userId: null, profil
  */
 export function SessionProvider({
   userId,
-  profile,
+  profile: initialProfile,
   children,
 }: {
   userId: number | null;
   profile: UserDetailResp | null;
   children: ReactNode;
 }) {
-  const value = useMemo(() => ({ userId, profile }), [userId, profile]);
+  const [profile, setProfile] = useState<UserDetailResp | null>(initialProfile);
+
+  useEffect(() => {
+    setProfile(initialProfile);
+  }, [initialProfile]);
+
+  const patchProfile = useCallback((patch: Partial<UserDetailResp>) => {
+    setProfile((current) => (current ? { ...current, ...patch } : current));
+  }, []);
+
+  const value = useMemo(() => ({ userId, profile, patchProfile }), [userId, profile, patchProfile]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 
