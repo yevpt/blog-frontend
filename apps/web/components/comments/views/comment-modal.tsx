@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useCallback, useLayoutEffect } from "react
 import type { CSSProperties, RefObject } from "react";
 import { SvgIcon } from "@repo/icons";
 import { Modal, cn } from "@repo/ui";
+import { useMobileSheetMergedStyle } from "@/hooks/use-mobile-sheet-merged-style";
 import { useSheetGesture } from "@/hooks/use-sheet-gesture";
 import { ModalComments } from "./modal-comments";
 
@@ -145,10 +146,6 @@ function CommentDialog({ targetType, targetId, onClose, onCommentAdded }: Commen
 }
 
 // ── Mobile: bottom sheet with gesture ────────────────────────────────────
-const SPRING = "0.4s cubic-bezier(.32,.72,0,1)";
-const COLLAPSED_HEIGHT = "70dvh";
-const EXPANDED_HEIGHT = "100dvh";
-
 function CommentSheet({ targetType, targetId, onClose, onCommentAdded }: CommentModalProps) {
   const sheetRef = useRef<HTMLDivElement>(null!);
   const scrollRef = useRef<HTMLDivElement>(null!);
@@ -168,31 +165,14 @@ function CommentSheet({ targetType, targetId, onClose, onCommentAdded }: Comment
     },
   );
 
-  const activeHeight =
-    expandOffset > 0
-      ? `calc(${COLLAPSED_HEIGHT} + ${Math.round(expandOffset)}px)`
-      : isExpanded
-        ? EXPANDED_HEIGHT
-        : COLLAPSED_HEIGHT;
-
-  const mergedStyle: CSSProperties = entered
-    ? {
-        transform: sheetStyle.transform,
-        height: activeHeight,
-        maxHeight: EXPANDED_HEIGHT,
-        transition: isDragging ? "none" : `transform ${SPRING}, height ${SPRING}`,
-        // 手势 dismiss 时（isOpen=false 且 translateY 未归零）禁用退场 CSS 动画：
-        // 退场动画的 from{transform:translateY(0)} 以 animation 优先级高于 inline style，
-        // 会把已经滑出屏幕的 sheet 拉回原位再重新退场，产生闪烁。
-        // 此时 sheet 已通过 CSS transition 滑出，直接让 React Aria 静默移除 DOM 即可。
-        animation: !isOpen && sheetStyle.transform !== "translateY(0px)" ? "none" : undefined,
-      }
-    : {
-        transform: "translateY(100%)",
-        height: COLLAPSED_HEIGHT,
-        maxHeight: EXPANDED_HEIGHT,
-        transition: `transform ${SPRING}`,
-      };
+  const mergedStyle = useMobileSheetMergedStyle({
+    entered,
+    isOpen,
+    sheetStyle,
+    isDragging,
+    isExpanded,
+    expandOffset,
+  });
 
   return (
     <Modal
