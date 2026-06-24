@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { createServerApiClient } from "@/lib/server-api";
 import { CircleList } from "./_components/circle-list";
 import { PageContainer } from "@/components/common/page-container";
+import { isAdminUser, isVipUser } from "@/lib/user-roles";
 
 export const metadata: Metadata = {
   title: "圈子 | Yevpt's Blog",
@@ -21,11 +22,11 @@ export default async function CirclePage() {
   const uniqueList = [...new Map(usersPage.list.map((u) => [u.id, u])).values()];
 
   const sortedList = [...uniqueList].sort((a, b) => {
-    const aAdmin = a.roles?.includes("admin") ? 1 : 0;
-    const bAdmin = b.roles?.includes("admin") ? 1 : 0;
+    const aAdmin = isAdminUser(a.roles) ? 1 : 0;
+    const bAdmin = isAdminUser(b.roles) ? 1 : 0;
     if (aAdmin !== bAdmin) return bAdmin - aAdmin;
-    const aVip = a.roles?.includes("vip") ? 1 : 0;
-    const bVip = b.roles?.includes("vip") ? 1 : 0;
+    const aVip = isVipUser(a.roles) ? 1 : 0;
+    const bVip = isVipUser(b.roles) ? 1 : 0;
     return bVip - aVip;
   });
 

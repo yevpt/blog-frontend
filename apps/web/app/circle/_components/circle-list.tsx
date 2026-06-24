@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import type { UserListItemResp, UserPageResp } from "@repo/api";
 import { apiJson } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
+import { isAdminUser, isVipUser } from "@/lib/user-roles";
 import { UserCard } from "./user-card";
 import { VirtuosoGrid } from "react-virtuoso";
 
@@ -41,11 +42,11 @@ export function CircleList({ initialPage }: CircleListProps) {
 
       // 排序：Admin 优先，其次 VIP
       const sorted = [...data.list].sort((a, b) => {
-        const aAdmin = a.roles?.includes("admin") ? 1 : 0;
-        const bAdmin = b.roles?.includes("admin") ? 1 : 0;
+        const aAdmin = isAdminUser(a.roles) ? 1 : 0;
+        const bAdmin = isAdminUser(b.roles) ? 1 : 0;
         if (aAdmin !== bAdmin) return bAdmin - aAdmin;
-        const aVip = a.roles?.includes("vip") ? 1 : 0;
-        const bVip = b.roles?.includes("vip") ? 1 : 0;
+        const aVip = isVipUser(a.roles) ? 1 : 0;
+        const bVip = isVipUser(b.roles) ? 1 : 0;
         return bVip - aVip;
       });
 
@@ -80,9 +81,11 @@ export function CircleList({ initialPage }: CircleListProps) {
         data={users}
         endReached={loadMore}
         overscan={400}
-        listClassName="grid grid-cols-3 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-4 lg:grid-cols-5"
+        listClassName="grid grid-cols-3 items-stretch gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-4 lg:grid-cols-5"
         itemContent={(index, user) => (
-          <UserCard key={user.id} user={user} index={index} animatedIds={animatedIds} />
+          <div className="h-full">
+            <UserCard key={user.id} user={user} index={index} animatedIds={animatedIds} />
+          </div>
         )}
       />
 
