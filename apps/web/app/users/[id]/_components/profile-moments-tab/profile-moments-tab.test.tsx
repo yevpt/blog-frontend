@@ -77,7 +77,7 @@ describe("ProfileMomentsTab", () => {
 
     expect(screen.getByTestId("profile-moments-virtual-list")).toBeInTheDocument();
     expect(mockUseMomentList).toHaveBeenCalledWith(
-      expect.objectContaining({ ownerUserId: 1, initialTab: "owner" }),
+      expect.objectContaining({ mode: "user", userId: 1 }),
     );
   });
 

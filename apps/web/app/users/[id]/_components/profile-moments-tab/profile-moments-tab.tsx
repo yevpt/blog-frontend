@@ -42,8 +42,8 @@ export function ProfileMomentsTab({
     setMoments,
   } = useMomentList({
     initialPage,
-    ownerUserId: userId,
-    initialTab: "owner",
+    mode: "user",
+    userId,
   });
   const openSnippetModal = useSnippetModal((state) => state.open);
   const [activeComment, setActiveComment] = useState<{ momentId: number } | null>(null);
