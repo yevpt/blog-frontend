@@ -33,6 +33,7 @@ export type {
 } from "./types/article";
 export type { CategoryTabItem, CategoryTabsResp } from "./types/category";
 export type { TagItemResp, TagListResp } from "./types/tag";
+export type { MusicItemResp, MusicListResp } from "./types/music";
 export type {
   MomentListReq,
   MomentSaveReq,

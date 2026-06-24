@@ -91,7 +91,8 @@ export interface MusicItem {
   name: string;
   singer: string;
   album: string;
-  url: string;
+  url?: string;
+  cover_img_url?: string;
   duration: number;
 }
 

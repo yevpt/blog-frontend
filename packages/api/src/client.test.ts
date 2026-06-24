@@ -410,6 +410,20 @@ describe("createApiClient", () => {
     );
   });
 
+  it("music.list 调用 /music", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: { list: [] } }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    await client.music.list();
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/music",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
   // ── 碎语接口（公开，无需登录）────────────────────────────────────────
 
   it("moments.listPublic 无参数时调用 /moments", async () => {

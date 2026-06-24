@@ -18,6 +18,7 @@ import type {
 } from "./types/article";
 import type { TagListResp } from "./types/tag";
 import type { CategoryTabsResp } from "./types/category";
+import type { MusicListResp } from "./types/music";
 import type {
   MomentDeleteResp,
   MomentItemResp,
@@ -240,6 +241,10 @@ export function createApiClient(config: ApiClientConfig) {
     tags: {
       /** 查询标签列表（含公开文章数量，按 seq/count 排序） */
       list: () => fetchPublic<TagListResp>("/tags", { method: "GET" }),
+    },
+    music: {
+      /** 查询音乐列表，用于文章编辑页选择背景音乐 */
+      list: () => fetchPublic<MusicListResp>("/music", { method: "GET" }),
     },
     moments: {
       /** 上报一次碎语阅读（触发即可，不等待返回值） */
