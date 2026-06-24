@@ -97,4 +97,4 @@ export type {
   NotificationReadAllReq,
   NotificationReadResp,
 } from "./types/notification";
-export type { TempUploadResp } from "./types/upload";
+export type { TempImageUploadReq, TempImageUploadScene, TempUploadResp } from "./types/upload";

@@ -1027,15 +1027,36 @@ describe("createApiClient", () => {
     });
 
     const file = new File(["image"], "cover.png", { type: "image/png" });
-    const result = await client.uploads.tempImage(file, "covers");
+    const result = await client.uploads.tempImage(file, { dir: "covers", scene: "article" });
 
     expect(result.url).toBe("https://cdn.example.com/key.png");
     const [, init] = vi.mocked(global.fetch).mock.calls[0];
     expect(init?.body).toBeInstanceOf(FormData);
     expect((init?.body as FormData).get("dir")).toBe("covers");
+    expect((init?.body as FormData).get("scene")).toBe("article");
     expect((init?.body as FormData).get("file")).toBe(file);
     const headers = init?.headers as Record<string, string>;
     expect(headers.Authorization).toBe("Bearer admin-token");
     expect(headers["Content-Type"]).toBeUndefined();
+  });
+
+  it("uploads.tempImage comment 场景写入 scene 字段", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { key: "temp/comment.png", url: "https://cdn.example.com/comment.png" },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "token",
+    });
+    const file = new File(["image"], "comment.png", { type: "image/png" });
+    await client.uploads.tempImage(file, { dir: "images", scene: "comment" });
+
+    const [, init] = vi.mocked(global.fetch).mock.calls[0];
+    expect((init?.body as FormData).get("scene")).toBe("comment");
+    expect((init?.body as FormData).get("dir")).toBe("images");
   });
 });

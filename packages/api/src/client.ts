@@ -65,7 +65,7 @@ import type {
   NotificationPageResp,
   NotificationUnreadCountResp,
 } from "./types/notification";
-import type { TempUploadResp } from "./types/upload";
+import type { TempImageUploadReq, TempUploadResp } from "./types/upload";
 
 /** createApiClient 的注入配置接口 */
 export interface ApiClientConfig {
@@ -547,10 +547,13 @@ export function createApiClient(config: ApiClientConfig) {
       },
     },
     uploads: {
-      /** 上传文章编辑阶段的临时图片，需登录；dir 为 images 或 covers */
-      tempImage: (file: File, dir: "images" | "covers") => {
+      /** 上传临时图片，需登录；scene 默认 article，comment 用于留言/评论/回复 */
+      tempImage: (file: File, options: TempImageUploadReq) => {
         const formData = new FormData();
-        formData.append("dir", dir);
+        formData.append("dir", options.dir);
+        if (options.scene) {
+          formData.append("scene", options.scene);
+        }
         formData.append("file", file);
         return fetchAuthed<TempUploadResp>("/uploads/temp", {
           method: "POST",
