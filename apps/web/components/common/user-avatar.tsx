@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@repo/ui";
+import { SvgIcon } from "@repo/icons";
 import Image from "next/image";
 
 const SIZE = {
@@ -24,14 +25,39 @@ const SIZE_PX: Record<keyof typeof SIZE, number> = {
   "2xl": 64,
 };
 
+/** VIP 皇冠尺寸与位置，约为头像 1/3，左上角倾斜 */
+const VIP_BADGE: Record<keyof typeof SIZE, { position: string; iconSize: number }> = {
+  xs: { position: "-left-0.5 -top-1", iconSize: 8 },
+  sm: { position: "-left-0.5 -top-1", iconSize: 9 },
+  md: { position: "-left-1 -top-1.5", iconSize: 10 },
+  ml: { position: "-left-1 -top-1.5", iconSize: 11 },
+  lg: { position: "-left-1 -top-2", iconSize: 13 },
+  xl: { position: "-left-1.5 -top-2.5", iconSize: 17 },
+  "2xl": { position: "-left-2 -top-3", iconSize: 22 },
+};
+
 interface UserAvatarProps {
   src?: string;
   name: string;
   size?: keyof typeof SIZE;
   className?: string;
+  /** 是否在头像左上角显示 VIP 皇冠 */
+  isVip?: boolean;
 }
 
-export function UserAvatar({ src, name, size = "md", className }: UserAvatarProps) {
+function VipBadge({ size }: { size: keyof typeof SIZE }) {
+  const { position, iconSize } = VIP_BADGE[size];
+  return (
+    <SvgIcon
+      name="vip"
+      size={iconSize}
+      aria-hidden
+      className={cn("pointer-events-none absolute z-10 -rotate-[35deg]", position)}
+    />
+  );
+}
+
+export function UserAvatar({ src, name, size = "md", className, isVip = false }: UserAvatarProps) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const imageRef = useRef<HTMLImageElement | null>(null);
@@ -52,9 +78,11 @@ export function UserAvatar({ src, name, size = "md", className }: UserAvatarProp
     setLoaded(Boolean(image?.complete && image.naturalWidth > 0));
   }, [validSrc]);
 
+  const vipBadge = isVip ? <VipBadge size={size} /> : null;
+
   if (validSrc && !failed) {
     return (
-      <span className={cn(base, "relative inline-flex bg-border")}>
+      <span className={cn("relative inline-flex", base, "bg-border")}>
         <span
           data-testid="user-avatar-placeholder"
           aria-hidden="true"
@@ -83,9 +111,15 @@ export function UserAvatar({ src, name, size = "md", className }: UserAvatarProp
           onError={() => setFailed(true)}
           suppressHydrationWarning
         />
+        {vipBadge}
       </span>
     );
   }
 
-  return <div className={cn(base, placeholderClassName)}>{initial}</div>;
+  return (
+    <div className={cn("relative inline-flex", base, placeholderClassName)}>
+      {initial}
+      {vipBadge}
+    </div>
+  );
 }

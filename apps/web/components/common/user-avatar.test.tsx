@@ -2,6 +2,10 @@ import { beforeEach, describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { UserAvatar } from "./user-avatar";
 
+vi.mock("@repo/icons", () => ({
+  SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
+}));
+
 const imageMockState = vi.hoisted(() => ({
   completeOnMount: false,
 }));
@@ -135,5 +139,15 @@ describe("UserAvatar", () => {
     const { container } = render(<UserAvatar name="D" size="ml" />);
     expect(container.firstChild).toHaveClass("h-[30px]");
     expect(container.firstChild).toHaveClass("w-[30px]");
+  });
+
+  it("isVip 时在头像左上角显示 VIP 皇冠", () => {
+    render(<UserAvatar name="VipUser" isVip />);
+    expect(screen.getByTestId("icon-vip")).toBeInTheDocument();
+  });
+
+  it("非 VIP 时不显示皇冠", () => {
+    render(<UserAvatar name="Regular" />);
+    expect(screen.queryByTestId("icon-vip")).not.toBeInTheDocument();
   });
 });
