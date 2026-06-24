@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState, type ChangeEvent } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { RichEditor } from "@repo/editor";
 import { SvgIcon } from "@repo/icons";
+import { ApiError } from "@repo/api";
 import {
   Badge,
   BreadcrumbItem,
@@ -21,66 +22,176 @@ import {
   Select,
   cn,
 } from "@repo/ui";
+import { apiClient } from "../../lib/api";
+import { addToast } from "../../lib/toast";
+import {
+  buildArticleSaveReq,
+  formatMusicDuration,
+  mapDetailToFormState,
+  statusToLabel,
+  type ArticleEditorStatusLabel,
+} from "./article-editor-utils";
 import { ArticleTagPicker } from "./components/ArticleTagPicker";
-import { categoryOptions, musicOptions, tagOptions, type ArticleTag } from "./editor-options";
+import type { ArticleTag } from "./editor-options";
+import { useArticleEditorDetail } from "./hooks/use-article-editor-detail";
+import { useArticleEditorOptions } from "./hooks/use-article-editor-options";
+import { useArticleImageUpload } from "./hooks/use-article-image-upload";
 import { useSyncedElementHeight } from "./hooks/use-synced-element-height";
 
-const defaultCoverUrl =
-  "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=1200&q=80";
-
 export function ArticleEditorPage() {
+  const navigate = useNavigate();
   const { articleId } = useParams();
   const isEditing = articleId !== undefined;
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const metaCard = useSyncedElementHeight(true);
-  const [title, setTitle] = useState("把博客编辑器体验打磨到顺手");
-  const [description, setDescription] = useState(
-    "从后台写作流出发，重新整理文章的封面、分类、标签与正文编辑，让内容发布更像一个稳定的工作台。",
-  );
-  const [content, setContent] = useState(
-    "## 为什么文章页需要单独定制编辑器\n\n评论和碎语更强调快速输入，文章编辑则需要更稳定的空间感。正文区域应该更高、更安静，并且让工具栏服务于长文本写作。\n\n> 正式实现复用公用 inline 类型编辑器，并通过样式和插入行为做文章页定制。\n",
-  );
-  const [coverUrl, setCoverUrl] = useState(defaultCoverUrl);
-  const [categoryId, setCategoryId] = useState("frontend");
-  const [selectedTags, setSelectedTags] = useState<ArticleTag[]>(tagOptions.slice(0, 3));
-  const [musicId, setMusicId] = useState<string | null>("midnight");
+
+  const {
+    categories,
+    tags,
+    musicList,
+    isLoading: isOptionsLoading,
+    error: optionsError,
+  } = useArticleEditorOptions();
+  const {
+    detail,
+    isLoading: isDetailLoading,
+    error: detailError,
+    isNew,
+  } = useArticleEditorDetail(articleId);
+  const {
+    coverInputRef,
+    contentImageInputRef,
+    isCoverUploading,
+    isContentImageUploading,
+    handleCoverFileChange,
+    handleInsertImageRequest,
+    handleContentImageFileChange,
+  } = useArticleImageUpload();
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [content, setContent] = useState("");
+  const [coverUrl, setCoverUrl] = useState("");
+  const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [selectedTags, setSelectedTags] = useState<ArticleTag[]>([]);
+  const [musicId, setMusicId] = useState<number | null>(null);
   const [musicPickerOpen, setMusicPickerOpen] = useState(false);
   const [musicSearchQuery, setMusicSearchQuery] = useState("");
-  const [status, setStatus] = useState("草稿");
+  const [statusLabel, setStatusLabel] = useState<ArticleEditorStatusLabel>("草稿");
+  const [commentStatus] = useState<0 | 1>(1);
+  const [isPassworded, setIsPassworded] = useState(false);
+  const [savedArticleId, setSavedArticleId] = useState<number | undefined>(undefined);
+  const [isSaving, setIsSaving] = useState(false);
+  const [detailApplied, setDetailApplied] = useState(false);
 
-  const selectedMusic = musicId ? (musicOptions.find((item) => item.id === musicId) ?? null) : null;
+  useEffect(() => {
+    if (optionsError) {
+      addToast(optionsError.message, "error");
+    }
+  }, [optionsError]);
+
+  useEffect(() => {
+    if (!detail || detailApplied) return;
+    const form = mapDetailToFormState(detail);
+    setTitle(form.title);
+    setDescription(form.description);
+    setContent(form.content);
+    setCoverUrl(form.coverUrl);
+    setCategoryId(form.categoryId);
+    setSelectedTags(form.selectedTags);
+    setMusicId(form.musicId);
+    setStatusLabel(statusToLabel(form.articleStatus));
+    setIsPassworded(form.isPassworded);
+    setSavedArticleId(form.savedArticleId);
+    setDetailApplied(true);
+  }, [detail, detailApplied]);
+
+  useEffect(() => {
+    if (!isNew || categoryId !== null || categories.length === 0) return;
+    setCategoryId(categories[0].id);
+  }, [isNew, categoryId, categories]);
+
+  const tagCandidates = useMemo(() => tags.map((tag) => ({ id: tag.id, label: tag.name })), [tags]);
+
+  const musicOptions = useMemo(
+    () =>
+      musicList.map((item) => ({
+        id: item.id,
+        label: item.name,
+        artist: item.singer,
+        duration: formatMusicDuration(item.duration),
+      })),
+    [musicList],
+  );
+
+  const selectedMusic =
+    musicId !== null ? (musicOptions.find((item) => item.id === musicId) ?? null) : null;
   const filteredMusicOptions = useMemo(() => {
     const query = musicSearchQuery.trim().toLowerCase();
     if (!query) return musicOptions;
 
     return musicOptions.filter(
       (item) =>
-        (item.label?.toLowerCase().includes(query) ?? false) ||
-        item.artist.toLowerCase().includes(query),
+        item.label.toLowerCase().includes(query) || item.artist.toLowerCase().includes(query),
     );
-  }, [musicSearchQuery]);
+  }, [musicOptions, musicSearchQuery]);
+
   const contentLength = content.replace(/[#>*_`\-\s]/g, "").length;
-  const selectedCategory =
-    categoryOptions.find((item) => item.id === categoryId)?.label ?? categoryOptions[0].label;
-  const handleCoverChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setCoverUrl(URL.createObjectURL(file));
-  };
+  const selectedCategory = categories.find((item) => item.id === categoryId)?.name ?? "未选择";
+  const isPageLoading = isOptionsLoading || (isEditing && isDetailLoading);
+  const pageError = detailError;
+  const saveDisabled = isPassworded || isSaving || isPageLoading || categoryId === null;
+
   const handleCategoryChange = (key: string | number | null) => {
-    if (key != null) setCategoryId(String(key));
+    if (key == null) return;
+    setCategoryId(Number(key));
   };
+
   const handleRemoveMusic = () => {
     setMusicId(null);
   };
+
   const handleSelectMusic = (id: string | number) => {
-    setMusicId(String(id));
+    setMusicId(Number(id));
     setMusicPickerOpen(false);
     setMusicSearchQuery("");
   };
+
   const handleMusicPickerOpenChange = (open: boolean) => {
     setMusicPickerOpen(open);
     if (!open) setMusicSearchQuery("");
+  };
+
+  const handleSave = async (targetStatus: 0 | 1) => {
+    if (saveDisabled) return;
+
+    setIsSaving(true);
+    try {
+      const req = buildArticleSaveReq({
+        title,
+        description,
+        content,
+        coverUrl,
+        categoryId,
+        selectedTags,
+        musicId,
+        targetStatus,
+        commentStatus,
+        articleId: savedArticleId,
+      });
+      const resp = await apiClient.articles.saveAdmin(req);
+      setSavedArticleId(resp.id);
+      setStatusLabel(statusToLabel(resp.status));
+      addToast(targetStatus === 1 ? "文章已发布" : "草稿已保存", "success");
+
+      if (isNew) {
+        navigate(`/articles/${resp.id}/edit`, { replace: true });
+      }
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : "保存失败，请重试";
+      addToast(message, "error");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const musicPickerPopover = (
@@ -130,6 +241,34 @@ export function ArticleEditorPage() {
     </Popover>
   );
 
+  if (pageError) {
+    return (
+      <div className="grid gap-4">
+        <Breadcrumbs aria-label="文章编辑导航">
+          <BreadcrumbItem href="/articles">文章管理</BreadcrumbItem>
+          <BreadcrumbItem>编辑文章</BreadcrumbItem>
+        </Breadcrumbs>
+        <Card className="border-border/80 shadow-sm">
+          <CardContent className="p-6 text-sm text-destructive">{pageError}</CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isPageLoading) {
+    return (
+      <div className="grid gap-4">
+        <Breadcrumbs aria-label="文章编辑导航">
+          <BreadcrumbItem href="/articles">文章管理</BreadcrumbItem>
+          <BreadcrumbItem>{isEditing ? "编辑文章" : "新建文章"}</BreadcrumbItem>
+        </Breadcrumbs>
+        <Card className="border-border/80 shadow-sm">
+          <CardContent className="p-6 text-sm text-muted-foreground">加载中…</CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-5 lg:-mt-3">
       <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -140,19 +279,32 @@ export function ArticleEditorPage() {
           </Breadcrumbs>
         </div>
         <div className="flex shrink-0 items-center gap-2 max-sm:grid max-sm:w-full max-sm:grid-cols-2">
-          <Button type="button" variant="outline" size="sm" onPress={() => setStatus("草稿")}>
-            保存草稿
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            isDisabled={saveDisabled}
+            onPress={() => void handleSave(0)}
+          >
+            {isSaving ? "保存中…" : "保存草稿"}
           </Button>
           <Button
             type="button"
             size="sm"
             className="bg-foreground text-background shadow-none hover:bg-foreground/90"
-            onPress={() => setStatus("已发布")}
+            isDisabled={saveDisabled}
+            onPress={() => void handleSave(1)}
           >
-            发布文章
+            {isSaving ? "发布中…" : "发布文章"}
           </Button>
         </div>
       </section>
+
+      {isPassworded ? (
+        <p className="text-sm text-muted-foreground">
+          当前为加密文章，暂不支持在此页修改或保存；请通过其他方式更新阅读密码后再编辑。
+        </p>
+      ) : null}
 
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-5">
         <main className="grid min-w-0 gap-4 xl:contents">
@@ -187,7 +339,9 @@ export function ArticleEditorPage() {
           <Card className="min-w-0 border-border/80 shadow-sm xl:col-start-1 xl:row-start-2">
             <CardHeader className="flex-row items-center justify-between gap-3 space-y-0 p-5 pb-3">
               <CardTitle className="text-base">文章内容</CardTitle>
-              <Badge variant="secondary">Markdown 兼容</Badge>
+              <Badge variant="secondary">
+                {isContentImageUploading ? "图片上传中…" : "Markdown 兼容"}
+              </Badge>
             </CardHeader>
             <CardContent className="p-5 pt-0">
               <RichEditor
@@ -200,7 +354,14 @@ export function ArticleEditorPage() {
                   "[&_[data-rich-editor-area]]:min-h-[420px]",
                   "[&_.tiptap]:min-h-[420px] [&_.tiptap]:max-h-[60dvh]",
                 )}
-                onInsertImage={(insert) => insert(coverUrl, title)}
+                onInsertImage={handleInsertImageRequest}
+              />
+              <input
+                ref={contentImageInputRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(event) => void handleContentImageFileChange(event)}
               />
             </CardContent>
           </Card>
@@ -214,7 +375,7 @@ export function ArticleEditorPage() {
             <CardContent className="flex min-h-0 flex-1 flex-col gap-3 p-5">
               <div className="flex shrink-0 items-center justify-between gap-3">
                 <CardTitle className="text-base">背景图片</CardTitle>
-                <Badge variant="secondary">16:9</Badge>
+                <Badge variant="secondary">{isCoverUploading ? "上传中…" : "16:9"}</Badge>
               </div>
               <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-muted">
                 {coverUrl ? (
@@ -239,7 +400,8 @@ export function ArticleEditorPage() {
                   type="button"
                   variant="ghost"
                   aria-label="替换背景图"
-                  onPress={() => fileInputRef.current?.click()}
+                  isDisabled={isCoverUploading}
+                  onPress={() => coverInputRef.current?.click()}
                   className={cn(
                     "absolute inset-0 z-0 h-auto w-auto rounded-xl p-0",
                     "flex flex-col items-center justify-center gap-1.5",
@@ -250,16 +412,16 @@ export function ArticleEditorPage() {
                 >
                   <SvgIcon name={coverUrl ? "camera" : "image"} size={coverUrl ? 20 : 22} />
                   <span className="text-xs font-medium">
-                    {coverUrl ? "更换图片" : "添加背景图"}
+                    {isCoverUploading ? "上传中…" : coverUrl ? "更换图片" : "添加背景图"}
                   </span>
                 </Button>
               </div>
               <input
-                ref={fileInputRef}
+                ref={coverInputRef}
                 type="file"
                 accept="image/*"
                 className="sr-only"
-                onChange={handleCoverChange}
+                onChange={(event) => void handleCoverFileChange(event, setCoverUrl)}
               />
             </CardContent>
           </Card>
@@ -279,19 +441,23 @@ export function ArticleEditorPage() {
                   <Select
                     aria-label="文章分类"
                     size="sm"
-                    selectedKey={categoryId}
+                    selectedKey={categoryId !== null ? String(categoryId) : undefined}
                     onSelectionChange={handleCategoryChange}
                     placeholder="选择分类"
                   >
-                    {categoryOptions.map((item) => (
-                      <Select.Item key={item.id} id={item.id} label={item.label} />
+                    {categories.map((item) => (
+                      <Select.Item key={String(item.id)} id={String(item.id)} label={item.name} />
                     ))}
                   </Select>
                 </div>
 
                 <div className="grid gap-1.5">
                   <Label>文章标签</Label>
-                  <ArticleTagPicker selectedTags={selectedTags} onChange={setSelectedTags} />
+                  <ArticleTagPicker
+                    selectedTags={selectedTags}
+                    tagCandidates={tagCandidates}
+                    onChange={setSelectedTags}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -372,7 +538,17 @@ export function ArticleEditorPage() {
             <Card className="border-border/80 shadow-sm">
               <CardHeader className="flex-row items-center justify-between gap-3 space-y-0 p-5 pb-3">
                 <CardTitle className="text-base">发布状态</CardTitle>
-                <Badge variant={status === "已发布" ? "success" : "secondary"}>{status}</Badge>
+                <Badge
+                  variant={
+                    statusLabel === "已发布"
+                      ? "success"
+                      : statusLabel === "加密"
+                        ? "warning"
+                        : "secondary"
+                  }
+                >
+                  {statusLabel}
+                </Badge>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-3 p-5 pt-0 text-sm">
                 <div className="rounded-xl bg-background p-3">
