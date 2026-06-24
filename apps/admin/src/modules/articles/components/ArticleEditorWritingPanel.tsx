@@ -1,5 +1,5 @@
-import type { ChangeEvent, RefObject } from "react";
-import { RichEditor } from "@repo/editor";
+import { useCallback, useState, type ChangeEvent, type RefObject } from "react";
+import { LinkDialog, RichEditor } from "@repo/editor";
 import { Card, cn } from "@repo/ui";
 
 interface ArticleEditorWritingPanelProps {
@@ -8,6 +8,7 @@ interface ArticleEditorWritingPanelProps {
   content: string;
   contentLength: number;
   readMinutes: number;
+  autosaveStatusText: string;
   isContentImageUploading: boolean;
   contentImageInputRef: RefObject<HTMLInputElement | null>;
   onTitleChange: (value: string) => void;
@@ -28,6 +29,7 @@ export function ArticleEditorWritingPanel({
   content,
   contentLength,
   readMinutes,
+  autosaveStatusText,
   isContentImageUploading,
   contentImageInputRef,
   onTitleChange,
@@ -36,6 +38,16 @@ export function ArticleEditorWritingPanel({
   onInsertImage,
   onContentImageFileChange,
 }: ArticleEditorWritingPanelProps) {
+  const [linkDialog, setLinkDialog] = useState<{
+    open: boolean;
+    insert?: (url: string, title?: string) => void;
+  }>({ open: false });
+
+  const handleInsertLink = useCallback(
+    (insert: (url: string, title?: string) => void) => setLinkDialog({ open: true, insert }),
+    [],
+  );
+
   return (
     <Card className={panelShellClassName} aria-label="写作区">
       <div className="px-5 pt-8 sm:px-10">
@@ -79,6 +91,16 @@ export function ArticleEditorWritingPanel({
           }
           className="h-full min-h-0 overflow-hidden"
           onInsertImage={onInsertImage}
+          onInsertLink={handleInsertLink}
+          enableBlockquote
+        />
+        <LinkDialog
+          open={linkDialog.open}
+          onClose={() => setLinkDialog({ open: false })}
+          onConfirm={(url, title) => {
+            linkDialog.insert?.(url, title);
+            setLinkDialog({ open: false });
+          }}
         />
         <input
           ref={contentImageInputRef}
@@ -93,7 +115,9 @@ export function ArticleEditorWritingPanel({
             <strong className="font-semibold text-foreground/75">{contentLength}</strong> 字 · 约{" "}
             <strong className="font-semibold text-foreground/75">{readMinutes}</strong> 分钟
           </span>
-          {isContentImageUploading ? <span>图片上传中…</span> : null}
+          <span className="ml-auto text-right">
+            {isContentImageUploading ? "图片上传中…" : autosaveStatusText}
+          </span>
         </footer>
       </div>
     </Card>

@@ -9,6 +9,7 @@ interface ArticleEditorTopBarProps {
   statusLabel: ArticleEditorStatusLabel;
   savingAction: ArticleEditorSavingAction;
   saveDisabled: boolean;
+  onBack: () => void;
   onSaveDraft: () => void;
   onPublish: () => void;
 }
@@ -47,6 +48,7 @@ export function ArticleEditorTopBar({
   statusLabel,
   savingAction,
   saveDisabled,
+  onBack,
   onSaveDraft,
   onPublish,
 }: ArticleEditorTopBarProps) {
@@ -65,9 +67,10 @@ export function ArticleEditorTopBar({
     <header className={topBarShellClassName}>
       <div className="flex min-w-0 items-center gap-3">
         <Button
-          href="/articles"
+          type="button"
           variant="ghost"
           aria-label="返回文章列表"
+          onPress={onBack}
           className={iconBtnClassName}
         >
           <SvgIcon name="arrow-back" size={16} />

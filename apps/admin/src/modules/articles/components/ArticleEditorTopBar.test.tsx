@@ -14,13 +14,14 @@ describe("ArticleEditorTopBar", () => {
         statusLabel="草稿"
         savingAction={null}
         saveDisabled={false}
+        onBack={vi.fn()}
         onSaveDraft={vi.fn()}
         onPublish={vi.fn()}
       />,
     );
 
     expect(screen.getByRole("heading", { name: "新建文章" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "返回文章列表" })).toHaveAttribute("href", "/articles");
+    expect(screen.getByRole("button", { name: "返回文章列表" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "存草稿" })).toBeEnabled();
   });
 
@@ -31,6 +32,7 @@ describe("ArticleEditorTopBar", () => {
         statusLabel="草稿"
         savingAction="publish"
         saveDisabled
+        onBack={vi.fn()}
         onSaveDraft={vi.fn()}
         onPublish={vi.fn()}
       />,

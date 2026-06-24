@@ -62,12 +62,7 @@ export function ArticleTagPicker({ selectedTags, tagCandidates, onChange }: Arti
         </Button>
         <Autocomplete.Popover className="w-64 overflow-hidden p-2">
           <Autocomplete key={String(isOpen)}>
-            <Autocomplete.SearchField
-              aria-label="搜索标签"
-              placeholder="搜索标签"
-              size="sm"
-              groupClassName="bg-card"
-            />
+            <Autocomplete.SearchField aria-label="搜索标签" placeholder="搜索标签" size="sm" />
             <Autocomplete.Menu
               aria-label="标签候选"
               items={availableTags}

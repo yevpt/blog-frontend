@@ -43,10 +43,13 @@ const panelShellClassName = cn("flex flex-col overflow-hidden");
 const sectionPaddingClassName = "px-5";
 const fieldBlockClassName = "grid gap-2.5";
 
+/** 封面预览浮层上的紧凑操作钮，对齐推荐稿 chip-btn（26px 高、11px 字） */
 const coverChipClassName = cn(
-  "inline-flex min-h-[26px] items-center rounded-md border-0 px-2.5",
-  "bg-black/55 text-[11px] font-semibold text-white backdrop-blur-sm",
-  "hover:bg-black/65 hover:text-white",
+  "inline-flex h-[26px] w-auto shrink-0 items-center justify-center rounded-md px-2.5 py-0",
+  "text-[11px] font-semibold leading-none shadow-none",
+  "bg-black/55 text-white backdrop-blur-sm",
+  "hover:bg-black/70 hover:text-white",
+  "focus-visible:ring-1 focus-visible:ring-white/50 focus-visible:ring-offset-0",
 );
 
 export const ArticleEditorPublishRail = forwardRef<HTMLElement, ArticleEditorPublishRailProps>(
@@ -110,7 +113,8 @@ export const ArticleEditorPublishRail = forwardRef<HTMLElement, ArticleEditorPub
                 >
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="text"
+                    size="sm"
                     isDisabled={isCoverUploading}
                     onPress={() => coverInputRef.current?.click()}
                     className={coverChipClassName}
@@ -119,7 +123,8 @@ export const ArticleEditorPublishRail = forwardRef<HTMLElement, ArticleEditorPub
                   </Button>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="text"
+                    size="sm"
                     onPress={onRemoveCover}
                     className={coverChipClassName}
                   >

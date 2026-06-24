@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
@@ -27,6 +27,10 @@ import { ArticleEditorTopBar } from "./components/ArticleEditorTopBar";
 import { ArticleEditorWritingPanel } from "./components/ArticleEditorWritingPanel";
 import type { ArticleTag } from "./editor-options";
 import { useArticleEditorDetail } from "./hooks/use-article-editor-detail";
+import {
+  useArticleEditorAutosave,
+  type ArticleEditorAutosaveFormState,
+} from "./hooks/use-article-editor-autosave";
 import { useArticleEditorMainLayout } from "./hooks/use-article-editor-main-layout";
 import { useArticleEditorOptions } from "./hooks/use-article-editor-options";
 import { useArticleImageUpload } from "./hooks/use-article-image-upload";
@@ -140,6 +144,39 @@ export function ArticleEditorPage() {
   const saveDisabled =
     isPassworded || savingAction !== null || isPageLoading || categoryId === null;
 
+  const autosaveValue = useMemo<ArticleEditorAutosaveFormState>(
+    () => ({
+      title,
+      description,
+      content,
+      coverUrl,
+      categoryId,
+      selectedTags,
+      musicId,
+      commentStatus,
+    }),
+    [title, description, content, coverUrl, categoryId, selectedTags, musicId, commentStatus],
+  );
+
+  const handleRestoreAutosave = useCallback((form: ArticleEditorAutosaveFormState) => {
+    setTitle(form.title);
+    setDescription(form.description);
+    setContent(form.content);
+    setCoverUrl(form.coverUrl);
+    setCategoryId(form.categoryId);
+    setSelectedTags(form.selectedTags);
+    setMusicId(form.musicId);
+    setCommentStatus(form.commentStatus);
+  }, []);
+
+  const { statusText: autosaveStatusText, clearBackup } = useArticleEditorAutosave({
+    articleId: savedArticleId,
+    isReady: !isPageLoading && (isNew || detailApplied),
+    remoteUpdatedAt: detail?.updated_at,
+    value: autosaveValue,
+    onRestore: handleRestoreAutosave,
+  });
+
   useArticleEditorMainLayout({
     enabled: !isPageLoading,
     layoutRef,
@@ -172,6 +209,11 @@ export function ArticleEditorPage() {
     if (!open) setMusicSearchQuery("");
   };
 
+  const handleBack = () => {
+    clearBackup();
+    navigate("/articles");
+  };
+
   const handleSave = async (targetStatus: 0 | 1) => {
     if (saveDisabled) return;
 
@@ -192,6 +234,7 @@ export function ArticleEditorPage() {
       const resp = await apiClient.articles.saveAdmin(req);
       setSavedArticleId(resp.id);
       setStatusLabel(statusToLabel(resp.status));
+      clearBackup();
       addToast(targetStatus === 1 ? "文章已发布" : "草稿已保存", "success");
 
       if (isNew) {
@@ -298,6 +341,7 @@ export function ArticleEditorPage() {
           statusLabel={statusLabel}
           savingAction={savingAction}
           saveDisabled={saveDisabled}
+          onBack={handleBack}
           onSaveDraft={() => void handleSave(0)}
           onPublish={() => void handleSave(1)}
         />
@@ -324,6 +368,7 @@ export function ArticleEditorPage() {
             content={content}
             contentLength={contentLength}
             readMinutes={readMinutes}
+            autosaveStatusText={autosaveStatusText}
             isContentImageUploading={isContentImageUploading}
             contentImageInputRef={contentImageInputRef}
             onTitleChange={setTitle}
