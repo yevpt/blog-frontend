@@ -6,6 +6,7 @@ import { Button, Popover, PopoverDialog, PopoverTrigger, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import { markdownToHtmlSync } from "@repo/markdown";
 import { UserAvatar } from "@/components/common/user-avatar";
+import { isVipUser } from "@/lib/user-roles";
 import { PreviewableMarkdown } from "@/components/common/previewable-markdown";
 import { formatDateTime } from "@/lib/format-time";
 
@@ -14,6 +15,7 @@ export interface ThreadUserInfo {
   username: string;
   nickname?: string;
   avatar_url?: string;
+  roles?: string[];
 }
 
 export function getThreadDisplayName(
@@ -183,7 +185,14 @@ export const ThreadCommentHeader = memo(function ThreadCommentHeader({
   const displayName = getThreadDisplayName(user);
   const time = formatDateTime(createdAt);
 
-  const avatar = <UserAvatar src={user?.avatar_url} name={displayName} size="ml" />;
+  const avatar = (
+    <UserAvatar
+      src={user?.avatar_url}
+      name={displayName}
+      size="ml"
+      isVip={isVipUser(user?.roles)}
+    />
+  );
 
   return (
     <div className="mb-2 flex gap-2.5">
@@ -273,7 +282,14 @@ export const ThreadReplyItem = memo(function ThreadReplyItem({
   const mentionName = mentionUser ? getThreadDisplayName(mentionUser) : null;
   const time = formatDateTime(createdAt);
 
-  const avatar = <UserAvatar src={user?.avatar_url} name={displayName} size="ml" />;
+  const avatar = (
+    <UserAvatar
+      src={user?.avatar_url}
+      name={displayName}
+      size="ml"
+      isVip={isVipUser(user?.roles)}
+    />
+  );
 
   return (
     <div className="flex gap-2.5 [animation:replyFadeIn_0.2s_ease-out_both]">

@@ -43,7 +43,7 @@ import { useSession } from "@/app/providers/session-provider";
 
 describe("PillCommentInput（已登录）", () => {
   beforeEach(() => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null, patchProfile: () => {} });
   });
 
   it("渲染文本框", () => {
@@ -139,7 +139,7 @@ describe("PillCommentInput（已登录）", () => {
 
 describe("PillCommentInput（未登录）", () => {
   beforeEach(() => {
-    vi.mocked(useSession).mockReturnValue({ userId: null, profile: null });
+    vi.mocked(useSession).mockReturnValue({ userId: null, profile: null, patchProfile: () => {} });
   });
 
   it("未登录时显示登录提示 pill，不显示输入框", () => {
