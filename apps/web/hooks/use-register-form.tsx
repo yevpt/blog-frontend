@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import type { UserResp } from "@repo/api";
+import type { CaptchaChallengeResp, UserResp } from "@repo/api";
 import { compressAvatarImage, getAvatarProcessingErrorMessage } from "@repo/hooks";
 import { addToast } from "@/lib/toast";
+import { useCaptchaToken } from "./use-captcha-token";
 
 export function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -33,21 +34,8 @@ class RegisterApiError extends Error {
   }
 }
 
-export interface CaptchaChallenge {
-  challenge_id: string;
-  master_image: string;
-  tile_image: string;
-  tile_x: number;
-  tile_y: number;
-  tile_width: number;
-  tile_height: number;
-  image_width: number;
-  image_height: number;
-}
-
-interface CaptchaVerifyResp {
-  captcha_token: string;
-}
+/** 注册图形验证码挑战类型，等价于 @repo/api 的 CaptchaChallengeResp（保持对外名稳定） */
+export type CaptchaChallenge = CaptchaChallengeResp;
 
 export interface UseRegisterFormOptions {
   onSuccess: (user: UserResp) => void;
@@ -80,10 +68,6 @@ export function useRegisterForm({ onSuccess }: UseRegisterFormOptions) {
   const [emailTouched, setEmailTouched] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
-  const [captchaOpen, setCaptchaOpen] = useState(false);
-  const [captchaChallenge, setCaptchaChallenge] = useState<CaptchaChallenge | null>(null);
-  const [captchaX, setCaptchaX] = useState(0);
-  const [captchaLoading, setCaptchaLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -116,11 +100,6 @@ export function useRegisterForm({ onSuccess }: UseRegisterFormOptions) {
         ? "重新发送"
         : "获取验证码";
 
-  const closeCaptcha = useCallback(() => {
-    setCaptchaOpen(false);
-    setCaptchaChallenge(null);
-  }, []);
-
   const sendEmailCode = useCallback(
     async (captchaToken: string) => {
       await requestRegisterApi<void>("/api/auth/send-code", {
@@ -134,6 +113,14 @@ export function useRegisterForm({ onSuccess }: UseRegisterFormOptions) {
     [email],
   );
 
+  // 复用通用图形验证码编排：拿到 token 后发码，429 弹 toast，其它失败重拉挑战
+  const captcha = useCaptchaToken({
+    onToken: sendEmailCode,
+    onRateLimited: (message) => addToast(message, "error"),
+  });
+  const { openCaptcha: openCaptchaChallenge, closeCaptcha } = captcha;
+
+  // 注册场景在拉挑战前先做邮箱校验，并接管 loading / apiError 展示
   const openCaptcha = useCallback(async () => {
     if (!isValidEmail(email)) {
       return;
@@ -141,60 +128,13 @@ export function useRegisterForm({ onSuccess }: UseRegisterFormOptions) {
     setLoading(true);
     setApiError(null);
     try {
-      const challenge = await requestRegisterApi<CaptchaChallenge>(
-        "/api/captcha/register/challenge",
-        { method: "POST" },
-      );
-      setCaptchaChallenge(challenge);
-      setCaptchaX(challenge.tile_x);
-      setCaptchaOpen(true);
+      await openCaptchaChallenge();
     } catch (err) {
       setApiError(err instanceof Error ? err.message : "图形验证码加载失败");
     } finally {
       setLoading(false);
     }
-  }, [email]);
-
-  const handleCaptchaVerify = useCallback(
-    async (x: number) => {
-      if (!captchaChallenge) {
-        return;
-      }
-      setCaptchaLoading(true);
-      try {
-        const result = await requestRegisterApi<CaptchaVerifyResp>("/api/captcha/register/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            challenge_id: captchaChallenge.challenge_id,
-            x,
-            y: captchaChallenge.tile_y,
-          }),
-        });
-        await sendEmailCode(result.captcha_token);
-        closeCaptcha();
-      } catch (err) {
-        if (err instanceof RegisterApiError && err.code === 429) {
-          closeCaptcha();
-          addToast(err.message, "error");
-          return;
-        }
-        try {
-          const challenge = await requestRegisterApi<CaptchaChallenge>(
-            "/api/captcha/register/challenge",
-            { method: "POST" },
-          );
-          setCaptchaChallenge(challenge);
-          setCaptchaX(challenge.tile_x);
-        } catch {
-          closeCaptcha();
-        }
-      } finally {
-        setCaptchaLoading(false);
-      }
-    },
-    [captchaChallenge, closeCaptcha, sendEmailCode],
-  );
+  }, [email, openCaptchaChallenge]);
 
   const submitRegistration = useCallback(async () => {
     setSubmitAttempted(true);
@@ -308,12 +248,12 @@ export function useRegisterForm({ onSuccess }: UseRegisterFormOptions) {
     passwordTouched,
     setPasswordTouched,
     submitAttempted,
-    captchaOpen,
-    captchaChallenge,
-    captchaX,
-    setCaptchaX,
-    captchaLoading,
-    setCaptchaOpen,
+    captchaOpen: captcha.captchaOpen,
+    captchaChallenge: captcha.captchaChallenge,
+    captchaX: captcha.captchaX,
+    setCaptchaX: captcha.setCaptchaX,
+    captchaLoading: captcha.captchaLoading,
+    setCaptchaOpen: captcha.setCaptchaOpen,
     fileInputRef,
     emailError,
     passwordError,
@@ -321,7 +261,7 @@ export function useRegisterForm({ onSuccess }: UseRegisterFormOptions) {
     canSendCode,
     sendBtnLabel,
     openCaptcha,
-    handleCaptchaVerify,
+    handleCaptchaVerify: captcha.handleVerify,
     closeCaptcha,
     handleSubmit,
     submitRegistration,
