@@ -1,19 +1,22 @@
 "use client";
 
 import type { MomentPageResp, UserPublicProfileResp } from "@repo/api";
-import { Card } from "@repo/ui";
+import { Card, cn } from "@repo/ui";
 import { useProfileEditor } from "@/hooks/use-profile-editor";
 import { UserInfoHeader } from "./user-info-header";
 import { UserProfileTabs } from "./user-profile-tabs";
+import { PROFILE_PAGE_MAX_WIDTH_CLASS } from "./constants";
 
 interface UserProfilePageProps {
   profile: UserPublicProfileResp;
   initialMomentsPage: MomentPageResp;
+  initialLikesCount: number;
 }
 
 export function UserProfilePage({
   profile: initialProfile,
   initialMomentsPage,
+  initialLikesCount,
 }: UserProfilePageProps) {
   const {
     profile,
@@ -28,10 +31,10 @@ export function UserProfilePage({
   } = useProfileEditor(initialProfile);
 
   return (
-    <div className="min-h-screen bg-muted/40">
+    <div className="min-h-screen bg-background">
       <div className="h-16" />
 
-      <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
+      <div className={cn("mx-auto space-y-4 px-4 py-6", PROFILE_PAGE_MAX_WIDTH_CLASS)}>
         <UserInfoHeader
           nickname={profile.nickname}
           mark={profile.mark}
@@ -48,10 +51,11 @@ export function UserProfilePage({
           onAvatarChange={changeAvatar}
         />
 
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden rounded-2xl">
           <UserProfileTabs
             profile={profile}
             initialMomentsPage={initialMomentsPage}
+            initialLikesCount={initialLikesCount}
             isOwner={isOwner}
             isEditMode={isEditMode}
             onSaveField={saveField}

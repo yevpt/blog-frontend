@@ -76,7 +76,7 @@ export function UserInfoHeader({
   const isAdmin = isAdminUser(roles);
 
   return (
-    <Card className="relative px-6 py-8">
+    <Card className="relative rounded-2xl px-6 py-8">
       {/* 三点菜单 — 左上角 */}
       {isOwner && (
         <button

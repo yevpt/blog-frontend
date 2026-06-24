@@ -1,4 +1,5 @@
 import { Card, cn } from "@repo/ui";
+import { PROFILE_PAGE_MAX_WIDTH_CLASS } from "../constants";
 
 function Bone({ className }: { className?: string }) {
   return <div className={cn("animate-pulse rounded bg-muted", className)} />;
@@ -6,11 +7,11 @@ function Bone({ className }: { className?: string }) {
 
 export function UserProfileSkeleton() {
   return (
-    <div className="min-h-screen bg-muted/40">
+    <div className="min-h-screen bg-background">
       <div className="h-16" />
-      <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
+      <div className={cn("mx-auto space-y-4 px-4 py-6", PROFILE_PAGE_MAX_WIDTH_CLASS)}>
         {/* Card 1: 用户信息头 */}
-        <Card className="px-6 py-8">
+        <Card className="rounded-2xl px-6 py-8">
           <div className="flex flex-col items-center text-center">
             <Bone className="h-20 w-20 rounded-full" />
             <Bone className="mt-3 h-6 w-32" />
@@ -26,7 +27,7 @@ export function UserProfileSkeleton() {
         </Card>
 
         {/* Card 2: Tabs + 内容 */}
-        <Card>
+        <Card className="rounded-2xl">
           {/* Tab 栏 */}
           <div className="flex gap-1 border-b border-border px-4 pt-2">
             {[1, 2, 3].map((i) => (
