@@ -322,9 +322,18 @@ importers:
 
   packages/hooks:
     dependencies:
-      react:
-        specifier: '*'
-        version: 19.2.6
+      '@repo/api':
+        specifier: workspace:*
+        version: link:../api
+      '@repo/editor':
+        specifier: workspace:*
+        version: link:../editor
+      browser-image-compression:
+        specifier: ^2.0.2
+        version: 2.0.2
+      heic2any:
+        specifier: 0.0.4
+        version: 0.0.4
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*
@@ -332,6 +341,15 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+      '@testing-library/react':
+        specifier: ^16.3.2
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.6
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@25.9.1)(@vitest/coverage-v8@4.1.7)(happy-dom@20.9.0)(jsdom@29.1.1)(vite@8.0.14(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0))
 
   packages/icons:
     dependencies:

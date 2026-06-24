@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>文章编辑器 · 图片占位符（对齐碎语）</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f0eeea;
+        --surface: #fdfbf7;
+        --ink: #1c1917;
+        --ink-soft: #57534e;
+        --ink-faint: #a8a29e;
+        --muted: #f4f4f5;
+        --muted-fg: #71717a;
+        --foreground: #1c1917;
+        --line-soft: rgb(28 25 23 / 5%);
+        --primary: #7c3aed;
+        --r-shell: 12px;
+        --r-md: 6px;
+        --shell-border: inset 0 0 0 1px rgb(28 25 23 / 8%);
+        --shadow-panel: 0 1px 2px rgb(28 25 23 / 4%), 0 12px 32px rgb(28 25 23 / 5%);
+        --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+        --font-serif: "Source Serif 4", ui-serif, Georgia, serif;
+      }
+
+      :root.dark {
+        color-scheme: dark;
+        --bg: #100f0e;
+        --surface: #1c1a18;
+        --ink: #f5f5f4;
+        --ink-soft: #a8a29e;
+        --ink-faint: #78716c;
+        --muted: #27272a;
+        --muted-fg: #a1a1aa;
+        --foreground: #f5f5f4;
+        --line-soft: rgb(255 255 255 / 5%);
+        --shadow-panel: 0 1px 2px rgb(0 0 0 / 30%), 0 12px 32px rgb(0 0 0 / 24%);
+        --shell-border: inset 0 0 0 1px rgb(255 255 255 / 9%);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--font-sans);
+        font-size: 14px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button {
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .page {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 28px 20px 48px;
+      }
+
+      .page-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .page-head h1 {
+        margin: 0;
+        font-family: var(--font-serif);
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .page-head p {
+        margin: 4px 0 0;
+        color: var(--ink-soft);
+        font-size: 13px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .btn {
+        min-height: 34px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 6px;
+        background: var(--ink);
+        color: var(--surface);
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .btn.secondary {
+        background: var(--surface);
+        color: var(--ink);
+        box-shadow: var(--shell-border);
+      }
+
+      .panel {
+        border-radius: var(--r-shell);
+        background: var(--surface);
+        box-shadow: var(--shell-border), var(--shadow-panel);
+        overflow: hidden;
+      }
+
+      .canvas-head {
+        padding: 28px 36px 0;
+      }
+
+      .title-fake {
+        font-family: var(--font-serif);
+        font-size: 32px;
+        font-weight: 600;
+        line-height: 1.18;
+        letter-spacing: -0.03em;
+      }
+
+      .desc-fake {
+        margin-top: 12px;
+        color: var(--ink-soft);
+        font-size: 15px;
+        line-height: 1.68;
+      }
+
+      .editor-zone {
+        margin-top: 22px;
+        border-top: 1px solid var(--line-soft);
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 2px;
+        padding: 10px 22px;
+        color: var(--ink-faint);
+        font-size: 11px;
+      }
+
+      .toolbar span:last-child {
+        margin-left: auto;
+      }
+
+      .editor-inner {
+        max-width: 620px;
+        margin: 0 auto;
+        padding: 6px 36px 36px;
+      }
+
+      .editor p {
+        margin: 0 0 18px;
+        font-size: 16px;
+        line-height: 1.85;
+        color: color-mix(in srgb, var(--ink) 88%, var(--ink-soft));
+      }
+
+      .canvas-foot {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 22px 14px;
+        border-top: 1px solid var(--line-soft);
+        color: var(--ink-faint);
+        font-size: 12px;
+      }
+
+      /* ===== 碎语 LoadingTile 同款，撑满文章图宽 ===== */
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .img-tile__spinner {
+          animation: none !important;
+        }
+      }
+
+      /*
+       * 对应 snippet-image-uploader.tsx LoadingTile：
+       * flex items-center justify-center rounded-md bg-muted/60
+       * + h-5 w-5 animate-spin border-2 border-muted-foreground/30 border-t-foreground
+       */
+      .img-tile {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 120px;
+        margin: 24px 0;
+        border-radius: var(--r-md);
+        background: color-mix(in srgb, var(--muted) 60%, transparent);
+      }
+
+      .img-tile__spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid color-mix(in srgb, var(--muted-fg) 30%, transparent);
+        border-top-color: var(--foreground);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      .img-tile--selected {
+        outline: 2px solid var(--primary);
+        outline-offset: -2px;
+      }
+
+      .img-real {
+        display: block;
+        width: 100%;
+        height: auto;
+        margin: 24px 0;
+        border-radius: var(--r-md);
+      }
+
+      .ref {
+        margin-top: 16px;
+        padding: 12px 14px;
+        border-radius: 6px;
+        background: color-mix(in srgb, var(--muted) 40%, var(--surface));
+        color: var(--ink-soft);
+        font-size: 12px;
+        line-height: 1.55;
+        box-shadow: var(--shell-border);
+      }
+
+      .ref code {
+        font-size: 11px;
+      }
+
+      .compare {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 8px;
+      }
+
+      .compare-tile {
+        display: flex;
+        height: 80px;
+        width: 80px;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--r-md);
+        background: color-mix(in srgb, var(--muted) 60%, transparent);
+      }
+
+      @media (max-width: 640px) {
+        .canvas-head,
+        .editor-inner {
+          padding-inline: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="page-head">
+        <div>
+          <h1>图片占位符 · 对齐碎语</h1>
+          <p>与碎语 composer 的 LoadingTile 同一套：灰底 + 居中 spinner，无文案无进度条。</p>
+        </div>
+        <div class="actions">
+          <button class="btn secondary" id="themeBtn" type="button">深浅色</button>
+          <button class="btn" id="simulateBtn" type="button">模拟插入</button>
+        </div>
+      </header>
+
+      <section class="panel">
+        <div class="canvas-head">
+          <div class="title-fake">把博客编辑器体验打磨到顺手</div>
+          <div class="desc-fake">选图后立刻占位，上传完成换成真图。</div>
+        </div>
+
+        <div class="editor-zone">
+          <div class="toolbar" aria-hidden="true">
+            <span>B I U H … 🔗 🖼</span>
+            <span>Markdown</span>
+          </div>
+
+          <div class="editor-inner">
+            <article class="editor">
+              <p>
+                插图前后的段落应保持同样的节奏。占位块只占住最终图片的比例，中间一个转圈——和碎语选图后压缩等待时一样，不额外加状态文案。
+              </p>
+
+              <div id="slot">
+                <figure
+                  class="img-tile"
+                  style="aspect-ratio: 16 / 9"
+                  aria-label="图片处理中"
+                  id="demoTile"
+                >
+                  <span class="img-tile__spinner" aria-hidden="true"></span>
+                </figure>
+              </div>
+
+              <p>上传结束、远程地址 decode 完成后，占位块直接换成上图，尺寸不变。</p>
+            </article>
+
+            <div class="ref">
+              <strong>碎语原组件（80×80 固定格）</strong>
+              <div class="compare">
+                <div class="compare-tile" aria-hidden="true">
+                  <span class="img-tile__spinner"></span>
+                </div>
+                <span>
+                  文章里唯一区别：<code>width:100%</code> + 本地预览的
+                  <code>aspect-ratio</code>，样式类相同。
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <footer class="canvas-foot">
+            <span>412 字 · 约 2 分钟</span>
+            <span id="footStatus">图片上传中…</span>
+          </footer>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const FINAL =
+        "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=1200&q=85";
+
+      const root = document.documentElement;
+      const slot = document.getElementById("slot");
+      const footStatus = document.getElementById("footStatus");
+      let timer;
+
+      function makeTile(ratio) {
+        const fig = document.createElement("figure");
+        fig.className = "img-tile";
+        fig.style.aspectRatio = ratio;
+        fig.setAttribute("aria-label", "图片处理中");
+        const spin = document.createElement("span");
+        spin.className = "img-tile__spinner";
+        spin.setAttribute("aria-hidden", "true");
+        fig.appendChild(spin);
+        return fig;
+      }
+
+      document.getElementById("themeBtn").addEventListener("click", () => {
+        root.classList.toggle("dark");
+      });
+
+      document.getElementById("simulateBtn").addEventListener("click", () => {
+        clearTimeout(timer);
+        slot.innerHTML = "";
+        slot.appendChild(makeTile("16 / 9"));
+        footStatus.textContent = "图片上传中…";
+
+        timer = setTimeout(() => {
+          slot.innerHTML = "";
+          const img = document.createElement("img");
+          img.className = "img-real";
+          img.src = FINAL;
+          img.alt = "示例配图";
+          img.style.aspectRatio = "16 / 9";
+          img.style.objectFit = "cover";
+          slot.appendChild(img);
+          footStatus.textContent = "已保存 · 刚刚";
+        }, 1600);
+      });
+    </script>
+  </body>
+</html>
