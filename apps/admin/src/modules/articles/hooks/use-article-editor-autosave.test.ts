@@ -7,6 +7,16 @@ import {
   type ArticleEditorAutosaveFormState,
 } from "./use-article-editor-autosave";
 
+const autosaveTestTime = new Date("2026-06-24T08:00:00.000Z");
+
+function formatAutosaveStatusTime(date: Date) {
+  return date.toLocaleTimeString("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
 const baseState: ArticleEditorAutosaveFormState = {
   title: "",
   description: "",
@@ -27,7 +37,7 @@ function getStoredValue(key: string) {
 describe("useArticleEditorAutosave", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-06-24T08:00:00.000Z"));
+    vi.setSystemTime(autosaveTestTime);
     localStorage.clear();
   });
 
@@ -61,7 +71,9 @@ describe("useArticleEditorAutosave", () => {
 
     const stored = getStoredValue(getArticleEditorAutosaveKey(undefined));
     expect(stored.form.title).toBe("本机标题");
-    expect(result.current.statusText).toBe("已本机备份 16:00");
+    expect(result.current.statusText).toBe(
+      `已本机备份 ${formatAutosaveStatusTime(autosaveTestTime)}`,
+    );
   });
 
   it("频繁输入时直到 debounce 触发才序列化本机备份", async () => {
