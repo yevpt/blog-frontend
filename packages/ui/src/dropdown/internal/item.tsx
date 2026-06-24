@@ -4,6 +4,7 @@ import { MenuItem as AriaMenuItem, Text } from "react-aria-components";
 import { SvgIcon } from "@repo/icons";
 import { Avatar } from "../../avatar/avatar";
 import { cn } from "../../lib/utils";
+import { menuItemInnerClasses } from "../../lib/control-variants";
 import type { DropdownItemProps } from "../types";
 import { SelectionIndicator } from "./selection-indicator";
 
@@ -46,12 +47,12 @@ export const DropdownItem = ({
       {(state) => (
         <div
           className={cn(
-            "relative flex items-center rounded-md px-2.5 py-2 outline-none transition duration-100 ease-linear",
-            !state.isDisabled && !danger && "group-hover:bg-accent",
-            !state.isDisabled && danger && "group-hover:bg-destructive/10",
-            state.isFocused && !danger && "bg-accent",
-            state.isFocused && danger && "bg-destructive/10",
-            state.isFocusVisible && "ring-2 ring-ring ring-inset -ring-offset-2",
+            menuItemInnerClasses.base,
+            !state.isDisabled && !danger && menuItemInnerClasses.hover,
+            !state.isDisabled && danger && menuItemInnerClasses.hoverDanger,
+            state.isFocused && !danger && menuItemInnerClasses.focused,
+            state.isFocused && danger && menuItemInnerClasses.focusedDanger,
+            state.isFocusVisible && "ring-2 ring-ring ring-inset",
             state.hasSubmenu && "pr-1.5",
           )}
         >
@@ -78,11 +79,7 @@ export const DropdownItem = ({
           <div className="min-w-0 grow">
             <Text
               slot="label"
-              className={cn(
-                "block truncate text-sm font-semibold",
-                danger ? "text-destructive" : "text-foreground",
-                state.isFocused && !danger && "text-accent-foreground",
-              )}
+              className={cn("block truncate", danger ? "text-destructive" : "text-foreground")}
             >
               {label || (typeof children === "function" ? children(state) : children)}
             </Text>

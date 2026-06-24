@@ -86,6 +86,7 @@ export {
   type SelectProps,
   type SelectSelectionIndicator,
   type SelectSize,
+  type SelectVariant,
 } from "./select";
 export {
   Carousel,

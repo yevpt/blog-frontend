@@ -96,6 +96,25 @@ describe("Dropdown", () => {
     expect(screen.getByTestId("icon-dots-horizontal")).toBeTruthy();
   });
 
+  it("菜单项使用紧凑精致内层样式", async () => {
+    const user = userEvent.setup();
+    render(
+      <Dropdown.Root>
+        <Dropdown.DotsButton aria-label="打开菜单" />
+        <Dropdown.Popover>
+          <Dropdown.Menu aria-label="菜单">
+            <Dropdown.Item label="选项一" id="1" />
+          </Dropdown.Menu>
+        </Dropdown.Popover>
+      </Dropdown.Root>,
+    );
+    await user.click(screen.getByRole("button", { name: "打开菜单" }));
+    const item = await screen.findByRole("menuitem", { name: "选项一" });
+    const inner = item.firstElementChild as HTMLElement;
+    expect(inner.className).toContain("font-medium");
+    expect(inner.className).toContain("py-1.5");
+  });
+
   it("Dropdown.DotsButton variant=ghost 使用圆形 hover 背景样式", () => {
     render(
       <Dropdown.Root>

@@ -86,6 +86,13 @@ describe("SearchField", () => {
     expect(screen.getByRole("button", { name: "清除搜索" })).toHaveClass("ghost-clear-button");
   });
 
+  it("默认使用紧凑精致边框与 focus glow", () => {
+    render(<SearchField placeholder="搜索文章" />);
+    const group = screen.getByRole("searchbox").parentElement;
+    expect(group).toHaveClass("border-input", "bg-card");
+    expect(group?.className).toContain("focus-within:border-ring");
+  });
+
   it("compact 模式内部 16px，通过 origin-top-right scale 对齐 h-7 视觉槽位", () => {
     render(<SearchField placeholder="搜索文章" compact />);
 

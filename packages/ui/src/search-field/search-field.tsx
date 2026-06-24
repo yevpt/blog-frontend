@@ -13,6 +13,7 @@ import {
 import { SvgIcon } from "@repo/icons";
 
 import { cn } from "../lib/utils";
+import { compactControlFocusWithin, triggerVariantClasses } from "../lib/control-variants";
 import type { SearchFieldProps } from "./types";
 
 // 2.333rem ≈ h-7(1.75rem) / 0.75；133.333% ≈ 100% / 0.75（Tailwind 不编译带除法的 calc arbitrary）
@@ -51,10 +52,10 @@ export function SearchField({
     <Group
       onMouseDown={handleGroupMouseDown}
       className={cn(
-        "flex items-center rounded-md border border-input bg-background",
-        "transition-colors",
-        "focus-within:ring-2 focus-within:ring-ring focus-within:border-transparent",
-        "group-data-[invalid]:border-destructive",
+        "flex items-center",
+        triggerVariantClasses.compact.base,
+        compactControlFocusWithin,
+        "group-data-[invalid]:border-destructive group-data-[invalid]:shadow-none",
         "group-data-[disabled]:opacity-50 group-data-[disabled]:cursor-not-allowed",
         compact ? "h-full w-full" : size === "sm" ? "h-9" : "h-10",
         groupClassName,
