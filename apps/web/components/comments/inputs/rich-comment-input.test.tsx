@@ -5,7 +5,6 @@ import { RichCommentInput } from "./rich-comment-input";
 
 const richEditorProps = vi.hoisted(() => vi.fn());
 
-// mock @repo/editor 避免 Tiptap DOM 依赖问题
 vi.mock("@repo/editor", () => ({
   ImageDialog: ({ open }: { open: boolean }) =>
     open ? (
@@ -19,19 +18,12 @@ vi.mock("@repo/editor", () => ({
         插入链接
       </div>
     ) : null,
-  CodeDialog: ({ open }: { open: boolean }) =>
-    open ? (
-      <div role="dialog" aria-label="插入代码块">
-        插入代码块
-      </div>
-    ) : null,
   RichEditor: ({
     value,
     onSubmit,
     submitDisabled,
     onInsertImage,
     onInsertLink,
-    onInsertCode,
     maxLength,
     characterCountThreshold,
   }: {
@@ -42,7 +34,6 @@ vi.mock("@repo/editor", () => ({
     characterCountThreshold?: number;
     onInsertImage?: (insert: (url: string, alt?: string) => void) => void;
     onInsertLink?: (insert: (url: string, title?: string) => void) => void;
-    onInsertCode?: (insert: (code: string, lang: string) => void) => void;
   }) => {
     richEditorProps({ value, submitDisabled, maxLength, characterCountThreshold });
     const showCounter =
@@ -62,7 +53,6 @@ vi.mock("@repo/editor", () => ({
         )}
         <button onClick={() => onInsertImage?.((_url, _alt) => {})}>插入图片</button>
         <button onClick={() => onInsertLink?.((_url, _title) => {})}>插入链接</button>
-        <button onClick={() => onInsertCode?.((_code, _lang) => {})}>插入代码</button>
       </div>
     );
   },
@@ -90,13 +80,6 @@ describe("RichCommentInput", () => {
     render(<RichCommentInput value="" onChange={() => {}} onSubmit={() => {}} />);
     await user.click(screen.getByText("插入链接"));
     expect(screen.getByRole("dialog", { name: "插入链接" })).toBeInTheDocument();
-  });
-
-  it("点击插入代码按钮后，CodeDialog 打开", async () => {
-    const user = userEvent.setup();
-    render(<RichCommentInput value="" onChange={() => {}} onSubmit={() => {}} />);
-    await user.click(screen.getByText("插入代码"));
-    expect(screen.getByRole("dialog", { name: "插入代码块" })).toBeInTheDocument();
   });
 
   it("未传 maxLength 时不渲染计数器", () => {
