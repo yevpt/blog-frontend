@@ -5,9 +5,14 @@ import type { UserPublicProfileResp } from "@repo/api";
 import { useProfileEditor } from "./use-profile-editor";
 
 let mockSessionUserId: number | null = 1;
+const mockPatchProfile = vi.fn();
 
 vi.mock("@/app/providers/session-provider", () => ({
-  useSession: () => ({ userId: mockSessionUserId, profile: null }),
+  useSession: () => ({
+    userId: mockSessionUserId,
+    profile: null,
+    patchProfile: mockPatchProfile,
+  }),
 }));
 
 const baseProfile: UserPublicProfileResp = {
@@ -34,6 +39,7 @@ describe("useProfileEditor", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
     mockSessionUserId = 1;
+    mockPatchProfile.mockClear();
   });
 
   afterEach(() => {
@@ -58,6 +64,7 @@ describe("useProfileEditor", () => {
       }),
     );
     expect(result.current.profile.nickname).toBe("NewName");
+    expect(mockPatchProfile).toHaveBeenCalledWith({ nickname: "NewName" });
   });
 
   it("saving mark/description PATCHes profile endpoint with null for empty values", async () => {
@@ -207,7 +214,11 @@ describe("useProfileEditor", () => {
       method: "POST",
       body: expect.any(FormData),
     });
-    expect((init?.body as FormData).get("avatar")).toBe(file);
+    const body = init?.body as FormData;
+    const uploaded = body.get("file");
+    expect(uploaded).toBeInstanceOf(File);
+    expect((uploaded as File).name).toBe("avatar.png");
     expect(result.current.profile.avatar_url).toBe("https://cdn.test/avatar.png");
+    expect(mockPatchProfile).toHaveBeenCalledWith({ avatar_url: "https://cdn.test/avatar.png" });
   });
 });
