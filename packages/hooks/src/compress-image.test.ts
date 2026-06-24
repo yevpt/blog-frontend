@@ -7,7 +7,7 @@ vi.mock("browser-image-compression", () => ({
 const heic2anyMock = vi.fn();
 vi.mock("heic2any", () => ({ default: (...args: unknown[]) => heic2anyMock(...args) }));
 
-import { compressImage, MAX_IMAGE_BYTES } from "../compress-image";
+import { compressImage, MAX_IMAGE_BYTES } from "./compress-image";
 
 function fileOf(bytes: number, type = "image/png", name = "x.png"): File {
   return new File([new Uint8Array(bytes)], name, { type });
