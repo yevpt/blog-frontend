@@ -119,4 +119,17 @@ export interface RichEditorProps extends InsertHandlers {
   onLoginRequired?: () => void;
 
   className?: string;
+
+  /**
+   * 视觉变体：`card` 为默认圆角边框卡片；`plain` 用于文章编辑等嵌入画布场景。
+   */
+  variant?: "card" | "plain";
+
+  /**
+   * 工具栏位置。文章编辑场景使用 `top`，评论/碎语默认 `bottom`。
+   */
+  toolbarPlacement?: "top" | "bottom";
+
+  /** 工具栏右侧附加内容（如「Markdown」提示） */
+  toolbarTrailing?: React.ReactNode;
 }

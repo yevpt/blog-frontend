@@ -10,6 +10,7 @@ export interface ArticleMusicPreviewRowProps {
   durationSeconds: number;
   url?: string;
   actions: ReactNode;
+  className?: string;
 }
 
 export function ArticleMusicPreviewRow({
@@ -19,6 +20,7 @@ export function ArticleMusicPreviewRow({
   durationSeconds,
   url,
   actions,
+  className,
 }: ArticleMusicPreviewRowProps) {
   const {
     audioRef,
@@ -41,7 +43,12 @@ export function ArticleMusicPreviewRow({
     state === "playing" ? `暂停 ${title}` : state === "loading" ? `加载 ${title}` : `播放 ${title}`;
 
   return (
-    <div className="flex h-16 items-center gap-3 rounded-xl border border-border bg-background p-3">
+    <div
+      className={cn(
+        "flex h-16 items-center gap-3 rounded-xl border border-border bg-background p-3",
+        className,
+      )}
+    >
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <audio
         ref={audioRef}

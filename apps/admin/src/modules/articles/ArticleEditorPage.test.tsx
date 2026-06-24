@@ -75,6 +75,7 @@ const mockMusic = {
       name: "Midnight Drafts",
       singer: "Luma",
       album: "A",
+      url: "https://cdn.example.com/midnight.mp3",
       duration: 222,
       seq: 0,
     },
@@ -83,6 +84,7 @@ const mockMusic = {
       name: "Quiet Rain",
       singer: "Paperroom",
       album: "B",
+      url: "https://cdn.example.com/rain.mp3",
       duration: 258,
       seq: 1,
     },
@@ -169,6 +171,23 @@ describe("ArticleEditorPage", () => {
     expect(screen.getByLabelText("文章分类")).toBeInTheDocument();
   });
 
+  it("桌面端主区域可拉伸铺满视口，并在右栏更高时允许页面滚动", async () => {
+    renderEditorPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole("textbox", { name: "文章标题" })).toBeInTheDocument();
+    });
+
+    const layout = screen.getByTestId("article-editor-layout");
+    expect(layout).toHaveClass("xl:min-h-[calc(100dvh-1.5rem)]");
+    expect(layout).not.toHaveClass("xl:overflow-visible");
+
+    const main = screen.getByTestId("article-editor-main");
+    expect(main).toHaveClass("flex-1");
+    expect(main).toHaveClass("xl:items-stretch");
+    expect(main).toHaveClass("overflow-hidden");
+  });
+
   it("编辑页加载详情并回填", async () => {
     renderEditorPage("/articles/12/edit");
 
@@ -189,18 +208,18 @@ describe("ArticleEditorPage", () => {
     });
   });
 
-  it("保存草稿调用 saveAdmin 并跳转编辑页", async () => {
+  it("存草稿调用 saveAdmin 并跳转编辑页", async () => {
     const user = userEvent.setup();
     renderEditorPage();
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "保存草稿" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "存草稿" })).toBeEnabled();
     });
 
     await user.type(screen.getByRole("textbox", { name: "文章标题" }), "新文章");
     await user.type(screen.getByRole("textbox", { name: "文章描述" }), "摘要");
     await user.type(screen.getByRole("textbox", { name: "文章内容编辑器" }), "正文");
-    await user.click(screen.getByRole("button", { name: "保存草稿" }));
+    await user.click(screen.getByRole("button", { name: "存草稿" }));
 
     await waitFor(() => {
       expect(apiClient.articles.saveAdmin).toHaveBeenCalledWith(
@@ -217,7 +236,7 @@ describe("ArticleEditorPage", () => {
     expect(screen.getByText("草稿已保存")).toBeInTheDocument();
   });
 
-  it("发布文章使用 status 1", async () => {
+  it("发布使用 status 1", async () => {
     const user = userEvent.setup();
     vi.mocked(apiClient.articles.saveAdmin).mockResolvedValue({
       ...mockDetail,
@@ -228,10 +247,10 @@ describe("ArticleEditorPage", () => {
     renderEditorPage("/articles/12/edit");
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "发布文章" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "发布" })).toBeEnabled();
     });
 
-    await user.click(screen.getByRole("button", { name: "发布文章" }));
+    await user.click(screen.getByRole("button", { name: "发布" }));
 
     await waitFor(() => {
       expect(apiClient.articles.saveAdmin).toHaveBeenCalledWith(
@@ -250,10 +269,10 @@ describe("ArticleEditorPage", () => {
     renderEditorPage("/articles/12/edit");
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "保存草稿" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "存草稿" })).toBeEnabled();
     });
 
-    await user.click(screen.getByRole("button", { name: "保存草稿" }));
+    await user.click(screen.getByRole("button", { name: "存草稿" }));
 
     await waitFor(() => {
       expect(screen.getByText("标题不能为空")).toBeInTheDocument();
@@ -265,7 +284,7 @@ describe("ArticleEditorPage", () => {
     renderEditorPage("/articles/12/edit");
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "替换背景图" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "更换" })).toBeEnabled();
     });
 
     const file = new File(["cover"], "cover.png", { type: "image/png" });
@@ -277,7 +296,7 @@ describe("ArticleEditorPage", () => {
       expect(apiClient.uploads.tempImage).toHaveBeenCalledWith(file, "covers");
     });
 
-    await user.click(screen.getByRole("button", { name: "保存草稿" }));
+    await user.click(screen.getByRole("button", { name: "存草稿" }));
 
     await waitFor(() => {
       expect(apiClient.articles.saveAdmin).toHaveBeenCalledWith(
@@ -321,8 +340,8 @@ describe("ArticleEditorPage", () => {
       expect(screen.getByText("加密")).toBeInTheDocument();
     });
 
-    expect(screen.getByRole("button", { name: "保存草稿" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "发布文章" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "存草稿" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "发布" })).toBeDisabled();
     expect(screen.getByText(/当前为加密文章/)).toBeInTheDocument();
   });
 
@@ -341,6 +360,24 @@ describe("ArticleEditorPage", () => {
     await user.type(screen.getByRole("searchbox", { name: "搜索音乐" }), "quiet");
     await user.click(screen.getByRole("button", { name: /Quiet Rain/ }));
     expect(screen.getByText("Quiet Rain")).toBeInTheDocument();
+  });
+
+  it("背景音乐卡片支持试听播放", async () => {
+    const user = userEvent.setup();
+    const playMock = vi.fn().mockResolvedValue(undefined);
+    HTMLAudioElement.prototype.play = playMock;
+
+    renderEditorPage("/articles/12/edit");
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "播放 Midnight Drafts" })).toBeEnabled();
+    });
+
+    await user.click(screen.getByRole("button", { name: "播放 Midnight Drafts" }));
+
+    expect(playMock).toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "暂停 Midnight Drafts" })).toBeInTheDocument();
+    expect(screen.getByLabelText("播放进度")).toBeInTheDocument();
   });
 
   it("通过 Autocomplete 追加标签", async () => {

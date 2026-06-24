@@ -52,10 +52,48 @@ describe("RichEditor", () => {
     expect(editorArea?.className).toContain("[&_.tiptap]:dark:prose-invert");
   });
 
+  it("plain + toolbarPlacement=top 时工具栏在上且无卡片边框", async () => {
+    const { container } = render(
+      <RichEditor
+        value=""
+        onChange={() => {}}
+        variant="plain"
+        toolbarPlacement="top"
+        toolbarTrailing={<span>Markdown</span>}
+        onInsertImage={() => {}}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector("[data-rich-editor-toolbar]")).toBeTruthy();
+    });
+
+    const root = container.firstElementChild;
+    expect(root).not.toHaveClass("border");
+    expect(root).not.toHaveClass("rounded-xl");
+    expect(screen.getByText("Markdown")).toBeInTheDocument();
+  });
+
   it("Markdown 标题被解析为 h2 节点", async () => {
     const { container } = render(<RichEditor value="## 二级标题\n\n正文" onChange={() => {}} />);
     await waitFor(() => {
       expect(container.querySelector(".tiptap h2")).toHaveTextContent("二级标题");
+    });
+  });
+
+  it("外部 value 异步更新后同步到编辑器", async () => {
+    const onChange = vi.fn();
+    const { container, rerender } = render(<RichEditor value="" onChange={onChange} />);
+
+    await waitFor(() => {
+      expect(container.querySelector("[contenteditable]")).toBeTruthy();
+    });
+
+    rerender(<RichEditor value="## 已有标题\n\n已有正文" onChange={onChange} />);
+
+    await waitFor(() => {
+      expect(container.querySelector(".tiptap h2")).toHaveTextContent("已有标题");
+      expect(container.querySelector(".tiptap")).toHaveTextContent("已有正文");
     });
   });
 

@@ -1,0 +1,59 @@
+import { describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { ArticleEditorWritingPanel } from "./ArticleEditorWritingPanel";
+
+vi.mock("@repo/editor", () => ({
+  RichEditor: ({ placeholder }: { placeholder?: string }) => (
+    <textarea aria-label="文章内容编辑器" placeholder={placeholder} />
+  ),
+}));
+
+describe("ArticleEditorWritingPanel", () => {
+  it("渲染标题、摘要与字数统计", () => {
+    render(
+      <ArticleEditorWritingPanel
+        title="标题"
+        description="摘要"
+        content=""
+        contentLength={120}
+        readMinutes={1}
+        isContentImageUploading={false}
+        contentImageInputRef={{ current: null }}
+        onTitleChange={vi.fn()}
+        onDescriptionChange={vi.fn()}
+        onContentChange={vi.fn()}
+        onInsertImage={vi.fn()}
+        onContentImageFileChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("textbox", { name: "文章标题" })).toHaveValue("标题");
+    expect(screen.getByText("120")).toBeInTheDocument();
+    expect(screen.getByText(/分钟/)).toBeInTheDocument();
+  });
+
+  it("写作区限制在容器内滚动，避免撑开整页", () => {
+    const { container } = render(
+      <ArticleEditorWritingPanel
+        title=""
+        description=""
+        content=""
+        contentLength={0}
+        readMinutes={1}
+        isContentImageUploading={false}
+        contentImageInputRef={{ current: null }}
+        onTitleChange={vi.fn()}
+        onDescriptionChange={vi.fn()}
+        onContentChange={vi.fn()}
+        onInsertImage={vi.fn()}
+        onContentImageFileChange={vi.fn()}
+      />,
+    );
+
+    const panel = screen.getByLabelText("写作区");
+    expect(panel).toHaveClass("overflow-hidden");
+    expect(panel).toHaveClass("h-full");
+    expect(panel).toHaveClass("xl:min-h-full");
+    expect(container.querySelector(".border-t")).toHaveClass("min-h-0");
+  });
+});

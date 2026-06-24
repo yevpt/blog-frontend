@@ -42,7 +42,6 @@ import { useRef, useEffect, useMemo } from "react";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
-import { marked } from "marked";
 import Image from "@tiptap/extension-image";
 import { UnderlineExtension } from "../extensions/underline";
 import { createMentionExtension } from "../extensions/mention";
@@ -52,6 +51,7 @@ import { AtomParagraphMergeExtension } from "../extensions/atom-paragraph-merge"
 import { MarkBoundaryExtension } from "../extensions/mark-boundary";
 import { CharacterLimitExtension } from "../extensions/character-limit";
 import type { MentionItem } from "../types";
+import { markdownToHtml } from "../utils/markdown-to-html";
 
 interface UseRichEditorOptions {
   initialValue: string;
@@ -60,21 +60,6 @@ interface UseRichEditorOptions {
   placeholder?: string;
   disabled?: boolean;
   maxLength?: number;
-}
-
-/**
- * 把 Markdown 字符串转成 HTML，供 Tiptap `content` 选项使用。
- * - 空字符串直接返回空，避免 marked 生成空 <p>。
- * - 若内容本身已是 HTML（以标签开头），直接返回原串，避免二次转义。
- * - 其余情况用 marked 同步解析为 HTML。
- */
-function markdownToHtml(markdown: string): string {
-  const trimmed = markdown.trim();
-  if (!trimmed) return "";
-  if (/^<[a-z][\s\S]*>/i.test(trimmed)) {
-    return markdown;
-  }
-  return (marked.parse(markdown, { async: false }) as string).trim();
 }
 
 export function useRichEditor({

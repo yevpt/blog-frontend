@@ -36,6 +36,9 @@ interface ToolbarProps extends InsertHandlers {
   characterCountOverLimit?: boolean;
   isLoggedIn?: boolean;
   onLoginRequired?: () => void;
+  className?: string;
+  trailing?: React.ReactNode;
+  markAsEditorToolbar?: boolean;
 }
 
 function insertLink(editor: Editor | null, url: string, title?: string) {
@@ -126,6 +129,9 @@ export function Toolbar({
   onInsertImage,
   onInsertLink,
   onInsertCode,
+  className,
+  trailing,
+  markAsEditorToolbar = false,
 }: ToolbarProps) {
   const editorState = useEditorState({
     editor,
@@ -156,7 +162,10 @@ export function Toolbar({
     isSubmitting === true || disabled || isEmpty || submitDisabledProp === true;
 
   return (
-    <div className="mt-1.5 flex items-center gap-1.5">
+    <div
+      {...(markAsEditorToolbar ? { "data-rich-editor-toolbar": true } : {})}
+      className={clsx("flex items-center gap-1.5", className)}
+    >
       <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto scrollbar-none sm:overflow-x-visible">
         <ToolbarButton
           title="粗体（Ctrl+B）"
@@ -228,6 +237,8 @@ export function Toolbar({
           />
         )}
       </div>
+
+      {trailing}
 
       {characterCountLabel && (
         <span

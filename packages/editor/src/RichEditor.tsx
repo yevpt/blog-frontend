@@ -36,6 +36,7 @@
 import { useEffect } from "react";
 import { EditorContent } from "@tiptap/react";
 import { clsx } from "clsx";
+import { markdownToHtml } from "./utils/markdown-to-html";
 import { useRichEditor } from "./hooks/use-rich-editor";
 import { Toolbar } from "./toolbar/Toolbar";
 import type { RichEditorProps } from "./types";
@@ -61,6 +62,9 @@ export function RichEditor({
   onReady,
   header,
   focusTrigger,
+  variant = "card",
+  toolbarPlacement = "bottom",
+  toolbarTrailing,
 }: RichEditorProps) {
   const editor = useRichEditor({
     initialValue: value,
@@ -87,20 +91,73 @@ export function RichEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
 
-  // 当外部将 value 重置为空字符串（如提交成功后），同步清空编辑器内容。
-  // useRichEditor 的 content 只在首次创建时读取，之后不自动跟随 value 变化，
-  // 因此需要在此显式调用 clearContent。
+  // 外部 value 变化时同步到编辑器（如编辑页异步回填）；与编辑器当前内容一致则跳过，避免干扰输入。
   useEffect(() => {
-    if (value === "" && editor && !editor.isEmpty) {
-      editor.commands.clearContent(true);
+    if (!editor) return;
+
+    const currentMarkdown = editor.getMarkdown();
+    if (value === currentMarkdown) return;
+
+    if (value === "") {
+      if (!editor.isEmpty) {
+        editor.commands.clearContent(true);
+      }
+      return;
     }
+
+    editor.commands.setContent(markdownToHtml(value), { emitUpdate: false });
   }, [value, editor]);
 
+  const isPlain = variant === "plain";
+  const toolbarOnTop = toolbarPlacement === "top";
+
   const shell = clsx(
-    "overflow-hidden rounded-xl border border-border bg-card px-3 py-3 sm:px-4 sm:py-3.5",
+    isPlain
+      ? "flex h-full min-h-0 flex-col overflow-hidden bg-transparent"
+      : "overflow-hidden rounded-xl border border-border bg-card px-3 py-3 sm:px-4 sm:py-3.5",
     disabled && "opacity-60",
     className,
   );
+
+  const editorAreaClassName = clsx(
+    "w-full",
+    isPlain
+      ? [
+          "min-h-0 flex-1 overflow-y-auto overscroll-y-contain",
+          "[&_.tiptap]:block [&_.tiptap]:w-full",
+          header ? "[&_.tiptap]:min-h-[64px]" : "[&_.tiptap]:min-h-[320px]",
+          "[&_.tiptap]:max-h-none [&_.tiptap]:overflow-visible",
+          "[&_.tiptap]:px-0 [&_.tiptap]:py-0 [&_.tiptap]:text-base [&_.tiptap]:leading-[1.85]",
+        ]
+      : [
+          "min-h-[88px]",
+          "[&_.tiptap]:block [&_.tiptap]:w-full",
+          header ? "[&_.tiptap]:min-h-[64px]" : "[&_.tiptap]:min-h-[88px]",
+          "[&_.tiptap]:max-h-56 [&_.tiptap]:overflow-y-auto [&_.tiptap]:overflow-x-hidden",
+          "[&_.tiptap]:px-0 [&_.tiptap]:py-0 [&_.tiptap]:text-[14px] [&_.tiptap]:leading-[1.6]",
+          "sm:[&_.tiptap]:max-h-72",
+        ],
+    "[&_.tiptap]:text-foreground",
+    "[&_.tiptap]:outline-none",
+    "[&_.tiptap]:break-words",
+    "[&_.tiptap]:tracking-[0.01em]",
+    "[&_.tiptap]:prose [&_.tiptap]:prose-neutral [&_.tiptap]:dark:prose-invert [&_.tiptap]:!max-w-none",
+    isPlain
+      ? "[&_.tiptap]:prose-base [&_.tiptap_h2]:font-serif [&_.tiptap_h2]:text-2xl [&_.tiptap_h2]:tracking-tight"
+      : "[&_.tiptap]:prose-sm",
+    "[&_.tiptap_p]:my-[0.2em]",
+    isPlain && "[&_.tiptap_p]:text-foreground/90",
+    "[&_.tiptap_p.is-editor-empty:first-child]:relative",
+    "[&_.tiptap_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]",
+    "[&_.tiptap_p.is-editor-empty:first-child::before]:absolute",
+    "[&_.tiptap_p.is-editor-empty:first-child::before]:left-0",
+    "[&_.tiptap_p.is-editor-empty:first-child::before]:top-0",
+    "[&_.tiptap_p.is-editor-empty:first-child::before]:text-muted-foreground",
+    "[&_.tiptap_p.is-editor-empty:first-child::before]:pointer-events-none",
+    "[&_.rich-editor-mention]:text-primary [&_.rich-editor-mention]:font-medium",
+    "[&_.tiptap_img.ProseMirror-selectednode]:outline [&_.tiptap_img.ProseMirror-selectednode]:outline-2 [&_.tiptap_img.ProseMirror-selectednode]:outline-primary [&_.tiptap_img.ProseMirror-selectednode]:-outline-offset-2",
+  );
+
   const currentLength = value.length;
   const isOverLimit = maxLength != null && currentLength > maxLength;
   const showCharacterCount =
@@ -109,84 +166,79 @@ export function RichEditor({
     (characterCountThreshold == null || currentLength >= maxLength - characterCountThreshold);
   const characterCountLabel = showCharacterCount ? `${currentLength}/${maxLength}` : undefined;
 
+  const toolbarNode = (
+    <Toolbar
+      editor={editor}
+      onSubmit={onSubmit}
+      isSubmitting={isSubmitting}
+      submitDisabled={submitDisabled}
+      characterCountLabel={characterCountLabel}
+      characterCountOverLimit={isOverLimit}
+      isLoggedIn={isLoggedIn}
+      onLoginRequired={onLoginRequired}
+      onInsertImage={onInsertImage}
+      onInsertLink={onInsertLink}
+      onInsertCode={onInsertCode}
+      markAsEditorToolbar={isPlain && toolbarOnTop}
+      trailing={toolbarTrailing}
+      className={clsx(
+        isPlain && toolbarOnTop && "shrink-0 px-5 py-2.5 sm:px-10",
+        !isPlain && "mt-1.5",
+        isPlain &&
+          toolbarOnTop &&
+          "[&_button]:size-[30px] [&_button]:rounded-md [&_button:hover]:bg-muted [&_button[aria-pressed=true]]:bg-muted",
+      )}
+    />
+  );
+
+  const editorAreaNode = (
+    <div data-rich-editor-area className={editorAreaClassName}>
+      {header && <div className="flex h-6 items-center">{header}</div>}
+      {isPlain ? (
+        <div className="w-full px-5 pb-10 pt-2 sm:px-10">
+          <EditorContent editor={editor} data-placeholder={placeholder} className="w-full" />
+        </div>
+      ) : (
+        <EditorContent editor={editor} data-placeholder={placeholder} className="w-full" />
+      )}
+    </div>
+  );
+
   // Tiptap 就绪前显示骨架屏，高度与真实编辑器完全一致，防止布局跳动
   if (!editor) {
     const bone = "animate-pulse rounded-md bg-foreground/[0.08]";
     return (
       <div className={shell} aria-hidden>
-        <div className="min-h-[88px]">
-          <div className={clsx(bone, "mt-[3px] h-[14px] w-2/5")} />
-        </div>
-        <div className="mt-1.5 flex items-center gap-1.5">
-          <div className="flex flex-1 items-center gap-0.5">
-            <div className={clsx(bone, "h-7 w-7")} />
-            <div className={clsx(bone, "h-7 w-7")} />
-            <div className={clsx(bone, "h-7 w-7")} />
-            <div className="mx-1 h-4 w-px shrink-0 bg-border" />
-            <div className={clsx(bone, "h-7 w-7")} />
-            <div className={clsx(bone, "h-7 w-7")} />
-            <div className={clsx(bone, "h-7 w-7")} />
-            <div className={clsx(bone, "h-7 w-7")} />
+        {isPlain && toolbarOnTop ? (
+          <div className="flex shrink-0 gap-1 px-5 py-2.5 sm:px-10">
+            <div className={clsx(bone, "size-[30px]")} />
+            <div className={clsx(bone, "size-[30px]")} />
+            <div className={clsx(bone, "size-[30px]")} />
           </div>
-          <div className={clsx(bone, "h-8 w-14 rounded-full")} />
+        ) : null}
+        <div className={isPlain ? "min-h-[320px] flex-1" : "min-h-[88px]"}>
+          {!isPlain || !toolbarOnTop ? (
+            <div className={clsx(bone, "mt-[3px] h-[14px] w-2/5")} />
+          ) : null}
         </div>
+        {!isPlain || !toolbarOnTop ? (
+          <div className="mt-1.5 flex items-center gap-1.5">
+            <div className="flex flex-1 items-center gap-0.5">
+              <div className={clsx(bone, "h-7 w-7")} />
+              <div className={clsx(bone, "h-7 w-7")} />
+              <div className={clsx(bone, "h-7 w-7")} />
+            </div>
+          </div>
+        ) : null}
       </div>
     );
   }
 
   return (
     <div className={shell}>
-      {/*
-       * 编辑区（min-h 固定 88px）
-       * header 存在时：header(24px) + tiptap(64px) = 88px，外部高度不变。
-       */}
-      <div
-        data-rich-editor-area
-        className={clsx(
-          "min-h-[88px] w-full",
-          "[&_.tiptap]:block [&_.tiptap]:w-full",
-          header ? "[&_.tiptap]:min-h-[64px]" : "[&_.tiptap]:min-h-[88px]",
-          "[&_.tiptap]:max-h-56 [&_.tiptap]:overflow-y-auto [&_.tiptap]:overflow-x-hidden",
-          "[&_.tiptap]:px-0 [&_.tiptap]:py-0 [&_.tiptap]:text-[14px] [&_.tiptap]:leading-[1.6]",
-          "[&_.tiptap]:text-foreground",
-          "[&_.tiptap]:outline-none",
-          "[&_.tiptap]:break-words",
-          "[&_.tiptap]:prose [&_.tiptap]:prose-sm [&_.tiptap]:prose-neutral [&_.tiptap]:dark:prose-invert [&_.tiptap]:!max-w-none",
-          "[&_.tiptap_p]:my-[0.2em]",
-          // 占位符用 absolute 叠在段落上，避免 float-left 在换行后挤占行宽导致第二行右侧留白
-          "[&_.tiptap_p.is-editor-empty:first-child]:relative",
-          "[&_.tiptap_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]",
-          "[&_.tiptap_p.is-editor-empty:first-child::before]:absolute",
-          "[&_.tiptap_p.is-editor-empty:first-child::before]:left-0",
-          "[&_.tiptap_p.is-editor-empty:first-child::before]:top-0",
-          "[&_.tiptap_p.is-editor-empty:first-child::before]:text-muted-foreground",
-          "[&_.tiptap_p.is-editor-empty:first-child::before]:pointer-events-none",
-          "[&_.rich-editor-mention]:text-primary [&_.rich-editor-mention]:font-medium",
-          // 图片为块级原子节点，方向键导航到图片时 ProseMirror 会产生 NodeSelection（节点选中态，
-          // 而非文本插入光标），默认没有任何视觉样式会显得「光标消失」，这里补上选中态高亮。
-          // 注意：outline-offset 必须用负值（向内绘制），因为外层 shell 容器有 overflow-hidden，
-          // 正向 offset 会让描边超出图片自身盒模型，被祖先裁切（曾导致某一侧描边缺失）。
-          "[&_.tiptap_img.ProseMirror-selectednode]:outline [&_.tiptap_img.ProseMirror-selectednode]:outline-2 [&_.tiptap_img.ProseMirror-selectednode]:outline-primary [&_.tiptap_img.ProseMirror-selectednode]:-outline-offset-2",
-          "sm:[&_.tiptap]:max-h-72",
-        )}
-      >
-        {header && <div className="flex h-6 items-center">{header}</div>}
-        <EditorContent editor={editor} data-placeholder={placeholder} className="w-full" />
-      </div>
-
-      <Toolbar
-        editor={editor}
-        onSubmit={onSubmit}
-        isSubmitting={isSubmitting}
-        submitDisabled={submitDisabled}
-        characterCountLabel={characterCountLabel}
-        characterCountOverLimit={isOverLimit}
-        isLoggedIn={isLoggedIn}
-        onLoginRequired={onLoginRequired}
-        onInsertImage={onInsertImage}
-        onInsertLink={onInsertLink}
-        onInsertCode={onInsertCode}
-      />
+      {toolbarOnTop ? toolbarNode : null}
+      {editorAreaNode}
+      {!toolbarOnTop ? toolbarNode : null}
     </div>
   );
 }
