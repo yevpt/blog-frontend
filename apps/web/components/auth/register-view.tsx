@@ -2,6 +2,7 @@
 
 import { SvgIcon } from "@repo/icons";
 import { Button, cn } from "@repo/ui";
+import type { UserResp } from "@repo/api";
 import { OAuthGrid } from "./oauth-grid";
 import { RegisterCaptcha } from "./register-captcha";
 import { useRegisterForm } from "@/hooks/use-register-form";
@@ -17,13 +18,15 @@ function inputCls(hasError?: boolean) {
 
 interface RegisterViewProps {
   onSwitchToLogin: () => void;
+  onSuccess: (user: UserResp) => void;
 }
 
-export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
+export function RegisterView({ onSwitchToLogin, onSuccess }: RegisterViewProps) {
   const {
     showPassword,
     setShowPassword,
     avatarPreview,
+    avatarCompressing,
     email,
     setEmail,
     code,
@@ -54,7 +57,8 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
     handleSubmit,
     handleAvatarChange,
     handleAvatarRemove,
-  } = useRegisterForm({ onSwitchToLogin });
+    openAvatarPicker,
+  } = useRegisterForm({ onSuccess });
 
   return (
     <div className="flex flex-col">
@@ -160,47 +164,82 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
             onChange={(e) => setNickname(e.target.value)}
           />
 
-          <label className="flex items-center gap-[14px] p-[12px_16px] rounded-xl bg-foreground/[0.03] border-[1.5px] border-dashed border-foreground/[0.09] cursor-pointer transition-colors hover:bg-primary/5 hover:border-primary/25">
+          <div
+            className={cn(
+              "flex items-center gap-[14px] p-[12px_16px] rounded-xl bg-foreground/[0.03] border-[1.5px] border-dashed border-foreground/[0.09]",
+            )}
+          >
             <div className="relative w-[38px] h-[38px] flex-shrink-0">
-              <div className="w-full h-full rounded-full bg-primary/12 border-[1.5px] border-dashed border-primary/25 flex items-center justify-center overflow-hidden">
+              <button
+                type="button"
+                disabled={avatarCompressing}
+                aria-label={avatarPreview ? "更换头像" : "上传头像（可选）"}
+                onClick={openAvatarPicker}
+                className={cn(
+                  "relative w-full h-full rounded-full bg-primary/12 border-[1.5px] border-dashed border-primary/25 flex items-center justify-center overflow-hidden transition-colors",
+                  avatarCompressing
+                    ? "cursor-wait opacity-70"
+                    : "cursor-pointer hover:bg-primary/20",
+                )}
+              >
                 {avatarPreview ? (
                   <img src={avatarPreview} alt="头像预览" className="w-full h-full object-cover" />
                 ) : (
                   <SvgIcon name="user" size={16} className="text-primary/60" />
                 )}
-              </div>
-              {avatarPreview && (
+                {avatarCompressing && (
+                  <div
+                    aria-label="头像处理中"
+                    className="absolute inset-0 flex items-center justify-center rounded-full bg-background/60"
+                  >
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-foreground" />
+                  </div>
+                )}
+              </button>
+              {avatarPreview && !avatarCompressing && (
                 <Button
                   type="button"
                   variant="ghost"
-                  onClickCapture={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    handleAvatarRemove(fileInputRef.current);
-                  }}
+                  onPress={() => handleAvatarRemove(fileInputRef.current)}
                   aria-label="删除头像"
-                  className="absolute -top-[5px] -right-[5px] w-[16px] h-[16px] rounded-full bg-destructive flex items-center justify-center p-0 shadow-sm"
+                  className="absolute -top-[5px] -right-[5px] w-[16px] h-[16px] rounded-full bg-destructive flex items-center justify-center p-0 shadow-sm z-10"
                 >
                   <SvgIcon name="close" size={8} className="text-white" />
                 </Button>
               )}
             </div>
-            <div>
+            <button
+              type="button"
+              disabled={avatarCompressing}
+              onClick={openAvatarPicker}
+              className={cn(
+                "flex-1 min-w-0 text-left transition-colors",
+                avatarCompressing ? "cursor-wait opacity-70" : "cursor-pointer",
+              )}
+            >
               <div className="text-[13px] text-muted-foreground">
-                {avatarPreview ? "更换头像" : "上传头像"}
+                {avatarPreview ? "更换头像" : "上传头像（可选）"}
               </div>
               <div className="text-[11px] text-muted-foreground/40 mt-[2px]">
-                {avatarPreview ? "点击更换，× 删除" : "可选 · JPG / PNG，最大 2MB"}
+                {avatarCompressing
+                  ? "头像处理中…"
+                  : avatarPreview
+                    ? "点击选择新图片，× 删除当前头像"
+                    : "JPG / PNG / WebP"}
               </div>
-            </div>
+            </button>
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/jpeg,image/png,image/webp"
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
               className="sr-only"
-              onChange={handleAvatarChange}
+              tabIndex={-1}
+              disabled={avatarCompressing}
+              onChange={(event) => {
+                void handleAvatarChange(event);
+              }}
             />
-          </label>
+          </div>
         </div>
 
         {apiError && (

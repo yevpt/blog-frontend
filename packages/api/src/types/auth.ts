@@ -6,12 +6,13 @@ export interface SendCodeReq {
   captcha_token: string;
 }
 
-/** 邮箱注册 */
+/** 邮箱注册（multipart/form-data，字段 avatar 为可选图片文件） */
 export interface RegisterReq {
   email: string;
   password: string;
   code: string;
   nickname?: string;
+  avatar?: File;
 }
 
 /** 登录（username / email / phone 三合一） */

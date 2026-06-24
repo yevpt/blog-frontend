@@ -60,6 +60,14 @@ export function LoginModal() {
     router.refresh();
   }
 
+  function handleRegisterSuccess(user: UserResp) {
+    requestClose();
+    setTimeout(() => {
+      addToast(`${user.nickname ?? user.username}，欢迎你的加入`, "success");
+    }, 100);
+    router.refresh();
+  }
+
   return (
     <Modal
       isOpen={modalOpen}
@@ -97,7 +105,10 @@ export function LoginModal() {
                 onSuccess={handleLoginSuccess}
               />
             ) : (
-              <RegisterView onSwitchToLogin={() => setView("login")} />
+              <RegisterView
+                onSwitchToLogin={() => setView("login")}
+                onSuccess={handleRegisterSuccess}
+              />
             )}
           </div>
         </>

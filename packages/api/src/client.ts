@@ -5,7 +5,6 @@ import type {
   LoginReq,
   AdminLoginReq,
   RefreshReq,
-  UserResp,
   LoginResp,
   TokenResp,
 } from "./types/auth";
@@ -176,9 +175,20 @@ export function createApiClient(config: ApiClientConfig) {
       /** 发送邮箱验证码（无需登录） */
       sendCode: (req: SendCodeReq) =>
         fetchPublic<void>("/auth/send-code", { method: "POST", body: JSON.stringify(req) }),
-      /** 邮箱注册（无需登录，消耗验证码） */
-      register: (req: RegisterReq) =>
-        fetchPublic<UserResp>("/auth/register", { method: "POST", body: JSON.stringify(req) }),
+      /** 邮箱注册（无需登录，消耗验证码；multipart 上传可选头像；成功返回登录态） */
+      register: (req: RegisterReq) => {
+        const formData = new FormData();
+        formData.append("email", req.email);
+        formData.append("password", req.password);
+        formData.append("code", req.code);
+        if (req.nickname) {
+          formData.append("nickname", req.nickname);
+        }
+        if (req.avatar) {
+          formData.append("avatar", req.avatar, req.avatar.name);
+        }
+        return fetchPublic<LoginResp>("/auth/register", { method: "POST", body: formData });
+      },
       /** 登录，返回双 token（无需登录，401 = 凭证错误而非 token 过期，不自动刷新） */
       login: (req: LoginReq) =>
         fetchPublic<LoginResp>("/auth/login", { method: "POST", body: JSON.stringify(req) }),

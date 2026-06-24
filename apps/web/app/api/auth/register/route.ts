@@ -1,14 +1,18 @@
 import { type NextRequest, NextResponse } from "next/server";
-import type { RegisterReq } from "@repo/api";
+import { jsonWithAuthSession } from "@/lib/auth-session";
 
+/** 邮箱注册：透传 multipart/form-data，成功后写入登录 Cookie */
 export async function POST(request: NextRequest) {
-  const body: RegisterReq = await request.json();
+  const formData = await request.formData();
   const res = await fetch(`${process.env.API_BASE_URL}/auth/register`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: formData,
   });
   const data = await res.json();
-  // 注册成功返回 user 信息，无 token（用户需单独调用登录接口）
-  return NextResponse.json(data, { status: res.status });
+
+  if (data.code !== 0) {
+    return NextResponse.json(data, { status: res.status });
+  }
+
+  return jsonWithAuthSession(data.data);
 }

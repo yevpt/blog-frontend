@@ -51,6 +51,44 @@ describe("createApiClient", () => {
     expect(result).toEqual(loginResp);
   });
 
+  it("register 使用 FormData 且不手动设置 JSON Content-Type", async () => {
+    const loginResp = {
+      access_token: "acc",
+      refresh_token: "ref",
+      expires_in: 7200,
+      user: { id: 1, username: "user@example.com", nickname: "昵称" },
+    };
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: loginResp }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+    const avatar = new File(["avatar"], "avatar.jpg", { type: "image/jpeg" });
+
+    const result = await client.auth.register({
+      email: "user@example.com",
+      password: "password1",
+      code: "123456",
+      nickname: "昵称",
+      avatar,
+    });
+
+    expect(result.access_token).toBe("acc");
+    expect(result.user.nickname).toBe("昵称");
+
+    const [, init] = vi.mocked(global.fetch).mock.calls[0];
+    expect(init?.body).toBeInstanceOf(FormData);
+    const body = init?.body as FormData;
+    expect(body.get("email")).toBe("user@example.com");
+    expect(body.get("password")).toBe("password1");
+    expect(body.get("code")).toBe("123456");
+    expect(body.get("nickname")).toBe("昵称");
+    const avatarField = body.get("avatar");
+    expect(avatarField).toBeInstanceOf(File);
+    expect((avatarField as File).name).toBe("avatar.jpg");
+    const headers = init?.headers as Record<string, string>;
+    expect(headers["Content-Type"]).toBeUndefined();
+  });
+
   it("adminAuth.login 调用 /admin/auth/login 并返回 LoginResp", async () => {
     const loginResp = {
       access_token: "acc",

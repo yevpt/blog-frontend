@@ -10,10 +10,19 @@ import {
 } from "./use-register-form";
 
 const mockAddToast = vi.fn();
+const mockCompressAvatarImage = vi.fn();
 
 vi.mock("@/lib/toast", () => ({
   addToast: (...args: unknown[]) => mockAddToast(...args),
 }));
+
+vi.mock("@repo/hooks", async () => {
+  const actual = await vi.importActual("@repo/hooks");
+  return {
+    ...(actual as object),
+    compressAvatarImage: (...args: unknown[]) => mockCompressAvatarImage(...args),
+  };
+});
 
 const CHALLENGE: CaptchaChallenge = {
   challenge_id: "challenge-id",
@@ -45,12 +54,14 @@ describe("validation helpers", () => {
 });
 
 describe("useRegisterForm", () => {
-  const onSwitchToLogin = vi.fn();
+  const onSuccess = vi.fn();
 
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
-    onSwitchToLogin.mockReset();
+    onSuccess.mockReset();
     mockAddToast.mockReset();
+    mockCompressAvatarImage.mockReset();
+    mockCompressAvatarImage.mockImplementation(async (file: File) => file);
     URL.createObjectURL = vi.fn(() => "blob:mock-url");
     URL.revokeObjectURL = vi.fn();
   });
@@ -60,7 +71,7 @@ describe("useRegisterForm", () => {
   });
 
   it("invalid email blocks captcha open", async () => {
-    const { result } = renderHook(() => useRegisterForm({ onSwitchToLogin }));
+    const { result } = renderHook(() => useRegisterForm({ onSuccess }));
 
     act(() => {
       result.current.setEmail("invalid-email");
@@ -77,7 +88,7 @@ describe("useRegisterForm", () => {
   it("successful captcha challenge opens modal and initializes captchaX", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(mockApiResponse(CHALLENGE));
 
-    const { result } = renderHook(() => useRegisterForm({ onSwitchToLogin }));
+    const { result } = renderHook(() => useRegisterForm({ onSuccess }));
 
     act(() => {
       result.current.setEmail("user@example.com");
@@ -98,7 +109,7 @@ describe("useRegisterForm", () => {
       .mockResolvedValueOnce(mockApiResponse({ captcha_token: "captcha-token" }))
       .mockResolvedValueOnce(mockApiResponse(null));
 
-    const { result } = renderHook(() => useRegisterForm({ onSwitchToLogin }));
+    const { result } = renderHook(() => useRegisterForm({ onSuccess }));
 
     act(() => {
       result.current.setEmail("user@example.com");
@@ -126,10 +137,11 @@ describe("useRegisterForm", () => {
     expect(result.current.codeSent).toBe(true);
   });
 
-  it("registration success calls onSwitchToLogin", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(mockApiResponse(null));
+  it("registration success auto-logins and calls onSuccess", async () => {
+    const user = { id: 1, username: "user@example.com", nickname: "新用户" };
+    vi.mocked(fetch).mockResolvedValueOnce(mockApiResponse({ user }));
 
-    const { result } = renderHook(() => useRegisterForm({ onSwitchToLogin }));
+    const { result } = renderHook(() => useRegisterForm({ onSuccess }));
 
     act(() => {
       result.current.setEmail("user@example.com");
@@ -141,36 +153,111 @@ describe("useRegisterForm", () => {
       await result.current.submitRegistration();
     });
 
-    expect(onSwitchToLogin).toHaveBeenCalledOnce();
+    expect(onSuccess).toHaveBeenCalledWith(user);
+    expect(fetch).toHaveBeenCalledOnce();
     expect(fetch).toHaveBeenCalledWith(
       "/api/auth/register",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({
-          email: "user@example.com",
-          password: "password1",
-          code: "123456",
-        }),
+        body: expect.any(FormData),
       }),
     );
   });
 
-  it("object URL for avatar preview is revoked when replaced/removed", () => {
-    const { result } = renderHook(() => useRegisterForm({ onSwitchToLogin }));
+  it("registration with avatar sends multipart including avatar file", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(mockApiResponse(null));
+    const compressed = new File(["avatar"], "avatar.jpg", { type: "image/jpeg" });
+    mockCompressAvatarImage.mockResolvedValueOnce(compressed);
+
+    const { result } = renderHook(() => useRegisterForm({ onSuccess }));
+
+    const file = new File(["avatar"], "avatar.png", { type: "image/png" });
+    await act(async () => {
+      await result.current.handleAvatarChange({
+        target: { files: [file], value: "avatar.png" },
+      } as unknown as ChangeEvent<HTMLInputElement>);
+    });
+
+    act(() => {
+      result.current.setEmail("user@example.com");
+      result.current.setPassword("password1");
+      result.current.setCode("123456");
+    });
+
+    await act(async () => {
+      await result.current.submitRegistration();
+    });
+
+    const body = vi.mocked(fetch).mock.calls[0]?.[1]?.body as FormData;
+    const avatarField = body.get("avatar");
+    expect(avatarField).toBeInstanceOf(File);
+    expect((avatarField as File).name).toBe("avatar.jpg");
+  });
+
+  it("avatar compression failure shows toast and keeps existing preview", async () => {
+    const existing = new File(["avatar"], "avatar.png", { type: "image/png" });
+    mockCompressAvatarImage.mockResolvedValueOnce(existing);
+
+    const { result } = renderHook(() => useRegisterForm({ onSuccess }));
+
+    await act(async () => {
+      await result.current.handleAvatarChange({
+        target: { files: [existing], value: "avatar.png" },
+      } as unknown as ChangeEvent<HTMLInputElement>);
+    });
+
+    expect(result.current.avatarPreview).toBe("blob:mock-url");
+
+    mockCompressAvatarImage.mockRejectedValueOnce(new Error("不支持 GIF 头像"));
+
+    await act(async () => {
+      await result.current.handleAvatarChange({
+        target: { files: [new File(["x"], "a.gif", { type: "image/gif" })], value: "a.gif" },
+      } as unknown as ChangeEvent<HTMLInputElement>);
+    });
+
+    expect(mockAddToast).toHaveBeenCalledWith("不支持 GIF 头像", "error");
+    expect(result.current.avatarPreview).toBe("blob:mock-url");
+  });
+
+  it("canceling file picker keeps existing preview", async () => {
+    const existing = new File(["avatar"], "avatar.png", { type: "image/png" });
+    mockCompressAvatarImage.mockResolvedValueOnce(existing);
+
+    const { result } = renderHook(() => useRegisterForm({ onSuccess }));
+
+    await act(async () => {
+      await result.current.handleAvatarChange({
+        target: { files: [existing], value: "avatar.png" },
+      } as unknown as ChangeEvent<HTMLInputElement>);
+    });
+
+    await act(async () => {
+      await result.current.handleAvatarChange({
+        target: { files: [], value: "" },
+      } as unknown as ChangeEvent<HTMLInputElement>);
+    });
+
+    expect(mockCompressAvatarImage).toHaveBeenCalledTimes(1);
+    expect(result.current.avatarPreview).toBe("blob:mock-url");
+  });
+
+  it("object URL for avatar preview is revoked when replaced/removed", async () => {
+    const { result } = renderHook(() => useRegisterForm({ onSuccess }));
     const fileInput = document.createElement("input");
 
     const firstFile = new File(["avatar"], "avatar.png", { type: "image/png" });
-    act(() => {
-      result.current.handleAvatarChange({
-        target: { files: [firstFile] },
+    await act(async () => {
+      await result.current.handleAvatarChange({
+        target: { files: [firstFile], value: "avatar.png" },
       } as unknown as ChangeEvent<HTMLInputElement>);
     });
 
     vi.mocked(URL.createObjectURL).mockReturnValueOnce("blob:second-url");
     const secondFile = new File(["avatar2"], "avatar2.png", { type: "image/png" });
-    act(() => {
-      result.current.handleAvatarChange({
-        target: { files: [secondFile] },
+    await act(async () => {
+      await result.current.handleAvatarChange({
+        target: { files: [secondFile], value: "avatar2.png" },
       } as unknown as ChangeEvent<HTMLInputElement>);
     });
 

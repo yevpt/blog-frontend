@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import type { UserResp } from "@repo/api";
+import { compressAvatarImage, getAvatarProcessingErrorMessage } from "@repo/hooks";
 import { addToast } from "@/lib/toast";
 
 export function isValidEmail(value: string): boolean {
@@ -48,7 +50,7 @@ interface CaptchaVerifyResp {
 }
 
 export interface UseRegisterFormOptions {
-  onSwitchToLogin: () => void;
+  onSuccess: (user: UserResp) => void;
 }
 
 type FetchInit = NonNullable<Parameters<typeof fetch>[1]>;
@@ -62,9 +64,11 @@ async function requestRegisterApi<T>(url: string, init: FetchInit): Promise<T> {
   return json.data as T;
 }
 
-export function useRegisterForm({ onSwitchToLogin }: UseRegisterFormOptions) {
+export function useRegisterForm({ onSuccess }: UseRegisterFormOptions) {
   const [showPassword, setShowPassword] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarCompressing, setAvatarCompressing] = useState(false);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
@@ -202,23 +206,28 @@ export function useRegisterForm({ onSwitchToLogin }: UseRegisterFormOptions) {
 
     setLoading(true);
     try {
-      await requestRegisterApi("/api/auth/register", {
+      const formData = new FormData();
+      formData.append("email", email);
+      formData.append("password", password);
+      formData.append("code", code);
+      if (nickname.trim()) {
+        formData.append("nickname", nickname.trim());
+      }
+      if (avatarFile) {
+        formData.append("avatar", avatarFile, avatarFile.name);
+      }
+
+      const { user } = await requestRegisterApi<{ user: UserResp }>("/api/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          code,
-          ...(nickname.trim() ? { nickname: nickname.trim() } : {}),
-        }),
+        body: formData,
       });
-      onSwitchToLogin();
+      onSuccess(user);
     } catch (err) {
       setApiError(err instanceof Error ? err.message : "注册失败，请稍后重试");
     } finally {
       setLoading(false);
     }
-  }, [code, email, nickname, onSwitchToLogin, password]);
+  }, [avatarFile, code, email, nickname, onSuccess, password]);
 
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
@@ -228,20 +237,34 @@ export function useRegisterForm({ onSwitchToLogin }: UseRegisterFormOptions) {
     [submitRegistration],
   );
 
-  const handleAvatarChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
       return;
     }
-    setAvatarPreview((current) => {
-      if (current) {
-        URL.revokeObjectURL(current);
+
+    setAvatarCompressing(true);
+    try {
+      const compressed = await compressAvatarImage(file);
+      setAvatarFile(compressed);
+      setAvatarPreview((current) => {
+        if (current) {
+          URL.revokeObjectURL(current);
+        }
+        return URL.createObjectURL(compressed);
+      });
+    } catch (err) {
+      addToast(getAvatarProcessingErrorMessage(err), "error");
+    } finally {
+      if (event.target) {
+        event.target.value = "";
       }
-      return URL.createObjectURL(file);
-    });
+      setAvatarCompressing(false);
+    }
   }, []);
 
   const handleAvatarRemove = useCallback((fileInput: HTMLInputElement | null) => {
+    setAvatarFile(null);
     setAvatarPreview((current) => {
       if (current) {
         URL.revokeObjectURL(current);
@@ -253,10 +276,18 @@ export function useRegisterForm({ onSwitchToLogin }: UseRegisterFormOptions) {
     }
   }, []);
 
+  const openAvatarPicker = useCallback(() => {
+    if (avatarCompressing) {
+      return;
+    }
+    fileInputRef.current?.click();
+  }, [avatarCompressing]);
+
   return {
     showPassword,
     setShowPassword,
     avatarPreview,
+    avatarCompressing,
     email,
     setEmail,
     code,
@@ -293,5 +324,6 @@ export function useRegisterForm({ onSwitchToLogin }: UseRegisterFormOptions) {
     submitRegistration,
     handleAvatarChange,
     handleAvatarRemove,
+    openAvatarPicker,
   };
 }

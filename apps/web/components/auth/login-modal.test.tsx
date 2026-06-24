@@ -3,6 +3,20 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LoginModal } from "./login-modal";
 import { useLoginModal } from "@/store/use-login-modal";
+import { _resetProvidersCache } from "./oauth-grid";
+
+const mockAddToast = vi.fn();
+vi.mock("@/lib/toast", () => ({
+  addToast: (...args: unknown[]) => mockAddToast(...args),
+}));
+
+vi.mock("@repo/hooks", async () => {
+  const actual = await vi.importActual("@repo/hooks");
+  return {
+    ...(actual as object),
+    compressAvatarImage: vi.fn(async (file: File) => file),
+  };
+});
 
 // next/navigation 的 useRouter 在 jsdom 测试环境中不可用，需要 mock
 const mockRefresh = vi.fn();
@@ -11,8 +25,10 @@ vi.mock("next/navigation", () => ({
 }));
 
 beforeEach(() => {
+  _resetProvidersCache();
   useLoginModal.setState({ isOpen: false, view: "login" });
   mockRefresh.mockClear();
+  mockAddToast.mockClear();
 });
 
 describe("LoginModal", () => {
@@ -91,4 +107,40 @@ describe("LoginModal", () => {
 
     vi.unstubAllGlobals();
   });
+
+  it("注册成功后自动登录、关闭弹窗并显示欢迎 toast", async () => {
+    const user = userEvent.setup();
+    const mockFetch = vi.fn(async (url: string) => {
+      if (url === "/api/oauth/providers") {
+        return mockApiResponse(["github"]);
+      }
+      if (url === "/api/auth/register") {
+        return mockApiResponse({
+          user: { id: 1, username: "user@example.com", nickname: "Alice" },
+        });
+      }
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    useLoginModal.setState({ isOpen: true, view: "register" });
+    render(<LoginModal />);
+
+    await user.type(screen.getByPlaceholderText("邮箱地址"), "user@example.com");
+    await user.type(screen.getByPlaceholderText("设置密码"), "password1");
+    await user.type(screen.getByPlaceholderText("验证码"), "123456");
+    await user.click(screen.getByRole("button", { name: "创建账号" }));
+
+    await waitFor(() => expect(useLoginModal.getState().isOpen).toBe(false));
+    expect(mockRefresh).toHaveBeenCalledOnce();
+    expect(mockAddToast).toHaveBeenCalledWith("Alice，欢迎你的加入", "success");
+
+    vi.unstubAllGlobals();
+  });
 });
+
+function mockApiResponse<T>(data: T) {
+  return {
+    json: () => Promise.resolve({ code: 0, message: "ok", data }),
+  } as Response;
+}

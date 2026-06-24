@@ -9,19 +9,33 @@ function mockProviders(providers: string[] = ["github", "qq", "weibo", "gitee", 
 }
 
 const mockAddToast = vi.fn();
+const mockCompressAvatarImage = vi.fn();
+
 vi.mock("@/lib/toast", () => ({
   addToast: vi
     .fn()
     .mockImplementation((...args: Parameters<typeof mockAddToast>) => mockAddToast(...args)),
 }));
 
+vi.mock("@repo/hooks", async () => {
+  const actual = await vi.importActual("@repo/hooks");
+  return {
+    ...(actual as object),
+    compressAvatarImage: (...args: unknown[]) => mockCompressAvatarImage(...args),
+  };
+});
+
 describe("RegisterView", () => {
   const mockSwitch = vi.fn();
+  const mockSuccess = vi.fn();
 
   beforeEach(() => {
     _resetProvidersCache();
     mockSwitch.mockClear();
+    mockSuccess.mockClear();
     mockAddToast.mockClear();
+    mockCompressAvatarImage.mockReset();
+    mockCompressAvatarImage.mockImplementation(async (file: File) => file);
     URL.createObjectURL = vi.fn(() => "blob:mock-url");
     URL.revokeObjectURL = vi.fn();
     global.fetch = vi.fn().mockResolvedValue(mockProviders());
@@ -31,22 +45,22 @@ describe("RegisterView", () => {
   });
 
   it("渲染注册所有必填和可选字段", () => {
-    render(<RegisterView onSwitchToLogin={mockSwitch} />);
+    render(<RegisterView onSwitchToLogin={mockSwitch} onSuccess={mockSuccess} />);
     expect(screen.getByPlaceholderText("邮箱地址")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("验证码")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("设置密码")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("昵称（可选）")).toBeInTheDocument();
-    expect(screen.getByText("上传头像")).toBeInTheDocument();
+    expect(screen.getByText("上传头像（可选）")).toBeInTheDocument();
   });
 
   it("密码字段默认为 password 类型", () => {
-    render(<RegisterView onSwitchToLogin={mockSwitch} />);
+    render(<RegisterView onSwitchToLogin={mockSwitch} onSuccess={mockSuccess} />);
     expect(screen.getByPlaceholderText("设置密码")).toHaveAttribute("type", "password");
   });
 
   it("点击眼睛按钮切换密码可见性", async () => {
     const user = userEvent.setup();
-    render(<RegisterView onSwitchToLogin={mockSwitch} />);
+    render(<RegisterView onSwitchToLogin={mockSwitch} onSuccess={mockSuccess} />);
     const input = screen.getByPlaceholderText("设置密码");
     await user.click(screen.getByLabelText("显示密码"));
     expect(input).toHaveAttribute("type", "text");
@@ -54,20 +68,20 @@ describe("RegisterView", () => {
 
   it("点击登录标签调用 onSwitchToLogin", async () => {
     const user = userEvent.setup();
-    render(<RegisterView onSwitchToLogin={mockSwitch} />);
+    render(<RegisterView onSwitchToLogin={mockSwitch} onSuccess={mockSuccess} />);
     await user.click(screen.getByRole("button", { name: "登录" }));
     expect(mockSwitch).toHaveBeenCalledOnce();
   });
 
   it("渲染其他方式注册分割线和 OAuthGrid", () => {
-    render(<RegisterView onSwitchToLogin={mockSwitch} />);
+    render(<RegisterView onSwitchToLogin={mockSwitch} onSuccess={mockSuccess} />);
     expect(screen.getByText("其他方式注册")).toBeInTheDocument();
     expect(screen.getByLabelText("QQ")).toBeInTheDocument();
   });
 
   it("邮箱格式无效时获取验证码按钮不可点击", async () => {
     const user = userEvent.setup();
-    render(<RegisterView onSwitchToLogin={mockSwitch} />);
+    render(<RegisterView onSwitchToLogin={mockSwitch} onSuccess={mockSuccess} />);
     await user.type(screen.getByPlaceholderText("邮箱地址"), "invalid-email");
     const btn = screen.getByRole("button", { name: "获取验证码" });
     expect(btn).toBeDisabled();
@@ -75,7 +89,7 @@ describe("RegisterView", () => {
 
   it("邮箱格式正确时获取验证码按钮可点击", async () => {
     const user = userEvent.setup();
-    render(<RegisterView onSwitchToLogin={mockSwitch} />);
+    render(<RegisterView onSwitchToLogin={mockSwitch} onSuccess={mockSuccess} />);
     await user.type(screen.getByPlaceholderText("邮箱地址"), "user@example.com");
     const btn = screen.getByRole("button", { name: "获取验证码" });
     expect(btn).not.toBeDisabled();
@@ -83,7 +97,7 @@ describe("RegisterView", () => {
 
   it("提交时邮箱格式错误显示内联错误提示", async () => {
     const user = userEvent.setup();
-    render(<RegisterView onSwitchToLogin={mockSwitch} />);
+    render(<RegisterView onSwitchToLogin={mockSwitch} onSuccess={mockSuccess} />);
     await user.type(screen.getByPlaceholderText("邮箱地址"), "bad");
     await user.click(screen.getByRole("button", { name: "创建账号" }));
     expect(screen.getByText("邮箱格式不正确")).toBeInTheDocument();
@@ -91,26 +105,50 @@ describe("RegisterView", () => {
 
   it("密码不足 8 位时显示内联错误提示", async () => {
     const user = userEvent.setup();
-    render(<RegisterView onSwitchToLogin={mockSwitch} />);
+    render(<RegisterView onSwitchToLogin={mockSwitch} onSuccess={mockSuccess} />);
     await user.type(screen.getByPlaceholderText("设置密码"), "abc12");
     fireEvent.blur(screen.getByPlaceholderText("设置密码"));
     expect(screen.getByText("密码不能少于 8 位")).toBeInTheDocument();
   });
 
-  it("上传头像后显示删除按钮，点击删除后恢复初始状态", async () => {
+  it("点击更换头像打开选图，取消后仍保留当前预览", async () => {
     const user = userEvent.setup();
-    render(<RegisterView onSwitchToLogin={mockSwitch} />);
+    render(<RegisterView onSwitchToLogin={mockSwitch} onSuccess={mockSuccess} />);
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["avatar"], "avatar.png", { type: "image/png" });
     await user.upload(fileInput, file);
 
+    await waitFor(() => {
+      expect(screen.getByLabelText("删除头像")).toBeInTheDocument();
+    });
+
+    const clickSpy = vi.spyOn(fileInput, "click");
+    await user.click(screen.getByRole("button", { name: "更换头像" }));
+    expect(clickSpy).toHaveBeenCalled();
+
+    fireEvent.change(fileInput, { target: { files: [], value: "" } });
+
     expect(screen.getByLabelText("删除头像")).toBeInTheDocument();
+    expect(screen.getByText("更换头像")).toBeInTheDocument();
+  });
+
+  it("上传头像后点击删除按钮恢复初始状态", async () => {
+    const user = userEvent.setup();
+    render(<RegisterView onSwitchToLogin={mockSwitch} onSuccess={mockSuccess} />);
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(["avatar"], "avatar.png", { type: "image/png" });
+    await user.upload(fileInput, file);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("删除头像")).toBeInTheDocument();
+    });
     expect(screen.getByText("更换头像")).toBeInTheDocument();
 
     await user.click(screen.getByLabelText("删除头像"));
     expect(screen.queryByLabelText("删除头像")).not.toBeInTheDocument();
-    expect(screen.getByText("上传头像")).toBeInTheDocument();
+    expect(screen.getByText("上传头像（可选）")).toBeInTheDocument();
   });
 
   it("获取邮箱验证码前先完成 GoCaptcha 校验，并携带 captcha_token 发送邮件验证码", async () => {
@@ -145,7 +183,7 @@ describe("RegisterView", () => {
         json: async () => ({ code: 0, message: "ok", data: null }),
       } as Response);
 
-    render(<RegisterView onSwitchToLogin={mockSwitch} />);
+    render(<RegisterView onSwitchToLogin={mockSwitch} onSuccess={mockSuccess} />);
 
     await user.type(screen.getByPlaceholderText("邮箱地址"), "user@example.com");
     await user.click(screen.getByRole("button", { name: "获取验证码" }));
@@ -217,7 +255,7 @@ describe("RegisterView", () => {
         json: async () => ({ code: 429, message: "IP 已被封禁，请稍后再试", data: null }),
       } as Response);
 
-    render(<RegisterView onSwitchToLogin={mockSwitch} />);
+    render(<RegisterView onSwitchToLogin={mockSwitch} onSuccess={mockSuccess} />);
     await user.type(screen.getByPlaceholderText("邮箱地址"), "user@example.com");
     await user.click(screen.getByRole("button", { name: "获取验证码" }));
 
