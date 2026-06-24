@@ -6,7 +6,7 @@ services:
     # BLOG_WEB_IMAGE 由部署脚本写入 .deploy.env，格式示例：
     # krccr.ccs.tencentyun.com/yevpt/blog-frontend-web:<commit-sha>
     image: ${BLOG_WEB_IMAGE}
-    container_name: blog-web
+    container_name: ${COMPOSE_CONTAINER_NAME:-blog-web}
     restart: unless-stopped
     environment:
       NODE_ENV: production

@@ -126,8 +126,11 @@ jobs:
     needs:
       - web-image
       - admin-artifact
-    environment: production
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
     env:
+      DEPLOY_TARGET: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+      CONTAINER_NAME: ${{ github.ref == 'refs/heads/main' && 'blog-web' || 'blog-web-test' }}
       # REMOTE_HOST：远端服务器地址/IP，放在 Secrets 中避免公开。
       REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
       # REMOTE_USER：SSH 登录用户，放在 Secrets 中避免暴露服务器账号。
@@ -204,6 +207,8 @@ jobs:
             "DEPLOY_WEB_ROOT='$DEPLOY_WEB_ROOT' \
              DEPLOY_ADMIN_ROOT='$DEPLOY_ADMIN_ROOT' \
              WEB_IMAGE_REF='$WEB_IMAGE_REF' \
+             CONTAINER_NAME='$CONTAINER_NAME' \
+             DEPLOY_TARGET='$DEPLOY_TARGET' \
              REGISTRY_HOST='$REGISTRY_HOST' \
              REGISTRY_USERNAME='$REGISTRY_USERNAME' \
              REGISTRY_PASSWORD='$REGISTRY_PASSWORD' \
@@ -213,15 +218,20 @@ jobs:
           # Web 目录必须已有 .env，里面放 API_BASE_URL、BLOG_USER_ID、WEB_PORT 等运行时配置。
           cd "$DEPLOY_WEB_ROOT"
           if [ ! -f .env ]; then
-            echo "缺少 $DEPLOY_WEB_ROOT/.env，请先在服务器创建 Web 运行时环境变量文件。"
+            echo "缺少 $DEPLOY_WEB_ROOT/.env，请先在服务器创建 ${DEPLOY_TARGET} Web 运行时环境变量文件。"
             exit 1
           fi
 
           # .deploy.env 只保存本次部署的镜像 tag，避免改动服务器上人工维护的 .env。
           printf 'BLOG_WEB_IMAGE=%s\n' "$WEB_IMAGE_REF" > .deploy.env
+          export COMPOSE_CONTAINER_NAME="$CONTAINER_NAME"
           printf '%s\n' "$REGISTRY_PASSWORD" | docker login "$REGISTRY_HOST" -u "$REGISTRY_USERNAME" --password-stdin
           docker compose --env-file .env --env-file .deploy.env pull blog-web
-          docker compose --env-file .env --env-file .deploy.env up -d --remove-orphans blog-web
+          if ! docker compose --env-file .env --env-file .deploy.env up -d --remove-orphans blog-web; then
+            echo "up 失败，移除同名遗留容器后重试…"
+            docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+            docker compose --env-file .env --env-file .deploy.env up -d --remove-orphans blog-web
+          fi
           docker compose --env-file .env --env-file .deploy.env ps blog-web
           docker image prune -f
 
