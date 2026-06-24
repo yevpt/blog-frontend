@@ -91,6 +91,13 @@ export type {
   UpdateEmailReq,
   SendAccountEmailCodeReq,
   SetInitialPasswordReq,
+  LikedContentFilter,
+  LikedContentKind,
+  UserLikedContentListReq,
+  UserLikedContentAuthorResp,
+  UserLikedContentItemResp,
+  UserLikedContentPageResp,
+  UserLikesCountResp,
 } from "./types/user";
 export type {
   FriendLinkItemResp,

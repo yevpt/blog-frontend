@@ -140,3 +140,72 @@ export interface UserPageResp {
   page_size: number;
   list: UserListItemResp[];
 }
+
+/** GET /users/:id/likes — type 查询参数 */
+export type LikedContentFilter = "article" | "comment" | "guestbook" | "moment";
+
+/** 点赞列表项内容类型（含回复） */
+export type LikedContentKind = "article" | "comment" | "reply" | "guestbook" | "moment";
+
+export interface UserLikedContentListReq {
+  page?: number;
+  page_size?: number;
+  type?: LikedContentFilter;
+}
+
+export interface UserLikedContentAuthorResp {
+  id: number;
+  username?: string;
+  nickname?: string;
+  avatar_url?: string;
+  roles?: string[];
+}
+
+export interface UserLikedContentItemResp {
+  id: number;
+  liked_at: string;
+  kind: LikedContentKind;
+  filter: LikedContentFilter;
+  author?: UserLikedContentAuthorResp;
+  content: {
+    id: number;
+    title?: string;
+    excerpt: string;
+    cover_img_url?: string;
+    deleted?: boolean;
+  };
+  parent?: {
+    kind: "comment" | "guestbook";
+    id: number;
+    excerpt: string;
+    deleted?: boolean;
+  };
+  root?: {
+    kind: "article" | "moment" | "guestbook";
+    id: number;
+    title?: string;
+    excerpt?: string;
+    deleted?: boolean;
+  };
+  /** 回复被 @ 的用户（reply 类型；与评论模块 to_user 对齐） */
+  reply_to?: UserLikedContentAuthorResp;
+  to_user?: UserLikedContentAuthorResp;
+  stats?: {
+    like_count?: number;
+    comment_count?: number;
+  };
+}
+
+export interface UserLikedContentPageResp {
+  total: number;
+  pages: number;
+  page: number;
+  page_size: number;
+  list: UserLikedContentItemResp[];
+}
+
+/** GET /users/:id/likes/count */
+export interface UserLikesCountResp {
+  /** Go int64 — safe as JS number for blog-scale counts */
+  count: number;
+}

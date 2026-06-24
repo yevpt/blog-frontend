@@ -64,6 +64,9 @@ import type {
   UpdateEmailReq,
   SendAccountEmailCodeReq,
   SetInitialPasswordReq,
+  UserLikedContentListReq,
+  UserLikedContentPageResp,
+  UserLikesCountResp,
 } from "./types/user";
 import type { FriendLinkListReq, FriendLinkPageResp } from "./types/friend-link";
 import type {
@@ -419,6 +422,21 @@ export function createApiClient(config: ApiClientConfig) {
         const qs = p.toString();
         return fetchPublic<UserPageResp>(`/users${qs ? `?${qs}` : ""}`, { method: "GET" });
       },
+      /** 分页查询用户赞过的内容（公开，可选登录） */
+      listLikedContent: (userId: number, req: UserLikedContentListReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        if (req.type !== undefined) p.set("type", req.type);
+        const qs = p.toString();
+        return fetchOptionalAuth<UserLikedContentPageResp>(
+          `/users/${userId}/likes${qs ? `?${qs}` : ""}`,
+          { method: "GET" },
+        );
+      },
+      /** 查询用户点赞总数（公开，可选登录） */
+      getLikesCount: (userId: number) =>
+        fetchOptionalAuth<UserLikesCountResp>(`/users/${userId}/likes/count`, { method: "GET" }),
     },
     comments: {
       /** 分页查询文章评论（可选登录，登录后返回 is_liked） */

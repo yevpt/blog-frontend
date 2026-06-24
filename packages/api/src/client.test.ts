@@ -778,6 +778,48 @@ describe("createApiClient", () => {
         }),
       );
     });
+
+    it("listLikedContent 构造 /users/:id/likes 分页与 type 查询参数", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({
+          code: 0,
+          message: "ok",
+          data: { total: 0, pages: 0, page: 2, page_size: 20, list: [] },
+        }),
+      );
+      const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token" });
+
+      await client.users.listLikedContent(9, { page: 2, page_size: 20, type: "comment" });
+
+      const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
+      const url = new URL(calledUrl);
+      expect(url.pathname).toBe("/users/9/likes");
+      expect(url.searchParams.get("page")).toBe("2");
+      expect(url.searchParams.get("page_size")).toBe("20");
+      expect(url.searchParams.get("type")).toBe("comment");
+      expect(global.fetch).toHaveBeenCalledWith(
+        calledUrl,
+        expect.objectContaining({
+          method: "GET",
+          headers: expect.objectContaining({ Authorization: "Bearer token" }),
+        }),
+      );
+    });
+
+    it("getLikesCount 请求 GET /users/:id/likes/count", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({ code: 0, message: "ok", data: { count: 12 } }),
+      );
+      const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+      const result = await client.users.getLikesCount(5);
+
+      expect(result).toEqual({ count: 12 });
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/users/5/likes/count",
+        expect.objectContaining({ method: "GET" }),
+      );
+    });
   });
 
   // ── 找回密码（公开）──────────────────────────────────────────────
