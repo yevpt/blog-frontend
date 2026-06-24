@@ -179,12 +179,27 @@ export function Toolbar({
             icon="image"
             disabled={disabled}
             onClick={() => {
-              onInsertImage((url, alt) => {
-                editor
-                  ?.chain()
-                  .focus()
-                  .setImage({ src: url, alt: alt ?? "" })
-                  .run();
+              onInsertImage({
+                insert: (url, alt) => {
+                  editor
+                    ?.chain()
+                    .focus()
+                    .setImage({ src: url, alt: alt ?? "" })
+                    .run();
+                },
+                insertLoading: ({ uploadId, aspectRatio, alt }) => {
+                  editor
+                    ?.chain()
+                    .focus()
+                    .insertImagePlaceholder({ uploadId, aspectRatio, alt })
+                    .run();
+                },
+                resolveLoading: (uploadId, url, alt) => {
+                  editor?.chain().resolveImagePlaceholder({ uploadId, src: url, alt }).run();
+                },
+                removeLoading: (uploadId) => {
+                  editor?.chain().removeImagePlaceholder({ uploadId }).run();
+                },
               });
             }}
           />

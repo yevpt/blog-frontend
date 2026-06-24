@@ -42,7 +42,7 @@ import { useRef, useEffect, useMemo } from "react";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
-import Image from "@tiptap/extension-image";
+import { ImageExtension } from "../extensions/image";
 import { UnderlineExtension } from "../extensions/underline";
 import { createMentionExtension } from "../extensions/mention";
 import { PlaceholderExtension } from "../extensions/placeholder";
@@ -129,11 +129,7 @@ export function useRichEditor({
         // 导致 contenteditable 对内联原子节点的点击命中测试/光标渲染严重错位
         // （点击图片右侧光标不可见、按 Left 键移动后光标位置与实际插入位置不一致）。
         // 改为块级后，图片独占一行，由 StarterKit 内置的 Gapcursor 处理光标定位，问题消失。
-        Image.configure({
-          inline: false,
-          allowBase64: false,
-          // 图片尺寸由 RichEditor 按 variant 用 prose / Tailwind 控制，避免内联 style 覆盖 prose。
-        }),
+        ImageExtension,
 
         // ⑥ 修复空段落与图片相邻时 Backspace/Delete 无法删除空段落的问题（见该扩展内注释）
         AtomParagraphMergeExtension,

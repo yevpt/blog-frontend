@@ -171,6 +171,8 @@ export function RichEditor({
     "[&_.rich-editor-mention]:text-primary [&_.rich-editor-mention]:font-medium",
     // 评论/碎语（card）与 MarkdownContent comment 一致；文章编辑（plain）走 prose 默认全宽。
     !isPlain && "[&_.tiptap_img]:max-w-[240px] [&_.tiptap_img]:h-auto [&_.tiptap_img]:rounded-md",
+    !isPlain &&
+      "[&_[data-rich-editor-image-loading]]:max-w-[240px] [&_[data-rich-editor-image]]:max-w-[240px] [&_[data-rich-editor-image]_img]:rounded-md",
     "[&_.tiptap_img.ProseMirror-selectednode]:outline [&_.tiptap_img.ProseMirror-selectednode]:outline-2 [&_.tiptap_img.ProseMirror-selectednode]:outline-primary [&_.tiptap_img.ProseMirror-selectednode]:-outline-offset-2",
     enableBlockquote && EDITOR_BLOCKQUOTE_QUOTELESS_CLASSES,
   );

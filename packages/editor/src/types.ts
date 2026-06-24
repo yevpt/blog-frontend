@@ -12,6 +12,18 @@
  * ================================================================
  */
 
+/** 工具栏图片按钮注入的插入 API。 */
+export interface ImageInsertHandlers {
+  /** 插入已就绪图片（评论 URL 对话框等） */
+  insert: (url: string, alt?: string) => void;
+  /** 选图后立即插入上传占位块 */
+  insertLoading: (options: { uploadId: string; aspectRatio: number; alt?: string }) => void;
+  /** 上传成功后替换为远程地址 */
+  resolveLoading: (uploadId: string, url: string, alt?: string) => void;
+  /** 上传失败时移除占位块 */
+  removeLoading: (uploadId: string) => void;
+}
+
 /**
  * 图片、链接的插入行为注入接口；代码块由工具栏直接插入。
  * 三者均为可选：未提供时，对应工具栏按钮不渲染。
@@ -19,13 +31,12 @@
 export interface InsertHandlers {
   /**
    * 工具栏点击图片按钮时触发。
-   * @param insert 将图片插入编辑器的函数，url 必填，alt 可选
    * @example
-   * onInsertImage={(insert) => {
-   *   openImageDialog((url, alt) => insert(url, alt));
+   * onInsertImage={(handlers) => {
+   *   openImageDialog((url, alt) => handlers.insert(url, alt));
    * }}
    */
-  onInsertImage?: (insert: (url: string, alt?: string) => void) => void;
+  onInsertImage?: (handlers: ImageInsertHandlers) => void;
 
   /**
    * 工具栏点击链接按钮时触发。

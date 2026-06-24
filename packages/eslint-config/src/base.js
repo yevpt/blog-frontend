@@ -23,6 +23,7 @@ export const base = [
         { prefer: "type-imports", fixStyle: "inline-type-imports" },
       ],
       "no-console": "warn",
+      "no-undef": "off",
     },
   },
 ];

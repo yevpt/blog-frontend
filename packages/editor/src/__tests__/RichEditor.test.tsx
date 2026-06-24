@@ -310,13 +310,21 @@ describe("RichEditor", () => {
     expect(screen.queryByRole("button", { name: "插入图片" })).toBeNull();
   });
 
-  it("onInsertImage 提供时渲染图片按钮并触发 handler", async () => {
+  it("onInsertImage 提供时渲染图片按钮并注入 handlers", async () => {
     const handler = vi.fn();
     const user = userEvent.setup();
     render(<RichEditor value="" onChange={() => {}} onInsertImage={handler} />);
     const btn = screen.getByRole("button", { name: "插入图片" });
     await user.click(btn);
     expect(handler).toHaveBeenCalledOnce();
+    expect(handler.mock.calls[0]?.[0]).toEqual(
+      expect.objectContaining({
+        insert: expect.any(Function),
+        insertLoading: expect.any(Function),
+        resolveLoading: expect.any(Function),
+        removeLoading: expect.any(Function),
+      }),
+    );
   });
 
   it("插入带标题链接时在编辑器内渲染为链接并输出 Markdown 链接", async () => {

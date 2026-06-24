@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { Editor } from "@tiptap/core";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
+import { ImageExtension } from "../extensions/image";
 import { AtomParagraphMergeExtension } from "../extensions/atom-paragraph-merge";
 
 /**
@@ -22,7 +22,7 @@ describe("AtomParagraphMergeExtension", () => {
       element: document.createElement("div"),
       extensions: [
         StarterKit.configure({ blockquote: false, horizontalRule: false }),
-        Image.configure({ inline: false }),
+        ImageExtension,
         AtomParagraphMergeExtension,
       ],
       content,
