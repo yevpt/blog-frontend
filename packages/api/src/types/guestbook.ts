@@ -6,6 +6,7 @@ export interface GuestbookUserResp {
   avatar_url?: string;
   site?: string;
   mark?: string;
+  roles?: string[];
 }
 
 export interface GuestbookItemResp {
