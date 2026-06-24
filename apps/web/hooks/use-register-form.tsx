@@ -217,11 +217,14 @@ export function useRegisterForm({ onSuccess }: UseRegisterFormOptions) {
         formData.append("avatar", avatarFile, avatarFile.name);
       }
 
-      const { user } = await requestRegisterApi<{ user: UserResp }>("/api/auth/register", {
+      const result = await requestRegisterApi<{ user?: UserResp }>("/api/auth/register", {
         method: "POST",
         body: formData,
       });
-      onSuccess(user);
+      if (!result?.user) {
+        throw new RegisterApiError("注册失败，请稍后重试", -1);
+      }
+      onSuccess(result.user);
     } catch (err) {
       setApiError(err instanceof Error ? err.message : "注册失败，请稍后重试");
     } finally {

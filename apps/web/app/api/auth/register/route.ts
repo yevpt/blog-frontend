@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { jsonWithAuthSession } from "@/lib/auth-session";
+import { jsonWithAuthSession, resolveAuthUser } from "@/lib/auth-session";
 
 /** 邮箱注册：透传 multipart/form-data，成功后写入登录 Cookie */
 export async function POST(request: NextRequest) {
@@ -14,5 +14,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data, { status: res.status });
   }
 
-  return jsonWithAuthSession(data.data);
+  const email = String(formData.get("email") ?? "");
+  const nicknameRaw = formData.get("nickname");
+  const nickname = typeof nicknameRaw === "string" ? nicknameRaw : undefined;
+  const user = resolveAuthUser(data.data, { email, nickname });
+
+  return jsonWithAuthSession({ ...data.data, user });
 }

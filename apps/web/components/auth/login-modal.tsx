@@ -52,10 +52,14 @@ export function LoginModal() {
     }, 200);
   }
 
+  function getDisplayName(user?: UserResp | null): string {
+    return user?.nickname ?? user?.username ?? "用户";
+  }
+
   function handleLoginSuccess(user: UserResp) {
     requestClose();
     setTimeout(() => {
-      addToast(`登录成功，欢迎回来 ${user.nickname ?? user.username}！`, "success");
+      addToast(`登录成功，欢迎回来 ${getDisplayName(user)}！`, "success");
     }, 100);
     router.refresh();
   }
@@ -63,7 +67,7 @@ export function LoginModal() {
   function handleRegisterSuccess(user: UserResp) {
     requestClose();
     setTimeout(() => {
-      addToast(`${user.nickname ?? user.username}，欢迎你的加入`, "success");
+      addToast(`${getDisplayName(user)}，欢迎你的加入`, "success");
     }, 100);
     router.refresh();
   }

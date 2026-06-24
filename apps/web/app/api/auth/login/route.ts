@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import type { LoginReq } from "@repo/api";
-import { jsonWithAuthSession } from "@/lib/auth-session";
+import { jsonWithAuthSession, resolveAuthUser } from "@/lib/auth-session";
 
 export async function POST(request: NextRequest) {
   const body: LoginReq = await request.json();
@@ -16,5 +16,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data);
   }
 
-  return jsonWithAuthSession(data.data);
+  const user = resolveAuthUser(data.data, { email: body.identifier });
+  return jsonWithAuthSession({ ...data.data, user });
 }

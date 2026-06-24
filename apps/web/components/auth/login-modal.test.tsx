@@ -137,6 +137,36 @@ describe("LoginModal", () => {
 
     vi.unstubAllGlobals();
   });
+
+  it("注册成功但 user 缺昵称时用 username 显示欢迎 toast", async () => {
+    const user = userEvent.setup();
+    const mockFetch = vi.fn(async (url: string) => {
+      if (url === "/api/oauth/providers") {
+        return mockApiResponse(["github"]);
+      }
+      if (url === "/api/auth/register") {
+        return mockApiResponse({
+          user: { id: 1, username: "user@example.com" },
+        });
+      }
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    useLoginModal.setState({ isOpen: true, view: "register" });
+    render(<LoginModal />);
+
+    await user.type(screen.getByPlaceholderText("邮箱地址"), "user@example.com");
+    await user.type(screen.getByPlaceholderText("设置密码"), "password1");
+    await user.type(screen.getByPlaceholderText("验证码"), "123456");
+    await user.click(screen.getByRole("button", { name: "创建账号" }));
+
+    await waitFor(() =>
+      expect(mockAddToast).toHaveBeenCalledWith("user@example.com，欢迎你的加入", "success"),
+    );
+
+    vi.unstubAllGlobals();
+  });
 });
 
 function mockApiResponse<T>(data: T) {

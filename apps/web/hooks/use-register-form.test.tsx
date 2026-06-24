@@ -164,8 +164,29 @@ describe("useRegisterForm", () => {
     );
   });
 
+  it("registration without user in response shows api error", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(mockApiResponse({}));
+
+    const { result } = renderHook(() => useRegisterForm({ onSuccess }));
+
+    act(() => {
+      result.current.setEmail("user@example.com");
+      result.current.setPassword("password1");
+      result.current.setCode("123456");
+    });
+
+    await act(async () => {
+      await result.current.submitRegistration();
+    });
+
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(result.current.apiError).toBe("注册失败，请稍后重试");
+  });
+
   it("registration with avatar sends multipart including avatar file", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(mockApiResponse(null));
+    vi.mocked(fetch).mockResolvedValueOnce(
+      mockApiResponse({ user: { id: 1, username: "user@example.com" } }),
+    );
     const compressed = new File(["avatar"], "avatar.jpg", { type: "image/jpeg" });
     mockCompressAvatarImage.mockResolvedValueOnce(compressed);
 
