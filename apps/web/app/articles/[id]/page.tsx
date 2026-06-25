@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createServerApiClient } from "@/lib/server-api";
+import { getCanonicalUrl } from "@/lib/seo";
 import { markdownToHtml, extractTocFromHtml } from "@/lib/markdown";
 import {
   ArticleNavbarSync,
@@ -20,9 +21,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   try {
     const api = await createServerApiClient();
     const article = await api.articles.getDetail(Number(id));
+    const canonical = getCanonicalUrl(`/articles/${article.id}`).toString();
     return {
       title: `${article.title} | Yevpt's Blog`,
       description: article.short_content ?? article.title,
+      alternates: {
+        canonical,
+      },
+      openGraph: {
+        title: article.title,
+        description: article.short_content ?? article.title,
+        url: canonical,
+        type: "article",
+        publishedTime: article.created_at,
+        modifiedTime: article.updated_at,
+        images: article.cover_img_url ? [article.cover_img_url] : undefined,
+      },
     };
   } catch {
     return { title: "文章 | Yevpt's Blog" };

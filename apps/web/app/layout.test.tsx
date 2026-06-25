@@ -52,7 +52,7 @@ vi.mock("./providers/global-modals", () => ({
   GlobalModals: () => null,
 }));
 
-import RootLayout, { viewport } from "./layout";
+import RootLayout, { metadata, viewport } from "./layout";
 
 type LayoutElementProps = {
   children?: ReactNode;
@@ -82,6 +82,12 @@ describe("Root layout viewport", () => {
       maximumScale: 1,
       userScalable: false,
     });
+  });
+});
+
+describe("Root layout metadata", () => {
+  it("配置站点基准地址", () => {
+    expect(metadata.metadataBase?.toString()).toBe("https://www.yevpt.com/");
   });
 });
 

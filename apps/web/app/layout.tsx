@@ -14,14 +14,28 @@ import { SessionProvider } from "./providers/session-provider";
 import { GlobalModals } from "./providers/global-modals";
 import { BfcacheBoundary } from "./providers/bfcache-boundary";
 import { NotificationProvider } from "@/components/notifications/notification-provider";
+import { getCanonicalUrl } from "@/lib/seo";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 const SITE_TITLE = "Yevpt's Blog";
 
 export const metadata: Metadata = {
+  metadataBase: getCanonicalUrl("/"),
   title: SITE_TITLE,
   description: "分享编程、工具、文学的个人博客",
+  applicationName: SITE_TITLE,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: SITE_TITLE,
+    description: "分享编程、工具、文学的个人博客",
+    url: "/",
+    siteName: SITE_TITLE,
+    locale: "zh_CN",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {

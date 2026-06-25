@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import ArticleDetailPage from "./page";
+import ArticleDetailPage, { generateMetadata } from "./page";
 import type { ArticleDetailResp } from "@repo/api";
 
 interface ArticleNavbarSyncProps {
@@ -62,6 +62,18 @@ vi.mock("@/components/article-detail", () => ({
 }));
 
 describe("ArticleDetailPage", () => {
+  it("生成文章 canonical 地址", async () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://example.com/");
+
+    const metadata = await generateMetadata({ params: Promise.resolve({ id: "1" }) });
+
+    expect(metadata).toMatchObject({
+      title: "Rust Web 框架实战 | Yevpt's Blog",
+      alternates: { canonical: "https://example.com/articles/1" },
+    });
+    vi.unstubAllEnvs();
+  });
+
   it("把当前文章信息传给 ArticleNavbarSync", async () => {
     mockArticleNavbarSync.mockClear();
 
