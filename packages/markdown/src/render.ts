@@ -22,6 +22,19 @@ export interface MarkdownRenderOptions {
   stripInvalidImages?: boolean;
 }
 
+/**
+ * remark 会折叠「纯空行」段间距（\n\n\n+）；仅含 nbsp 的段落可保留视觉间隔
+ * （普通空格段会被 remark 丢弃，与手动在空行输入空格的效果一致）。
+ */
+export function expandExtraBlankLines(markdown: string): string {
+  const parts = markdown.split(/(```[\s\S]*?```)/g);
+  return parts
+    .map((part) =>
+      part.startsWith("```") ? part : part.replace(/(?:\r?\n){3,}/g, "\n\n&nbsp;\n\n"),
+    )
+    .join("");
+}
+
 // 语言显示名映射
 const LANG_DISPLAY: Record<string, string> = {
   javascript: "JavaScript",
@@ -270,7 +283,8 @@ function buildPipeline(options: MarkdownRenderOptions = {}) {
 
 /** 同步版 Markdown → HTML，适用于客户端 useMemo 实时渲染（无加载状态、无闪烁）。 */
 export function markdownToHtmlSync(markdown: string, options?: MarkdownRenderOptions): string {
-  return String(buildPipeline(options).processSync(markdown));
+  const input = expandExtraBlankLines(markdown);
+  return String(buildPipeline(options).processSync(input));
 }
 
 /** 异步版 Markdown → HTML，供服务端/SSR 使用（如文章详情页）。 */

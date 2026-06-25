@@ -76,6 +76,27 @@ describe("markdownToHtml", () => {
     const html = await markdownToHtml("```typescript\nconst x = 1\n```");
     expect(html).toContain("language-typescript");
   });
+
+  it("markdownToHtmlSync 将纯空行段间距转为 nbsp 间隔段", () => {
+    const html = markdownToHtmlSync("第一段。\n\n第二段。\n\n\n\n第三段。");
+    expect(html).toMatch(/<p>第一段。<\/p>\s*<p>第二段。<\/p>\s*<p>[^<]*<\/p>\s*<p>第三段。<\/p>/);
+  });
+
+  it("markdownToHtmlSync 不重复处理已有 nbsp 间隔段", () => {
+    const html = markdownToHtmlSync("第一段。\n\n&nbsp;\n\n第二段。");
+    expect(html.match(/<p>/g)).toHaveLength(3);
+  });
+
+  it("markdownToHtmlSync 不改动代码围栏内的连续换行", () => {
+    const html = markdownToHtmlSync("```js\nconst a = 1\n\n\nconst b = 2\n```");
+    expect(html).toContain("hljs-number");
+    expect(html).not.toMatch(/<p>[^<]*<\/p>/);
+  });
+
+  it("markdownToHtmlSync 支持 CRLF 纯空行段间距", () => {
+    const html = markdownToHtmlSync("Token😂）。\r\n\r\n\r\n\r\n之前都是爬的景区");
+    expect(html.match(/<p>/g)).toHaveLength(3);
+  });
 });
 
 describe("extractTocFromHtml", () => {
