@@ -6,7 +6,7 @@ export function AdminListCard({ className, children, ...props }: HTMLAttributes<
   return (
     <Card
       className={cn(
-        "flex min-h-0 flex-1 flex-col divide-y divide-border/70 overflow-hidden border border-border/80 shadow-none",
+        "flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col divide-y divide-border/70 overflow-hidden border border-border/80 shadow-none",
         className,
       )}
       {...props}
