@@ -73,7 +73,7 @@ export function SecurityTab({ userId: _userId }: SecurityTabProps) {
 
   return (
     <>
-      <SecurityList data={data} onAction={dispatch} />
+      <SecurityList data={data} onAction={dispatch} onDisplayChanged={() => void reload()} />
       <UsernameSheet
         open={usernameOpen}
         currentUsername={data.username}

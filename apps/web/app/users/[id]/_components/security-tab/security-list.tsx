@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import type { SecurityData } from "./use-account-security";
 import { getProviderMeta } from "./oauth-providers";
+import { EmailDisplaySelect, type EmailDisplayValue } from "./email-display-select";
 
 /** 列表行可触发的动作，可辨识联合。后续 Task 6–10 据 type 打开对应 Sheet。 */
 export type SecurityAction =
@@ -16,17 +17,19 @@ export type SecurityAction =
 interface SecurityListProps {
   data: SecurityData;
   onAction: (action: SecurityAction) => void;
+  /** 对外展示设置变更成功后回调，用于刷新列表数据 */
+  onDisplayChanged: () => void;
 }
 
-/** mailShow 数值 → 对外展示文案。约定 0=不展示, 1=主邮箱, 2=副邮箱（Task 8 落地交互下拉前先只读展示）。 */
-const MAIL_SHOW_LABEL: Record<number, string> = {
-  0: "不展示",
-  1: "主邮箱",
-  2: "副邮箱",
-};
+/** mailShow 数值 → 对外展示值（后端 UpdateEmailDisplay 权威映射：1=main, 0=sub, 2=none，未知按 main）。 */
+function mailShowToValue(mailShow: number): EmailDisplayValue {
+  if (mailShow === 0) return "sub";
+  if (mailShow === 2) return "none";
+  return "main";
+}
 
 /** 账号安全受控纯展示列表：三组（登录凭证 / 邮箱 / 第三方绑定） */
-export function SecurityList({ data, onAction }: SecurityListProps) {
+export function SecurityList({ data, onAction, onDisplayChanged }: SecurityListProps) {
   return (
     <div className="pb-4">
       <SecuritySection title="登录凭证">
@@ -65,12 +68,14 @@ export function SecurityList({ data, onAction }: SecurityListProps) {
           actionLabel={data.subEmail ? "换绑副邮箱" : "绑定副邮箱"}
           onAction={() => onAction({ type: "email", target: "sub" })}
         />
-        {/* 对外展示行本任务先渲染为只读文本；Task 8 再替换为交互下拉。 */}
+        {/* 对外展示行：交互下拉，变更即调后端，副邮箱不存在时禁用「副邮箱」选项 */}
         <div className="flex min-h-[48px] items-center border-b border-border px-4 py-2 last:border-b-0">
           <span className="flex-1 text-[13px] text-muted-foreground">对外展示邮箱</span>
-          <span className="text-[13px] text-muted-foreground/70">
-            {MAIL_SHOW_LABEL[data.mailShow] ?? "不展示"}
-          </span>
+          <EmailDisplaySelect
+            value={mailShowToValue(data.mailShow)}
+            subEmailExists={!!data.subEmail}
+            onChanged={onDisplayChanged}
+          />
         </div>
       </SecuritySection>
 
