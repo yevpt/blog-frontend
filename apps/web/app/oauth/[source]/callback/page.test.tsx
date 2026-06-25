@@ -100,41 +100,23 @@ describe("OAuth 回调接收页", () => {
     expect(mockPostMessage).not.toHaveBeenCalled();
   });
 
-  it("直接导航模式：绑定成功后重定向至 next 指向的账号安全页", async () => {
-    Object.defineProperty(window, "opener", { writable: true, value: null });
-    const nextParams = new URLSearchParams("code=abc&state=xyz&next=%2Fusers%2F1%3Ftab%3Dsecurity");
-    vi.mocked(useSearchParams).mockReturnValue(nextParams as ReturnType<typeof useSearchParams>);
-
-    vi.mocked(global.fetch).mockResolvedValue({
-      json: () =>
-        Promise.resolve({
-          code: 0,
-          data: { action: "bind" },
-        }),
-    } as Response);
-
-    render(<OAuthCallbackPage />);
-
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/users/1?tab=security"));
-    expect(sessionStorage.getItem("oauth_result")).toBeNull();
-    expect(mockPostMessage).not.toHaveBeenCalled();
-  });
-
-  it("绑定成功优先使用 sessionStorage 暂存的回跳目标，并清除它", async () => {
-    Object.defineProperty(window, "opener", { writable: true, value: null });
-    // redirect_uri 为裸地址，平台回跳不带 next，回跳目标只在 sessionStorage 里
-    sessionStorage.setItem("oauth_bind_redirect", "/users/9?tab=security");
-    const params = new URLSearchParams("code=abc&state=xyz");
-    vi.mocked(useSearchParams).mockReturnValue(params as ReturnType<typeof useSearchParams>);
-
+  it("Popup 模式：绑定成功后 postMessage 通知父窗口并关闭自身", async () => {
+    vi.mocked(useParams).mockReturnValue({ source: "github" });
     vi.mocked(global.fetch).mockResolvedValue({
       json: () => Promise.resolve({ code: 0, data: { action: "bind" } }),
     } as Response);
 
     render(<OAuthCallbackPage />);
 
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/users/9?tab=security"));
-    expect(sessionStorage.getItem("oauth_bind_redirect")).toBeNull();
+    await waitFor(() =>
+      expect(mockPostMessage).toHaveBeenCalledWith(
+        { type: "oauth_bind_success", source: "github" },
+        window.location.origin,
+      ),
+    );
+    expect(mockClose).toHaveBeenCalled();
+    // 绑定不写登录态，也不触发路由跳转
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 
   it("缺少 code 或 state 时，直接发送错误消息", async () => {

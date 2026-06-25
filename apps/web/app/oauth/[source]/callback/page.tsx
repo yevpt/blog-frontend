@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import type { UserResp } from "@repo/api";
-import { OAUTH_BIND_REDIRECT_KEY, type OAuthMessage } from "@/lib/oauth";
+import type { OAuthMessage } from "@/lib/oauth";
 
 interface OAuthCallbackResult {
   code?: number;
@@ -11,15 +11,7 @@ interface OAuthCallbackResult {
   data?: {
     action?: "login" | "bind";
     user?: UserResp;
-    redirect_uri?: string;
   };
-}
-
-function safeRedirectPath(value: string | null | undefined): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) {
-    return "/";
-  }
-  return value;
 }
 
 /**
@@ -76,17 +68,10 @@ function OAuthCallbackContent() {
       .then((data: OAuthCallbackResult) => {
         if (data.code !== 0) {
           notify({ type: "oauth_error", message: data.message ?? "登录失败，请稍后重试" });
+        } else if (data.data?.action === "bind") {
+          // 绑定与登录共用 popup 机制：通知发起页（个人详情页）绑定成功后自行刷新
+          notify({ type: "oauth_bind_success", source });
         } else {
-          if (data.data?.action === "bind") {
-            // 回跳目标优先取 sessionStorage（startBind 暂存，避免污染 redirect_uri）；
-            // 兼容保留 redirect_uri / next 回退，供其它发起方使用。
-            const stored = sessionStorage.getItem(OAUTH_BIND_REDIRECT_KEY);
-            sessionStorage.removeItem(OAUTH_BIND_REDIRECT_KEY);
-            router.replace(
-              safeRedirectPath(stored ?? data.data.redirect_uri ?? searchParams.get("next")),
-            );
-            return;
-          }
           const user = data.data?.user;
           if (!user) {
             notify({ type: "oauth_error", message: "登录数据异常，请稍后重试" });

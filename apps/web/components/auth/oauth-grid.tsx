@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { SvgIcon, type IconName } from "@repo/icons";
 import { Button, cn } from "@repo/ui";
 import type { UserResp } from "@repo/api";
-import type { OAuthMessage } from "@/lib/oauth";
+import { openOAuthPopup } from "@/lib/oauth";
 import { addToast } from "@/lib/toast";
 
 // 模块级缓存：整个页面生命周期内只发一次请求，React StrictMode 双执行不重复请求
@@ -64,20 +64,16 @@ export function OAuthGrid({ className, onSuccess }: OAuthGridProps) {
   const [expanded, setExpanded] = useState(false);
   const [enabledProviders, setEnabledProviders] = useState<Set<string>>(new Set());
 
-  // 保存当前活跃的 postMessage 监听器引用，以便组件卸载时清理
-  const messageHandlerRef = useRef<((e: MessageEvent) => void) | null>(null);
+  // 保存当前 popup 监听器的清理函数，以便组件卸载时移除，防止内存泄漏
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     getEnabledProviders().then(setEnabledProviders);
   }, []);
 
-  // 组件卸载时移除尚未触发的监听器，防止内存泄漏
+  // 组件卸载时移除尚未触发的监听器
   useEffect(() => {
-    return () => {
-      if (messageHandlerRef.current) {
-        window.removeEventListener("message", messageHandlerRef.current);
-      }
-    };
+    return () => cleanupRef.current?.();
   }, []);
 
   async function handleOAuthLogin(id: string) {
@@ -93,42 +89,22 @@ export function OAuthGrid({ className, onSuccess }: OAuthGridProps) {
         return;
       }
 
-      const w = 600;
-      const h = 700;
-      // 移动端浏览器会忽略 features，自动以新标签页（全屏）打开
-      const isMobile = window.matchMedia("(max-width: 768px)").matches;
-      const features = isMobile
-        ? ""
-        : `width=${w},height=${h},left=${Math.round(window.screenLeft + (window.outerWidth - w) / 2)},top=${Math.round(window.screenTop + (window.outerHeight - h) / 2)}`;
-
-      const popup = window.open(data.data.authorize_url, "oauth_popup", features);
-
-      if (!popup) {
-        addToast("浏览器阻止了弹出窗口，请允许后重试", "error");
-        return;
-      }
-
-      if (messageHandlerRef.current) {
-        window.removeEventListener("message", messageHandlerRef.current);
-      }
-
-      function handleMessage(event: MessageEvent<OAuthMessage>) {
-        if (event.origin !== window.location.origin) return;
-
-        const msg = event.data;
-
+      // 复位上一次未触发的监听器，再开新的 popup
+      cleanupRef.current?.();
+      const cleanup = openOAuthPopup(data.data.authorize_url, (msg) => {
         if (msg.type === "oauth_success") {
           onSuccess?.(msg.user);
         } else if (msg.type === "oauth_error") {
           addToast(msg.message ?? "登录失败，请稍后重试", "error");
         }
+        cleanupRef.current = null;
+      });
 
-        window.removeEventListener("message", handleMessage);
-        messageHandlerRef.current = null;
+      if (!cleanup) {
+        addToast("浏览器阻止了弹出窗口，请允许后重试", "error");
+        return;
       }
-
-      messageHandlerRef.current = handleMessage;
-      window.addEventListener("message", handleMessage);
+      cleanupRef.current = cleanup;
     } catch {
       addToast("网络异常，请稍后重试", "error");
     }
