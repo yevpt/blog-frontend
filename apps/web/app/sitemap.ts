@@ -12,43 +12,69 @@ const STATIC_ROUTES: Array<{
   priority: number;
 }> = [
   { path: "/", changeFrequency: "daily", priority: 1 },
-  { path: "/snippets", changeFrequency: "daily", priority: 0.7 },
+  { path: "/moments", changeFrequency: "daily", priority: 0.7 },
   { path: "/guestbook", changeFrequency: "weekly", priority: 0.5 },
   { path: "/friend-links", changeFrequency: "monthly", priority: 0.4 },
   { path: "/circle", changeFrequency: "weekly", priority: 0.4 },
 ];
 
 async function fetchPublicArticles(): Promise<ArticleListItemResp[]> {
+  try {
+    return await fetchPublicArticlesFromBackend();
+  } catch {
+    try {
+      return await fetchPublicArticlesFromPublicApi();
+    } catch {
+      return [];
+    }
+  }
+}
+
+async function fetchPublicArticlesFromBackend(): Promise<ArticleListItemResp[]> {
   const api = createApiClient({
     baseUrl: process.env.API_BASE_URL!,
     getAccessToken: () => null,
   });
 
-  try {
-    const firstPage = await api.articles.listPublic({
-      page: 1,
+  const loadPage = (page: number) =>
+    api.articles.listPublic({
+      page,
       page_size: ARTICLE_PAGE_SIZE,
       sort_by: "updated_at",
       sort_order: "desc",
     });
 
-    if (firstPage.pages <= 1) return firstPage.list;
+  return collectArticlePages(loadPage);
+}
 
-    const restPages = await Promise.all(
-      Array.from({ length: firstPage.pages - 1 }, (_, index) =>
-        api.articles.listPublic({
-          page: index + 2,
-          page_size: ARTICLE_PAGE_SIZE,
-          sort_by: "updated_at",
-          sort_order: "desc",
-        }),
-      ),
-    );
+async function fetchPublicArticlesFromPublicApi(): Promise<ArticleListItemResp[]> {
+  const loadPage = async (page: number) => {
+    const url = getCanonicalUrl("/api/articles");
+    url.searchParams.set("page", String(page));
+    url.searchParams.set("page_size", String(ARTICLE_PAGE_SIZE));
+    url.searchParams.set("sort_by", "updated_at");
+    url.searchParams.set("sort_order", "desc");
 
-    return firstPage.list.concat(restPages.flatMap((page) => page.list));
-  } catch {
-    return [];
-  }
+    const res = await fetch(url.toString(), { method: "GET" });
+    if (!res.ok) throw new Error("Failed to fetch articles from public API");
+    return (await res.json()) as { pages: number; list: ArticleListItemResp[] };
+  };
+
+  return collectArticlePages(loadPage);
+}
+
+async function collectArticlePages(
+  loadPage: (page: number) => Promise<{ pages: number; list: ArticleListItemResp[] }>,
+): Promise<ArticleListItemResp[]> {
+  const firstPage = await loadPage(1);
+
+  if (firstPage.pages <= 1) return firstPage.list;
+
+  const restPages = await Promise.all(
+    Array.from({ length: firstPage.pages - 1 }, (_, index) => loadPage(index + 2)),
+  );
+
+  return firstPage.list.concat(restPages.flatMap((page) => page.list));
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
