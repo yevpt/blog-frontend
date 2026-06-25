@@ -42,6 +42,16 @@ describe("WriteSnippetButton", () => {
     expect(screen.getByRole("button", { name: "写碎语" })).toBeInTheDocument();
   });
 
+  it("圆形按钮去除默认内边距，避免图标被挤压", () => {
+    vi.mocked(useSession).mockReturnValue({ userId: null, profile: null, patchProfile: () => {} });
+    render(<WriteSnippetButton />);
+    const button = screen.getByRole("button", { name: "写碎语" });
+    expect(button.className).toContain("p-0");
+    const icon = button.querySelector("svg");
+    expect(icon?.getAttribute("class")).toContain("size-4");
+    expect(icon?.getAttribute("class")).toContain("md:size-[18px]");
+  });
+
   it("未登录时点击弹出登录弹窗", async () => {
     const user = userEvent.setup();
     vi.mocked(useSession).mockReturnValue({ userId: null, profile: null, patchProfile: () => {} });

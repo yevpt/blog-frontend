@@ -27,12 +27,12 @@ export function WriteSnippetButton() {
         aria-label="写碎语"
         variant="default"
         className={cn(
-          "pointer-events-auto flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full shadow-lg md:h-12 md:w-12",
+          "pointer-events-auto flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full p-0 shadow-lg md:h-12 md:w-12",
           "bg-primary text-primary-foreground hover:shadow-xl",
           "md:translate-x-[max(0px,calc(25vw-13.5rem))]", // 精准推到右侧空白区中心
         )}
       >
-        <SvgIcon name="pen" size={20} className="md:h-[22px] md:w-[22px]" />
+        <SvgIcon name="pen" className="size-4 shrink-0 md:size-[18px]" />
       </Button>
     </Tooltip>
   );
