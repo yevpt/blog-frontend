@@ -15,10 +15,8 @@ interface ArticleEditorTopBarProps {
 }
 
 const topBarShellClassName = cn(
-  "sticky top-0 z-30 -mx-4 flex flex-col gap-3 bg-background/85 px-4 py-3.5 backdrop-blur-md",
-  "sm:flex-row sm:items-center sm:justify-between sm:gap-5",
-  "md:-mx-6 md:px-6",
-  "lg:-mx-8 lg:px-8",
+  "sticky top-0 z-30 grid gap-3 bg-background/90 pb-3 backdrop-blur-md",
+  "sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:justify-between sm:gap-5",
 );
 
 const iconBtnClassName = cn(
@@ -65,7 +63,7 @@ export function ArticleEditorTopBar({
 
   return (
     <header className={topBarShellClassName}>
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3 pr-14 sm:pr-0">
         <Button
           type="button"
           variant="ghost"
@@ -76,7 +74,7 @@ export function ArticleEditorTopBar({
           <SvgIcon name="arrow-back" size={16} />
         </Button>
         <div className="min-w-0">
-          <h1 className="text-[15px] font-semibold tracking-[-0.02em] text-foreground">
+          <h1 className="text-xl font-semibold leading-8 tracking-normal text-foreground sm:text-2xl">
             {isEditing ? "编辑文章" : "新建文章"}
           </h1>
           <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">

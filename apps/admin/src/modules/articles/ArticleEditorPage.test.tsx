@@ -205,7 +205,9 @@ describe("ArticleEditorPage", () => {
     });
 
     const layout = screen.getByTestId("article-editor-layout");
-    expect(layout).toHaveClass("xl:min-h-[calc(100dvh-1.5rem)]");
+    expect(layout).toHaveClass("xl:min-h-[calc(100dvh-3.5rem)]");
+    expect(layout).toHaveClass("motion-safe:animate-in");
+    expect(layout).toHaveClass("motion-safe:fade-in");
     expect(layout).not.toHaveClass("xl:overflow-visible");
 
     const main = screen.getByTestId("article-editor-main");

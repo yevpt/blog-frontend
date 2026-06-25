@@ -328,11 +328,11 @@ export function ArticleEditorPage() {
       ref={layoutRef}
       data-testid="article-editor-layout"
       className={cn(
-        "flex flex-col lg:-mt-6",
+        "flex flex-col motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-200",
         // 小屏：锁在视口内，正文在编辑器内滚动
-        "max-h-[calc(100dvh-6.5rem)] overflow-hidden",
+        "max-h-[calc(100dvh-3rem)] overflow-hidden lg:max-h-[calc(100dvh-3.5rem)]",
         // 桌面：至少铺满视口；右栏更高时由主区域增高触发页面滚动
-        "xl:min-h-[calc(100dvh-1.5rem)]",
+        "xl:min-h-[calc(100dvh-3.5rem)]",
       )}
     >
       <div className="grid shrink-0 gap-3">

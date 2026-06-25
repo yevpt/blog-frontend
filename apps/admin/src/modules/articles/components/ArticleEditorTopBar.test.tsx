@@ -8,7 +8,7 @@ vi.mock("@repo/icons", () => ({
 
 describe("ArticleEditorTopBar", () => {
   it("新建页展示标题与保存按钮", () => {
-    render(
+    const { container } = render(
       <ArticleEditorTopBar
         isEditing={false}
         statusLabel="草稿"
@@ -23,6 +23,9 @@ describe("ArticleEditorTopBar", () => {
     expect(screen.getByRole("heading", { name: "新建文章" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "返回文章列表" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "存草稿" })).toBeEnabled();
+    const header = container.querySelector("header");
+    expect(header).toHaveClass("grid", "gap-3", "sm:grid-cols-[minmax(0,1fr)_auto]");
+    expect(header).not.toHaveClass("-mx-3");
   });
 
   it("发布加载时保持按钮文案与宽度占位", () => {
