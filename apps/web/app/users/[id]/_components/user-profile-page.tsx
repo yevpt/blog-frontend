@@ -33,6 +33,7 @@ export function UserProfilePage({
     saveField,
     changeAvatar,
     updateRoles,
+    patchDisplayEmail,
   } = useProfileEditor(initialProfile);
 
   const { profile: viewerProfile } = useSession();
@@ -84,6 +85,7 @@ export function UserProfilePage({
             isEditMode={isEditMode}
             onSaveField={saveField}
             onActiveEditingChange={setIsAnyFieldEditing}
+            onDisplayEmailChanged={patchDisplayEmail}
           />
         </Card>
 

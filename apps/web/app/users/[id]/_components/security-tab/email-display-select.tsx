@@ -1,20 +1,21 @@
 "use client";
 
-import { useState, type Key } from "react";
+import { useEffect, useState, type Key } from "react";
 import { Select } from "@repo/ui";
 import { apiJson, getApiErrorMessage } from "@/lib/client-fetch";
 import { addToast } from "@/lib/toast";
+import type { EmailDisplayValue } from "../../_lib/display-email";
 
-/** 对外展示邮箱的可选值。 */
-export type EmailDisplayValue = "main" | "sub" | "none";
+export type { EmailDisplayValue } from "../../_lib/display-email";
+export { displayToMailShow, mailShowToDisplay } from "../../_lib/display-email";
 
 interface EmailDisplaySelectProps {
   /** 当前对外展示设置 */
   value: EmailDisplayValue;
   /** 副邮箱是否存在；不存在时禁用「副邮箱」选项 */
   subEmailExists: boolean;
-  /** 设置成功后回调（用于刷新列表） */
-  onChanged: () => void;
+  /** 设置成功后回调，传入最新展示值供父级局部更新 */
+  onChanged: (display: EmailDisplayValue) => void;
 }
 
 /** 选项文案，单一来源。 */
@@ -39,6 +40,11 @@ export function EmailDisplaySelect({ value, subEmailExists, onChanged }: EmailDi
   const [selected, setSelected] = useState<EmailDisplayValue>(value);
   const [saving, setSaving] = useState(false);
 
+  // 父级 mailShow 变更时同步（全量 reload）；局部 patch 时 value 与 selected 一致，无副作用
+  useEffect(() => {
+    setSelected(value);
+  }, [value]);
+
   async function handleChange(key: Key | null) {
     if (!isDisplayValue(key)) return;
     if (key === selected) return;
@@ -52,7 +58,7 @@ export function EmailDisplaySelect({ value, subEmailExists, onChanged }: EmailDi
         method: "PATCH",
         body: JSON.stringify({ display: key }),
       });
-      onChanged();
+      onChanged(key);
     } catch (err) {
       // 失败回滚本地值并提示
       setSelected(prev);

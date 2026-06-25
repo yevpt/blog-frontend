@@ -7,6 +7,10 @@ import {
   normalizeSocialPlatform,
   toBackendSocialPlatform,
 } from "@/app/users/[id]/_components/profile-tab/profile-config";
+import {
+  displayEmailForSetting,
+  type EmailDisplayValue,
+} from "@/app/users/[id]/_lib/display-email";
 import { apiForm, apiJson, ApiClientError } from "@/lib/client-fetch";
 
 const PROFILE_FIELDS = ["mark", "description"] as const;
@@ -152,6 +156,16 @@ export function useProfileEditor(initialProfile: UserPublicProfileResp) {
     setProfile((current) => ({ ...current, roles }));
   }, []);
 
+  const patchDisplayEmail = useCallback(
+    (display: EmailDisplayValue, mainEmail: string | null, subEmail: string | null) => {
+      setProfile((current) => ({
+        ...current,
+        display_email: displayEmailForSetting(display, mainEmail, subEmail),
+      }));
+    },
+    [],
+  );
+
   return {
     profile,
     isOwner,
@@ -163,5 +177,6 @@ export function useProfileEditor(initialProfile: UserPublicProfileResp) {
     saveField,
     changeAvatar,
     updateRoles,
+    patchDisplayEmail,
   };
 }

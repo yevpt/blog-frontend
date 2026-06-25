@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { UserDetailResp, OAuthBindingResp } from "@repo/api";
 import { apiJson, getApiErrorMessage } from "@/lib/client-fetch";
+import { displayToMailShow, type EmailDisplayValue } from "../../_lib/display-email";
 
 /** 单个第三方平台的绑定态 */
 export interface SecurityProvider {
@@ -30,12 +31,36 @@ async function fetchProviders(): Promise<string[]> {
   return json.code === 0 && Array.isArray(json.data) ? (json.data as string[]) : [];
 }
 
+/** 规范化 oauth-bindings 响应：兼容非数组信封、provider 字段与大小写差异 */
+export function normalizeOAuthBindings(raw: unknown): OAuthBindingResp[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    if (typeof item !== "object" || item === null) return [];
+    const record = item as Record<string, unknown>;
+    const source = record.source ?? record.provider;
+    if (typeof source !== "string" || !source) return [];
+    const socialUserId = record.social_user_id;
+    return [
+      {
+        source: source.toLowerCase(),
+        social_user_id: typeof socialUserId === "number" ? socialUserId : 0,
+      },
+    ];
+  });
+}
+
+function isProviderBound(bindings: OAuthBindingResp[], source: string): boolean {
+  const key = source.toLowerCase();
+  return bindings.some((b) => b.source.toLowerCase() === key);
+}
+
 /** 将三处响应聚合为视图数据 */
-function toSecurityData(
+export function toSecurityData(
   me: UserDetailResp,
   sources: string[],
-  bindings: OAuthBindingResp[],
+  bindingsRaw: unknown,
 ): SecurityData {
+  const bindings = normalizeOAuthBindings(bindingsRaw);
   return {
     username: me.username,
     passwordSet: me.password_set ?? false,
@@ -44,7 +69,7 @@ function toSecurityData(
     mailShow: me.setting?.mail_show ?? 0,
     providers: sources.map((source) => ({
       source,
-      bound: bindings.some((b) => b.source === source),
+      bound: isProviderBound(bindings, source),
     })),
   };
 }
@@ -54,6 +79,8 @@ interface UseAccountSecurityResult {
   loading: boolean;
   error: string | null;
   reload: () => Promise<void>;
+  /** 对外展示邮箱变更后局部更新 mailShow，避免全量 reload */
+  patchMailShow: (display: EmailDisplayValue) => void;
 }
 
 /** 账号安全数据容器：并行拉取当前用户详情 / 第三方平台 / 已绑定关系并聚合 */
@@ -69,7 +96,7 @@ export function useAccountSecurity(): UseAccountSecurityResult {
       const [me, sources, bindings] = await Promise.all([
         apiJson<UserDetailResp>("/api/users/me", { method: "GET" }),
         fetchProviders(),
-        apiJson<OAuthBindingResp[]>("/api/users/me/oauth-bindings", { method: "GET" }),
+        apiJson<unknown>("/api/users/me/oauth-bindings", { method: "GET" }),
       ]);
       setData(toSecurityData(me, sources, bindings));
     } catch (err) {
@@ -79,9 +106,13 @@ export function useAccountSecurity(): UseAccountSecurityResult {
     }
   }, []);
 
+  const patchMailShow = useCallback((display: EmailDisplayValue) => {
+    setData((prev) => (prev ? { ...prev, mailShow: displayToMailShow(display) } : prev));
+  }, []);
+
   useEffect(() => {
     void reload();
   }, [reload]);
 
-  return { data, loading, error, reload };
+  return { data, loading, error, reload, patchMailShow };
 }

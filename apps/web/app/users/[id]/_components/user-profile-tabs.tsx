@@ -12,6 +12,7 @@ import { ProfileLikesTab } from "./profile-likes-tab/profile-likes-tab";
 import { formatProfileMomentsTabLabel } from "./profile-moments-tab/constants";
 import { formatProfileLikesTabLabel } from "./profile-likes-tab/constants";
 import type { MomentPageResp } from "@repo/api";
+import type { EmailDisplayValue } from "../_lib/display-email";
 
 type TabKey = "profile" | "moments" | "likes" | "security";
 
@@ -30,6 +31,11 @@ interface UserProfileTabsProps {
   isEditMode: boolean;
   onSaveField: (field: string, value: string) => Promise<void>;
   onActiveEditingChange?: (active: boolean) => void;
+  onDisplayEmailChanged?: (
+    display: EmailDisplayValue,
+    mainEmail: string | null,
+    subEmail: string | null,
+  ) => void;
 }
 
 export function UserProfileTabs({
@@ -40,6 +46,7 @@ export function UserProfileTabs({
   isEditMode,
   onSaveField,
   onActiveEditingChange,
+  onDisplayEmailChanged,
 }: UserProfileTabsProps) {
   const searchParams = useSearchParams();
   const wantsSecurity = searchParams.get("tab") === "security";
@@ -111,7 +118,7 @@ export function UserProfileTabs({
             )}
           >
             <SvgIcon name={tab.icon} size={17} className={cn("shrink-0", tab.iconColor)} />
-            <span>{tab.label}</span>
+            <span className="tabular-nums">{tab.label}</span>
           </button>
         ))}
 
@@ -154,7 +161,9 @@ export function UserProfileTabs({
             onCountChange={setLikesTotal}
           />
         )}
-        {validTab === "security" && isOwner && isEditMode && <SecurityTab userId={profile.id} />}
+        {validTab === "security" && isOwner && isEditMode && (
+          <SecurityTab userId={profile.id} onDisplayEmailChanged={onDisplayEmailChanged} />
+        )}
       </div>
     </div>
   );

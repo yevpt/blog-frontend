@@ -9,13 +9,19 @@ import { EmailSheet } from "./email-sheet";
 import { PasswordSheet } from "./password-sheet";
 import { UnbindConfirm } from "./unbind-confirm";
 import { addToast } from "@/lib/toast";
+import type { EmailDisplayValue } from "../../_lib/display-email";
 
 interface SecurityTabProps {
   userId: number;
+  onDisplayEmailChanged?: (
+    display: EmailDisplayValue,
+    mainEmail: string | null,
+    subEmail: string | null,
+  ) => void;
 }
 
-export function SecurityTab({ userId }: SecurityTabProps) {
-  const { data, loading, error, reload } = useAccountSecurity();
+export function SecurityTab({ userId, onDisplayEmailChanged }: SecurityTabProps) {
+  const { data, loading, error, reload, patchMailShow } = useAccountSecurity();
   const router = useRouter();
   // 当前打开的 Sheet
   const [usernameOpen, setUsernameOpen] = useState(false);
@@ -126,7 +132,14 @@ export function SecurityTab({ userId }: SecurityTabProps) {
 
   return (
     <>
-      <SecurityList data={data} onAction={dispatch} onDisplayChanged={() => void reload()} />
+      <SecurityList
+        data={data}
+        onAction={dispatch}
+        onDisplayChanged={(display) => {
+          patchMailShow(display);
+          onDisplayEmailChanged?.(display, data.mainEmail, data.subEmail);
+        }}
+      />
       <UsernameSheet
         open={usernameOpen}
         currentUsername={data.username}

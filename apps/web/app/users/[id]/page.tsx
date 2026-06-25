@@ -7,6 +7,10 @@ import {
   EMPTY_MOMENTS_PAGE,
   PROFILE_MOMENTS_PAGE_SIZE,
 } from "./_components/profile-moments-tab/constants";
+import {
+  buildPublicProfileFromMe,
+  enrichProfileDisplayEmailForOwner,
+} from "./_lib/profile-from-me";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -19,34 +23,36 @@ interface Props {
  */
 async function fetchProfile(id: number): Promise<UserPublicProfileResp | null> {
   const api = await createServerApiClient();
+  let profile: UserPublicProfileResp | null = null;
+
   try {
-    return await api.users.getPublicProfile(id);
+    profile = await api.users.getPublicProfile(id);
   } catch (err) {
     console.warn(`[UserProfile] GET /users/${id} 失败，尝试降级到 /users/me:`, err);
   }
 
   // 降级：用当前登录用户数据（/users/me）模拟公开详情
-  try {
-    const me = await api.users.getMe();
-    if (me.id !== id) return null;
-    return {
-      id: me.id,
-      nickname: me.nickname ?? me.username ?? "用户",
-      avatar_url: me.avatar_url ?? null,
-      mark: me.mark ?? null,
-      description: me.meta?.description ?? null,
-      last_login_at: me.last_login_at ?? null,
-      register_at: new Date().toISOString(),
-      roles: me.roles,
-      display_email: null,
-      site: me.site ?? null,
-      social_links: me.social_links ?? [],
-      gender: me.meta?.gender != null ? String(me.meta.gender) : null,
-      birthday: me.meta?.birthday ?? null,
-    };
-  } catch {
-    // /users/me also failed
+  if (!profile) {
+    try {
+      const me = await api.users.getMe();
+      if (me.id !== id) return null;
+      profile = buildPublicProfileFromMe(me);
+    } catch {
+      // /users/me also failed
+    }
   }
+
+  // 本人查看：用 /users/me 的 mail_show 补全 display_email（公开接口可能未返回）
+  if (profile) {
+    try {
+      const me = await api.users.getMe();
+      profile = enrichProfileDisplayEmailForOwner(profile, me);
+    } catch {
+      // 未登录或非本人，保留公开接口返回值
+    }
+  }
+
+  if (profile) return profile;
 
   // dev 模式：返回 mock 数据方便本地预览（生产环境不会触发此分支）
   if (process.env.NODE_ENV === "development") {

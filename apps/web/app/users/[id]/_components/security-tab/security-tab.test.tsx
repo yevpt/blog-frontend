@@ -159,6 +159,38 @@ describe("SecurityTab", () => {
     expect(await screen.findByText("解绑 GitHub？")).toBeInTheDocument();
   });
 
+  it("切换对外展示邮箱不触发全量 reload", async () => {
+    const user = userEvent.setup();
+    apiJson.mockImplementation((path: string, init?: { method?: string; body?: string }) => {
+      if (path === "/api/users/me") return Promise.resolve(meResp());
+      if (path === "/api/users/me/oauth-bindings") return Promise.resolve(bindings);
+      if (path === "/api/users/me/email/display" && init?.method === "PATCH") {
+        return Promise.resolve(undefined);
+      }
+      if (path === "/api/users/me/username") return Promise.resolve(undefined);
+      return Promise.reject(new Error(`unexpected path: ${path}`));
+    });
+
+    render(<SecurityTab userId={1} />);
+    expect(await screen.findByText("yevpt")).toBeInTheDocument();
+    const meCalls = apiJson.mock.calls.filter(([path]) => path === "/api/users/me").length;
+
+    await user.click(screen.getByRole("button", { name: /对外展示邮箱/ }));
+    await user.click(await screen.findByRole("option", { name: "不展示" }));
+
+    await waitFor(() =>
+      expect(apiJson).toHaveBeenCalledWith(
+        "/api/users/me/email/display",
+        expect.objectContaining({
+          method: "PATCH",
+          body: JSON.stringify({ display: "none" }),
+        }),
+      ),
+    );
+    expect(screen.queryByText("加载中…")).not.toBeInTheDocument();
+    expect(apiJson.mock.calls.filter(([path]) => path === "/api/users/me").length).toBe(meCalls);
+  });
+
   it("取数失败时显示错误与重试", async () => {
     apiJson.mockRejectedValue(new Error("boom"));
     render(<SecurityTab userId={1} />);

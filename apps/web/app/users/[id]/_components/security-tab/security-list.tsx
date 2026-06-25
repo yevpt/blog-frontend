@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { SecurityData } from "./use-account-security";
 import { getProviderMeta } from "./oauth-providers";
 import { EmailDisplaySelect, type EmailDisplayValue } from "./email-display-select";
+import { mailShowToDisplay } from "../../_lib/display-email";
 
 /** 列表行可触发的动作，可辨识联合。后续 Task 6–10 据 type 打开对应 Sheet。 */
 export type SecurityAction =
@@ -17,15 +18,8 @@ export type SecurityAction =
 interface SecurityListProps {
   data: SecurityData;
   onAction: (action: SecurityAction) => void;
-  /** 对外展示设置变更成功后回调，用于刷新列表数据 */
-  onDisplayChanged: () => void;
-}
-
-/** mailShow 数值 → 对外展示值（后端 UpdateEmailDisplay 权威映射：1=main, 0=sub, 2=none，未知按 main）。 */
-function mailShowToValue(mailShow: number): EmailDisplayValue {
-  if (mailShow === 0) return "sub";
-  if (mailShow === 2) return "none";
-  return "main";
+  /** 对外展示设置变更成功后回调，用于局部更新 mailShow */
+  onDisplayChanged: (display: EmailDisplayValue) => void;
 }
 
 /** 账号安全受控纯展示列表：三组（登录凭证 / 邮箱 / 第三方绑定） */
@@ -72,7 +66,7 @@ export function SecurityList({ data, onAction, onDisplayChanged }: SecurityListP
         <div className="flex min-h-[48px] items-center border-b border-border px-4 py-2 last:border-b-0">
           <span className="flex-1 text-[13px] text-muted-foreground">对外展示邮箱</span>
           <EmailDisplaySelect
-            value={mailShowToValue(data.mailShow)}
+            value={mailShowToDisplay(data.mailShow)}
             subEmailExists={!!data.subEmail}
             onChanged={onDisplayChanged}
           />

@@ -39,7 +39,8 @@ describe("EmailDisplaySelect", () => {
         }),
       );
     });
-    await waitFor(() => expect(onChanged).toHaveBeenCalled());
+    await waitFor(() => expect(onChanged).toHaveBeenCalledWith("none"));
+    expect(screen.getByRole("button", { name: /不展示/ })).toBeInTheDocument();
   });
 
   it("副邮箱不存在时「副邮箱」选项禁用", async () => {
