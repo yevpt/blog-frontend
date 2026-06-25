@@ -2,7 +2,8 @@ import type { MetadataRoute } from "next";
 import { createApiClient, type ArticleListItemResp } from "@repo/api";
 import { getCanonicalUrl } from "@/lib/seo";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const ARTICLE_PAGE_SIZE = 100;
 

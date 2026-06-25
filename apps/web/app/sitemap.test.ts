@@ -29,13 +29,17 @@ vi.mock("@/lib/server-api", () => ({
   }),
 }));
 
-import sitemap from "./sitemap";
+import sitemap, { dynamic } from "./sitemap";
 
 describe("sitemap metadata route", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
     sitemapMockState.listPublic.mockReset();
+  });
+
+  it("强制动态生成，避免缓存空文章列表", () => {
+    expect(dynamic).toBe("force-dynamic");
   });
 
   it("生成静态公开路由和公开文章详情 URL", async () => {
