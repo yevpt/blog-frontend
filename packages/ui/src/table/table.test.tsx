@@ -558,7 +558,7 @@ describe("DataTable", () => {
         getRowId={(article) => article.id}
         isLoading
         classNames={{
-          header: "table-sticky-header",
+          headerCell: "table-sticky-header",
           overlay: "table-loading-overlay",
         }}
       />,
@@ -625,6 +625,47 @@ describe("DataTable", () => {
     expect(scrollContainer).toHaveClass("h-full");
   });
 
+  it("showToolbar=false 时不渲染内置工具栏，search 仍可用于筛选", () => {
+    render(
+      <DataTable
+        aria-label="文章"
+        items={rows}
+        columns={columns}
+        getRowId={(article) => article.id}
+        showToolbar={false}
+        search={{
+          placeholder: "搜索",
+          match: (article, keyword) => article.title.includes(keyword),
+        }}
+        state={{ searchValue: "React Query", filters: {} }}
+      />,
+    );
+
+    expect(screen.queryByPlaceholderText("搜索")).not.toBeInTheDocument();
+    expect(screen.getByText("React Query 与后台表格状态")).toBeInTheDocument();
+    expect(screen.queryByText("Vite 管理后台的主题方案")).not.toBeInTheDocument();
+  });
+
+  it("embedded 模式使用单层滚动容器，无 clip 圆角与内边框", () => {
+    const { container } = render(
+      <DataTable
+        aria-label="文章"
+        items={rows}
+        columns={columns}
+        getRowId={(article) => article.id}
+        embedded
+        classNames={{ container: "table-scroll-container" }}
+      />,
+    );
+
+    const scrollContainer = container.querySelector<HTMLElement>(".table-scroll-container");
+    expect(scrollContainer).toBeInTheDocument();
+    expect(scrollContainer).toHaveClass("overflow-auto");
+    expect(scrollContainer).not.toHaveClass("rounded-lg");
+    expect(scrollContainer).not.toHaveClass("border");
+    expect(scrollContainer?.parentElement).not.toHaveClass("[contain:paint]");
+  });
+
   it("移动端横向滚动被限制在表格容器内", () => {
     const { container } = render(
       <DataTable
@@ -632,13 +673,14 @@ describe("DataTable", () => {
         items={rows}
         columns={columns}
         getRowId={(article) => article.id}
-        classNames={{ container: "table-scroll-container" }}
+        classNames={{ container: "table-scroll-container", clip: "table-clip-wrapper" }}
       />,
     );
 
     const scrollContainer = container.querySelector<HTMLElement>(".table-scroll-container");
     const clippingWrapper = scrollContainer?.parentElement;
 
+    expect(clippingWrapper).toHaveClass("table-clip-wrapper");
     expect(clippingWrapper).toHaveClass("overflow-hidden");
     expect(clippingWrapper).toHaveClass("rounded-lg");
     expect(clippingWrapper).toHaveClass("[contain:paint]");

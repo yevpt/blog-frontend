@@ -27,6 +27,7 @@ interface DataTableViewProps<T extends object> {
   skeletonRows: number;
   classNames?: DataTableClassNames;
   maxHeightClassName?: string | false;
+  embedded?: boolean;
   labelProps: DataTableAccessibleName;
   onSortChange: (column: DataTableColumn<T>) => void;
   onFilterChange: (columnId: string, value: string) => void;
@@ -45,6 +46,7 @@ export function DataTableView<T extends object>({
   skeletonRows,
   classNames,
   maxHeightClassName,
+  embedded = false,
   labelProps,
   onSortChange,
   onFilterChange,
@@ -54,8 +56,58 @@ export function DataTableView<T extends object>({
   // 排序/翻页等无关 state 变化也会触发整表重排，导致交互 INP 飙高。
   const minTableWidth = getMinTableWidth(columns);
 
+  const tableNode = (
+    <AriaTable
+      {...labelProps}
+      // 容器更窄时由 minWidth 撑出横向滚动，避免内容被压缩裁切
+      style={{ minWidth: minTableWidth || undefined }}
+      className={cn(
+        "w-full table-fixed border-separate border-spacing-0 box-border text-sm has-[>[data-empty]]:h-full",
+        classNames?.table,
+      )}
+    >
+      <DataTableHeader
+        columns={columns}
+        tableState={tableState}
+        onSortChange={onSortChange}
+        onFilterChange={onFilterChange}
+        classNames={classNames}
+      />
+      <DataTableBody
+        columns={columns}
+        rowItems={rowItems}
+        getRowId={getRowId}
+        emptyState={emptyState}
+        emptyText={emptyText}
+        showSkeleton={showSkeleton}
+        skeletonRows={skeletonRows}
+        classNames={classNames}
+      />
+    </AriaTable>
+  );
+
+  if (embedded) {
+    return (
+      <div
+        className={cn(
+          "relative h-full min-h-0 min-w-0 w-full overflow-auto overscroll-none touch-pan-x touch-pan-y outline-none [-webkit-overflow-scrolling:auto] focus:outline-none focus-visible:outline-none",
+          maxHeightClassName || undefined,
+          classNames?.container,
+        )}
+      >
+        {tableNode}
+        {showOverlay ? <DataTableOverlay loadingText={loadingText} classNames={classNames} /> : null}
+      </div>
+    );
+  }
+
   return (
-    <div className="relative h-full min-h-0 min-w-0 w-full overflow-hidden rounded-lg [contain:paint]">
+    <div
+      className={cn(
+        "relative h-full min-h-0 min-w-0 w-full overflow-hidden rounded-lg [contain:paint]",
+        classNames?.clip,
+      )}
+    >
       <div
         className={cn(
           "w-full overflow-auto overscroll-none touch-pan-x touch-pan-y rounded-lg border border-border bg-card outline-none [-webkit-overflow-scrolling:auto] focus:outline-none focus-visible:outline-none",
@@ -63,33 +115,7 @@ export function DataTableView<T extends object>({
           classNames?.container,
         )}
       >
-        <AriaTable
-          {...labelProps}
-          // 容器更窄时由 minWidth 撑出横向滚动，避免内容被压缩裁切
-          style={{ minWidth: minTableWidth || undefined }}
-          className={cn(
-            "w-full table-fixed border-separate border-spacing-0 box-border text-sm has-[>[data-empty]]:h-full",
-            classNames?.table,
-          )}
-        >
-          <DataTableHeader
-            columns={columns}
-            tableState={tableState}
-            onSortChange={onSortChange}
-            onFilterChange={onFilterChange}
-            classNames={classNames}
-          />
-          <DataTableBody
-            columns={columns}
-            rowItems={rowItems}
-            getRowId={getRowId}
-            emptyState={emptyState}
-            emptyText={emptyText}
-            showSkeleton={showSkeleton}
-            skeletonRows={skeletonRows}
-            classNames={classNames}
-          />
-        </AriaTable>
+        {tableNode}
       </div>
 
       {showOverlay ? <DataTableOverlay loadingText={loadingText} classNames={classNames} /> : null}

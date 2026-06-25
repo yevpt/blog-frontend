@@ -69,6 +69,8 @@ export interface DataTableColumn<T> {
 
 export interface DataTableClassNames {
   root?: string;
+  /** 表格外层裁剪容器（overflow hidden + 圆角） */
+  clip?: string;
   toolbar?: string;
   search?: string;
   actions?: string;
@@ -127,6 +129,8 @@ export type DataTableProps<T> = DataTableAccessibleName & {
   total?: number;
   /** 是否在工具栏显示「共 N 条」总数，默认 true；置 false 可改由外部（如分页栏）承载 */
   showTotal?: boolean;
+  /** 是否渲染内置工具栏；置 false 时仍可用 search 做客户端筛选 */
+  showToolbar?: boolean;
   emptyState?: DataTableEmptyState;
   emptyText?: ReactNode;
   loadingText?: ReactNode;
@@ -136,4 +140,6 @@ export type DataTableProps<T> = DataTableAccessibleName & {
   className?: string;
   classNames?: DataTableClassNames;
   maxHeightClassName?: string | false;
+  /** 嵌入 Card 等外框：单层滚动容器，无 clip/内边框/圆角，避免双层圆角露缝 */
+  embedded?: boolean;
 };

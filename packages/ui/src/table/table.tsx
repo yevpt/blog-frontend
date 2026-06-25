@@ -17,6 +17,7 @@ export function DataTable<T extends object>({
   actions,
   total,
   showTotal = true,
+  showToolbar = true,
   emptyState,
   emptyText = "暂无数据",
   loadingText = "加载中",
@@ -25,6 +26,7 @@ export function DataTable<T extends object>({
   className,
   classNames,
   maxHeightClassName = "max-h-[480px]",
+  embedded = false,
   ...labelProps
 }: DataTableProps<T>) {
   const table = useDataTable({
@@ -36,7 +38,8 @@ export function DataTable<T extends object>({
     search,
     isLoading,
   });
-  const hasToolbar = Boolean(search) || Boolean(actions) || showTotal;
+  const hasToolbar =
+    showToolbar && (Boolean(search) || Boolean(actions) || showTotal);
 
   return (
     <div
@@ -70,6 +73,7 @@ export function DataTable<T extends object>({
         skeletonRows={skeletonRows}
         classNames={classNames}
         maxHeightClassName={maxHeightClassName}
+        embedded={embedded}
         onSortChange={table.onSortChange}
         onFilterChange={table.onFilterChange}
       />

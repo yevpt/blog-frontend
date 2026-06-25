@@ -34,7 +34,7 @@ export function DataTableHeader<T extends object>({
 }: DataTableHeaderProps<T>) {
   return (
     <TableHeader
-      className={cn("sticky top-0 z-30 bg-muted text-muted-foreground", classNames?.header)}
+      className={cn("text-muted-foreground", classNames?.header)}
     >
       {columns.map((column) => (
         <Column
@@ -50,7 +50,7 @@ export function DataTableHeader<T extends object>({
             onSortChange(column);
           }}
           className={cn(
-            "cursor-default border-b border-border px-3 py-2.5 text-start align-middle font-semibold text-muted-foreground outline-hidden",
+            "sticky top-0 z-30 bg-muted cursor-default border-b border-border px-3 py-2.5 text-start align-middle font-semibold text-muted-foreground outline-hidden",
             "focus-within:z-20 data-[focus-visible]:outline-2 data-[focus-visible]:outline-ring",
             column.sort &&
               "cursor-pointer transition-colors hover:bg-accent/50 data-[pressed]:bg-accent/70",
