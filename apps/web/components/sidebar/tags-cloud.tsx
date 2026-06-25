@@ -1,12 +1,12 @@
 "use client";
 
+import type { TagItemResp } from "@repo/api";
 import { useLocale } from "@repo/hooks";
 import { TagGroup, TagList, TagItem } from "@repo/ui";
 import { SidebarSectionHeader } from "@/components/sidebar";
-import type { Tag } from "../../app/_mock/types";
 
 interface TagsCloudProps {
-  tags: Tag[];
+  tags: TagItemResp[];
 }
 
 export function TagsCloud({ tags }: TagsCloudProps) {
@@ -22,12 +22,12 @@ export function TagsCloud({ tags }: TagsCloudProps) {
             {tags.map((tag) => (
               <TagItem
                 key={tag.id}
-                id={tag.id}
-                textValue={`${tag.name} ${tag.count}`}
+                id={String(tag.id)}
+                textValue={`${tag.name} ${tag.article_count}`}
                 className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary hover:border-primary"
               >
                 {tag.name}
-                <span className="ml-1 text-[10px] opacity-60">{tag.count}</span>
+                <span className="ml-1 text-[10px] opacity-60">{tag.article_count}</span>
               </TagItem>
             ))}
           </TagList>

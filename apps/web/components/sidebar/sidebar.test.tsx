@@ -1,9 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
+import type { TagItemResp } from "@repo/api";
 import { RecentVisitors } from "./recent-visitors";
 import { TagsCloud } from "./tags-cloud";
-import type { Visitor, Tag } from "../../app/_mock/types";
+import type { Visitor } from "../../app/_mock/types";
 
 // Mock @repo/hooks useLocale
 vi.mock("@repo/hooks", () => ({
@@ -100,19 +101,19 @@ function makeVisitor(id: string): Visitor {
 const mockVisitors: Visitor[] = Array.from({ length: 9 }, (_, i) => makeVisitor(String(i + 1)));
 
 // 生成测试用 Tag 数据
-function makeTag(id: string, name: string): Tag {
+function makeTag(id: number, name: string, articleCount: number): TagItemResp {
   return {
     id,
     name,
-    icon: "tag",
-    count: Number(id) * 3,
+    seq: id,
+    article_count: articleCount,
   };
 }
 
-const mockTags: Tag[] = [
-  makeTag("1", "React"),
-  makeTag("2", "TypeScript"),
-  makeTag("3", "Next.js"),
+const mockTags: TagItemResp[] = [
+  makeTag(1, "React", 3),
+  makeTag(2, "TypeScript", 6),
+  makeTag(3, "Next.js", 9),
 ];
 
 describe("RecentVisitors", () => {
@@ -204,7 +205,6 @@ describe("TagsCloud", () => {
 
   it("显示每个标签的计数", () => {
     render(<TagsCloud tags={mockTags} />);
-    // makeTag(id) 的 count 是 id * 3：3, 6, 9
     expect(screen.getByText("3")).toBeTruthy();
     expect(screen.getByText("6")).toBeTruthy();
     expect(screen.getByText("9")).toBeTruthy();
