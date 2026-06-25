@@ -151,6 +151,7 @@ export function LinksPage() {
       {
         id: "name",
         header: "友链",
+        isRowHeader: true,
         width: "28%",
         minWidth: 180,
         className: "min-w-0 whitespace-normal",

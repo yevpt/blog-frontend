@@ -129,6 +129,7 @@ export function TagsPage() {
       {
         id: "name",
         header: "标签",
+        isRowHeader: true,
         width: "24%",
         minWidth: 128,
         className: "min-w-0 whitespace-normal",

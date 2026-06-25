@@ -49,7 +49,7 @@ export function SidebarUser({ isCollapsed }: SidebarUserProps) {
           variant="ghost"
           aria-label="打开用户菜单"
           className={cn(
-            "h-10 w-full justify-start rounded-lg px-2 py-0 text-left transition-colors hover:bg-accent data-[pressed]:scale-100",
+            "h-10 w-full justify-start rounded-lg px-2 py-0 text-left transition-colors hover:bg-accent focus-visible:ring-0 focus-visible:ring-offset-0 data-[pressed]:scale-100",
             isCollapsed && "h-10 justify-center px-0 py-0",
           )}
         >

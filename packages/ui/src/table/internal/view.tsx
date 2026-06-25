@@ -1,11 +1,13 @@
 "use client";
 
+import { useMemo } from "react";
 import { Table as AriaTable } from "react-aria-components";
 import { cn } from "../../lib/utils";
 import { DataTableBody } from "./body";
 import { DataTableHeader } from "./header";
 import { DataTableOverlay } from "./overlay";
 import { getMinTableWidth } from "../utils/column-size";
+import { ensureRowHeaderColumn } from "../utils/row-header";
 import type {
   DataTableAccessibleName,
   DataTableClassNames,
@@ -51,10 +53,12 @@ export function DataTableView<T extends object>({
   onSortChange,
   onFilterChange,
 }: DataTableViewProps<T>) {
+  const resolvedColumns = useMemo(() => ensureRowHeaderColumn(columns), [columns]);
+
   // 列宽改用纯 CSS（table-layout: fixed）而非 react-aria 的 ResizableTableContainer：
   // 后者会给表格强加 width: min-content，使每次渲染都对所有单元格做固有宽度量算，
   // 排序/翻页等无关 state 变化也会触发整表重排，导致交互 INP 飙高。
-  const minTableWidth = getMinTableWidth(columns);
+  const minTableWidth = getMinTableWidth(resolvedColumns);
 
   const tableNode = (
     <AriaTable
@@ -67,14 +71,14 @@ export function DataTableView<T extends object>({
       )}
     >
       <DataTableHeader
-        columns={columns}
+        columns={resolvedColumns}
         tableState={tableState}
         onSortChange={onSortChange}
         onFilterChange={onFilterChange}
         classNames={classNames}
       />
       <DataTableBody
-        columns={columns}
+        columns={resolvedColumns}
         rowItems={rowItems}
         getRowId={getRowId}
         emptyState={emptyState}
@@ -96,7 +100,9 @@ export function DataTableView<T extends object>({
         )}
       >
         {tableNode}
-        {showOverlay ? <DataTableOverlay loadingText={loadingText} classNames={classNames} /> : null}
+        {showOverlay ? (
+          <DataTableOverlay loadingText={loadingText} classNames={classNames} />
+        ) : null}
       </div>
     );
   }
