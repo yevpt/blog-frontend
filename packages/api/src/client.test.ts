@@ -820,6 +820,46 @@ describe("createApiClient", () => {
         expect.objectContaining({ method: "GET" }),
       );
     });
+
+    it("grantVipRole 使用 fetchAuthed 调用 POST /admin/users/:id/roles/vip", async () => {
+      const data = { user_id: 42, roles: ["ROLE_NORMAL", "ROLE_VIP"] };
+      vi.mocked(global.fetch).mockResolvedValue(mockResponse({ code: 0, message: "ok", data }));
+      const client = createApiClient({
+        baseUrl: "http://api",
+        getAccessToken: () => "admin-token",
+      });
+
+      const result = await client.users.grantVipRole(42);
+
+      expect(result).toEqual(data);
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/admin/users/42/roles/vip",
+        expect.objectContaining({
+          method: "POST",
+          headers: expect.objectContaining({ Authorization: "Bearer admin-token" }),
+        }),
+      );
+    });
+
+    it("revokeVipRole 使用 fetchAuthed 调用 DELETE /admin/users/:id/roles/vip", async () => {
+      const data = { user_id: 42, roles: ["ROLE_NORMAL"] };
+      vi.mocked(global.fetch).mockResolvedValue(mockResponse({ code: 0, message: "ok", data }));
+      const client = createApiClient({
+        baseUrl: "http://api",
+        getAccessToken: () => "admin-token",
+      });
+
+      const result = await client.users.revokeVipRole(42);
+
+      expect(result).toEqual(data);
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/admin/users/42/roles/vip",
+        expect.objectContaining({
+          method: "DELETE",
+          headers: expect.objectContaining({ Authorization: "Bearer admin-token" }),
+        }),
+      );
+    });
   });
 
   // ── 找回密码（公开）──────────────────────────────────────────────

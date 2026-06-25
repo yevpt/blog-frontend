@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import type { UserPublicProfileResp } from "@repo/api";
@@ -40,7 +41,24 @@ export function UserProfileTabs({
   onSaveField,
   onActiveEditingChange,
 }: UserProfileTabsProps) {
-  const [activeTab, setActiveTab] = useState<TabKey>("profile");
+  const searchParams = useSearchParams();
+  const wantsSecurity = searchParams.get("tab") === "security";
+  // 绑定回跳定位：URL 带 ?tab=security 且账号安全 Tab 当前可见（编辑态 + 本人）时初始选中它。
+  // 惰性初始化只读一次，避免覆盖用户后续手动切换的 Tab。
+  const [activeTab, setActiveTab] = useState<TabKey>(() =>
+    wantsSecurity && isEditMode && isOwner ? "security" : "profile",
+  );
+
+  // 回跳进入编辑态可能晚于本组件首次渲染（页面在 effect 中切编辑态）：
+  // 待账号安全 Tab 变为可见后再补选一次，ref 守卫确保只触发一次、不抢用户手动切换。
+  const hasAppliedSecurityTabRef = useRef(false);
+  useEffect(() => {
+    if (hasAppliedSecurityTabRef.current) return;
+    if (wantsSecurity && isEditMode && isOwner) {
+      hasAppliedSecurityTabRef.current = true;
+      setActiveTab("security");
+    }
+  }, [wantsSecurity, isEditMode, isOwner]);
   const [momentsTotal, setMomentsTotal] = useState(initialMomentsPage.total);
   const [likesTotal, setLikesTotal] = useState(initialLikesCount);
 

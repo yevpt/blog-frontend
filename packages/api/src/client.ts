@@ -67,6 +67,7 @@ import type {
   UserLikedContentListReq,
   UserLikedContentPageResp,
   UserLikesCountResp,
+  AdminUserRolesResp,
 } from "./types/user";
 import type { FriendLinkListReq, FriendLinkPageResp } from "./types/friend-link";
 import type {
@@ -437,6 +438,14 @@ export function createApiClient(config: ApiClientConfig) {
       /** 查询用户点赞总数（公开，可选登录） */
       getLikesCount: (userId: number) =>
         fetchOptionalAuth<UserLikesCountResp>(`/users/${userId}/likes/count`, { method: "GET" }),
+      /** 授予目标用户 VIP 角色，需管理员登录；幂等 */
+      grantVipRole: (userId: number) =>
+        fetchAuthed<AdminUserRolesResp>(`/admin/users/${userId}/roles/vip`, { method: "POST" }),
+      /** 取消目标用户 VIP 角色，需管理员登录；幂等 */
+      revokeVipRole: (userId: number) =>
+        fetchAuthed<AdminUserRolesResp>(`/admin/users/${userId}/roles/vip`, {
+          method: "DELETE",
+        }),
     },
     comments: {
       /** 分页查询文章评论（可选登录，登录后返回 is_liked） */

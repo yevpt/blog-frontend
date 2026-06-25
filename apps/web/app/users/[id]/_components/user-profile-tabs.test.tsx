@@ -1,9 +1,22 @@
-import { describe, it, expect, vi } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { UserProfileTabs } from "./user-profile-tabs";
 import type { MomentPageResp, UserPublicProfileResp } from "@repo/api";
 import { EMPTY_MOMENTS_PAGE } from "./profile-moments-tab/constants";
+
+// 可变的 URL 查询参数，供各用例改写 ?tab= 命中分支
+let mockSearchParams = new URLSearchParams();
+
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => mockSearchParams,
+  useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
+}));
+
+afterEach(() => {
+  // 复位查询参数，避免用例间相互污染（默认无 tab → profile）
+  mockSearchParams = new URLSearchParams();
+});
 
 vi.mock("./profile-moments-tab/profile-moments-tab", () => ({
   ProfileMomentsTab: ({ onTotalChange }: { onTotalChange?: (total: number) => void }) => {
@@ -14,6 +27,10 @@ vi.mock("./profile-moments-tab/profile-moments-tab", () => ({
 
 vi.mock("./profile-likes-tab/profile-likes-tab", () => ({
   ProfileLikesTab: () => <div data-testid="profile-likes-tab">likes content</div>,
+}));
+
+vi.mock("./security-tab/security-tab", () => ({
+  SecurityTab: () => <div data-testid="security-tab">security content</div>,
 }));
 
 const baseProfile: UserPublicProfileResp = {
@@ -188,5 +205,26 @@ describe("UserProfileTabs", () => {
     await user.click(screen.getByRole("tab", { name: "点赞 (0)" }));
 
     expect(screen.getByTestId("profile-likes-tab")).toBeInTheDocument();
+  });
+
+  it("URL 带 ?tab=security 且处于编辑态时初始选中账号安全", () => {
+    mockSearchParams = new URLSearchParams("tab=security");
+    render(<UserProfileTabs {...baseProps} isOwner isEditMode />);
+
+    expect(screen.getByRole("tab", { name: /账号安全/ })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("无 tab 参数时默认选中资料 Tab", () => {
+    render(<UserProfileTabs {...baseProps} isOwner isEditMode />);
+
+    expect(screen.getByRole("tab", { name: "资料" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: /账号安全/ })).toHaveAttribute("aria-selected", "false");
+  });
+
+  it("?tab=security 但账号安全 Tab 不可见（非编辑态）时回退到资料", () => {
+    mockSearchParams = new URLSearchParams("tab=security");
+    render(<UserProfileTabs {...baseProps} />);
+
+    expect(screen.getByRole("tab", { name: "资料" })).toHaveAttribute("aria-selected", "true");
   });
 });

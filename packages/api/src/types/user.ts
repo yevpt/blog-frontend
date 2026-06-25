@@ -209,3 +209,9 @@ export interface UserLikesCountResp {
   /** Go int64 — safe as JS number for blog-scale counts */
   count: number;
 }
+
+/** POST/DELETE /admin/users/:id/roles/vip — 授予或取消 VIP 后的角色快照 */
+export interface AdminUserRolesResp {
+  user_id: number;
+  roles: string[];
+}

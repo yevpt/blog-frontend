@@ -9,6 +9,12 @@ vi.mock("@/app/providers/session-provider", () => ({
   useSession: () => ({ userId: null, profile: null }),
 }));
 
+// UserProfileTabs/UserProfilePage 依赖 next/navigation 读取回跳参数，访客无 tab 即默认资料 Tab。
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
+}));
+
 const mockProfile: UserPublicProfileResp = {
   id: 42,
   nickname: "MockUser",

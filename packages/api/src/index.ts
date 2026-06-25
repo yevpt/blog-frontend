@@ -98,6 +98,7 @@ export type {
   UserLikedContentItemResp,
   UserLikedContentPageResp,
   UserLikesCountResp,
+  AdminUserRolesResp,
 } from "./types/user";
 export type {
   FriendLinkItemResp,

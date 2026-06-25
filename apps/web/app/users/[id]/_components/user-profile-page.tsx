@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import type { MomentPageResp, UserPublicProfileResp } from "@repo/api";
 import { Card, cn } from "@repo/ui";
 import { useProfileEditor } from "@/hooks/use-profile-editor";
@@ -29,6 +31,18 @@ export function UserProfilePage({
     saveField,
     changeAvatar,
   } = useProfileEditor(initialProfile);
+
+  const searchParams = useSearchParams();
+  // 第三方绑定回跳：URL 带 ?tab=security 时本人自动进入编辑态，使账号安全 Tab 可见并被选中。
+  // useRef 守卫确保只触发一次，避免重复 toggle。
+  const hasAutoEnteredEditRef = useRef(false);
+  useEffect(() => {
+    if (hasAutoEnteredEditRef.current) return;
+    if (searchParams.get("tab") === "security" && isOwner && !isEditMode) {
+      hasAutoEnteredEditRef.current = true;
+      toggleEditMode();
+    }
+  }, [searchParams, isOwner, isEditMode, toggleEditMode]);
 
   return (
     <div className="min-h-screen bg-background">
