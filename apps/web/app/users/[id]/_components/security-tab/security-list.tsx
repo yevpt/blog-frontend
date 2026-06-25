@@ -1,6 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { Button } from "@repo/ui";
+import { SvgIcon } from "@repo/icons";
 import type { SecurityData } from "./use-account-security";
 import { getProviderMeta } from "./oauth-providers";
 import { EmailDisplaySelect, type EmailDisplayValue } from "./email-display-select";
@@ -81,13 +83,17 @@ export function SecurityList({ data, onAction, onDisplayChanged }: SecurityListP
               key={source}
               labelNode={
                 <span className="flex items-center gap-2">
-                  <span
-                    className="inline-flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold text-white"
-                    style={{ backgroundColor: meta.color }}
-                    aria-hidden
-                  >
-                    {meta.short}
-                  </span>
+                  {meta.icon ? (
+                    <SvgIcon name={meta.icon} size={20} aria-hidden />
+                  ) : (
+                    <span
+                      className="inline-flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold text-white"
+                      style={{ backgroundColor: meta.color }}
+                      aria-hidden
+                    >
+                      {meta.short}
+                    </span>
+                  )}
                   {meta.label}
                 </span>
               }
@@ -184,18 +190,19 @@ function SecurityItem({
         )}
 
         {action && (
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="sm"
             aria-label={actionLabel ?? action}
-            onClick={onAction}
-            className={`rounded-md border px-2.5 py-1 text-xs transition-colors ${
+            onPress={onAction}
+            className={
               actionMuted
-                ? "border-border text-muted-foreground/60 hover:text-muted-foreground"
-                : "border-primary/40 text-primary hover:border-primary/70"
-            }`}
+                ? "text-muted-foreground/70 hover:text-muted-foreground"
+                : "border-primary/40 text-primary hover:border-primary/70 hover:text-primary"
+            }
           >
             {action}
-          </button>
+          </Button>
         )}
       </div>
     </div>
