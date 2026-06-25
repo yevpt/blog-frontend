@@ -20,8 +20,22 @@ import type {
   ArticlePageResp,
   ArticleSaveReq,
 } from "./types/article";
-import type { TagListResp } from "./types/tag";
-import type { CategoryTabsResp } from "./types/category";
+import type {
+  TagArticlesReq,
+  TagArticlesResp,
+  TagCreateReq,
+  TagItemResp,
+  TagListResp,
+  TagUpdateReq,
+} from "./types/tag";
+import type {
+  CategoryArticlesReq,
+  CategoryArticlesResp,
+  CategoryCreateReq,
+  CategoryItemResp,
+  CategoryTabsResp,
+  CategoryUpdateReq,
+} from "./types/category";
 import type { MusicListResp } from "./types/music";
 import type {
   MomentDeleteResp,
@@ -282,10 +296,65 @@ export function createApiClient(config: ApiClientConfig) {
     categories: {
       /** 查询分类 Tab 列表（含文章数量，按 seq/count 排序） */
       listTabs: () => fetchPublic<CategoryTabsResp>("/categories", { method: "GET" }),
+      /** 新增分类，需管理员登录 */
+      create: (req: CategoryCreateReq) =>
+        fetchAuthed<CategoryItemResp>("/admin/categories", {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 修改分类，需管理员登录 */
+      update: (id: number, req: CategoryUpdateReq) =>
+        fetchAuthed<CategoryItemResp>(`/admin/categories/${id}`, {
+          method: "PUT",
+          body: JSON.stringify(req),
+        }),
+      /** 删除分类（清空文章关联），需管理员登录 */
+      delete: (id: number) =>
+        fetchAuthed<CategoryItemResp>(`/admin/categories/${id}`, { method: "DELETE" }),
+      /** 批量将文章归入分类，需管理员登录 */
+      addArticles: (id: number, req: CategoryArticlesReq) =>
+        fetchAuthed<CategoryArticlesResp>(`/admin/categories/${id}/articles`, {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 批量移除分类下文章关联，需管理员登录 */
+      removeArticles: (id: number, req: CategoryArticlesReq) =>
+        fetchAuthed<CategoryArticlesResp>(`/admin/categories/${id}/articles`, {
+          method: "DELETE",
+          body: JSON.stringify(req),
+        }),
     },
     tags: {
       /** 查询标签列表（含公开文章数量，按 seq/count 排序） */
       list: () => fetchPublic<TagListResp>("/tags", { method: "GET" }),
+      /** 查询标签详情 */
+      get: (id: number) => fetchPublic<TagItemResp>(`/tags/${id}`, { method: "GET" }),
+      /** 新增标签，需管理员登录 */
+      create: (req: TagCreateReq) =>
+        fetchAuthed<TagItemResp>("/admin/tags", {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 修改标签，需管理员登录 */
+      update: (id: number, req: TagUpdateReq) =>
+        fetchAuthed<TagItemResp>(`/admin/tags/${id}`, {
+          method: "PUT",
+          body: JSON.stringify(req),
+        }),
+      /** 删除标签（清空文章关联），需管理员登录 */
+      delete: (id: number) => fetchAuthed<TagItemResp>(`/admin/tags/${id}`, { method: "DELETE" }),
+      /** 批量给文章添加标签，需管理员登录 */
+      addArticles: (id: number, req: TagArticlesReq) =>
+        fetchAuthed<TagArticlesResp>(`/admin/tags/${id}/articles`, {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 批量移除标签下文章关联，需管理员登录 */
+      removeArticles: (id: number, req: TagArticlesReq) =>
+        fetchAuthed<TagArticlesResp>(`/admin/tags/${id}/articles`, {
+          method: "DELETE",
+          body: JSON.stringify(req),
+        }),
     },
     music: {
       /** 查询音乐列表，用于文章编辑页选择背景音乐 */

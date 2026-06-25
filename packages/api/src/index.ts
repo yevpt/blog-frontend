@@ -36,8 +36,23 @@ export type {
   ArticleTagSaveReq,
   MusicItem,
 } from "./types/article";
-export type { CategoryTabItem, CategoryTabsResp } from "./types/category";
-export type { TagItemResp, TagListResp } from "./types/tag";
+export type {
+  CategoryArticlesReq,
+  CategoryArticlesResp,
+  CategoryCreateReq,
+  CategoryItemResp,
+  CategoryTabItem,
+  CategoryTabsResp,
+  CategoryUpdateReq,
+} from "./types/category";
+export type {
+  TagArticlesReq,
+  TagArticlesResp,
+  TagCreateReq,
+  TagItemResp,
+  TagListResp,
+  TagUpdateReq,
+} from "./types/tag";
 export type { MusicItemResp, MusicListResp } from "./types/music";
 export type {
   MomentListReq,

@@ -434,6 +434,103 @@ describe("createApiClient", () => {
     );
   });
 
+  it("categories.create 使用 fetchAuthed 调用 POST /admin/categories", async () => {
+    const req = {
+      name: "编程",
+      icon: "icons/code.svg",
+      description: "编程笔记",
+      cover_img_url: "covers/code.jpg",
+      seq: 0,
+    };
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: { id: 1, ...req, article_count: 0 } }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    await client.categories.create(req);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/categories",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify(req),
+        headers: expect.objectContaining({ Authorization: "Bearer admin-token" }),
+      }),
+    );
+  });
+
+  it("categories.update 使用 fetchAuthed 调用 PUT /admin/categories/{id}", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { id: 2, name: "生活", seq: 1, article_count: 3 },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    await client.categories.update(2, { name: "生活", seq: 1 });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/categories/2",
+      expect.objectContaining({
+        method: "PUT",
+        body: JSON.stringify({ name: "生活", seq: 1 }),
+      }),
+    );
+  });
+
+  it("categories.delete 使用 fetchAuthed 调用 DELETE /admin/categories/{id}", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { id: 3, name: "随笔", seq: 2, article_count: 0 },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    await client.categories.delete(3);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/categories/3",
+      expect.objectContaining({ method: "DELETE" }),
+    );
+  });
+
+  it("categories.addArticles 使用 fetchAuthed 调用 POST /admin/categories/{id}/articles", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { category_id: 1, article_ids: [5, 6], affected_count: 2 },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    await client.categories.addArticles(1, { article_ids: [5, 6] });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/categories/1/articles",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ article_ids: [5, 6] }),
+      }),
+    );
+  });
+
   it("tags.list 调用 /tags", async () => {
     vi.mocked(global.fetch).mockResolvedValue(
       mockResponse({ code: 0, message: "ok", data: { list: [] } }),
@@ -445,6 +542,97 @@ describe("createApiClient", () => {
     expect(global.fetch).toHaveBeenCalledWith(
       "http://api/tags",
       expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("tags.create 使用 fetchAuthed 调用 POST /admin/tags", async () => {
+    const req = { name: "Go", seq: 0 };
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: { id: 1, ...req, article_count: 0 } }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    await client.tags.create(req);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/tags",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify(req),
+        headers: expect.objectContaining({ Authorization: "Bearer admin-token" }),
+      }),
+    );
+  });
+
+  it("tags.update 使用 fetchAuthed 调用 PUT /admin/tags/{id}", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { id: 2, name: "TypeScript", seq: 1, article_count: 3 },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    await client.tags.update(2, { name: "TypeScript", seq: 1 });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/tags/2",
+      expect.objectContaining({
+        method: "PUT",
+        body: JSON.stringify({ name: "TypeScript", seq: 1 }),
+      }),
+    );
+  });
+
+  it("tags.delete 使用 fetchAuthed 调用 DELETE /admin/tags/{id}", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { id: 3, name: "React", seq: 2, article_count: 0 },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    await client.tags.delete(3);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/tags/3",
+      expect.objectContaining({ method: "DELETE" }),
+    );
+  });
+
+  it("tags.addArticles 使用 fetchAuthed 调用 POST /admin/tags/{id}/articles", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { tag_id: 1, article_ids: [5, 6], affected_count: 2 },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    await client.tags.addArticles(1, { article_ids: [5, 6] });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/tags/1/articles",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ article_ids: [5, 6] }),
+      }),
     );
   });
 
