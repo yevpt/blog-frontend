@@ -10,6 +10,7 @@ import {
   CardTitle,
   cn,
 } from "@repo/ui";
+import { AdminPageHeader } from "../../components/AdminPageHeader";
 import { adminNavItems } from "../../config/modules";
 import { useAuthStore } from "../../store/auth";
 
@@ -55,20 +56,16 @@ export function DashboardPage() {
 
   return (
     <div className="grid gap-6">
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            你好，{displayName}
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            今天也可以从这里快速进入内容、站点与发布管理。
-          </p>
-        </div>
-        <Button href="/articles" className="w-full sm:w-auto">
-          <SvgIcon name="plus" size={18} />
-          写文章
-        </Button>
-      </section>
+      <AdminPageHeader
+        title={`你好，${displayName}`}
+        description="今天也可以从这里快速进入内容、站点与发布管理。"
+        action={
+          <Button href="/articles" className="w-full sm:w-auto">
+            <SvgIcon name="plus" size={18} />
+            写文章
+          </Button>
+        }
+      />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="后台统计">
         {stats.map((item) => (
