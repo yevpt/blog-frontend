@@ -203,7 +203,7 @@ export function MusicPage() {
   }, []);
 
   return (
-    <div className="grid min-h-0 gap-4 overflow-hidden md:max-h-[calc(100dvh-6.5rem)] md:grid-rows-[auto_auto_minmax(0,1fr)] lg:-mt-6 lg:max-h-[calc(100dvh-1.5rem)]">
+    <div className="grid min-h-0 min-w-0 max-w-full gap-4 overflow-hidden md:max-h-[calc(100dvh-3rem)] md:grid-rows-[auto_auto_minmax(0,1fr)] lg:max-h-[calc(100dvh-3.5rem)]">
       <MusicPageHeader
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -212,7 +212,7 @@ export function MusicPage() {
         onCreateAlbum={openCreateAlbum}
       />
 
-      <section className="flex min-h-0 flex-col" aria-label="音乐资料库">
+      <section className="flex min-h-0 min-w-0 max-w-full flex-col" aria-label="音乐资料库">
         {error ? (
           <p role="alert" className="pb-3 text-sm text-destructive">
             {error.message}

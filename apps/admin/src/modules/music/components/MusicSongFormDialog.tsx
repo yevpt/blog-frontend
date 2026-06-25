@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ApiError, type MusicAlbumResp, type MusicArtistResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
-import { Button, Checkbox, Input, Label, Modal, Select, Toggle, cn } from "@repo/ui";
+import { Button, Input, Label, Modal, Select, Toggle, cn } from "@repo/ui";
 import {
   applyAudioUpload,
   createEmptyMusicForm,
@@ -53,6 +53,10 @@ export function MusicSongFormDialog({
   const [uploadLabel, setUploadLabel] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const selectedArtists = artists.filter((artist) => values.artistIds.includes(String(artist.id)));
+  const selectableArtists = artists.filter(
+    (artist) => !values.artistIds.includes(String(artist.id)),
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -66,12 +70,17 @@ export function MusicSongFormDialog({
     setValues((current) => ({ ...current, [key]: value }));
   };
 
-  const toggleArtist = (artistId: string, selected: boolean) => {
+  const addArtist = (artistId: string) => {
     setValues((current) => ({
       ...current,
-      artistIds: selected
-        ? [...new Set([...current.artistIds, artistId])]
-        : current.artistIds.filter((id) => id !== artistId),
+      artistIds: [...new Set([...current.artistIds, artistId])],
+    }));
+  };
+
+  const removeArtist = (artistId: string) => {
+    setValues((current) => ({
+      ...current,
+      artistIds: current.artistIds.filter((id) => id !== artistId),
     }));
   };
 
@@ -146,24 +155,65 @@ export function MusicSongFormDialog({
               />
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-3 rounded-lg border border-border bg-background p-3">
               <Label isRequired isInvalid={Boolean(errors.artistIds)}>
                 歌手
               </Label>
-              <div className="grid max-h-36 gap-2 overflow-y-auto rounded-lg border border-border bg-background p-3 sm:grid-cols-2">
-                {artists.length > 0 ? (
-                  artists.map((artist) => (
-                    <Checkbox
-                      key={artist.id}
-                      label={artist.display_name}
-                      isSelected={values.artistIds.includes(String(artist.id))}
-                      onChange={(selected) => toggleArtist(String(artist.id), selected)}
-                    />
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">请先在“歌手”标签中新建歌手。</p>
-                )}
-              </div>
+              {artists.length > 0 ? (
+                <>
+                  <Select.ComboBox
+                    aria-label="搜索并添加歌手"
+                    placeholder="搜索并添加歌手"
+                    size="sm"
+                    selectedKey={null}
+                    items={selectableArtists.map((artist) => ({
+                      id: String(artist.id),
+                      label: artist.display_name,
+                      supportingText: artist.name_zh,
+                      avatarUrl: artist.avatar_url,
+                    }))}
+                    onSelectionChange={(key) => {
+                      if (key) addArtist(String(key));
+                    }}
+                  >
+                    {(item) => (
+                      <Select.Item
+                        id={item.id}
+                        label={item.label}
+                        supportingText={item.supportingText}
+                        avatarUrl={item.avatarUrl}
+                        selectionIndicator="none"
+                      />
+                    )}
+                  </Select.ComboBox>
+                  <div className="flex min-h-9 flex-wrap gap-2">
+                    {selectedArtists.length > 0 ? (
+                      selectedArtists.map((artist) => (
+                        <span
+                          key={artist.id}
+                          className="inline-flex max-w-full items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground"
+                        >
+                          <span className="truncate">{artist.display_name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="size-5 p-0"
+                            aria-label={`移除 ${artist.display_name}`}
+                            onPress={() => removeArtist(String(artist.id))}
+                          >
+                            <SvgIcon name="close" size={12} />
+                          </Button>
+                        </span>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">搜索并添加至少一位歌手。</p>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">请先在“歌手”标签中新建歌手。</p>
+              )}
               {errors.artistIds ? (
                 <p className="text-sm text-destructive">{errors.artistIds}</p>
               ) : null}
@@ -205,23 +255,32 @@ export function MusicSongFormDialog({
               />
             </div>
 
-            <div className="grid min-w-0 gap-4 md:grid-cols-[1fr_12rem]">
+            <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_12rem]">
               <div className="grid gap-2">
                 <Label isRequired isInvalid={Boolean(errors.audioKey)}>
                   音频文件
                 </Label>
-                <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-border bg-background p-3 sm:flex-row sm:items-center">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    isLoading={isUploading}
-                    loadingText="上传中…"
-                    onPress={() => fileInputRef.current?.click()}
-                  >
-                    <SvgIcon name="arrow-up" size={14} />
-                    选择音频
-                  </Button>
+                <div className="grid min-w-0 gap-3 rounded-lg border border-border bg-background p-3">
+                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">当前音频</p>
+                      <p className="mt-1 break-all text-xs text-muted-foreground">
+                        {values.audioKey || "还没有选择音频"}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0"
+                      isLoading={isUploading}
+                      loadingText="上传中…"
+                      onPress={() => fileInputRef.current?.click()}
+                    >
+                      <SvgIcon name="arrow-up" size={14} />
+                      选择音频
+                    </Button>
+                  </div>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -232,9 +291,17 @@ export function MusicSongFormDialog({
                       event.currentTarget.value = "";
                     }}
                   />
-                  <span className="min-w-0 truncate text-sm text-muted-foreground">
-                    {uploadLabel ?? (values.audioKey || "支持 mp3、m4a、flac，最大 50MB")}
-                  </span>
+                  <div className="grid gap-1 rounded-md bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+                    <span className="truncate">
+                      {uploadLabel ?? "支持 mp3、m4a、flac，最大 50MB"}
+                    </span>
+                    <span className="truncate">
+                      {values.audioMime || "MIME 待上传后自动填充"}
+                      {values.audioSize !== "0"
+                        ? ` · ${formatFileSize(Number(values.audioSize))}`
+                        : ""}
+                    </span>
+                  </div>
                 </div>
                 {errors.audioKey ? (
                   <p className="text-sm text-destructive">{errors.audioKey}</p>

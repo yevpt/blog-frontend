@@ -20,7 +20,7 @@ export function MusicListToolbar({
   onVisibilityFilterChange,
 }: MusicListToolbarProps) {
   return (
-    <div className="flex shrink-0 flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center">
+    <div className="flex min-w-0 shrink-0 flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center">
       <SearchField
         aria-label="搜索音乐"
         placeholder="搜索曲名、歌手或专辑…"

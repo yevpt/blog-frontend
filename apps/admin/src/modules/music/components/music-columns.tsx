@@ -1,6 +1,7 @@
 import type { DataTableColumn } from "@repo/ui";
 import { Button } from "@repo/ui";
 import { MusicArtwork } from "./MusicArtwork";
+import { MusicPreviewButton } from "./MusicPreviewButton";
 import { MusicStatusBadge } from "./MusicStatusBadge";
 import { formatDuration, type MusicRow } from "../model";
 
@@ -71,18 +72,7 @@ export function createMusicColumns(
       headerClassName: "text-center [&>div]:justify-center",
       cell: (row) => (
         <div className="flex items-center justify-center gap-0.5">
-          {row.audioUrl ? (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2 text-xs"
-              href={row.audioUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              试听
-            </Button>
-          ) : null}
+          <MusicPreviewButton title={row.name} url={row.audioUrl} />
           <Button
             type="button"
             size="sm"

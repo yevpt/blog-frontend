@@ -1,6 +1,7 @@
 import { SvgIcon } from "@repo/icons";
 import { Button, type DataTableEmptyState } from "@repo/ui";
 import { MusicArtwork } from "./MusicArtwork";
+import { MusicPreviewButton } from "./MusicPreviewButton";
 import { MusicStatusBadge } from "./MusicStatusBadge";
 import { formatDuration, type MusicRow } from "../model";
 
@@ -76,6 +77,7 @@ export function MusicMobileList({
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-0.5">
+            <MusicPreviewButton title={row.name} url={row.audioUrl} />
             <Button
               type="button"
               size="sm"

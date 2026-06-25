@@ -1,5 +1,6 @@
 import { SvgIcon } from "@repo/icons";
 import { Button } from "@repo/ui";
+import { AdminPageHeader } from "../../../components/AdminPageHeader";
 import type { MusicCatalogTab } from "../model";
 
 const tabOptions: Array<{ id: MusicCatalogTab; label: string; icon: "music" | "user" | "image" }> =
@@ -31,23 +32,19 @@ export function MusicPageHeader({
 
   return (
     <>
-      <section className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h2 className="text-xl font-semibold tracking-normal text-foreground sm:text-2xl">
-            音乐管理
-          </h2>
-          <p className="mt-1 hidden text-sm text-muted-foreground sm:block">
-            维护歌曲、歌手、专辑和上传资源，供前台音乐库与文章背景音乐使用。
-          </p>
-        </div>
-        <Button size="sm" className="w-full shrink-0 sm:w-auto" onPress={createAction}>
-          <SvgIcon name="plus" size={15} />
-          {createLabel}
-        </Button>
-      </section>
+      <AdminPageHeader
+        title="音乐管理"
+        description="维护歌曲、歌手、专辑和上传资源，供前台音乐库与文章背景音乐使用。"
+        action={
+          <Button size="sm" className="w-full shrink-0 sm:w-auto" onPress={createAction}>
+            <SvgIcon name="plus" size={15} />
+            {createLabel}
+          </Button>
+        }
+      />
 
       <nav
-        className="flex gap-1 overflow-x-auto rounded-lg border border-border bg-card p-1"
+        className="flex min-w-0 max-w-full gap-1 overflow-x-auto rounded-lg border border-border bg-card p-1"
         aria-label="音乐管理分组"
       >
         {tabOptions.map((tab) => (

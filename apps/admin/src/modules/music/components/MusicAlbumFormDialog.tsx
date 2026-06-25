@@ -104,9 +104,9 @@ export function MusicAlbumFormDialog({
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">专辑封面会被同专辑歌曲复用。</p>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className={cn(contentInsetClassName, "grid gap-5 py-5")}>
-            <div className="grid gap-4 md:grid-cols-2">
+        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
+          <div className={cn(contentInsetClassName, "grid min-w-0 gap-5 py-5")}>
+            <div className="grid min-w-0 gap-4 md:grid-cols-2">
               <Input
                 label="专辑名"
                 value={values.name}
@@ -116,17 +116,23 @@ export function MusicAlbumFormDialog({
                 hint={errors.name}
                 placeholder="Sleepless Nights"
               />
-              <Select
-                label="主歌手"
-                placeholder="未设置"
-                selectedKey={values.artistId || null}
-                onSelectionChange={(key) => updateField("artistId", key ? String(key) : "")}
-              >
-                <Select.Item id="" label="未设置" />
-                {artists.map((artist) => (
-                  <Select.Item key={artist.id} id={String(artist.id)} label={artist.display_name} />
-                ))}
-              </Select>
+              <div className="min-w-0">
+                <Select
+                  label="主歌手"
+                  placeholder="未设置"
+                  selectedKey={values.artistId || null}
+                  onSelectionChange={(key) => updateField("artistId", key ? String(key) : "")}
+                >
+                  <Select.Item id="" label="未设置" />
+                  {artists.map((artist) => (
+                    <Select.Item
+                      key={artist.id}
+                      id={String(artist.id)}
+                      label={artist.display_name}
+                    />
+                  ))}
+                </Select>
+              </div>
             </div>
 
             <Input
@@ -138,7 +144,7 @@ export function MusicAlbumFormDialog({
 
             <div className="grid gap-2">
               <Label>封面</Label>
-              <div className="flex flex-col gap-2 rounded-lg border border-border bg-background p-3 sm:flex-row sm:items-center">
+              <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-border bg-background p-3 sm:flex-row sm:items-center">
                 <Button
                   type="button"
                   size="sm"
@@ -160,7 +166,7 @@ export function MusicAlbumFormDialog({
                     event.currentTarget.value = "";
                   }}
                 />
-                <span className="min-w-0 truncate text-sm text-muted-foreground">
+                <span className="min-w-0 break-all text-sm text-muted-foreground sm:truncate">
                   {values.coverKey || "可选，最大 10MB"}
                 </span>
               </div>
