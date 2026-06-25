@@ -12,8 +12,13 @@ import {
   type DataTableEmptyState,
   type DataTableState,
 } from "@repo/ui";
+import { AdminListCard } from "../../components/AdminListCard";
+import { AdminListSummary } from "../../components/AdminListSummary";
+import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
+import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
 import { ArticleDeleteButton } from "./components/ArticleDeleteButton";
-import { ArticleListSearch } from "./components/ArticleListSearch";
+import { ArticleListToolbar } from "./components/ArticleListToolbar";
+import { ArticleMobileList } from "./components/ArticleMobileList";
 import { ArticleStatusBadge } from "./components/ArticleStatusBadge";
 import { useAdminArticleFilterOptions } from "./hooks/use-article-filter-options";
 import { useAdminArticleList } from "./hooks/use-article-list";
@@ -51,6 +56,7 @@ export function ArticlesPage() {
     isLoading: isLoadingFilterOptions,
     error: filterOptionsError,
   } = useAdminArticleFilterOptions();
+  const isMdScreen = useIsMdScreen();
   const [deletingArticleId, setDeletingArticleId] = useState<string | null>(null);
 
   const handleDeleteArticle = useCallback(
@@ -93,9 +99,9 @@ export function ArticlesPage() {
         id: "title",
         header: "标题",
         isRowHeader: true,
-        width: "1fr",
-        minWidth: 360,
-        headerAction: <ArticleListSearch value={filters.search} onChange={setSearch} />,
+        width: "34%",
+        minWidth: 240,
+        className: "min-w-0 whitespace-normal",
         cell: (article) => (
           <>
             <Link
@@ -114,14 +120,16 @@ export function ArticlesPage() {
       {
         id: "status",
         header: "状态",
-        width: 120,
+        width: "12%",
+        minWidth: 96,
         cell: (article) => <ArticleStatusBadge status={article.status} />,
         sort: serverSideColumnSort,
       },
       {
         id: "category",
         header: "分类",
-        width: 128,
+        width: "14%",
+        minWidth: 96,
         className: "text-muted-foreground",
         cell: (article) => article.category,
         sort: serverSideColumnSort,
@@ -136,7 +144,8 @@ export function ArticlesPage() {
       {
         id: "pinned",
         header: "推荐",
-        width: 100,
+        width: "12%",
+        minWidth: 88,
         cell: (article) => (
           <Badge variant={article.isPinned ? "brand" : "secondary"}>
             {article.isPinned ? "已推荐" : "普通"}
@@ -147,41 +156,44 @@ export function ArticlesPage() {
       {
         id: "createdAt",
         header: "创建时间",
-        width: 130,
-        className: "text-muted-foreground",
+        width: "14%",
+        minWidth: 112,
+        className: "text-muted-foreground tabular-nums",
         cell: (article) => article.createdAt,
         sort: serverSideColumnSort,
       },
       {
         id: "updatedAt",
         header: "更新时间",
-        width: 130,
-        className: "text-muted-foreground",
+        width: "14%",
+        minWidth: 112,
+        className: "text-muted-foreground tabular-nums",
         cell: (article) => article.updatedAt,
         sort: serverSideColumnSort,
       },
       {
         id: "actions",
         header: "操作",
-        width: 80,
+        width: "10%",
+        minWidth: 80,
         className: "text-center",
         headerClassName: "text-center [&>div]:justify-center",
         cell: (article) => (
-          <ArticleDeleteButton
-            article={article}
-            isDeleting={deletingArticleId === article.id}
-            onConfirmDelete={handleDeleteArticle}
-          />
+          <div className="flex items-center justify-center">
+            <ArticleDeleteButton
+              article={article}
+              isDeleting={deletingArticleId === article.id}
+              onConfirmDelete={handleDeleteArticle}
+            />
+          </div>
         ),
       },
     ],
     [
       deletingArticleId,
       handleDeleteArticle,
-      filters.search,
       filters.categoryId,
       categoryOptions,
-      setSearch,
       setCategoryId,
     ],
   );
@@ -199,7 +211,7 @@ export function ArticlesPage() {
         description: "调整搜索关键词或分类筛选后再试。",
       }
     : {
-        icon: "folder",
+        icon: "pen",
         title: "还没有文章",
         description: "新建第一篇文章后，它会显示在这里。",
         action: (
@@ -210,72 +222,93 @@ export function ArticlesPage() {
         ),
       };
 
+  const tableState: DataTableState = {
+    searchValue: filters.search,
+    filters: {
+      category: filters.categoryId,
+    },
+    sort,
+  };
+
   return (
-    <div className="grid max-h-[calc(100dvh-6.5rem)] min-h-0 grid-rows-[64px_minmax(0,1fr)] overflow-hidden lg:-mt-6 lg:max-h-[calc(100dvh-1.5rem)]">
-      <section className="flex min-w-0 items-center justify-between gap-3">
-        <h2 className="truncate text-2xl font-semibold tracking-normal text-foreground">
-          文章管理
-        </h2>
-        <Button href="/articles/new" size="sm" className="shrink-0">
+    <div className="grid min-h-0 gap-4 overflow-hidden md:max-h-[calc(100dvh-6.5rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:-mt-6 lg:max-h-[calc(100dvh-1.5rem)]">
+      <section className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-xl font-semibold tracking-normal text-foreground sm:text-2xl">
+            文章管理
+          </h2>
+          <p className="mt-1 hidden text-sm text-muted-foreground sm:block">
+            集中查看文章、按表头筛选排序，并从标题直接进入编辑页面。
+          </p>
+        </div>
+        <Button href="/articles/new" size="sm" className="w-full shrink-0 sm:w-auto">
           <SvgIcon name="plus" size={15} />
-          新建
+          新建文章
         </Button>
       </section>
 
-      <section
-        className={cn(
-          "grid min-h-0 gap-3 pt-3",
-          listError ? "grid-rows-[auto_minmax(0,1fr)_auto]" : "grid-rows-[minmax(0,1fr)_auto]",
-        )}
-        aria-label="文章列表工具栏"
-      >
+      <section className="flex min-h-0 flex-col" aria-label="文章列表">
         {listError ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="pb-3 text-sm text-destructive">
             {listError.message}
           </p>
         ) : null}
-        <DataTable
-          aria-label="文章列表"
-          items={rows}
-          columns={columns}
-          getRowId={(article) => article.id}
-          showTotal={false}
-          state={{
-            searchValue: filters.search,
-            filters: {
-              category: filters.categoryId,
-            },
-            sort,
-          }}
-          onStateChange={handleTableStateChange}
-          total={pageData?.total}
-          emptyState={articleEmptyState}
-          isLoading={isLoading || isLoadingFilterOptions}
-          maxHeightClassName={false}
-          classNames={{
-            root: "min-h-0 h-full",
-            container: "min-h-0 h-full shadow-sm",
-            headerAction: "min-w-0 flex-1 shrink justify-end",
-          }}
-        />
 
-        {showFooterTotal || showPagination ? (
-          <div className="flex shrink-0 items-center justify-between gap-3 pt-3">
-            {showFooterTotal ? (
-              <p className="whitespace-nowrap text-sm text-muted-foreground">共 {totalCount} 条</p>
-            ) : (
-              <span aria-hidden="true" />
-            )}
-            {showPagination ? (
-              <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-                className="justify-end border-t-0 pt-0 md:pt-0"
+        <AdminListCard className="md:min-h-[320px]">
+          <ArticleListToolbar
+            searchValue={filters.search}
+            onSearchChange={setSearch}
+            categoryId={filters.categoryId}
+            categoryOptions={categoryOptions}
+            onCategoryChange={setCategoryId}
+          />
+
+          <div className="min-h-0 flex-1 overflow-hidden">
+            {isMdScreen ? (
+              <DataTable
+                aria-label="文章列表"
+                items={rows}
+                columns={columns}
+                getRowId={(article) => article.id}
+                state={tableState}
+                onStateChange={handleTableStateChange}
+                showTotal={false}
+                showToolbar={false}
+                emptyState={articleEmptyState}
+                isLoading={isLoading || isLoadingFilterOptions}
+                maxHeightClassName={false}
+                embedded
+                classNames={adminFlushDataTableClassNames}
               />
-            ) : null}
+            ) : (
+              <div className="h-full overflow-y-auto overscroll-y-contain">
+                <ArticleMobileList
+                  items={rows}
+                  isLoading={isLoading || isLoadingFilterOptions}
+                  emptyState={articleEmptyState}
+                  deletingArticleId={deletingArticleId}
+                  onConfirmDelete={handleDeleteArticle}
+                />
+              </div>
+            )}
           </div>
-        ) : null}
+
+          {showFooterTotal || showPagination ? (
+            <div className="flex shrink-0 flex-col gap-1 border-t border-border/60 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+              {showFooterTotal ? (
+                <AdminListSummary visibleCount={totalCount} className="border-0" />
+              ) : null}
+              {showPagination ? (
+                <Pagination
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  className="w-full border-t-0 px-4 py-2 sm:w-auto sm:shrink-0 sm:justify-end sm:py-2.5"
+                />
+              ) : null}
+            </div>
+          ) : null}
+        </AdminListCard>
       </section>
     </div>
   );

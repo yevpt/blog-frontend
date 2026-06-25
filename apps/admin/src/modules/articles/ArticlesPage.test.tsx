@@ -11,6 +11,7 @@ import { toastQueue } from "../../lib/toast";
 import type { ArticleRow } from "./model";
 import { useAdminArticleFilterOptions } from "./hooks/use-article-filter-options";
 import { useAdminArticleList } from "./hooks/use-article-list";
+import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
 
 const mockRows: ArticleRow[] = [
   {
@@ -49,6 +50,10 @@ vi.mock("./hooks/use-article-filter-options", () => ({
   useAdminArticleFilterOptions: vi.fn(),
 }));
 
+vi.mock("../tags/hooks/use-is-md-screen", () => ({
+  useIsMdScreen: vi.fn(),
+}));
+
 vi.mock("../../lib/api", () => ({
   apiClient: {
     articles: {
@@ -71,6 +76,7 @@ describe("ArticlesPage", () => {
     vi.clearAllMocks();
     toastQueue.clear();
     mockRefetch.mockResolvedValue(undefined);
+    vi.mocked(useIsMdScreen).mockReturnValue(true);
     vi.mocked(useAdminArticleList).mockReturnValue({
       rows: mockRows,
       pageData: { total: 42, pages: 3, page: 1, page_size: 10, list: [] },
@@ -117,25 +123,19 @@ describe("ArticlesPage", () => {
 
     expect(screen.getByRole("heading", { name: "文章管理" })).toBeInTheDocument();
     expect(
-      screen.queryByText("集中查看文章、按表头筛选排序，并从标题直接进入编辑页面。"),
-    ).not.toBeInTheDocument();
+      screen.getByText("集中查看文章、按表头筛选排序，并从标题直接进入编辑页面。"),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "置顶管理" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "新建" })).toHaveAttribute("href", "/articles/new");
+    expect(screen.getByRole("link", { name: "新建文章" })).toHaveAttribute("href", "/articles/new");
     expect(screen.queryByText("全部 42")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "更多筛选" })).not.toBeInTheDocument();
-    expect(screen.getByText("共 42 条")).toHaveClass("whitespace-nowrap");
+    expect(screen.getByText("共 42 条")).toBeInTheDocument();
 
-    const listRegion = screen.getByRole("region", { name: "文章列表工具栏" });
-    expect(
-      Array.from(listRegion.children).some(
-        (child) =>
-          child.tagName === "DIV" && child.childElementCount === 0 && child.textContent === "",
-      ),
-    ).toBe(false);
+    expect(screen.getByRole("searchbox", { name: "搜索文章" })).toBeInTheDocument();
 
     const table = screen.getByRole("grid", { name: "文章列表" });
     expect(within(table).getByRole("columnheader", { name: /创建时间/ })).toBeInTheDocument();
-    expect(within(table).getByRole("button", { name: "展开搜索" })).toBeInTheDocument();
+    expect(within(table).queryByRole("button", { name: "展开搜索" })).not.toBeInTheDocument();
     expect(within(table).getByRole("button", { name: "筛选分类" })).toBeInTheDocument();
     expect(within(table).queryByRole("button", { name: "筛选推荐" })).not.toBeInTheDocument();
     expect(
@@ -168,7 +168,7 @@ describe("ArticlesPage", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("加载文章列表失败");
   });
 
-  it("展开搜索后将输入交给服务端查询", async () => {
+  it("工具栏搜索将输入交给服务端查询", async () => {
     const user = userEvent.setup();
     vi.mocked(useAdminArticleList).mockImplementation(() => {
       const [search, setSearchState] = useState("");
@@ -196,8 +196,7 @@ describe("ArticlesPage", () => {
     });
     renderArticlesPage();
 
-    await user.click(screen.getByRole("button", { name: "展开搜索" }));
-    const searchbox = screen.getByRole("searchbox", { name: "搜索标题或摘要" });
+    const searchbox = screen.getByRole("searchbox", { name: "搜索文章" });
     await user.type(searchbox, "Vite");
 
     await waitFor(() => {
@@ -302,7 +301,7 @@ describe("ArticlesPage", () => {
 
     expect(screen.getByText("还没有文章")).toBeInTheDocument();
     expect(screen.getByText("新建第一篇文章后，它会显示在这里。")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "新建文章" })).toHaveAttribute("href", "/articles/new");
+    expect(screen.getAllByRole("link", { name: "新建文章" })).toHaveLength(2);
   });
 
   it("删除文章前弹出二次确认，确认后调用删除接口并刷新列表", async () => {
@@ -337,5 +336,14 @@ describe("ArticlesPage", () => {
     expect(
       screen.getByRole("dialog", { name: /确认删除「React Query 与后台表格状态」/ }),
     ).toBeInTheDocument();
+  });
+
+  it("小屏时渲染移动端列表", () => {
+    vi.mocked(useIsMdScreen).mockReturnValue(false);
+    renderArticlesPage();
+
+    expect(screen.queryByRole("grid", { name: "文章列表" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "React Query 与后台表格状态" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /筛选分类/ })).toBeInTheDocument();
   });
 });
