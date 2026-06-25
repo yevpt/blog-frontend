@@ -10,9 +10,9 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush, refresh: mockRefresh }),
 }));
 
-const mockOpenSnippetModal = vi.fn();
-vi.mock("@/store/use-snippet-modal", () => ({
-  useSnippetModal: () => ({ open: mockOpenSnippetModal }),
+const mockOpenMomentModal = vi.fn();
+vi.mock("@/store/use-moment-modal", () => ({
+  useMomentModal: () => ({ open: mockOpenMomentModal }),
 }));
 
 vi.mock("@repo/icons", () => ({
@@ -49,7 +49,7 @@ describe("NavbarUserMenu", () => {
   beforeEach(() => {
     mockPush.mockClear();
     mockRefresh.mockClear();
-    mockOpenSnippetModal.mockClear();
+    mockOpenMomentModal.mockClear();
     global.fetch = vi.fn().mockResolvedValue({ json: async () => ({}) });
     mobileMediaListener = null;
     Object.defineProperty(window, "matchMedia", {
@@ -110,11 +110,11 @@ describe("NavbarUserMenu", () => {
     await user.click(screen.getByRole("button", { name: /账号菜单/ }));
 
     const profileButton = screen.getByText("管理账号", { exact: false }).closest("button");
-    const snippetButton = screen.getByText("发表碎语").closest("button");
+    const momentButton = screen.getByText("发表碎语").closest("button");
     const messagesButton = screen.getByText("我的消息").closest("button");
     const logoutButton = screen.getByText("退出登录").closest("button");
 
-    for (const button of [profileButton, snippetButton, messagesButton, logoutButton]) {
+    for (const button of [profileButton, momentButton, messagesButton, logoutButton]) {
       expect(button).toBeTruthy();
       expect(button?.className).not.toContain("hover:bg-accent");
       expect(button?.className).not.toContain("h-10");
@@ -123,7 +123,7 @@ describe("NavbarUserMenu", () => {
     }
 
     expect(profileButton?.className).toContain("justify-between");
-    expect(snippetButton?.className).toContain("justify-start");
+    expect(momentButton?.className).toContain("justify-start");
     expect(messagesButton?.className).toContain("justify-start");
     expect(logoutButton?.className).toContain("justify-start");
   });
@@ -157,12 +157,12 @@ describe("NavbarUserMenu", () => {
     expect(screen.queryByText("发表碎语")).not.toBeInTheDocument();
   });
 
-  it("点击「发表碎语」调用 openSnippetModal 并关闭下拉", async () => {
+  it("点击「发表碎语」调用 openMomentModal 并关闭下拉", async () => {
     const user = userEvent.setup();
     render(<NavbarUserMenu />);
     await user.click(screen.getByRole("button", { name: /账号菜单/ }));
     await user.click(screen.getByText("发表碎语"));
-    expect(mockOpenSnippetModal).toHaveBeenCalledOnce();
+    expect(mockOpenMomentModal).toHaveBeenCalledOnce();
     expect(screen.queryByText("发表碎语")).not.toBeInTheDocument();
   });
 

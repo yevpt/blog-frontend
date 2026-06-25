@@ -30,17 +30,17 @@ vi.mock("react-virtuoso", () => ({
   },
 }));
 
-vi.mock("@/components/snippets/snippet-card", () => ({
-  SnippetCard: ({ snippet }: { snippet: MomentItemResp }) => (
-    <article data-testid="snippet-card" className="last:border-b-0">
-      {snippet.content}
+vi.mock("@/components/moments/moment-card", () => ({
+  MomentCard: ({ moment }: { moment: MomentItemResp }) => (
+    <article data-testid="moment-card" className="last:border-b-0">
+      {moment.content}
     </article>
   ),
 }));
 
-vi.mock("@/components/snippets/snippet-scroll-loader", () => ({
-  SnippetScrollLoader: () => <div data-testid="scroll-loader">loading</div>,
-  SnippetEndReached: () => <div data-testid="end-reached">end</div>,
+vi.mock("@/components/moments/moment-scroll-loader", () => ({
+  MomentScrollLoader: () => <div data-testid="scroll-loader">loading</div>,
+  MomentEndReached: () => <div data-testid="end-reached">end</div>,
 }));
 
 function makeMoment(id: number): MomentItemResp {
@@ -83,7 +83,7 @@ describe("ProfileMomentsVirtualList", () => {
     );
 
     expect(screen.getByTestId("virtuoso")).toBeInTheDocument();
-    expect(screen.getAllByTestId("snippet-card")).toHaveLength(2);
+    expect(screen.getAllByTestId("moment-card")).toHaveLength(2);
     expect(screen.getAllByTestId("profile-moment-item")).toHaveLength(2);
   });
 

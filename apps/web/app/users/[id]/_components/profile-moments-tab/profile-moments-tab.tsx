@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { MomentItemResp, MomentPageResp } from "@repo/api";
 import dynamic from "next/dynamic";
 import { useMomentList } from "@/hooks/use-moment-list";
-import { useSnippetModal } from "@/store/use-snippet-modal";
+import { useMomentModal } from "@/store/use-moment-modal";
 import { ProfileTabEmptyState } from "../profile-tab-empty-state";
 import { ProfileMomentsVirtualList } from "./profile-moments-virtual-list";
 
@@ -19,7 +19,7 @@ interface ProfileMomentsTabProps {
   onTotalChange?: (total: number) => void;
 }
 
-/** 个人页碎语 Tab：embedded SnippetCard + Virtuoso 无限滚动 */
+/** 个人页碎语 Tab：embedded MomentCard + Virtuoso 无限滚动 */
 export function ProfileMomentsTab({
   userId,
   isOwner,
@@ -45,22 +45,22 @@ export function ProfileMomentsTab({
     mode: "user",
     userId,
   });
-  const openSnippetModal = useSnippetModal((state) => state.open);
+  const openMomentModal = useMomentModal((state) => state.open);
   const [activeComment, setActiveComment] = useState<{ momentId: number } | null>(null);
 
   useEffect(() => {
     onTotalChange?.(pageData.total);
   }, [onTotalChange, pageData.total]);
 
-  const openComment = useCallback((snippet: MomentItemResp) => {
-    setActiveComment({ momentId: snippet.id });
+  const openComment = useCallback((moment: MomentItemResp) => {
+    setActiveComment({ momentId: moment.id });
   }, []);
 
   const openEdit = useCallback(
-    (snippet: MomentItemResp) => {
-      openSnippetModal(snippet, (content, images) => updateMoment(snippet, content, images));
+    (moment: MomentItemResp) => {
+      openMomentModal(moment, (content, images) => updateMoment(moment, content, images));
     },
-    [openSnippetModal, updateMoment],
+    [openMomentModal, updateMoment],
   );
 
   const closeComment = useCallback(() => {

@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Home",
-    "snippets": "Snippets",
+    "moments": "Moments",
     "guestbook": "Guestbook",
     "friends": "Friends",
     "circle": "Circle"
@@ -13,10 +13,10 @@
   "home": {
     "featured": "Featured",
     "articles": "Articles",
-    "snippets": "Snippets",
+    "moments": "Moments",
     "recentVisitors": "Recent Visitors",
     "tags": "Tags",
-    "postSnippet": "Post Snippet",
+    "postMoment": "Post Moment",
     "viewMore": "View More",
     "joinQQ": "Join QQ Group"
   },
@@ -28,7 +28,7 @@
     "allCategories": "All",
     "searchPlaceholder": "Search articles..."
   },
-  "snippet": {
+  "moment": {
     "expand": "Expand",
     "collapse": "Collapse",
     "like": "Like",

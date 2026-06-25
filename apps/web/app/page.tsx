@@ -11,7 +11,7 @@ import type { FeaturedPost } from "./_mock/types";
 import { createServerApiClient } from "@/lib/server-api";
 import { FeaturedCarousel } from "@/components/featured";
 import { ArticleSection } from "@/components/articles";
-import { SnippetsSection } from "@/components/snippets";
+import { MomentsSection } from "@/components/moments";
 import { RecentVisitors, TagsCloud } from "@/components/sidebar";
 import { PageContainer } from "@/components/common/page-container";
 
@@ -82,8 +82,8 @@ export default async function Home() {
           categories={categoriesResp.list}
           sidebar={
             <>
-              <SnippetsSection
-                snippets={momentsPage.list}
+              <MomentsSection
+                initialMoments={momentsPage.list}
                 ownerUserId={Number(process.env.BLOG_USER_ID) || undefined}
               />
               <RecentVisitors visitors={recentVisitors} />

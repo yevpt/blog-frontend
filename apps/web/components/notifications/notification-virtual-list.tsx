@@ -3,10 +3,7 @@
 import { useCallback } from "react";
 import { Virtuoso } from "react-virtuoso";
 import type { NotificationItemResp } from "@repo/api";
-import {
-  SnippetEndReached,
-  SnippetScrollLoader,
-} from "@/components/snippets/snippet-scroll-loader";
+import { MomentEndReached, MomentScrollLoader } from "@/components/moments/moment-scroll-loader";
 import NotificationCard from "./notification-card";
 import { NotificationCardMotion } from "./notification-card-motion";
 
@@ -52,8 +49,8 @@ export function NotificationVirtualList({
   }, [hasMore, loading, onLoadMore]);
 
   const ListFooter = useCallback(() => {
-    if (loading) return <SnippetScrollLoader />;
-    if (!hasMore) return <SnippetEndReached />;
+    if (loading) return <MomentScrollLoader />;
+    if (!hasMore) return <MomentEndReached />;
     return null;
   }, [hasMore, loading]);
 

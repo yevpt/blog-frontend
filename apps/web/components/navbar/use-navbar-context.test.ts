@@ -36,7 +36,7 @@ describe("useNavbarContext", () => {
   });
 
   it("碎语页复用 home variant，无标题", () => {
-    mockPathname = "/snippets";
+    mockPathname = "/moments";
 
     const { result } = renderHook(() => useNavbarContext());
 

@@ -7,8 +7,8 @@ vi.mock("./profile-moments-virtual-list", () => ({
   ProfileMomentsVirtualList: () => <div data-testid="profile-moments-virtual-list" />,
 }));
 
-vi.mock("@/store/use-snippet-modal", () => ({
-  useSnippetModal: (selector: (state: { open: () => void }) => unknown) =>
+vi.mock("@/store/use-moment-modal", () => ({
+  useMomentModal: (selector: (state: { open: () => void }) => unknown) =>
     selector({ open: vi.fn() }),
 }));
 

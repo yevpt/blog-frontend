@@ -17,6 +17,6 @@ describe("seo url helpers", () => {
 
     expect(getSiteUrl()).toBe("https://example.com");
     expect(getCanonicalUrl("/articles/1").toString()).toBe("https://example.com/articles/1");
-    expect(getCanonicalUrl("snippets").toString()).toBe("https://example.com/snippets");
+    expect(getCanonicalUrl("moments").toString()).toBe("https://example.com/moments");
   });
 });

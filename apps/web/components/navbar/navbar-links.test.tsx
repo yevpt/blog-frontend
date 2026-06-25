@@ -31,7 +31,7 @@ describe("NavbarLinks", () => {
     expect(links.map((link) => link.textContent)).toEqual(["主页", "碎语", "留言", "友邻", "圈子"]);
     expect(links.map((link) => link.getAttribute("href"))).toEqual([
       "/",
-      "/snippets",
+      "/moments",
       "/guestbook",
       "/friend-links",
       "/circle",

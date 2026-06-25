@@ -3,11 +3,8 @@
 import { useCallback } from "react";
 import { Virtuoso } from "react-virtuoso";
 import type { MomentItemResp } from "@repo/api";
-import { SnippetCard } from "@/components/snippets/snippet-card";
-import {
-  SnippetEndReached,
-  SnippetScrollLoader,
-} from "@/components/snippets/snippet-scroll-loader";
+import { MomentCard } from "@/components/moments/moment-card";
+import { MomentEndReached, MomentScrollLoader } from "@/components/moments/moment-scroll-loader";
 
 /** 碎语卡片高度不一（有无图片、长短文），给 Virtuoso 一个接近均值的估算高度 */
 const ESTIMATED_ITEM_HEIGHT = 168;
@@ -20,11 +17,11 @@ interface ProfileMomentsVirtualListProps {
   pendingLikeIds: ReadonlySet<number>;
   pendingActionIds: ReadonlySet<number>;
   onLoadMore: () => void;
-  onLike: (snippet: MomentItemResp) => void;
-  onComment: (snippet: MomentItemResp) => void;
-  onEdit: (snippet: MomentItemResp) => void;
-  onToggleTop: (snippet: MomentItemResp) => void;
-  onDelete: (snippet: MomentItemResp) => Promise<void> | void;
+  onLike: (moment: MomentItemResp) => void;
+  onComment: (moment: MomentItemResp) => void;
+  onEdit: (moment: MomentItemResp) => void;
+  onToggleTop: (moment: MomentItemResp) => void;
+  onDelete: (moment: MomentItemResp) => Promise<void> | void;
 }
 
 export function ProfileMomentsVirtualList({
@@ -50,29 +47,29 @@ export function ProfileMomentsVirtualList({
 
   const ListFooter = useCallback(() => {
     if (loading) {
-      return <SnippetScrollLoader />;
+      return <MomentScrollLoader />;
     }
     if (!hasMore) {
-      return <SnippetEndReached />;
+      return <MomentEndReached />;
     }
     return null;
   }, [hasMore, loading]);
 
   const renderItem = useCallback(
-    (index: number, snippet: MomentItemResp) => (
+    (index: number, moment: MomentItemResp) => (
       // Virtuoso 每项独立容器，embedded 的 last:border-b-0 会误删分割线，外层补 border-b
       <div className="border-b border-border/40" data-testid="profile-moment-item">
-        <SnippetCard
-          snippet={snippet}
+        <MomentCard
+          moment={moment}
           layout="embedded"
           priority={index === 0}
           onLike={onLike}
-          likeDisabled={pendingLikeIds.has(snippet.id)}
+          likeDisabled={pendingLikeIds.has(moment.id)}
           onComment={onComment}
           onEdit={onEdit}
           onToggleTop={onToggleTop}
           onDelete={onDelete}
-          actionDisabled={pendingActionIds.has(snippet.id)}
+          actionDisabled={pendingActionIds.has(moment.id)}
         />
       </div>
     ),
@@ -84,7 +81,7 @@ export function ProfileMomentsVirtualList({
       <Virtuoso
         useWindowScroll
         data={items}
-        computeItemKey={(_, snippet) => snippet.id}
+        computeItemKey={(_, moment) => moment.id}
         endReached={handleEndReached}
         overscan={320}
         defaultItemHeight={ESTIMATED_ITEM_HEIGHT}

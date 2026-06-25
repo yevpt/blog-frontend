@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import type { MomentItemResp, MomentPageResp } from "@repo/api";
 import { useMomentList } from "./use-moment-list";
-import { useSnippetModal } from "@/store/use-snippet-modal";
+import { useMomentModal } from "@/store/use-moment-modal";
 
 const { mockOpenLoginModal, mockAddToast } = vi.hoisted(() => ({
   mockOpenLoginModal: vi.fn(),
@@ -66,7 +66,7 @@ describe("useMomentList", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
     mockSessionUserId = 7;
-    useSnippetModal.setState({ isOpen: false, publishCount: 0, lastPublishedUserId: null });
+    useMomentModal.setState({ isOpen: false, publishCount: 0, lastPublishedUserId: null });
     mockOpenLoginModal.mockReset();
     mockAddToast.mockReset();
   });
@@ -219,7 +219,7 @@ describe("useMomentList", () => {
     );
 
     act(() => {
-      useSnippetModal.getState().markPublished(1);
+      useMomentModal.getState().markPublished(1);
     });
 
     await waitFor(() => {
@@ -238,7 +238,7 @@ describe("useMomentList", () => {
     );
 
     act(() => {
-      useSnippetModal.getState().markPublished(6);
+      useMomentModal.getState().markPublished(6);
     });
 
     expect(fetch).not.toHaveBeenCalled();
@@ -276,7 +276,7 @@ describe("useMomentList", () => {
     expect(result.current.moments[0]?.is_top).toBe(true);
   });
 
-  it("toggleTop deletes top endpoint when snippet is already top", async () => {
+  it("toggleTop deletes top endpoint when moment is already top", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ id: 1, is_top: false }));
 
     const { result } = renderHook(() =>
@@ -291,7 +291,7 @@ describe("useMomentList", () => {
     expect(result.current.moments[0]?.is_top).toBe(false);
   });
 
-  it("deleteMoment deletes endpoint and removes the snippet locally", async () => {
+  it("deleteMoment deletes endpoint and removes the moment locally", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ id: 1 }));
 
     const { result } = renderHook(() =>
@@ -309,7 +309,7 @@ describe("useMomentList", () => {
     expect(result.current.pageData.total).toBe(1);
   });
 
-  it("updateMoment saves through multipart endpoint and replaces snippet locally", async () => {
+  it("updateMoment saves through multipart endpoint and replaces moment locally", async () => {
     const updated = makeMoment(1, { content: "更新后的碎语" });
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(updated));
 

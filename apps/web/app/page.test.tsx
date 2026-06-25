@@ -37,8 +37,8 @@ vi.mock("@/components/articles", () => ({
     </section>
   ),
 }));
-vi.mock("@/components/snippets", () => ({
-  SnippetsSection: () => <div data-testid="snippets-section">SnippetsSection</div>,
+vi.mock("@/components/moments", () => ({
+  MomentsSection: () => <div data-testid="moments-section">MomentsSection</div>,
 }));
 vi.mock("@/components/sidebar", () => ({
   RecentVisitors: () => <div data-testid="recent-visitors">RecentVisitors</div>,
@@ -218,7 +218,7 @@ describe("Home page", () => {
 
   it("包含碎语区域", async () => {
     render(await Page());
-    expect(screen.getByTestId("snippets-section")).toBeInTheDocument();
+    expect(screen.getByTestId("moments-section")).toBeInTheDocument();
   });
 
   it("包含最近来访模块", async () => {

@@ -7,7 +7,7 @@ import { useLocale } from "@repo/hooks/locale";
 // mock dynamic import，避免真实文件系统依赖
 vi.mock("../../messages/zh.json", () => ({
   default: {
-    nav: { home: "首页", snippets: "碎语", guestbook: "留言", friends: "友邻", circle: "圈子" },
+    nav: { home: "首页", moments: "碎语", guestbook: "留言", friends: "友邻", circle: "圈子" },
     auth: { login: "登录", register: "注册" },
   },
 }));
@@ -16,7 +16,7 @@ vi.mock("../../messages/en.json", () => ({
   default: {
     nav: {
       home: "Home",
-      snippets: "Snippets",
+      moments: "Moments",
       guestbook: "Guestbook",
       friends: "Friends",
       circle: "Circle",

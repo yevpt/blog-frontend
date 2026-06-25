@@ -30,8 +30,8 @@ describe("matchNavbarRoute", () => {
     });
   });
 
-  it("snippets 复用 home variant，无标题", () => {
-    expect(matchNavbarRoute("/snippets")).toEqual({
+  it("moments 复用 home variant，无标题", () => {
+    expect(matchNavbarRoute("/moments")).toEqual({
       mobileVariant: "home",
       title: undefined,
     });

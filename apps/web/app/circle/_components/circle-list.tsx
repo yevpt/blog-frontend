@@ -91,19 +91,19 @@ export function CircleList({ initialPage }: CircleListProps) {
 
       {/* 加载中 */}
       {isLoadingMore && (
-        <div className="snippet-scroll-loader">
-          <div className="snippet-loader-dots">
-            <div className="snippet-loader-dot" />
-            <div className="snippet-loader-dot" />
-            <div className="snippet-loader-dot" />
+        <div className="moment-scroll-loader">
+          <div className="moment-loader-dots">
+            <div className="moment-loader-dot" />
+            <div className="moment-loader-dot" />
+            <div className="moment-loader-dot" />
           </div>
-          <span className="snippet-loader-text">加载更多成员…</span>
+          <span className="moment-loader-text">加载更多成员…</span>
         </div>
       )}
 
       {/* 已到底 */}
       {endReached && !isLoadingMore && (
-        <div className="snippet-end-reached">全部 {users.length} 位成员</div>
+        <div className="moment-end-reached">全部 {users.length} 位成员</div>
       )}
 
       {/* 加载失败 */}

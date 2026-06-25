@@ -8,7 +8,7 @@ export function getNotificationHref(item: NotificationItemResp): string {
     return `/articles/${item.root_id}`;
   }
   if (item.root_type === "moment") {
-    return "/snippets";
+    return "/moments";
   }
   if (item.root_type === "guestbook") {
     return "/guestbook";

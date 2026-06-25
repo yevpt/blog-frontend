@@ -107,7 +107,7 @@ describe("NavbarMobileMenu", () => {
     const navLinks = screen
       .getAllByRole("link")
       .filter((link) =>
-        ["/", "/snippets", "/guestbook", "/friend-links", "/circle"].includes(
+        ["/", "/moments", "/guestbook", "/friend-links", "/circle"].includes(
           link.getAttribute("href") ?? "",
         ),
       );

@@ -30,9 +30,9 @@ vi.mock("react-virtuoso", () => ({
   },
 }));
 
-vi.mock("@/components/snippets/snippet-scroll-loader", () => ({
-  SnippetScrollLoader: () => <div data-testid="scroll-loader">loading</div>,
-  SnippetEndReached: () => <div data-testid="end-reached">end</div>,
+vi.mock("@/components/moments/moment-scroll-loader", () => ({
+  MomentScrollLoader: () => <div data-testid="scroll-loader">loading</div>,
+  MomentEndReached: () => <div data-testid="end-reached">end</div>,
 }));
 
 vi.mock("./notification-card", () => ({

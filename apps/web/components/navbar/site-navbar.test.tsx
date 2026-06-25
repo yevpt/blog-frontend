@@ -40,8 +40,8 @@ vi.mock("../../store/use-login-modal", () => ({
   useLoginModal: () => ({ open: vi.fn(), close: vi.fn(), isOpen: false, view: "login" }),
 }));
 
-vi.mock("../../store/use-snippet-modal", () => ({
-  useSnippetModal: () => ({ open: vi.fn(), close: vi.fn(), isOpen: false }),
+vi.mock("../../store/use-moment-modal", () => ({
+  useMomentModal: () => ({ open: vi.fn(), close: vi.fn(), isOpen: false }),
 }));
 
 vi.mock("../../app/providers/session-provider", () => ({
@@ -65,7 +65,7 @@ vi.mock("@repo/hooks/locale", () => ({
       const translations: Record<string, string> = {
         "nav.home": "首页",
         "nav.articles": "文章",
-        "nav.snippets": "碎语",
+        "nav.moments": "碎语",
         "nav.guestbook": "留言",
         "nav.friends": "友邻",
         "nav.circle": "圈子",
@@ -202,7 +202,7 @@ describe("SiteNavbar", () => {
   });
 
   it("碎语页移动端头部显示 Logo、menu，不显示返回按钮，不显示写碎语按钮", () => {
-    mockPathname.mockReturnValue("/snippets");
+    mockPathname.mockReturnValue("/moments");
     render(<SiteNavbar />);
 
     expect(screen.queryByLabelText("返回首页")).not.toBeInTheDocument();

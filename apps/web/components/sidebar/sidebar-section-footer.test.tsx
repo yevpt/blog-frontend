@@ -84,12 +84,12 @@ describe("SidebarFooterButton", () => {
 
   it("传 href 时渲染为链接", () => {
     render(
-      <SidebarFooterButton tone="ghost" href="/snippets">
+      <SidebarFooterButton tone="ghost" href="/moments">
         查看更多
       </SidebarFooterButton>,
     );
     const link = screen.getByRole("link", { name: "查看更多" });
-    expect(link.getAttribute("href")).toBe("/snippets");
+    expect(link.getAttribute("href")).toBe("/moments");
   });
 
   it("透传自定义 className", () => {

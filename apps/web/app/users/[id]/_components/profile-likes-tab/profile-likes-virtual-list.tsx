@@ -5,10 +5,7 @@ import { Virtuoso } from "react-virtuoso";
 import type { UserLikedContentItemResp } from "@repo/api";
 import { Button } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
-import {
-  SnippetEndReached,
-  SnippetScrollLoader,
-} from "@/components/snippets/snippet-scroll-loader";
+import { MomentEndReached, MomentScrollLoader } from "@/components/moments/moment-scroll-loader";
 import { LikedContentCard } from "./liked-content-card";
 
 const ESTIMATED_ITEM_HEIGHT = 148;
@@ -39,7 +36,7 @@ export function ProfileLikesVirtualList({
 
   const ListFooter = useCallback(() => {
     if (loading) {
-      return <SnippetScrollLoader />;
+      return <MomentScrollLoader />;
     }
     if (fetchError) {
       return (
@@ -59,7 +56,7 @@ export function ProfileLikesVirtualList({
       );
     }
     if (!hasMore) {
-      return <SnippetEndReached />;
+      return <MomentEndReached />;
     }
     return null;
   }, [fetchError, hasMore, loading, onRetryLoadMore]);

@@ -11,11 +11,11 @@ import type {
 } from "@repo/api";
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
-import { useSnippetModal } from "@/store/use-snippet-modal";
+import { useMomentModal } from "@/store/use-moment-modal";
 import { addToast } from "@/lib/toast";
 import { apiForm, apiJson, ApiClientError, getApiErrorMessage } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
-import type { SnippetImageItem } from "@/components/snippets/types";
+import type { MomentImageItem } from "@/components/moments/types";
 
 export type MomentTab = "all" | "owner" | "friends";
 export type MomentSort = "latest" | "popular";
@@ -96,8 +96,8 @@ export function useMomentList({
 }: UseMomentListOptions) {
   const { userId: sessionUserId } = useSession();
   const { open: openLoginModal } = useLoginModal();
-  const publishCount = useSnippetModal((s) => s.publishCount);
-  const lastPublishedUserId = useSnippetModal((s) => s.lastPublishedUserId);
+  const publishCount = useMomentModal((s) => s.publishCount);
+  const lastPublishedUserId = useMomentModal((s) => s.lastPublishedUserId);
 
   const [activeTab, setActiveTab] = useState<MomentTab>(initialTab);
   const [activeSort, setActiveSort] = useState<MomentSort>(initialSort);
@@ -276,23 +276,23 @@ export function useMomentList({
   ]);
 
   const toggleLike = useCallback(
-    async (snippet: MomentItemResp) => {
+    async (moment: MomentItemResp) => {
       if (sessionUserId == null) {
         openLoginModal();
         return;
       }
-      if (pendingLikeIdsRef.current.has(snippet.id)) {
+      if (pendingLikeIdsRef.current.has(moment.id)) {
         return;
       }
 
-      setPendingLikeIds((current) => new Set([...current, snippet.id]));
+      setPendingLikeIds((current) => new Set([...current, moment.id]));
       try {
-        const data = await apiJson<MomentLikeResp>(`/api/moments/${snippet.id}/like`, {
+        const data = await apiJson<MomentLikeResp>(`/api/moments/${moment.id}/like`, {
           method: "POST",
         });
         setMoments((current) =>
           current.map((item) =>
-            item.id === snippet.id
+            item.id === moment.id
               ? { ...item, is_liked: data.is_liked, like_count: data.like_count }
               : item,
           ),
@@ -305,14 +305,14 @@ export function useMomentList({
         addToast(
           getApiErrorMessage(
             err,
-            snippet.is_liked ? "取消点赞失败，请稍后重试" : "点赞失败，请稍后重试",
+            moment.is_liked ? "取消点赞失败，请稍后重试" : "点赞失败，请稍后重试",
           ),
           "error",
         );
       } finally {
         setPendingLikeIds((current) => {
           const next = new Set(current);
-          next.delete(snippet.id);
+          next.delete(moment.id);
           return next;
         });
       }
@@ -321,18 +321,18 @@ export function useMomentList({
   );
 
   const updateMoment = useCallback(
-    async (snippet: MomentItemResp, content: string, images: SnippetImageItem[]) => {
-      if (pendingActionIdsRef.current.has(snippet.id)) {
-        return snippet;
+    async (moment: MomentItemResp, content: string, images: MomentImageItem[]) => {
+      if (pendingActionIdsRef.current.has(moment.id)) {
+        return moment;
       }
 
-      setPendingActionIds((current) => new Set([...current, snippet.id]));
+      setPendingActionIds((current) => new Set([...current, moment.id]));
       try {
         const form = new FormData();
-        form.append("id", String(snippet.id));
+        form.append("id", String(moment.id));
         form.append("content", content);
-        form.append("status", String(snippet.status));
-        form.append("comment_status", String(snippet.comment_status));
+        form.append("status", String(moment.status));
+        form.append("comment_status", String(moment.comment_status));
 
         images.forEach((image) => {
           if (image.file) {
@@ -346,7 +346,7 @@ export function useMomentList({
 
         const updated = await apiForm<MomentItemResp>("/api/moments", form, { method: "POST" });
         setMoments((current) =>
-          current.map((item) => (item.id === snippet.id ? { ...item, ...updated } : item)),
+          current.map((item) => (item.id === moment.id ? { ...item, ...updated } : item)),
         );
         addToast("碎语已更新", "success");
         return updated;
@@ -360,7 +360,7 @@ export function useMomentList({
       } finally {
         setPendingActionIds((current) => {
           const next = new Set(current);
-          next.delete(snippet.id);
+          next.delete(moment.id);
           return next;
         });
       }
@@ -369,18 +369,18 @@ export function useMomentList({
   );
 
   const toggleTop = useCallback(
-    async (snippet: MomentItemResp) => {
-      if (pendingActionIdsRef.current.has(snippet.id)) {
+    async (moment: MomentItemResp) => {
+      if (pendingActionIdsRef.current.has(moment.id)) {
         return;
       }
 
-      setPendingActionIds((current) => new Set([...current, snippet.id]));
+      setPendingActionIds((current) => new Set([...current, moment.id]));
       try {
-        const data = await apiJson<MomentTopResp>(`/api/moments/${snippet.id}/top`, {
-          method: snippet.is_top ? "DELETE" : "POST",
+        const data = await apiJson<MomentTopResp>(`/api/moments/${moment.id}/top`, {
+          method: moment.is_top ? "DELETE" : "POST",
         });
         setMoments((current) =>
-          current.map((item) => (item.id === snippet.id ? { ...item, is_top: data.is_top } : item)),
+          current.map((item) => (item.id === moment.id ? { ...item, is_top: data.is_top } : item)),
         );
         addToast(data.is_top ? "已置顶" : "已取消置顶", "success");
       } catch (err) {
@@ -391,14 +391,14 @@ export function useMomentList({
         addToast(
           getApiErrorMessage(
             err,
-            snippet.is_top ? "取消置顶失败，请稍后重试" : "置顶失败，请稍后重试",
+            moment.is_top ? "取消置顶失败，请稍后重试" : "置顶失败，请稍后重试",
           ),
           "error",
         );
       } finally {
         setPendingActionIds((current) => {
           const next = new Set(current);
-          next.delete(snippet.id);
+          next.delete(moment.id);
           return next;
         });
       }
@@ -407,15 +407,15 @@ export function useMomentList({
   );
 
   const deleteMoment = useCallback(
-    async (snippet: MomentItemResp) => {
-      if (pendingActionIdsRef.current.has(snippet.id)) {
+    async (moment: MomentItemResp) => {
+      if (pendingActionIdsRef.current.has(moment.id)) {
         return;
       }
 
-      setPendingActionIds((current) => new Set([...current, snippet.id]));
+      setPendingActionIds((current) => new Set([...current, moment.id]));
       try {
-        await apiJson<MomentDeleteResp>(`/api/moments/${snippet.id}`, { method: "DELETE" });
-        setMoments((current) => current.filter((item) => item.id !== snippet.id));
+        await apiJson<MomentDeleteResp>(`/api/moments/${moment.id}`, { method: "DELETE" });
+        setMoments((current) => current.filter((item) => item.id !== moment.id));
         setPageData((current) => ({ ...current, total: Math.max(0, current.total - 1) }));
         addToast("碎语已删除", "success");
       } catch (err) {
@@ -428,7 +428,7 @@ export function useMomentList({
       } finally {
         setPendingActionIds((current) => {
           const next = new Set(current);
-          next.delete(snippet.id);
+          next.delete(moment.id);
           return next;
         });
       }

@@ -17,7 +17,7 @@ export function matchNavbarRoute(pathname: string): NavbarRouteMatch {
     return { mobileVariant: "home", title: undefined };
   }
 
-  if (pathname === "/snippets") {
+  if (pathname === "/moments") {
     return { mobileVariant: "home", title: undefined };
   }
 

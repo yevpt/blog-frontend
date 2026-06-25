@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "首页",
-    "snippets": "碎语",
+    "moments": "碎语",
     "guestbook": "留言",
     "friends": "友邻",
     "circle": "圈子"
@@ -13,10 +13,10 @@
   "home": {
     "featured": "推荐文章",
     "articles": "文章",
-    "snippets": "碎语",
+    "moments": "碎语",
     "recentVisitors": "最近来访",
     "tags": "标签",
-    "postSnippet": "发表碎语",
+    "postMoment": "发表碎语",
     "viewMore": "查看更多",
     "joinQQ": "入驻 QQ 群"
   },
@@ -28,7 +28,7 @@
     "allCategories": "全部",
     "searchPlaceholder": "搜索文章..."
   },
-  "snippet": {
+  "moment": {
     "expand": "展开",
     "collapse": "收起",
     "like": "喜欢",

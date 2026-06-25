@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { SvgIcon } from "@repo/icons";
 import { Button, cn } from "@repo/ui";
 import { UserAvatar } from "@/components/common/user-avatar";
-import { useSnippetModal } from "@/store/use-snippet-modal";
+import { useMomentModal } from "@/store/use-moment-modal";
 import { useSession } from "@/app/providers/session-provider";
 
 interface NavbarUserMenuProps {
@@ -21,7 +21,7 @@ export function NavbarUserMenu({ isGlass = false, unreadCount = 0 }: NavbarUserM
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const { open: openSnippetModal } = useSnippetModal();
+  const { open: openMomentModal } = useMomentModal();
   const { userId, profile } = useSession();
 
   const displayName = profile?.nickname ?? profile?.username ?? "";
@@ -116,7 +116,7 @@ export function NavbarUserMenu({ isGlass = false, unreadCount = 0 }: NavbarUserM
           size={null}
           onPress={() => {
             setOpen(false);
-            openSnippetModal();
+            openMomentModal();
           }}
           className="flex h-auto w-full cursor-pointer items-center justify-start gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-foreground/[0.05]"
         >

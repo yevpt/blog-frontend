@@ -15,7 +15,7 @@ import {
 
 describe("getNestedValue", () => {
   const messages = {
-    nav: { home: "首页", snippets: "碎语" },
+    nav: { home: "首页", moments: "碎语" },
     auth: { login: "登录" },
     flat: "直接值",
   };
@@ -59,7 +59,7 @@ describe("useLocale（默认 Context）", () => {
 describe("useLocale（通过 LocaleContext.Provider 注入）", () => {
   // 模拟中文 messages
   const zhMessages = {
-    nav: { home: "首页", snippets: "碎语" },
+    nav: { home: "首页", moments: "碎语" },
     auth: { login: "登录" },
   };
 

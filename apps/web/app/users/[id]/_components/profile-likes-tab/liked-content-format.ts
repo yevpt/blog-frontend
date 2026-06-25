@@ -54,7 +54,7 @@ export function getLikedContentRootHref(item: UserLikedContentItemResp): string 
     if (item.content.deleted) {
       return null;
     }
-    return "/snippets";
+    return "/moments";
   }
 
   if (item.kind === "guestbook") {
@@ -73,7 +73,7 @@ export function getLikedContentRootHref(item: UserLikedContentItemResp): string 
     return `/articles/${root.id}${buildCommentAnchor(item.content.id)}`;
   }
   if (root.kind === "moment") {
-    return "/snippets";
+    return "/moments";
   }
   return "/guestbook";
 }

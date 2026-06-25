@@ -125,7 +125,7 @@ describe("NotificationProvider", () => {
     const toast = await screen.findByRole("button", { name: /新的碎语回复/ });
     await userEvent.click(toast);
 
-    expect(mockPush).toHaveBeenCalledWith("/snippets");
+    expect(mockPush).toHaveBeenCalledWith("/moments");
   });
 
   it("未登录时重置未读数且不建立 SSE", () => {
