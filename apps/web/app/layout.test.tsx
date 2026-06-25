@@ -6,12 +6,6 @@ vi.mock("next/headers", () => ({
   cookies: vi.fn().mockResolvedValue({ get: vi.fn() }),
 }));
 
-vi.mock("next/script", () => ({
-  default: function NextScriptMock(props: { id?: string; strategy?: string }) {
-    return <template data-testid={props.id} data-strategy={props.strategy} />;
-  },
-}));
-
 vi.mock("@repo/icons", () => ({
   SvgSprite: () => null,
 }));
@@ -53,6 +47,7 @@ vi.mock("./providers/global-modals", () => ({
 }));
 
 import RootLayout, { metadata, viewport } from "./layout";
+import { StripExtensionAttrsScript } from "./providers/strip-extension-attrs-script";
 
 type LayoutElementProps = {
   children?: ReactNode;
@@ -105,19 +100,11 @@ describe("RootLayout", () => {
     expect(nav[0]?.props).toMatchObject({ initialUnreadCount: 12 });
   });
 
-  it("使用 next/script 在 hydration 前清除扩展注入属性", async () => {
+  it("在 hydration 前注入清除扩展属性的内联脚本", async () => {
     const layout = await RootLayout({ children: <main /> });
 
-    expect(findElements(layout, (element) => element.type === "script")).toHaveLength(0);
     expect(
-      findElements(
-        layout,
-        (element) =>
-          typeof element.type === "function" &&
-          element.type.name === "NextScriptMock" &&
-          element.props.id === "strip-extension-attrs" &&
-          element.props.strategy === "beforeInteractive",
-      ),
+      findElements(layout, (element) => element.type === StripExtensionAttrsScript),
     ).toHaveLength(1);
   });
 });

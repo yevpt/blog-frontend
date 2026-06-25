@@ -1,14 +1,13 @@
 import type { ReactNode } from "react";
 import { cookies } from "next/headers";
-import Script from "next/script";
 import { SvgSprite } from "@repo/icons";
 import { SiteFooter } from "@/components/footer";
 import { SiteNavbar } from "@/components/navbar";
 import { getSession } from "@/lib/session";
 import { createServerApiClient } from "@/lib/server-api";
-import { STRIP_EXTENSION_ATTRS_SCRIPT } from "@/lib/strip-extension-attrs";
 import { THEME_CRITICAL_CSS } from "@/lib/theme-init";
 import { ThemeProvider } from "./providers/theme-provider";
+import { StripExtensionAttrsScript } from "./providers/strip-extension-attrs-script";
 import { LocaleProvider } from "./providers/locale-provider";
 import { SessionProvider } from "./providers/session-provider";
 import { GlobalModals } from "./providers/global-modals";
@@ -79,11 +78,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         {/* 关键内联样式：外部 CSS 加载前防止背景闪烁 */}
         <style dangerouslySetInnerHTML={{ __html: THEME_CRITICAL_CSS }} />
         {/* hydration 前清除扩展注入 attribute，见 lib/strip-extension-attrs.ts */}
-        <Script
-          id="strip-extension-attrs"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: STRIP_EXTENSION_ATTRS_SCRIPT }}
-        />
+        <StripExtensionAttrsScript />
       </head>
       <body>
         <ThemeProvider>

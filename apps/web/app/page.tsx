@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { tags } from "./_mock/tags";
 import type {
   ArticleListItemResp,
   ArticlePageResp,
   CategoryTabsResp,
   MomentPageResp,
+  TagListResp,
   UserPageResp,
 } from "@repo/api";
 import type { FeaturedPost } from "./_mock/types";
@@ -31,6 +31,7 @@ const EMPTY_RECOMMENDED_PAGE: ArticlePageResp = {
 const EMPTY_CATEGORIES: CategoryTabsResp = { list: [] };
 const EMPTY_MOMENTS: MomentPageResp = { total: 0, pages: 0, page: 1, page_size: 3, list: [] };
 const EMPTY_USERS: UserPageResp = { total: 0, pages: 0, page: 1, page_size: 9, list: [] };
+const EMPTY_TAGS: TagListResp = { list: [] };
 
 function toFeaturedPost(article: ArticleListItemResp): FeaturedPost | null {
   if (!article.cover_img_url) return null;
@@ -48,7 +49,7 @@ function toFeaturedPost(article: ArticleListItemResp): FeaturedPost | null {
 
 export default async function Home() {
   const api = await createServerApiClient();
-  const [categoriesResp, initialPage, recommendedPage, momentsPage, recentUsersPage] =
+  const [categoriesResp, initialPage, recommendedPage, momentsPage, recentUsersPage, tagsResp] =
     await Promise.all([
       api.categories.listTabs().catch(() => EMPTY_CATEGORIES),
       api.articles.listPublic({ page: 1 }).catch(() => EMPTY_PAGE),
@@ -59,6 +60,7 @@ export default async function Home() {
         .listPublic({ page: 1, page_size: 3, user_id: Number(process.env.BLOG_USER_ID) })
         .catch(() => EMPTY_MOMENTS),
       api.users.listRecent({ page: 1, page_size: 9 }).catch(() => EMPTY_USERS),
+      api.tags.list().catch(() => EMPTY_TAGS),
     ]);
   const recommendedPosts = recommendedPage.list
     .map(toFeaturedPost)
@@ -87,7 +89,7 @@ export default async function Home() {
                 ownerUserId={Number(process.env.BLOG_USER_ID) || undefined}
               />
               <RecentVisitors visitors={recentVisitors} />
-              <TagsCloud tags={tags} />
+              <TagsCloud tags={tagsResp.list} />
             </>
           }
         />

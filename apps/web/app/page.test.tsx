@@ -9,6 +9,7 @@ const homePageMockState = vi.hoisted(() => {
   const featuredCarousel = vi.fn();
   const listMomentsPublic = vi.fn();
   const listRecentUsers = vi.fn();
+  const listTags = vi.fn();
 
   return {
     listPublic,
@@ -16,6 +17,7 @@ const homePageMockState = vi.hoisted(() => {
     featuredCarousel,
     listMomentsPublic,
     listRecentUsers,
+    listTags,
   };
 });
 
@@ -64,6 +66,9 @@ vi.mock("@/lib/server-api", () => ({
     users: {
       listRecent: homePageMockState.listRecentUsers,
     },
+    tags: {
+      list: homePageMockState.listTags,
+    },
   }),
 }));
 
@@ -73,6 +78,8 @@ describe("Home page", () => {
     homePageMockState.listTabs.mockReset();
     homePageMockState.listMomentsPublic.mockReset();
     homePageMockState.featuredCarousel.mockReset();
+    homePageMockState.listRecentUsers.mockReset();
+    homePageMockState.listTags.mockReset();
 
     homePageMockState.listPublic.mockResolvedValue({
       total: 0,
@@ -96,6 +103,7 @@ describe("Home page", () => {
       page_size: 9,
       list: [],
     });
+    homePageMockState.listTags.mockResolvedValue({ list: [] });
   });
 
   it("渲染不崩溃", async () => {
@@ -185,6 +193,7 @@ describe("Home page", () => {
       page: 1,
       page_size: 9,
     });
+    expect(homePageMockState.listTags).toHaveBeenCalledOnce();
   });
 
   it("推荐轮播位于页面内容容器之前，形成首屏 Hero", async () => {
