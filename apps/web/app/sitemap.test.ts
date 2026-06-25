@@ -48,7 +48,7 @@ describe("sitemap metadata route", () => {
       total: 2,
       pages: 1,
       page: 1,
-      page_size: 100,
+      page_size: 50,
       list: [
         {
           id: 1,
@@ -80,16 +80,17 @@ describe("sitemap metadata route", () => {
         },
       ],
     };
-    sitemapMockState.listPublic.mockResolvedValue(page);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => page,
+      }),
+    );
 
     const entries = await sitemap();
 
-    expect(sitemapMockState.listPublic).toHaveBeenCalledWith({
-      page: 1,
-      page_size: 100,
-      sort_by: "updated_at",
-      sort_order: "desc",
-    });
+    expect(sitemapMockState.listPublic).not.toHaveBeenCalled();
     expect(entries).toEqual([
       {
         url: "https://example.com/",
@@ -136,14 +137,13 @@ describe("sitemap metadata route", () => {
     ]);
   });
 
-  it("后端直连失败时回退到公开 articles API", async () => {
+  it("优先使用公开 articles API 生成文章 URL", async () => {
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://example.com");
-    sitemapMockState.listPublic.mockRejectedValue(new Error("backend unavailable"));
     const page: ArticlePageResp = {
       total: 1,
       pages: 1,
       page: 1,
-      page_size: 100,
+      page_size: 50,
       list: [
         {
           id: 52,
@@ -169,13 +169,62 @@ describe("sitemap metadata route", () => {
 
     const entries = await sitemap();
 
+    expect(sitemapMockState.listPublic).not.toHaveBeenCalled();
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://example.com/api/articles?page=1&page_size=100&sort_by=updated_at&sort_order=desc",
+      "https://example.com/api/articles?page=1&page_size=50&sort_by=updated_at&sort_order=desc",
       { method: "GET" },
     );
     expect(entries).toContainEqual({
       url: "https://example.com/articles/52",
       lastModified: new Date("2021-06-24T16:56:42+08:00"),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    });
+  });
+
+  it("公开 articles API 失败时回退到后端直连", async () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://example.com");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({ error: "failed" }),
+      }),
+    );
+    sitemapMockState.listPublic.mockResolvedValue({
+      total: 1,
+      pages: 1,
+      page: 1,
+      page_size: 50,
+      list: [
+        {
+          id: 50,
+          title: "后端文章",
+          user_id: 1,
+          status: 1,
+          comment_status: 1,
+          read_count: 0,
+          like_count: 0,
+          is_liked: false,
+          comment_count: 0,
+          is_recommended: false,
+          created_at: "2020-12-17T14:37:06+08:00",
+          updated_at: "2021-01-14T09:52:15+08:00",
+        },
+      ],
+    });
+
+    const entries = await sitemap();
+
+    expect(sitemapMockState.listPublic).toHaveBeenCalledWith({
+      page: 1,
+      page_size: 50,
+      sort_by: "updated_at",
+      sort_order: "desc",
+    });
+    expect(entries).toContainEqual({
+      url: "https://example.com/articles/50",
+      lastModified: new Date("2021-01-14T09:52:15+08:00"),
       changeFrequency: "weekly",
       priority: 0.8,
     });

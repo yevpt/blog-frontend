@@ -5,7 +5,7 @@ import { getCanonicalUrl } from "@/lib/seo";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const ARTICLE_PAGE_SIZE = 100;
+const ARTICLE_PAGE_SIZE = 50;
 
 const STATIC_ROUTES: Array<{
   path: string;
@@ -21,15 +21,24 @@ const STATIC_ROUTES: Array<{
 
 async function fetchPublicArticles(): Promise<ArticleListItemResp[]> {
   try {
-    return await fetchPublicArticlesFromBackend();
+    return await fetchPublicArticlesFromPublicApi();
   } catch {
     try {
-      return await fetchPublicArticlesFromPublicApi();
+      return await fetchPublicArticlesFromBackend();
     } catch {
       return [];
     }
   }
 }
+
+function getPublicApiBaseUrl(): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (appUrl) return appUrl.replace(/\/+$/, "");
+  return process.env.NODE_ENV === "production"
+    ? getCanonicalUrl("/").origin
+    : "http://localhost:3000";
+}
+
 async function fetchPublicArticlesFromBackend(): Promise<ArticleListItemResp[]> {
   const api = createApiClient({
     baseUrl: process.env.API_BASE_URL!,
@@ -49,7 +58,7 @@ async function fetchPublicArticlesFromBackend(): Promise<ArticleListItemResp[]> 
 
 async function fetchPublicArticlesFromPublicApi(): Promise<ArticleListItemResp[]> {
   const loadPage = async (page: number) => {
-    const url = getCanonicalUrl("/api/articles");
+    const url = new URL("/api/articles", `${getPublicApiBaseUrl()}/`);
     url.searchParams.set("page", String(page));
     url.searchParams.set("page_size", String(ARTICLE_PAGE_SIZE));
     url.searchParams.set("sort_by", "updated_at");
