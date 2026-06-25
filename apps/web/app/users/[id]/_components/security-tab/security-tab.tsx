@@ -7,18 +7,41 @@ import { SecurityList, type SecurityAction } from "./security-list";
 import { UsernameSheet } from "./username-sheet";
 import { EmailSheet } from "./email-sheet";
 import { PasswordSheet } from "./password-sheet";
+import { UnbindConfirm } from "./unbind-confirm";
+import { addToast } from "@/lib/toast";
 
 interface SecurityTabProps {
   userId: number;
 }
 
-export function SecurityTab({ userId: _userId }: SecurityTabProps) {
+export function SecurityTab({ userId }: SecurityTabProps) {
   const { data, loading, error, reload } = useAccountSecurity();
   const router = useRouter();
-  // 当前打开的 Sheet；username / email 已接入，其余 action 仍占位
+  // 当前打开的 Sheet
   const [usernameOpen, setUsernameOpen] = useState(false);
   const [emailTarget, setEmailTarget] = useState<"main" | "sub" | null>(null);
   const [passwordOpen, setPasswordOpen] = useState(false);
+  // 待解绑平台 source，null 表示确认框关闭
+  const [unbindSource, setUnbindSource] = useState<string | null>(null);
+
+  // 发起绑定：取后端授权地址后整页跳转第三方授权页（回跳定位至安全 Tab）。
+  // 该 authorize 代理路由不解包，故按信封读 data.authorize_url。
+  async function startBind(source: string) {
+    const redirectUri = `${window.location.origin}/users/${userId}?tab=security`;
+    try {
+      const res = await fetch(
+        `/api/oauth/${source}/authorize?action=bind&redirect_uri=${encodeURIComponent(redirectUri)}`,
+      );
+      const d = await res.json();
+      if (d.code === 0 && d.data?.authorize_url) {
+        window.location.href = d.data.authorize_url;
+        return;
+      }
+      addToast(d.message ?? "获取授权地址失败", "error");
+    } catch {
+      addToast("网络异常，请稍后重试", "error");
+    }
+  }
 
   function dispatch(action: SecurityAction) {
     if (action.type === "username") {
@@ -33,8 +56,21 @@ export function SecurityTab({ userId: _userId }: SecurityTabProps) {
       setPasswordOpen(true);
       return;
     }
-    // Task 8–10 接入其余 Sheet，暂占位记录
-    console.warn("[SecurityTab] action 暂未接入", action);
+    if (action.type === "bind") {
+      void startBind(action.source);
+      return;
+    }
+    if (action.type === "unbind") {
+      setUnbindSource(action.source);
+      return;
+    }
+    // display 由 SecurityList 内部直接处理，此处无需分支
+  }
+
+  // 解绑成功后关闭确认框并刷新数据
+  function handleUnbindSuccess() {
+    setUnbindSource(null);
+    void reload();
   }
 
   // 邮箱换绑/添加成功后关闭 Sheet 并刷新数据
@@ -110,6 +146,12 @@ export function SecurityTab({ userId: _userId }: SecurityTabProps) {
         mainEmail={data.mainEmail}
         onClose={() => setPasswordOpen(false)}
         onSuccess={() => void handlePasswordSuccess()}
+      />
+      <UnbindConfirm
+        open={unbindSource !== null}
+        source={unbindSource ?? ""}
+        onClose={() => setUnbindSource(null)}
+        onSuccess={handleUnbindSuccess}
       />
     </>
   );

@@ -109,6 +109,56 @@ describe("SecurityTab", () => {
     await waitFor(() => expect(mockRefresh).toHaveBeenCalled());
   });
 
+  it("点未绑定平台「绑定」取授权地址并整页跳转", async () => {
+    const user = userEvent.setup();
+    // 复用按 path 分发的 apiJson；fetch 在 authorize 时返回 authorize_url 信封
+    const origin = "http://localhost";
+    const hrefSetter = vi.fn();
+    Object.defineProperty(window, "location", {
+      value: {
+        origin,
+        set href(v: string) {
+          hrefSetter(v);
+        },
+      },
+      writable: true,
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) => {
+        if (typeof url === "string" && url.includes("/authorize")) {
+          return Promise.resolve({
+            json: () => Promise.resolve({ code: 0, data: { authorize_url: "https://auth/x" } }),
+          });
+        }
+        return Promise.resolve({
+          json: () => Promise.resolve({ code: 0, data: ["github", "qq"] }),
+        });
+      }),
+    );
+
+    render(<SecurityTab userId={1} />);
+    await user.click(await screen.findByRole("button", { name: "绑定 QQ" }));
+
+    await waitFor(() =>
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "/api/oauth/qq/authorize?action=bind&redirect_uri=" +
+            encodeURIComponent(`${origin}/users/1?tab=security`),
+        ),
+      ),
+    );
+    await waitFor(() => expect(hrefSetter).toHaveBeenCalledWith("https://auth/x"));
+  });
+
+  it("点已绑定平台「解绑」打开确认框", async () => {
+    const user = userEvent.setup();
+    render(<SecurityTab userId={1} />);
+    await user.click(await screen.findByRole("button", { name: "解绑 GitHub" }));
+    // 确认框出现「解绑」操作按钮
+    expect(await screen.findByText("解绑 GitHub？")).toBeInTheDocument();
+  });
+
   it("取数失败时显示错误与重试", async () => {
     apiJson.mockRejectedValue(new Error("boom"));
     render(<SecurityTab userId={1} />);
