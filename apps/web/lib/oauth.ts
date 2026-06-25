@@ -15,3 +15,12 @@ import type { UserResp } from "@repo/api";
 export type OAuthMessage =
   | { type: "oauth_success"; user: UserResp }
   | { type: "oauth_error"; message: string };
+
+/**
+ * 绑定流程暂存「回跳目标」的 sessionStorage 键。
+ *
+ * 为什么不把回跳目标拼进 redirect_uri：QQ/微博/百度 等平台要求 redirect_uri 与注册回调
+ * 「精确一致」，多带 query（如 ?next=…）会被判为非法、导致授权被拒或 token 交换失败。
+ * 绑定走整页跳转、同标签页同源，sessionStorage 在跳转往返中可靠保留，故用它承载回跳目标。
+ */
+export const OAUTH_BIND_REDIRECT_KEY = "oauth_bind_redirect";

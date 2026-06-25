@@ -38,6 +38,8 @@ export interface UserResp {
   id: number;
   username: string;
   email?: string;
+  /** 主邮箱是否已验证；旧用户缺省视为 false */
+  email_verified?: boolean;
   nickname?: string;
   roles?: string[];
 }

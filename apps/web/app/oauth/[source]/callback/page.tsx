@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import type { UserResp } from "@repo/api";
-import type { OAuthMessage } from "@/lib/oauth";
+import { OAUTH_BIND_REDIRECT_KEY, type OAuthMessage } from "@/lib/oauth";
 
 interface OAuthCallbackResult {
   code?: number;
@@ -78,7 +78,13 @@ function OAuthCallbackContent() {
           notify({ type: "oauth_error", message: data.message ?? "登录失败，请稍后重试" });
         } else {
           if (data.data?.action === "bind") {
-            router.replace(safeRedirectPath(data.data.redirect_uri ?? searchParams.get("next")));
+            // 回跳目标优先取 sessionStorage（startBind 暂存，避免污染 redirect_uri）；
+            // 兼容保留 redirect_uri / next 回退，供其它发起方使用。
+            const stored = sessionStorage.getItem(OAUTH_BIND_REDIRECT_KEY);
+            sessionStorage.removeItem(OAUTH_BIND_REDIRECT_KEY);
+            router.replace(
+              safeRedirectPath(stored ?? data.data.redirect_uri ?? searchParams.get("next")),
+            );
             return;
           }
           const user = data.data?.user;

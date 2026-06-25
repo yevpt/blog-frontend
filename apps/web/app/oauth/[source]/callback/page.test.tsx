@@ -120,6 +120,23 @@ describe("OAuth 回调接收页", () => {
     expect(mockPostMessage).not.toHaveBeenCalled();
   });
 
+  it("绑定成功优先使用 sessionStorage 暂存的回跳目标，并清除它", async () => {
+    Object.defineProperty(window, "opener", { writable: true, value: null });
+    // redirect_uri 为裸地址，平台回跳不带 next，回跳目标只在 sessionStorage 里
+    sessionStorage.setItem("oauth_bind_redirect", "/users/9?tab=security");
+    const params = new URLSearchParams("code=abc&state=xyz");
+    vi.mocked(useSearchParams).mockReturnValue(params as ReturnType<typeof useSearchParams>);
+
+    vi.mocked(global.fetch).mockResolvedValue({
+      json: () => Promise.resolve({ code: 0, data: { action: "bind" } }),
+    } as Response);
+
+    render(<OAuthCallbackPage />);
+
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/users/9?tab=security"));
+    expect(sessionStorage.getItem("oauth_bind_redirect")).toBeNull();
+  });
+
   it("缺少 code 或 state 时，直接发送错误消息", async () => {
     const emptyParams = new URLSearchParams("");
     vi.mocked(useSearchParams).mockReturnValue(emptyParams as ReturnType<typeof useSearchParams>);
