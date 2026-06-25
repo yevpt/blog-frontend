@@ -22,6 +22,7 @@
     "@repo/icons": "workspace:*",
     "@repo/markdown": "workspace:*",
     "@repo/styles": "workspace:*",
+    "@repo/tracker": "workspace:*",
     "@repo/ui": "workspace:*",
     "@tailwindcss/typography": "^0.5.19",
     "browser-image-compression": "^2.0.2",

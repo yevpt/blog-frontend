@@ -168,6 +168,9 @@ importers:
       '@repo/styles':
         specifier: workspace:*
         version: link:../../packages/styles
+      '@repo/tracker':
+        specifier: workspace:*
+        version: link:../../packages/tracker
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui

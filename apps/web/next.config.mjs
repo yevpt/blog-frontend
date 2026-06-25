@@ -15,6 +15,7 @@ const nextConfig = {
     "@repo/styles",
     "@repo/editor",
     "@repo/markdown",
+    "@repo/tracker",
   ],
   allowedDevOrigins: [...getDevAllowedOrigins(), "www.yevpt.com"],
   images: {

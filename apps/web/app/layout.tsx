@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { SvgSprite } from "@repo/icons";
+import { AnalyticsTracker } from "@repo/tracker/react";
 import { SiteFooter } from "@/components/footer";
 import { SiteNavbar } from "@/components/navbar";
 import { getSession } from "@/lib/session";
@@ -81,6 +82,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <StripExtensionAttrsScript />
       </head>
       <body>
+        <AnalyticsTracker />
         <ThemeProvider>
           <LocaleProvider>
             <SessionProvider userId={session?.userId ?? null} profile={profile}>
