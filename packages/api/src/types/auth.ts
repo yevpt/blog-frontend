@@ -1,4 +1,5 @@
 // packages/api/src/types/auth.ts
+import type { OAuthBindingResp } from "./user";
 
 /** 发送邮箱验证码 */
 export interface SendCodeReq {
@@ -89,11 +90,12 @@ export interface OAuthAuthorizeResp {
 /**
  * OAuth callback 处理响应
  * - action="login" 时 login 字段存在，包含 token 和用户信息
- * - action="bind" 时 binding 字段存在（本次不实现）
+ * - action="bind" 时 binding 字段存在
  */
 export interface OAuthCallbackResp {
   action: "login" | "bind";
   login?: LoginResp;
+  binding?: OAuthBindingResp;
 }
 
 /** POST /auth/password-reset/code */

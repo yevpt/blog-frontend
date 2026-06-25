@@ -42,6 +42,30 @@ describe("GET /api/oauth/[source]/callback", () => {
     expect(setCookieHeader).toContain("HttpOnly");
   });
 
+  it("绑定成功：透传 bind action，不写登录 Cookie", async () => {
+    vi.mocked(global.fetch).mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          code: 0,
+          data: {
+            action: "bind",
+            binding: { source: "github", social_user_id: 1 },
+          },
+        }),
+    } as Response);
+
+    const req = new NextRequest("http://localhost/api/oauth/github/callback?code=abc&state=xyz");
+    const res = await GET(req, { params: Promise.resolve({ source: "github" }) });
+    const body = await res.json();
+
+    expect(body).toEqual({
+      code: 0,
+      message: "ok",
+      data: { action: "bind", binding: { source: "github", social_user_id: 1 } },
+    });
+    expect(res.headers.getSetCookie()).toHaveLength(0);
+  });
+
   it("code 和 state 被正确转发给后端", async () => {
     vi.mocked(global.fetch).mockResolvedValue({
       json: () =>

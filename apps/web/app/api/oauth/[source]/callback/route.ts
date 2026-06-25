@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import type { OAuthCallbackResp } from "@repo/api";
 
 /**
  * GET /api/oauth/[source]/callback
@@ -38,8 +39,18 @@ export async function GET(
       return NextResponse.json(data);
     }
 
-    // action=login 时 login 字段存在；action=bind 时此字段为空（本版本不处理 bind）
-    const loginData = data.data?.login;
+    const callbackData = data.data as OAuthCallbackResp | undefined;
+
+    if (callbackData?.action === "bind") {
+      return NextResponse.json({
+        code: 0,
+        message: "ok",
+        data: { action: "bind", binding: callbackData.binding },
+      });
+    }
+
+    // action=login 时 login 字段存在；action=bind 已在上方直接返回
+    const loginData = callbackData?.login;
     if (!loginData) {
       return NextResponse.json({ code: 1, message: "OAuth 回调数据异常" });
     }
