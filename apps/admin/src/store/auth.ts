@@ -1,11 +1,15 @@
 import { create } from "zustand";
 import type { UserResp } from "@repo/api";
 
+type AdminUser = UserResp & {
+  avatar_url?: string;
+};
+
 interface AuthState {
   accessToken: string | null;
-  user: UserResp | null;
+  user: AdminUser | null;
   setAccessToken: (token: string) => void;
-  setUser: (user: UserResp) => void;
+  setUser: (user: AdminUser) => void;
   logout: () => void;
 }
 
