@@ -1,0 +1,35 @@
+{
+  "name": "@repo/tracker",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./react": {
+      "types": "./src/react.tsx",
+      "import": "./src/react.tsx"
+    }
+  },
+  "scripts": {
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix"
+  },
+  "peerDependencies": {
+    "next": "*",
+    "react": "*"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@testing-library/react": "^16.3.2",
+    "next": "^16.2.6",
+    "react": "^19.0.0",
+    "vitest": "^4.1.7"
+  }
+}
