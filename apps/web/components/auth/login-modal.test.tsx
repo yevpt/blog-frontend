@@ -84,6 +84,26 @@ describe("LoginModal", () => {
     expect(useLoginModal.getState().view).toBe("register");
   });
 
+  it("点击「忘记密码？」切换到找回密码视图并预填邮箱", async () => {
+    const user = userEvent.setup();
+    useLoginModal.setState({ isOpen: true, view: "login" });
+    render(<LoginModal />);
+    await user.type(screen.getByPlaceholderText("账号 / 邮箱 / 手机号"), "user@example.com");
+    await user.click(screen.getByRole("button", { name: "忘记密码？" }));
+    expect(useLoginModal.getState().view).toBe("recover");
+    expect(screen.getByRole("heading", { name: "找回密码" })).toBeInTheDocument();
+    expect(screen.getByLabelText("邮箱")).toHaveValue("user@example.com");
+  });
+
+  it("找回密码视图点击「登录」返回登录视图", async () => {
+    const user = userEvent.setup();
+    useLoginModal.setState({ isOpen: true, view: "recover" });
+    render(<LoginModal />);
+    await user.click(screen.getByRole("button", { name: "登录" }));
+    expect(useLoginModal.getState().view).toBe("login");
+    expect(screen.getByText("欢迎回来")).toBeInTheDocument();
+  });
+
   it("登录成功后关闭弹窗并触发 router.refresh", async () => {
     const user = userEvent.setup();
     const mockFetch = vi.fn().mockResolvedValue({

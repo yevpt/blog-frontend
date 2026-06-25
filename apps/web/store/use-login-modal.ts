@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-type ModalView = "login" | "register";
+type ModalView = "login" | "register" | "recover";
 
 interface LoginModalStore {
   isOpen: boolean;

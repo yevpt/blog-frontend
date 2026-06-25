@@ -9,11 +9,13 @@ import { useLoginModal } from "@/store/use-login-modal";
 import { addToast } from "@/lib/toast";
 import { LoginView } from "./login-view";
 import { RegisterView } from "./register-view";
+import { PasswordRecoveryView } from "./password-recovery-view";
 
 export function LoginModal() {
   const { isOpen, view, close, setView } = useLoginModal();
   const router = useRouter();
   const [modalOpen, setModalOpen] = useState(isOpen);
+  const [recoveryEmail, setRecoveryEmail] = useState("");
   const [isPulsing, setIsPulsing] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -81,7 +83,7 @@ export function LoginModal() {
       onBackdropPress={triggerPulse}
       placement="fullscreen-mobile"
       size="md"
-      aria-label={view === "login" ? "登录" : "注册"}
+      aria-label={view === "login" ? "登录" : view === "register" ? "注册" : "找回密码"}
       overlayClassName="z-[400] bg-black/45 backdrop-blur-md"
       positionerClassName={isPulsing ? "animate-modal-pulse" : ""}
       modalClassName="md:max-w-[480px] max-md:overflow-y-auto md:overflow-y-auto"
@@ -106,13 +108,19 @@ export function LoginModal() {
             {view === "login" ? (
               <LoginView
                 onSwitchToRegister={() => setView("register")}
+                onSwitchToRecover={(identifier) => {
+                  setRecoveryEmail(identifier);
+                  setView("recover");
+                }}
                 onSuccess={handleLoginSuccess}
               />
-            ) : (
+            ) : view === "register" ? (
               <RegisterView
                 onSwitchToLogin={() => setView("login")}
                 onSuccess={handleRegisterSuccess}
               />
+            ) : (
+              <PasswordRecoveryView initialEmail={recoveryEmail} onBack={() => setView("login")} />
             )}
           </div>
         </>

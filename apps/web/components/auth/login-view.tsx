@@ -18,10 +18,11 @@ function inputCls(hasError?: boolean) {
 
 interface LoginViewProps {
   onSwitchToRegister: () => void;
+  onSwitchToRecover: (identifier: string) => void;
   onSuccess: (user: UserResp) => void;
 }
 
-export function LoginView({ onSwitchToRegister, onSuccess }: LoginViewProps) {
+export function LoginView({ onSwitchToRegister, onSwitchToRecover, onSuccess }: LoginViewProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -155,6 +156,7 @@ export function LoginView({ onSwitchToRegister, onSuccess }: LoginViewProps) {
             <Button
               type="button"
               variant="ghost"
+              onPress={() => onSwitchToRecover(identifier.trim())}
               className="text-[11.5px] text-muted-foreground/60 transition-colors cursor-pointer hover:text-primary"
             >
               忘记密码？

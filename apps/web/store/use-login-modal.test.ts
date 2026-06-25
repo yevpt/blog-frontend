@@ -37,6 +37,8 @@ describe("useLoginModal", () => {
   it("setView() 切换当前视图", () => {
     useLoginModal.getState().setView("register");
     expect(useLoginModal.getState().view).toBe("register");
+    useLoginModal.getState().setView("recover");
+    expect(useLoginModal.getState().view).toBe("recover");
     useLoginModal.getState().setView("login");
     expect(useLoginModal.getState().view).toBe("login");
   });

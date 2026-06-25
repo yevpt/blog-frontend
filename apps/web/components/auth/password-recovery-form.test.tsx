@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type * as clientFetch from "@/lib/client-fetch";
@@ -82,5 +83,42 @@ describe("PasswordRecoveryForm", () => {
     await user.type(screen.getByLabelText(/新密码/), "short");
 
     expect(screen.getByRole("button", { name: "重置密码" })).toBeDisabled();
+  });
+
+  it("展示未验证邮件提示文案", () => {
+    render(<PasswordRecoveryForm email="a@b.com" onDone={() => {}} />);
+    expect(screen.getByText(/如果未收到邮件，请确认该邮箱已在账号中完成验证/)).toBeInTheDocument();
+  });
+
+  it("emailReadOnly=false 时可编辑邮箱，发码使用更新后的地址", async () => {
+    const user = userEvent.setup();
+
+    function Harness() {
+      const [email, setEmail] = useState("a@b.com");
+      return (
+        <PasswordRecoveryForm
+          email={email}
+          onEmailChange={setEmail}
+          emailReadOnly={false}
+          emailLabel="邮箱"
+          onDone={() => {}}
+        />
+      );
+    }
+
+    render(<Harness />);
+
+    const emailInput = screen.getByLabelText("邮箱");
+    expect(emailInput).not.toHaveAttribute("readonly");
+
+    await user.clear(emailInput);
+    await user.type(emailInput, "new@b.com");
+
+    await capturedOnToken?.("captcha-token-456");
+
+    expect(apiJson).toHaveBeenCalledWith("/api/auth/password-reset/code", {
+      method: "POST",
+      body: JSON.stringify({ email: "new@b.com", captcha_token: "captcha-token-456" }),
+    });
   });
 });
