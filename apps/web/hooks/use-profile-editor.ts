@@ -148,6 +148,10 @@ export function useProfileEditor(initialProfile: UserPublicProfileResp) {
     [patchProfile],
   );
 
+  const updateRoles = useCallback((roles: string[]) => {
+    setProfile((current) => ({ ...current, roles }));
+  }, []);
+
   return {
     profile,
     isOwner,
@@ -158,5 +162,6 @@ export function useProfileEditor(initialProfile: UserPublicProfileResp) {
     saveNickname,
     saveField,
     changeAvatar,
+    updateRoles,
   };
 }

@@ -4,8 +4,13 @@ import userEvent from "@testing-library/user-event";
 import { UserProfilePage } from "./user-profile-page";
 import type { MomentPageResp, UserPublicProfileResp } from "@repo/api";
 
+const sessionState = vi.hoisted(() => ({
+  userId: 1,
+  profile: null as { roles: string[] } | null,
+}));
+
 vi.mock("@/app/providers/session-provider", () => ({
-  useSession: () => ({ userId: 1, profile: null }),
+  useSession: () => ({ userId: sessionState.userId, profile: sessionState.profile }),
 }));
 
 // 进入编辑态后账号安全 Tab 会渲染 SecurityTab（带取数副作用），此处替身以隔离测试。
@@ -23,6 +28,8 @@ vi.mock("next/navigation", () => ({
 
 afterEach(() => {
   mockSearchParams = new URLSearchParams();
+  sessionState.userId = 1;
+  sessionState.profile = null;
 });
 
 const baseProfile: UserPublicProfileResp = {
@@ -108,5 +115,44 @@ describe("UserProfilePage", () => {
     await userEvent.click(screen.getByText("编辑个人资料"));
     await userEvent.click(screen.getByText("退出编辑"));
     expect(screen.getByText("编辑个人资料")).toBeInTheDocument();
+  });
+
+  it("管理员查看他人时显示更多操作", () => {
+    sessionState.userId = 2;
+    sessionState.profile = { roles: ["ROLE_ADMIN"] };
+    render(
+      <UserProfilePage
+        profile={{ ...baseProfile, id: 1 }}
+        initialMomentsPage={emptyMomentsPage}
+        initialLikesCount={0}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "更多操作" })).toBeInTheDocument();
+  });
+
+  it("管理员查看自己时不显示更多操作", () => {
+    sessionState.userId = 1;
+    sessionState.profile = { roles: ["ROLE_ADMIN"] };
+    render(
+      <UserProfilePage
+        profile={baseProfile}
+        initialMomentsPage={emptyMomentsPage}
+        initialLikesCount={0}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "更多操作" })).not.toBeInTheDocument();
+  });
+
+  it("管理员查看 Admin 用户时不显示更多操作", () => {
+    sessionState.userId = 2;
+    sessionState.profile = { roles: ["ROLE_ADMIN"] };
+    render(
+      <UserProfilePage
+        profile={{ ...baseProfile, id: 3, roles: ["ROLE_ADMIN"] }}
+        initialMomentsPage={emptyMomentsPage}
+        initialLikesCount={0}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "更多操作" })).not.toBeInTheDocument();
   });
 });

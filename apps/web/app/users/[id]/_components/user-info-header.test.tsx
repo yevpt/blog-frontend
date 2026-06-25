@@ -4,8 +4,19 @@ import userEvent from "@testing-library/user-event";
 import { UserInfoHeader } from "./user-info-header";
 
 const mockAddToast = vi.fn();
+const mockGrantVip = vi.fn().mockResolvedValue(undefined);
+const mockRevokeVip = vi.fn().mockResolvedValue(undefined);
+
 vi.mock("@/lib/toast", () => ({
   addToast: (...args: unknown[]) => mockAddToast(...args),
+}));
+
+vi.mock("@/hooks/use-admin-vip-role", () => ({
+  useAdminVipRole: () => ({
+    grantVip: mockGrantVip,
+    revokeVip: mockRevokeVip,
+    isPending: false,
+  }),
 }));
 
 vi.mock("@repo/icons", () => ({
@@ -13,6 +24,7 @@ vi.mock("@repo/icons", () => ({
 }));
 
 const baseProps = {
+  userId: 42,
   nickname: "TestUser",
   mark: null,
   description: null,
@@ -22,13 +34,17 @@ const baseProps = {
   socialLinks: [],
   isOwner: false,
   isEditMode: false,
+  canManageVip: false,
   onToggleEditMode: vi.fn(),
   onSaveNickname: vi.fn().mockResolvedValue(undefined),
+  onRolesChange: vi.fn(),
 };
 
 describe("UserInfoHeader", () => {
   beforeEach(() => {
     mockAddToast.mockClear();
+    mockGrantVip.mockClear();
+    mockRevokeVip.mockClear();
   });
 
   it("渲染不崩溃", () => {
@@ -97,5 +113,51 @@ describe("UserInfoHeader", () => {
 
     expect(onAvatarChange).toHaveBeenCalledWith(file);
     expect(mockAddToast).toHaveBeenCalledWith("缺少上传文件", "error");
+  });
+
+  it("canManageVip 为 false 时不显示更多操作", () => {
+    render(<UserInfoHeader {...baseProps} canManageVip={false} />);
+    expect(screen.queryByRole("button", { name: "更多操作" })).not.toBeInTheDocument();
+  });
+
+  it("canManageVip 时显示授予星标认证菜单", async () => {
+    const user = userEvent.setup();
+    render(<UserInfoHeader {...baseProps} canManageVip roles={[]} />);
+    await user.click(screen.getByRole("button", { name: "更多操作" }));
+    expect(screen.getByRole("menuitem", { name: "授予星标认证" })).toBeInTheDocument();
+  });
+
+  it("已是 VIP 时菜单显示取消星标认证", async () => {
+    const user = userEvent.setup();
+    render(<UserInfoHeader {...baseProps} canManageVip roles={["ROLE_VIP"]} />);
+    await user.click(screen.getByRole("button", { name: "更多操作" }));
+    expect(screen.getByRole("menuitem", { name: "取消星标认证" })).toBeInTheDocument();
+  });
+
+  it("授予星标认证需二次确认后才调用接口", async () => {
+    const user = userEvent.setup();
+    const onRolesChange = vi.fn();
+    render(<UserInfoHeader {...baseProps} canManageVip onRolesChange={onRolesChange} />);
+
+    await user.click(screen.getByRole("button", { name: "更多操作" }));
+    await user.click(screen.getByRole("menuitem", { name: "授予星标认证" }));
+    expect(screen.getByText("确定为「TestUser」授予星标认证吗？")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "确定" }));
+    expect(mockGrantVip).toHaveBeenCalled();
+    expect(mockRevokeVip).not.toHaveBeenCalled();
+  });
+
+  it("取消星标认证需二次确认后才调用接口", async () => {
+    const user = userEvent.setup();
+    render(<UserInfoHeader {...baseProps} canManageVip roles={["ROLE_VIP"]} />);
+
+    await user.click(screen.getByRole("button", { name: "更多操作" }));
+    await user.click(screen.getByRole("menuitem", { name: "取消星标认证" }));
+    expect(screen.getByText("确定取消「TestUser」的星标认证吗？")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "确定" }));
+    expect(mockRevokeVip).toHaveBeenCalled();
+    expect(mockGrantVip).not.toHaveBeenCalled();
   });
 });

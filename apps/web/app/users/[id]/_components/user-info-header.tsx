@@ -1,16 +1,19 @@
 "use client";
 
 import { useState, useRef, type ChangeEvent } from "react";
-import { Card, cn } from "@repo/ui";
+import type { IconName } from "@repo/icons";
+import { Card, cn, Dropdown, Modal, Button } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import { useHydrated } from "@repo/hooks";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { isAdminUser, isVipUser } from "@/lib/user-roles";
+import { useAdminVipRole } from "@/hooks/use-admin-vip-role";
 import { InlineFieldEditor } from "./inline-field-editor";
 import { formatRelativeTime } from "@/lib/format-time";
 import { addToast } from "@/lib/toast";
 
 interface UserInfoHeaderProps {
+  userId: number;
   nickname: string;
   mark: string | null;
   description: string | null;
@@ -20,11 +23,21 @@ interface UserInfoHeaderProps {
   socialLinks: Array<{ platform: string; url: string }>;
   isOwner: boolean;
   isEditMode: boolean;
+  canManageVip: boolean;
   hasActiveFieldEditing?: boolean;
   onToggleEditMode: () => void;
   onSaveNickname: (value: string) => Promise<void>;
   onAvatarChange?: (file: File) => Promise<void>;
+  onRolesChange: (roles: string[]) => void;
 }
+
+function DropdownIcon({ name }: { name: IconName }) {
+  return function Icon({ className }: { className?: string }) {
+    return <SvgIcon name={name} size={16} className={className} />;
+  };
+}
+
+const vipIcon = DropdownIcon({ name: "vip" });
 
 function getOnlineStatus(lastLoginAt: string | null): { online: boolean; label: string } {
   if (!lastLoginAt) return { online: false, label: "" };
@@ -35,6 +48,7 @@ function getOnlineStatus(lastLoginAt: string | null): { online: boolean; label: 
 }
 
 export function UserInfoHeader({
+  userId,
   nickname,
   mark,
   description,
@@ -44,14 +58,22 @@ export function UserInfoHeader({
   socialLinks: _socialLinks,
   isOwner,
   isEditMode,
+  canManageVip,
   hasActiveFieldEditing = false,
   onToggleEditMode,
   onSaveNickname,
   onAvatarChange,
+  onRolesChange,
 }: UserInfoHeaderProps) {
   const hydrated = useHydrated();
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [pendingVipAction, setPendingVipAction] = useState<"grant" | "revoke" | null>(null);
+  const {
+    grantVip,
+    revokeVip,
+    isPending: isVipActionPending,
+  } = useAdminVipRole(userId, onRolesChange);
   const isAnyEditing = isEditingNickname || hasActiveFieldEditing;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -74,18 +96,80 @@ export function UserInfoHeader({
     : { online: false, label: "\u00A0" };
   const isVip = isVipUser(roles);
   const isAdmin = isAdminUser(roles);
+  const vipMenuLabel = isVip ? "取消星标认证" : "授予星标认证";
+
+  async function handleConfirmVipAction() {
+    if (!pendingVipAction) return;
+    try {
+      if (pendingVipAction === "grant") {
+        await grantVip();
+      } else {
+        await revokeVip();
+      }
+      setPendingVipAction(null);
+    } catch {
+      // 错误已在 hook 内 toast
+    }
+  }
 
   return (
     <Card className="relative rounded-2xl px-6 py-8">
-      {/* 三点菜单 — 左上角 */}
-      {isOwner && (
-        <button
-          type="button"
-          aria-label="更多操作"
-          className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/50 transition-colors hover:bg-foreground/[0.06] hover:text-muted-foreground"
-        >
-          <SvgIcon name="dots-vertical" size={20} />
-        </button>
+      {/* 管理员查看他人时显示更多操作 */}
+      {canManageVip && (
+        <>
+          <Dropdown.Root>
+            <Dropdown.DotsButton
+              variant="ghost"
+              aria-label="更多操作"
+              className="absolute left-4 top-4 size-8 p-0 text-muted-foreground/50 hover:bg-foreground/[0.06] hover:text-muted-foreground"
+            />
+            <Dropdown.Popover placement="bottom start" className="min-w-36 w-auto">
+              <Dropdown.Menu
+                aria-label="用户管理"
+                onAction={(key) => {
+                  if (key === "toggle-vip") {
+                    setPendingVipAction(isVip ? "revoke" : "grant");
+                  }
+                }}
+              >
+                <Dropdown.Item id="toggle-vip" label={vipMenuLabel} icon={vipIcon} />
+              </Dropdown.Menu>
+            </Dropdown.Popover>
+          </Dropdown.Root>
+
+          <Modal
+            isOpen={pendingVipAction !== null}
+            onOpenChange={(open) => {
+              if (!open) setPendingVipAction(null);
+            }}
+            isDismissable={!isVipActionPending}
+            size="sm"
+            aria-label="确认星标认证操作"
+          >
+            <div className="p-5">
+              <p className="text-sm leading-6 text-foreground">
+                {pendingVipAction === "grant"
+                  ? `确定为「${nickname}」授予星标认证吗？`
+                  : `确定取消「${nickname}」的星标认证吗？`}
+              </p>
+              <div className="mt-4 flex justify-end gap-2">
+                <Button variant="outline" size="sm" slot="close" isDisabled={isVipActionPending}>
+                  取消
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  isDisabled={isVipActionPending}
+                  onPress={() => {
+                    void handleConfirmVipAction();
+                  }}
+                >
+                  确定
+                </Button>
+              </div>
+            </div>
+          </Modal>
+        </>
       )}
 
       {/* 在线状态 — 右上角；hydration 前占位避免 #418 */}
