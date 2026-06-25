@@ -1,9 +1,9 @@
-import { base } from "@repo/eslint-config/base";
+import { react } from "@repo/eslint-config/react";
 import globals from "globals";
 
 /** @type {import("eslint").Linter.Config[]} */
 export default [
-  ...base,
+  ...react,
   {
     languageOptions: {
       globals: { ...globals.browser },

@@ -4,3 +4,4 @@ export { buildPayload } from "./payload";
 export { sendEvent } from "./transport";
 export { createTracker } from "./tracker";
 export type { Tracker, TrackerDeps } from "./tracker";
+export { createBrowserTracker } from "./browser";
