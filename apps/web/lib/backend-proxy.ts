@@ -151,7 +151,8 @@ export async function proxySseGet(req: NextRequest, path: string): Promise<Respo
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache, no-transform",
-        Connection: "keep-alive",
+        // 不设 Connection：HTTP/2 禁止连接级 header（RFC 9113 §8.2.2），
+        // 否则生产 HTTP/2 下浏览器报 ERR_HTTP2_PROTOCOL_ERROR 中断流
         "X-Accel-Buffering": "no",
       },
     });
