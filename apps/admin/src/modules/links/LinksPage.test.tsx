@@ -5,6 +5,7 @@ import { ToastRegion } from "@repo/ui";
 import { LinksPage } from "./LinksPage";
 import { toastQueue } from "../../lib/toast";
 import { useFriendLinkList } from "./hooks/use-friend-link-list";
+import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
 import type { FriendLinkRow } from "./model";
 
 const mockRows: FriendLinkRow[] = [
@@ -67,6 +68,14 @@ describe("LinksPage", () => {
 
     expect(screen.getByRole("heading", { name: "友链管理" })).toBeInTheDocument();
     expect(screen.getByText("VPT")).toBeInTheDocument();
+  });
+
+  it("移动端列表容器限制在视口宽度内", () => {
+    vi.mocked(useIsMdScreen).mockReturnValue(false);
+
+    renderLinksPage();
+
+    expect(screen.getByRole("region", { name: "友链列表" })).toHaveClass("min-w-0", "max-w-full");
   });
 
   it("空列表时显示空态", () => {

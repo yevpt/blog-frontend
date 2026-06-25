@@ -8,6 +8,7 @@ import {
   type DataTableEmptyState,
   type DataTableState,
 } from "@repo/ui";
+import { AdminPageHeader } from "../../components/AdminPageHeader";
 import { AdminListCard } from "../../components/AdminListCard";
 import { AdminListSummary } from "../../components/AdminListSummary";
 import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
@@ -253,23 +254,19 @@ export function LinksPage() {
   const showSummary = !isLoading && rows.length > 0;
 
   return (
-    <div className="grid min-h-0 gap-4 overflow-hidden md:max-h-[calc(100dvh-6.5rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:-mt-6 lg:max-h-[calc(100dvh-1.5rem)]">
-      <section className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h2 className="text-xl font-semibold tracking-normal text-foreground sm:text-2xl">
-            友链管理
-          </h2>
-          <p className="mt-1 hidden text-sm text-muted-foreground sm:block">
-            管理友情链接、展示状态与排序，同步前台友链页。
-          </p>
-        </div>
-        <Button size="sm" className="w-full shrink-0 sm:w-auto" onPress={openCreateDialog}>
-          <SvgIcon name="plus" size={15} />
-          新建友链
-        </Button>
-      </section>
+    <div className="grid min-h-0 min-w-0 max-w-full gap-4 overflow-hidden md:max-h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:max-h-[calc(100dvh-3.5rem)]">
+      <AdminPageHeader
+        title="友链管理"
+        description="管理友情链接、展示状态与排序，同步前台友链页。"
+        action={
+          <Button size="sm" className="w-full shrink-0 sm:w-auto" onPress={openCreateDialog}>
+            <SvgIcon name="plus" size={15} />
+            新建友链
+          </Button>
+        }
+      />
 
-      <section className="flex min-h-0 flex-col" aria-label="友链列表">
+      <section className="flex min-h-0 min-w-0 max-w-full flex-col" aria-label="友链列表">
         {error ? (
           <p role="alert" className="pb-3 text-sm text-destructive">
             {error.message}
