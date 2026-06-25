@@ -4,7 +4,7 @@ import { apiClient } from "./api";
 import { useAuthStore } from "../store/auth";
 
 vi.mock("./api", () => ({
-  apiClient: { auth: { refresh: vi.fn() } },
+  apiClient: { auth: { refresh: vi.fn() }, users: { getMe: vi.fn() } },
 }));
 
 describe("initSessionFromRefreshToken", () => {
@@ -28,11 +28,25 @@ describe("initSessionFromRefreshToken", () => {
       refresh_token: "new-ref",
       expires_in: 7200,
     });
+    vi.mocked(apiClient.users.getMe).mockResolvedValue({
+      id: 1,
+      username: "admin",
+      nickname: "叶后台",
+      email: "admin@example.com",
+      status: 1,
+      roles: ["admin"],
+    });
 
     await initSessionFromRefreshToken();
 
     expect(apiClient.auth.refresh).toHaveBeenCalledWith({ refresh_token: "old-ref" });
+    expect(apiClient.users.getMe).toHaveBeenCalled();
     expect(useAuthStore.getState().accessToken).toBe("new-acc");
+    expect(useAuthStore.getState().user).toMatchObject({
+      username: "admin",
+      nickname: "叶后台",
+      email: "admin@example.com",
+    });
     expect(localStorage.getItem("refresh_token")).toBe("new-ref");
   });
 
@@ -48,6 +62,12 @@ describe("initSessionFromRefreshToken", () => {
         resolveRefresh = resolve;
       }),
     );
+    vi.mocked(apiClient.users.getMe).mockResolvedValue({
+      id: 1,
+      username: "admin",
+      status: 1,
+      roles: ["admin"],
+    });
 
     const first = initSessionFromRefreshToken();
     const second = initSessionFromRefreshToken();
@@ -68,6 +88,12 @@ describe("initSessionFromRefreshToken", () => {
       access_token: "acc",
       refresh_token: "ref",
       expires_in: 7200,
+    });
+    vi.mocked(apiClient.users.getMe).mockResolvedValue({
+      id: 1,
+      username: "admin",
+      status: 1,
+      roles: ["admin"],
     });
 
     await initSessionFromRefreshToken();

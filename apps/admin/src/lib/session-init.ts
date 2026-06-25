@@ -20,9 +20,11 @@ export function initSessionFromRefreshToken(): Promise<void> {
 
   initPromise = apiClient.auth
     .refresh({ refresh_token: refreshToken })
-    .then((tokens) => {
-      useAuthStore.getState().setAccessToken(tokens.access_token);
+    .then(async (tokens) => {
+      const store = useAuthStore.getState();
+      store.setAccessToken(tokens.access_token);
       localStorage.setItem("refresh_token", tokens.refresh_token);
+      store.setUser(await apiClient.users.getMe());
     })
     .catch(() => {
       initPromise = null;
