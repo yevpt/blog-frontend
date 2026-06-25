@@ -28,12 +28,3 @@ export interface Visitor {
   isOnline: boolean;
   visitedAt: Date;
 }
-
-import type { IconName } from "@repo/icons";
-
-export interface Tag {
-  id: string;
-  name: string;
-  icon: IconName;
-  count: number;
-}
