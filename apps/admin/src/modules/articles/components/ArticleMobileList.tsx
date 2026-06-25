@@ -31,9 +31,17 @@ function ArticleMobileEmptyState({ emptyState }: { emptyState?: DataTableEmptySt
   const title = emptyState?.title ?? "暂无数据";
   const description = emptyState?.description ?? "添加数据后会显示在这里。";
 
+  const icon = emptyState?.icon;
+  const iconNode =
+    icon === false ? null : typeof icon === "string" ? (
+      <SvgIcon name={icon} size={28} className="text-muted-foreground" />
+    ) : (
+      (icon ?? <SvgIcon name="folder" size={28} className="text-muted-foreground" />)
+    );
+
   return (
     <div className="flex flex-col items-center px-6 py-12 text-center">
-      <SvgIcon name={emptyState?.icon ?? "folder"} size={28} className="text-muted-foreground" />
+      {iconNode}
       <p className="mt-4 text-sm font-medium text-foreground">{title}</p>
       <p className="mt-2 max-w-xs text-sm text-muted-foreground">{description}</p>
       {emptyState?.action ? <div className="mt-5">{emptyState.action}</div> : null}

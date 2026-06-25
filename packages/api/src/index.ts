@@ -119,6 +119,10 @@ export type {
   FriendLinkItemResp,
   FriendLinkPageResp,
   FriendLinkListReq,
+  FriendLinkStatus,
+  FriendLinkAdminListReq,
+  FriendLinkCreateReq,
+  FriendLinkUpdateReq,
 } from "./types/friend-link";
 export type {
   NotificationListReq,

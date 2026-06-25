@@ -83,7 +83,14 @@ import type {
   UserLikesCountResp,
   AdminUserRolesResp,
 } from "./types/user";
-import type { FriendLinkListReq, FriendLinkPageResp } from "./types/friend-link";
+import type {
+  FriendLinkAdminListReq,
+  FriendLinkCreateReq,
+  FriendLinkItemResp,
+  FriendLinkListReq,
+  FriendLinkPageResp,
+  FriendLinkUpdateReq,
+} from "./types/friend-link";
 import type {
   NotificationListReq,
   NotificationPageResp,
@@ -685,6 +692,52 @@ export function createApiClient(config: ApiClientConfig) {
           method: "GET",
         });
       },
+      /** 管理端分页查询友链，需管理员登录 */
+      listAdmin: (req: FriendLinkAdminListReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        if (req.status !== undefined) p.set("status", String(req.status));
+        const qs = p.toString();
+        return fetchAuthed<FriendLinkPageResp>(`/admin/friend-links${qs ? `?${qs}` : ""}`, {
+          method: "GET",
+        });
+      },
+      /** 新增友链，需管理员登录；multipart 上传 logo */
+      create: (req: FriendLinkCreateReq) => {
+        const formData = new FormData();
+        formData.append("name", req.name);
+        formData.append("site", req.site);
+        formData.append("seq", String(req.seq));
+        if (req.description !== undefined) formData.append("description", req.description);
+        if (req.email !== undefined) formData.append("email", req.email);
+        if (req.phone !== undefined) formData.append("phone", req.phone);
+        if (req.status !== undefined) formData.append("status", String(req.status));
+        formData.append("logo", req.logo, req.logo.name);
+        return fetchAuthed<FriendLinkItemResp>("/admin/friend-links", {
+          method: "POST",
+          body: formData,
+        });
+      },
+      /** 修改友链，需管理员登录；logo 可选，未传则保留原头像 */
+      update: (id: number, req: FriendLinkUpdateReq) => {
+        const formData = new FormData();
+        if (req.name !== undefined) formData.append("name", req.name);
+        if (req.site !== undefined) formData.append("site", req.site);
+        if (req.seq !== undefined) formData.append("seq", String(req.seq));
+        if (req.description !== undefined) formData.append("description", req.description);
+        if (req.email !== undefined) formData.append("email", req.email);
+        if (req.phone !== undefined) formData.append("phone", req.phone);
+        if (req.status !== undefined) formData.append("status", String(req.status));
+        if (req.logo) formData.append("logo", req.logo, req.logo.name);
+        return fetchAuthed<FriendLinkItemResp>(`/admin/friend-links/${id}`, {
+          method: "PUT",
+          body: formData,
+        });
+      },
+      /** 软删除友链，需管理员登录 */
+      delete: (id: number) =>
+        fetchAuthed<FriendLinkItemResp>(`/admin/friend-links/${id}`, { method: "DELETE" }),
     },
     notifications: {
       /** 查询当前用户未读通知数量，需登录。 */

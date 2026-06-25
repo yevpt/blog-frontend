@@ -1,5 +1,5 @@
 import { SvgIcon } from "@repo/icons";
-import { Badge, cn } from "@repo/ui";
+import { cn } from "@repo/ui";
 
 interface TagPresentationPlaceholderProps {
   iconUrl?: string;
@@ -34,7 +34,10 @@ function AssetSlot({ label, previewUrl, variant }: AssetSlotProps) {
           <img
             src={previewUrl}
             alt=""
-            className={cn("object-cover opacity-70 grayscale", isIcon ? "size-full" : "h-full w-full")}
+            className={cn(
+              "object-cover opacity-70 grayscale",
+              isIcon ? "size-full" : "h-full w-full",
+            )}
           />
         ) : (
           <SvgIcon

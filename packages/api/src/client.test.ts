@@ -1552,4 +1552,78 @@ describe("createApiClient", () => {
     expect((init?.body as FormData).get("scene")).toBe("comment");
     expect((init?.body as FormData).get("dir")).toBe("images");
   });
+
+  it("friendLinks.listAdmin 带 status 时构造 query string", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { total: 0, pages: 0, page: 1, page_size: 10, list: [] },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    await client.friendLinks.listAdmin({ page: 1, page_size: 50, status: 1 });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/friend-links?page=1&page_size=50&status=1",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("friendLinks.create 使用 FormData 上传 logo", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { id: 1, name: "VPT", site: "https://vpt.im", seq: 0, status: 1 },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+    const logo = new File(["logo"], "logo.jpg", { type: "image/jpeg" });
+
+    await client.friendLinks.create({
+      name: "VPT",
+      site: "https://vpt.im",
+      seq: 0,
+      logo,
+    });
+
+    const [, init] = vi.mocked(global.fetch).mock.calls[0];
+    expect(init?.body).toBeInstanceOf(FormData);
+    const body = init?.body as FormData;
+    expect(body.get("name")).toBe("VPT");
+    const uploadedLogo = body.get("logo");
+    expect(uploadedLogo).toBeInstanceOf(File);
+    expect((uploadedLogo as File).name).toBe("logo.jpg");
+    const headers = init?.headers as Record<string, string>;
+    expect(headers["Content-Type"]).toBeUndefined();
+  });
+
+  it("friendLinks.update 无 logo 时仅提交文本字段", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { id: 1, name: "VPT", site: "https://vpt.im", seq: 1, status: 1 },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    await client.friendLinks.update(1, { name: "VPT Blog", seq: 1 });
+
+    const [, init] = vi.mocked(global.fetch).mock.calls[0];
+    const body = init?.body as FormData;
+    expect(body.get("name")).toBe("VPT Blog");
+    expect(body.get("logo")).toBeNull();
+  });
 });

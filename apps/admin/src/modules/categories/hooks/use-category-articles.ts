@@ -147,7 +147,7 @@ export function useCategoryArticles({
         const resp = await apiClient.articles.listAdmin({
           page,
           page_size: PAGE_SIZE,
-          category_id: categoryId,
+          category_id: categoryId ?? undefined,
           search: debouncedSearch || undefined,
         });
         if (cancelled) return;
@@ -186,8 +186,8 @@ export function useCategoryArticles({
         });
         if (cancelled) return;
         const candidates = resp.list
-          .filter((item) => isCategoryArticleAddCandidate(item, categoryId))
-          .map((item) => mapAdminArticleToCategoryArticleRow(item, categoryId));
+          .filter((item) => isCategoryArticleAddCandidate(item, categoryId!))
+          .map((item) => mapAdminArticleToCategoryArticleRow(item, categoryId!));
         setPickerRows(candidates);
         setPickerTotalPages(resp.pages);
       } catch (err) {

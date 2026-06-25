@@ -57,22 +57,26 @@ describe("useCategoryArticles", () => {
       page_size: 10,
       list: [articleInCategory],
     });
-    vi.mocked(apiClient.categories.removeArticles).mockResolvedValue({ affected: 1 });
-    vi.mocked(apiClient.categories.addArticles).mockResolvedValue({ affected: 1 });
+    vi.mocked(apiClient.categories.removeArticles).mockResolvedValue({
+      category_id: 1,
+      article_ids: [1],
+      affected_count: 1,
+    });
+    vi.mocked(apiClient.categories.addArticles).mockResolvedValue({
+      category_id: 1,
+      article_ids: [1],
+      affected_count: 1,
+    });
   });
 
   it("打开时加载分类内文章", async () => {
-    const { result } = renderHook(() =>
-      useCategoryArticles({ category, isOpen: true }),
-    );
+    const { result } = renderHook(() => useCategoryArticles({ category, isOpen: true }));
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(result.current.rows).toEqual([
-      expect.objectContaining({ id: "10", title: "Go 入门" }),
-    ]);
+    expect(result.current.rows).toEqual([expect.objectContaining({ id: "10", title: "Go 入门" })]);
     expect(apiClient.articles.listAdmin).toHaveBeenCalledWith(
       expect.objectContaining({ category_id: 1 }),
     );
@@ -116,9 +120,7 @@ describe("useCategoryArticles", () => {
       list: [articleInCategory, articleOtherCategory],
     });
 
-    const { result } = renderHook(() =>
-      useCategoryArticles({ category, isOpen: true }),
-    );
+    const { result } = renderHook(() => useCategoryArticles({ category, isOpen: true }));
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
