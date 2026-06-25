@@ -18,11 +18,11 @@ const nextConfig = {
   ],
   allowedDevOrigins: [...getDevAllowedOrigins(), "www.yevpt.com"],
   images: {
-    // Mock 阶段使用的外部图片域名，正式接入后端后替换为真实 CDN 域名
     remotePatterns: [
       { hostname: "picsum.photos" },
       { hostname: "i.pravatar.cc" },
       { hostname: "blog-oss.yevpt.com" },
+      { hostname: "garage-s3-local-api.yevpt.com" },
       { hostname: "api.dicebear.com" },
     ],
   },

@@ -9,6 +9,7 @@ vi.mock("./lib/api", () => ({
   apiClient: {
     auth: { refresh: vi.fn() },
     adminAuth: { login: vi.fn() },
+    users: { getMe: vi.fn() },
   },
 }));
 
@@ -49,6 +50,14 @@ describe("App", () => {
         resolveRefresh = resolve;
       }),
     );
+    vi.mocked(apiClient.users.getMe).mockResolvedValue({
+      id: 1,
+      username: "admin",
+      nickname: "叶后台",
+      email: "admin@example.com",
+      status: 1,
+      roles: ["admin"],
+    });
 
     render(<App />);
 
@@ -57,8 +66,9 @@ describe("App", () => {
 
     resolveRefresh({ access_token: "new-acc", refresh_token: "new-ref", expires_in: 7200 });
 
-    expect(await screen.findByRole("heading", { name: "你好，管理员" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "你好，叶后台" })).toBeInTheDocument();
     expect(useAuthStore.getState().accessToken).toBe("new-acc");
+    expect(useAuthStore.getState().user?.email).toBe("admin@example.com");
     expect(localStorage.getItem("refresh_token")).toBe("new-ref");
     expect(window.location.pathname).toBe("/");
   });
