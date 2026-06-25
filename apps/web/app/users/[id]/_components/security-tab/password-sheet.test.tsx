@@ -50,6 +50,7 @@ describe("PasswordSheet", () => {
         open
         passwordSet
         mainEmail="a@b.com"
+        mainEmailVerified
         onClose={() => {}}
         onSuccess={onSuccess}
       />,
@@ -74,6 +75,7 @@ describe("PasswordSheet", () => {
         open
         passwordSet
         mainEmail="a@b.com"
+        mainEmailVerified
         onClose={() => {}}
         onSuccess={() => {}}
       />,
@@ -93,6 +95,7 @@ describe("PasswordSheet", () => {
         open
         passwordSet
         mainEmail="a@b.com"
+        mainEmailVerified
         onClose={() => {}}
         onSuccess={() => {}}
       />,
@@ -110,6 +113,7 @@ describe("PasswordSheet", () => {
         open
         passwordSet={false}
         mainEmail="a@b.com"
+        mainEmailVerified
         onClose={() => {}}
         onSuccess={onSuccess}
       />,
@@ -133,6 +137,7 @@ describe("PasswordSheet", () => {
         open
         passwordSet={false}
         mainEmail={null}
+        mainEmailVerified={false}
         onClose={() => {}}
         onSuccess={() => {}}
       />,
@@ -140,5 +145,26 @@ describe("PasswordSheet", () => {
 
     expect(screen.getByText(/请先绑定主邮箱/)).toBeInTheDocument();
     expect(screen.queryByLabelText("邮箱验证码")).not.toBeInTheDocument();
+  });
+
+  it("主邮箱未验证时找回视图显示提示", async () => {
+    const user = userEvent.setup();
+    const onVerify = vi.fn();
+    render(
+      <PasswordSheet
+        open
+        passwordSet
+        mainEmail="a@b.com"
+        mainEmailVerified={false}
+        onVerifyMainEmail={onVerify}
+        onClose={() => {}}
+        onSuccess={() => {}}
+      />,
+    );
+
+    await user.click(screen.getByText(/忘记原密码/));
+    expect(screen.getByText(/尚未验证/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "去验证主邮箱" }));
+    expect(onVerify).toHaveBeenCalled();
   });
 });

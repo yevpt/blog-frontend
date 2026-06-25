@@ -35,6 +35,8 @@ interface UserProfileTabsProps {
     display: EmailDisplayValue,
     mainEmail: string | null,
     subEmail: string | null,
+    mainEmailVerified: boolean,
+    subEmailVerified: boolean,
   ) => void;
 }
 

@@ -10,11 +10,9 @@ export type { EmailDisplayValue } from "../../_lib/display-email";
 export { displayToMailShow, mailShowToDisplay } from "../../_lib/display-email";
 
 interface EmailDisplaySelectProps {
-  /** 当前对外展示设置 */
   value: EmailDisplayValue;
-  /** 副邮箱是否存在；不存在时禁用「副邮箱」选项 */
-  subEmailExists: boolean;
-  /** 设置成功后回调，传入最新展示值供父级局部更新 */
+  mainEmailVerified: boolean;
+  subEmailVerified: boolean;
   onChanged: (display: EmailDisplayValue) => void;
 }
 
@@ -36,7 +34,12 @@ function isDisplayValue(key: Key | null): key is EmailDisplayValue {
  * 对外展示邮箱下拉：变更即乐观更新本地选中值并调后端，失败回滚 + toast。
  * mailShow 数值 ↔ 展示值映射由调用方（security-list）负责，本组件只认 main/sub/none。
  */
-export function EmailDisplaySelect({ value, subEmailExists, onChanged }: EmailDisplaySelectProps) {
+export function EmailDisplaySelect({
+  value,
+  mainEmailVerified,
+  subEmailVerified,
+  onChanged,
+}: EmailDisplaySelectProps) {
   const [selected, setSelected] = useState<EmailDisplayValue>(value);
   const [saving, setSaving] = useState(false);
 
@@ -81,8 +84,9 @@ export function EmailDisplaySelect({ value, subEmailExists, onChanged }: EmailDi
           key={option}
           id={option}
           label={DISPLAY_LABEL[option]}
-          // 副邮箱不存在时禁用该选项
-          isDisabled={option === "sub" && !subEmailExists}
+          isDisabled={
+            (option === "main" && !mainEmailVerified) || (option === "sub" && !subEmailVerified)
+          }
         />
       ))}
     </Select>

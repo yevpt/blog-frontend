@@ -7,9 +7,10 @@ const me: UserDetailResp = {
   username: "alice",
   nickname: "Alice",
   email: "alice@main.com",
+  email_verified: true,
   status: 0,
   roles: [],
-  meta: { sub_email: "alice@sub.com" },
+  meta: { sub_email: "alice@sub.com", sub_email_verified: true },
   setting: {
     mail_show: 1,
     mail_receive: 0,

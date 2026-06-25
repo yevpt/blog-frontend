@@ -8,11 +8,11 @@ import { getProviderMeta } from "./oauth-providers";
 import { EmailDisplaySelect, type EmailDisplayValue } from "./email-display-select";
 import { mailShowToDisplay } from "../../_lib/display-email";
 
-/** 列表行可触发的动作，可辨识联合。后续 Task 6–10 据 type 打开对应 Sheet。 */
+/** 列表行可触发的动作 */
 export type SecurityAction =
   | { type: "username" }
   | { type: "password" }
-  | { type: "email"; target: "main" | "sub" }
+  | { type: "email"; target: "main" | "sub"; intent: "bind" | "rebind" | "verify" }
   | { type: "bind"; source: string }
   | { type: "unbind"; source: string }
   | { type: "display"; value: "main" | "sub" | "none" };
@@ -24,8 +24,63 @@ interface SecurityListProps {
   onDisplayChanged: (display: EmailDisplayValue) => void;
 }
 
+function emailRowProps(
+  email: string | null,
+  verified: boolean,
+  bindLabel: string,
+  rebindLabel: string,
+  target: "main" | "sub",
+  onAction: (action: SecurityAction) => void,
+) {
+  if (!email) {
+    return {
+      value: "未绑定" as const,
+      valueMuted: true,
+      badge: undefined,
+      action: "绑定" as const,
+      actionLabel: bindLabel,
+      onAction: () => onAction({ type: "email", target, intent: "bind" }),
+      secondaryAction: undefined,
+      secondaryActionLabel: undefined,
+      onSecondaryAction: undefined,
+    };
+  }
+
+  return {
+    value: email,
+    valueMuted: false,
+    badge: verified ? undefined : ("未验证" as const),
+    badgeVariant: "unbound" as const,
+    action: "换绑" as const,
+    actionLabel: rebindLabel,
+    onAction: () => onAction({ type: "email", target, intent: "rebind" }),
+    secondaryAction: verified ? undefined : ("验证当前邮箱" as const),
+    secondaryActionLabel: verified ? undefined : `验证${target === "main" ? "主" : "副"}邮箱`,
+    onSecondaryAction: verified
+      ? undefined
+      : () => onAction({ type: "email", target, intent: "verify" }),
+  };
+}
+
 /** 账号安全受控纯展示列表：三组（登录凭证 / 邮箱 / 第三方绑定） */
 export function SecurityList({ data, onAction, onDisplayChanged }: SecurityListProps) {
+  const mainRow = emailRowProps(
+    data.mainEmail,
+    data.mainEmailVerified,
+    "绑定主邮箱",
+    "换绑主邮箱",
+    "main",
+    onAction,
+  );
+  const subRow = emailRowProps(
+    data.subEmail,
+    data.subEmailVerified,
+    "绑定副邮箱",
+    "换绑副邮箱",
+    "sub",
+    onAction,
+  );
+
   return (
     <div className="pb-4">
       <SecuritySection title="登录凭证">
@@ -50,26 +105,36 @@ export function SecurityList({ data, onAction, onDisplayChanged }: SecurityListP
         <SecurityItem
           label="主邮箱"
           labelSub="接收通知"
-          value={data.mainEmail ?? "未绑定"}
-          valueMuted={!data.mainEmail}
-          action={data.mainEmail ? "换绑" : "绑定"}
-          actionLabel={data.mainEmail ? "换绑主邮箱" : "绑定主邮箱"}
-          onAction={() => onAction({ type: "email", target: "main" })}
+          value={mainRow.value}
+          valueMuted={mainRow.valueMuted}
+          badge={mainRow.badge}
+          badgeVariant={mainRow.badgeVariant}
+          action={mainRow.action}
+          actionLabel={mainRow.actionLabel}
+          onAction={mainRow.onAction}
+          secondaryAction={mainRow.secondaryAction}
+          secondaryActionLabel={mainRow.secondaryActionLabel}
+          onSecondaryAction={mainRow.onSecondaryAction}
         />
         <SecurityItem
           label="副邮箱"
-          value={data.subEmail ?? "未绑定"}
-          valueMuted={!data.subEmail}
-          action={data.subEmail ? "换绑" : "绑定"}
-          actionLabel={data.subEmail ? "换绑副邮箱" : "绑定副邮箱"}
-          onAction={() => onAction({ type: "email", target: "sub" })}
+          value={subRow.value}
+          valueMuted={subRow.valueMuted}
+          badge={subRow.badge}
+          badgeVariant={subRow.badgeVariant}
+          action={subRow.action}
+          actionLabel={subRow.actionLabel}
+          onAction={subRow.onAction}
+          secondaryAction={subRow.secondaryAction}
+          secondaryActionLabel={subRow.secondaryActionLabel}
+          onSecondaryAction={subRow.onSecondaryAction}
         />
-        {/* 对外展示行：交互下拉，变更即调后端，副邮箱不存在时禁用「副邮箱」选项 */}
         <div className="flex min-h-[48px] items-center border-b border-border px-4 py-2 last:border-b-0">
           <span className="flex-1 text-[13px] text-muted-foreground">对外展示邮箱</span>
           <EmailDisplaySelect
             value={mailShowToDisplay(data.mailShow)}
-            subEmailExists={!!data.subEmail}
+            mainEmailVerified={data.mainEmailVerified}
+            subEmailVerified={data.subEmailVerified}
             onChanged={onDisplayChanged}
           />
         </div>
@@ -132,7 +197,6 @@ function SecuritySection({
 
 interface SecurityItemProps {
   label?: string;
-  /** 自定义标签节点（第三方行用，含短码方块）；优先级高于 label */
   labelNode?: ReactNode;
   labelSub?: string;
   value?: string;
@@ -140,10 +204,12 @@ interface SecurityItemProps {
   badge?: string;
   badgeVariant?: "bound" | "unbound";
   action?: string;
-  /** 按钮无障碍名称，用于区分多行同文案按钮（如多个「绑定」） */
   actionLabel?: string;
   actionMuted?: boolean;
   onAction?: () => void;
+  secondaryAction?: string;
+  secondaryActionLabel?: string;
+  onSecondaryAction?: () => void;
 }
 
 function SecurityItem({
@@ -158,6 +224,9 @@ function SecurityItem({
   actionLabel,
   actionMuted,
   onAction,
+  secondaryAction,
+  secondaryActionLabel,
+  onSecondaryAction,
 }: SecurityItemProps) {
   return (
     <div className="flex min-h-[48px] items-center border-b border-border px-4 py-2 last:border-b-0">
@@ -168,10 +237,12 @@ function SecurityItem({
         )}
       </span>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2">
         {value && (
           <span
-            className={`text-[13px] ${valueMuted ? "italic text-muted-foreground/40" : "text-muted-foreground/70"}`}
+            className={`max-w-[40vw] truncate text-[13px] sm:max-w-none ${
+              valueMuted ? "italic text-muted-foreground/40" : "text-muted-foreground/70"
+            }`}
           >
             {value}
           </span>
@@ -179,7 +250,7 @@ function SecurityItem({
 
         {badge && (
           <span
-            className={`rounded px-2 py-0.5 text-xs font-medium ${
+            className={`shrink-0 rounded px-2 py-0.5 text-xs font-medium ${
               badgeVariant === "bound"
                 ? "bg-emerald-500/10 text-emerald-500"
                 : "bg-muted text-muted-foreground/60"
@@ -187,6 +258,18 @@ function SecurityItem({
           >
             {badge}
           </span>
+        )}
+
+        {secondaryAction && (
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label={secondaryActionLabel ?? secondaryAction}
+            onPress={onSecondaryAction}
+            className="border-primary/40 text-primary hover:border-primary/70 hover:text-primary"
+          >
+            {secondaryAction}
+          </Button>
         )}
 
         {action && (

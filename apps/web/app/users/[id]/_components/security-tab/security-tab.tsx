@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { useAccountSecurity } from "./use-account-security";
 import { SecurityList, type SecurityAction } from "./security-list";
 import { UsernameSheet } from "./username-sheet";
-import { EmailSheet } from "./email-sheet";
+import { EmailSheet, type EmailSheetIntent } from "./email-sheet";
 import { PasswordSheet } from "./password-sheet";
 import { UnbindConfirm } from "./unbind-confirm";
 import { addToast } from "@/lib/toast";
+import { OAUTH_BIND_REDIRECT_KEY } from "@/lib/oauth";
 import type { EmailDisplayValue } from "../../_lib/display-email";
 
 interface SecurityTabProps {
@@ -17,24 +18,32 @@ interface SecurityTabProps {
     display: EmailDisplayValue,
     mainEmail: string | null,
     subEmail: string | null,
+    mainEmailVerified: boolean,
+    subEmailVerified: boolean,
   ) => void;
+}
+
+interface EmailSheetState {
+  target: "main" | "sub";
+  intent: EmailSheetIntent;
 }
 
 export function SecurityTab({ userId, onDisplayEmailChanged }: SecurityTabProps) {
   const { data, loading, error, reload, patchMailShow } = useAccountSecurity();
   const router = useRouter();
-  // 当前打开的 Sheet
   const [usernameOpen, setUsernameOpen] = useState(false);
-  const [emailTarget, setEmailTarget] = useState<"main" | "sub" | null>(null);
+  const [emailSheet, setEmailSheet] = useState<EmailSheetState | null>(null);
   const [passwordOpen, setPasswordOpen] = useState(false);
-  // 待解绑平台 source，null 表示确认框关闭
   const [unbindSource, setUnbindSource] = useState<string | null>(null);
 
-  // 发起绑定：取后端授权地址后整页跳转第三方授权页（回跳定位至安全 Tab）。
+  // 发起绑定：取后端授权地址后整页跳转第三方授权页，回跳由 OAuth 回调页统一换取绑定结果。
+  // redirect_uri 必须与各平台注册的回调地址「精确一致」（QQ/微博/百度 等严格校验，多带 query 会被拒，
+  // 导致授权失败或 token 交换失败 → 绑定不落库、被跳走）；故 next 不拼进 redirect_uri，
+  // 改用 sessionStorage 暂存回跳目标（整页跳转同标签页同源，往返可靠读回）。
   // 该 authorize 代理路由不解包，故按信封读 data.authorize_url。
   async function startBind(source: string) {
-    const next = `/users/${userId}?tab=security`;
-    const redirectUri = `${window.location.origin}/oauth/${source}/callback?next=${encodeURIComponent(next)}`;
+    const redirectUri = `${window.location.origin}/oauth/${source}/callback`;
+    sessionStorage.setItem(OAUTH_BIND_REDIRECT_KEY, `/users/${userId}?tab=security`);
     try {
       const res = await fetch(
         `/api/oauth/${source}/authorize?action=bind&redirect_uri=${encodeURIComponent(redirectUri)}`,
@@ -56,7 +65,7 @@ export function SecurityTab({ userId, onDisplayEmailChanged }: SecurityTabProps)
       return;
     }
     if (action.type === "email") {
-      setEmailTarget(action.target);
+      setEmailSheet({ target: action.target, intent: action.intent });
       return;
     }
     if (action.type === "password") {
@@ -69,41 +78,35 @@ export function SecurityTab({ userId, onDisplayEmailChanged }: SecurityTabProps)
     }
     if (action.type === "unbind") {
       setUnbindSource(action.source);
-      return;
     }
-    // display 由 SecurityList 内部直接处理，此处无需分支
   }
 
-  // 解绑成功后关闭确认框并刷新数据
   function handleUnbindSuccess() {
     setUnbindSource(null);
     void reload();
   }
 
-  // 邮箱换绑/添加成功后关闭 Sheet 并刷新数据
   function handleEmailSuccess() {
-    setEmailTarget(null);
+    setEmailSheet(null);
     void reload();
   }
 
-  // 改名成功后登出并刷新（沿用 navbar-user-menu 的登出模式），下次访问需重新登录
   async function handleUsernameSuccess() {
     setUsernameOpen(false);
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch {
-      // 忽略网络错误，服务端 token 失效后自然拦截
+      // 忽略网络错误
     }
     router.refresh();
   }
 
-  // 改密/设初始/找回成功后同样登出并刷新（密码变更后旧会话失效）
   async function handlePasswordSuccess() {
     setPasswordOpen(false);
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch {
-      // 忽略网络错误，服务端 token 失效后自然拦截
+      // 忽略网络错误
     }
     router.refresh();
   }
@@ -131,6 +134,9 @@ export function SecurityTab({ userId, onDisplayEmailChanged }: SecurityTabProps)
     );
   }
 
+  const emailTarget = emailSheet?.target ?? "main";
+  const currentEmail = emailTarget === "sub" ? data.subEmail : data.mainEmail;
+
   return (
     <>
       <SecurityList
@@ -138,7 +144,13 @@ export function SecurityTab({ userId, onDisplayEmailChanged }: SecurityTabProps)
         onAction={dispatch}
         onDisplayChanged={(display) => {
           patchMailShow(display);
-          onDisplayEmailChanged?.(display, data.mainEmail, data.subEmail);
+          onDisplayEmailChanged?.(
+            display,
+            data.mainEmail,
+            data.subEmail,
+            data.mainEmailVerified,
+            data.subEmailVerified,
+          );
         }}
       />
       <UsernameSheet
@@ -148,16 +160,19 @@ export function SecurityTab({ userId, onDisplayEmailChanged }: SecurityTabProps)
         onSuccess={() => void handleUsernameSuccess()}
       />
       <EmailSheet
-        open={emailTarget !== null}
-        target={emailTarget ?? "main"}
-        currentEmail={emailTarget === "sub" ? data.subEmail : data.mainEmail}
-        onClose={() => setEmailTarget(null)}
+        open={emailSheet !== null}
+        target={emailTarget}
+        intent={emailSheet?.intent ?? "bind"}
+        currentEmail={currentEmail}
+        onClose={() => setEmailSheet(null)}
         onSuccess={handleEmailSuccess}
       />
       <PasswordSheet
         open={passwordOpen}
         passwordSet={data.passwordSet}
         mainEmail={data.mainEmail}
+        mainEmailVerified={data.mainEmailVerified}
+        onVerifyMainEmail={() => setEmailSheet({ target: "main", intent: "verify" })}
         onClose={() => setPasswordOpen(false)}
         onSuccess={() => void handlePasswordSuccess()}
       />

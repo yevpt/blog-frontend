@@ -3,7 +3,6 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import type * as ClientFetch from "@/lib/client-fetch";
 
-// 对外展示下拉变更会调 apiJson；列表测试只关心渲染/action，故 mock 掉副作用
 vi.mock("@/lib/client-fetch", async () => {
   const actual = await vi.importActual<typeof ClientFetch>("@/lib/client-fetch");
   return { ...actual, apiJson: vi.fn().mockResolvedValue(undefined) };
@@ -19,6 +18,8 @@ function data(over: Partial<SecurityData> = {}): SecurityData {
     passwordSet: true,
     mainEmail: "main@example.com",
     subEmail: null,
+    mainEmailVerified: true,
+    subEmailVerified: false,
     mailShow: 1,
     providers: [
       { source: "github", bound: true },
@@ -63,15 +64,30 @@ describe("SecurityList", () => {
     expect(screen.getByRole("button", { name: "设置" })).toBeInTheDocument();
   });
 
-  it("主邮箱有值显具体邮箱并触发 email/main", () => {
+  it("主邮箱已验证：无未验证 badge，换绑触发 rebind", () => {
     const onAction = vi.fn();
     render(<SecurityList data={data()} onAction={onAction} onDisplayChanged={vi.fn()} />);
     expect(screen.getByText("main@example.com")).toBeInTheDocument();
+    expect(screen.queryByText("未验证")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "换绑主邮箱" }));
-    expect(onAction).toHaveBeenCalledWith({ type: "email", target: "main" });
+    expect(onAction).toHaveBeenCalledWith({ type: "email", target: "main", intent: "rebind" });
   });
 
-  it("副邮箱无值灰显并触发 email/sub 绑定", () => {
+  it("主邮箱未验证：显示未验证与验证入口", () => {
+    const onAction = vi.fn();
+    render(
+      <SecurityList
+        data={data({ mainEmailVerified: false })}
+        onAction={onAction}
+        onDisplayChanged={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("未验证")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "验证主邮箱" }));
+    expect(onAction).toHaveBeenCalledWith({ type: "email", target: "main", intent: "verify" });
+  });
+
+  it("副邮箱无值灰显并触发 bind", () => {
     const onAction = vi.fn();
     render(
       <SecurityList
@@ -81,11 +97,10 @@ describe("SecurityList", () => {
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: "绑定副邮箱" }));
-    expect(onAction).toHaveBeenCalledWith({ type: "email", target: "sub" });
+    expect(onAction).toHaveBeenCalledWith({ type: "email", target: "sub", intent: "bind" });
   });
 
   it("对外展示下拉按 mailShow 映射选中值（2→不展示）", () => {
-    // mailShow=2 → none → 下拉触发器显示「不展示」
     render(
       <SecurityList data={data({ mailShow: 2 })} onAction={vi.fn()} onDisplayChanged={vi.fn()} />,
     );

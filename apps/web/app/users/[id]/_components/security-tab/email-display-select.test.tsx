@@ -25,7 +25,9 @@ describe("EmailDisplaySelect", () => {
   it("切换为「不展示」时以 {display:'none'} 调用 apiJson 并触发 onChanged", async () => {
     const user = userEvent.setup();
     const onChanged = vi.fn();
-    render(<EmailDisplaySelect value="main" subEmailExists onChanged={onChanged} />);
+    render(
+      <EmailDisplaySelect value="main" mainEmailVerified subEmailVerified onChanged={onChanged} />,
+    );
 
     await user.click(screen.getByRole("button"));
     await user.click(await screen.findByRole("option", { name: "不展示" }));
@@ -43,9 +45,32 @@ describe("EmailDisplaySelect", () => {
     expect(screen.getByRole("button", { name: /不展示/ })).toBeInTheDocument();
   });
 
-  it("副邮箱不存在时「副邮箱」选项禁用", async () => {
+  it("邮箱未验证时禁用对应展示选项", async () => {
     const user = userEvent.setup();
-    render(<EmailDisplaySelect value="main" subEmailExists={false} onChanged={() => {}} />);
+    render(
+      <EmailDisplaySelect
+        value="main"
+        mainEmailVerified={false}
+        subEmailVerified={false}
+        onChanged={() => {}}
+      />,
+    );
+
+    await user.click(screen.getByRole("button"));
+    const mainOption = await screen.findByRole("option", { name: "主邮箱" });
+    expect(mainOption).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("副邮箱未验证时「副邮箱」选项禁用", async () => {
+    const user = userEvent.setup();
+    render(
+      <EmailDisplaySelect
+        value="main"
+        mainEmailVerified
+        subEmailVerified={false}
+        onChanged={() => {}}
+      />,
+    );
 
     await user.click(screen.getByRole("button"));
     const subOption = await screen.findByRole("option", { name: "副邮箱" });

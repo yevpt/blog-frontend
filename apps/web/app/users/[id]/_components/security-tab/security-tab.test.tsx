@@ -26,6 +26,7 @@ function meResp(over: Partial<UserDetailResp> = {}): UserDetailResp {
     id: 1,
     username: "yevpt",
     email: "of940417@gmail.com",
+    email_verified: true,
     status: 0,
     roles: [],
     password_set: false,
@@ -140,16 +141,16 @@ describe("SecurityTab", () => {
     render(<SecurityTab userId={1} />);
     await user.click(await screen.findByRole("button", { name: "绑定 QQ" }));
 
+    // redirect_uri 必须是裸回调地址（QQ/微博/百度 精确匹配），回跳目标走 sessionStorage
     await waitFor(() =>
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining(
           "/api/oauth/qq/authorize?action=bind&redirect_uri=" +
-            encodeURIComponent(
-              `${origin}/oauth/qq/callback?next=${encodeURIComponent("/users/1?tab=security")}`,
-            ),
+            encodeURIComponent(`${origin}/oauth/qq/callback`),
         ),
       ),
     );
+    expect(sessionStorage.getItem("oauth_bind_redirect")).toBe("/users/1?tab=security");
     await waitFor(() => expect(hrefSetter).toHaveBeenCalledWith("https://auth/x"));
   });
 

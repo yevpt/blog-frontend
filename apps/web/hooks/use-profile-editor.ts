@@ -157,10 +157,22 @@ export function useProfileEditor(initialProfile: UserPublicProfileResp) {
   }, []);
 
   const patchDisplayEmail = useCallback(
-    (display: EmailDisplayValue, mainEmail: string | null, subEmail: string | null) => {
+    (
+      display: EmailDisplayValue,
+      mainEmail: string | null,
+      subEmail: string | null,
+      mainEmailVerified = false,
+      subEmailVerified = false,
+    ) => {
       setProfile((current) => ({
         ...current,
-        display_email: displayEmailForSetting(display, mainEmail, subEmail),
+        display_email: displayEmailForSetting(
+          display,
+          mainEmail,
+          subEmail,
+          mainEmailVerified,
+          subEmailVerified,
+        ),
       }));
     },
     [],

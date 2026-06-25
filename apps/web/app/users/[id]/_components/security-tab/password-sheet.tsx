@@ -6,16 +6,15 @@ import { apiJson, getApiErrorMessage } from "@/lib/client-fetch";
 import { addToast } from "@/lib/toast";
 import { useCaptchaToken } from "@/hooks/use-captcha-token";
 import { RegisterCaptcha } from "@/components/auth/register-captcha";
-import { PasswordRecoveryForm } from "./password-recovery-form";
+import { PasswordRecoveryForm } from "@/components/auth/password-recovery-form";
 
 interface PasswordSheetProps {
   open: boolean;
-  /** 当前是否已设置密码：true → 修改(A)；false → 设初始(C) */
   passwordSet: boolean;
-  /** 主邮箱（设初始/找回发码主体），未绑定为 null */
   mainEmail: string | null;
+  mainEmailVerified: boolean;
+  onVerifyMainEmail?: () => void;
   onClose: () => void;
-  /** 改密/设初始/找回成功回调（容器据此登出） */
   onSuccess: () => void;
 }
 
@@ -32,6 +31,8 @@ export function PasswordSheet({
   open,
   passwordSet,
   mainEmail,
+  mainEmailVerified,
+  onVerifyMainEmail,
   onClose,
   onSuccess,
 }: PasswordSheetProps) {
@@ -158,7 +159,26 @@ export function PasswordSheet({
       if (!mainEmail) {
         return <p className="text-sm text-muted-foreground">请先绑定主邮箱后再使用邮箱找回。</p>;
       }
-      return <PasswordRecoveryForm email={mainEmail} onDone={onSuccess} />;
+      return (
+        <>
+          {!mainEmailVerified ? (
+            <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+              <p>当前主邮箱尚未验证。找回密码验证码仅会发往已验证的主邮箱。</p>
+              {onVerifyMainEmail ? (
+                <Button
+                  variant="text"
+                  size="sm"
+                  onPress={onVerifyMainEmail}
+                  className="mt-1 h-auto px-0 text-primary hover:underline"
+                >
+                  去验证主邮箱
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+          <PasswordRecoveryForm email={mainEmail} onDone={onSuccess} />
+        </>
+      );
     }
 
     // C 视图：设置初始密码

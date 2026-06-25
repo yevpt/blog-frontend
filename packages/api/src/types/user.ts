@@ -12,6 +12,8 @@ export interface UserMetaResp {
   address?: string;
   /** 副邮箱（后端在 GET /users/me 的 meta 中返回） */
   sub_email?: string | null;
+  /** 副邮箱是否已验证 */
+  sub_email_verified?: boolean;
 }
 
 /** 用户偏好设置 */
@@ -43,6 +45,8 @@ export interface UserDetailResp {
   username: string;
   nickname?: string;
   email?: string;
+  /** 主邮箱是否已验证；旧用户缺省视为 false */
+  email_verified?: boolean;
   phone?: string;
   site?: string;
   avatar_url?: string;

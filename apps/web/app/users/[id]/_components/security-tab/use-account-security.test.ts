@@ -50,6 +50,16 @@ describe("normalizeOAuthBindings", () => {
 });
 
 describe("toSecurityData", () => {
+  it("toSecurityData 映射邮箱验证态", () => {
+    const data = toSecurityData(
+      meResp({ email_verified: false, meta: { sub_email: "s@b.com", sub_email_verified: true } }),
+      [],
+      [],
+    );
+    expect(data.mainEmailVerified).toBe(false);
+    expect(data.subEmailVerified).toBe(true);
+  });
+
   it("providers 与 bindings 按 source 合并绑定态", () => {
     const data = toSecurityData(
       meResp(),

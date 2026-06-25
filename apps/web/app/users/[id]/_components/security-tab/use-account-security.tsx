@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { UserDetailResp, OAuthBindingResp } from "@repo/api";
 import { apiJson, getApiErrorMessage } from "@/lib/client-fetch";
 import { displayToMailShow, type EmailDisplayValue } from "../../_lib/display-email";
+import { isMainEmailVerified, isSubEmailVerified } from "../../_lib/email-verification";
 
 /** 单个第三方平台的绑定态 */
 export interface SecurityProvider {
@@ -17,6 +18,8 @@ export interface SecurityData {
   passwordSet: boolean;
   mainEmail: string | null;
   subEmail: string | null;
+  mainEmailVerified: boolean;
+  subEmailVerified: boolean;
   /** 对外展示邮箱设置，对应 setting.mail_show */
   mailShow: number;
   providers: SecurityProvider[];
@@ -66,6 +69,8 @@ export function toSecurityData(
     passwordSet: me.password_set ?? false,
     mainEmail: me.email ?? null,
     subEmail: me.meta?.sub_email ?? null,
+    mainEmailVerified: isMainEmailVerified(me),
+    subEmailVerified: isSubEmailVerified(me),
     mailShow: me.setting?.mail_show ?? 0,
     providers: sources.map((source) => ({
       source,

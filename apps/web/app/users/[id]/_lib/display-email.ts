@@ -1,4 +1,5 @@
 import type { UserDetailResp } from "@repo/api";
+import { isMainEmailVerified, isSubEmailVerified } from "./email-verification";
 
 /** 对外展示邮箱的可选值 */
 export type EmailDisplayValue = "main" | "sub" | "none";
@@ -17,21 +18,30 @@ export function displayToMailShow(display: EmailDisplayValue): number {
   return 1;
 }
 
-/** 按对外展示设置从主/副邮箱解析应展示的邮箱地址 */
+export interface ResolveDisplayEmailVerified {
+  main?: boolean;
+  sub?: boolean;
+}
+
+/** 按对外展示设置从主/副邮箱解析应展示的邮箱地址（仅已验证邮箱可展示） */
 export function resolveDisplayEmail(
   mailShow: number,
   mainEmail: string | null | undefined,
   subEmail: string | null | undefined,
+  verified: ResolveDisplayEmailVerified = {},
 ): string | null {
   const display = mailShowToDisplay(mailShow);
   if (display === "none") return null;
-  if (display === "sub") return subEmail ?? null;
-  return mainEmail ?? null;
+  if (display === "sub") return verified.sub && subEmail ? subEmail : null;
+  return verified.main && mainEmail ? mainEmail : null;
 }
 
 /** 从 GET /users/me 响应解析对外展示邮箱 */
 export function resolveDisplayEmailFromMe(me: UserDetailResp): string | null {
-  return resolveDisplayEmail(me.setting?.mail_show ?? 0, me.email, me.meta?.sub_email);
+  return resolveDisplayEmail(me.setting?.mail_show ?? 0, me.email, me.meta?.sub_email, {
+    main: isMainEmailVerified(me),
+    sub: isSubEmailVerified(me),
+  });
 }
 
 /** 展示值 + 主副邮箱 → 对外展示邮箱（账号安全 Tab 局部更新资料 Tab 用） */
@@ -39,6 +49,11 @@ export function displayEmailForSetting(
   display: EmailDisplayValue,
   mainEmail: string | null,
   subEmail: string | null,
+  mainVerified = false,
+  subVerified = false,
 ): string | null {
-  return resolveDisplayEmail(displayToMailShow(display), mainEmail, subEmail);
+  return resolveDisplayEmail(displayToMailShow(display), mainEmail, subEmail, {
+    main: mainVerified,
+    sub: subVerified,
+  });
 }
