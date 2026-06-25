@@ -8,6 +8,7 @@ import {
   type DataTableEmptyState,
   type DataTableState,
 } from "@repo/ui";
+import { AdminPageHeader } from "../../components/AdminPageHeader";
 import { AdminListCard } from "../../components/AdminListCard";
 import { AdminListSummary } from "../../components/AdminListSummary";
 import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
@@ -48,14 +49,8 @@ export function TagsPage() {
   });
 
   const nextSeq = useMemo(() => suggestNextSeq(items), [items]);
-  const totalArticles = useMemo(
-    () => rows.reduce((sum, row) => sum + row.articleCount, 0),
-    [rows],
-  );
-  const visibleRows = useMemo(
-    () => filterAndSortTagRows(rows, tableState),
-    [rows, tableState],
-  );
+  const totalArticles = useMemo(() => rows.reduce((sum, row) => sum + row.articleCount, 0), [rows]);
+  const visibleRows = useMemo(() => filterAndSortTagRows(rows, tableState), [rows, tableState]);
 
   const openCreateDialog = useCallback(() => {
     setFormMode("create");
@@ -219,21 +214,17 @@ export function TagsPage() {
   const showArticleSummary = !isLoading && rows.length > 0;
 
   return (
-    <div className="grid min-h-0 gap-4 overflow-hidden md:max-h-[calc(100dvh-6.5rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:-mt-6 lg:max-h-[calc(100dvh-1.5rem)]">
-      <section className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h2 className="text-xl font-semibold tracking-normal text-foreground sm:text-2xl">
-            标签管理
-          </h2>
-          <p className="mt-1 hidden text-sm text-muted-foreground sm:block">
-            整理标签字典与文章关联，保持内容检索清晰。
-          </p>
-        </div>
-        <Button size="sm" className="w-full shrink-0 sm:w-auto" onPress={openCreateDialog}>
-          <SvgIcon name="plus" size={15} />
-          新建标签
-        </Button>
-      </section>
+    <div className="grid min-h-0 gap-4 overflow-hidden md:max-h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:max-h-[calc(100dvh-3.5rem)]">
+      <AdminPageHeader
+        title="标签管理"
+        description="整理标签字典与文章关联，保持内容检索清晰。"
+        action={
+          <Button size="sm" className="w-full shrink-0 sm:w-auto" onPress={openCreateDialog}>
+            <SvgIcon name="plus" size={15} />
+            新建标签
+          </Button>
+        }
+      />
 
       <section className="flex min-h-0 flex-col" aria-label="标签列表">
         {error ? (
