@@ -33,7 +33,8 @@ export function SecurityTab({ userId, onDisplayEmailChanged }: SecurityTabProps)
   // 发起绑定：取后端授权地址后整页跳转第三方授权页（回跳定位至安全 Tab）。
   // 该 authorize 代理路由不解包，故按信封读 data.authorize_url。
   async function startBind(source: string) {
-    const redirectUri = `${window.location.origin}/users/${userId}?tab=security`;
+    const next = `/users/${userId}?tab=security`;
+    const redirectUri = `${window.location.origin}/oauth/${source}/callback?next=${encodeURIComponent(next)}`;
     try {
       const res = await fetch(
         `/api/oauth/${source}/authorize?action=bind&redirect_uri=${encodeURIComponent(redirectUri)}`,

@@ -144,7 +144,9 @@ describe("SecurityTab", () => {
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining(
           "/api/oauth/qq/authorize?action=bind&redirect_uri=" +
-            encodeURIComponent(`${origin}/users/1?tab=security`),
+            encodeURIComponent(
+              `${origin}/oauth/qq/callback?next=${encodeURIComponent("/users/1?tab=security")}`,
+            ),
         ),
       ),
     );
