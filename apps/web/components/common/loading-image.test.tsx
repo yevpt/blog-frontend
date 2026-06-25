@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { LoadingImage } from "./loading-image";
 
 // next/image mock 需转发 ref，组件才能读取底层 <img> 的 complete/naturalWidth。
@@ -13,13 +13,14 @@ vi.mock("next/image", () => ({
       alt: string;
       className?: string;
       priority?: boolean;
+      unoptimized?: boolean;
       fetchPriority?: "high" | "low" | "auto";
       loading?: "eager" | "lazy";
       onLoad?: () => void;
       onError?: () => void;
     }
   >(function MockImage(
-    { src, alt, className, priority, fetchPriority, loading, onLoad, onError },
+    { src, alt, className, priority, unoptimized, fetchPriority, loading, onLoad, onError },
     ref,
   ) {
     return (
@@ -30,6 +31,7 @@ vi.mock("next/image", () => ({
         className={className}
         loading={priority ? "eager" : loading}
         fetchPriority={priority ? "high" : fetchPriority}
+        data-unoptimized={unoptimized ?? false}
         onLoad={onLoad}
         onError={onError}
       />
@@ -90,14 +92,26 @@ describe("LoadingImage", () => {
     expect(screen.getByRole("img", { name: "封面" })).toHaveClass("opacity-100");
   });
 
-  it("图片加载失败后显示图片占位", () => {
+  it("图片加载失败后显示图片占位", async () => {
+    vi.useFakeTimers();
     render(<LoadingImage src="https://example.com/broken.jpg" alt="封面" fill />);
 
-    fireEvent.error(screen.getByRole("img", { name: "封面" }));
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      await act(async () => {
+        fireEvent.error(screen.getByRole("img", { name: "封面" }));
+      });
+      if (attempt < 3) {
+        expect(screen.getByTestId("loading-image-skeleton")).toBeInTheDocument();
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(1500);
+        });
+      }
+    }
 
     expect(screen.queryByTestId("loading-image-skeleton")).not.toBeInTheDocument();
     expect(screen.getByTestId("loading-image-fallback")).toBeInTheDocument();
     expect(screen.getByTestId("icon-image-off")).toBeInTheDocument();
+    vi.useRealTimers();
   });
 
   // 回归用例：bfcache 恢复 / 缓存命中导致挂载即 complete 时，onLoad 不会触发，
@@ -142,5 +156,51 @@ describe("LoadingImage", () => {
     const img = screen.getByRole("img", { name: "封面" });
     expect(img).toHaveAttribute("fetchpriority", "high");
     expect(img).toHaveAttribute("loading", "eager");
+  });
+
+  it("优化器超时期间保持骨架屏，重试成功后显示图片", async () => {
+    vi.useFakeTimers();
+    render(<LoadingImage src="https://example.com/cover.jpg" alt="封面" fill />);
+
+    await act(async () => {
+      fireEvent.error(screen.getByRole("img", { name: "封面" }));
+    });
+    expect(screen.getByTestId("loading-image-skeleton")).toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1500);
+    });
+    await act(async () => {
+      fireEvent.load(screen.getByRole("img", { name: "封面" }));
+    });
+
+    expect(screen.queryByTestId("loading-image-skeleton")).not.toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "封面" })).toHaveClass("opacity-100");
+    vi.useRealTimers();
+  });
+
+  it("fallbackUnoptimized 时优化器重试耗尽后回退为 unoptimized", async () => {
+    vi.useFakeTimers();
+    render(
+      <LoadingImage src="https://example.com/cover.jpg" alt="封面" fill fallbackUnoptimized />,
+    );
+
+    expect(screen.getByRole("img", { name: "封面" })).toHaveAttribute("data-unoptimized", "false");
+
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      await act(async () => {
+        fireEvent.error(screen.getByRole("img", { name: "封面" }));
+      });
+      if (attempt < 3) {
+        expect(screen.getByTestId("loading-image-skeleton")).toBeInTheDocument();
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(1500);
+        });
+      }
+    }
+
+    expect(screen.getByRole("img", { name: "封面" })).toHaveAttribute("data-unoptimized", "true");
+    expect(screen.getByTestId("loading-image-skeleton")).toBeInTheDocument();
+    vi.useRealTimers();
   });
 });
