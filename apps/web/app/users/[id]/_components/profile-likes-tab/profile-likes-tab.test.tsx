@@ -118,6 +118,38 @@ describe("ProfileLikesTab", () => {
     expect(screen.getByTestId("profile-likes-virtual-list")).toHaveTextContent("1 条");
   });
 
+  it("首屏加载中不同步 Tab 计数，避免覆盖 SSR 初始值", () => {
+    const onCountChange = vi.fn();
+    mockUseUserLikedContent.mockReturnValue(
+      makeHookState({
+        isLoadingInitial: true,
+        pageData: { total: 0, pages: 0, page: 1, page_size: 20, list: [] },
+      }),
+    );
+
+    render(
+      <ProfileLikesTab userId={1} isOwner={false} likesCount={12} onCountChange={onCountChange} />,
+    );
+
+    expect(onCountChange).not.toHaveBeenCalled();
+  });
+
+  it("首屏加载完成后同步 Tab 计数", () => {
+    const onCountChange = vi.fn();
+    mockUseUserLikedContent.mockReturnValue(
+      makeHookState({
+        isLoadingInitial: false,
+        pageData: { total: 12, pages: 1, page: 1, page_size: 20, list: [baseItem] },
+      }),
+    );
+
+    render(
+      <ProfileLikesTab userId={1} isOwner={false} likesCount={12} onCountChange={onCountChange} />,
+    );
+
+    expect(onCountChange).toHaveBeenCalledWith(12);
+  });
+
   it("切换筛选调用 changeFilter", async () => {
     const changeFilter = vi.fn();
     mockUseUserLikedContent.mockReturnValue(makeHookState({ changeFilter }));

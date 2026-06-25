@@ -101,12 +101,13 @@ export function ProfileLikesTab({
     retryLoadMore,
   } = useUserLikedContent({ userId });
 
-  // 仅在「全部」筛选下同步 Tab 计数，避免子筛选的 total 覆盖全量点赞数
+  // 仅在「全部」筛选且首屏已加载后同步 Tab 计数：
+  // 挂载时 pageData 为 EMPTY（total=0），若立即回写会覆盖 SSR 计数导致 Tab 标签抖动。
   useEffect(() => {
-    if (filter === "all") {
+    if (filter === "all" && !isLoadingInitial) {
       onCountChange?.(pageData.total);
     }
-  }, [filter, onCountChange, pageData.total]);
+  }, [filter, isLoadingInitial, onCountChange, pageData.total]);
 
   const showEmpty = !isLoadingInitial && !initialError && items.length === 0;
 
