@@ -86,7 +86,7 @@ export function LoginModal() {
       aria-label={view === "login" ? "登录" : view === "register" ? "注册" : "找回密码"}
       overlayClassName="z-[400] bg-black/45 backdrop-blur-md"
       positionerClassName={isPulsing ? "animate-modal-pulse" : ""}
-      modalClassName="md:max-w-[480px] max-md:overflow-y-auto md:overflow-y-auto"
+      modalClassName="md:max-w-[480px] max-md:top-0 max-md:h-dvh max-md:overflow-y-auto md:overflow-y-auto"
     >
       {() => (
         <>

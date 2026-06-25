@@ -44,6 +44,15 @@ describe("LoginModal", () => {
     expect(screen.getByText("欢迎回来")).toBeInTheDocument();
   });
 
+  it("移动端使用全屏高度而非底部内容 sheet", () => {
+    useLoginModal.setState({ isOpen: true, view: "login" });
+    render(<LoginModal />);
+    const panelClassName = screen.getByTestId("modal-panel").className;
+    expect(panelClassName).toContain("max-md:top-0");
+    expect(panelClassName).toContain("max-md:h-dvh");
+    expect(panelClassName).not.toContain("max-md:top-auto");
+  });
+
   it("isOpen=true, view=register 时显示注册视图", () => {
     useLoginModal.setState({ isOpen: true, view: "register" });
     render(<LoginModal />);
