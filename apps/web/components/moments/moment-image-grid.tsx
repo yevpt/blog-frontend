@@ -67,6 +67,7 @@ export function MomentImageGrid({ images, onOpen, priority = false }: MomentImag
             width={0}
             height={0}
             priority={priority}
+            fallbackUnoptimized
             sizes="(max-width: 768px) 90vw, 480px"
             className="block h-auto max-h-[320px] w-auto max-w-full object-contain"
             skeletonClassName="rounded-[6px]"
@@ -105,6 +106,7 @@ export function MomentImageGrid({ images, onOpen, priority = false }: MomentImag
                 alt={img.name}
                 fill
                 priority={priority && idx === 0}
+                fallbackUnoptimized
                 sizes="(max-width: 768px) 33vw, 160px"
                 className="object-cover"
                 skeletonClassName="rounded-[6px]"

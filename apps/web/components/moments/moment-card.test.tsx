@@ -38,6 +38,7 @@ vi.mock("next/image", () => ({
     alt,
     className,
     priority,
+    unoptimized,
   }: {
     src: string;
     alt: string;
@@ -45,6 +46,7 @@ vi.mock("next/image", () => ({
     className?: string;
     sizes?: string;
     priority?: boolean;
+    unoptimized?: boolean;
   }) => (
     <img
       src={src}
@@ -52,6 +54,7 @@ vi.mock("next/image", () => ({
       className={className}
       loading={priority ? "eager" : "lazy"}
       data-priority={priority ?? false}
+      data-unoptimized={unoptimized ?? false}
     />
   ),
 }));
@@ -357,6 +360,27 @@ describe("MomentCard", () => {
     expect(img).toHaveAttribute("src", "/motion.gif");
     expect(img).not.toHaveAttribute("loading");
     expect(img).not.toHaveAttribute("data-priority");
+  });
+
+  it("非 GIF 碎语图优先走优化器，并启用 fallbackUnoptimized", () => {
+    const moment = makeMoment({
+      images: [
+        {
+          id: 1,
+          name: "photo.jpg",
+          file_type: "image/jpeg",
+          url: "/photo.jpg",
+          access_url: "/photo.jpg",
+          size: 1000,
+          seq: 1,
+        },
+      ],
+    });
+
+    render(<MomentCard moment={moment} />);
+
+    const img = screen.getByRole("img", { name: "photo.jpg" });
+    expect(img).toHaveAttribute("data-unoptimized", "false");
   });
 
   it("无图片时不渲染图片网格", () => {

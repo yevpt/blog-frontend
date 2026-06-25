@@ -29,12 +29,8 @@ export function MomentContent({ content, collapsible = true }: MomentContentProp
   const html = useMemo(() => markdownToHtmlSync(displayText), [displayText]);
 
   return (
-    <div className="mt-0.5">
-      <PreviewableMarkdown
-        html={html}
-        variant="comment"
-        className="break-words text-[13px] leading-relaxed text-(--fg2)"
-      />
+    <div className="mt-0.5 text-[13px] leading-relaxed text-(--fg2)">
+      <PreviewableMarkdown html={html} variant="comment" className="break-words" />
       {isLong && (
         <Button
           variant="text"
