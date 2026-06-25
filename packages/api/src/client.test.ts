@@ -9,6 +9,7 @@ function mockResponse(body: unknown, status = 200) {
     status,
     ok: status >= 200 && status < 300,
     json: () => Promise.resolve(body),
+    text: () => Promise.resolve(typeof body === "string" ? body : JSON.stringify(body)),
   } as Response;
 }
 
@@ -125,6 +126,16 @@ describe("createApiClient", () => {
     ).rejects.toMatchObject({
       code: 400,
       message: "参数错误",
+    });
+  });
+
+  it("非 JSON 响应时抛出包含 HTTP 状态的 ApiError", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(mockResponse("404 page not found", 404));
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    await expect(client.music.list()).rejects.toMatchObject({
+      code: 404,
+      message: "404 page not found",
     });
   });
 
@@ -648,6 +659,91 @@ describe("createApiClient", () => {
       "http://api/music",
       expect.objectContaining({ method: "GET" }),
     );
+  });
+
+  it("music.listAdmin 使用 fetchAuthed 并构造 query string", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: { total: 0, list: [] } }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    await client.music.listAdmin({ keyword: " rain ", page: 2, page_size: 30 });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/music?keyword=rain&page=2&page_size=30",
+      expect.objectContaining({
+        method: "GET",
+        headers: expect.objectContaining({ Authorization: "Bearer admin-token" }),
+      }),
+    );
+  });
+
+  it("music.create 和 update 使用 JSON 请求体", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(mockResponse({ code: 0, message: "ok", data: null }));
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+    const req = {
+      name: "Ref:rain",
+      artist_ids: [1],
+      album_track_no: 1,
+      audio_key: "temp/music/1/audio/a.mp3",
+      audio_size: 1024,
+      duration: 270,
+      is_public: true,
+      seq: 0,
+    };
+
+    await client.music.create(req);
+    await client.music.update(7, req);
+
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      1,
+      "http://api/admin/music",
+      expect.objectContaining({ method: "POST", body: JSON.stringify(req) }),
+    );
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      2,
+      "http://api/admin/music/7",
+      expect.objectContaining({ method: "PUT", body: JSON.stringify(req) }),
+    );
+  });
+
+  it("music.uploadAudio 使用 FormData 且不手动设置 JSON Content-Type", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: {
+          key: "temp/music/1/audio/a.mp3",
+          url: "https://cdn.example.com/a.mp3",
+          size: 1024,
+          mime: "audio/mpeg",
+          hash: "hash",
+        },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+    const file = new File(["audio"], "a.mp3", { type: "audio/mpeg" });
+
+    const result = await client.music.uploadAudio({ file });
+
+    const [, init] = vi.mocked(global.fetch).mock.calls[0];
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/music/uploads/audio",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(init?.body).toBeInstanceOf(FormData);
+    expect((init?.body as FormData).get("file")).toBeInstanceOf(File);
+    expect((init?.headers as Record<string, string>)["Content-Type"]).toBeUndefined();
+    expect(result.key).toBe("temp/music/1/audio/a.mp3");
   });
 
   // ── 碎语接口（公开，无需登录）────────────────────────────────────────

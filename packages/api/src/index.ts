@@ -53,7 +53,22 @@ export type {
   TagListResp,
   TagUpdateReq,
 } from "./types/tag";
-export type { MusicItemResp, MusicListResp } from "./types/music";
+export type {
+  MusicAdminListReq,
+  MusicAdminListResp,
+  MusicAlbumListResp,
+  MusicAlbumResp,
+  MusicAlbumSaveReq,
+  MusicArtistListResp,
+  MusicArtistResp,
+  MusicArtistSaveReq,
+  MusicDetailResp,
+  MusicItemResp,
+  MusicListResp,
+  MusicSaveReq,
+  MusicUploadReq,
+  MusicUploadResp,
+} from "./types/music";
 export type {
   MomentListReq,
   MomentFeedScope,

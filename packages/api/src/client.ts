@@ -36,7 +36,20 @@ import type {
   CategoryTabsResp,
   CategoryUpdateReq,
 } from "./types/category";
-import type { MusicListResp } from "./types/music";
+import type {
+  MusicAdminListReq,
+  MusicAdminListResp,
+  MusicAlbumListResp,
+  MusicAlbumResp,
+  MusicAlbumSaveReq,
+  MusicArtistListResp,
+  MusicArtistResp,
+  MusicArtistSaveReq,
+  MusicListResp,
+  MusicSaveReq,
+  MusicUploadReq,
+  MusicUploadResp,
+} from "./types/music";
 import type {
   MomentDeleteResp,
   MomentItemResp,
@@ -135,7 +148,13 @@ async function request<T>(url: string, init: RequestInit, accessToken: string | 
   }
 
   const res = await fetch(url, { ...init, headers });
-  const json: BackendResponse<T> = await res.json();
+  const rawText = await res.text();
+  let json: BackendResponse<T>;
+  try {
+    json = rawText ? (JSON.parse(rawText) as BackendResponse<T>) : { code: 0, message: "ok" };
+  } catch {
+    throw new ApiError(res.status || 500, rawText || "响应不是合法的 JSON");
+  }
 
   // HTTP 401 单独处理，供上层 fetchAuthed 捕获后触发刷新逻辑
   if (res.status === 401) {
@@ -366,6 +385,102 @@ export function createApiClient(config: ApiClientConfig) {
     music: {
       /** 查询音乐列表，用于文章编辑页选择背景音乐 */
       list: () => fetchPublic<MusicListResp>("/music", { method: "GET" }),
+      /** 分页查询管理端音乐，需管理员登录 */
+      listAdmin: (req: MusicAdminListReq = {}) => {
+        const params = new URLSearchParams();
+        if (req.keyword !== undefined && req.keyword.trim() !== "") {
+          params.set("keyword", req.keyword.trim());
+        }
+        if (req.page !== undefined) params.set("page", String(req.page));
+        if (req.page_size !== undefined) params.set("page_size", String(req.page_size));
+        const qs = params.toString();
+        return fetchAuthed<MusicAdminListResp>(`/admin/music${qs ? `?${qs}` : ""}`, {
+          method: "GET",
+        });
+      },
+      /** 新增音乐，需管理员登录 */
+      create: (req: MusicSaveReq) =>
+        fetchAuthed<void>("/admin/music", { method: "POST", body: JSON.stringify(req) }),
+      /** 修改音乐，需管理员登录 */
+      update: (id: number, req: MusicSaveReq) =>
+        fetchAuthed<void>(`/admin/music/${id}`, { method: "PUT", body: JSON.stringify(req) }),
+      /** 删除音乐，需管理员登录 */
+      delete: (id: number) => fetchAuthed<void>(`/admin/music/${id}`, { method: "DELETE" }),
+      /** 查询管理端歌手，需管理员登录 */
+      listArtistsAdmin: (keyword = "") => {
+        const params = new URLSearchParams();
+        if (keyword.trim() !== "") params.set("keyword", keyword.trim());
+        const qs = params.toString();
+        return fetchAuthed<MusicArtistListResp>(`/admin/music/artists${qs ? `?${qs}` : ""}`, {
+          method: "GET",
+        });
+      },
+      /** 新增歌手，需管理员登录 */
+      createArtist: (req: MusicArtistSaveReq) =>
+        fetchAuthed<MusicArtistResp>("/admin/music/artists", {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 修改歌手，需管理员登录 */
+      updateArtist: (id: number, req: MusicArtistSaveReq) =>
+        fetchAuthed<MusicArtistResp>(`/admin/music/artists/${id}`, {
+          method: "PUT",
+          body: JSON.stringify(req),
+        }),
+      /** 删除歌手，需管理员登录 */
+      deleteArtist: (id: number) =>
+        fetchAuthed<void>(`/admin/music/artists/${id}`, { method: "DELETE" }),
+      /** 查询管理端专辑，需管理员登录 */
+      listAlbumsAdmin: (keyword = "") => {
+        const params = new URLSearchParams();
+        if (keyword.trim() !== "") params.set("keyword", keyword.trim());
+        const qs = params.toString();
+        return fetchAuthed<MusicAlbumListResp>(`/admin/music/albums${qs ? `?${qs}` : ""}`, {
+          method: "GET",
+        });
+      },
+      /** 新增专辑，需管理员登录 */
+      createAlbum: (req: MusicAlbumSaveReq) =>
+        fetchAuthed<MusicAlbumResp>("/admin/music/albums", {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 修改专辑，需管理员登录 */
+      updateAlbum: (id: number, req: MusicAlbumSaveReq) =>
+        fetchAuthed<MusicAlbumResp>(`/admin/music/albums/${id}`, {
+          method: "PUT",
+          body: JSON.stringify(req),
+        }),
+      /** 删除专辑，需管理员登录 */
+      deleteAlbum: (id: number) =>
+        fetchAuthed<void>(`/admin/music/albums/${id}`, { method: "DELETE" }),
+      /** 上传音乐音频到临时路径，需管理员登录 */
+      uploadAudio: (req: MusicUploadReq) => {
+        const formData = new FormData();
+        formData.append("file", req.file, req.file.name);
+        return fetchAuthed<MusicUploadResp>("/admin/music/uploads/audio", {
+          method: "POST",
+          body: formData,
+        });
+      },
+      /** 上传专辑封面到临时路径，需管理员登录 */
+      uploadAlbumCover: (req: MusicUploadReq) => {
+        const formData = new FormData();
+        formData.append("file", req.file, req.file.name);
+        return fetchAuthed<MusicUploadResp>("/admin/music/uploads/album-cover", {
+          method: "POST",
+          body: formData,
+        });
+      },
+      /** 上传歌手头像到临时路径，需管理员登录 */
+      uploadArtistAvatar: (req: MusicUploadReq) => {
+        const formData = new FormData();
+        formData.append("file", req.file, req.file.name);
+        return fetchAuthed<MusicUploadResp>("/admin/music/uploads/artist-avatar", {
+          method: "POST",
+          body: formData,
+        });
+      },
     },
     moments: {
       /** 上报一次碎语阅读（触发即可，不等待返回值） */
