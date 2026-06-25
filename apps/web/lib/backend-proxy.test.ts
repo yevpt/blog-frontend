@@ -38,6 +38,14 @@ describe("backend-proxy parseBackendJson", () => {
     expect(body).toEqual({ items: [] });
   });
 
+  it("空数组 data 不被误落成对象", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ code: 0, message: "ok", data: [] }));
+    const res = await proxyGet(makeReq("http://localhost/api/test"), "/test");
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body).toEqual([]);
+  });
+
   it("业务错误 (code!=0) 透传后端 message", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       jsonResponse({ code: 400, message: "内容长度不能超过 2000 个字符" }),

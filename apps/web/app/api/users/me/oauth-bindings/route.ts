@@ -2,5 +2,5 @@ import { type NextRequest } from "next/server";
 import { proxyGet } from "@/lib/backend-proxy";
 
 export async function GET(req: NextRequest) {
-  return proxyGet(req, "/oauth/bindings");
+  return proxyGet(req, "/users/me/oauth-bindings");
 }

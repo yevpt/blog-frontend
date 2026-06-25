@@ -64,7 +64,8 @@ async function parseBackendJson(res: Response): Promise<NextResponse> {
     forwardCookies(res, errRes);
     return errRes;
   }
-  const okRes = NextResponse.json(json.data || {});
+  // 用 ?? 保留空数组等 falsy 合法 data（|| 会把 [] 误落成 {}）
+  const okRes = NextResponse.json(json.data ?? {});
   forwardCookies(res, okRes);
   return okRes;
 }
