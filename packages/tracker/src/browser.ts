@@ -8,6 +8,7 @@ import type { TrackerOptions } from "./types";
 function browserDeps(options: TrackerOptions): TrackerDeps {
   const endpoint = options.endpoint;
   const sessionTimeoutMs = options.sessionTimeoutMs;
+  const tokenEndpoint = options.tokenEndpoint ?? "/api/analytics-token";
   return {
     now: () => Date.now(),
     send: (payload) => sendEvent(payload, endpoint),
@@ -15,6 +16,12 @@ function browserDeps(options: TrackerOptions): TrackerDeps {
     buildPayload,
     setInterval: (cb, ms) => window.setInterval(cb, ms),
     clearInterval: (id) => window.clearInterval(id),
+    // 同源取新 collect token；no-store 避免缓存短期 token，失败一律降级为 undefined（保留原 token）。
+    fetchToken: () =>
+      fetch(tokenEndpoint, { credentials: "include", cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => d?.token ?? undefined)
+        .catch(() => undefined),
     isVisible: () => document.visibilityState === "visible",
     onVisibilityChange: (cb) => {
       document.addEventListener("visibilitychange", cb);

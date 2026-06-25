@@ -10,8 +10,13 @@ function makeDeps(overrides: Partial<TrackerDeps> = {}) {
   let intervalCb: (() => void) | null = null;
 
   let interactionCb: (() => void) | null = null;
+  let refreshCb: (() => void) | null = null;
+  let refreshMs = 0;
+
+  const fetchToken = vi.fn<() => Promise<string | undefined>>(() => Promise.resolve(undefined));
 
   const deps: TrackerDeps = {
+    fetchToken,
     now: () => 1000,
     send: (p) => sent.push(p),
     getSession: () => "sid",
@@ -28,7 +33,13 @@ function makeDeps(overrides: Partial<TrackerDeps> = {}) {
         no_interaction: opts?.hasInteracted === false,
       },
     }),
-    setInterval: (cb) => {
+    setInterval: (cb, ms) => {
+      // 同一假实现服务心跳与 token 刷新两类定时器，用间隔区分回调。
+      if (ms >= 60000) {
+        refreshCb = cb;
+        refreshMs = ms;
+        return 2;
+      }
       intervalCb = cb;
       return 1;
     },
@@ -65,6 +76,9 @@ function makeDeps(overrides: Partial<TrackerDeps> = {}) {
     firePageHide: () => pageHideCb?.(),
     fireInterval: () => intervalCb?.(),
     fireInteraction: () => interactionCb?.(),
+    fireRefresh: () => refreshCb?.(),
+    refreshMs: () => refreshMs,
+    fetchToken,
     isInteractionSubscribed: () => interactionCb !== null,
   };
 }
@@ -168,5 +182,54 @@ describe("createTracker", () => {
     expect(h.isInteractionSubscribed()).toBe(true);
     t.stop();
     expect(h.isInteractionSubscribed()).toBe(false);
+  });
+
+  it("刷新定时器默认间隔 240000（< 后端 5 分钟 TTL）", () => {
+    const t = createTracker(h.deps, { collectToken: "old" });
+    t.start();
+    expect(h.refreshMs()).toBe(240000);
+  });
+
+  it("刷新成功后续上报使用新 token", async () => {
+    h.fetchToken.mockResolvedValue("new-tok");
+    const t = createTracker(h.deps, { collectToken: "old" });
+    t.start();
+    t.trackPageView("/a");
+    expect(h.sent.at(-1)?.collect_token).toBe("old");
+
+    h.fireRefresh();
+    await Promise.resolve(); // 等待 fetchToken 微任务结算
+    expect(h.fetchToken).toHaveBeenCalledTimes(1);
+
+    t.trackPageView("/b");
+    expect(h.sent.at(-1)?.collect_token).toBe("new-tok");
+  });
+
+  it("刷新返回 undefined 时保留原 token（优雅降级）", async () => {
+    h.fetchToken.mockResolvedValue(undefined);
+    const t = createTracker(h.deps, { collectToken: "old" });
+    t.start();
+    h.fireRefresh();
+    await Promise.resolve();
+    t.trackPageView("/a");
+    expect(h.sent.at(-1)?.collect_token).toBe("old");
+  });
+
+  it("刷新 reject 时保留原 token（优雅降级）", async () => {
+    h.fetchToken.mockRejectedValue(new Error("network"));
+    const t = createTracker(h.deps, { collectToken: "old" });
+    t.start();
+    h.fireRefresh();
+    await Promise.resolve();
+    await Promise.resolve();
+    t.trackPageView("/a");
+    expect(h.sent.at(-1)?.collect_token).toBe("old");
+  });
+
+  it("stop 清理刷新定时器", () => {
+    const t = createTracker(h.deps, { collectToken: "old" });
+    t.start();
+    t.stop();
+    expect(h.deps.clearInterval).toHaveBeenCalledWith(2);
   });
 });

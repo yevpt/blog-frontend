@@ -25,4 +25,6 @@ export interface TrackerOptions {
   heartbeatMs?: number; // 心跳间隔，默认 15000
   sessionTimeoutMs?: number; // 会话失活阈值，默认 30 分钟
   collectToken?: string; // SSR 注入的 collect token，原样随每次上报回传
+  tokenEndpoint?: string; // collect token 重签端点，默认 "/api/analytics-token"
+  refreshTokenMs?: number; // token 刷新间隔，默认 240000（4 分钟，须 < 后端 5 分钟 TTL）
 }
