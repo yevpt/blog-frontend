@@ -36,8 +36,8 @@
 import { useEffect } from "react";
 import { EditorContent } from "@tiptap/react";
 import { clsx } from "clsx";
-import { markdownToHtml } from "./utils/markdown-to-html";
 import { EDITOR_BLOCKQUOTE_QUOTELESS_CLASSES } from "./utils/prose-blockquote-classes";
+import { normalizeMarkdownEols } from "./utils/normalize-markdown-eols";
 import { useRichEditor } from "./hooks/use-rich-editor";
 import { Toolbar } from "./toolbar/Toolbar";
 import type { RichEditorProps } from "./types";
@@ -112,7 +112,7 @@ export function RichEditor({
     if (!editor) return;
 
     const currentMarkdown = editor.getMarkdown();
-    if (value === currentMarkdown) return;
+    if (normalizeMarkdownEols(value) === normalizeMarkdownEols(currentMarkdown)) return;
 
     if (value === "") {
       if (!editor.isEmpty) {
@@ -121,7 +121,7 @@ export function RichEditor({
       return;
     }
 
-    editor.commands.setContent(markdownToHtml(value), { emitUpdate: false });
+    editor.commands.setContent(value, { contentType: "markdown", emitUpdate: false });
   }, [value, editor]);
 
   const isPlain = variant === "plain";

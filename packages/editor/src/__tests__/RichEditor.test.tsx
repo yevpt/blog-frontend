@@ -416,4 +416,16 @@ describe("RichEditor", () => {
       expect(onChange.mock.calls.at(-1)?.[0]).toContain("> 引用内容");
     });
   });
+
+  it("外部 value 回填（CRLF + 段间空行）时保留空段落", async () => {
+    const apiContent =
+      "（为了赚回我的订阅费，只能化身无情监工去消耗Token😂）。\r\n\r\n\r\n\r\n之前都是爬的景区，香山、八大处、凤凰岭之流。";
+    const { container, rerender } = render(<RichEditor value="" onChange={() => {}} />);
+
+    rerender(<RichEditor value={apiContent} onChange={() => {}} />);
+
+    await waitFor(() => {
+      expect(container.querySelectorAll(".tiptap > p").length).toBeGreaterThanOrEqual(3);
+    });
+  });
 });
