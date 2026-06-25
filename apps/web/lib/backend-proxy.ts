@@ -1,10 +1,20 @@
 // apps/web/lib/backend-proxy.ts
 import { type NextRequest, NextResponse } from "next/server";
+import {
+  ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+  type AuthTokens,
+  authCookieHeader,
+  refreshAuthTokens,
+  setAuthCookies,
+} from "@/lib/auth-refresh";
 
-const BASE = process.env.API_BASE_URL!;
+function apiBaseUrl(): string {
+  return process.env.API_BASE_URL!;
+}
 
 function token(req: NextRequest) {
-  return req.cookies.get("access_token")?.value;
+  return req.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
 }
 
 function authHeader(t: string | undefined): Record<string, string> {
@@ -12,7 +22,9 @@ function authHeader(t: string | undefined): Record<string, string> {
 }
 
 /** 将浏览器请求中的 Cookie 转发到后端，确保 visitor_id 等字段不丢失 */
-function cookieHeader(req: NextRequest): Record<string, string> {
+function cookieHeader(req: NextRequest, tokens?: AuthTokens | null): Record<string, string> {
+  if (tokens) return { Cookie: authCookieHeader(req, tokens) };
+
   const all = req.cookies.getAll();
   if (all.length === 0) return {};
   return { Cookie: all.map((c) => `${c.name}=${c.value}`).join("; ") };
@@ -57,15 +69,55 @@ async function parseBackendJson(res: Response): Promise<NextResponse> {
   return okRes;
 }
 
+async function refreshFromRequest(req: NextRequest): Promise<AuthTokens | null> {
+  const refreshToken = req.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
+  if (!refreshToken) return null;
+  return refreshAuthTokens(refreshToken);
+}
+
+async function proxyWithRefresh(
+  req: NextRequest,
+  opts: { requireAuth: boolean },
+  fetchBackend: (accessToken: string | undefined, tokens: AuthTokens | null) => Promise<Response>,
+): Promise<NextResponse> {
+  let accessToken = token(req);
+  let tokens: AuthTokens | null = null;
+
+  if (!accessToken) {
+    tokens = await refreshFromRequest(req);
+    accessToken = tokens?.accessToken;
+  }
+
+  if (opts.requireAuth && !accessToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let res = await fetchBackend(accessToken, tokens);
+  if (res.status === 401 && !tokens) {
+    tokens = await refreshFromRequest(req);
+    if (tokens) {
+      accessToken = tokens.accessToken;
+      res = await fetchBackend(accessToken, tokens);
+    }
+  }
+
+  const response = await parseBackendJson(res);
+  if (tokens) {
+    setAuthCookies(response, tokens);
+  }
+  return response;
+}
+
 /** GET 代理：转发 query 参数，携带可选 access token 和 Cookie */
 export async function proxyGet(req: NextRequest, path: string): Promise<NextResponse> {
   const qs = req.nextUrl.searchParams.toString();
   try {
-    const res = await fetch(`${BASE}${path}${qs ? `?${qs}` : ""}`, {
-      method: "GET",
-      headers: { ...authHeader(token(req)), ...cookieHeader(req) },
-    });
-    return await parseBackendJson(res);
+    return await proxyWithRefresh(req, { requireAuth: false }, (accessToken, tokens) =>
+      fetch(`${apiBaseUrl()}${path}${qs ? `?${qs}` : ""}`, {
+        method: "GET",
+        headers: { ...authHeader(accessToken), ...cookieHeader(req, tokens) },
+      }),
+    );
   } catch {
     return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
   }
@@ -73,22 +125,27 @@ export async function proxyGet(req: NextRequest, path: string): Promise<NextResp
 
 /** SSE GET 代理：保持流式响应，携带 access token 和 Cookie */
 export async function proxySseGet(req: NextRequest, path: string): Promise<Response> {
-  const t = token(req);
+  let t = token(req);
+  let tokens: AuthTokens | null = null;
+  if (!t) {
+    tokens = await refreshFromRequest(req);
+    t = tokens?.accessToken;
+  }
   if (!t) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const qs = req.nextUrl.searchParams.toString();
   try {
-    const res = await fetch(`${BASE}${path}${qs ? `?${qs}` : ""}`, {
+    const res = await fetch(`${apiBaseUrl()}${path}${qs ? `?${qs}` : ""}`, {
       method: "GET",
       headers: {
         Accept: "text/event-stream",
         ...authHeader(t),
-        ...cookieHeader(req),
+        ...cookieHeader(req, tokens),
       },
     });
     if (!res.ok) return await parseBackendJson(res);
 
-    return new Response(res.body, {
+    const response = new NextResponse(res.body, {
       status: res.status,
       headers: {
         "Content-Type": "text/event-stream",
@@ -97,6 +154,8 @@ export async function proxySseGet(req: NextRequest, path: string): Promise<Respo
         "X-Accel-Buffering": "no",
       },
     });
+    if (tokens) setAuthCookies(response, tokens);
+    return response;
   } catch {
     return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
   }
@@ -109,16 +168,19 @@ export async function proxyPost(
   opts: { requireAuth?: boolean; hasBody?: boolean } = {},
 ): Promise<NextResponse> {
   const { requireAuth = true, hasBody = true } = opts;
-  const t = token(req);
-  if (requireAuth && !t) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const body = hasBody ? JSON.stringify(await req.json().catch(() => ({}))) : undefined;
-    const res = await fetch(`${BASE}${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeader(t), ...cookieHeader(req) },
-      body,
-    });
-    return await parseBackendJson(res);
+    return await proxyWithRefresh(req, { requireAuth }, (accessToken, tokens) =>
+      fetch(`${apiBaseUrl()}${path}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeader(accessToken),
+          ...cookieHeader(req, tokens),
+        },
+        body,
+      }),
+    );
   } catch {
     return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
   }
@@ -126,16 +188,19 @@ export async function proxyPost(
 
 /** PATCH 代理：转发 JSON body，携带 access token */
 export async function proxyPatch(req: NextRequest, path: string): Promise<NextResponse> {
-  const t = token(req);
-  if (!t) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const body = JSON.stringify(await req.json().catch(() => ({})));
-    const res = await fetch(`${BASE}${path}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...authHeader(t), ...cookieHeader(req) },
-      body,
-    });
-    return await parseBackendJson(res);
+    return await proxyWithRefresh(req, { requireAuth: true }, (accessToken, tokens) =>
+      fetch(`${apiBaseUrl()}${path}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeader(accessToken),
+          ...cookieHeader(req, tokens),
+        },
+        body,
+      }),
+    );
   } catch {
     return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
   }
@@ -143,16 +208,15 @@ export async function proxyPatch(req: NextRequest, path: string): Promise<NextRe
 
 /** POST 代理：转发 multipart/form-data，携带 access token */
 export async function proxyPostForm(req: NextRequest, path: string): Promise<NextResponse> {
-  const t = token(req);
-  if (!t) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const formData = await req.formData();
-    const res = await fetch(`${BASE}${path}`, {
-      method: "POST",
-      headers: { ...authHeader(t), ...cookieHeader(req) },
-      body: formData,
-    });
-    return await parseBackendJson(res);
+    return await proxyWithRefresh(req, { requireAuth: true }, (accessToken, tokens) =>
+      fetch(`${apiBaseUrl()}${path}`, {
+        method: "POST",
+        headers: { ...authHeader(accessToken), ...cookieHeader(req, tokens) },
+        body: formData,
+      }),
+    );
   } catch {
     return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
   }
@@ -160,14 +224,13 @@ export async function proxyPostForm(req: NextRequest, path: string): Promise<Nex
 
 /** DELETE 代理：需要 access token 并转发 Cookie */
 export async function proxyDelete(req: NextRequest, path: string): Promise<NextResponse> {
-  const t = token(req);
-  if (!t) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
-    const res = await fetch(`${BASE}${path}`, {
-      method: "DELETE",
-      headers: { ...authHeader(t), ...cookieHeader(req) },
-    });
-    return await parseBackendJson(res);
+    return await proxyWithRefresh(req, { requireAuth: true }, (accessToken, tokens) =>
+      fetch(`${apiBaseUrl()}${path}`, {
+        method: "DELETE",
+        headers: { ...authHeader(accessToken), ...cookieHeader(req, tokens) },
+      }),
+    );
   } catch {
     return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
   }

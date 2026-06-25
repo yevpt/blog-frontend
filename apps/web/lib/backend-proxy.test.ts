@@ -18,6 +18,10 @@ function makeReq(url: string, method = "GET", withAuth = false): NextRequest {
   return new NextRequest(url, { method, headers });
 }
 
+function makeReqWithCookie(url: string, method: string, cookie: string): NextRequest {
+  return new NextRequest(url, { method, headers: { Cookie: cookie } });
+}
+
 describe("backend-proxy parseBackendJson", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -105,5 +109,69 @@ describe("backend-proxy parseBackendJson", () => {
     expect(res.status).toBe(401);
     expect(body.error).toBe("Unauthorized");
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("proxyPost 无 access 但有 refresh 时先续期再请求后端", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(
+        jsonResponse({
+          code: 0,
+          message: "ok",
+          data: { access_token: "new-acc", refresh_token: "new-ref", expires_in: 7200 },
+        }),
+      )
+      .mockResolvedValueOnce(jsonResponse({ code: 0, message: "ok", data: { saved: true } }));
+
+    const req = makeReqWithCookie("http://localhost/api/test", "POST", "refresh_token=old-ref");
+    const res = await proxyPost(req, "/test");
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toEqual({ saved: true });
+    expect(fetch).toHaveBeenNthCalledWith(
+      1,
+      "http://mock-backend/auth/refresh",
+      expect.objectContaining({ body: JSON.stringify({ refresh_token: "old-ref" }) }),
+    );
+    expect(fetch).toHaveBeenNthCalledWith(
+      2,
+      "http://mock-backend/test",
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer new-acc" }),
+      }),
+    );
+    expect(res.headers.getSetCookie().join("\n")).toContain("access_token=new-acc");
+  });
+
+  it("proxyGet 收到后端 401 时续期并重试一次", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(jsonResponse({ code: 401, message: "token 已过期" }, 401))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          code: 0,
+          message: "ok",
+          data: { access_token: "new-acc", refresh_token: "new-ref", expires_in: 7200 },
+        }),
+      )
+      .mockResolvedValueOnce(jsonResponse({ code: 0, message: "ok", data: { items: [1] } }));
+
+    const req = makeReqWithCookie(
+      "http://localhost/api/test",
+      "GET",
+      "access_token=old-acc; refresh_token=old-ref",
+    );
+    const res = await proxyGet(req, "/test");
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toEqual({ items: [1] });
+    expect(fetch).toHaveBeenNthCalledWith(
+      3,
+      "http://mock-backend/test",
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer new-acc" }),
+      }),
+    );
+    expect(res.headers.getSetCookie().join("\n")).toContain("refresh_token=new-ref");
   });
 });
