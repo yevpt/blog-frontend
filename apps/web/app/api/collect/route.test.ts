@@ -1,10 +1,11 @@
+// @vitest-environment node
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
 import { POST } from "./route";
 
 function makeReq(opts: { cookies?: string; origin?: string; xff?: string } = {}): NextRequest {
   const headers: Record<string, string> = { "content-type": "application/json" };
-  if (opts.cookies) headers.cookie = opts.cookies;
+  if (opts.cookies) headers.Cookie = opts.cookies;
   if (opts.origin) headers.origin = opts.origin;
   if (opts.xff) headers["x-forwarded-for"] = opts.xff;
   return new NextRequest("http://localhost/api/collect", {
@@ -12,6 +13,10 @@ function makeReq(opts: { cookies?: string; origin?: string; xff?: string } = {})
     headers,
     body: JSON.stringify({ event_type: "page_view", path: "/", session_id: "sid" }),
   });
+}
+
+function fetchInitHeaders(init: RequestInit | undefined): Headers {
+  return new Headers(init?.headers);
 }
 
 describe("POST /api/collect", () => {
@@ -32,22 +37,22 @@ describe("POST /api/collect", () => {
 
   it("有 access_token cookie 时加 Authorization Bearer", async () => {
     await POST(makeReq({ cookies: "access_token=jwt123; visitor_id=v1" }));
-    const init = vi.mocked(fetch).mock.calls[0][1]!;
-    expect((init.headers as Record<string, string>).Authorization).toBe("Bearer jwt123");
+    const init = vi.mocked(fetch).mock.lastCall?.[1];
+    expect(fetchInitHeaders(init).get("Authorization")).toBe("Bearer jwt123");
   });
 
   it("匿名（无 access_token）不加 Authorization", async () => {
     await POST(makeReq({ cookies: "visitor_id=v1" }));
-    const init = vi.mocked(fetch).mock.calls[0][1]!;
-    expect((init.headers as Record<string, string>).Authorization).toBeUndefined();
+    const init = vi.mocked(fetch).mock.lastCall?.[1];
+    expect(fetchInitHeaders(init).get("Authorization")).toBeNull();
   });
 
   it("转发 Cookie / Origin / X-Forwarded-For 到后端", async () => {
     await POST(makeReq({ cookies: "visitor_id=v1", origin: "https://yevpt.com", xff: "1.2.3.4" }));
-    const headers = vi.mocked(fetch).mock.calls[0][1]!.headers as Record<string, string>;
-    expect(headers.Cookie).toContain("visitor_id=v1");
-    expect(headers.Origin).toBe("https://yevpt.com");
-    expect(headers["X-Forwarded-For"]).toBe("1.2.3.4");
+    const headers = fetchInitHeaders(vi.mocked(fetch).mock.lastCall?.[1]);
+    expect(headers.get("Cookie")).toContain("visitor_id=v1");
+    expect(headers.get("Origin")).toBe("https://yevpt.com");
+    expect(headers.get("X-Forwarded-For")).toBe("1.2.3.4");
   });
 
   it("回写后端 Set-Cookie（首次下发 visitor_id）", async () => {
