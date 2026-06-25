@@ -2,7 +2,25 @@
 
 import { Suspense, useEffect, useRef } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
+import type { UserResp } from "@repo/api";
 import type { OAuthMessage } from "@/lib/oauth";
+
+interface OAuthCallbackResult {
+  code?: number;
+  message?: string;
+  data?: {
+    action?: "login" | "bind";
+    user?: UserResp;
+    redirect_uri?: string;
+  };
+}
+
+function safeRedirectPath(value: string | null | undefined): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return "/";
+  }
+  return value;
+}
 
 /**
  * OAuth 回调接收页（Popup 窗口内运行）
@@ -55,10 +73,14 @@ function OAuthCallbackContent() {
       `/api/oauth/${source}/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
     )
       .then((r) => r.json())
-      .then((data) => {
+      .then((data: OAuthCallbackResult) => {
         if (data.code !== 0) {
           notify({ type: "oauth_error", message: data.message ?? "登录失败，请稍后重试" });
         } else {
+          if (data.data?.action === "bind") {
+            router.replace(safeRedirectPath(data.data.redirect_uri ?? searchParams.get("next")));
+            return;
+          }
           const user = data.data?.user;
           if (!user) {
             notify({ type: "oauth_error", message: "登录数据异常，请稍后重试" });

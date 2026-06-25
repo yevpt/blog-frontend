@@ -100,6 +100,26 @@ describe("OAuth 回调接收页", () => {
     expect(mockPostMessage).not.toHaveBeenCalled();
   });
 
+  it("直接导航模式：绑定成功后重定向至 next 指向的账号安全页", async () => {
+    Object.defineProperty(window, "opener", { writable: true, value: null });
+    const nextParams = new URLSearchParams("code=abc&state=xyz&next=%2Fusers%2F1%3Ftab%3Dsecurity");
+    vi.mocked(useSearchParams).mockReturnValue(nextParams as ReturnType<typeof useSearchParams>);
+
+    vi.mocked(global.fetch).mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          code: 0,
+          data: { action: "bind" },
+        }),
+    } as Response);
+
+    render(<OAuthCallbackPage />);
+
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/users/1?tab=security"));
+    expect(sessionStorage.getItem("oauth_result")).toBeNull();
+    expect(mockPostMessage).not.toHaveBeenCalled();
+  });
+
   it("缺少 code 或 state 时，直接发送错误消息", async () => {
     const emptyParams = new URLSearchParams("");
     vi.mocked(useSearchParams).mockReturnValue(emptyParams as ReturnType<typeof useSearchParams>);
