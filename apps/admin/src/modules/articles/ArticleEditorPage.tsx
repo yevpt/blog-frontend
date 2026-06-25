@@ -117,10 +117,10 @@ export function ArticleEditorPage() {
       musicList.map((item) => ({
         id: item.id,
         label: item.name,
-        artist: item.singer,
+        artist: item.artist_display_name ?? item.singer ?? "",
         duration: formatMusicDuration(item.duration),
         durationSeconds: item.duration,
-        url: item.url,
+        url: item.audio_url ?? item.url,
       })),
     [musicList],
   );

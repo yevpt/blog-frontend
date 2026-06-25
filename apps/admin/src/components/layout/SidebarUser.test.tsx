@@ -31,6 +31,21 @@ describe("SidebarUser", () => {
     expect(screen.getByText("admin@example.com")).toBeInTheDocument();
   });
 
+  it("用户菜单只保留退出登录，不再显示个人设置", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <SidebarUser isCollapsed={false} />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "打开用户菜单" }));
+
+    expect(await screen.findByText("退出登录")).toBeInTheDocument();
+    expect(screen.queryByText("个人设置")).not.toBeInTheDocument();
+  });
+
   it("点击退出登录后清理状态并跳转登录页", async () => {
     localStorage.setItem("refresh_token", "refresh");
     const user = userEvent.setup();

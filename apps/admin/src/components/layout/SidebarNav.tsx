@@ -22,7 +22,10 @@ const navGroups = adminNavItems.reduce<Array<{ group?: string; items: typeof adm
 
 export function SidebarNav({ isCollapsed, onNavigate }: SidebarNavProps) {
   return (
-    <nav aria-label="后台导航" className="flex flex-1 flex-col gap-5 px-3 py-4">
+    <nav
+      aria-label="后台导航"
+      className={cn("flex flex-1 flex-col gap-4 px-3 py-4", isCollapsed && "px-2")}
+    >
       {navGroups.map((group) => (
         <div key={group.group ?? "overview"} className="grid gap-1.5">
           {group.group && (
@@ -46,8 +49,9 @@ export function SidebarNav({ isCollapsed, onNavigate }: SidebarNavProps) {
                 onClick={onNavigate}
                 className={({ isActive }) =>
                   cn(
-                    "group relative flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring",
-                    isActive && "bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary",
+                    "group relative flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring",
+                    isActive &&
+                      "bg-foreground text-background shadow-sm hover:bg-foreground hover:text-background",
                     isCollapsed && "justify-center px-0",
                   )
                 }

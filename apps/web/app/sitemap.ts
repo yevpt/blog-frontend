@@ -30,7 +30,6 @@ async function fetchPublicArticles(): Promise<ArticleListItemResp[]> {
     }
   }
 }
-
 async function fetchPublicArticlesFromBackend(): Promise<ArticleListItemResp[]> {
   const api = createApiClient({
     baseUrl: process.env.API_BASE_URL!,

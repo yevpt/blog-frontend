@@ -22,7 +22,6 @@ function DropdownIcon({ name }: { name: IconName }) {
   };
 }
 
-const userIcon = DropdownIcon({ name: "user" });
 const logoutIcon = DropdownIcon({ name: "log-out" });
 
 export function SidebarUser({ isCollapsed }: SidebarUserProps) {
@@ -30,7 +29,7 @@ export function SidebarUser({ isCollapsed }: SidebarUserProps) {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const displayName = getDisplayName(user);
-  const email = user?.email ?? "未设置邮箱";
+  const email = user?.email ?? user?.username ?? "等待同步用户信息";
 
   function handleAction(key: Key) {
     if (key !== "logout") {
@@ -43,18 +42,23 @@ export function SidebarUser({ isCollapsed }: SidebarUserProps) {
   }
 
   return (
-    <div className="border-t border-border p-3">
+    <div className={cn("border-t border-border p-3", isCollapsed && "p-2")}>
       <Dropdown.Root>
         <Button
           type="button"
           variant="ghost"
           aria-label="打开用户菜单"
           className={cn(
-            "h-auto w-full justify-start rounded-lg px-2 py-2 text-left hover:bg-accent",
-            isCollapsed && "justify-center px-0",
+            "h-10 w-full justify-start rounded-lg px-2 py-0 text-left transition-colors hover:bg-accent data-[pressed]:scale-100",
+            isCollapsed && "h-10 justify-center px-0 py-0",
           )}
         >
-          <Avatar size="sm" initials={getInitials(displayName)} alt={displayName} />
+          <Avatar
+            size="sm"
+            src={user?.avatar_url}
+            initials={getInitials(displayName)}
+            alt={displayName}
+          />
           <span className={cn("min-w-0 flex-1", isCollapsed && "sr-only")}>
             <span className="block truncate text-sm font-medium text-foreground">
               {displayName}
@@ -72,8 +76,6 @@ export function SidebarUser({ isCollapsed }: SidebarUserProps) {
           className="w-56 rounded-lg border border-border bg-card text-card-foreground shadow-xl"
         >
           <Dropdown.Menu aria-label="用户菜单" onAction={handleAction}>
-            <Dropdown.Item id="profile" label="个人设置" icon={userIcon} />
-            <Dropdown.Separator />
             <Dropdown.Item id="logout" label="退出登录" icon={logoutIcon} />
           </Dropdown.Menu>
         </Dropdown.Popover>

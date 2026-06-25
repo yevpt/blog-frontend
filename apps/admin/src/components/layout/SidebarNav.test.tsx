@@ -24,7 +24,7 @@ describe("SidebarNav", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("link", { name: "标签" })).toHaveClass("bg-primary/10");
-    expect(screen.getByRole("link", { name: "概览" })).not.toHaveClass("bg-primary/10");
+    expect(screen.getByRole("link", { name: "标签" })).toHaveClass("bg-foreground");
+    expect(screen.getByRole("link", { name: "概览" })).not.toHaveClass("bg-foreground");
   });
 });
