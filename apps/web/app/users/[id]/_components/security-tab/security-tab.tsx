@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAccountSecurity } from "./use-account-security";
 import { SecurityList, type SecurityAction } from "./security-list";
@@ -9,7 +9,7 @@ import { EmailSheet, type EmailSheetIntent } from "./email-sheet";
 import { PasswordSheet } from "./password-sheet";
 import { UnbindConfirm } from "./unbind-confirm";
 import { addToast } from "@/lib/toast";
-import { OAUTH_BIND_REDIRECT_KEY } from "@/lib/oauth";
+import { openOAuthPopup } from "@/lib/oauth";
 import type { EmailDisplayValue } from "../../_lib/display-email";
 
 interface SecurityTabProps {
@@ -28,7 +28,7 @@ interface EmailSheetState {
   intent: EmailSheetIntent;
 }
 
-export function SecurityTab({ userId, onDisplayEmailChanged }: SecurityTabProps) {
+export function SecurityTab({ onDisplayEmailChanged }: SecurityTabProps) {
   const { data, loading, error, reload, patchMailShow } = useAccountSecurity();
   const router = useRouter();
   const [usernameOpen, setUsernameOpen] = useState(false);
@@ -36,24 +36,46 @@ export function SecurityTab({ userId, onDisplayEmailChanged }: SecurityTabProps)
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [unbindSource, setUnbindSource] = useState<string | null>(null);
 
-  // 发起绑定：取后端授权地址后整页跳转第三方授权页，回跳由 OAuth 回调页统一换取绑定结果。
-  // redirect_uri 必须与各平台注册的回调地址「精确一致」（QQ/微博/百度 等严格校验，多带 query 会被拒，
-  // 导致授权失败或 token 交换失败 → 绑定不落库、被跳走）；故 next 不拼进 redirect_uri，
-  // 改用 sessionStorage 暂存回跳目标（整页跳转同标签页同源，往返可靠读回）。
+  // 保存当前 popup 监听器的清理函数，组件卸载时移除，防止内存泄漏
+  const cleanupRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    return () => cleanupRef.current?.();
+  }, []);
+
+  // 发起绑定：与登录共用 popup 机制（openOAuthPopup）——弹窗授权、个人详情页保持在原地，
+  // 回调页 postMessage 通知本页绑定结果，成功后 reload 列表刷新为已绑定。
+  // redirect_uri 用裸回调地址，与各平台注册回调「精确一致」（QQ/微博/百度 等严格校验，
+  // 多带 query 会被拒 → 授权失败或 token 交换失败 → 绑定不落库）。
   // 该 authorize 代理路由不解包，故按信封读 data.authorize_url。
   async function startBind(source: string) {
     const redirectUri = `${window.location.origin}/oauth/${source}/callback`;
-    sessionStorage.setItem(OAUTH_BIND_REDIRECT_KEY, `/users/${userId}?tab=security`);
     try {
       const res = await fetch(
         `/api/oauth/${source}/authorize?action=bind&redirect_uri=${encodeURIComponent(redirectUri)}`,
       );
       const d = await res.json();
-      if (d.code === 0 && d.data?.authorize_url) {
-        window.location.href = d.data.authorize_url;
+      if (d.code !== 0 || !d.data?.authorize_url) {
+        addToast(d.message ?? "获取授权地址失败", "error");
         return;
       }
-      addToast(d.message ?? "获取授权地址失败", "error");
+
+      cleanupRef.current?.();
+      const cleanup = openOAuthPopup(d.data.authorize_url, (msg) => {
+        if (msg.type === "oauth_bind_success") {
+          addToast("绑定成功", "success");
+          void reload();
+        } else if (msg.type === "oauth_error") {
+          addToast(msg.message ?? "绑定失败，请稍后重试", "error");
+        }
+        // 忽略 oauth_success（登录消息）等无关类型
+        cleanupRef.current = null;
+      });
+
+      if (!cleanup) {
+        addToast("浏览器阻止了弹出窗口，请允许后重试", "error");
+        return;
+      }
+      cleanupRef.current = cleanup;
     } catch {
       addToast("网络异常，请稍后重试", "error");
     }

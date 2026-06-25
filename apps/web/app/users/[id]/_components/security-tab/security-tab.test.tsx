@@ -110,20 +110,13 @@ describe("SecurityTab", () => {
     await waitFor(() => expect(mockRefresh).toHaveBeenCalled());
   });
 
-  it("点未绑定平台「绑定」取授权地址并整页跳转", async () => {
+  it("点未绑定平台「绑定」用裸 redirect_uri 取授权地址并弹出 popup", async () => {
     const user = userEvent.setup();
-    // 复用按 path 分发的 apiJson；fetch 在 authorize 时返回 authorize_url 信封
-    const origin = "http://localhost";
-    const hrefSetter = vi.fn();
-    Object.defineProperty(window, "location", {
-      value: {
-        origin,
-        set href(v: string) {
-          hrefSetter(v);
-        },
-      },
-      writable: true,
-    });
+    const origin = window.location.origin;
+    // jsdom 缺 matchMedia，startBind 用它判移动端 features，不补会被 catch 吞掉
+    window.matchMedia = vi.fn().mockReturnValue({ matches: false }) as unknown as typeof matchMedia;
+    const mockOpen = vi.fn().mockReturnValue({ closed: false });
+    vi.stubGlobal("open", mockOpen);
     vi.stubGlobal(
       "fetch",
       vi.fn((url: string) => {
@@ -141,7 +134,7 @@ describe("SecurityTab", () => {
     render(<SecurityTab userId={1} />);
     await user.click(await screen.findByRole("button", { name: "绑定 QQ" }));
 
-    // redirect_uri 必须是裸回调地址（QQ/微博/百度 精确匹配），回跳目标走 sessionStorage
+    // redirect_uri 必须是裸回调地址（QQ/微博/百度 精确匹配，带 query 会被拒）
     await waitFor(() =>
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining(
@@ -150,8 +143,44 @@ describe("SecurityTab", () => {
         ),
       ),
     );
-    expect(sessionStorage.getItem("oauth_bind_redirect")).toBe("/users/1?tab=security");
-    await waitFor(() => expect(hrefSetter).toHaveBeenCalledWith("https://auth/x"));
+    // 复用登录 popup 机制，个人详情页保持在原地（不整页跳转）
+    await waitFor(() =>
+      expect(mockOpen).toHaveBeenCalledWith("https://auth/x", "oauth_popup", expect.any(String)),
+    );
+  });
+
+  it("收到 oauth_bind_success 消息后刷新绑定列表", async () => {
+    const user = userEvent.setup();
+    window.matchMedia = vi.fn().mockReturnValue({ matches: false }) as unknown as typeof matchMedia;
+    vi.stubGlobal("open", vi.fn().mockReturnValue({ closed: false }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) => {
+        if (typeof url === "string" && url.includes("/authorize")) {
+          return Promise.resolve({
+            json: () => Promise.resolve({ code: 0, data: { authorize_url: "https://auth/x" } }),
+          });
+        }
+        return Promise.resolve({
+          json: () => Promise.resolve({ code: 0, data: ["github", "qq"] }),
+        });
+      }),
+    );
+
+    render(<SecurityTab userId={1} />);
+    await user.click(await screen.findByRole("button", { name: "绑定 QQ" }));
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+    const callsBefore = apiJson.mock.calls.length;
+    window.dispatchEvent(
+      new MessageEvent("message", {
+        data: { type: "oauth_bind_success", source: "qq" },
+        origin: window.location.origin,
+      }),
+    );
+
+    // reload 会重新拉取 me / bindings，apiJson 调用次数增加
+    await waitFor(() => expect(apiJson.mock.calls.length).toBeGreaterThan(callsBefore));
   });
 
   it("点已绑定平台「解绑」打开确认框", async () => {
