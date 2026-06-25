@@ -46,4 +46,11 @@ describe("AnalyticsTracker", () => {
       .mock.calls.filter((c) => JSON.parse(c[1]!.body as string).event_type === "page_view");
     expect(pvCalls).toHaveLength(1);
   });
+
+  it("options.collectToken 透传到上报载荷", () => {
+    render(<AnalyticsTracker options={{ collectToken: "ssr-tok" }} />);
+    const body = JSON.parse(vi.mocked(fetch).mock.calls[0][1]!.body as string);
+    expect(body.collect_token).toBe("ssr-tok");
+    expect(body.signals).toMatchObject({ no_interaction: true });
+  });
 });

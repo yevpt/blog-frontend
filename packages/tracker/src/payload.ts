@@ -5,6 +5,7 @@ export function buildPayload(
   eventType: AnalyticsEventType,
   path: string,
   sessionId: string,
+  opts: { collectToken?: string; hasInteracted?: boolean } = {},
 ): CollectPayload {
   const screen =
     typeof window !== "undefined" && window.screen
@@ -12,5 +13,17 @@ export function buildPayload(
       : "";
   const title = typeof document !== "undefined" ? document.title : "";
   const referer = typeof document !== "undefined" ? document.referrer : "";
-  return { event_type: eventType, path, title, referer, session_id: sessionId, screen };
+  return {
+    event_type: eventType,
+    path,
+    title,
+    referer,
+    session_id: sessionId,
+    screen,
+    collect_token: opts.collectToken,
+    signals: {
+      webdriver: typeof navigator !== "undefined" && navigator.webdriver === true,
+      no_interaction: opts.hasInteracted === false,
+    },
+  };
 }

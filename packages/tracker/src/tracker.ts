@@ -7,12 +7,18 @@ export interface TrackerDeps {
   now: () => number;
   send: (payload: CollectPayload) => void;
   getSession: (now: number) => string;
-  buildPayload: (type: AnalyticsEventType, path: string, sessionId: string) => CollectPayload;
+  buildPayload: (
+    type: AnalyticsEventType,
+    path: string,
+    sessionId: string,
+    opts?: { collectToken?: string; hasInteracted?: boolean },
+  ) => CollectPayload;
   setInterval: (cb: () => void, ms: number) => number;
   clearInterval: (id: number) => void;
   isVisible: () => boolean;
   onVisibilityChange: (cb: () => void) => () => void;
   onPageHide: (cb: () => void) => () => void;
+  onInteraction: (cb: () => void) => () => void;
 }
 
 export interface Tracker {
@@ -28,12 +34,19 @@ export function createTracker(deps: TrackerDeps, options: TrackerOptions = {}): 
   let currentPath = "";
   let pendingPath: string | null = null;
   let intervalId: number | null = null;
+  let hasInteracted = false;
   let unsubVisibility: (() => void) | null = null;
   let unsubPageHide: (() => void) | null = null;
+  let unsubInteraction: (() => void) | null = null;
 
   function emit(type: AnalyticsEventType, path: string): void {
     const sid = deps.getSession(deps.now());
-    deps.send(deps.buildPayload(type, path, sid));
+    deps.send(
+      deps.buildPayload(type, path, sid, {
+        collectToken: options.collectToken,
+        hasInteracted,
+      }),
+    );
   }
 
   function sendHeartbeat(): void {
@@ -88,6 +101,9 @@ export function createTracker(deps: TrackerDeps, options: TrackerOptions = {}): 
   function start(): void {
     unsubVisibility = deps.onVisibilityChange(handleVisibility);
     unsubPageHide = deps.onPageHide(handlePageHide);
+    unsubInteraction = deps.onInteraction(() => {
+      hasInteracted = true;
+    });
     if (deps.isVisible()) startHeartbeat();
   }
 
@@ -95,8 +111,10 @@ export function createTracker(deps: TrackerDeps, options: TrackerOptions = {}): 
     stopHeartbeat();
     unsubVisibility?.();
     unsubPageHide?.();
+    unsubInteraction?.();
     unsubVisibility = null;
     unsubPageHide = null;
+    unsubInteraction = null;
   }
 
   return { trackPageView, start, stop };

@@ -5,6 +5,7 @@ import { AnalyticsTracker } from "@repo/tracker/react";
 import { SiteFooter } from "@/components/footer";
 import { SiteNavbar } from "@/components/navbar";
 import { getSession } from "@/lib/session";
+import { signAnalyticsCollectToken } from "@/lib/analytics-token";
 import { createServerApiClient } from "@/lib/server-api";
 import { THEME_CRITICAL_CSS } from "@/lib/theme-init";
 import { ThemeProvider } from "./providers/theme-provider";
@@ -82,7 +83,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <StripExtensionAttrsScript />
       </head>
       <body>
-        <AnalyticsTracker />
+        <AnalyticsTracker options={{ collectToken: signAnalyticsCollectToken() }} />
         <ThemeProvider>
           <LocaleProvider>
             <SessionProvider userId={session?.userId ?? null} profile={profile}>

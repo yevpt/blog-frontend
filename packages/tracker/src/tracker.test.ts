@@ -9,17 +9,24 @@ function makeDeps(overrides: Partial<TrackerDeps> = {}) {
   let pageHideCb: (() => void) | null = null;
   let intervalCb: (() => void) | null = null;
 
+  let interactionCb: (() => void) | null = null;
+
   const deps: TrackerDeps = {
     now: () => 1000,
     send: (p) => sent.push(p),
     getSession: () => "sid",
-    buildPayload: (event_type, path, session_id) => ({
+    buildPayload: (event_type, path, session_id, opts) => ({
       event_type,
       path,
       title: "t",
       referer: "",
       session_id,
       screen: "1x1",
+      collect_token: opts?.collectToken,
+      signals: {
+        webdriver: false,
+        no_interaction: opts?.hasInteracted === false,
+      },
     }),
     setInterval: (cb) => {
       intervalCb = cb;
@@ -39,6 +46,12 @@ function makeDeps(overrides: Partial<TrackerDeps> = {}) {
         pageHideCb = null;
       };
     },
+    onInteraction: (cb) => {
+      interactionCb = cb;
+      return () => {
+        interactionCb = null;
+      };
+    },
     ...overrides,
   };
 
@@ -51,6 +64,8 @@ function makeDeps(overrides: Partial<TrackerDeps> = {}) {
     fireVisibility: () => visibilityCb?.(),
     firePageHide: () => pageHideCb?.(),
     fireInterval: () => intervalCb?.(),
+    fireInteraction: () => interactionCb?.(),
+    isInteractionSubscribed: () => interactionCb !== null,
   };
 }
 
@@ -128,5 +143,30 @@ describe("createTracker", () => {
     t.stop();
     h.fireVisibility();
     expect(h.sent.filter((e) => e.event_type === "heartbeat")).toHaveLength(0);
+  });
+
+  it("未交互前 no_interaction 为 true，交互后转为 false", () => {
+    const t = createTracker(h.deps);
+    t.start();
+    t.trackPageView("/a");
+    expect(h.sent.at(-1)?.signals?.no_interaction).toBe(true);
+    h.fireInteraction();
+    t.trackPageView("/b");
+    expect(h.sent.at(-1)?.signals?.no_interaction).toBe(false);
+  });
+
+  it("collectToken 透传到每次上报载荷", () => {
+    const t = createTracker(h.deps, { collectToken: "tok" });
+    t.start();
+    t.trackPageView("/a");
+    expect(h.sent.at(-1)?.collect_token).toBe("tok");
+  });
+
+  it("start 订阅交互，stop 解绑交互监听", () => {
+    const t = createTracker(h.deps);
+    t.start();
+    expect(h.isInteractionSubscribed()).toBe(true);
+    t.stop();
+    expect(h.isInteractionSubscribed()).toBe(false);
   });
 });
