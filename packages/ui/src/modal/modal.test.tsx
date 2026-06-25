@@ -86,8 +86,11 @@ describe("Modal", () => {
     expect(panelClassName).not.toMatch(/(?<!:)max-w-\[440px\]/);
     // md: 断点起应用 size 限制
     expect(panelClassName).toContain("md:max-w-[440px]");
-    // 仍保留移动端全屏高度
-    expect(panelClassName).toContain("max-md:h-dvh");
+    // 移动端按内容高度撑开，最高不超过视口；桌面端仍受 md:max-w 约束
+    expect(panelClassName).toContain("max-md:max-h-dvh");
+    expect(panelClassName).toContain("max-md:fixed");
+    expect(panelClassName).toContain("max-md:inset-x-0");
+    expect(screen.getByTestId("modal-positioner").className).toContain("max-md:contents");
   });
 
   it("placement=center 时 size 在所有断点生效", () => {

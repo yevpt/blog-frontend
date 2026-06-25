@@ -26,7 +26,8 @@ const sizeClassesAtMd: Record<ModalSize, string> = {
 const positionerClasses: Record<ModalPlacement, string> = {
   center: "items-center justify-center p-4",
   sheet: "items-end justify-center",
-  "fullscreen-mobile": "items-end justify-center md:items-center md:p-4",
+  "fullscreen-mobile":
+    "max-md:contents md:flex md:min-h-full md:w-full md:items-center md:justify-center md:p-4",
 };
 
 const modalClasses: Record<ModalPlacement, string> = {
@@ -35,7 +36,7 @@ const modalClasses: Record<ModalPlacement, string> = {
   sheet:
     "absolute inset-x-0 bottom-0 mx-auto flex w-full flex-col overflow-hidden rounded-t-2xl border-t border-border bg-card text-foreground shadow-2xl outline-none",
   "fullscreen-mobile":
-    "relative flex w-full flex-col overflow-hidden border-t border-border bg-card text-foreground shadow-2xl outline-none max-md:h-dvh max-md:rounded-none md:rounded-2xl md:border",
+    "relative flex min-h-0 w-full max-w-full flex-col overflow-x-hidden border-t border-border bg-card text-foreground shadow-2xl outline-none max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:top-auto max-md:flex max-md:max-h-dvh max-md:w-auto max-md:max-w-none max-md:rounded-none md:mx-auto md:overflow-hidden md:rounded-2xl md:border",
 };
 
 export function Modal({
@@ -66,7 +67,7 @@ export function Modal({
       }}
       className={({ isExiting }) =>
         cn(
-          "ui-modal-overlay fixed inset-0 isolate z-50 flex bg-black/40 text-left backdrop-blur-sm",
+          "ui-modal-overlay fixed inset-0 isolate z-50 flex overflow-x-hidden bg-black/40 text-left backdrop-blur-sm",
           isExiting ? "ui-modal-overlay-exit" : "ui-modal-overlay-enter",
           overlayClassName,
         )
@@ -108,7 +109,11 @@ export function Modal({
               placement === "center" && "max-h-[calc(var(--visual-viewport-height,100vh)*0.9)]",
               placement === "fullscreen-mobile" &&
                 "md:max-h-[calc(var(--visual-viewport-height,100vh)*0.9)]",
-              isExiting ? "ui-modal-panel-exit" : "ui-modal-panel-enter",
+              isExiting
+                ? "ui-modal-panel-exit"
+                : placement === "fullscreen-mobile"
+                  ? "ui-modal-panel-fullscreen-mobile-enter"
+                  : "ui-modal-panel-enter",
               modalClassName,
             )
           }
@@ -117,7 +122,13 @@ export function Modal({
             role={role}
             aria-label={ariaLabel}
             aria-labelledby={ariaLabelledBy}
-            className={cn("flex max-h-[inherit] flex-col outline-none", dialogClassName)}
+            className={cn(
+              "flex w-full min-w-0 max-w-full flex-col outline-none",
+              placement === "fullscreen-mobile"
+                ? "min-h-0 flex-1 max-h-full overflow-x-hidden md:h-full"
+                : "max-h-[inherit]",
+              dialogClassName,
+            )}
           >
             {children}
           </Dialog>
