@@ -6,6 +6,7 @@ import { useAccountSecurity } from "./use-account-security";
 import { SecurityList, type SecurityAction } from "./security-list";
 import { UsernameSheet } from "./username-sheet";
 import { EmailSheet } from "./email-sheet";
+import { PasswordSheet } from "./password-sheet";
 
 interface SecurityTabProps {
   userId: number;
@@ -17,6 +18,7 @@ export function SecurityTab({ userId: _userId }: SecurityTabProps) {
   // 当前打开的 Sheet；username / email 已接入，其余 action 仍占位
   const [usernameOpen, setUsernameOpen] = useState(false);
   const [emailTarget, setEmailTarget] = useState<"main" | "sub" | null>(null);
+  const [passwordOpen, setPasswordOpen] = useState(false);
 
   function dispatch(action: SecurityAction) {
     if (action.type === "username") {
@@ -25,6 +27,10 @@ export function SecurityTab({ userId: _userId }: SecurityTabProps) {
     }
     if (action.type === "email") {
       setEmailTarget(action.target);
+      return;
+    }
+    if (action.type === "password") {
+      setPasswordOpen(true);
       return;
     }
     // Task 8–10 接入其余 Sheet，暂占位记录
@@ -40,6 +46,17 @@ export function SecurityTab({ userId: _userId }: SecurityTabProps) {
   // 改名成功后登出并刷新（沿用 navbar-user-menu 的登出模式），下次访问需重新登录
   async function handleUsernameSuccess() {
     setUsernameOpen(false);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // 忽略网络错误，服务端 token 失效后自然拦截
+    }
+    router.refresh();
+  }
+
+  // 改密/设初始/找回成功后同样登出并刷新（密码变更后旧会话失效）
+  async function handlePasswordSuccess() {
+    setPasswordOpen(false);
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch {
@@ -86,6 +103,13 @@ export function SecurityTab({ userId: _userId }: SecurityTabProps) {
         currentEmail={emailTarget === "sub" ? data.subEmail : data.mainEmail}
         onClose={() => setEmailTarget(null)}
         onSuccess={handleEmailSuccess}
+      />
+      <PasswordSheet
+        open={passwordOpen}
+        passwordSet={data.passwordSet}
+        mainEmail={data.mainEmail}
+        onClose={() => setPasswordOpen(false)}
+        onSuccess={() => void handlePasswordSuccess()}
       />
     </>
   );
