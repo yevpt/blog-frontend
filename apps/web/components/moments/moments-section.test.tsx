@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { readFileSync } from "node:fs";
@@ -367,5 +367,79 @@ describe("MomentsSection", () => {
     await waitFor(() => {
       expect(toastMockState.addToast).toHaveBeenCalledWith("操作太频繁，请稍后再试", "error");
     });
+  });
+
+  it("点击换一批会请求随机碎语并替换卡片，exclude_ids 携带当前已展示的碎语 ID", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        total: 10,
+        pages: 1,
+        page: 1,
+        page_size: 3,
+        list: [makeMoment(101, "换一批换出来的碎语")],
+      }),
+    );
+
+    render(
+      <MomentsSection
+        initialMoments={[makeMoment(1, SHORT_CONTENT), makeMoment(2, LONG_CONTENT)]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /换一批/ }));
+
+    await waitFor(() => {
+      expect(screen.getByText("换一批换出来的碎语")).toBeTruthy();
+    });
+    expect(screen.queryByText(SHORT_CONTENT)).toBeNull();
+
+    const calledUrl = vi.mocked(fetch).mock.calls.at(-1)?.[0] as string;
+    const url = new URL(calledUrl, "http://localhost");
+    expect(url.pathname).toBe("/api/moments");
+    expect(url.searchParams.get("random")).toBe("true");
+    expect(url.searchParams.get("exclude_ids")).toBe("1,2");
+    expect(url.searchParams.get("page_size")).toBe("3");
+    expect(url.searchParams.has("user_id")).toBe(false);
+  });
+
+  it("换一批请求进行中按钮禁用，请求完成后恢复可点击", async () => {
+    const user = userEvent.setup();
+    let resolveFetch!: (value: Response) => void;
+    vi.mocked(fetch).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        }),
+    );
+
+    render(<MomentsSection initialMoments={[makeMoment(1, SHORT_CONTENT)]} />);
+
+    const shuffleButton = screen.getByRole("button", { name: /换一批/ });
+    await user.click(shuffleButton);
+
+    expect(shuffleButton).toBeDisabled();
+
+    await act(async () => {
+      resolveFetch(jsonResponse({ total: 1, pages: 1, page: 1, page_size: 3, list: [] }));
+    });
+
+    await waitFor(() => {
+      expect(shuffleButton).not.toBeDisabled();
+    });
+  });
+
+  it("换一批失败时 toast 展示兜底文案，不改变已展示内容", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+
+    render(<MomentsSection initialMoments={[makeMoment(1, SHORT_CONTENT)]} />);
+
+    await user.click(screen.getByRole("button", { name: /换一批/ }));
+
+    await waitFor(() => {
+      expect(toastMockState.addToast).toHaveBeenCalledWith("换一批失败，请稍后重试", "error");
+    });
+    expect(screen.getByText(SHORT_CONTENT)).toBeTruthy();
   });
 });

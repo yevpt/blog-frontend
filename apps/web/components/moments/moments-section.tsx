@@ -13,6 +13,7 @@ import {
 } from "@/components/sidebar";
 import { useSession } from "@/app/providers/session-provider";
 import { useMomentList } from "@/hooks/use-moment-list";
+import { useMomentShuffle } from "@/hooks/use-moment-shuffle";
 import { useLoginModal } from "@/store/use-login-modal";
 import { useMomentModal } from "@/store/use-moment-modal";
 import { MomentCard } from "./moment-card";
@@ -59,6 +60,11 @@ export function MomentsSection({ initialMoments, loading, ownerUserId }: Moments
     mode: "user",
     userId: ownerUserId,
   });
+  const { shuffle, isShuffling } = useMomentShuffle({
+    pageSize: MAX_MOMENTS,
+    initialMomentIds: initialMoments.map((moment) => moment.id),
+    onShuffled: setMoments,
+  });
   const [activeComment, setActiveComment] = useState<{ momentId: number } | null>(null);
 
   const visibleMoments = moments.slice(0, MAX_MOMENTS);
@@ -98,8 +104,16 @@ export function MomentsSection({ initialMoments, loading, ownerUserId }: Moments
         <SidebarSectionHeader
           title={t("home.moments")}
           action={
-            <SidebarSectionAction aria-label={t("moment.shuffle")}>
-              <SvgIcon name="refresh-cw" size={12} />
+            <SidebarSectionAction
+              aria-label={t("moment.shuffle")}
+              onPress={shuffle}
+              isDisabled={isShuffling}
+            >
+              <SvgIcon
+                name="refresh-cw"
+                size={12}
+                className={isShuffling ? "animate-spin" : undefined}
+              />
               {t("moment.shuffle")}
             </SidebarSectionAction>
           }
