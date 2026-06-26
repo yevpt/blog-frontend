@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
     const pageSize = searchParams.get("page_size");
     const userId = searchParams.get("user_id");
     const roleId = searchParams.get("role_id");
+    const random = searchParams.get("random");
+    const excludeIds = searchParams.get("exclude_ids");
 
     const pageNum = Number(page);
     const pageSizeNum = Number(pageSize);
@@ -22,6 +24,14 @@ export async function GET(request: NextRequest) {
     if (pageSize && !Number.isNaN(pageSizeNum)) req.page_size = pageSizeNum;
     if (userId && !Number.isNaN(userIdNum)) req.user_id = userIdNum;
     if (roleId && !Number.isNaN(roleIdNum)) req.role_id = roleIdNum;
+    if (random === "true") req.random = true;
+    if (excludeIds) {
+      const ids = excludeIds
+        .split(",")
+        .map(Number)
+        .filter((id) => !Number.isNaN(id));
+      if (ids.length > 0) req.exclude_ids = ids;
+    }
 
     const api = await createServerApiClient();
     const data = await api.moments.listPublic(req);
