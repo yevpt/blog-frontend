@@ -148,3 +148,21 @@ export type {
   NotificationReadResp,
 } from "./types/notification";
 export type { TempImageUploadReq, TempImageUploadScene, TempUploadResp } from "./types/upload";
+export type {
+  AnalyticsSegmentStat,
+  AnalyticsOverviewResp,
+  AnalyticsMetric,
+  AnalyticsSegment,
+  AnalyticsTrendReq,
+  AnalyticsTrendPoint,
+  AnalyticsDimension,
+  AnalyticsDimensionPoint,
+  AnalyticsPageStat,
+  AnalyticsFriendLinkStat,
+  AnalyticsRealtimePath,
+  AnalyticsRealtimeResp,
+  AnalyticsPathSequence,
+  AnalyticsFunnelStep,
+  AnalyticsRangeReq,
+  AdminOverviewSummaryResp,
+} from "./types/analytics";

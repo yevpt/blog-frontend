@@ -110,6 +110,20 @@ import type {
   NotificationUnreadCountResp,
 } from "./types/notification";
 import type { TempImageUploadReq, TempUploadResp } from "./types/upload";
+import type {
+  AnalyticsOverviewResp,
+  AnalyticsTrendReq,
+  AnalyticsTrendPoint,
+  AnalyticsDimension,
+  AnalyticsDimensionPoint,
+  AnalyticsPageStat,
+  AnalyticsFriendLinkStat,
+  AnalyticsRealtimeResp,
+  AnalyticsPathSequence,
+  AnalyticsFunnelStep,
+  AnalyticsRangeReq,
+  AdminOverviewSummaryResp,
+} from "./types/analytics";
 
 /** createApiClient 的注入配置接口 */
 export interface ApiClientConfig {
@@ -891,6 +905,88 @@ export function createApiClient(config: ApiClientConfig) {
      * 测试用端点，与后端 /test/* 路由对应。
      * 同时作为 fetchAuthed 路径的示例，未来可删除。
      */
+    /** 站点分析（后台），均需管理员登录 */
+    analytics: {
+      /** 总览：今日 PV/UV、在线、累计、注册/匿名分档 */
+      getOverview: () =>
+        fetchAuthed<AnalyticsOverviewResp>("/admin/analytics/overview", { method: "GET" }),
+      /** 趋势序列：metric × segment，按天 */
+      getTrend: (req: AnalyticsTrendReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.from !== undefined) p.set("from", req.from);
+        if (req.to !== undefined) p.set("to", req.to);
+        if (req.metric !== undefined) p.set("metric", req.metric);
+        if (req.segment !== undefined) p.set("segment", req.segment);
+        const qs = p.toString();
+        return fetchAuthed<AnalyticsTrendPoint[]>(`/admin/analytics/trend${qs ? `?${qs}` : ""}`, {
+          method: "GET",
+        });
+      },
+      /** 维度分布：按「天 × 维度取值」返回，调用方按 dim_value 汇总 */
+      getDimensions: (
+        dimension: AnalyticsDimension,
+        req: Omit<AnalyticsRangeReq, "limit"> = {},
+      ) => {
+        const p = new URLSearchParams();
+        p.set("dimension", dimension);
+        if (req.from !== undefined) p.set("from", req.from);
+        if (req.to !== undefined) p.set("to", req.to);
+        return fetchAuthed<AnalyticsDimensionPoint[]>(
+          `/admin/analytics/dimensions?${p.toString()}`,
+          { method: "GET" },
+        );
+      },
+      /** 热门页面排行 */
+      getPages: (req: AnalyticsRangeReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.from !== undefined) p.set("from", req.from);
+        if (req.to !== undefined) p.set("to", req.to);
+        if (req.limit !== undefined) p.set("limit", String(req.limit));
+        const qs = p.toString();
+        return fetchAuthed<AnalyticsPageStat[]>(`/admin/analytics/pages${qs ? `?${qs}` : ""}`, {
+          method: "GET",
+        });
+      },
+      /** 友链入站来源排行（含入站占比） */
+      getFriendLinks: (req: AnalyticsRangeReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.from !== undefined) p.set("from", req.from);
+        if (req.to !== undefined) p.set("to", req.to);
+        if (req.limit !== undefined) p.set("limit", String(req.limit));
+        const qs = p.toString();
+        return fetchAuthed<AnalyticsFriendLinkStat[]>(
+          `/admin/analytics/friend-links${qs ? `?${qs}` : ""}`,
+          { method: "GET" },
+        );
+      },
+      /** 实时：当前在线 + 最近活跃路径 */
+      getRealtime: () =>
+        fetchAuthed<AnalyticsRealtimeResp>("/admin/analytics/realtime", { method: "GET" }),
+      /** 访问路径序列 */
+      getPaths: (req: AnalyticsRangeReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.from !== undefined) p.set("from", req.from);
+        if (req.to !== undefined) p.set("to", req.to);
+        if (req.limit !== undefined) p.set("limit", String(req.limit));
+        const qs = p.toString();
+        return fetchAuthed<AnalyticsPathSequence[]>(`/admin/analytics/paths${qs ? `?${qs}` : ""}`, {
+          method: "GET",
+        });
+      },
+      /** 漏斗：按有序 step 列表返回每步留存与转化率 */
+      getFunnel: (steps: string[], req: Omit<AnalyticsRangeReq, "limit"> = {}) => {
+        const p = new URLSearchParams();
+        steps.forEach((s) => p.append("step", s));
+        if (req.from !== undefined) p.set("from", req.from);
+        if (req.to !== undefined) p.set("to", req.to);
+        return fetchAuthed<AnalyticsFunnelStep[]>(`/admin/analytics/funnel?${p.toString()}`, {
+          method: "GET",
+        });
+      },
+      /** 后台首页汇总：内容总量、互动待办、用户统计 */
+      getOverviewSummary: () =>
+        fetchAuthed<AdminOverviewSummaryResp>("/admin/overview/summary", { method: "GET" }),
+    },
     test: {
       authed: () => fetchAuthed<string>("/test/authed", { method: "GET" }),
     },
