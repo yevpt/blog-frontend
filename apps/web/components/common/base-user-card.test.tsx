@@ -26,7 +26,8 @@ describe("BaseUserCard", () => {
     id: "user-1",
     nickname: "Test User",
     avatar_url: "/avatar.png",
-    last_login_at: new Date().toISOString(),
+    is_online: true,
+    last_active_at: new Date().toISOString(),
     roles: ["user"],
   };
 
@@ -76,8 +77,16 @@ describe("BaseUserCard", () => {
 
   it("shows time ago if offline", () => {
     const offlineDate = new Date(Date.now() - 1000 * 60 * 60 * 24); // 1 day ago
-    render(<BaseUserCard user={{ ...mockUser, last_login_at: offlineDate.toISOString() }} />);
+    render(
+      <BaseUserCard
+        user={{
+          ...mockUser,
+          is_online: false,
+          last_active_at: offlineDate.toISOString(),
+        }}
+      />,
+    );
     expect(screen.queryByText("在线")).not.toBeInTheDocument();
-    expect(screen.getByText(/来过/)).toBeInTheDocument();
+    expect(screen.getByText(/活跃过/)).toBeInTheDocument();
   });
 });

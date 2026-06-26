@@ -3,27 +3,33 @@
 import { cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import { useHydrated } from "@repo/hooks";
-import { formatRelativeTime } from "@/lib/format-time";
+import { resolvePresenceDisplay } from "@/lib/user-presence";
 
 interface UserBannerProps {
   lastLoginAt: string | null;
+  lastActiveAt?: string | null;
+  isOnline?: boolean;
   isOwner: boolean;
   isEditMode: boolean;
 }
 
-function getOnlineStatus(lastLoginAt: string | null): { online: boolean; label: string } {
-  if (!lastLoginAt) return { online: false, label: "从未登录" };
-  const loginTime = new Date(lastLoginAt);
-  const diffMs = Date.now() - loginTime.getTime();
-  if (diffMs < 3 * 60 * 1000) return { online: true, label: "在线" };
-  return { online: false, label: `${formatRelativeTime(loginTime)}来过` };
-}
-
-export function UserBanner({ lastLoginAt, isOwner, isEditMode }: UserBannerProps) {
+export function UserBanner({
+  lastLoginAt,
+  lastActiveAt,
+  isOnline,
+  isOwner,
+  isEditMode,
+}: UserBannerProps) {
   const hydrated = useHydrated();
-  const { online, label } = hydrated
-    ? getOnlineStatus(lastLoginAt)
-    : { online: false, label: "\u00A0" };
+  const presence = hydrated
+    ? resolvePresenceDisplay({
+        is_online: isOnline,
+        last_active_at: lastActiveAt,
+        last_login_at: lastLoginAt,
+      })
+    : null;
+  const online = presence?.kind === "online";
+  const label = presence?.label ?? "\u00A0";
 
   return (
     <div className="relative h-[140px] w-full overflow-hidden bg-gradient-to-br from-violet-800 via-violet-600 to-indigo-500">

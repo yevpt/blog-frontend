@@ -26,5 +26,6 @@ export interface Visitor {
   name: string;
   avatar: string;
   isOnline: boolean;
-  visitedAt: Date;
+  lastActiveAt: Date | null;
+  lastLoginAt: Date | null;
 }

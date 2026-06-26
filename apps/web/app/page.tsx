@@ -70,8 +70,9 @@ export default async function Home() {
     id: String(u.id),
     name: u.nickname || "User",
     avatar: u.avatar_url || "",
-    isOnline: false,
-    visitedAt: u.last_login_at ? new Date(u.last_login_at) : new Date(),
+    isOnline: u.is_online ?? false,
+    lastActiveAt: u.last_active_at ? new Date(u.last_active_at) : null,
+    lastLoginAt: u.last_login_at ? new Date(u.last_login_at) : null,
   }));
 
   return (

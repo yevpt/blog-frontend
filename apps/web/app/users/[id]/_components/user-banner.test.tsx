@@ -24,15 +24,14 @@ describe("UserBanner", () => {
     expect(screen.getByText("点击更换背景")).toBeInTheDocument();
   });
 
-  it("最近 3 分钟内登录显示在线", () => {
-    const recentLogin = new Date(Date.now() - 60 * 1000).toISOString();
-    render(<UserBanner {...baseProps} lastLoginAt={recentLogin} />);
+  it("is_online=true 显示在线", () => {
+    render(<UserBanner {...baseProps} isOnline />);
     expect(screen.getByText("在线")).toBeInTheDocument();
   });
 
-  it("超过 3 分钟显示相对时间", () => {
-    const oldLogin = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-    render(<UserBanner {...baseProps} lastLoginAt={oldLogin} />);
-    expect(screen.getByText(/来过/)).toBeInTheDocument();
+  it("离线时显示相对活跃时间", () => {
+    const oldActive = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    render(<UserBanner {...baseProps} lastActiveAt={oldActive} isOnline={false} />);
+    expect(screen.getByText(/活跃过/)).toBeInTheDocument();
   });
 });

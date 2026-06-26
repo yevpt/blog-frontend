@@ -53,6 +53,8 @@ export interface UserDetailResp {
   mark?: string;
   status: number;
   last_login_at?: string;
+  last_active_at?: string;
+  is_online?: boolean;
   roles: string[];
   /** 是否已设置登录密码（第三方注册用户可能为 false） */
   password_set?: boolean;
@@ -69,6 +71,8 @@ export interface UserPublicProfileResp {
   mark: string | null;
   description: string | null;
   last_login_at: string | null;
+  last_active_at?: string | null;
+  is_online?: boolean;
   register_at: string;
   roles: string[];
   display_email: string | null;
@@ -135,6 +139,8 @@ export interface UserListItemResp {
   mark?: string;
   roles: string[];
   last_login_at?: string;
+  last_active_at?: string;
+  is_online?: boolean;
 }
 
 export interface UserPageResp {

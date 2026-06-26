@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { cn } from "@repo/ui";
 import { useHydrated } from "@repo/hooks";
-import { formatRelativeTime } from "@/lib/format-time";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { isAdminUser, isVipUser } from "@/lib/user-roles";
+import { resolvePresenceDisplay } from "@/lib/user-presence";
 
 export interface BaseUserCardProps {
   user: {
@@ -13,6 +13,8 @@ export interface BaseUserCardProps {
     nickname?: string | null;
     avatar_url?: string | null;
     last_login_at?: string | Date | null;
+    last_active_at?: string | Date | null;
+    is_online?: boolean;
     roles?: string[] | null;
   };
   variant?: "normal" | "compact";
@@ -37,8 +39,13 @@ export function BaseUserCard({
   const isAdmin = isAdminUser(user.roles);
   const isVip = isVipUser(user.roles);
 
-  const loginTime = user.last_login_at ? new Date(user.last_login_at) : null;
-  const isOnline = hydrated && loginTime ? Date.now() - loginTime.getTime() < 3 * 60 * 1000 : false;
+  const presence = hydrated
+    ? resolvePresenceDisplay({
+        is_online: user.is_online,
+        last_active_at: user.last_active_at,
+        last_login_at: user.last_login_at,
+      })
+    : null;
 
   const roleLabel = isAdmin ? "Admin" : isVip ? "VIP" : null;
   const isCompact = variant === "compact";
@@ -72,7 +79,7 @@ export function BaseUserCard({
                 : "",
           )}
         />
-        {!isCompact && isOnline && (
+        {!isCompact && presence?.kind === "online" && (
           <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background bg-emerald-500" />
         )}
       </div>
@@ -104,19 +111,15 @@ export function BaseUserCard({
 
       {/* 在线状态：hydration 前占位，避免在线/离线分支切换导致 #418 */}
       <div className="flex w-full items-center justify-center">
-        {!hydrated ? (
+        {!hydrated || !presence ? (
           <span className="truncate text-[10px] text-(--fg3)">&nbsp;</span>
-        ) : isOnline ? (
+        ) : presence.kind === "online" ? (
           <span className="flex items-center gap-1 truncate text-[10px] font-semibold text-emerald-500">
             {isCompact && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>}
-            在线
-          </span>
-        ) : loginTime ? (
-          <span className="truncate text-[10px] text-(--fg3)">
-            {formatRelativeTime(loginTime)}来过
+            {presence.label}
           </span>
         ) : (
-          <span className="text-[10px] text-(--fg3)">从未登录</span>
+          <span className="truncate text-[10px] text-(--fg3)">{presence.label}</span>
         )}
       </div>
     </Link>

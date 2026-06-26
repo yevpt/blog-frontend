@@ -64,6 +64,8 @@ export function UserProfilePage({
           description={profile.description}
           avatarUrl={profile.avatar_url}
           lastLoginAt={profile.last_login_at}
+          lastActiveAt={profile.last_active_at}
+          isOnline={profile.is_online}
           roles={profile.roles}
           socialLinks={profile.social_links}
           isOwner={isOwner}

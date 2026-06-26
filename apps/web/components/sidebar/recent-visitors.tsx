@@ -29,7 +29,9 @@ export function RecentVisitors({ visitors }: RecentVisitorsProps) {
               id: visitor.id,
               nickname: visitor.name,
               avatar_url: visitor.avatar,
-              last_login_at: visitor.visitedAt,
+              is_online: visitor.isOnline,
+              last_active_at: visitor.lastActiveAt,
+              last_login_at: visitor.lastLoginAt,
               roles: [],
             }}
             variant="compact"

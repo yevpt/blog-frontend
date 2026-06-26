@@ -88,12 +88,15 @@ vi.mock("@repo/ui", () => ({
 
 // 生成测试用 Visitor 数据
 function makeVisitor(id: string): Visitor {
+  const online = id === "1";
+  const activeAt = online ? new Date() : new Date("2026-05-30T10:00:00");
   return {
     id,
     name: `访客${id}`,
     avatar: `https://example.com/avatar${id}.jpg`,
-    isOnline: id === "1",
-    visitedAt: id === "1" ? new Date() : new Date("2026-05-30T10:00:00"),
+    isOnline: online,
+    lastActiveAt: activeAt,
+    lastLoginAt: activeAt,
   };
 }
 

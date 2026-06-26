@@ -9,7 +9,7 @@ import { UserAvatar } from "@/components/common/user-avatar";
 import { isAdminUser, isVipUser } from "@/lib/user-roles";
 import { useAdminVipRole } from "@/hooks/use-admin-vip-role";
 import { InlineFieldEditor } from "./inline-field-editor";
-import { formatRelativeTime } from "@/lib/format-time";
+import { resolvePresenceDisplay } from "@/lib/user-presence";
 import { addToast } from "@/lib/toast";
 
 interface UserInfoHeaderProps {
@@ -19,6 +19,8 @@ interface UserInfoHeaderProps {
   description: string | null;
   avatarUrl: string | null;
   lastLoginAt: string | null;
+  lastActiveAt?: string | null;
+  isOnline?: boolean;
   roles: string[];
   socialLinks: Array<{ platform: string; url: string }>;
   isOwner: boolean;
@@ -39,14 +41,6 @@ function DropdownIcon({ name }: { name: IconName }) {
 
 const vipIcon = DropdownIcon({ name: "vip" });
 
-function getOnlineStatus(lastLoginAt: string | null): { online: boolean; label: string } {
-  if (!lastLoginAt) return { online: false, label: "" };
-  const loginTime = new Date(lastLoginAt);
-  const diffMs = Date.now() - loginTime.getTime();
-  if (diffMs < 3 * 60 * 1000) return { online: true, label: "在线" };
-  return { online: false, label: `${formatRelativeTime(loginTime)}来过` };
-}
-
 export function UserInfoHeader({
   userId,
   nickname,
@@ -54,6 +48,8 @@ export function UserInfoHeader({
   description,
   avatarUrl,
   lastLoginAt,
+  lastActiveAt,
+  isOnline,
   roles,
   socialLinks: _socialLinks,
   isOwner,
@@ -91,9 +87,15 @@ export function UserInfoHeader({
     }
   }
 
-  const { online, label: onlineLabel } = hydrated
-    ? getOnlineStatus(lastLoginAt)
-    : { online: false, label: "\u00A0" };
+  const presence = hydrated
+    ? resolvePresenceDisplay({
+        is_online: isOnline,
+        last_active_at: lastActiveAt,
+        last_login_at: lastLoginAt,
+      })
+    : null;
+  const online = presence?.kind === "online";
+  const onlineLabel = presence?.kind === "never" ? "" : (presence?.label ?? "\u00A0");
   const isVip = isVipUser(roles);
   const isAdmin = isAdminUser(roles);
   const vipMenuLabel = isVip ? "取消星标认证" : "授予星标认证";
