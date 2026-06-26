@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { MomentPageResp } from "@repo/api";
 import { createServerApiClient } from "@/lib/server-api";
 import { MomentsListLoader } from "@/components/moments/moments-list-loader";
-import { WriteMomentButton } from "@/components/moments/write-moment-button";
+import { MomentsFloatDockSetup } from "@/components/moments/moments-float-dock-setup";
 import { PageContainer } from "@/components/common/page-container";
 
 export const metadata: Metadata = {
@@ -26,12 +26,8 @@ export default async function MomentsPage() {
 
   return (
     <PageContainer size="default">
+      <MomentsFloatDockSetup />
       <MomentsListLoader initialPage={momentsPage} />
-      <div className="pointer-events-none absolute inset-x-5 bottom-6 top-0 z-40 md:bottom-10">
-        <div className="sticky top-[calc(100dvh-4rem)] flex justify-end md:top-[calc(100dvh-5.5rem)]">
-          <WriteMomentButton />
-        </div>
-      </div>
     </PageContainer>
   );
 }

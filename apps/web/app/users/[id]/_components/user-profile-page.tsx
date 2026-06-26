@@ -10,6 +10,8 @@ import { isAdminUser } from "@/lib/user-roles";
 import { UserInfoHeader } from "./user-info-header";
 import { UserProfileTabs } from "./user-profile-tabs";
 import { PROFILE_PAGE_MAX_WIDTH_CLASS } from "./constants";
+import { FloatDockPageAnchor } from "@/components/float-dock";
+import { PROFILE_FLOAT_DOCK_LAYOUT } from "@/lib/float-dock-layouts";
 
 interface UserProfilePageProps {
   profile: UserPublicProfileResp;
@@ -54,6 +56,7 @@ export function UserProfilePage({
 
   return (
     <div className="min-h-screen bg-background">
+      <FloatDockPageAnchor layout={PROFILE_FLOAT_DOCK_LAYOUT} />
       <div className="h-16" />
 
       <div className={cn("mx-auto space-y-4 px-4 py-6", PROFILE_PAGE_MAX_WIDTH_CLASS)}>

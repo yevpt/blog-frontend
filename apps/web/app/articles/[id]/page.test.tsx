@@ -21,7 +21,9 @@ interface ArticleMusicSyncProps {
 
 const mockArticleNavbarSync = vi.fn<(props: ArticleNavbarSyncProps) => null>(() => null);
 const mockArticleMusicSync = vi.fn<(props: ArticleMusicSyncProps) => null>(() => null);
-const mockArticleFloatActions = vi.fn<(props: { articleId: number }) => null>(() => null);
+const mockArticleFloatDockSetup = vi.fn<(props: { articleId: number; hasToc?: boolean }) => null>(
+  () => null,
+);
 
 const mockArticle: ArticleDetailResp = {
   id: 1,
@@ -59,9 +61,9 @@ vi.mock("@/components/article-detail", () => ({
     <div data-testid="content" dangerouslySetInnerHTML={{ __html: contentHtml }} />
   ),
   ArticleToc: () => <nav aria-label="文章目录" />,
-  ArticleFloatActions: (props: { articleId: number }) => {
-    mockArticleFloatActions(props);
-    return <div data-testid="float-actions" />;
+  ArticleFloatDockSetup: (props: { articleId: number; hasToc?: boolean }) => {
+    mockArticleFloatDockSetup(props);
+    return <div data-testid="float-dock-setup" />;
   },
   ArticleComments: () => <section data-testid="comments" />,
 }));
@@ -146,12 +148,15 @@ describe("ArticleDetailPage", () => {
   });
 
   it("渲染浮动操作区", async () => {
-    mockArticleFloatActions.mockClear();
+    mockArticleFloatDockSetup.mockClear();
 
     const jsx = await ArticleDetailPage({ params: Promise.resolve({ id: "1" }) });
     render(jsx);
 
-    expect(mockArticleFloatActions).toHaveBeenCalledWith({ articleId: mockArticle.id });
-    expect(screen.getByTestId("float-actions")).toBeInTheDocument();
+    expect(mockArticleFloatDockSetup).toHaveBeenCalledWith({
+      articleId: mockArticle.id,
+      hasToc: true,
+    });
+    expect(screen.getByTestId("float-dock-setup")).toBeInTheDocument();
   });
 });

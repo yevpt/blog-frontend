@@ -9,7 +9,7 @@ import {
   ArticleHero,
   ArticleContent,
   ArticleToc,
-  ArticleFloatActions,
+  ArticleFloatDockSetup,
   ArticleComments,
   ArticleMusicSync,
   ArticleMusicHost,
@@ -110,7 +110,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         )}
       </div>
 
-      <ArticleFloatActions articleId={article.id} />
+      <ArticleFloatDockSetup articleId={article.id} hasToc={hasToc} />
     </>
   );
 }
