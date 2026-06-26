@@ -4,12 +4,14 @@ import type { MomentRow } from "../model";
 interface MomentColumnsOptions {
   togglingTopId: string | null;
   onToggleTop: (moment: MomentRow) => void;
+  onEdit: (moment: MomentRow) => void;
   onDelete: (moment: MomentRow) => void;
 }
 
 export function createMomentColumns({
   togglingTopId,
   onToggleTop,
+  onEdit,
   onDelete,
 }: MomentColumnsOptions): Array<DataTableColumn<MomentRow>> {
   return [
@@ -74,11 +76,20 @@ export function createMomentColumns({
       id: "actions",
       header: "操作",
       width: "18%",
-      minWidth: 156,
+      minWidth: 200,
       className: "text-center",
       headerClassName: "text-center [&>div]:justify-center",
       cell: (moment) => (
         <div className="flex items-center justify-center gap-0.5">
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="h-7 px-2 text-xs"
+            onPress={() => onEdit(moment)}
+          >
+            编辑
+          </Button>
           <Button
             type="button"
             size="sm"

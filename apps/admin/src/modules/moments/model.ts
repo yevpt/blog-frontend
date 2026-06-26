@@ -1,4 +1,11 @@
-import type { AdminMomentStatusFilter, MomentItemResp } from "@repo/api";
+import type { AdminMomentStatusFilter, MomentItemResp, MomentSaveReq } from "@repo/api";
+
+export interface MomentImageRow {
+  id: string;
+  name: string;
+  url: string;
+  accessUrl: string;
+}
 
 export interface MomentRow {
   id: string;
@@ -13,6 +20,13 @@ export interface MomentRow {
   likeCount: number;
   commentCount: number;
   createdAt: string;
+  images: MomentImageRow[];
+}
+
+export interface MomentFormValues {
+  content: string;
+  status: "0" | "1";
+  commentStatus: "0" | "1";
 }
 
 export const MOMENT_STATUS_FILTER_OPTIONS: Array<{
@@ -38,6 +52,51 @@ export function mapMomentToRow(item: MomentItemResp): MomentRow {
     likeCount: item.like_count,
     commentCount: item.comment_count,
     createdAt: formatAdminDateTime(item.created_at),
+    images: item.images.map((image) => ({
+      id: String(image.id),
+      name: image.name,
+      url: image.url,
+      accessUrl: image.access_url,
+    })),
+  };
+}
+
+export function createEmptyMomentForm(): MomentFormValues {
+  return { content: "", status: "1", commentStatus: "1" };
+}
+
+export function mapMomentToFormValues(moment: MomentRow): MomentFormValues {
+  return {
+    content: moment.content,
+    status: String(moment.status) as "0" | "1",
+    commentStatus: String(moment.commentStatus) as "0" | "1",
+  };
+}
+
+export function validateMomentForm(values: MomentFormValues) {
+  const errors: Partial<Record<keyof MomentFormValues, string>> = {};
+  const content = values.content.trim();
+  if (!content) errors.content = "请输入动态内容";
+  if (content.length > 800) errors.content = "动态内容不能超过 800 个字符";
+  return errors;
+}
+
+export function hasMomentFormErrors(errors: Partial<Record<keyof MomentFormValues, string>>) {
+  return Object.keys(errors).length > 0;
+}
+
+export function toMomentSaveReq(
+  values: MomentFormValues,
+  editingMoment: MomentRow | null,
+): MomentSaveReq {
+  const image_urls = editingMoment?.images.map((image) => image.url) ?? [];
+  return {
+    id: editingMoment ? Number(editingMoment.id) : undefined,
+    content: values.content.trim(),
+    status: Number(values.status) as 0 | 1,
+    comment_status: Number(values.commentStatus) as 0 | 1,
+    image_urls,
+    image_order: image_urls.map((_, index) => `url:${index}`),
   };
 }
 

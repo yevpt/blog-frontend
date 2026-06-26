@@ -10,11 +10,12 @@ import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
 import { addToast } from "../../lib/toast";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
 import { MomentDeleteDialog } from "./components/MomentDeleteDialog";
+import { MomentFormDialog } from "./components/MomentFormDialog";
 import { MomentListToolbar } from "./components/MomentListToolbar";
 import { MomentMobileList } from "./components/MomentMobileList";
 import { createMomentColumns } from "./components/moment-columns";
 import { useAdminMomentList } from "./hooks/use-admin-moment-list";
-import type { MomentRow } from "./model";
+import { toMomentSaveReq, type MomentFormValues, type MomentRow } from "./model";
 
 export function MomentsPage() {
   const {
@@ -31,8 +32,49 @@ export function MomentsPage() {
   } = useAdminMomentList();
   const isMdScreen = useIsMdScreen();
   const [deletingMoment, setDeletingMoment] = useState<MomentRow | null>(null);
+  const [editingMoment, setEditingMoment] = useState<MomentRow | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [togglingTopId, setTogglingTopId] = useState<string | null>(null);
+
+  const openCreateDialog = useCallback(() => {
+    setFormMode("create");
+    setEditingMoment(null);
+    setIsFormOpen(true);
+  }, []);
+
+  const openEditDialog = useCallback((moment: MomentRow) => {
+    setFormMode("edit");
+    setEditingMoment(moment);
+    setIsFormOpen(true);
+  }, []);
+
+  const closeFormDialog = useCallback(() => {
+    if (isSubmitting) return;
+    setIsFormOpen(false);
+    setEditingMoment(null);
+  }, [isSubmitting]);
+
+  const handleSubmitMoment = useCallback(
+    async (values: MomentFormValues, mode: "create" | "edit", moment: MomentRow | null) => {
+      setIsSubmitting(true);
+      try {
+        await apiClient.moments.save(toMomentSaveReq(values, moment));
+        addToast(mode === "create" ? "动态已创建" : "动态已保存", "success");
+        setIsFormOpen(false);
+        setEditingMoment(null);
+        await refetch();
+      } catch (err) {
+        addToast(err instanceof ApiError ? err.message : "保存失败，请稍后重试", "error");
+        throw err;
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [refetch],
+  );
 
   const handleDeleteMoment = useCallback(
     async (moment: MomentRow) => {
@@ -79,9 +121,10 @@ export function MomentsPage() {
       createMomentColumns({
         togglingTopId,
         onToggleTop: (moment) => void handleToggleTop(moment).catch(() => undefined),
+        onEdit: openEditDialog,
         onDelete: setDeletingMoment,
       }),
-    [handleToggleTop, togglingTopId],
+    [handleToggleTop, openEditDialog, togglingTopId],
   );
 
   const hasActiveFilter = filters.status !== "all" || filters.search.trim().length > 0;
@@ -108,15 +151,21 @@ export function MomentsPage() {
         title="动态管理"
         description="管理全站动态内容、公开状态与置顶顺序。"
         action={
-          <Button
-            size="sm"
-            variant="outline"
-            className="w-full shrink-0 sm:w-auto"
-            onPress={() => void refetch()}
-          >
-            <SvgIcon name="refresh-cw" size={15} />
-            刷新
-          </Button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <Button size="sm" className="w-full shrink-0 sm:w-auto" onPress={openCreateDialog}>
+              <SvgIcon name="plus" size={15} />
+              新建动态
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full shrink-0 sm:w-auto"
+              onPress={() => void refetch()}
+            >
+              <SvgIcon name="refresh-cw" size={15} />
+              刷新
+            </Button>
+          </div>
         }
       />
 
@@ -157,6 +206,7 @@ export function MomentsPage() {
                   isLoading={isLoading}
                   emptyState={emptyState}
                   onToggleTop={(moment) => void handleToggleTop(moment).catch(() => undefined)}
+                  onEdit={openEditDialog}
                   onDelete={setDeletingMoment}
                 />
               </div>
@@ -190,6 +240,14 @@ export function MomentsPage() {
         isDeleting={isDeleting}
         onClose={() => setDeletingMoment(null)}
         onConfirm={handleDeleteMoment}
+      />
+      <MomentFormDialog
+        mode={formMode}
+        open={isFormOpen}
+        moment={editingMoment}
+        isSubmitting={isSubmitting}
+        onClose={closeFormDialog}
+        onSubmit={handleSubmitMoment}
       />
     </div>
   );

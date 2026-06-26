@@ -6,6 +6,7 @@ interface MomentMobileListProps {
   isLoading: boolean;
   emptyState: DataTableEmptyState;
   onToggleTop: (moment: MomentRow) => void;
+  onEdit: (moment: MomentRow) => void;
   onDelete: (moment: MomentRow) => void;
 }
 
@@ -14,6 +15,7 @@ export function MomentMobileList({
   isLoading,
   emptyState,
   onToggleTop,
+  onEdit,
   onDelete,
 }: MomentMobileListProps) {
   if (isLoading) {
@@ -59,6 +61,14 @@ export function MomentMobileList({
             </span>
           </div>
           <div className="mt-3 flex items-center justify-end gap-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs"
+              onPress={() => onEdit(moment)}
+            >
+              编辑
+            </Button>
             <Button
               size="sm"
               variant="ghost"

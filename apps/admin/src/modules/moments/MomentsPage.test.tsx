@@ -23,6 +23,9 @@ const mockRows: MomentRow[] = [
     likeCount: 2,
     commentCount: 3,
     createdAt: "2026/06/26 16:00",
+    images: [
+      { id: "1", name: "wind.jpg", url: "moments/wind.jpg", accessUrl: "https://cdn/wind.jpg" },
+    ],
   },
 ];
 
@@ -43,6 +46,7 @@ vi.mock("../../lib/api", () => ({
   apiClient: {
     moments: {
       delete: vi.fn(),
+      save: vi.fn(),
       setTop: vi.fn(),
       removeTop: vi.fn(),
     },
@@ -64,6 +68,21 @@ describe("MomentsPage", () => {
     toastQueue.clear();
     mockRefetch.mockResolvedValue(undefined);
     vi.mocked(apiClient.moments.delete).mockResolvedValue({ id: 9 });
+    vi.mocked(apiClient.moments.save).mockResolvedValue({
+      id: 9,
+      user_id: 1,
+      content: "新动态",
+      status: 1,
+      comment_status: 1,
+      read_count: 0,
+      is_top: false,
+      like_count: 0,
+      comment_count: 0,
+      is_liked: false,
+      images: [],
+      created_at: "2026-06-26T08:00:00Z",
+      updated_at: "2026-06-26T08:00:00Z",
+    });
     vi.mocked(apiClient.moments.setTop).mockResolvedValue({ id: 9, is_top: true });
     vi.mocked(apiClient.moments.removeTop).mockResolvedValue({ id: 9, is_top: false });
     vi.mocked(useAdminMomentList).mockReturnValue({
@@ -106,6 +125,49 @@ describe("MomentsPage", () => {
       expect(apiClient.moments.setTop).toHaveBeenCalledWith(9);
     });
     expect(mockRefetch).toHaveBeenCalled();
+  });
+
+  it("新建动态时调用保存接口并刷新", async () => {
+    const user = userEvent.setup();
+    renderMomentsPage();
+
+    await user.click(screen.getByRole("button", { name: "新建动态" }));
+    await user.type(screen.getByLabelText("动态内容"), "新动态");
+    await user.click(screen.getByRole("button", { name: "创建" }));
+
+    await waitFor(() => {
+      expect(apiClient.moments.save).toHaveBeenCalledWith({
+        id: undefined,
+        content: "新动态",
+        status: 1,
+        comment_status: 1,
+        image_urls: [],
+        image_order: [],
+      });
+    });
+    expect(mockRefetch).toHaveBeenCalled();
+  });
+
+  it("编辑动态时保留已有图片并调用保存接口", async () => {
+    const user = userEvent.setup();
+    renderMomentsPage();
+
+    await user.click(screen.getByRole("button", { name: "编辑" }));
+    const contentInput = screen.getByLabelText("动态内容");
+    await user.clear(contentInput);
+    await user.type(contentInput, "风很温柔");
+    await user.click(screen.getByRole("button", { name: "保存" }));
+
+    await waitFor(() => {
+      expect(apiClient.moments.save).toHaveBeenCalledWith({
+        id: 9,
+        content: "风很温柔",
+        status: 1,
+        comment_status: 1,
+        image_urls: ["moments/wind.jpg"],
+        image_order: ["url:0"],
+      });
+    });
   });
 
   it("点击删除动态后调用删除接口并刷新", async () => {
