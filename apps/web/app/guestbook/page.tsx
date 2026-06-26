@@ -12,7 +12,7 @@ const EMPTY_PAGE: GuestbookPageResp = {
   total: 0,
   pages: 0,
   page: 1,
-  page_size: 10,
+  page_size: 20,
   list: [],
 };
 
@@ -25,7 +25,7 @@ export default async function GuestbookPageRoute({
   const page = Math.max(1, Number.parseInt(pageStr ?? "1", 10) || 1);
 
   const api = await createServerApiClient();
-  const initialPage = await api.guestbook.list({ page, page_size: 10 }).catch(() => EMPTY_PAGE);
+  const initialPage = await api.guestbook.list({ page, page_size: 20 }).catch(() => EMPTY_PAGE);
 
   return <GuestbookPage key={initialPage.page} initialPage={initialPage} />;
 }

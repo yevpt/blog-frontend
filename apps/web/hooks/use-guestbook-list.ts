@@ -4,7 +4,7 @@ import { apiJson, getApiErrorMessage } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
 import { replacePageSearchParam } from "@/lib/url-search";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 function isAbortError(err: unknown): boolean {
   return (
