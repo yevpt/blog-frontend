@@ -107,8 +107,11 @@ export {
 export {
   ToastRegion,
   ToastQueue,
+  toastChromeClassName,
   type ToastContent,
+  type ToastPosition,
   type ToastRegionProps,
+  type ToastRenderHelpers,
   type ToastType,
 } from "./toast";
 export { FadeInUp, type FadeInUpProps } from "./fade-in-up";

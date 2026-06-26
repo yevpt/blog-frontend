@@ -479,6 +479,9 @@ importers:
       react-dom:
         specifier: '*'
         version: 19.2.6(react@19.2.6)
+      react-stately:
+        specifier: 3.47.0
+        version: 3.47.0(react@19.2.6)
       tailwind-merge:
         specifier: ^3.6.0
         version: 3.6.0

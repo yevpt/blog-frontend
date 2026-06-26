@@ -31,6 +31,7 @@
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.6.0",
     "react-aria-components": "^1.18.0",
+    "react-stately": "3.47.0",
     "tailwind-merge": "^3.6.0"
   }
 }

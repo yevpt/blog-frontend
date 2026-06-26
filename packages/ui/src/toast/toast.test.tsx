@@ -61,6 +61,34 @@ describe("ToastRegion", () => {
     expect(toast).toHaveClass("w-fit");
   });
 
+  it("默认弹出位置是右下角", () => {
+    const queue = makeQueue({ message: "测试通知", type: "info" });
+    render(<ToastRegion queue={queue} />);
+    const region = screen.getByRole("alertdialog").closest('[role="region"]');
+    expect(region).toHaveClass("bottom-4");
+    expect(region).toHaveClass("right-4");
+    expect(region).toHaveClass("items-end");
+  });
+
+  it("position=top-left 时渲染左上角对应的定位类名", () => {
+    const queue = makeQueue({ message: "测试通知", type: "info" });
+    render(<ToastRegion queue={queue} position="top-left" />);
+    const region = screen.getByRole("alertdialog").closest('[role="region"]');
+    expect(region).toHaveClass("top-4");
+    expect(region).toHaveClass("left-4");
+    expect(region).toHaveClass("items-start");
+  });
+
+  it("position=top-center 时水平居中并取消左右锚点", () => {
+    const queue = makeQueue({ message: "测试通知", type: "info" });
+    render(<ToastRegion queue={queue} position="top-center" />);
+    const region = screen.getByRole("alertdialog").closest('[role="region"]');
+    expect(region).toHaveClass("top-4");
+    expect(region).toHaveClass("left-1/2");
+    expect(region).toHaveClass("-translate-x-1/2");
+    expect(region).toHaveClass("items-center");
+  });
+
   it("点击关闭按钮后 toast 消失", async () => {
     const user = userEvent.setup();
     const queue = makeQueue({ message: "测试通知", type: "info" });
@@ -68,5 +96,58 @@ describe("ToastRegion", () => {
     expect(screen.getByText("测试通知")).toBeInTheDocument();
     await user.click(screen.getByLabelText("关闭通知"));
     expect(screen.queryByText("测试通知")).not.toBeInTheDocument();
+  });
+
+  it("传入 renderToast 时按自定义内容渲染", () => {
+    interface DemoContent {
+      label: string;
+    }
+    const queue = new ToastQueue<DemoContent>({ maxVisibleToasts: 5 });
+    queue.add({ label: "自定义内容" });
+    render(
+      <ToastRegion queue={queue} renderToast={(toast) => <span>{toast.content.label}</span>} />,
+    );
+    expect(screen.getByText("自定义内容")).toBeInTheDocument();
+  });
+
+  it("itemClassName 覆盖默认的宽度与对齐类名", () => {
+    interface DemoContent {
+      label: string;
+    }
+    const queue = new ToastQueue<DemoContent>({ maxVisibleToasts: 5 });
+    queue.add({ label: "自定义内容" });
+    render(
+      <ToastRegion
+        queue={queue}
+        itemClassName="w-[300px] items-start"
+        renderToast={(toast) => <span>{toast.content.label}</span>}
+      />,
+    );
+    const item = screen.getByRole("alertdialog");
+    expect(item).toHaveClass("w-[300px]");
+    expect(item).toHaveClass("items-start");
+    expect(item).not.toHaveClass("w-fit");
+  });
+
+  it("renderToast 的 close helper 能关闭对应 toast", async () => {
+    interface DemoContent {
+      label: string;
+    }
+    const user = userEvent.setup();
+    const queue = new ToastQueue<DemoContent>({ maxVisibleToasts: 5 });
+    queue.add({ label: "可关闭内容" });
+    render(
+      <ToastRegion
+        queue={queue}
+        renderToast={(toast, { close }) => (
+          <button type="button" onClick={close}>
+            关闭 {toast.content.label}
+          </button>
+        )}
+      />,
+    );
+    const closeBtn = screen.getByRole("button", { name: /可关闭内容/ });
+    await user.click(closeBtn);
+    expect(screen.queryByText(/可关闭内容/)).not.toBeInTheDocument();
   });
 });

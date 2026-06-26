@@ -1,2 +1,8 @@
-export { ToastRegion, ToastQueue } from "./toast";
-export type { ToastContent, ToastRegionProps, ToastType } from "./types";
+export { ToastRegion, ToastQueue, toastChromeClassName } from "./toast";
+export type {
+  ToastContent,
+  ToastPosition,
+  ToastRegionProps,
+  ToastRenderHelpers,
+  ToastType,
+} from "./types";
