@@ -104,8 +104,9 @@ export interface AdminOverviewSummaryResp {
     music: number;
     friend_links: number;
   };
+  /** 近 7 天新增互动 */
   interactions: {
-    pending_comments: number;
+    new_comments: number;
     new_guestbook: number;
     new_moments: number;
   };
