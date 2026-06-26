@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { SvgIcon } from "@repo/icons";
+import { cn } from "../lib/utils";
 import { Modal } from "../modal";
 import { ImageViewerToolbar } from "./internal/toolbar";
 import { useViewerTransform } from "./internal/use-viewer-transform";
@@ -11,7 +12,7 @@ const NAV_BTN =
   "absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white/90 transition-colors hover:bg-black/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/60";
 
 export function ImageViewer({ images, index, isOpen, onClose, onIndexChange }: ImageViewerProps) {
-  const { transform, reset, zoomIn, zoomOut, rotate, handlers } = useViewerTransform();
+  const { transform, isGesturing, reset, zoomIn, zoomOut, rotate, handlers } = useViewerTransform();
   const current = images[index];
   const hasGallery = images.length > 1 && !!onIndexChange;
   // 下载文件名取自 URL 末段路径（剥离查询串），无法解析时回退空串
@@ -76,7 +77,11 @@ export function ImageViewer({ images, index, isOpen, onClose, onIndexChange }: I
           src={current.src}
           alt={current.alt ?? ""}
           draggable={false}
-          className="max-h-full max-w-full select-none object-contain transition-transform duration-75"
+          className={cn(
+            "max-h-full max-w-full touch-none select-none object-contain",
+            // 手势期间禁用过渡：连续 transform 更新 + CSS transition 会导致移动端捏合剧烈抖动
+            !isGesturing && "transition-transform duration-150 ease-out",
+          )}
           style={{
             transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale}) rotate(${transform.rotation}deg)`,
             cursor: transform.scale > 1 ? "grab" : "default",

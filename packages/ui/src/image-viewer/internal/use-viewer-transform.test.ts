@@ -132,4 +132,13 @@ describe("useViewerTransform", () => {
     act(() => result.current.reset());
     expect(result.current.transform).toEqual({ scale: 1, x: 0, y: 0, rotation: 0 });
   });
+
+  it("指针按下期间 isGesturing 为 true，全部抬起后恢复 false", () => {
+    const { result } = renderHook(() => useViewerTransform());
+    expect(result.current.isGesturing).toBe(false);
+    act(() => result.current.handlers.onPointerDown(pointer(1, 0, 0)));
+    expect(result.current.isGesturing).toBe(true);
+    act(() => result.current.handlers.onPointerUp(pointer(1, 0, 0)));
+    expect(result.current.isGesturing).toBe(false);
+  });
 });

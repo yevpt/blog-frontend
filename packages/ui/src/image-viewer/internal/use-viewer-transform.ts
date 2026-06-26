@@ -17,11 +17,12 @@ export function clamp(value: number, min: number, max: number): number {
 interface PointerTracker {
   pointers: Map<number, { x: number; y: number }>;
   startDistance: number;
-  startScale: number;
 }
 
 export interface UseViewerTransformResult {
   transform: ViewerTransform;
+  /** 指针按下期间为 true，用于禁用 transform 过渡避免捏合/拖拽抖动 */
+  isGesturing: boolean;
   reset: () => void;
   zoomIn: () => void;
   zoomOut: () => void;
@@ -37,7 +38,8 @@ export interface UseViewerTransformResult {
 
 export function useViewerTransform(): UseViewerTransformResult {
   const [transform, setTransform] = useState<ViewerTransform>(IDENTITY);
-  const tracker = useRef<PointerTracker>({ pointers: new Map(), startDistance: 0, startScale: 1 });
+  const [isGesturing, setIsGesturing] = useState(false);
+  const tracker = useRef<PointerTracker>({ pointers: new Map(), startDistance: 0 });
 
   const reset = useCallback(() => setTransform(IDENTITY), []);
 
@@ -67,16 +69,13 @@ export function useViewerTransform(): UseViewerTransformResult {
   }, []);
 
   const onPointerDown = useCallback((e: ReactPointerEvent) => {
+    setIsGesturing(true);
     (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
     const { pointers } = tracker.current;
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.size === 2) {
       const [a, b] = [...pointers.values()];
       tracker.current.startDistance = Math.hypot(a.x - b.x, a.y - b.y);
-      setTransform((t) => {
-        tracker.current.startScale = t.scale;
-        return t;
-      });
     }
   }, []);
 
@@ -93,13 +92,14 @@ export function useViewerTransform(): UseViewerTransformResult {
       const dy = next.y - prev.y;
       setTransform((t) => (t.scale <= MIN_SCALE ? t : { ...t, x: t.x + dx, y: t.y + dy }));
     } else if (pointers.size === 2 && tracker.current.startDistance > 0) {
-      // 双指捏合缩放
+      // 双指捏合缩放：逐帧相对上一帧距离，避免与 CSS 过渡叠加产生抖动
       const [a, b] = [...pointers.values()];
       const distance = Math.hypot(a.x - b.x, a.y - b.y);
       const factor = distance / tracker.current.startDistance;
+      tracker.current.startDistance = distance;
       setTransform((t) => ({
         ...t,
-        scale: clamp(tracker.current.startScale * factor, MIN_SCALE, MAX_SCALE),
+        scale: clamp(t.scale * factor, MIN_SCALE, MAX_SCALE),
       }));
     }
   }, []);
@@ -108,6 +108,7 @@ export function useViewerTransform(): UseViewerTransformResult {
     const { pointers } = tracker.current;
     pointers.delete(e.pointerId);
     if (pointers.size < 2) tracker.current.startDistance = 0;
+    if (pointers.size === 0) setIsGesturing(false);
   }, []);
 
   const onDoubleClick = useCallback(() => {
@@ -116,6 +117,7 @@ export function useViewerTransform(): UseViewerTransformResult {
 
   return {
     transform,
+    isGesturing,
     reset,
     zoomIn,
     zoomOut,
