@@ -37,6 +37,7 @@ const baseProps = {
   canManageVip: false,
   onToggleEditMode: vi.fn(),
   onSaveNickname: vi.fn().mockResolvedValue(undefined),
+  onSaveField: vi.fn().mockResolvedValue(undefined),
   onRolesChange: vi.fn(),
 };
 
@@ -96,6 +97,49 @@ describe("UserInfoHeader", () => {
     render(<UserInfoHeader {...baseProps} isOwner isEditMode />);
     await userEvent.click(screen.getByLabelText("编辑昵称"));
     expect(screen.getByDisplayValue("TestUser")).toBeInTheDocument();
+  });
+
+  it("编辑模式下身份标签与个人简介显示铅笔入口", () => {
+    render(
+      <UserInfoHeader
+        {...baseProps}
+        isOwner
+        isEditMode
+        mark="全栈工程师"
+        description="热爱编程"
+      />,
+    );
+    expect(screen.getByLabelText("编辑身份标签")).toBeInTheDocument();
+    expect(screen.getByLabelText("编辑个人简介")).toBeInTheDocument();
+    expect(screen.getByText("全栈工程师")).toBeInTheDocument();
+    expect(screen.getByText("热爱编程")).toBeInTheDocument();
+  });
+
+  it("编辑模式下空身份标签显示占位文案", () => {
+    render(<UserInfoHeader {...baseProps} isOwner isEditMode mark={null} />);
+    expect(screen.getByText("未填写身份标签")).toBeInTheDocument();
+  });
+
+  it("点击身份标签铅笔进入编辑并保存", async () => {
+    const onSaveField = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    render(
+      <UserInfoHeader
+        {...baseProps}
+        isOwner
+        isEditMode
+        mark="工程师"
+        onSaveField={onSaveField}
+      />,
+    );
+
+    await user.click(screen.getByLabelText("编辑身份标签"));
+    const input = screen.getByDisplayValue("工程师");
+    await user.clear(input);
+    await user.type(input, "全栈工程师");
+    await user.click(screen.getByLabelText("保存"));
+
+    expect(onSaveField).toHaveBeenCalledWith("mark", "全栈工程师");
   });
 
   it("传入社交链接不崩溃", () => {

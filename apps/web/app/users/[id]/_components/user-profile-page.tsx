@@ -77,6 +77,7 @@ export function UserProfilePage({
           hasActiveFieldEditing={isAnyFieldEditing}
           onToggleEditMode={toggleEditMode}
           onSaveNickname={saveNickname}
+          onSaveField={saveField}
           onAvatarChange={changeAvatar}
           onRolesChange={updateRoles}
         />

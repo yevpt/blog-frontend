@@ -9,6 +9,7 @@ import { UserAvatar } from "@/components/common/user-avatar";
 import { isAdminUser, isVipUser } from "@/lib/user-roles";
 import { useAdminVipRole } from "@/hooks/use-admin-vip-role";
 import { InlineFieldEditor } from "./inline-field-editor";
+import { validateDescription, validateMark } from "./profile-tab/profile-config";
 import { resolvePresenceDisplay } from "@/lib/user-presence";
 import { addToast } from "@/lib/toast";
 
@@ -29,6 +30,7 @@ interface UserInfoHeaderProps {
   hasActiveFieldEditing?: boolean;
   onToggleEditMode: () => void;
   onSaveNickname: (value: string) => Promise<void>;
+  onSaveField: (field: "mark" | "description", value: string) => Promise<void>;
   onAvatarChange?: (file: File) => Promise<void>;
   onRolesChange: (roles: string[]) => void;
 }
@@ -40,6 +42,82 @@ function DropdownIcon({ name }: { name: IconName }) {
 }
 
 const vipIcon = DropdownIcon({ name: "vip" });
+
+type HeaderEditableField = "nickname" | "mark" | "description";
+
+interface HeaderInlineFieldProps {
+  value: string | null;
+  isEditing: boolean;
+  editingDisabled: boolean;
+  onStartEdit: () => void;
+  onSave: (value: string) => Promise<void>;
+  onCancel: () => void;
+  validate?: (value: string) => string | null;
+  maxLength?: number;
+  placeholder?: string;
+  emptyText: string;
+  editLabel: string;
+  displayClassName: string;
+  editorWidthClass?: string;
+}
+
+function HeaderInlineField({
+  value,
+  isEditing,
+  editingDisabled,
+  onStartEdit,
+  onSave,
+  onCancel,
+  validate,
+  maxLength,
+  placeholder,
+  emptyText,
+  editLabel,
+  displayClassName,
+  editorWidthClass = "w-48",
+}: HeaderInlineFieldProps) {
+  if (isEditing) {
+    return (
+      <div className={cn("mt-1.5", editorWidthClass)}>
+        <InlineFieldEditor
+          initialValue={value ?? ""}
+          onSave={async (nextValue) => {
+            await onSave(nextValue);
+            onCancel();
+          }}
+          onCancel={onCancel}
+          validate={validate}
+          maxLength={maxLength}
+          placeholder={placeholder}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-1.5 flex items-center justify-center gap-2">
+      {value ? (
+        <p className={displayClassName}>{value}</p>
+      ) : (
+        <p className="text-sm italic text-muted-foreground/40">{emptyText}</p>
+      )}
+      <button
+        type="button"
+        onClick={onStartEdit}
+        disabled={editingDisabled}
+        aria-label={editLabel}
+        className={cn(
+          "flex h-6 w-6 items-center justify-center rounded-md transition-colors",
+          editingDisabled
+            ? "cursor-not-allowed text-muted-foreground/20"
+            : "text-muted-foreground/40 hover:bg-primary/10 hover:text-primary",
+        )}
+      >
+        <SvgIcon name="pen" size={13} />
+      </button>
+    </div>
+  );
+}
 
 export function UserInfoHeader({
   userId,
@@ -58,11 +136,12 @@ export function UserInfoHeader({
   hasActiveFieldEditing = false,
   onToggleEditMode,
   onSaveNickname,
+  onSaveField,
   onAvatarChange,
   onRolesChange,
 }: UserInfoHeaderProps) {
   const hydrated = useHydrated();
-  const [isEditingNickname, setIsEditingNickname] = useState(false);
+  const [editingField, setEditingField] = useState<HeaderEditableField | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [pendingVipAction, setPendingVipAction] = useState<"grant" | "revoke" | null>(null);
   const {
@@ -70,8 +149,21 @@ export function UserInfoHeader({
     revokeVip,
     isPending: isVipActionPending,
   } = useAdminVipRole(userId, onRolesChange);
-  const isAnyEditing = isEditingNickname || hasActiveFieldEditing;
+  const isHeaderEditing = editingField !== null;
+  const isAnyEditing = isHeaderEditing || hasActiveFieldEditing;
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function canEditField(field: HeaderEditableField) {
+    return !isAnyEditing || editingField === field;
+  }
+
+  function startEditing(field: HeaderEditableField) {
+    setEditingField(field);
+  }
+
+  function stopEditing() {
+    setEditingField(null);
+  }
 
   async function handleAvatarFileChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -230,15 +322,15 @@ export function UserInfoHeader({
 
         {/* 昵称行 */}
         <div className="mt-3 flex items-center justify-center gap-2">
-          {isEditMode && isOwner && isEditingNickname ? (
+          {isEditMode && isOwner && editingField === "nickname" ? (
             <div className="w-48">
               <InlineFieldEditor
                 initialValue={nickname}
                 onSave={async (v) => {
                   await onSaveNickname(v);
-                  setIsEditingNickname(false);
+                  stopEditing();
                 }}
-                onCancel={() => setIsEditingNickname(false)}
+                onCancel={stopEditing}
                 validate={(v) => (v.trim().length < 1 ? "昵称不能为空" : null)}
                 maxLength={30}
               />
@@ -259,12 +351,12 @@ export function UserInfoHeader({
               {isEditMode && isOwner && (
                 <button
                   type="button"
-                  onClick={() => setIsEditingNickname(true)}
-                  disabled={hasActiveFieldEditing}
+                  onClick={() => startEditing("nickname")}
+                  disabled={!canEditField("nickname")}
                   aria-label="编辑昵称"
                   className={cn(
                     "flex h-6 w-6 items-center justify-center rounded-md transition-colors",
-                    hasActiveFieldEditing
+                    !canEditField("nickname")
                       ? "cursor-not-allowed text-muted-foreground/20"
                       : "text-muted-foreground/40 hover:bg-primary/10 hover:text-primary",
                   )}
@@ -277,13 +369,48 @@ export function UserInfoHeader({
         </div>
 
         {/* 身份标签 */}
-        {mark && <p className="mt-1.5 text-sm text-muted-foreground">{mark}</p>}
+        {isEditMode && isOwner ? (
+          <HeaderInlineField
+            value={mark}
+            isEditing={editingField === "mark"}
+            editingDisabled={!canEditField("mark")}
+            onStartEdit={() => startEditing("mark")}
+            onSave={(value) => onSaveField("mark", value)}
+            onCancel={stopEditing}
+            validate={validateMark}
+            maxLength={30}
+            placeholder="身份标签"
+            emptyText="未填写身份标签"
+            editLabel="编辑身份标签"
+            displayClassName="text-sm text-muted-foreground"
+          />
+        ) : (
+          mark && <p className="mt-1.5 text-sm text-muted-foreground">{mark}</p>
+        )}
 
         {/* 个人简介 */}
-        {description && (
-          <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-muted-foreground/70">
-            {description}
-          </p>
+        {isEditMode && isOwner ? (
+          <HeaderInlineField
+            value={description}
+            isEditing={editingField === "description"}
+            editingDisabled={!canEditField("description")}
+            onStartEdit={() => startEditing("description")}
+            onSave={(value) => onSaveField("description", value)}
+            onCancel={stopEditing}
+            validate={validateDescription}
+            maxLength={200}
+            placeholder="个人简介"
+            emptyText="未填写个人简介"
+            editLabel="编辑个人简介"
+            displayClassName="max-w-sm text-sm leading-relaxed text-muted-foreground/70"
+            editorWidthClass="w-full max-w-sm"
+          />
+        ) : (
+          description && (
+            <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-muted-foreground/70">
+              {description}
+            </p>
+          )
         )}
 
         {/* 编辑 / 退出编辑按钮 */}
