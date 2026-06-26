@@ -69,7 +69,9 @@ describe("useArticleList", () => {
 
     expect(result.current.currentPage).toBe(2);
     expect(result.current.pageData).toEqual(initialPage);
-    expect(result.current.isLoading).toBe(false);
+    expect(result.current.articles).toEqual(initialPage.list);
+    expect(result.current.isLoadingInitial).toBe(false);
+    expect(result.current.isLoadingMore).toBe(false);
     expect(result.current.fetchError).toBe(false);
     expect(result.current.currentCategoryId).toBe(0);
   });
@@ -94,41 +96,65 @@ describe("useArticleList", () => {
       expect(init?.signal).toBeInstanceOf(AbortSignal);
       expect(result.current.currentPage).toBe(1);
       expect(result.current.currentCategoryId).toBe(1);
-      expect(result.current.pageData.list[0]?.title).toBe("编程文章");
+      expect(result.current.articles[0]?.title).toBe("编程文章");
     });
   });
 
-  it("changePage(page) requests current category", async () => {
+  it("changePage(page) 请求指定页并替换列表", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify(makePageResp({ page: 2, list: [makeArticle(11, "第二页")] })), {
-        status: 200,
-      }),
+      new Response(
+        JSON.stringify(
+          makePageResp({ page: 2, pages: 3, total: 25, list: [makeArticle(21, "第二页")] }),
+        ),
+        { status: 200 },
+      ),
     );
 
     const { result } = renderHook(() =>
-      useArticleList({ initialPage: makePageResp({ pages: 3 }) }),
+      useArticleList({ initialPage: makePageResp({ total: 25, pages: 3 }) }),
     );
 
     await act(async () => {
-      result.current.changeCategory(2);
+      await result.current.changePage(2);
     });
-    await waitFor(() => expect(result.current.currentCategoryId).toBe(2));
 
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith("/api/articles?page=2", expect.any(Object));
+      expect(result.current.currentPage).toBe(2);
+      expect(result.current.articles).toHaveLength(1);
+      expect(result.current.articles[0]?.title).toBe("第二页");
+    });
+  });
+
+  it("loadMore appends items and sets end state", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify(makePageResp({ page: 2, list: [makeArticle(11, "第二页")] })), {
-        status: 200,
+      new Response(
+        JSON.stringify(makePageResp({ page: 2, pages: 2, list: [makeArticle(11, "第二页")] })),
+        { status: 200 },
+      ),
+    );
+
+    const { result } = renderHook(() =>
+      useArticleList({
+        initialPage: makePageResp({
+          total: 4,
+          pages: 2,
+          page: 1,
+          list: [makeArticle(1, "第一页")],
+        }),
       }),
     );
 
     await act(async () => {
-      result.current.changePage(2);
+      await result.current.loadMore();
     });
 
     await waitFor(() => {
+      expect(result.current.articles).toHaveLength(2);
+      expect(result.current.articles.map((item) => item.id)).toEqual([1, 11]);
+      expect(result.current.endReached).toBe(true);
       const lastCall = vi.mocked(fetch).mock.calls.at(-1);
-      expect(lastCall?.[0]).toBe("/api/articles?page=2&category_id=2");
-      expect(result.current.currentPage).toBe(2);
-      expect(result.current.pageData.list[0]?.title).toBe("第二页");
+      expect(lastCall?.[0]).toBe("/api/articles?page=2");
     });
   });
 
@@ -154,7 +180,7 @@ describe("useArticleList", () => {
     );
 
     act(() => {
-      void result.current.changePage(2);
+      result.current.changeCategory(2);
     });
 
     await waitFor(() => {
@@ -179,7 +205,7 @@ describe("useArticleList", () => {
     });
 
     await waitFor(() => {
-      expect(result.current.pageData.list[0]?.title).toBe("分类结果");
+      expect(result.current.articles[0]?.title).toBe("分类结果");
     });
   });
 
@@ -211,10 +237,10 @@ describe("useArticleList", () => {
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith("/api/articles/1/like", { method: "POST" });
-      expect(result.current.pageData.list[0]?.is_liked).toBe(true);
-      expect(result.current.pageData.list[0]?.like_count).toBe(9);
-      expect(result.current.pageData.list[1]?.is_liked).toBe(false);
-      expect(result.current.pageData.list[1]?.like_count).toBe(2);
+      expect(result.current.articles[0]?.is_liked).toBe(true);
+      expect(result.current.articles[0]?.like_count).toBe(9);
+      expect(result.current.articles[1]?.is_liked).toBe(false);
+      expect(result.current.articles[1]?.like_count).toBe(2);
     });
   });
 

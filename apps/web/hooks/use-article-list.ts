@@ -33,66 +33,154 @@ export function useArticleList({ initialPage, controlledCategoryId }: UseArticle
 
   const [currentPage, setCurrentPage] = useState(initialPage.page || 1);
   const [pageData, setPageData] = useState(initialPage);
-  const [isLoading, setIsLoading] = useState(false);
+  const [articles, setArticles] = useState(initialPage.list);
+  const [isLoadingInitial, setIsLoadingInitial] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [endReached, setEndReached] = useState((initialPage.page || 1) >= initialPage.pages);
   const [fetchError, setFetchError] = useState(false);
   const [pendingLikeIds, setPendingLikeIds] = useState<ReadonlySet<number>>(() => new Set());
 
   const abortRef = useRef<AbortController | null>(null);
+  const categoryRef = useRef(currentCategoryId);
+  categoryRef.current = currentCategoryId;
   const pendingLikeIdsRef = useRef(pendingLikeIds);
   pendingLikeIdsRef.current = pendingLikeIds;
 
-  const fetchPage = useCallback(async (categoryId: number, page: number) => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-    setIsLoading(true);
-
-    try {
-      const qs = buildQuery({
-        page,
-        ...(categoryId !== ALL_CATEGORY_ID ? { category_id: categoryId } : {}),
-      });
-      const data = await apiJson<ArticlePageResp>(`/api/articles?${qs}`, {
-        signal: controller.signal,
-      });
-      if (controller.signal.aborted) return;
-      setPageData(data);
-      setFetchError(false);
-    } catch (err) {
-      if (isAbortError(err)) return;
-      setFetchError(true);
-    } finally {
-      if (!controller.signal.aborted) {
-        setIsLoading(false);
-      }
-    }
+  const fetchPage = useCallback(async (categoryId: number, page: number, signal?: AbortSignal) => {
+    const qs = buildQuery({
+      page,
+      ...(categoryId !== ALL_CATEGORY_ID ? { category_id: categoryId } : {}),
+    });
+    return apiJson<ArticlePageResp>(`/api/articles?${qs}`, { signal });
   }, []);
+
+  const applyFirstPage = useCallback((data: ArticlePageResp) => {
+    setArticles(data.list);
+    setPageData(data);
+    setCurrentPage(data.page || 1);
+    setEndReached((data.page || 1) >= data.pages);
+  }, []);
+
+  const reloadFirstPage = useCallback(
+    async (categoryId: number) => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      setIsLoadingInitial(true);
+      setFetchError(false);
+      setEndReached(false);
+
+      try {
+        const data = await fetchPage(categoryId, 1, controller.signal);
+        if (controller.signal.aborted) return;
+        applyFirstPage(data);
+        setFetchError(false);
+      } catch (err) {
+        if (isAbortError(err)) return;
+        setFetchError(true);
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoadingInitial(false);
+        }
+      }
+    },
+    [applyFirstPage, fetchPage],
+  );
 
   const changeCategory = useCallback(
     (id: number) => {
-      setFetchError(false);
       if (!isControlled) {
         setInternalCategoryId(id);
       }
       setCurrentPage(1);
-      void fetchPage(id, 1);
+      void reloadFirstPage(id);
     },
-    [fetchPage, isControlled],
+    [isControlled, reloadFirstPage],
   );
 
   const changePage = useCallback(
-    (page: number) => {
+    async (page: number) => {
+      const categoryId = currentCategoryId;
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      setIsLoadingInitial(true);
       setFetchError(false);
-      setCurrentPage(page);
-      void fetchPage(currentCategoryId, page);
+      setEndReached(false);
+
+      try {
+        const data = await fetchPage(categoryId, page, controller.signal);
+        if (controller.signal.aborted) return;
+        if (categoryRef.current !== categoryId) return;
+        applyFirstPage(data);
+        setFetchError(false);
+      } catch (err) {
+        if (isAbortError(err)) return;
+        if (categoryRef.current === categoryId) {
+          setFetchError(true);
+        }
+      } finally {
+        if (!controller.signal.aborted && categoryRef.current === categoryId) {
+          setIsLoadingInitial(false);
+        }
+      }
     },
-    [currentCategoryId, fetchPage],
+    [applyFirstPage, currentCategoryId, fetchPage],
   );
 
-  const refreshForSessionChange = useCallback(() => {
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || isLoadingInitial || endReached) {
+      return;
+    }
+    if (currentPage >= pageData.pages) {
+      setEndReached(true);
+      return;
+    }
+
+    const categoryId = currentCategoryId;
+    const nextPage = currentPage + 1;
+    setIsLoadingMore(true);
     setFetchError(false);
-    return fetchPage(currentCategoryId, currentPage);
-  }, [currentCategoryId, currentPage, fetchPage]);
+
+    try {
+      const data = await fetchPage(categoryId, nextPage);
+      if (categoryRef.current !== categoryId) {
+        return;
+      }
+      setArticles((prev) => [...prev, ...data.list]);
+      setPageData(data);
+      setCurrentPage(nextPage);
+      if (nextPage >= data.pages) {
+        setEndReached(true);
+      }
+    } catch {
+      if (categoryRef.current === categoryId) {
+        setFetchError(true);
+      }
+    } finally {
+      if (categoryRef.current === categoryId) {
+        setIsLoadingMore(false);
+      }
+    }
+  }, [
+    currentCategoryId,
+    currentPage,
+    endReached,
+    fetchPage,
+    isLoadingInitial,
+    isLoadingMore,
+    pageData.pages,
+  ]);
+
+  const refreshForSessionChange = useCallback(async () => {
+    setFetchError(false);
+    try {
+      const data = await fetchPage(currentCategoryId, 1);
+      applyFirstPage(data);
+    } catch {
+      // 静默失败，避免登录态切换打断阅读
+    }
+  }, [applyFirstPage, currentCategoryId, fetchPage]);
 
   const toggleLike = useCallback(
     async (article: ArticleListItemResp) => {
@@ -109,14 +197,13 @@ export function useArticleList({ initialPage, controlledCategoryId }: UseArticle
         const data = await apiJson<ArticleLikeResp>(`/api/articles/${article.id}/like`, {
           method: "POST",
         });
-        setPageData((current) => ({
-          ...current,
-          list: current.list.map((item) =>
+        setArticles((current) =>
+          current.map((item) =>
             item.id === article.id
               ? { ...item, is_liked: data.is_liked, like_count: data.like_count }
               : item,
           ),
-        }));
+        );
       } catch (err) {
         if (err instanceof ApiClientError && err.status === 401) {
           openLoginModal();
@@ -144,13 +231,17 @@ export function useArticleList({ initialPage, controlledCategoryId }: UseArticle
     currentCategoryId,
     currentPage,
     pageData,
-    isLoading,
+    articles,
+    isLoadingInitial,
+    isLoadingMore,
+    endReached,
     fetchError,
     pendingLikeIds,
     changeCategory,
     changePage,
+    loadMore,
     toggleLike,
     refreshForSessionChange,
-    setPageData,
+    setArticles,
   };
 }
