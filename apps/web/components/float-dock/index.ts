@@ -12,5 +12,7 @@ export {
   floatDockHeartbeatClass,
   floatDockIconSize,
   floatDockOrbSize,
+  floatDockOrbHiddenClass,
   getFloatScrollTopThreshold,
+  FLOAT_SCROLL_TOP_HIDE_HYSTERESIS,
 } from "./float-dock-styles";

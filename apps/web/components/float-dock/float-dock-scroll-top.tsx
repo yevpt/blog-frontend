@@ -2,7 +2,7 @@
 
 import { SvgIcon } from "@repo/icons";
 import { Button, cn } from "@repo/ui";
-import { floatDockIconSize, floatDockOrbClass } from "./float-dock-styles";
+import { floatDockIconSize, floatDockOrbClass, floatDockOrbHiddenClass } from "./float-dock-styles";
 
 interface FloatDockScrollTopOrbProps {
   visible: boolean;
@@ -22,11 +22,7 @@ export function FloatDockScrollTopOrb({
       variant="ghost"
       aria-label="回到顶部"
       onPress={scrollToTop}
-      className={cn(
-        floatDockOrbClass,
-        className,
-        visible ? "opacity-100" : "pointer-events-none scale-90 opacity-0",
-      )}
+      className={cn(floatDockOrbClass, className, !visible && floatDockOrbHiddenClass)}
     >
       <SvgIcon name="arrow-up" size={iconSize} aria-hidden />
     </Button>

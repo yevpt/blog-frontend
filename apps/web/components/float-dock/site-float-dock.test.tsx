@@ -196,6 +196,6 @@ describe("SiteFloatDock", () => {
     });
     Object.defineProperty(window, "scrollY", { value: 1400, writable: true, configurable: true });
     fireEvent.scroll(window);
-    expect(screen.getByRole("button", { name: /回到顶部/ })).toHaveClass("opacity-100");
+    expect(screen.getByRole("button", { name: /回到顶部/ })).not.toHaveClass("opacity-0");
   });
 });

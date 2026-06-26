@@ -51,3 +51,9 @@ const FLOAT_SCROLL_TOP_VIEWPORT_RATIO = 1.5;
 export function getFloatScrollTopThreshold(viewportHeight: number): number {
   return Math.max(FLOAT_SCROLL_TOP_MIN_PX, viewportHeight * FLOAT_SCROLL_TOP_VIEWPORT_RATIO);
 }
+
+/** 回顶钮已显示后，需再向上滚过此距离才隐藏，避免阈值附近抖动 */
+export const FLOAT_SCROLL_TOP_HIDE_HYSTERESIS = 120;
+
+/** Dock 圆钮隐藏态：保留占位，避免栈内其它按钮位移 */
+export const floatDockOrbHiddenClass = "pointer-events-none scale-90 opacity-0";
