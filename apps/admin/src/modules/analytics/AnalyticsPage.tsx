@@ -1,6 +1,9 @@
 import { Tabs, TabsItem, TabsList, TabsPanel, TabsPanels } from "@repo/ui";
 import { AdminPageHeader } from "../../components/AdminPageHeader";
 import { TrendTab } from "./tabs/TrendTab";
+import { AudienceTab } from "./tabs/AudienceTab";
+import { PagesTab } from "./tabs/PagesTab";
+import { FriendsTab } from "./tabs/FriendsTab";
 
 function ComingSoon({ name }: { name: string }) {
   return (
@@ -31,13 +34,13 @@ export function AnalyticsPage() {
             <TrendTab />
           </TabsPanel>
           <TabsPanel id="audience">
-            <ComingSoon name="受众与来源" />
+            <AudienceTab />
           </TabsPanel>
           <TabsPanel id="pages">
-            <ComingSoon name="页面排行" />
+            <PagesTab />
           </TabsPanel>
           <TabsPanel id="friends">
-            <ComingSoon name="友链来源" />
+            <FriendsTab />
           </TabsPanel>
           <TabsPanel id="realtime">
             <ComingSoon name="实时" />
