@@ -15,6 +15,7 @@ import { SessionProvider } from "./providers/session-provider";
 import { GlobalModals } from "./providers/global-modals";
 import { BfcacheBoundary } from "./providers/bfcache-boundary";
 import { NotificationProvider } from "@/components/notifications/notification-provider";
+import { FloatDockProvider, SiteFloatDock } from "@/components/float-dock";
 import { getCanonicalUrl } from "@/lib/seo";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
@@ -94,9 +95,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                   {/* bfcache 恢复时软重挂载导航/正文/弹层，修复卡在揭示前状态的问题。
                       SvgSprite 与 SiteFooter 留在边界外：前者重注入会闪烁，后者无揭示门控。 */}
                   <BfcacheBoundary>
-                    <GlobalModals />
-                    <SiteNavbar initialUnreadCount={initialUnreadCount} />
-                    <main className="flex-1 pt-0">{children}</main>
+                    <FloatDockProvider>
+                      <GlobalModals />
+                      <SiteNavbar initialUnreadCount={initialUnreadCount} />
+                      <main className="flex-1 pt-0">{children}</main>
+                      <SiteFloatDock />
+                    </FloatDockProvider>
                   </BfcacheBoundary>
                   <SiteFooter />
                 </div>

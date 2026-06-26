@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@repo/ui";
+import { FloatDockPageAnchor } from "@/components/float-dock";
+import { pageContainerFloatDockLayout } from "@/lib/float-dock-layouts";
 
 interface PageContainerProps {
   children: ReactNode;
@@ -21,16 +23,19 @@ export function PageContainer({
   "data-testid": testId,
 }: PageContainerProps) {
   return (
-    <div
-      data-testid={testId}
-      className={cn(
-        "relative mx-auto px-5",
-        "pb-20 pt-20 md:pt-24", // 默认上下边距，会被 className 中的明确设置覆盖
-        sizeClasses[size],
-        className,
-      )}
-    >
-      {children}
-    </div>
+    <>
+      <FloatDockPageAnchor layout={pageContainerFloatDockLayout(size)} />
+      <div
+        data-testid={testId}
+        className={cn(
+          "relative mx-auto px-5",
+          "pb-20 pt-20 md:pt-24", // 默认上下边距，会被 className 中的明确设置覆盖
+          sizeClasses[size],
+          className,
+        )}
+      >
+        {children}
+      </div>
+    </>
   );
 }
