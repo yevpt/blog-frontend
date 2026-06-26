@@ -3,6 +3,14 @@ import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ResponsiveModalShell } from "./responsive-modal";
 
+const gestureState = vi.hoisted(() => ({
+  sheetStyle: { transform: "translateY(0px)" } as const,
+  isDragging: false,
+  isExpanded: false,
+  expandOffset: 0,
+  expand: vi.fn(),
+}));
+
 function mockMatch(isDesktop: boolean) {
   window.matchMedia = vi.fn().mockImplementation((q: string) => ({
     matches: q.includes("min-width: 768px") ? isDesktop : false,
@@ -15,7 +23,28 @@ function mockMatch(isDesktop: boolean) {
     dispatchEvent: vi.fn(),
   }));
 }
-beforeEach(() => mockMatch(true));
+
+vi.mock("@/hooks/use-sheet-gesture", () => ({
+  useSheetGesture: () => gestureState,
+}));
+
+vi.mock("@/hooks/use-visual-viewport-inset", () => ({
+  useVisualViewportInset: () => ({ bottomInset: 0, viewportHeight: 800 }),
+}));
+
+vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb: FrameRequestCallback) => {
+  cb(0);
+  return 0;
+});
+
+beforeEach(() => {
+  mockMatch(true);
+  gestureState.sheetStyle = { transform: "translateY(0px)" };
+  gestureState.isDragging = false;
+  gestureState.isExpanded = false;
+  gestureState.expandOffset = 0;
+  gestureState.expand.mockClear();
+});
 
 describe("ResponsiveModalShell", () => {
   it("渲染标题、body 与 footer", async () => {
@@ -117,7 +146,9 @@ describe("ResponsiveModalShell", () => {
     );
 
     const panel = await screen.findByTestId("modal-panel");
-    await waitFor(() => expect(panel.style.height).toBe("70dvh"));
+    // jsdom 不反映 inline height: 70dvh，用折叠态圆角与 maxHeight 代替
+    expect(panel.className).toContain("rounded-t-[20px]");
+    await waitFor(() => expect(panel.style.maxHeight).toBe("100dvh"));
 
     const scrollNode = screen.getByText("正文").parentElement as HTMLElement;
     Object.defineProperty(scrollNode, "scrollHeight", { value: 800, configurable: true });
@@ -126,7 +157,7 @@ describe("ResponsiveModalShell", () => {
     expect(onContentResize).toBeDefined();
     act(() => onContentResize?.());
 
-    await waitFor(() => expect(panel.style.height).toBe("100dvh"));
+    expect(gestureState.expand).toHaveBeenCalledOnce();
   });
 
   it("移动端内容未溢出时保持折叠高度，不主动展开", async () => {
@@ -143,7 +174,8 @@ describe("ResponsiveModalShell", () => {
     );
 
     const panel = await screen.findByTestId("modal-panel");
-    await waitFor(() => expect(panel.style.height).toBe("70dvh"));
+    expect(panel.className).toContain("rounded-t-[20px]");
+    await waitFor(() => expect(panel.style.maxHeight).toBe("100dvh"));
 
     const scrollNode = screen.getByText("正文").parentElement as HTMLElement;
     Object.defineProperty(scrollNode, "scrollHeight", { value: 200, configurable: true });
@@ -151,7 +183,8 @@ describe("ResponsiveModalShell", () => {
 
     act(() => onContentResize?.());
 
-    expect(panel.style.height).toBe("70dvh");
+    expect(gestureState.expand).not.toHaveBeenCalled();
+    expect(panel.className).toContain("rounded-t-[20px]");
   });
 
   it("移动端不监听 scrollRef 自身尺寸变化（避免与手动收起手势打架）", async () => {
