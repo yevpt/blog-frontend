@@ -35,7 +35,7 @@ const REFERER_LABELS: Record<string, string> = {
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="flex-1 px-5 py-4 first:pl-0 sm:border-l sm:border-border sm:first:border-l-0">
+    <div className="flex-1 px-5 py-4 sm:border-l sm:border-border sm:first:border-l-0">
       <div className="text-sm text-text-muted">{label}</div>
       <div className="mt-1.5 text-2xl font-medium tracking-tight">{value}</div>
       {hint ? <div className="mt-1 text-xs text-text-muted">{hint}</div> : null}
