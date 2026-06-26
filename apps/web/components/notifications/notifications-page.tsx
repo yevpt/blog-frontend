@@ -16,6 +16,8 @@ import NotificationFilterTabs from "./notification-filter-tabs";
 import NotificationSelectionBar from "./notification-selection-bar";
 import { MarkAllReadButton } from "./mark-all-read-button";
 import { useNotificationInlineReply } from "./use-notification-inline-reply";
+import { FloatDockPageAnchor } from "@/components/float-dock";
+import { NOTIFICATIONS_FLOAT_DOCK_LAYOUT } from "@/lib/float-dock-layouts";
 
 const INITIAL_SKELETON_COUNT = 8;
 
@@ -182,83 +184,86 @@ export default function NotificationsPage() {
   const isInitialLoading = !n.error && n.loading && n.items.length === 0;
 
   return (
-    <main className="mx-auto flex min-h-[100dvh] w-full max-w-2xl flex-col px-4 pt-[4.75rem] pb-8 md:pt-20">
-      <header className="mb-2 hidden md:block">
-        <h1 className="text-xl font-medium text-foreground">消息中心</h1>
-      </header>
+    <>
+      <FloatDockPageAnchor layout={NOTIFICATIONS_FLOAT_DOCK_LAYOUT} />
+      <main className="mx-auto flex min-h-[100dvh] w-full max-w-2xl flex-col px-4 pt-[4.75rem] pb-8 md:pt-20">
+        <header className="mb-2 hidden md:block">
+          <h1 className="text-xl font-medium text-foreground">消息中心</h1>
+        </header>
 
-      <div className="flex items-center justify-between gap-3 border-b border-border">
-        <NotificationFilterTabs
-          unreadOnly={n.unreadOnly}
-          unreadCount={unreadCount}
-          onChange={(v) => {
-            exitSelect();
-            n.setUnreadOnly(v);
-          }}
-        />
-        <div className="flex shrink-0 items-center gap-1.5">
-          <NotificationHeaderIconButton
-            label={selecting ? "取消选择" : "批量选择"}
-            icon={<SvgIcon name="list-checks" size={14} />}
-            isActive={selecting}
-            isDisabled={!selecting && n.items.length === 0}
-            onPress={toggleSelectMode}
+        <div className="flex items-center justify-between gap-3 border-b border-border">
+          <NotificationFilterTabs
+            unreadOnly={n.unreadOnly}
+            unreadCount={unreadCount}
+            onChange={(v) => {
+              exitSelect();
+              n.setUnreadOnly(v);
+            }}
           />
-          <MarkAllReadButton unreadCount={unreadCount} onConfirm={n.markAllRead} />
-        </div>
-      </div>
-
-      <div className="mt-3.5 flex min-h-0 flex-1 flex-col">
-        {n.error ? (
-          <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
-            <p className="text-sm">加载失败了</p>
-            <Button
-              type="button"
-              variant={null}
-              size={null}
-              onPress={n.reload}
-              className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm"
-            >
-              <SvgIcon name="refresh-cw" size={15} />
-              重试
-            </Button>
-          </div>
-        ) : isInitialLoading ? (
-          <NotificationSkeletonList />
-        ) : n.items.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
-            <SvgIcon name="bell" size={28} />
-            <p className="text-sm">{n.unreadOnly ? "没有未读消息" : "这里还没有消息"}</p>
-          </div>
-        ) : (
-          <div className="min-h-full flex-1">
-            <NotificationVirtualList
-              items={n.items}
-              enteringIds={n.enteringIds}
-              staggerAnimateIds={n.staggerAnimateIds}
-              selecting={selecting}
-              selected={selected}
-              hasMore={n.hasMore}
-              loading={n.loading}
-              onLoadMore={n.loadMore}
-              onOpen={openItem}
-              onRead={n.markRead}
-              onToggleSelect={toggleSelect}
-              onInlineLike={handleInlineLike}
-              onInlineReplySubmit={handleInlineReplySubmit}
-              replyingId={submittingId}
+          <div className="flex shrink-0 items-center gap-1.5">
+            <NotificationHeaderIconButton
+              label={selecting ? "取消选择" : "批量选择"}
+              icon={<SvgIcon name="list-checks" size={14} />}
+              isActive={selecting}
+              isDisabled={!selecting && n.items.length === 0}
+              onPress={toggleSelectMode}
             />
+            <MarkAllReadButton unreadCount={unreadCount} onConfirm={n.markAllRead} />
           </div>
-        )}
-      </div>
+        </div>
 
-      {selecting && (
-        <NotificationSelectionBar
-          count={selected.size}
-          onMarkRead={batchRead}
-          onCancel={exitSelect}
-        />
-      )}
-    </main>
+        <div className="mt-3.5 flex min-h-0 flex-1 flex-col">
+          {n.error ? (
+            <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
+              <p className="text-sm">加载失败了</p>
+              <Button
+                type="button"
+                variant={null}
+                size={null}
+                onPress={n.reload}
+                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm"
+              >
+                <SvgIcon name="refresh-cw" size={15} />
+                重试
+              </Button>
+            </div>
+          ) : isInitialLoading ? (
+            <NotificationSkeletonList />
+          ) : n.items.length === 0 ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
+              <SvgIcon name="bell" size={28} />
+              <p className="text-sm">{n.unreadOnly ? "没有未读消息" : "这里还没有消息"}</p>
+            </div>
+          ) : (
+            <div className="min-h-full flex-1">
+              <NotificationVirtualList
+                items={n.items}
+                enteringIds={n.enteringIds}
+                staggerAnimateIds={n.staggerAnimateIds}
+                selecting={selecting}
+                selected={selected}
+                hasMore={n.hasMore}
+                loading={n.loading}
+                onLoadMore={n.loadMore}
+                onOpen={openItem}
+                onRead={n.markRead}
+                onToggleSelect={toggleSelect}
+                onInlineLike={handleInlineLike}
+                onInlineReplySubmit={handleInlineReplySubmit}
+                replyingId={submittingId}
+              />
+            </div>
+          )}
+        </div>
+
+        {selecting && (
+          <NotificationSelectionBar
+            count={selected.size}
+            onMarkRead={batchRead}
+            onCancel={exitSelect}
+          />
+        )}
+      </main>
+    </>
   );
 }

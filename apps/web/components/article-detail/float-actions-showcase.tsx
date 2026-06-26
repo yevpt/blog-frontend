@@ -152,12 +152,10 @@ function VariantSpeedDial({ c }: { c: ShowcaseControls }) {
     {
       key: "like",
       label: c.isLiked ? "取消点赞" : "点赞",
-      icon: (c.isLiked ? "heart-fill" : "heart-line") as const,
+      icon: c.isLiked ? "heart-fill" : "heart-line",
       liked: c.isLiked,
     },
-    c.showMusic
-      ? { key: "music", label: "音乐", icon: (c.isPlaying ? "pause" : "music") as const }
-      : null,
+    c.showMusic ? { key: "music", label: "音乐", icon: c.isPlaying ? "pause" : "music" } : null,
   ].filter(Boolean) as Array<{
     key: string;
     label: string;
