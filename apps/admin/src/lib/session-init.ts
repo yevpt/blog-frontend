@@ -1,6 +1,11 @@
 import { apiClient } from "./api";
 import { useAuthStore } from "../store/auth";
 
+/** 拉取完整用户资料（含 avatar_url）并写入 store */
+export async function syncCurrentUser(): Promise<void> {
+  useAuthStore.getState().setUser(await apiClient.users.getMe());
+}
+
 /** 启动时静默续期去重：StrictMode 双挂载时复用同一 Promise，避免重复请求 */
 let initPromise: Promise<void> | null = null;
 
@@ -24,7 +29,7 @@ export function initSessionFromRefreshToken(): Promise<void> {
       const store = useAuthStore.getState();
       store.setAccessToken(tokens.access_token);
       localStorage.setItem("refresh_token", tokens.refresh_token);
-      store.setUser(await apiClient.users.getMe());
+      await syncCurrentUser();
     })
     .catch(() => {
       initPromise = null;

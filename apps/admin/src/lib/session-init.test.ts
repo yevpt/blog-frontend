@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { initSessionFromRefreshToken, resetSessionInitForTests } from "./session-init";
+import {
+  initSessionFromRefreshToken,
+  resetSessionInitForTests,
+  syncCurrentUser,
+} from "./session-init";
 import { apiClient } from "./api";
 import { useAuthStore } from "../store/auth";
 
@@ -106,5 +110,19 @@ describe("initSessionFromRefreshToken", () => {
 
     expect(apiClient.auth.refresh).toHaveBeenCalledTimes(2);
     expect(useAuthStore.getState().accessToken).toBe("acc");
+  });
+
+  it("syncCurrentUser 写入 getMe 返回的完整资料", async () => {
+    vi.mocked(apiClient.users.getMe).mockResolvedValue({
+      id: 1,
+      username: "admin",
+      avatar_url: "https://cdn.test/avatar.png",
+      status: 1,
+      roles: ["admin"],
+    });
+
+    await syncCurrentUser();
+
+    expect(useAuthStore.getState().user?.avatar_url).toBe("https://cdn.test/avatar.png");
   });
 });
