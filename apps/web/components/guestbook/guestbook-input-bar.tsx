@@ -11,6 +11,8 @@ interface GuestbookInputBarProps {
   isSubmitting?: boolean;
   replyTarget?: ReplyTarget | null;
   onCancelReply?: () => void;
+  /** 滚动定位完成后递增，触发编辑器聚焦 */
+  focusTrigger?: number | null;
 }
 
 export function GuestbookInputBar({
@@ -18,6 +20,7 @@ export function GuestbookInputBar({
   isSubmitting,
   replyTarget,
   onCancelReply,
+  focusTrigger,
 }: GuestbookInputBarProps) {
   const [content, setContent] = useState("");
   const { userId } = useSession();
@@ -48,7 +51,7 @@ export function GuestbookInputBar({
         onLoginRequired={openLoginModal}
         placeholder={placeholder}
         header={replyBanner}
-        focusTrigger={replyTarget}
+        focusTrigger={focusTrigger}
         maxLength={2000}
         className="focus-within:border-foreground/15 transition-colors duration-200"
       />

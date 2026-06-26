@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import type { CommentReplyResp, GuestbookPageResp } from "@repo/api";
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
@@ -12,6 +12,7 @@ import { GuestbookList } from "./guestbook-list";
 import { GuestbookInputBar } from "./guestbook-input-bar";
 import type { ReplyTarget } from "@/components/comments";
 import { PageContainer } from "@/components/common/page-container";
+import { runAfterSmoothScroll, scrollIntoViewBelowFixedHeader } from "@/lib/scroll-into-view";
 
 interface GuestbookPageProps {
   initialPage: GuestbookPageResp;
@@ -41,8 +42,22 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
   const { toggleEntryLike } = useGuestbookLike();
   const { deleteItem, deleteReply } = useGuestbookDelete();
 
+  const editorRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const pendingPaginationScrollRef = useRef(false);
+  const wasLoadingRef = useRef(false);
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
+  const [focusNonce, setFocusNonce] = useState<number | null>(null);
   const [pendingReplies, setPendingReplies] = useState<Record<number, CommentReplyResp | null>>({});
+
+  const scrollToEditor = useCallback(() => {
+    requestAnimationFrame(() => {
+      const el = editorRef.current;
+      if (!el) return;
+      scrollIntoViewBelowFixedHeader(el);
+      runAfterSmoothScroll(() => setFocusNonce((n) => (n ?? 0) + 1));
+    });
+  }, []);
 
   const handleSubmit = useCallback(
     async (content: string): Promise<boolean> => {
@@ -85,8 +100,9 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
         return;
       }
       setReplyTarget(target);
+      scrollToEditor();
     },
-    [userId, openLoginModal],
+    [scrollToEditor, userId, openLoginModal],
   );
 
   const handleDelete = useCallback(
@@ -115,14 +131,35 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
     setReplyTarget(null);
   }, []);
 
+  const handlePageChange = useCallback(
+    (pageNum: number) => {
+      pendingPaginationScrollRef.current = true;
+      void fetchPage(pageNum);
+    },
+    [fetchPage],
+  );
+
+  // 分页加载完成后，滚到留言列表顶部（避开 fixed 顶栏）
+  useEffect(() => {
+    if (wasLoadingRef.current && !isLoading && pendingPaginationScrollRef.current) {
+      pendingPaginationScrollRef.current = false;
+      const el = listRef.current;
+      if (el) {
+        scrollIntoViewBelowFixedHeader(el);
+      }
+    }
+    wasLoadingRef.current = isLoading;
+  }, [isLoading]);
+
   return (
     <PageContainer size="default" className="min-h-dvh">
-      <div className="mb-6">
+      <div ref={editorRef} className="mb-6">
         <GuestbookInputBar
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
           replyTarget={replyTarget}
           onCancelReply={handleCancelReply}
+          focusTrigger={focusNonce}
         />
       </div>
       <GuestbookList
@@ -132,8 +169,9 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
         total={total}
         isLoading={isLoading}
         error={error}
-        onPageChange={fetchPage}
+        onPageChange={handlePageChange}
         onReply={handleReply}
+        listRef={listRef}
         onLike={handleLike}
         currentUserId={userId}
         onDelete={handleDelete}
