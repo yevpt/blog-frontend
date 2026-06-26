@@ -23,6 +23,7 @@ function estimateReadingMinutes(content: string): number {
 export function ArticleHero({ article }: ArticleHeroProps) {
   const readingMin = estimateReadingMinutes(article.content);
   const readCount = useActiveArticle((state) => state.readCount) || article.read_count;
+  const likeCount = useActiveArticle((state) => state.likeCount) || article.like_count;
   const { locale } = useLocale();
   const openViewer = useImageViewer((s) => s.open);
   const formattedDate = formatDate(article.created_at, locale);
@@ -82,6 +83,10 @@ export function ArticleHero({ article }: ArticleHeroProps) {
         <span>{readingMin} 分钟阅读</span>
         <span aria-hidden>·</span>
         <span>{String(readCount)} 阅读</span>
+        <span aria-hidden className="hidden md:inline">
+          ·
+        </span>
+        <span className="hidden md:inline">{String(likeCount)} 点赞</span>
       </div>
 
       <ArticleMusicBar preview={musicPreview} />
