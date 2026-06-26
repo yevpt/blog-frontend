@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createServerApiClient } from "@/lib/server-api";
 import { getCanonicalUrl } from "@/lib/seo";
+import { mapArticleMusicToSyncInput } from "@/lib/article-music";
 import { markdownToHtml, extractTocFromHtml } from "@/lib/markdown";
 import {
   ArticleNavbarSync,
@@ -10,6 +11,8 @@ import {
   ArticleToc,
   ArticleFloatActions,
   ArticleComments,
+  ArticleMusicSync,
+  ArticleMusicHost,
 } from "@/components/article-detail";
 
 interface PageProps {
@@ -61,6 +64,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
   const tocItems = extractTocFromHtml(contentHtml);
 
   const hasToc = tocItems.length >= 2;
+  const articleMusic = mapArticleMusicToSyncInput(article.music);
 
   return (
     <>
@@ -71,6 +75,15 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         isLiked={article.is_liked ?? false}
         readCount={article.read_count}
       />
+
+      <ArticleMusicSync
+        musicUrl={articleMusic?.musicUrl}
+        musicName={articleMusic?.musicName}
+        musicArtist={articleMusic?.musicArtist}
+        musicCoverUrl={articleMusic?.musicCoverUrl}
+        musicDurationSeconds={articleMusic?.musicDurationSeconds}
+      />
+      <ArticleMusicHost />
 
       <div className="mx-auto max-w-[1100px] px-4 pt-22 pb-8 md:pt-24">
         {hasToc ? (
@@ -97,11 +110,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         )}
       </div>
 
-      <ArticleFloatActions
-        articleId={article.id}
-        musicUrl={article.music?.[0]?.url}
-        musicName={article.music?.[0]?.name}
-      />
+      <ArticleFloatActions articleId={article.id} />
     </>
   );
 }

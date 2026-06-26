@@ -228,6 +228,33 @@ describe("ArticleEditorPage", () => {
     expect(screen.getByRole("textbox", { name: "文章描述" })).toHaveValue("摘要");
   });
 
+  it("编辑页在公开曲库缺失时用详情 music 展示非公开曲目", async () => {
+    vi.mocked(apiClient.music.list).mockResolvedValue({ list: [] });
+    vi.mocked(apiClient.articles.getAdminDetail).mockResolvedValue({
+      ...mockDetail,
+      music_ids: [99],
+      music: [
+        {
+          id: 99,
+          name: "Hidden Drafts",
+          artists: [{ id: 8, name: "Luma", display_name: "Luma" }],
+          audio_url: "https://cdn.example.com/hidden.mp3",
+          duration: 180,
+          is_public: false,
+          seq: 0,
+        },
+      ],
+    });
+
+    renderEditorPage("/articles/12/edit");
+
+    await waitFor(() => {
+      expect(screen.getByText("Hidden Drafts")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Luma · 03:00")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "播放 Hidden Drafts" })).toBeEnabled();
+  });
+
   it("编辑页仅在本机备份比远端更新时恢复", async () => {
     localStorage.setItem(
       getArticleEditorAutosaveKey(12),

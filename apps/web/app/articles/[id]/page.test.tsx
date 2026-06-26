@@ -11,14 +11,17 @@ interface ArticleNavbarSyncProps {
   readCount: number;
 }
 
-interface ArticleFloatActionsProps {
-  articleId: number;
+interface ArticleMusicSyncProps {
   musicUrl?: string;
   musicName?: string;
+  musicArtist?: string;
+  musicCoverUrl?: string;
+  musicDurationSeconds?: number;
 }
 
 const mockArticleNavbarSync = vi.fn<(props: ArticleNavbarSyncProps) => null>(() => null);
-const mockArticleFloatActions = vi.fn<(props: ArticleFloatActionsProps) => null>(() => null);
+const mockArticleMusicSync = vi.fn<(props: ArticleMusicSyncProps) => null>(() => null);
+const mockArticleFloatActions = vi.fn<(props: { articleId: number }) => null>(() => null);
 
 const mockArticle: ArticleDetailResp = {
   id: 1,
@@ -49,12 +52,14 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/components/article-detail", () => ({
   ArticleNavbarSync: (props: ArticleNavbarSyncProps) => mockArticleNavbarSync(props),
+  ArticleMusicSync: (props: ArticleMusicSyncProps) => mockArticleMusicSync(props),
+  ArticleMusicHost: () => <div data-testid="music-host" />,
   ArticleHero: ({ article }: { article: ArticleDetailResp }) => <h1>{article.title}</h1>,
   ArticleContent: ({ contentHtml }: { contentHtml: string }) => (
     <div data-testid="content" dangerouslySetInnerHTML={{ __html: contentHtml }} />
   ),
   ArticleToc: () => <nav aria-label="文章目录" />,
-  ArticleFloatActions: (props: ArticleFloatActionsProps) => {
+  ArticleFloatActions: (props: { articleId: number }) => {
     mockArticleFloatActions(props);
     return <div data-testid="float-actions" />;
   },
@@ -102,17 +107,51 @@ describe("ArticleDetailPage", () => {
     expect(screen.getByTestId("comments")).toBeInTheDocument();
   });
 
+  it("同步背景音乐并挂载 audio host", async () => {
+    mockArticle.music = [
+      {
+        id: 2,
+        name: "春夏秋冬",
+        artist_display_name: "GILLE",
+        artists: [{ id: 2, name: "GILLE", display_name: "GILLE" }],
+        album: {
+          id: 2,
+          name: "The Best of “I AM GILLE.”~Amazing J-POP Covers~",
+          artist: { id: 2, name: "GILLE", display_name: "GILLE" },
+          cover_url: "https://example.com/album-cover.jpg",
+        },
+        album_track_no: 0,
+        audio_url: "https://example.com/a.m4a",
+        cover_url: "https://example.com/cover.jpg",
+        duration: 307,
+        is_public: true,
+        seq: 0,
+      },
+    ];
+    mockArticleMusicSync.mockClear();
+
+    const jsx = await ArticleDetailPage({ params: Promise.resolve({ id: "1" }) });
+    render(jsx);
+
+    expect(mockArticleMusicSync).toHaveBeenCalledWith({
+      musicUrl: "https://example.com/a.m4a",
+      musicName: "春夏秋冬",
+      musicArtist: "GILLE",
+      musicCoverUrl: "https://example.com/cover.jpg",
+      musicDurationSeconds: 307,
+    });
+    expect(screen.getByTestId("music-host")).toBeInTheDocument();
+
+    mockArticle.music = undefined;
+  });
+
   it("渲染浮动操作区", async () => {
     mockArticleFloatActions.mockClear();
 
     const jsx = await ArticleDetailPage({ params: Promise.resolve({ id: "1" }) });
     render(jsx);
 
-    expect(mockArticleFloatActions).toHaveBeenCalledWith({
-      articleId: mockArticle.id,
-      musicUrl: mockArticle.music?.[0]?.url,
-      musicName: mockArticle.music?.[0]?.name,
-    });
+    expect(mockArticleFloatActions).toHaveBeenCalledWith({ articleId: mockArticle.id });
     expect(screen.getByTestId("float-actions")).toBeInTheDocument();
   });
 });

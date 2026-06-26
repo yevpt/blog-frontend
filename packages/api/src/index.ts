@@ -34,7 +34,6 @@ export type {
   AdminArticleDetailResp,
   ArticleSaveReq,
   ArticleTagSaveReq,
-  MusicItem,
 } from "./types/article";
 export type {
   CategoryArticlesReq,

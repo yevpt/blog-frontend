@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { AdminArticleDetailResp } from "@repo/api";
+import type { AdminArticleDetailResp, MusicItemResp } from "@repo/api";
 import {
   buildArticleSaveReq,
   formatMusicDuration,
   mapDetailToFormState,
+  mapMusicItemToEditorOption,
+  resolveEditorMusicOption,
+  resolveMusicArtistLabel,
   statusToLabel,
 } from "./article-editor-utils";
 
@@ -53,6 +56,54 @@ describe("article-editor-utils", () => {
       isPassworded: false,
       savedArticleId: 12,
     });
+  });
+
+  it("resolveMusicArtistLabel 优先 artist_display_name，其次 artists，最后 singer", () => {
+    const withDisplay: MusicItemResp = {
+      id: 1,
+      name: "曲",
+      artist_display_name: "Aimer / milet",
+      duration: 100,
+      seq: 0,
+    };
+    const withArtists: MusicItemResp = {
+      id: 2,
+      name: "曲",
+      artists: [
+        { id: 1, name: "Aimer", display_name: "Aimer" },
+        { id: 2, name: "milet", display_name: "milet" },
+      ],
+      duration: 100,
+      seq: 0,
+    };
+    const legacy: MusicItemResp = {
+      id: 3,
+      name: "曲",
+      singer: "Yevpt",
+      duration: 100,
+      seq: 0,
+    };
+
+    expect(resolveMusicArtistLabel(withDisplay)).toBe("Aimer / milet");
+    expect(resolveMusicArtistLabel(withArtists)).toBe("Aimer / milet");
+    expect(resolveMusicArtistLabel(legacy)).toBe("Yevpt");
+  });
+
+  it("resolveEditorMusicOption 在公开列表缺失时用详情 music 兜底", () => {
+    const hiddenTrack: MusicItemResp = {
+      id: 99,
+      name: "Hidden Song",
+      artists: [{ id: 5, name: "Luma", display_name: "Luma" }],
+      audio_url: "https://cdn.example.com/hidden.mp3",
+      duration: 180,
+      is_public: false,
+      seq: 0,
+    };
+
+    expect(resolveEditorMusicOption(99, [], [hiddenTrack])).toEqual(
+      mapMusicItemToEditorOption(hiddenTrack),
+    );
+    expect(resolveEditorMusicOption(99, [], undefined)).toBeNull();
   });
 
   it("buildArticleSaveReq 构造保存请求", () => {

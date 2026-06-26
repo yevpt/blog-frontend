@@ -1,3 +1,5 @@
+import type { MusicItemResp } from "./music";
+
 export interface ArticleRelationResp {
   id: number;
   name: string;
@@ -86,16 +88,6 @@ export interface AdminArticlePageResp {
   list: AdminArticleListItemResp[];
 }
 
-export interface MusicItem {
-  id: number;
-  name: string;
-  singer: string;
-  album: string;
-  url?: string;
-  cover_img_url?: string;
-  duration: number;
-}
-
 export interface ArticleDetailResp {
   id: number;
   title: string;
@@ -118,7 +110,7 @@ export interface ArticleDetailResp {
   categories?: ArticleRelationResp[];
   tag_ids?: number[];
   music_ids?: number[];
-  music?: MusicItem[];
+  music?: MusicItemResp[];
   user?: ArticleUserResp;
   category?: ArticleRelationResp;
   tags?: ArticleRelationResp[];

@@ -17,8 +17,9 @@ import { apiClient } from "../../lib/api";
 import { addToast } from "../../lib/toast";
 import {
   buildArticleSaveReq,
-  formatMusicDuration,
   mapDetailToFormState,
+  mapMusicListToEditorOptions,
+  resolveEditorMusicOption,
   statusToLabel,
   type ArticleEditorStatusLabel,
 } from "./article-editor-utils";
@@ -112,21 +113,12 @@ export function ArticleEditorPage() {
 
   const tagCandidates = useMemo(() => tags.map((tag) => ({ id: tag.id, label: tag.name })), [tags]);
 
-  const musicOptions = useMemo(
-    () =>
-      musicList.map((item) => ({
-        id: item.id,
-        label: item.name,
-        artist: item.artist_display_name ?? item.singer ?? "",
-        duration: formatMusicDuration(item.duration),
-        durationSeconds: item.duration,
-        url: item.audio_url ?? item.url,
-      })),
-    [musicList],
-  );
+  const musicOptions = useMemo(() => mapMusicListToEditorOptions(musicList), [musicList]);
 
-  const selectedMusic =
-    musicId !== null ? (musicOptions.find((item) => item.id === musicId) ?? null) : null;
+  const selectedMusic = useMemo(
+    () => resolveEditorMusicOption(musicId, musicList, detail?.music),
+    [musicId, musicList, detail?.music],
+  );
   const filteredMusicOptions = useMemo(() => {
     const query = musicSearchQuery.trim().toLowerCase();
     if (!query) return musicOptions;

@@ -4,3 +4,7 @@ export { ArticleToc } from "./article-toc";
 export { ArticleFloatActions } from "./article-float-actions";
 export { ArticleComments } from "./article-comments";
 export { ArticleNavbarSync } from "./article-navbar-sync";
+export { ArticleMusicSync } from "./article-music-sync";
+export { ArticleMusicHost } from "./article-music-host";
+export { ArticleMusicBar } from "./article-music-bar";
+export { ArticleMusicControl } from "./article-music-control";

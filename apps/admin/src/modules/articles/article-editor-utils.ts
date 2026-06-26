@@ -1,7 +1,16 @@
-import type { AdminArticleDetailResp, ArticleSaveReq } from "@repo/api";
+import type { AdminArticleDetailResp, ArticleSaveReq, MusicItemResp } from "@repo/api";
 import type { ArticleTag } from "./editor-options";
 
 export type ArticleEditorStatusLabel = "草稿" | "已发布" | "加密";
+
+export interface ArticleEditorMusicOption {
+  id: number;
+  label: string;
+  artist: string;
+  duration: string;
+  durationSeconds: number;
+  url?: string;
+}
 
 export function formatMusicDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
@@ -13,6 +22,52 @@ export function statusToLabel(status: number): ArticleEditorStatusLabel {
   if (status === 1) return "已发布";
   if (status === 2) return "加密";
   return "草稿";
+}
+
+/** 解析曲目歌手展示名，与前台 article-music 口径一致 */
+export function resolveMusicArtistLabel(item: MusicItemResp): string {
+  const display = item.artist_display_name?.trim();
+  if (display) return display;
+
+  const fromArtists = item.artists
+    ?.map((artist) => artist.display_name?.trim() || artist.name.trim())
+    .filter(Boolean)
+    .join(" / ");
+  if (fromArtists) return fromArtists;
+
+  return item.singer?.trim() ?? "";
+}
+
+export function mapMusicItemToEditorOption(item: MusicItemResp): ArticleEditorMusicOption {
+  return {
+    id: item.id,
+    label: item.name,
+    artist: resolveMusicArtistLabel(item),
+    duration: formatMusicDuration(item.duration),
+    durationSeconds: item.duration,
+    url: item.audio_url ?? item.url,
+  };
+}
+
+export function mapMusicListToEditorOptions(items: MusicItemResp[]): ArticleEditorMusicOption[] {
+  return items.map(mapMusicItemToEditorOption);
+}
+
+/** 优先从公开曲库匹配，否则用详情里的 music 兜底（如非公开曲目） */
+export function resolveEditorMusicOption(
+  musicId: number | null,
+  musicList: MusicItemResp[],
+  detailMusic?: MusicItemResp[],
+): ArticleEditorMusicOption | null {
+  if (musicId === null) return null;
+
+  const fromList = musicList.find((item) => item.id === musicId);
+  if (fromList) return mapMusicItemToEditorOption(fromList);
+
+  const fromDetail = detailMusic?.find((item) => item.id === musicId);
+  if (fromDetail) return mapMusicItemToEditorOption(fromDetail);
+
+  return null;
 }
 
 export function mapDetailToFormState(detail: AdminArticleDetailResp) {
