@@ -87,6 +87,30 @@ describe("SecurityList", () => {
     expect(onAction).toHaveBeenCalledWith({ type: "email", target: "main", intent: "verify" });
   });
 
+  it("主邮箱行移动端三行布局，其他行保持原横向布局", () => {
+    render(
+      <SecurityList
+        data={data({ mainEmailVerified: false })}
+        onAction={vi.fn()}
+        onDisplayChanged={vi.fn()}
+      />,
+    );
+    const mainRow = screen.getByRole("button", { name: "验证主邮箱" }).closest(".border-b");
+    expect(mainRow).toHaveClass("grid");
+    expect(mainRow).toHaveClass("sm:flex");
+
+    const usernameRow = screen.getByText("用户名").closest(".border-b");
+    expect(usernameRow).toHaveClass("flex");
+    expect(usernameRow).not.toHaveClass("grid");
+
+    const metaRow = mainRow?.querySelector(".flex.flex-wrap.items-center.gap-2");
+    const actionRows = mainRow?.querySelectorAll(".flex.flex-wrap.items-center.gap-2");
+    expect(metaRow).toHaveTextContent("main@example.com");
+    expect(metaRow).toHaveTextContent("未验证");
+    expect(actionRows?.[1]).toHaveTextContent("验证当前邮箱");
+    expect(actionRows?.[1]).toHaveTextContent("换绑");
+  });
+
   it("副邮箱无值灰显并触发 bind", () => {
     const onAction = vi.fn();
     render(

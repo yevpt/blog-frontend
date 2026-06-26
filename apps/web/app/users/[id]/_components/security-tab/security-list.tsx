@@ -102,7 +102,7 @@ export function SecurityList({ data, onAction, onDisplayChanged }: SecurityListP
       </SecuritySection>
 
       <SecuritySection title="邮箱" className="mt-2">
-        <SecurityItem
+        <MainEmailSecurityItem
           label="主邮箱"
           labelSub="接收通知"
           value={mainRow.value}
@@ -288,6 +288,96 @@ function SecurityItem({
           </Button>
         )}
       </div>
+    </div>
+  );
+}
+
+/** 主邮箱行：移动端三行（标签 / 邮箱+状态 / 按钮），PC 端与其他行一致 */
+function MainEmailSecurityItem({
+  label,
+  labelSub,
+  value,
+  valueMuted,
+  badge,
+  badgeVariant,
+  action,
+  actionLabel,
+  onAction,
+  secondaryAction,
+  secondaryActionLabel,
+  onSecondaryAction,
+}: Omit<SecurityItemProps, "labelNode" | "actionMuted">) {
+  const valueNode = value ? (
+    <span
+      className={`truncate text-[13px] max-sm:max-w-full sm:max-w-none ${
+        valueMuted ? "italic text-muted-foreground/40" : "text-muted-foreground/70"
+      }`}
+    >
+      {value}
+    </span>
+  ) : null;
+
+  const badgeNode = badge ? (
+    <span
+      className={`shrink-0 rounded px-2 py-0.5 text-xs font-medium ${
+        badgeVariant === "bound"
+          ? "bg-emerald-500/10 text-emerald-500"
+          : "bg-muted text-muted-foreground/60"
+      }`}
+    >
+      {badge}
+    </span>
+  ) : null;
+
+  const secondaryActionNode = secondaryAction ? (
+    <Button
+      variant="outline"
+      size="sm"
+      aria-label={secondaryActionLabel ?? secondaryAction}
+      onPress={onSecondaryAction}
+      className="border-primary/40 text-primary hover:border-primary/70 hover:text-primary"
+    >
+      {secondaryAction}
+    </Button>
+  ) : null;
+
+  const actionNode = action ? (
+    <Button
+      variant="outline"
+      size="sm"
+      aria-label={actionLabel ?? action}
+      onPress={onAction}
+      className="border-primary/40 text-primary hover:border-primary/70 hover:text-primary"
+    >
+      {action}
+    </Button>
+  ) : null;
+
+  const hasMetaRow = valueNode || badgeNode;
+  const hasActionRow = secondaryActionNode || actionNode;
+
+  return (
+    <div className="grid grid-cols-1 gap-y-2 border-b border-border px-4 py-3 last:border-b-0 sm:flex sm:min-h-[48px] sm:items-center sm:gap-2 sm:py-2">
+      <span className="text-[13px] text-muted-foreground sm:flex-1">
+        {label}
+        {labelSub && (
+          <span className="ml-1.5 text-xs text-muted-foreground/50">（{labelSub}）</span>
+        )}
+      </span>
+
+      {hasMetaRow && (
+        <div className="flex flex-wrap items-center gap-2 sm:contents">
+          {valueNode}
+          {badgeNode}
+        </div>
+      )}
+
+      {hasActionRow && (
+        <div className="flex flex-wrap items-center gap-2 sm:contents">
+          {secondaryActionNode}
+          {actionNode}
+        </div>
+      )}
     </div>
   );
 }
