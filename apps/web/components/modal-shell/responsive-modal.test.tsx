@@ -241,4 +241,33 @@ describe("ResponsiveModalShell", () => {
     expect(observe).toHaveBeenCalledTimes(2);
     vi.unstubAllGlobals();
   });
+
+  it("桌面弹窗高度按 scroll 区 scrollHeight 累加，避免底部内容被裁切", async () => {
+    if (window.visualViewport) {
+      Object.defineProperty(window.visualViewport, "height", {
+        configurable: true,
+        value: 1000,
+      });
+    }
+
+    render(
+      <ResponsiveModalShell isOpen title="写碎语" onClose={() => {}} footer={<span>底栏</span>}>
+        {() => <div data-testid="body">正文</div>}
+      </ResponsiveModalShell>,
+    );
+
+    const panel = await screen.findByTestId("modal-panel");
+    const body = screen.getByTestId("body");
+    const scrollNode = body.parentElement as HTMLElement;
+    const header = scrollNode.previousElementSibling as HTMLElement;
+    const footer = scrollNode.nextElementSibling as HTMLElement;
+
+    Object.defineProperty(header, "offsetHeight", { configurable: true, value: 48 });
+    Object.defineProperty(footer, "offsetHeight", { configurable: true, value: 56 });
+    Object.defineProperty(scrollNode, "scrollHeight", { configurable: true, value: 320 });
+
+    window.dispatchEvent(new Event("resize"));
+
+    await waitFor(() => expect(panel.style.height).toBe("424px"));
+  });
 });

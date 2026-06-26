@@ -71,8 +71,21 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-/** 临时解除固定高度以测量内容自然高度，供桌面弹窗高度过渡使用 */
-function measurePanelNaturalHeight(panel: HTMLDivElement) {
+/**
+ * 测量桌面弹窗自然高度。
+ * 有 scroll 区时累加 header + scrollHeight + footer，避免 flex-1/min-h-0
+ * 滚动容器在 height:auto 下不把内容高度传给面板（碎语弹窗底部图片区被裁切）。
+ */
+function measurePanelNaturalHeight(panel: HTMLDivElement, scrollNode?: HTMLDivElement | null) {
+  if (scrollNode) {
+    const headerEl = scrollNode.previousElementSibling;
+    const footerEl = scrollNode.nextElementSibling;
+    const headerHeight = headerEl instanceof HTMLElement ? headerEl.offsetHeight : 0;
+    const footerHeight = footerEl instanceof HTMLElement ? footerEl.offsetHeight : 0;
+    const bodyHeight = scrollNode.scrollHeight;
+    return Math.min(headerHeight + bodyHeight + footerHeight, getDesktopModalMaxHeight());
+  }
+
   const previousHeight = panel.style.height;
   const previousTransition = panel.style.transition;
   panel.style.transition = "none";
@@ -83,14 +96,17 @@ function measurePanelNaturalHeight(panel: HTMLDivElement) {
   return naturalHeight;
 }
 
-function useAnimatedPanelHeight(panelRef: RefObject<HTMLDivElement | null>) {
+function useAnimatedPanelHeight(
+  panelRef: RefObject<HTMLDivElement | null>,
+  scrollRef?: RefObject<HTMLDivElement | null>,
+) {
   const [panelHeight, setPanelHeight] = useState<number | undefined>();
 
   const measurePanelHeight = useCallback(() => {
     const panel = panelRef.current;
     if (!panel) return;
-    setPanelHeight(measurePanelNaturalHeight(panel));
-  }, [panelRef]);
+    setPanelHeight(measurePanelNaturalHeight(panel, scrollRef?.current));
+  }, [panelRef, scrollRef]);
 
   useLayoutEffect(() => {
     measurePanelHeight();
@@ -165,7 +181,7 @@ function DesktopDialog({ title, onClose, desktopMaxWidthClassName, children, foo
   const { isOpen, requestClose } = useAnimatedClose(onClose);
   const panelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null!);
-  const { modalStyle, measurePanelHeight } = useAnimatedPanelHeight(panelRef);
+  const { modalStyle, measurePanelHeight } = useAnimatedPanelHeight(panelRef, scrollRef);
   useScrollContentResizeObserver(scrollRef, measurePanelHeight);
 
   return (
