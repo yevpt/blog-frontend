@@ -5,6 +5,15 @@ export interface MomentListReq {
   page_size?: number;
 }
 
+export type AdminMomentStatusFilter = "all" | "public" | "hidden";
+
+export interface AdminMomentListReq {
+  page?: number;
+  page_size?: number;
+  status?: AdminMomentStatusFilter;
+  search?: string;
+}
+
 /** 碎语独立页 feed 范围 */
 export type MomentFeedScope = "all" | "owner" | "friends";
 
@@ -84,6 +93,15 @@ export interface MomentTopResp {
 }
 
 export interface MomentPageResp {
+  /** Go int64 — safe as JS number for blog-scale counts */
+  total: number;
+  pages: number;
+  page: number;
+  page_size: number;
+  list: MomentItemResp[];
+}
+
+export interface AdminMomentPageResp {
   /** Go int64 — safe as JS number for blog-scale counts */
   total: number;
   pages: number;

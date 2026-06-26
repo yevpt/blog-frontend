@@ -69,6 +69,9 @@ export type {
   MusicUploadResp,
 } from "./types/music";
 export type {
+  AdminMomentListReq,
+  AdminMomentPageResp,
+  AdminMomentStatusFilter,
   MomentListReq,
   MomentFeedScope,
   MomentFeedSort,

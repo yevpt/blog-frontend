@@ -3,6 +3,7 @@ import { dashboardModule } from "../modules/dashboard/module";
 import { articlesModule } from "../modules/articles/module";
 import { commentsModule } from "../modules/comments/module";
 import { guestbookModule } from "../modules/guestbook/module";
+import { momentsModule } from "../modules/moments/module";
 import { categoriesModule } from "../modules/categories/module";
 import { tagsModule } from "../modules/tags/module";
 import { musicModule } from "../modules/music/module";
@@ -15,6 +16,7 @@ export const adminModules: AdminModule[] = [
   articlesModule,
   commentsModule,
   guestbookModule,
+  momentsModule,
   categoriesModule,
   tagsModule,
   musicModule,

@@ -766,6 +766,32 @@ describe("createApiClient", () => {
     );
   });
 
+  it("moments.listAdmin 使用后台动态查询路径并拼接筛选参数", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { total: 1, pages: 1, page: 2, page_size: 20, list: [] },
+      }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token" });
+
+    await client.moments.listAdmin({
+      page: 2,
+      page_size: 20,
+      status: "hidden",
+      search: "风",
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/moments?page=2&page_size=20&status=hidden&search=%E9%A3%8E",
+      expect.objectContaining({
+        method: "GET",
+        headers: expect.objectContaining({ Authorization: "Bearer token" }),
+      }),
+    );
+  });
+
   it("moments.listPublic 带 page 和 page_size 时构造正确 query string", async () => {
     vi.mocked(global.fetch).mockResolvedValue(
       mockResponse({

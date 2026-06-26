@@ -51,6 +51,8 @@ import type {
   MusicUploadResp,
 } from "./types/music";
 import type {
+  AdminMomentListReq,
+  AdminMomentPageResp,
   MomentDeleteResp,
   MomentItemResp,
   MomentFeedListReq,
@@ -501,6 +503,18 @@ export function createApiClient(config: ApiClientConfig) {
       },
     },
     moments: {
+      /** 后台分页查询全站碎语（需管理员） */
+      listAdmin: (req: AdminMomentListReq = {}) => {
+        const params = new URLSearchParams();
+        if (req.page !== undefined) params.set("page", String(req.page));
+        if (req.page_size !== undefined) params.set("page_size", String(req.page_size));
+        if (req.status !== undefined) params.set("status", req.status);
+        if (req.search !== undefined && req.search !== "") params.set("search", req.search);
+        const qs = params.toString();
+        return fetchAuthed<AdminMomentPageResp>(`/admin/moments${qs ? `?${qs}` : ""}`, {
+          method: "GET",
+        });
+      },
       /** 上报一次碎语阅读（触发即可，不等待返回值） */
       view: (id: number) => fetchPublic<void>(`/moments/${id}/view`, { method: "POST" }),
       /** 分页查询公开碎语，支持用户/角色过滤；登录态可返回 is_liked */
