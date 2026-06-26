@@ -28,6 +28,7 @@ const nextConfig = {
     remotePatterns: [
       { hostname: "picsum.photos" },
       { hostname: "i.pravatar.cc" },
+      { hostname: "blog-dev-oss.yevpt.com" },
       { hostname: "blog-oss.yevpt.com" },
       { hostname: "garage-s3-local-api.yevpt.com" },
       { hostname: "api.dicebear.com" },
