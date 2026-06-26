@@ -9,8 +9,14 @@ import { PageSectionHeader } from "@/components/common/page-section-header";
 import { ArticleCard } from "./article-card";
 import { ArticleCardSkeleton } from "./article-card-skeleton";
 import { CommentModal } from "@/components/comments";
+import { MomentEndReached, MomentScrollLoader } from "@/components/moments/moment-scroll-loader";
 import { useSession } from "@/app/providers/session-provider";
 import { ALL_CATEGORY_ID, useArticleList } from "@/hooks/use-article-list";
+import {
+  filterVisibleCategories,
+  getCategoryArticleCount,
+  shouldUseCategoryPagination,
+} from "@/lib/category-tabs";
 
 // 虚拟"全部"Tab，对应不带 category_id 的请求
 const ALL_CATEGORY: CategoryTabItem = {
@@ -43,15 +49,19 @@ export function ArticleSection({
   const {
     currentCategoryId,
     currentPage,
+    articles,
     pageData,
-    isLoading,
+    isLoadingInitial,
+    isLoadingMore,
+    endReached,
     fetchError,
     pendingLikeIds,
     changeCategory,
     changePage,
+    loadMore,
     toggleLike,
     refreshForSessionChange,
-    setPageData,
+    setArticles,
   } = useArticleList({ initialPage, controlledCategoryId });
 
   // TODO: 待后端支持文字搜索接口后，在 fetchPage 中加入 search 参数
@@ -59,47 +69,89 @@ export function ArticleSection({
   const [activeComment, setActiveComment] = useState<ActiveComment | null>(null);
   const { userId } = useSession();
 
-  const allCategories = useMemo(() => [ALL_CATEGORY, ...categories], [categories]);
+  const visibleCategories = useMemo(() => filterVisibleCategories(categories), [categories]);
+  const allCategories = useMemo(
+    () => [{ ...ALL_CATEGORY, article_count: initialPage.total }, ...visibleCategories],
+    [initialPage.total, visibleCategories],
+  );
+  const currentArticleCount = useMemo(
+    () =>
+      getCategoryArticleCount(
+        currentCategoryId,
+        visibleCategories,
+        pageData.total || initialPage.total,
+      ),
+    [currentCategoryId, initialPage.total, pageData.total, visibleCategories],
+  );
+  const usePagination = shouldUseCategoryPagination(currentArticleCount);
 
   const sectionRef = useRef<HTMLElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef(loadMore);
   const prevUserIdRef = useRef<number | null>(userId);
-  const silentRefreshRef = useRef(false);
-  const wasLoadingRef = useRef(false);
+  const wasLoadingInitialRef = useRef(false);
+  const pendingPaginationScrollRef = useRef(false);
+  loadMoreRef.current = loadMore;
 
-  // 数据加载完成（isLoading true → false）后再滚动，避免布局偏移打断平滑滚动
+  const showSentinel =
+    !usePagination && !endReached && !isLoadingMore && !isLoadingInitial && !fetchError;
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      pendingPaginationScrollRef.current = true;
+      void changePage(page);
+    },
+    [changePage],
+  );
+
   useEffect(() => {
-    if (wasLoadingRef.current && !isLoading) {
-      if (silentRefreshRef.current) {
-        silentRefreshRef.current = false;
-      } else {
-        sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !showSentinel) {
+      return;
     }
-    wasLoadingRef.current = isLoading;
-  }, [isLoading]);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          void loadMoreRef.current();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [showSentinel]);
 
   useEffect(() => {
     if (prevUserIdRef.current === userId) {
       return;
     }
     prevUserIdRef.current = userId;
-    silentRefreshRef.current = true;
     void refreshForSessionChange();
   }, [refreshForSessionChange, userId]);
 
-  const skeletonCount = pageData.list.length || 6;
+  // 分页切换加载完成后，平滑滚动到文章区顶部（scroll-mt-20 已预留顶栏偏移）
+  useEffect(() => {
+    if (wasLoadingInitialRef.current && !isLoadingInitial && pendingPaginationScrollRef.current) {
+      pendingPaginationScrollRef.current = false;
+      sectionRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+    }
+    wasLoadingInitialRef.current = isLoadingInitial;
+  }, [isLoadingInitial]);
+
+  const skeletonCount = articles.length || pageData.list.length || 6;
 
   const handleCommentAdded = useCallback(() => {
     if (!activeComment) return;
-    setPageData((current) => ({
-      ...current,
-      list: current.list.map((item) =>
+    setArticles((current) =>
+      current.map((item) =>
         item.id === activeComment.articleId
           ? { ...item, comment_count: item.comment_count + 1 }
           : item,
       ),
-    }));
-  }, [activeComment, setPageData]);
+    );
+  }, [activeComment, setArticles]);
 
   const openComment = (article: ArticleListItemResp) => {
     setActiveComment({
@@ -112,9 +164,9 @@ export function ArticleSection({
   const articleGrid = (
     <>
       <div className="mt-6 grid grid-cols-1 gap-0 md:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:gap-5">
-        {isLoading
+        {isLoadingInitial
           ? Array.from({ length: skeletonCount }, (_, i) => <ArticleCardSkeleton key={i} />)
-          : pageData.list.map((article, index) => (
+          : articles.map((article, index) => (
               <ArticleCard
                 key={article.id}
                 article={article}
@@ -126,17 +178,22 @@ export function ArticleSection({
             ))}
       </div>
 
-      {fetchError && (
-        <p className="mt-4 text-center text-sm text-muted-foreground">加载失败，请稍后重试</p>
-      )}
+      {isLoadingMore && !usePagination && <MomentScrollLoader />}
+      {endReached && !usePagination && !isLoadingMore && !isLoadingInitial && <MomentEndReached />}
 
-      {pageData.pages > 1 && (
+      {showSentinel && <div ref={sentinelRef} className="h-px" />}
+
+      {usePagination && pageData.pages > 1 && !isLoadingInitial && (
         <Pagination
           currentPage={currentPage}
           totalPages={pageData.pages}
-          onPageChange={changePage}
+          onPageChange={handlePageChange}
           className="mt-8"
         />
+      )}
+
+      {fetchError && !isLoadingMore && !isLoadingInitial && (
+        <p className="mt-4 text-center text-sm text-muted-foreground">加载失败，请稍后重试</p>
       )}
     </>
   );

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, act, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, act, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import type { ArticlePageResp, CategoryTabItem } from "@repo/api";
@@ -10,6 +10,9 @@ const toastMockState = vi.hoisted(() => ({
   addToast: vi.fn(),
 }));
 let mockSessionUserId: number | null = 7;
+let intersectionObserverCallback:
+  | ((entries: IntersectionObserverEntry[], observer: IntersectionObserver) => void)
+  | undefined;
 
 vi.mock("next/image", () => ({
   default: ({ src, alt, className }: { src: string; alt: string; className?: string }) => (
@@ -203,11 +206,26 @@ function jsonResponse(body: unknown, status = 200): Response {
 const mockCategories: CategoryTabItem[] = [
   { id: 1, name: "编程", seq: 0, article_count: 10 },
   { id: 2, name: "工具", seq: 1, article_count: 5 },
+  { id: 3, name: "空分类", seq: 2, article_count: 0 },
 ];
 
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn());
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
+  intersectionObserverCallback = undefined;
+  vi.stubGlobal(
+    "IntersectionObserver",
+    class MockIntersectionObserver {
+      observe = vi.fn();
+      unobserve = vi.fn();
+      disconnect = vi.fn();
+      constructor(
+        cb: (entries: IntersectionObserverEntry[], observer: IntersectionObserver) => void,
+      ) {
+        intersectionObserverCallback = cb;
+      }
+    },
+  );
   mockSessionUserId = 7;
 });
 
@@ -232,19 +250,42 @@ describe("ArticleSection", () => {
     expect(grid?.className).toContain("minmax(320px,1fr)");
   });
 
-  it("pages <= 1 时不显示分页", () => {
-    render(<ArticleSection initialPage={makePageResp({ pages: 1 })} categories={mockCategories} />);
-    expect(screen.queryByRole("navigation", { name: "分页导航" })).toBeNull();
+  it("pages === 1 且文章数不超过 60 时显示到底提示", () => {
+    render(
+      <ArticleSection
+        initialPage={makePageResp({ pages: 1, total: 2 })}
+        categories={mockCategories}
+      />,
+    );
+    expect(screen.getByText("已经到底了")).toBeTruthy();
   });
 
-  it("pages > 1 时显示分页", () => {
+  it("文章数不超过 60 且有多页时显示滚动加载哨兵", () => {
     render(
       <ArticleSection
         initialPage={makePageResp({ total: 25, pages: 3 })}
         categories={mockCategories}
       />,
     );
-    expect(screen.getByRole("navigation", { name: "分页导航" })).toBeTruthy();
+    expect(document.querySelector(".h-px")).toBeTruthy();
+    expect(screen.queryByLabelText("分页导航")).toBeNull();
+  });
+
+  it("文章数超过 60 时显示分页组件而非滚动哨兵", () => {
+    render(
+      <ArticleSection
+        initialPage={makePageResp({ total: 65, pages: 7 })}
+        categories={mockCategories}
+      />,
+    );
+    expect(screen.getByLabelText("分页导航")).toBeTruthy();
+    expect(document.querySelector(".h-px")).toBeNull();
+  });
+
+  it("article_count 为 0 的分类不显示在 Tab 中", () => {
+    render(<ArticleSection initialPage={makePageResp()} categories={mockCategories} />);
+    expect(screen.queryByRole("button", { name: "空分类" })).toBeNull();
+    expect(screen.getByRole("button", { name: "编程" })).toBeTruthy();
   });
 
   it("点击分类 Tab 后以 category_id 参数 fetch 第一页", async () => {
@@ -273,10 +314,11 @@ describe("ArticleSection", () => {
     });
   });
 
-  it("点击下一页后以正确 page 参数 fetch", async () => {
-    const user = userEvent.setup();
+  it("滚动到底时加载下一页并追加文章", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      jsonResponse(makePageResp({ page: 2, list: [makeArticle(11, "第二页文章")] })),
+      jsonResponse(
+        makePageResp({ page: 2, pages: 3, total: 25, list: [makeArticle(11, "第二页文章")] }),
+      ),
     );
 
     render(
@@ -286,9 +328,11 @@ describe("ArticleSection", () => {
       />,
     );
 
-    const nextBtn = screen.getByRole("button", { name: "下一页" });
-    await act(async () => {
-      await user.click(nextBtn);
+    act(() => {
+      intersectionObserverCallback?.(
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        {} as IntersectionObserver,
+      );
     });
 
     await waitFor(() => {
@@ -296,10 +340,68 @@ describe("ArticleSection", () => {
       const url = new URL(call, "http://localhost");
       expect(url.searchParams.get("page")).toBe("2");
       expect(url.searchParams.get("category_id")).toBeNull();
+      expect(screen.getByText("第二页文章")).toBeTruthy();
+      expect(screen.getByText("文章一")).toBeTruthy();
     });
+  });
+
+  it("分页模式下点击下一页会替换当前列表", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(
+        makePageResp({
+          page: 2,
+          pages: 7,
+          total: 65,
+          list: [makeArticle(21, "分页第二页")],
+        }),
+      ),
+    );
+
+    render(
+      <ArticleSection
+        initialPage={makePageResp({ total: 65, pages: 7 })}
+        categories={mockCategories}
+      />,
+    );
+
+    await user.click(screen.getByLabelText("下一页"));
 
     await waitFor(() => {
-      expect(screen.getByText("第二页文章")).toBeTruthy();
+      const call = vi.mocked(fetch).mock.calls[0][0] as string;
+      const url = new URL(call, "http://localhost");
+      expect(url.searchParams.get("page")).toBe("2");
+      expect(screen.getByText("分页第二页")).toBeTruthy();
+      expect(screen.queryByText("文章一")).toBeNull();
+    });
+  });
+
+  it("分页模式下切换页码后平滑滚动到文章区顶部", async () => {
+    const scrollIntoView = vi.fn();
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(
+        makePageResp({
+          page: 2,
+          pages: 7,
+          total: 65,
+          list: [makeArticle(21, "分页第二页")],
+        }),
+      ),
+    );
+
+    render(
+      <ArticleSection
+        initialPage={makePageResp({ total: 65, pages: 7 })}
+        categories={mockCategories}
+      />,
+    );
+
+    await user.click(screen.getByLabelText("下一页"));
+
+    await waitFor(() => {
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
     });
   });
 
@@ -307,7 +409,9 @@ describe("ArticleSection", () => {
     const user = userEvent.setup();
     vi.mocked(fetch)
       .mockResolvedValueOnce(
-        jsonResponse(makePageResp({ page: 2, pages: 3, list: [makeArticle(5, "第二页")] })),
+        jsonResponse(
+          makePageResp({ page: 2, pages: 3, total: 25, list: [makeArticle(5, "第二页")] }),
+        ),
       )
       .mockResolvedValueOnce(jsonResponse(makePageResp({ list: [makeArticle(6, "编程第一页")] })));
 
@@ -318,8 +422,11 @@ describe("ArticleSection", () => {
       />,
     );
 
-    await act(async () => {
-      await user.click(screen.getByRole("button", { name: "下一页" }));
+    act(() => {
+      intersectionObserverCallback?.(
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        {} as IntersectionObserver,
+      );
     });
     await waitFor(() => expect(screen.getByText("第二页")).toBeTruthy());
 
@@ -332,35 +439,12 @@ describe("ArticleSection", () => {
       const url = new URL(secondCall, "http://localhost");
       expect(url.searchParams.get("page")).toBe("1");
       expect(url.searchParams.get("category_id")).toBe("1");
+      expect(screen.getByText("编程第一页")).toBeTruthy();
     });
   });
 
-  it("翻页后调用 scrollIntoView 平滑滚动到文章区顶部", async () => {
-    const scrollIntoView = vi.fn();
-    window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
-
-    vi.mocked(fetch).mockResolvedValueOnce(
-      jsonResponse(makePageResp({ page: 2, list: [makeArticle(11, "第二页文章")] })),
-    );
-
+  it("切换分类时显示骨架屏，加载完成后显示文章", async () => {
     const user = userEvent.setup();
-    render(
-      <ArticleSection
-        initialPage={makePageResp({ total: 25, pages: 3 })}
-        categories={mockCategories}
-      />,
-    );
-
-    await act(async () => {
-      await user.click(screen.getByRole("button", { name: "下一页" }));
-    });
-
-    await waitFor(() => {
-      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
-    });
-  });
-
-  it("加载中显示骨架屏，加载完成后显示文章", async () => {
     let resolveResponse!: (val: Response) => void;
     vi.mocked(fetch).mockImplementationOnce(
       () =>
@@ -376,21 +460,17 @@ describe("ArticleSection", () => {
       />,
     );
 
-    act(() => {
-      fireEvent.click(screen.getByRole("button", { name: "下一页" }));
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "编程" }));
     });
 
-    // 加载中：原文章文字消失（骨架屏无文字内容）
     await waitFor(() => {
       expect(screen.queryByText("文章一")).toBeNull();
       expect(screen.queryByText("文章二")).toBeNull();
     });
 
-    // 解决 fetch，文章出现
     await act(async () => {
-      resolveResponse(
-        jsonResponse(makePageResp({ page: 2, list: [makeArticle(11, "骨架屏测试文章")] })),
-      );
+      resolveResponse(jsonResponse(makePageResp({ list: [makeArticle(11, "骨架屏测试文章")] })));
     });
 
     await waitFor(() => {
