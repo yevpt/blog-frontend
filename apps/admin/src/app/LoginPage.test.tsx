@@ -13,7 +13,7 @@ import { toastQueue } from "../lib/toast";
 
 // mock 全局 apiClient，避免真实 HTTP 请求
 vi.mock("../lib/api", () => ({
-  apiClient: { adminAuth: { login: vi.fn() } },
+  apiClient: { adminAuth: { login: vi.fn() }, users: { getMe: vi.fn() } },
 }));
 
 function renderLoginPage() {
@@ -93,6 +93,14 @@ describe("LoginPage", () => {
       expires_in: 7200,
       user: { id: 1, username: "vpt" },
     });
+    vi.mocked(apiClient.users.getMe).mockResolvedValue({
+      id: 1,
+      username: "vpt",
+      nickname: "VPT",
+      avatar_url: "https://cdn.test/avatar.png",
+      status: 1,
+      roles: ["admin"],
+    });
 
     renderLoginPage();
     await userEvent.type(screen.getByLabelText(/用户名/), "vpt");
@@ -101,7 +109,28 @@ describe("LoginPage", () => {
 
     await waitFor(() => {
       expect(useAuthStore.getState().accessToken).toBe("acc");
+      expect(useAuthStore.getState().user?.avatar_url).toBe("https://cdn.test/avatar.png");
       expect(localStorage.getItem("refresh_token")).toBe("ref");
+    });
+    expect(apiClient.users.getMe).toHaveBeenCalled();
+  });
+
+  it("getMe 失败时回退到登录响应中的 user", async () => {
+    vi.mocked(apiClient.adminAuth.login).mockResolvedValue({
+      access_token: "acc",
+      refresh_token: "ref",
+      expires_in: 7200,
+      user: { id: 1, username: "vpt", nickname: "备用名" },
+    });
+    vi.mocked(apiClient.users.getMe).mockRejectedValue(new Error("network"));
+
+    renderLoginPage();
+    await userEvent.type(screen.getByLabelText(/用户名/), "vpt");
+    await userEvent.type(screen.getByPlaceholderText("输入密码"), "password123");
+    await userEvent.click(screen.getByRole("button", { name: "登录" }));
+
+    await waitFor(() => {
+      expect(useAuthStore.getState().user?.nickname).toBe("备用名");
     });
   });
 

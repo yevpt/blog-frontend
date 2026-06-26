@@ -6,6 +6,7 @@ import { BrandMark } from "../components/layout/BrandMark";
 import { ThemeToggle } from "../components/layout/ThemeToggle";
 import { apiClient } from "../lib/api";
 import { addToast } from "../lib/toast";
+import { syncCurrentUser } from "../lib/session-init";
 import { useAuthStore } from "../store/auth";
 
 export function LoginPage() {
@@ -21,8 +22,13 @@ export function LoginPage() {
     try {
       const resp = await apiClient.adminAuth.login({ username, password });
       setAccessToken(resp.access_token);
-      setUser(resp.user);
       localStorage.setItem("refresh_token", resp.refresh_token);
+      // 登录响应不含 avatar_url，需拉取 /users/me 与刷新续期路径一致
+      try {
+        await syncCurrentUser();
+      } catch {
+        setUser(resp.user);
+      }
       navigate("/");
     } catch (err) {
       addToast(err instanceof ApiError ? err.message : "网络错误，请稍后重试", "error");
