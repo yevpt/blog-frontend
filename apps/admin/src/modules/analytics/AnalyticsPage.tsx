@@ -4,14 +4,8 @@ import { TrendTab } from "./tabs/TrendTab";
 import { AudienceTab } from "./tabs/AudienceTab";
 import { PagesTab } from "./tabs/PagesTab";
 import { FriendsTab } from "./tabs/FriendsTab";
-
-function ComingSoon({ name }: { name: string }) {
-  return (
-    <div className="flex h-[300px] items-center justify-center text-sm text-muted">
-      {name}（建设中）
-    </div>
-  );
-}
+import { RealtimeTab } from "./tabs/RealtimeTab";
+import { PathsTab } from "./tabs/PathsTab";
 
 export function AnalyticsPage() {
   return (
@@ -43,10 +37,10 @@ export function AnalyticsPage() {
             <FriendsTab />
           </TabsPanel>
           <TabsPanel id="realtime">
-            <ComingSoon name="实时" />
+            <RealtimeTab />
           </TabsPanel>
           <TabsPanel id="paths">
-            <ComingSoon name="路径漏斗" />
+            <PathsTab />
           </TabsPanel>
         </TabsPanels>
       </Tabs>
