@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { SvgIcon } from "@repo/icons";
 import { Button, cn } from "@repo/ui";
 import { useArticleEngagement } from "@/hooks/use-article-engagement";
+import { useArticleMusic } from "@/store/use-article-music";
+import { ArticleMusicControl } from "@/components/article-detail/article-music-control";
 import { NavbarLogo } from "./navbar-logo";
 import type { NavbarMobileVariant } from "./navbar-route-config";
 
@@ -74,12 +76,14 @@ function NavbarMobileMenuButton({
 
 function NavbarMobileArticleActions() {
   const { likeCount, commentCount, isLiked, isLiking, toggleLike } = useArticleEngagement();
+  const hasMusic = Boolean(useArticleMusic((state) => state.track));
 
   const actionButtonClass =
     "flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors hover:bg-foreground/5 text-black/54 dark:text-(--fg3)";
 
   return (
     <>
+      {hasMusic ? <ArticleMusicControl variant="navbar" /> : null}
       <Button
         type="button"
         variant="ghost"

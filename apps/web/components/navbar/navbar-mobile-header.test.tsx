@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NavbarMobileHeader } from "./navbar-mobile-header";
+import { useArticleMusic } from "@/store/use-article-music";
 
 const mockPush = vi.fn();
 const mockToggleMenu = vi.fn();
@@ -30,6 +31,33 @@ vi.mock("@/hooks/use-article-engagement", () => ({
   useArticleEngagement: () => mockUseArticleEngagement(),
 }));
 
+vi.mock("@repo/ui", () => ({
+  cn: (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" "),
+  Button: ({
+    children,
+    onPress,
+    className,
+    "aria-label": ariaLabel,
+    isDisabled,
+  }: {
+    children: React.ReactNode;
+    onPress?: () => void;
+    className?: string;
+    "aria-label"?: string;
+    isDisabled?: boolean;
+  }) => (
+    <button
+      type="button"
+      className={className}
+      aria-label={ariaLabel}
+      disabled={isDisabled}
+      onClick={onPress}
+    >
+      {children}
+    </button>
+  ),
+}));
+
 describe("NavbarMobileHeader", () => {
   beforeEach(() => {
     mockPush.mockReset();
@@ -38,6 +66,7 @@ describe("NavbarMobileHeader", () => {
     mockScrollIntoView.mockReset();
     mockUseArticleEngagement.mockReset();
     mockUseArticleEngagement.mockReturnValue(defaultArticleEngagementState);
+    useArticleMusic.getState().clear();
     document.body.innerHTML = "";
   });
 
@@ -188,6 +217,28 @@ describe("NavbarMobileHeader", () => {
 
     expect(screen.getByLabelText("关闭导航菜单")).toBeInTheDocument();
     expect(screen.queryByLabelText("打开导航菜单")).not.toBeInTheDocument();
+  });
+
+  it("article 变体有背景音乐时在点赞左侧渲染音乐控制", () => {
+    useArticleMusic.getState().init({ url: "https://example.com/a.mp3", name: "雨夜" });
+
+    render(
+      <NavbarMobileHeader
+        mobileVariant="article"
+        title={undefined}
+        isGlass={true}
+        menuOpen={false}
+        onToggleMenu={mockToggleMenu}
+      />,
+    );
+
+    const musicButton = screen.getByRole("button", { name: /播放 雨夜/ });
+    const likeButton = screen.getByRole("button", { name: "点赞 99+" });
+
+    expect(musicButton).toBeInTheDocument();
+    expect(
+      musicButton.compareDocumentPosition(likeButton) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("article 变体点击点赞按钮时调用 toggleLike", async () => {
