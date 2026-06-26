@@ -41,6 +41,7 @@
 import {
   type CSSProperties,
   type RefObject,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -77,7 +78,14 @@ export function useSheetGesture(
     minDisplacement = 60,
     onDismiss,
   }: SheetGestureOptions,
-): { sheetStyle: CSSProperties; isDragging: boolean; isExpanded: boolean; expandOffset: number } {
+): {
+  sheetStyle: CSSProperties;
+  isDragging: boolean;
+  isExpanded: boolean;
+  expandOffset: number;
+  /** 不经手势、直接切换到 expanded(100dvh)，供内容溢出时主动撑高 sheet */
+  expand: () => void;
+} {
   const translateYRef = useRef(0);
   const [translateY, _setTranslateY] = useState(0);
   const expandOffsetRef = useRef(0);
@@ -86,6 +94,12 @@ export function useSheetGesture(
   // snapState：collapsed(70dvh) 或 expanded(100dvh)
   const [isExpanded, setIsExpanded] = useState(false);
   const isExpandedRef = useRef(false); // Ref 版本供闭包内同步读取
+
+  const expand = useCallback(() => {
+    if (isExpandedRef.current) return;
+    isExpandedRef.current = true;
+    setIsExpanded(true);
+  }, []);
 
   const gestureRef = useRef<GestureState | null>(null);
   const onDismissRef = useRef(onDismiss);
@@ -322,5 +336,5 @@ export function useSheetGesture(
     transition: isDragging ? "none" : "transform 0.35s cubic-bezier(.32,.72,0,1)",
   };
 
-  return { sheetStyle, isDragging, isExpanded, expandOffset };
+  return { sheetStyle, isDragging, isExpanded, expandOffset, expand };
 }

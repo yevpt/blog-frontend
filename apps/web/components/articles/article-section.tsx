@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import type { ReactNode } from "react";
-import { Pagination } from "@repo/ui";
+import { Button, Pagination } from "@repo/ui";
 import type { ArticleListItemResp, ArticlePageResp, CategoryTabItem } from "@repo/api";
 import { ArticleListHeader } from "./article-list-header";
 import { PageSectionHeader } from "@/components/common/page-section-header";
@@ -12,11 +12,15 @@ import { CommentModal } from "@/components/comments";
 import { MomentEndReached, MomentScrollLoader } from "@/components/moments/moment-scroll-loader";
 import { useSession } from "@/app/providers/session-provider";
 import { ALL_CATEGORY_ID, useArticleList } from "@/hooks/use-article-list";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import {
   filterVisibleCategories,
   getCategoryArticleCount,
   shouldUseCategoryPagination,
 } from "@/lib/category-tabs";
+
+/** 与 ArticleSection 侧栏 `lg:grid-cols` 对齐：窄屏文章与碎言纵向堆叠 */
+const DESKTOP_LAYOUT_MEDIA_QUERY = "(min-width: 1024px)";
 
 // 虚拟"全部"Tab，对应不带 category_id 的请求
 const ALL_CATEGORY: CategoryTabItem = {
@@ -84,6 +88,8 @@ export function ArticleSection({
     [currentCategoryId, initialPage.total, pageData.total, visibleCategories],
   );
   const usePagination = shouldUseCategoryPagination(currentArticleCount);
+  const isDesktopLayout = useMediaQuery(DESKTOP_LAYOUT_MEDIA_QUERY);
+  const useScrollLoad = !usePagination;
 
   const sectionRef = useRef<HTMLElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -93,8 +99,9 @@ export function ArticleSection({
   const pendingPaginationScrollRef = useRef(false);
   loadMoreRef.current = loadMore;
 
-  const showSentinel =
-    !usePagination && !endReached && !isLoadingMore && !isLoadingInitial && !fetchError;
+  const hasMoreScrollContent = useScrollLoad && !endReached && !isLoadingInitial && !fetchError;
+  const showSentinel = hasMoreScrollContent && !isLoadingMore && isDesktopLayout;
+  const showLoadMoreButton = hasMoreScrollContent && !isDesktopLayout;
 
   const handlePageChange = useCallback(
     (page: number) => {
@@ -163,7 +170,7 @@ export function ArticleSection({
 
   const articleGrid = (
     <>
-      <div className="mt-6 grid grid-cols-1 gap-0 md:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:gap-5">
+      <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:gap-5">
         {isLoadingInitial
           ? Array.from({ length: skeletonCount }, (_, i) => <ArticleCardSkeleton key={i} />)
           : articles.map((article, index) => (
@@ -176,10 +183,24 @@ export function ArticleSection({
                 onComment={openComment}
               />
             ))}
+        {showLoadMoreButton && (
+          <div className="col-span-full flex w-full justify-center py-6">
+            <Button
+              variant="outline"
+              size="sm"
+              isLoading={isLoadingMore}
+              loadingText="加载中..."
+              onPress={() => void loadMore()}
+              className="h-9 min-w-[7.5rem] rounded-full px-5 text-xs font-semibold text-(--fg2) hover:border-primary hover:bg-primary/10 hover:text-primary"
+            >
+              加载更多
+            </Button>
+          </div>
+        )}
       </div>
 
-      {isLoadingMore && !usePagination && <MomentScrollLoader />}
-      {endReached && !usePagination && !isLoadingMore && !isLoadingInitial && <MomentEndReached />}
+      {isLoadingMore && useScrollLoad && isDesktopLayout && <MomentScrollLoader />}
+      {endReached && useScrollLoad && !isLoadingMore && !isLoadingInitial && <MomentEndReached />}
 
       {showSentinel && <div ref={sentinelRef} className="h-px" />}
 

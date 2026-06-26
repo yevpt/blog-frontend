@@ -212,13 +212,23 @@ function MobileSheet({ title, onClose, children, footer }: InnerProps) {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  const { sheetStyle, isDragging, isExpanded, expandOffset } = useSheetGesture(
+  const { sheetStyle, isDragging, isExpanded, expandOffset, expand } = useSheetGesture(
     sheetRef,
     scrollRef,
     {
       onDismiss: requestClose,
     },
   );
+
+  // 内容（长文本/多图）撑满折叠高度（70dvh）时自动展开到全屏，保证底部区域
+  // （如图片上传）不被裁切。仅由内容变化（字数/图片数/编辑器就绪）驱动检测，
+  // 不用 ResizeObserver 监听 scrollRef 自身尺寸——否则手动收起手势导致的高度
+  // 收缩也会被当成"溢出"重新触发展开，跟用户的收起手势打架。
+  const expandIfOverflow = useCallback(() => {
+    const node = scrollRef.current;
+    if (!node || node.scrollHeight <= node.clientHeight) return;
+    expand();
+  }, [expand, scrollRef]);
 
   const mergedStyle = useMobileSheetMergedStyle({
     entered,
@@ -256,7 +266,7 @@ function MobileSheet({ title, onClose, children, footer }: InnerProps) {
             className="min-h-0 flex-1 overflow-y-auto"
             style={{ overscrollBehavior: "contain" }}
           >
-            {children({ scrollRef, requestClose, onContentResize: () => {} })}
+            {children({ scrollRef, requestClose, onContentResize: expandIfOverflow })}
           </div>
           {footer ? <div className="shrink-0 border-t border-border">{footer}</div> : null}
         </>
