@@ -7,13 +7,50 @@ import type { ArticleMusicSyncInput } from "@/lib/article-music";
 import { useArticleMusic, type ArticleMusicTrack } from "@/store/use-article-music";
 import { MusicSeek } from "./article-music-seek";
 
-/** 频谱条配置：跳动时长 / 起始延迟（错峰）/ 静止时的高度比例。 */
-const VISUALIZER_BARS = [
-  { duration: 900, delay: 0, idle: 0.4 },
-  { duration: 1300, delay: 120, idle: 0.85 },
-  { duration: 1000, delay: 60, idle: 0.55 },
-  { duration: 1500, delay: 200, idle: 0.7 },
+const DEFAULT_VISUALIZER_LEVELS = [0.4, 0.85, 0.55, 0.7] as const;
+const VISUALIZER_FALLBACK_BARS = [
+  { duration: 900, delay: 0 },
+  { duration: 1300, delay: 120 },
+  { duration: 1000, delay: 60 },
+  { duration: 1500, delay: 200 },
 ] as const;
+const ENABLE_VISUALIZER_FALLBACK_MOTION = true;
+const VISUALIZER_MIN_SCALE = 0.14;
+const VISUALIZER_SCALE_RANGE = 0.81;
+const VISUALIZER_MAX_SCALE = 0.95;
+const VISUALIZER_FFT_SIZE = 512;
+const VISUALIZER_BANDS = [
+  { minHz: 40, maxHz: 180, gain: 1 },
+  { minHz: 180, maxHz: 700, gain: 1.45 },
+  { minHz: 700, maxHz: 2400, gain: 2.4 },
+  { minHz: 2400, maxHz: 8000, gain: 3.2 },
+] as const;
+const VISUALIZER_INITIAL_FLOOR_RATIO = 0.8;
+const VISUALIZER_INITIAL_PEAK_RATIO = 1.8;
+const VISUALIZER_MIN_DYNAMIC_RANGE = 0.08;
+const VISUALIZER_FLOOR_RISE = 0.025;
+const VISUALIZER_FLOOR_FALL = 0.22;
+const VISUALIZER_PEAK_RISE = 0.82;
+const VISUALIZER_PEAK_FALL = 0.05;
+const VISUALIZER_LEVEL_ATTACK = 0.78;
+const VISUALIZER_LEVEL_RELEASE = 0.42;
+const VISUALIZER_LEVEL_CURVE = 0.85;
+
+interface AudioAnalyserHandle {
+  context: AudioContext;
+  analyser: AnalyserNode;
+  data: Uint8Array<ArrayBuffer>;
+  sampleRate: number;
+}
+
+interface VisualizerBandState {
+  floor: number;
+  peak: number;
+  level: number;
+  initialized: boolean;
+}
+
+const audioAnalyserHandles = new WeakMap<HTMLAudioElement, AudioAnalyserHandle>();
 
 const articleMusicHeightClass = "h-16 max-sm:h-14";
 
@@ -37,26 +74,206 @@ function formatMusicTime(seconds?: number): string {
   return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 }
 
-function MusicVisualizer({ active, className }: { active: boolean; className?: string }) {
+function getAudioContextConstructor(): typeof AudioContext | undefined {
+  if (typeof window === "undefined") return undefined;
+  return (
+    window.AudioContext ??
+    (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+  );
+}
+
+function canSampleAudio(audio: HTMLAudioElement): boolean {
+  return audio.crossOrigin === "anonymous";
+}
+
+function getAudioAnalyser(audio: HTMLAudioElement): AudioAnalyserHandle | null {
+  if (!canSampleAudio(audio)) return null;
+
+  const existing = audioAnalyserHandles.get(audio);
+  if (existing) return existing;
+
+  const AudioContextConstructor = getAudioContextConstructor();
+  if (!AudioContextConstructor) return null;
+
+  try {
+    const context = new AudioContextConstructor();
+    const source = context.createMediaElementSource(audio);
+    const analyser = context.createAnalyser();
+    analyser.fftSize = VISUALIZER_FFT_SIZE;
+    analyser.smoothingTimeConstant = 0.8;
+    source.connect(analyser);
+    analyser.connect(context.destination);
+    const handle = {
+      context,
+      analyser,
+      data: new Uint8Array(new ArrayBuffer(analyser.frequencyBinCount)),
+      sampleRate: context.sampleRate,
+    };
+    audioAnalyserHandles.set(audio, handle);
+    return handle;
+  } catch {
+    return null;
+  }
+}
+
+function normalizedEnergyToScale(value: number): number {
+  const shaped = Math.pow(Math.min(1, Math.max(0, value)), VISUALIZER_LEVEL_CURVE);
+  const next = VISUALIZER_MIN_SCALE + shaped * VISUALIZER_SCALE_RANGE;
+  return Math.min(VISUALIZER_MAX_SCALE, Number(next.toFixed(2)));
+}
+
+function createVisualizerBandStates(): VisualizerBandState[] {
+  return Array.from({ length: VISUALIZER_BANDS.length }, () => ({
+    floor: 0,
+    peak: 0,
+    level: VISUALIZER_MIN_SCALE,
+    initialized: false,
+  }));
+}
+
+function frequencyDataToEnergies(data: Uint8Array, sampleRate: number, fftSize: number): number[] {
+  if (data.length === 0) return Array.from({ length: VISUALIZER_BANDS.length }, () => 0);
+  const binHz = sampleRate / fftSize;
+
+  return VISUALIZER_BANDS.map((band) => {
+    const start = Math.min(data.length - 1, Math.max(1, Math.ceil(band.minHz / binHz)));
+    const end = Math.min(data.length, Math.max(start + 1, Math.ceil(band.maxHz / binHz)));
+    let squaredTotal = 0;
+    let peak = 0;
+
+    for (let i = start; i < end; i += 1) {
+      const value = (data[i] ?? 0) / 255;
+      squaredTotal += value * value;
+      peak = Math.max(peak, value);
+    }
+
+    const count = end - start;
+    const rms = Math.sqrt(squaredTotal / count);
+    // 以 RMS 为主体保留整体能量，少量 peak 让旋律瞬时变化能被四根柱捕捉到。
+    return (rms * 0.72 + peak * 0.28) * band.gain;
+  });
+}
+
+function energiesToAdaptiveLevels(energies: number[], states: VisualizerBandState[]): number[] {
+  return energies.map((energy, index) => {
+    const state =
+      states[index] ??
+      (states[index] = {
+        floor: 0,
+        peak: 0,
+        level: VISUALIZER_MIN_SCALE,
+        initialized: false,
+      });
+
+    if (!state.initialized) {
+      state.floor = energy * VISUALIZER_INITIAL_FLOOR_RATIO;
+      state.peak = Math.max(
+        energy * VISUALIZER_INITIAL_PEAK_RATIO,
+        state.floor + VISUALIZER_MIN_DYNAMIC_RANGE,
+      );
+      state.initialized = true;
+    }
+
+    const floorRate = energy < state.floor ? VISUALIZER_FLOOR_FALL : VISUALIZER_FLOOR_RISE;
+    state.floor += (energy - state.floor) * floorRate;
+
+    const peakRate = energy > state.peak ? VISUALIZER_PEAK_RISE : VISUALIZER_PEAK_FALL;
+    state.peak += (energy - state.peak) * peakRate;
+    state.peak = Math.max(state.peak, state.floor + VISUALIZER_MIN_DYNAMIC_RANGE);
+
+    const normalized = (energy - state.floor) / (state.peak - state.floor);
+    const targetLevel = normalizedEnergyToScale(normalized);
+    const levelRate =
+      targetLevel > state.level ? VISUALIZER_LEVEL_ATTACK : VISUALIZER_LEVEL_RELEASE;
+    state.level += (targetLevel - state.level) * levelRate;
+
+    return Number(state.level.toFixed(2));
+  });
+}
+
+function MusicVisualizer({
+  active,
+  audioEl,
+  trackUrl,
+  className,
+}: {
+  active: boolean;
+  audioEl: HTMLAudioElement | null;
+  trackUrl: string;
+  className?: string;
+}) {
+  const [levels, setLevels] = useState<number[]>([...DEFAULT_VISUALIZER_LEVELS]);
+  const [useFallbackMotion, setUseFallbackMotion] = useState(false);
+  const bandStatesRef = useRef<VisualizerBandState[]>(createVisualizerBandStates());
+
+  useEffect(() => {
+    setLevels([...DEFAULT_VISUALIZER_LEVELS]);
+    setUseFallbackMotion(false);
+    bandStatesRef.current = createVisualizerBandStates();
+  }, [trackUrl]);
+
+  useEffect(() => {
+    if (!active) {
+      setUseFallbackMotion(false);
+      return;
+    }
+
+    if (!audioEl) {
+      setUseFallbackMotion(ENABLE_VISUALIZER_FALLBACK_MOTION);
+      return;
+    }
+
+    const handle = getAudioAnalyser(audioEl);
+    if (!handle) {
+      setUseFallbackMotion(ENABLE_VISUALIZER_FALLBACK_MOTION);
+      return;
+    }
+
+    let frameId = 0;
+    setUseFallbackMotion(false);
+
+    if (handle.context.state === "suspended") {
+      void handle.context.resume().catch(() => undefined);
+    }
+
+    const sample = () => {
+      handle.analyser.getByteFrequencyData(handle.data);
+      const energies = frequencyDataToEnergies(
+        handle.data,
+        handle.sampleRate,
+        handle.analyser.fftSize,
+      );
+      setLevels(energiesToAdaptiveLevels(energies, bandStatesRef.current));
+      frameId = window.requestAnimationFrame(sample);
+    };
+
+    frameId = window.requestAnimationFrame(sample);
+    return () => window.cancelAnimationFrame(frameId);
+  }, [active, audioEl]);
+
   return (
     <div
       className={cn("hidden h-[18px] shrink-0 items-end gap-[3px] sm:flex", className)}
       aria-hidden
     >
-      {VISUALIZER_BARS.map((bar, index) => (
+      {levels.map((level, index) => (
         <span
           key={index}
+          data-testid="article-music-visualizer-bar"
           className={cn(
             "h-full w-[3px] origin-bottom rounded-full",
             active
               ? "bg-foreground/55 dark:bg-foreground/70"
               : "bg-foreground/30 dark:bg-foreground/40",
           )}
-          style={
-            active
-              ? { animation: `equalize ${bar.duration}ms ease-in-out ${bar.delay}ms infinite` }
-              : { transform: `scaleY(${bar.idle})` }
-          }
+          style={{
+            transform: `scaleY(${level})`,
+            animation: useFallbackMotion
+              ? `equalize ${VISUALIZER_FALLBACK_BARS[index]?.duration ?? 1000}ms ease-in-out ${
+                  VISUALIZER_FALLBACK_BARS[index]?.delay ?? 0
+                }ms infinite`
+              : undefined,
+          }}
         />
       ))}
     </div>
@@ -240,6 +457,7 @@ export function ArticleMusicBar({ preview }: ArticleMusicBarProps = {}) {
   const seek = useArticleMusic((state) => state.seek);
   const retry = useArticleMusic((state) => state.retry);
   const setMusicBarInView = useArticleMusic((state) => state.setMusicBarInView);
+  const audioEl = useArticleMusic((state) => state.audioEl);
   const barRef = useRef<HTMLElement>(null);
 
   const displayTrack = track ?? (preview ? previewToTrack(preview) : null);
@@ -351,7 +569,12 @@ export function ArticleMusicBar({ preview }: ArticleMusicBarProps = {}) {
         />
       </div>
 
-      <MusicVisualizer active={isPlaying} className="ml-3" />
+      <MusicVisualizer
+        active={isPlaying}
+        audioEl={audioEl}
+        trackUrl={displayTrack.url}
+        className="ml-3"
+      />
     </section>
   );
 }

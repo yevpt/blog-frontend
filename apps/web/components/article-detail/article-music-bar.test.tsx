@@ -37,6 +37,12 @@ function fireIntersection(isIntersecting: boolean) {
   });
 }
 
+function readVisualizerScales() {
+  return screen
+    .getAllByTestId("article-music-visualizer-bar")
+    .map((bar) => Number(bar.style.transform.match(/scaleY\(([^)]+)\)/)?.[1] ?? 0));
+}
+
 beforeAll(() => {
   vi.stubGlobal(
     "ResizeObserver",
@@ -229,6 +235,157 @@ describe("ArticleMusicBar", () => {
 
     expect(screen.getByText("00:50 / 01:40")).toBeInTheDocument();
     expect(screen.getByTestId("icon-pause")).toBeInTheDocument();
+  });
+
+  it("频谱播放时读取真实音频数据，暂停后保留最后一帧", () => {
+    const frequencyData = new Uint8Array(256);
+    frequencyData[1] = 120;
+    frequencyData[4] = 100;
+    frequencyData[12] = 90;
+    frequencyData[40] = 80;
+    const getByteFrequencyData = vi.fn((target: Uint8Array) => target.set(frequencyData));
+    const connect = vi.fn();
+    const resume = vi.fn(() => Promise.resolve());
+    const audioEl = document.createElement("audio");
+    audioEl.crossOrigin = "anonymous";
+    audioEl.pause = vi.fn();
+    let rafCallback: FrameRequestCallback | null = null;
+    const rafSpy = vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
+      rafCallback = cb;
+      return 1;
+    });
+    const cancelSpy = vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
+
+    class MockAnalyserNode {
+      fftSize = 0;
+      frequencyBinCount = frequencyData.length;
+      smoothingTimeConstant = 0;
+      connect = connect;
+      getByteFrequencyData = getByteFrequencyData;
+    }
+
+    class MockAudioContext {
+      state = "running";
+      destination = {};
+      sampleRate = 48000;
+      resume = resume;
+      createAnalyser = vi.fn(() => new MockAnalyserNode());
+      createMediaElementSource = vi.fn(() => ({ connect }));
+    }
+
+    vi.stubGlobal("AudioContext", MockAudioContext);
+    useArticleMusic.setState({
+      track: {
+        url: "https://example.com/a.mp3",
+        name: "春夏秋冬",
+        durationSeconds: 100,
+      },
+      playbackState: "playing",
+      progress: 0,
+      audioEl,
+    });
+
+    const { rerender } = render(<ArticleMusicBar />);
+    act(() => {
+      rafCallback?.(0);
+    });
+
+    expect(getByteFrequencyData).toHaveBeenCalled();
+    const firstScales = readVisualizerScales();
+
+    act(() => {
+      rafCallback?.(16);
+    });
+
+    const secondScales = readVisualizerScales();
+    expect(Math.abs(secondScales[0] - firstScales[0])).toBeLessThan(0.12);
+    expect(Math.abs(secondScales[1] - firstScales[1])).toBeLessThan(0.12);
+    expect(Math.abs(secondScales[2] - firstScales[2])).toBeLessThan(0.12);
+    expect(Math.abs(secondScales[3] - firstScales[3])).toBeLessThan(0.12);
+
+    frequencyData[1] = 240;
+    frequencyData[4] = 220;
+    frequencyData[12] = 210;
+    frequencyData[40] = 200;
+    act(() => {
+      rafCallback?.(32);
+    });
+
+    const highScales = readVisualizerScales();
+    expect(highScales[0]).toBeGreaterThan(secondScales[0]);
+    expect(highScales[1]).toBeGreaterThan(secondScales[1]);
+    expect(highScales[2]).toBeGreaterThan(secondScales[2]);
+    expect(highScales[3]).toBeGreaterThan(secondScales[3]);
+    expect(highScales[0]).toBeGreaterThan(0.8);
+    expect(highScales[1]).toBeGreaterThan(0.6);
+    expect(highScales[2]).toBeGreaterThan(0.75);
+    expect(highScales[3]).toBeGreaterThan(0.8);
+
+    frequencyData[1] = 20;
+    frequencyData[4] = 18;
+    frequencyData[12] = 16;
+    frequencyData[40] = 14;
+    act(() => {
+      rafCallback?.(48);
+    });
+
+    const lowScales = readVisualizerScales();
+    expect(lowScales[0]).toBeLessThan(highScales[0] - 0.2);
+    expect(lowScales[1]).toBeLessThan(highScales[1] - 0.2);
+    expect(lowScales[2]).toBeLessThan(highScales[2] - 0.2);
+    expect(lowScales[3]).toBeLessThan(highScales[3] - 0.2);
+
+    useArticleMusic.setState({ playbackState: "paused" });
+    rerender(<ArticleMusicBar />);
+
+    expect(cancelSpy).toHaveBeenCalled();
+    expect(readVisualizerScales()).toEqual(lowScales);
+
+    rafSpy.mockRestore();
+    cancelSpy.mockRestore();
+  });
+
+  it("兜底策略启用时，非 CORS 采样模式的音频使用 CSS 动效", () => {
+    const createMediaElementSource = vi.fn();
+    const audioEl = document.createElement("audio");
+    audioEl.pause = vi.fn();
+
+    class MockAudioContext {
+      state = "running";
+      destination = {};
+      resume = vi.fn(() => Promise.resolve());
+      createAnalyser = vi.fn();
+      createMediaElementSource = createMediaElementSource;
+    }
+
+    vi.stubGlobal("AudioContext", MockAudioContext);
+    useArticleMusic.setState({
+      track: {
+        url: "https://example.com/a.mp3",
+        name: "春夏秋冬",
+        durationSeconds: 100,
+      },
+      playbackState: "playing",
+      progress: 0,
+      audioEl,
+    });
+
+    render(<ArticleMusicBar />);
+
+    expect(createMediaElementSource).not.toHaveBeenCalled();
+    const bars = screen.getAllByTestId("article-music-visualizer-bar");
+    expect(bars.map((bar) => bar.style.animation)).toEqual([
+      "equalize 900ms ease-in-out 0ms infinite",
+      "equalize 1300ms ease-in-out 120ms infinite",
+      "equalize 1000ms ease-in-out 60ms infinite",
+      "equalize 1500ms ease-in-out 200ms infinite",
+    ]);
+    expect(bars.map((bar) => bar.style.transform)).toEqual([
+      "scaleY(0.4)",
+      "scaleY(0.85)",
+      "scaleY(0.55)",
+      "scaleY(0.7)",
+    ]);
   });
 
   it("加载失败时展示不可用态与重试", async () => {
