@@ -3,9 +3,9 @@
 import { useCallback } from "react";
 import { Virtuoso } from "react-virtuoso";
 import type { UserLikedContentItemResp } from "@repo/api";
-import { Button } from "@repo/ui";
+import { Button, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
-import { MomentEndReached, MomentScrollLoader } from "@/components/moments/moment-scroll-loader";
+import { MomentScrollLoader } from "@/components/moments/moment-scroll-loader";
 import { LikedContentCard } from "./liked-content-card";
 
 const ESTIMATED_ITEM_HEIGHT = 148;
@@ -15,6 +15,7 @@ interface ProfileLikesVirtualListProps {
   hasMore: boolean;
   loading: boolean;
   fetchError: boolean;
+  showEndMessage: boolean;
   onLoadMore: () => void;
   onRetryLoadMore: () => void;
 }
@@ -24,6 +25,7 @@ export function ProfileLikesVirtualList({
   hasMore,
   loading,
   fetchError,
+  showEndMessage,
   onLoadMore,
   onRetryLoadMore,
 }: ProfileLikesVirtualListProps) {
@@ -55,32 +57,47 @@ export function ProfileLikesVirtualList({
         </div>
       );
     }
-    if (!hasMore) {
-      return <MomentEndReached />;
-    }
     return null;
-  }, [fetchError, hasMore, loading, onRetryLoadMore]);
+  }, [fetchError, loading, onRetryLoadMore]);
 
   const renderItem = useCallback(
-    (_index: number, item: UserLikedContentItemResp) => (
-      <div className="border-b border-border/40 last:border-b-0" data-testid="profile-liked-item">
-        <LikedContentCard item={item} />
-      </div>
-    ),
-    [],
+    (index: number, item: UserLikedContentItemResp) => {
+      const isLastItem = index === items.length - 1;
+      const hideLastBorder = isLastItem && !showEndMessage && !hasMore && !loading;
+
+      return (
+        <div
+          className={cn("border-border/40", !hideLastBorder && "border-b")}
+          data-testid="profile-liked-item"
+        >
+          <LikedContentCard item={item} />
+        </div>
+      );
+    },
+    [hasMore, items.length, loading, showEndMessage],
   );
 
   return (
-    <Virtuoso
-      useWindowScroll
-      data={items}
-      computeItemKey={(_, item) => item.id}
-      endReached={handleEndReached}
-      overscan={320}
-      defaultItemHeight={ESTIMATED_ITEM_HEIGHT}
-      increaseViewportBy={{ top: 240, bottom: 480 }}
-      components={{ Footer: ListFooter }}
-      itemContent={renderItem}
-    />
+    <>
+      <Virtuoso
+        useWindowScroll
+        data={items}
+        computeItemKey={(_, item) => item.id}
+        endReached={handleEndReached}
+        overscan={320}
+        defaultItemHeight={ESTIMATED_ITEM_HEIGHT}
+        increaseViewportBy={{ top: 240, bottom: 480 }}
+        components={{ Footer: ListFooter }}
+        itemContent={renderItem}
+      />
+      {showEndMessage ? (
+        <p
+          data-testid="profile-likes-end-hint"
+          className="pt-3 pb-1 text-center text-xs text-muted-foreground"
+        >
+          已经到底了
+        </p>
+      ) : null}
+    </>
   );
 }

@@ -1,12 +1,8 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import type { MomentPageResp, UserPublicProfileResp } from "@repo/api";
+import type { UserPublicProfileResp } from "@repo/api";
 import { createServerApiClient } from "@/lib/server-api";
 import { UserProfilePage } from "./_components/user-profile-page";
-import {
-  EMPTY_MOMENTS_PAGE,
-  PROFILE_MOMENTS_PAGE_SIZE,
-} from "./_components/profile-moments-tab/constants";
 import {
   buildPublicProfileFromMe,
   enrichProfileDisplayEmailForOwner,
@@ -79,17 +75,14 @@ async function fetchProfile(id: number): Promise<UserPublicProfileResp | null> {
   return null;
 }
 
-async function fetchUserMoments(userId: number): Promise<MomentPageResp> {
+async function fetchUserMomentsCount(userId: number): Promise<number> {
   const api = await createServerApiClient();
   try {
-    return await api.moments.listPublic({
-      user_id: userId,
-      page: 1,
-      page_size: PROFILE_MOMENTS_PAGE_SIZE,
-    });
+    const data = await api.users.getMomentsCount(userId);
+    return data.count;
   } catch (err) {
-    console.warn(`[UserProfile] GET /moments?user_id=${userId} 失败:`, err);
-    return EMPTY_MOMENTS_PAGE;
+    console.warn(`[UserProfile] GET /users/${userId}/moments/count 失败:`, err);
+    return 0;
   }
 }
 
@@ -124,13 +117,13 @@ export default async function UserProfileRoute({ params }: Props) {
   const profile = await fetchProfile(numId);
   if (!profile) notFound();
 
-  const initialMomentsPage = await fetchUserMoments(numId);
+  const initialMomentsCount = await fetchUserMomentsCount(numId);
   const initialLikesCount = await fetchUserLikesCount(numId);
 
   return (
     <UserProfilePage
       profile={profile}
-      initialMomentsPage={initialMomentsPage}
+      initialMomentsCount={initialMomentsCount}
       initialLikesCount={initialLikesCount}
     />
   );

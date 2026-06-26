@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import type { MomentPageResp, UserPublicProfileResp } from "@repo/api";
+import type { UserPublicProfileResp } from "@repo/api";
 import { Card, cn } from "@repo/ui";
 import { useSession } from "@/app/providers/session-provider";
 import { useProfileEditor } from "@/hooks/use-profile-editor";
@@ -15,13 +15,13 @@ import { PROFILE_FLOAT_DOCK_LAYOUT } from "@/lib/float-dock-layouts";
 
 interface UserProfilePageProps {
   profile: UserPublicProfileResp;
-  initialMomentsPage: MomentPageResp;
+  initialMomentsCount: number;
   initialLikesCount: number;
 }
 
 export function UserProfilePage({
   profile: initialProfile,
-  initialMomentsPage,
+  initialMomentsCount,
   initialLikesCount,
 }: UserProfilePageProps) {
   const {
@@ -85,7 +85,7 @@ export function UserProfilePage({
         <Card className="overflow-hidden rounded-2xl">
           <UserProfileTabs
             profile={profile}
-            initialMomentsPage={initialMomentsPage}
+            initialMomentsCount={initialMomentsCount}
             initialLikesCount={initialLikesCount}
             isOwner={isOwner}
             isEditMode={isEditMode}

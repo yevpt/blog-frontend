@@ -100,6 +100,7 @@ import type {
   UserLikedContentListReq,
   UserLikedContentPageResp,
   UserLikesCountResp,
+  UserMomentsCountResp,
   AdminUserRolesResp,
 } from "./types/user";
 import type {
@@ -663,6 +664,11 @@ export function createApiClient(config: ApiClientConfig) {
       /** 查询用户点赞总数（公开，可选登录） */
       getLikesCount: (userId: number) =>
         fetchOptionalAuth<UserLikesCountResp>(`/users/${userId}/likes/count`, { method: "GET" }),
+      /** 查询用户碎语总数（公开，可选登录） */
+      getMomentsCount: (userId: number) =>
+        fetchOptionalAuth<UserMomentsCountResp>(`/users/${userId}/moments/count`, {
+          method: "GET",
+        }),
       /** 授予目标用户 VIP 角色，需管理员登录；幂等 */
       grantVipRole: (userId: number) =>
         fetchAuthed<AdminUserRolesResp>(`/admin/users/${userId}/roles/vip`, { method: "POST" }),

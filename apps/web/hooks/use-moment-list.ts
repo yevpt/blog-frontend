@@ -87,6 +87,13 @@ function shouldRefreshForPublishedMoment(
   return true;
 }
 
+function computeEndReached(page: number, pages: number): boolean {
+  if (pages <= 0) {
+    return false;
+  }
+  return page >= pages;
+}
+
 export function useMomentList({
   initialPage,
   mode = "feed",
@@ -104,14 +111,19 @@ export function useMomentList({
   const [currentPage, setCurrentPage] = useState(initialPage.page);
   const [pageData, setPageData] = useState(initialPage);
   const [moments, setMoments] = useState(initialPage.list);
-  const [isLoadingInitial, setIsLoadingInitial] = useState(false);
+  // 个人页 user 模式：Tab 懒挂载，首屏在客户端拉列表
+  const [isLoadingInitial, setIsLoadingInitial] = useState(() => mode === "user");
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [endReached, setEndReached] = useState(initialPage.page >= initialPage.pages);
+  const [endReached, setEndReached] = useState(() =>
+    computeEndReached(initialPage.page, initialPage.pages),
+  );
   const [fetchError, setFetchError] = useState(false);
   const [pendingLikeIds, setPendingLikeIds] = useState<ReadonlySet<number>>(() => new Set());
   const [pendingActionIds, setPendingActionIds] = useState<ReadonlySet<number>>(() => new Set());
 
   const prevUserIdRef = useRef<number | null>(sessionUserId);
+  const userIdRef = useRef(userId);
+  userIdRef.current = userId;
   const prevPublishCountRef = useRef(publishCount);
   const pendingLikeIdsRef = useRef(pendingLikeIds);
   const pendingActionIdsRef = useRef(pendingActionIds);
@@ -156,7 +168,7 @@ export function useMomentList({
     setMoments(data.list);
     setPageData(data);
     setCurrentPage(data.page);
-    setEndReached(data.page >= data.pages);
+    setEndReached(computeEndReached(data.page, data.pages));
   }, []);
 
   const refreshForSessionChange = useCallback(async () => {
@@ -175,6 +187,40 @@ export function useMomentList({
     prevUserIdRef.current = sessionUserId;
     void refreshForSessionChange();
   }, [refreshForSessionChange, sessionUserId]);
+
+  useEffect(() => {
+    if (mode !== "user" || userId === undefined) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadInitialUserPage = async () => {
+      setIsLoadingInitial(true);
+      setFetchError(false);
+
+      const data = await fetchPage(1, activeTab, activeSort);
+
+      if (cancelled || userIdRef.current !== userId) {
+        setIsLoadingInitial(false);
+        return;
+      }
+
+      if (data) {
+        applyPageData(data);
+      } else {
+        setFetchError(true);
+      }
+
+      setIsLoadingInitial(false);
+    };
+
+    void loadInitialUserPage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeSort, activeTab, applyPageData, fetchPage, mode, userId]);
 
   const refreshToFirstPage = useCallback(async () => {
     setFetchError(false);

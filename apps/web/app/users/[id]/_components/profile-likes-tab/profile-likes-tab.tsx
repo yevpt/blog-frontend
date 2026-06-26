@@ -4,9 +4,10 @@ import { useEffect } from "react";
 import { Button, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import { useUserLikedContent } from "@/hooks/use-user-liked-content";
+import { ProfileTabCompactSkeleton } from "../profile-tab-compact-skeleton";
 import { ProfileTabEmptyState } from "../profile-tab-empty-state";
-import { PROFILE_LIKES_SKELETON_COUNT } from "./constants";
 import { LIKED_CONTENT_FILTERS } from "./liked-content-format";
+import { shouldShowProfileLikesEndMessage } from "./constants";
 import { ProfileLikesVirtualList } from "./profile-likes-virtual-list";
 
 interface ProfileLikesTabProps {
@@ -14,28 +15,6 @@ interface ProfileLikesTabProps {
   isOwner: boolean;
   likesCount: number;
   onCountChange?: (count: number) => void;
-}
-
-function ProfileLikesSkeletonList() {
-  return (
-    <div className="space-y-0" data-testid="profile-likes-skeleton">
-      {Array.from({ length: PROFILE_LIKES_SKELETON_COUNT }, (_, index) => (
-        <div key={index} className="border-b border-border/40 py-3.5 last:border-b-0">
-          <div className="flex animate-pulse gap-3">
-            <div className="size-9 shrink-0 rounded-full bg-muted" />
-            <div className="min-w-0 flex-1 space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <div className="h-4 w-28 rounded bg-muted" />
-                <div className="h-3 w-12 rounded bg-muted" />
-              </div>
-              <div className="h-4 w-full rounded bg-muted" />
-              <div className="h-4 w-4/5 rounded bg-muted" />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
 }
 
 function ProfileLikesFilterBar({
@@ -124,7 +103,7 @@ export function ProfileLikesTab({
       ) : null}
 
       {isLoadingInitial ? (
-        <ProfileLikesSkeletonList />
+        <ProfileTabCompactSkeleton testId="profile-likes-skeleton" />
       ) : initialError ? (
         <div className="flex flex-col items-center gap-3 py-12 text-muted-foreground">
           <p className="text-sm">加载失败，请稍后重试</p>
@@ -153,6 +132,12 @@ export function ProfileLikesTab({
           hasMore={!endReached}
           loading={isLoadingMore}
           fetchError={fetchError}
+          showEndMessage={shouldShowProfileLikesEndMessage(
+            items.length,
+            !endReached,
+            pageData.page,
+            pageData.page_size,
+          )}
           onLoadMore={loadMore}
           onRetryLoadMore={retryLoadMore}
         />

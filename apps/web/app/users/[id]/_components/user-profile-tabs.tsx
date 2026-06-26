@@ -11,7 +11,6 @@ import { ProfileMomentsTab } from "./profile-moments-tab/profile-moments-tab";
 import { ProfileLikesTab } from "./profile-likes-tab/profile-likes-tab";
 import { formatProfileMomentsTabLabel } from "./profile-moments-tab/constants";
 import { formatProfileLikesTabLabel } from "./profile-likes-tab/constants";
-import type { MomentPageResp } from "@repo/api";
 import type { EmailDisplayValue } from "../_lib/display-email";
 
 type TabKey = "profile" | "moments" | "likes" | "security";
@@ -25,7 +24,7 @@ interface TabDef {
 
 interface UserProfileTabsProps {
   profile: UserPublicProfileResp;
-  initialMomentsPage: MomentPageResp;
+  initialMomentsCount: number;
   initialLikesCount: number;
   isOwner: boolean;
   isEditMode: boolean;
@@ -42,7 +41,7 @@ interface UserProfileTabsProps {
 
 export function UserProfileTabs({
   profile,
-  initialMomentsPage,
+  initialMomentsCount,
   initialLikesCount,
   isOwner,
   isEditMode,
@@ -68,7 +67,7 @@ export function UserProfileTabs({
       setActiveTab("security");
     }
   }, [wantsSecurity, isEditMode, isOwner]);
-  const [momentsTotal, setMomentsTotal] = useState(initialMomentsPage.total);
+  const [momentsTotal, setMomentsTotal] = useState(initialMomentsCount);
   const [likesTotal, setLikesTotal] = useState(initialLikesCount);
 
   const tabs: TabDef[] =
@@ -151,7 +150,6 @@ export function UserProfileTabs({
           <ProfileMomentsTab
             userId={profile.id}
             isOwner={isOwner}
-            initialPage={initialMomentsPage}
             onTotalChange={setMomentsTotal}
           />
         )}

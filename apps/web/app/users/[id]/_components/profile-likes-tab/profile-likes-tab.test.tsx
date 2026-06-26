@@ -81,12 +81,15 @@ describe("ProfileLikesTab", () => {
     vi.clearAllMocks();
   });
 
-  it("首屏加载时展示骨架屏", () => {
+  it("首屏加载时展示与空态同高的紧凑骨架屏", () => {
     mockUseUserLikedContent.mockReturnValue(makeHookState({ isLoadingInitial: true }));
 
     render(<ProfileLikesTab userId={1} isOwner={false} likesCount={3} />);
 
-    expect(screen.getByTestId("profile-likes-skeleton")).toBeInTheDocument();
+    const skeleton = screen.getByTestId("profile-likes-skeleton");
+    expect(skeleton).toBeInTheDocument();
+    expect(skeleton.className).toContain("min-h-[180px]");
+    expect(screen.queryByText("暂无点赞")).not.toBeInTheDocument();
   });
 
   it("空列表展示空态", () => {

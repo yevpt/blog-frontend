@@ -2,8 +2,7 @@ import { afterEach, describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { UserProfileTabs } from "./user-profile-tabs";
-import type { MomentPageResp, UserPublicProfileResp } from "@repo/api";
-import { EMPTY_MOMENTS_PAGE } from "./profile-moments-tab/constants";
+import type { UserPublicProfileResp } from "@repo/api";
 
 // 可变的 URL 查询参数，供各用例改写 ?tab= 命中分支
 let mockSearchParams = new URLSearchParams();
@@ -49,11 +48,9 @@ const baseProfile: UserPublicProfileResp = {
   birthday: null,
 };
 
-const emptyMomentsPage: MomentPageResp = EMPTY_MOMENTS_PAGE;
-
 const baseProps = {
   profile: baseProfile,
-  initialMomentsPage: emptyMomentsPage,
+  initialMomentsCount: 0,
   initialLikesCount: 0,
   isOwner: false,
   isEditMode: false,
@@ -78,9 +75,7 @@ describe("UserProfileTabs", () => {
   });
 
   it("Tab 标签展示碎语总数", () => {
-    render(
-      <UserProfileTabs {...baseProps} initialMomentsPage={{ ...emptyMomentsPage, total: 24 }} />,
-    );
+    render(<UserProfileTabs {...baseProps} initialMomentsCount={24} />);
     expect(screen.getByRole("tab", { name: "碎语 (24)" })).toBeInTheDocument();
   });
 
@@ -156,33 +151,7 @@ describe("UserProfileTabs", () => {
 
   it("碎语 Tab 有内容时渲染列表", async () => {
     const user = userEvent.setup();
-    render(
-      <UserProfileTabs
-        {...baseProps}
-        initialMomentsPage={{
-          ...emptyMomentsPage,
-          total: 3,
-          pages: 1,
-          list: [
-            {
-              id: 1,
-              user_id: 1,
-              content: "hello",
-              status: 1,
-              comment_status: 1,
-              read_count: 0,
-              is_top: false,
-              like_count: 0,
-              comment_count: 0,
-              is_liked: false,
-              images: [],
-              created_at: "2026-01-01T00:00:00Z",
-              updated_at: "2026-01-01T00:00:00Z",
-            },
-          ],
-        }}
-      />,
-    );
+    render(<UserProfileTabs {...baseProps} initialMomentsCount={3} />);
 
     await user.click(screen.getByRole("tab", { name: "碎语 (3)" }));
 

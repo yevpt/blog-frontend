@@ -31,10 +31,11 @@ describe("ProfileMomentsTab", () => {
     mockUseMomentList.mockReset();
   });
 
-  it("无碎语时显示空态", () => {
+  it("首屏加载时展示骨架屏", () => {
     mockUseMomentList.mockReturnValue({
       moments: [],
       pageData: emptyPage,
+      isLoadingInitial: true,
       isLoadingMore: false,
       endReached: true,
       fetchError: false,
@@ -48,7 +49,31 @@ describe("ProfileMomentsTab", () => {
       setMoments: vi.fn(),
     });
 
-    render(<ProfileMomentsTab userId={1} isOwner={false} initialPage={emptyPage} />);
+    render(<ProfileMomentsTab userId={1} isOwner={false} />);
+
+    expect(screen.getByTestId("profile-moments-skeleton")).toBeInTheDocument();
+    expect(screen.queryByText("暂无碎语")).not.toBeInTheDocument();
+  });
+
+  it("无碎语时显示空态", () => {
+    mockUseMomentList.mockReturnValue({
+      moments: [],
+      pageData: emptyPage,
+      isLoadingInitial: false,
+      isLoadingMore: false,
+      endReached: true,
+      fetchError: false,
+      pendingLikeIds: new Set(),
+      pendingActionIds: new Set(),
+      loadMore: vi.fn(),
+      toggleLike: vi.fn(),
+      updateMoment: vi.fn(),
+      toggleTop: vi.fn(),
+      deleteMoment: vi.fn(),
+      setMoments: vi.fn(),
+    });
+
+    render(<ProfileMomentsTab userId={1} isOwner={false} />);
 
     expect(screen.getByText("暂无碎语")).toBeInTheDocument();
     expect(screen.getByText("TA 还没有发布过碎语")).toBeInTheDocument();
@@ -58,6 +83,7 @@ describe("ProfileMomentsTab", () => {
     mockUseMomentList.mockReturnValue({
       moments: [{ id: 1 }],
       pageData: { ...emptyPage, total: 1, list: [{ id: 1 }] },
+      isLoadingInitial: false,
       isLoadingMore: false,
       endReached: true,
       fetchError: false,
@@ -71,9 +97,7 @@ describe("ProfileMomentsTab", () => {
       setMoments: vi.fn(),
     });
 
-    render(
-      <ProfileMomentsTab userId={1} isOwner initialPage={emptyPage} onTotalChange={vi.fn()} />,
-    );
+    render(<ProfileMomentsTab userId={1} isOwner onTotalChange={vi.fn()} />);
 
     expect(screen.getByTestId("profile-moments-virtual-list")).toBeInTheDocument();
     expect(mockUseMomentList).toHaveBeenCalledWith(
@@ -81,11 +105,12 @@ describe("ProfileMomentsTab", () => {
     );
   });
 
-  it("total 变化时通知父组件", () => {
+  it("首屏加载中不同步 Tab 计数，避免覆盖 SSR 初始值", () => {
     const onTotalChange = vi.fn();
     mockUseMomentList.mockReturnValue({
-      moments: [{ id: 1 }],
-      pageData: { ...emptyPage, total: 5 },
+      moments: [],
+      pageData: emptyPage,
+      isLoadingInitial: true,
       isLoadingMore: false,
       endReached: true,
       fetchError: false,
@@ -99,14 +124,31 @@ describe("ProfileMomentsTab", () => {
       setMoments: vi.fn(),
     });
 
-    render(
-      <ProfileMomentsTab
-        userId={1}
-        isOwner
-        initialPage={emptyPage}
-        onTotalChange={onTotalChange}
-      />,
-    );
+    render(<ProfileMomentsTab userId={1} isOwner onTotalChange={onTotalChange} />);
+
+    expect(onTotalChange).not.toHaveBeenCalled();
+  });
+
+  it("total 变化时通知父组件", () => {
+    const onTotalChange = vi.fn();
+    mockUseMomentList.mockReturnValue({
+      moments: [{ id: 1 }],
+      pageData: { ...emptyPage, total: 5 },
+      isLoadingInitial: false,
+      isLoadingMore: false,
+      endReached: true,
+      fetchError: false,
+      pendingLikeIds: new Set(),
+      pendingActionIds: new Set(),
+      loadMore: vi.fn(),
+      toggleLike: vi.fn(),
+      updateMoment: vi.fn(),
+      toggleTop: vi.fn(),
+      deleteMoment: vi.fn(),
+      setMoments: vi.fn(),
+    });
+
+    render(<ProfileMomentsTab userId={1} isOwner onTotalChange={onTotalChange} />);
 
     expect(onTotalChange).toHaveBeenCalledWith(5);
   });

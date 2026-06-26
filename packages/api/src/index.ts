@@ -135,6 +135,7 @@ export type {
   UserLikedContentItemResp,
   UserLikedContentPageResp,
   UserLikesCountResp,
+  UserMomentsCountResp,
   AdminUserRolesResp,
 } from "./types/user";
 export type {

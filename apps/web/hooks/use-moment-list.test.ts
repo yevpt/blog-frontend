@@ -76,6 +76,41 @@ describe("useMomentList", () => {
     vi.clearAllMocks();
   });
 
+  it("user mode loads first page on mount", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(makePageResp({ list: [makeMoment(5)] })));
+
+    const emptyInitial: MomentPageResp = {
+      total: 0,
+      pages: 0,
+      page: 1,
+      page_size: 10,
+      list: [],
+    };
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: emptyInitial, mode: "user", userId: 42 }),
+    );
+
+    expect(result.current.isLoadingInitial).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.isLoadingInitial).toBe(false);
+      expect(result.current.moments.map((item) => item.id)).toEqual([5]);
+      expect(getLastFetchUrl()).toContain("user_id=42");
+    });
+  });
+
+  it("feed mode does not load user page on mount", () => {
+    renderHook(() =>
+      useMomentList({
+        initialPage: makePageResp({ list: [makeMoment(1)] }),
+        mode: "feed",
+      }),
+    );
+
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("when active tab is friends, refresh after session change requests scope=friends", async () => {
     vi.mocked(fetch)
       .mockResolvedValueOnce(jsonResponse(makePageResp({ list: [makeMoment(2)] })))

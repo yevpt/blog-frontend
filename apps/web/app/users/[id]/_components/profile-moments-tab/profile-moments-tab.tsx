@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { MomentItemResp, MomentPageResp } from "@repo/api";
+import type { MomentItemResp } from "@repo/api";
 import dynamic from "next/dynamic";
 import { useMomentList } from "@/hooks/use-moment-list";
 import { useMomentModal } from "@/store/use-moment-modal";
+import { ProfileTabCompactSkeleton } from "../profile-tab-compact-skeleton";
 import { ProfileTabEmptyState } from "../profile-tab-empty-state";
+import { EMPTY_MOMENTS_PAGE, shouldShowProfileMomentsEndMessage } from "./constants";
 import { ProfileMomentsVirtualList } from "./profile-moments-virtual-list";
 
 const CommentModal = dynamic(() => import("@/components/comments").then((m) => m.CommentModal), {
@@ -15,20 +17,15 @@ const CommentModal = dynamic(() => import("@/components/comments").then((m) => m
 interface ProfileMomentsTabProps {
   userId: number;
   isOwner: boolean;
-  initialPage: MomentPageResp;
   onTotalChange?: (total: number) => void;
 }
 
 /** 个人页碎语 Tab：embedded MomentCard + Virtuoso 无限滚动 */
-export function ProfileMomentsTab({
-  userId,
-  isOwner,
-  initialPage,
-  onTotalChange,
-}: ProfileMomentsTabProps) {
+export function ProfileMomentsTab({ userId, isOwner, onTotalChange }: ProfileMomentsTabProps) {
   const {
     moments,
     pageData,
+    isLoadingInitial,
     isLoadingMore,
     endReached,
     fetchError,
@@ -41,7 +38,7 @@ export function ProfileMomentsTab({
     deleteMoment,
     setMoments,
   } = useMomentList({
-    initialPage,
+    initialPage: EMPTY_MOMENTS_PAGE,
     mode: "user",
     userId,
   });
@@ -49,8 +46,10 @@ export function ProfileMomentsTab({
   const [activeComment, setActiveComment] = useState<{ momentId: number } | null>(null);
 
   useEffect(() => {
-    onTotalChange?.(pageData.total);
-  }, [onTotalChange, pageData.total]);
+    if (!isLoadingInitial) {
+      onTotalChange?.(pageData.total);
+    }
+  }, [isLoadingInitial, onTotalChange, pageData.total]);
 
   const openComment = useCallback((moment: MomentItemResp) => {
     setActiveComment({ momentId: moment.id });
@@ -80,6 +79,13 @@ export function ProfileMomentsTab({
     );
   }, [activeComment, setMoments]);
 
+  const isPendingInitial =
+    isLoadingInitial || (pageData.total > 0 && moments.length === 0 && !fetchError);
+
+  if (isPendingInitial) {
+    return <ProfileTabCompactSkeleton testId="profile-moments-skeleton" />;
+  }
+
   if (moments.length === 0) {
     return (
       <ProfileTabEmptyState
@@ -100,6 +106,12 @@ export function ProfileMomentsTab({
           hasMore={!endReached}
           loading={isLoadingMore}
           fetchError={fetchError}
+          showEndMessage={shouldShowProfileMomentsEndMessage(
+            moments.length,
+            !endReached,
+            pageData.page,
+            pageData.page_size,
+          )}
           pendingLikeIds={pendingLikeIds}
           pendingActionIds={pendingActionIds}
           onLoadMore={loadMore}

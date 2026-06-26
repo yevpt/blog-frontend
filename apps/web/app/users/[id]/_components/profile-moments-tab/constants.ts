@@ -14,3 +14,5 @@ export const EMPTY_MOMENTS_PAGE: MomentPageResp = {
 export function formatProfileMomentsTabLabel(total: number): string {
   return `碎语 (${total})`;
 }
+
+export { shouldShowProfileTabEndMessage as shouldShowProfileMomentsEndMessage } from "../profile-tab-end-message";

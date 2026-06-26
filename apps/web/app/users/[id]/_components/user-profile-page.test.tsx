@@ -2,7 +2,7 @@ import { afterEach, describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { UserProfilePage } from "./user-profile-page";
-import type { MomentPageResp, UserPublicProfileResp } from "@repo/api";
+import type { UserPublicProfileResp } from "@repo/api";
 
 const sessionState = vi.hoisted(() => ({
   userId: 1,
@@ -48,70 +48,32 @@ const baseProfile: UserPublicProfileResp = {
   birthday: null,
 };
 
-const emptyMomentsPage: MomentPageResp = {
-  total: 0,
-  pages: 0,
-  page: 1,
-  page_size: 10,
-  list: [],
-};
-
 describe("UserProfilePage", () => {
   it("渲染不崩溃", () => {
-    render(
-      <UserProfilePage
-        profile={baseProfile}
-        initialMomentsPage={emptyMomentsPage}
-        initialLikesCount={0}
-      />,
-    );
+    render(<UserProfilePage profile={baseProfile} initialMomentsCount={0} initialLikesCount={0} />);
     expect(screen.getByText("TestUser")).toBeInTheDocument();
   });
 
   it("本人（id 匹配）显示编辑按钮", () => {
-    render(
-      <UserProfilePage
-        profile={baseProfile}
-        initialMomentsPage={emptyMomentsPage}
-        initialLikesCount={0}
-      />,
-    );
+    render(<UserProfilePage profile={baseProfile} initialMomentsCount={0} initialLikesCount={0} />);
     expect(screen.getByText("编辑个人资料")).toBeInTheDocument();
   });
 
   it("点击编辑按钮进入编辑模式", async () => {
-    render(
-      <UserProfilePage
-        profile={baseProfile}
-        initialMomentsPage={emptyMomentsPage}
-        initialLikesCount={0}
-      />,
-    );
+    render(<UserProfilePage profile={baseProfile} initialMomentsCount={0} initialLikesCount={0} />);
     await userEvent.click(screen.getByText("编辑个人资料"));
     expect(screen.getByText("退出编辑")).toBeInTheDocument();
   });
 
   it("绑定回跳 ?tab=security 时本人自动进入编辑态", () => {
     mockSearchParams = new URLSearchParams("tab=security");
-    render(
-      <UserProfilePage
-        profile={baseProfile}
-        initialMomentsPage={emptyMomentsPage}
-        initialLikesCount={0}
-      />,
-    );
+    render(<UserProfilePage profile={baseProfile} initialMomentsCount={0} initialLikesCount={0} />);
     expect(screen.getByText("退出编辑")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /账号安全/ })).toHaveAttribute("aria-selected", "true");
   });
 
   it("退出编辑后回到只读模式", async () => {
-    render(
-      <UserProfilePage
-        profile={baseProfile}
-        initialMomentsPage={emptyMomentsPage}
-        initialLikesCount={0}
-      />,
-    );
+    render(<UserProfilePage profile={baseProfile} initialMomentsCount={0} initialLikesCount={0} />);
     await userEvent.click(screen.getByText("编辑个人资料"));
     await userEvent.click(screen.getByText("退出编辑"));
     expect(screen.getByText("编辑个人资料")).toBeInTheDocument();
@@ -123,7 +85,7 @@ describe("UserProfilePage", () => {
     render(
       <UserProfilePage
         profile={{ ...baseProfile, id: 1 }}
-        initialMomentsPage={emptyMomentsPage}
+        initialMomentsCount={0}
         initialLikesCount={0}
       />,
     );
@@ -133,13 +95,7 @@ describe("UserProfilePage", () => {
   it("管理员查看自己时不显示更多操作", () => {
     sessionState.userId = 1;
     sessionState.profile = { roles: ["ROLE_ADMIN"] };
-    render(
-      <UserProfilePage
-        profile={baseProfile}
-        initialMomentsPage={emptyMomentsPage}
-        initialLikesCount={0}
-      />,
-    );
+    render(<UserProfilePage profile={baseProfile} initialMomentsCount={0} initialLikesCount={0} />);
     expect(screen.queryByRole("button", { name: "更多操作" })).not.toBeInTheDocument();
   });
 
@@ -149,7 +105,7 @@ describe("UserProfilePage", () => {
     render(
       <UserProfilePage
         profile={{ ...baseProfile, id: 3, roles: ["ROLE_ADMIN"] }}
-        initialMomentsPage={emptyMomentsPage}
+        initialMomentsCount={0}
         initialLikesCount={0}
       />,
     );

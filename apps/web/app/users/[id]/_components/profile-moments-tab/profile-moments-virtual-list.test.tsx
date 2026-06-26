@@ -40,7 +40,6 @@ vi.mock("@/components/moments/moment-card", () => ({
 
 vi.mock("@/components/moments/moment-scroll-loader", () => ({
   MomentScrollLoader: () => <div data-testid="scroll-loader">loading</div>,
-  MomentEndReached: () => <div data-testid="end-reached">end</div>,
 }));
 
 function makeMoment(id: number): MomentItemResp {
@@ -61,24 +60,27 @@ function makeMoment(id: number): MomentItemResp {
   };
 }
 
-const noop = vi.fn();
+const baseProps = {
+  fetchError: false,
+  showEndMessage: false,
+  pendingLikeIds: new Set<number>(),
+  pendingActionIds: new Set<number>(),
+  onLoadMore: vi.fn(),
+  onLike: vi.fn(),
+  onComment: vi.fn(),
+  onEdit: vi.fn(),
+  onToggleTop: vi.fn(),
+  onDelete: vi.fn(),
+};
 
 describe("ProfileMomentsVirtualList", () => {
   it("渲染虚拟列表项", () => {
     render(
       <ProfileMomentsVirtualList
+        {...baseProps}
         items={[makeMoment(1), makeMoment(2)]}
         hasMore
         loading={false}
-        fetchError={false}
-        pendingLikeIds={new Set()}
-        pendingActionIds={new Set()}
-        onLoadMore={noop}
-        onLike={noop}
-        onComment={noop}
-        onEdit={noop}
-        onToggleTop={noop}
-        onDelete={noop}
       />,
     );
 
@@ -91,18 +93,11 @@ describe("ProfileMomentsVirtualList", () => {
     const onLoadMore = vi.fn();
     render(
       <ProfileMomentsVirtualList
+        {...baseProps}
         items={[makeMoment(1)]}
         hasMore
         loading={false}
-        fetchError={false}
-        pendingLikeIds={new Set()}
-        pendingActionIds={new Set()}
         onLoadMore={onLoadMore}
-        onLike={noop}
-        onComment={noop}
-        onEdit={noop}
-        onToggleTop={noop}
-        onDelete={noop}
       />,
     );
 
@@ -110,89 +105,106 @@ describe("ProfileMomentsVirtualList", () => {
     expect(onLoadMore).toHaveBeenCalledTimes(1);
   });
 
-  it("加载中或已无更多时不触发 onLoadMore", () => {
+  it("加载中时不触发 onLoadMore，Footer 展示加载态", () => {
     const onLoadMore = vi.fn();
-    const { rerender } = render(
+    render(
       <ProfileMomentsVirtualList
+        {...baseProps}
         items={[makeMoment(1)]}
         hasMore
         loading
-        fetchError={false}
-        pendingLikeIds={new Set()}
-        pendingActionIds={new Set()}
         onLoadMore={onLoadMore}
-        onLike={noop}
-        onComment={noop}
-        onEdit={noop}
-        onToggleTop={noop}
-        onDelete={noop}
       />,
     );
 
     endReached();
     expect(onLoadMore).not.toHaveBeenCalled();
     expect(screen.getByTestId("scroll-loader")).toBeInTheDocument();
+  });
 
-    rerender(
+  it("showEndMessage 为 true 时展示轻量到底提示", () => {
+    render(
       <ProfileMomentsVirtualList
+        {...baseProps}
         items={[makeMoment(1)]}
         hasMore={false}
         loading={false}
-        fetchError={false}
-        pendingLikeIds={new Set()}
-        pendingActionIds={new Set()}
-        onLoadMore={onLoadMore}
-        onLike={noop}
-        onComment={noop}
-        onEdit={noop}
-        onToggleTop={noop}
-        onDelete={noop}
+        showEndMessage
       />,
     );
 
-    endReached();
-    expect(onLoadMore).not.toHaveBeenCalled();
-    expect(screen.getByTestId("end-reached")).toBeInTheDocument();
+    expect(screen.getByTestId("profile-moments-end-hint")).toHaveTextContent("已经到底了");
   });
 
-  it("每项外层保留分割线（Virtuoso 下不受 last:border-b-0 影响）", () => {
+  it("showEndMessage 为 false 时不展示到底提示", () => {
     render(
       <ProfileMomentsVirtualList
-        items={[makeMoment(1), makeMoment(2)]}
-        hasMore
+        {...baseProps}
+        items={[makeMoment(1)]}
+        hasMore={false}
         loading={false}
-        fetchError={false}
-        pendingLikeIds={new Set()}
-        pendingActionIds={new Set()}
-        onLoadMore={noop}
-        onLike={noop}
-        onComment={noop}
-        onEdit={noop}
-        onToggleTop={noop}
-        onDelete={noop}
+        showEndMessage={false}
+      />,
+    );
+
+    expect(screen.queryByTestId("profile-moments-end-hint")).not.toBeInTheDocument();
+  });
+
+  it("无到底提示且列表已结束时，最后一条不显示底部分割线", () => {
+    render(
+      <ProfileMomentsVirtualList
+        {...baseProps}
+        items={[makeMoment(1), makeMoment(2)]}
+        hasMore={false}
+        loading={false}
+        showEndMessage={false}
+      />,
+    );
+
+    const items = screen.getAllByTestId("profile-moment-item");
+    expect(items[0]?.className.split(/\s+/)).toContain("border-b");
+    expect(items[1]?.className.split(/\s+/)).not.toContain("border-b");
+  });
+
+  it("有到底提示时，最后一条仍保留底部分割线", () => {
+    render(
+      <ProfileMomentsVirtualList
+        {...baseProps}
+        items={[makeMoment(1), makeMoment(2)]}
+        hasMore={false}
+        loading={false}
+        showEndMessage
       />,
     );
 
     for (const item of screen.getAllByTestId("profile-moment-item")) {
-      expect(item.className).toContain("border-b");
+      expect(item.className.split(/\s+/)).toContain("border-b");
+    }
+  });
+
+  it("还有更多时，最后一条保留底部分割线", () => {
+    render(
+      <ProfileMomentsVirtualList
+        {...baseProps}
+        items={[makeMoment(1), makeMoment(2)]}
+        hasMore
+        loading={false}
+      />,
+    );
+
+    for (const item of screen.getAllByTestId("profile-moment-item")) {
+      expect(item.className.split(/\s+/)).toContain("border-b");
     }
   });
 
   it("加载失败时显示错误提示", () => {
     render(
       <ProfileMomentsVirtualList
+        {...baseProps}
         items={[makeMoment(1)]}
         hasMore={false}
         loading={false}
         fetchError
-        pendingLikeIds={new Set()}
-        pendingActionIds={new Set()}
-        onLoadMore={noop}
-        onLike={noop}
-        onComment={noop}
-        onEdit={noop}
-        onToggleTop={noop}
-        onDelete={noop}
       />,
     );
 

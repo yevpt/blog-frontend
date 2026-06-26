@@ -1116,6 +1116,21 @@ describe("createApiClient", () => {
       );
     });
 
+    it("getMomentsCount 请求 GET /users/:id/moments/count", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({ code: 0, message: "ok", data: { count: 8 } }),
+      );
+      const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+      const result = await client.users.getMomentsCount(5);
+
+      expect(result).toEqual({ count: 8 });
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/users/5/moments/count",
+        expect.objectContaining({ method: "GET" }),
+      );
+    });
+
     it("getLikesCount 请求 GET /users/:id/likes/count", async () => {
       vi.mocked(global.fetch).mockResolvedValue(
         mockResponse({ code: 0, message: "ok", data: { count: 12 } }),
