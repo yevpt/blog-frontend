@@ -3,7 +3,13 @@ import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ThreadCommentHeader, ThreadReplyItem, getThreadDisplayName } from "./thread-comment-item";
+import { markdownToHtmlSync } from "@repo/markdown";
+import {
+  ThreadCommentContent,
+  ThreadCommentHeader,
+  ThreadReplyItem,
+  getThreadDisplayName,
+} from "./thread-comment-item";
 
 vi.mock("next/link", () => ({
   default: ({
@@ -18,7 +24,7 @@ vi.mock("next/link", () => ({
 }));
 
 vi.mock("@repo/markdown", () => ({
-  markdownToHtmlSync: (content: string) => content,
+  markdownToHtmlSync: vi.fn((content: string) => content),
   MarkdownContent: ({ html }: { html: string }) => (
     <div dangerouslySetInnerHTML={{ __html: html }} />
   ),
@@ -103,7 +109,28 @@ describe("ThreadCommentHeader", () => {
   });
 });
 
+describe("ThreadCommentContent", () => {
+  it("渲染时把外部链接当作 UGC 处理（留言板/评论正文，与文章/碎语正文区分开）", () => {
+    render(<ThreadCommentContent content="你好" />);
+    expect(markdownToHtmlSync).toHaveBeenCalledWith("你好", { treatLinksAsUgc: true });
+  });
+});
+
 describe("ThreadReplyItem", () => {
+  it("渲染回复内容时也把外部链接当作 UGC 处理", () => {
+    render(
+      <ThreadReplyItem
+        user={{ id: 1, username: "bob" }}
+        createdAt="2026-01-01T00:00:00Z"
+        content="回复内容"
+        likeCount={0}
+        isLiked={false}
+        onLike={vi.fn()}
+      />,
+    );
+    expect(markdownToHtmlSync).toHaveBeenCalledWith("回复内容", { treatLinksAsUgc: true });
+  });
+
   it("渲染 @提及 和回复内容", () => {
     render(
       <ThreadReplyItem

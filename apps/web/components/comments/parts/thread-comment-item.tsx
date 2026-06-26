@@ -26,7 +26,8 @@ export function getThreadDisplayName(
 }
 
 function ThreadMarkdownBody({ content }: { content: string }) {
-  const html = useMemo(() => markdownToHtmlSync(content), [content]);
+  // 留言板留言/评论回复均为 UGC，外部链接需 nofollow ugc + 新窗口打开，区别于文章/碎语正文
+  const html = useMemo(() => markdownToHtmlSync(content, { treatLinksAsUgc: true }), [content]);
   return <PreviewableMarkdown html={html} variant="comment" />;
 }
 
