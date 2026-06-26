@@ -109,4 +109,26 @@ describe("DashboardPage", () => {
       }),
     );
   });
+
+  it("站点概况与互动摘要链接到对应后台模块", async () => {
+    render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(screen.getByText("站点概况")).toBeInTheDocument());
+
+    expect(screen.getByRole("link", { name: "查看文章管理" })).toHaveAttribute("href", "/articles");
+    expect(screen.getByRole("link", { name: "查看评论管理" })).toHaveAttribute("href", "/comments");
+    expect(screen.getByRole("link", { name: "查看留言管理" })).toHaveAttribute(
+      "href",
+      "/guestbook",
+    );
+    expect(screen.getByRole("link", { name: "查看动态管理" })).toHaveAttribute("href", "/moments");
+    expect(screen.getAllByRole("link", { name: "查看用户管理" })[0]).toHaveAttribute(
+      "href",
+      "/users",
+    );
+  });
 });

@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react";
+import { Link } from "react-router-dom";
 import type { AdminOverviewSummaryResp, AnalyticsOverviewResp } from "@repo/api";
 import { Card, CardContent } from "@repo/ui";
 import { apiClient } from "../../lib/api";
@@ -33,6 +34,15 @@ const REFERER_LABELS: Record<string, string> = {
   internal: "站内跳转",
 };
 
+const CONTENT_OVERVIEW_LINKS = [
+  { label: "文章", key: "articles", to: "/articles" },
+  { label: "分类", key: "categories", to: "/categories" },
+  { label: "标签", key: "tags", to: "/tags" },
+  { label: "音乐", key: "music", to: "/music" },
+  { label: "友链", key: "friend_links", to: "/links" },
+  { label: "用户", key: "users", to: "/users" },
+] as const;
+
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="flex-1 px-5 py-4 sm:border-l sm:border-border sm:first:border-l-0">
@@ -41,6 +51,14 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
       {hint ? <div className="mt-1 text-xs text-text-muted">{hint}</div> : null}
     </div>
   );
+}
+
+function getContentOverviewValue(
+  summary: AdminOverviewSummaryResp,
+  key: (typeof CONTENT_OVERVIEW_LINKS)[number]["key"],
+) {
+  if (key === "users") return summary.users.total;
+  return summary.content[key];
 }
 
 export function DashboardPage() {
@@ -180,36 +198,52 @@ export function DashboardPage() {
         <CardContent className="pt-5">
           <div className="mb-3 text-sm font-medium">站点概况</div>
           <div className="flex flex-wrap gap-y-4">
-            {[
-              { label: "文章", value: summary.content.articles },
-              { label: "分类", value: summary.content.categories },
-              { label: "标签", value: summary.content.tags },
-              { label: "音乐", value: summary.content.music },
-              { label: "友链", value: summary.content.friend_links },
-              { label: "用户", value: summary.users.total },
-            ].map((item) => (
-              <div key={item.label} className="min-w-[80px] flex-1">
-                <div className="text-lg font-medium">{item.value.toLocaleString()}</div>
+            {CONTENT_OVERVIEW_LINKS.map((item) => (
+              <Link
+                key={item.label}
+                to={item.to}
+                aria-label={`查看${item.label}管理`}
+                className="min-w-[80px] flex-1 rounded-md transition-colors hover:bg-surface-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <div className="text-lg font-medium">
+                  {getContentOverviewValue(summary, item.key).toLocaleString()}
+                </div>
                 <div className="mt-0.5 text-xs text-text-muted">{item.label}</div>
-              </div>
+              </Link>
             ))}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border pt-3 text-sm">
             <span className="text-text-muted">近 7 天</span>
-            <span>
+            <Link
+              to="/comments"
+              aria-label="查看评论管理"
+              className="rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
               新增评论 <span className="font-medium">{summary.interactions.new_comments}</span>
-            </span>
-            <span>
+            </Link>
+            <Link
+              to="/guestbook"
+              aria-label="查看留言管理"
+              className="rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
               新留言 <span className="font-medium">{summary.interactions.new_guestbook}</span>
-            </span>
-            <span>
+            </Link>
+            <Link
+              to="/moments"
+              aria-label="查看动态管理"
+              className="rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
               新动态 <span className="font-medium">{summary.interactions.new_moments}</span>
-            </span>
-            <span className="ml-auto text-text-secondary">
+            </Link>
+            <Link
+              to="/users"
+              aria-label="查看用户管理"
+              className="ml-auto rounded-sm text-text-secondary transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
               今日新增用户{" "}
               <span className="font-medium text-success">+{summary.users.today_new}</span> · 活跃{" "}
               {summary.users.today_active}
-            </span>
+            </Link>
           </div>
         </CardContent>
       </Card>
