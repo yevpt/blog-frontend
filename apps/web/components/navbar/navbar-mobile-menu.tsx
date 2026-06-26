@@ -8,6 +8,7 @@ import { useTheme } from "../../app/providers/theme-provider";
 import { useLocale } from "@repo/hooks";
 import { useLoginModal } from "@/store/use-login-modal";
 import { useSession } from "@/app/providers/session-provider";
+import { isAdminUser } from "@/lib/user-roles";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { NAV_ITEMS } from "./nav-items";
 import { openAdminPanel } from "./admin-panel";
@@ -26,6 +27,7 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
   const router = useRouter();
   const nextTheme = resolvedTheme === "dark" ? "light" : "dark";
   const displayName = profile?.nickname ?? profile?.username ?? "我的账号";
+  const isAdmin = isAdminUser(profile?.roles);
 
   async function handleLogout() {
     try {
@@ -183,7 +185,7 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
                   )}
                 </Link>
               )}
-              {userId != null && (
+              {userId != null && isAdmin && (
                 <button
                   type="button"
                   onClick={() => {
@@ -196,11 +198,11 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
                     "border-0 bg-transparent font-inherit outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
                   )}
                 >
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-500/[0.10]">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/[0.10]">
                     <SvgIcon
                       name="monitor"
                       size={14}
-                      className="text-violet-600 dark:text-violet-400"
+                      className="text-emerald-600 dark:text-emerald-400"
                     />
                   </div>
                   <span className="flex-1 text-left text-[13px] font-medium text-foreground">

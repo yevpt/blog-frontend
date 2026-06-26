@@ -176,16 +176,30 @@ describe("NavbarMobileMenu", () => {
     expect(screen.getByText("99+")).toBeInTheDocument();
   });
 
-  it("已登录：显示管理后台入口", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null, patchProfile: () => {} });
+  it("已登录：管理员显示管理后台入口", () => {
+    vi.mocked(useSession).mockReturnValue({
+      userId: 1,
+      profile: { id: 1, username: "admin", status: 0, roles: ["ROLE_ADMIN"] },
+      patchProfile: () => {},
+    });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
     expect(screen.getByRole("button", { name: "管理后台" })).toBeInTheDocument();
     expect(screen.getByTestId("icon-monitor")).toBeInTheDocument();
   });
 
+  it("已登录：非管理员不显示管理后台入口", () => {
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null, patchProfile: () => {} });
+    render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
+    expect(screen.queryByRole("button", { name: "管理后台" })).not.toBeInTheDocument();
+  });
+
   it("已登录：点击管理后台在新标签打开并关闭菜单", async () => {
     const user = userEvent.setup();
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null, patchProfile: () => {} });
+    vi.mocked(useSession).mockReturnValue({
+      userId: 1,
+      profile: { id: 1, username: "admin", status: 0, roles: ["ROLE_ADMIN"] },
+      patchProfile: () => {},
+    });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
     await user.click(screen.getByRole("button", { name: "管理后台" }));
     expect(mockOpenAdminPanel).toHaveBeenCalledOnce();

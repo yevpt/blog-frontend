@@ -107,8 +107,19 @@ describe("NavbarUserMenu", () => {
     expect(screen.getByText("管理账号", { exact: false })).toBeInTheDocument();
     expect(screen.getByText("发表碎语")).toBeInTheDocument();
     expect(screen.getByText("我的消息")).toBeInTheDocument();
-    expect(screen.getByText("管理后台")).toBeInTheDocument();
+    expect(screen.queryByText("管理后台")).not.toBeInTheDocument();
     expect(screen.getByText("退出登录")).toBeInTheDocument();
+  });
+
+  it("管理员展开下拉时显示管理后台入口", async () => {
+    const user = userEvent.setup();
+    mockUseSession.mockReturnValue({
+      userId: 1,
+      profile: makeProfile({ roles: ["ROLE_ADMIN"] }),
+    });
+    render(<NavbarUserMenu />);
+    await user.click(screen.getByRole("button", { name: /账号菜单/ }));
+    expect(screen.getByText("管理后台")).toBeInTheDocument();
   });
 
   it("下拉菜单内部按钮不继承 Button 默认 ghost 布局和悬浮背景", async () => {
@@ -184,6 +195,10 @@ describe("NavbarUserMenu", () => {
 
   it("点击「管理后台」在新标签打开管理后台并关闭下拉", async () => {
     const user = userEvent.setup();
+    mockUseSession.mockReturnValue({
+      userId: 1,
+      profile: makeProfile({ roles: ["ROLE_ADMIN"] }),
+    });
     render(<NavbarUserMenu />);
     await user.click(screen.getByRole("button", { name: /账号菜单/ }));
     await user.click(screen.getByText("管理后台"));
