@@ -20,7 +20,7 @@ vi.mock("next/image", () => ({
 const base: FriendLinkItemResp = {
   id: 1,
   name: "YEVPT Blog",
-  description: "我喜欢要么极度悲伤要么淡淡温暖。",
+  description: "浮墨几许，落在此刻。。",
   site: "https://www.yevpt.com",
   seq: 0,
   status: 1,
@@ -32,7 +32,7 @@ describe("FriendLinkCard", () => {
   it("渲染名称和简介", () => {
     render(<FriendLinkCard link={base} />);
     expect(screen.getByText("YEVPT Blog")).toBeTruthy();
-    expect(screen.getByText("我喜欢要么极度悲伤要么淡淡温暖。")).toBeTruthy();
+    expect(screen.getByText("浮墨几许，落在此刻。。")).toBeTruthy();
   });
 
   it("status=1 渲染为可点击链接，href 为 site", () => {
@@ -56,7 +56,7 @@ describe("FriendLinkCard", () => {
 
   it("无 description 时不渲染简介行", () => {
     render(<FriendLinkCard link={{ ...base, description: undefined }} />);
-    expect(screen.queryByText("我喜欢要么极度悲伤要么淡淡温暖。")).toBeNull();
+    expect(screen.queryByText("浮墨几许，落在此刻。。")).toBeNull();
   });
 
   it("无 avatar_url 时渲染首字母占位", () => {
