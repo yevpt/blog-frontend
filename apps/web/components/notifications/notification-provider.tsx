@@ -12,11 +12,12 @@ import { SvgIcon } from "@repo/icons";
 import { cn } from "@repo/ui";
 import { useSession } from "@/app/providers/session-provider";
 import { apiJson } from "@/lib/client-fetch";
-import { connectReconnectingEventSource } from "@/lib/reconnecting-event-source";
 import { useNotificationStore } from "@/store/use-notification-store";
 import { getNotificationHref } from "./notification-target";
 
 const LATEST_UNREAD_PATH = "/api/notifications?unread_only=true&page=1&page_size=5";
+const POLL_INTERVAL_MS = 8000;
+const MAX_POLL_RETRY_DELAY_MS = 60_000;
 const TOAST_TIMEOUT_MS = 6000;
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
@@ -27,20 +28,44 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const reset = useNotificationStore((state) => state.reset);
   const [popups, setPopups] = useState<NotificationItemResp[]>([]);
   const knownUnreadIdsRef = useRef<Set<number>>(new Set());
+  const lastUnreadCountRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (userId == null) {
       knownUnreadIdsRef.current = new Set();
+      lastUnreadCountRef.current = null;
       setPopups([]);
       reset();
       return;
     }
 
     let cancelled = false;
+    let pollTimer: number | undefined;
+    let retryDelay = POLL_INTERVAL_MS;
 
-    async function refreshUnreadCount() {
+    function isPageVisible() {
+      return typeof document === "undefined" || document.visibilityState !== "hidden";
+    }
+
+    function clearPollTimer() {
+      if (pollTimer === undefined) return;
+      window.clearTimeout(pollTimer);
+      pollTimer = undefined;
+    }
+
+    function schedulePoll(delay = POLL_INTERVAL_MS) {
+      if (cancelled || !isPageVisible()) return;
+      clearPollTimer();
+      pollTimer = window.setTimeout(() => {
+        pollTimer = undefined;
+        void runPoll();
+      }, delay);
+    }
+
+    async function fetchUnreadCount() {
       const data = await apiJson<NotificationUnreadCountResp>("/api/notifications/unread-count");
       if (!cancelled) setUnreadCount(data.count);
+      return data.count;
     }
 
     async function loadLatestUnread() {
@@ -50,17 +75,30 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     async function seedUnreadSnapshot() {
       try {
-        const [, items] = await Promise.all([refreshUnreadCount(), loadLatestUnread()]);
+        const [count, items] = await Promise.all([fetchUnreadCount(), loadLatestUnread()]);
         if (cancelled) return;
+        lastUnreadCountRef.current = count;
         knownUnreadIdsRef.current = new Set(items.map((item) => item.id));
+        retryDelay = POLL_INTERVAL_MS;
       } catch {
-        // 通知入口不阻塞页面主流程；下次 SSE 或刷新时会再同步。
+        // 通知入口不阻塞页面主流程；下次轮询或刷新时会再同步。
+        retryDelay = Math.min(retryDelay * 2, MAX_POLL_RETRY_DELAY_MS);
       }
     }
 
-    async function handleNotificationSignal() {
+    async function syncLatestUnread(forceLatest = false) {
       try {
-        const [, items] = await Promise.all([refreshUnreadCount(), loadLatestUnread()]);
+        const previousCount = lastUnreadCountRef.current;
+        const count = await fetchUnreadCount();
+        if (cancelled) return;
+
+        lastUnreadCountRef.current = count;
+        if (!forceLatest && previousCount !== null && count === previousCount) {
+          retryDelay = POLL_INTERVAL_MS;
+          return;
+        }
+
+        const items = await loadLatestUnread();
         if (cancelled) return;
 
         const known = knownUnreadIdsRef.current;
@@ -71,30 +109,45 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           setPopups((current) => [...freshItems, ...current].slice(0, 3));
         }
         bumpListSync();
+        retryDelay = POLL_INTERVAL_MS;
       } catch {
-        // SSE 只是变化信号，失败时保持当前徽标，避免打扰用户。
+        // 轮询失败时保持当前徽标，退避后重试，避免打扰用户。
+        retryDelay = Math.min(retryDelay * 2, MAX_POLL_RETRY_DELAY_MS);
       }
     }
 
-    knownUnreadIdsRef.current = new Set();
-    void seedUnreadSnapshot();
+    async function runPoll(forceLatest = false) {
+      if (!isPageVisible()) return;
+      await syncLatestUnread(forceLatest);
+      schedulePoll(retryDelay);
+    }
 
-    const disconnect = connectReconnectingEventSource({
-      url: "/api/notifications/stream",
-      eventTypes: ["notification"],
-      handlers: {
-        onOpen: () => {
-          void seedUnreadSnapshot();
-        },
-        onMessage: () => {
-          void handleNotificationSignal();
-        },
-      },
-    });
+    function handleVisibilityChange() {
+      if (!isPageVisible()) {
+        clearPollTimer();
+        return;
+      }
+      retryDelay = POLL_INTERVAL_MS;
+      void runPoll(true);
+    }
+
+    function handleOnline() {
+      retryDelay = POLL_INTERVAL_MS;
+      void runPoll(true);
+    }
+
+    knownUnreadIdsRef.current = new Set();
+    lastUnreadCountRef.current = null;
+    void seedUnreadSnapshot().finally(() => schedulePoll(POLL_INTERVAL_MS));
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("online", handleOnline);
 
     return () => {
       cancelled = true;
-      disconnect();
+      clearPollTimer();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("online", handleOnline);
     };
   }, [bumpListSync, reset, setUnreadCount, userId]);
 

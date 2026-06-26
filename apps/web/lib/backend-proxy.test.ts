@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { proxyGet, proxyPost, proxyDelete, proxySseGet } from "./backend-proxy";
+import { proxyGet, proxyPost, proxyDelete } from "./backend-proxy";
 
 vi.stubEnv("API_BASE_URL", "http://mock-backend");
 
@@ -108,33 +108,6 @@ describe("backend-proxy parseBackendJson", () => {
     const body = await res.json();
     expect(res.status).toBe(502);
     expect(body.error).toBe("Backend unavailable");
-  });
-
-  it("proxySseGet 流式响应不带 Connection header（HTTP/2 禁止，否则报 ERR_HTTP2_PROTOCOL_ERROR）", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(
-      new Response("data: hi\n\n", {
-        status: 200,
-        headers: { "Content-Type": "text/event-stream" },
-      }),
-    );
-    const req = makeReqWithCookie(
-      "http://localhost/api/notifications/stream",
-      "GET",
-      "access_token=test-token",
-    );
-    const res = await proxySseGet(req, "/notifications/stream");
-
-    expect(res.status).toBe(200);
-    expect(res.headers.has("connection")).toBe(false);
-    expect(res.headers.get("content-type")).toBe("text/event-stream");
-    expect(res.headers.get("x-accel-buffering")).toBe("no");
-  });
-
-  it("proxySseGet 无 token 时返回 401", async () => {
-    const req = new NextRequest("http://localhost/api/notifications/stream", { method: "GET" });
-    const res = await proxySseGet(req, "/notifications/stream");
-    expect(res.status).toBe(401);
-    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("proxyPost 无 token 且 requireAuth 时返回 401", async () => {

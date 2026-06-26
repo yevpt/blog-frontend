@@ -1,6 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { act, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import type { NotificationItemResp } from "@repo/api";
 import { NotificationProvider } from "./notification-provider";
 import { useNotificationStore } from "@/store/use-notification-store";
@@ -15,36 +14,6 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/app/providers/session-provider", () => ({
   useSession: () => mockUseSession(),
 }));
-
-class MockEventSource {
-  static instances: MockEventSource[] = [];
-  listeners = new Map<string, Array<(event: MessageEvent) => void>>();
-  close = vi.fn();
-
-  constructor(public readonly url: string) {
-    MockEventSource.instances.push(this);
-  }
-
-  addEventListener(type: string, listener: (event: MessageEvent) => void) {
-    const current = this.listeners.get(type) ?? [];
-    current.push(listener);
-    this.listeners.set(type, current);
-  }
-
-  removeEventListener(type: string, listener: (event: MessageEvent) => void) {
-    const current = this.listeners.get(type) ?? [];
-    this.listeners.set(
-      type,
-      current.filter((item) => item !== listener),
-    );
-  }
-
-  emit(type: string) {
-    for (const listener of this.listeners.get(type) ?? []) {
-      listener(new MessageEvent(type, { data: "comment_created" }));
-    }
-  }
-}
 
 function notification(overrides: Partial<NotificationItemResp>): NotificationItemResp {
   return {
@@ -65,11 +34,18 @@ function notification(overrides: Partial<NotificationItemResp>): NotificationIte
   };
 }
 
+async function flushAsyncWork() {
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+}
+
 describe("NotificationProvider", () => {
   beforeEach(() => {
+    vi.useFakeTimers();
     vi.clearAllMocks();
-    MockEventSource.instances = [];
-    vi.stubGlobal("EventSource", MockEventSource);
+    vi.stubGlobal("EventSource", vi.fn());
     useNotificationStore.getState().reset();
     mockUseSession.mockReturnValue({ userId: 1, profile: null });
     global.fetch = vi
@@ -80,19 +56,57 @@ describe("NotificationProvider", () => {
       );
   });
 
-  it("登录后拉取未读数并建立 SSE 连接", async () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it("登录后立即拉取未读数和最新未读快照且不建立 SSE 连接", async () => {
     render(
       <NotificationProvider>
         <span>child</span>
       </NotificationProvider>,
     );
 
-    await waitFor(() => expect(useNotificationStore.getState().unreadCount).toBe(1));
+    await flushAsyncWork();
+    expect(useNotificationStore.getState().unreadCount).toBe(1);
     expect(global.fetch).toHaveBeenCalledWith("/api/notifications/unread-count", undefined);
-    expect(MockEventSource.instances[0]?.url).toBe("/api/notifications/stream");
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/notifications?unread_only=true&page=1&page_size=5",
+      undefined,
+    );
+    expect(global.EventSource).not.toHaveBeenCalled();
   });
 
-  it("SSE notification 后补拉未读列表，只弹新增未读并可点击跳转", async () => {
+  it("轮询时未读数不变只刷新 count，不补拉列表", async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ count: 1 }), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ list: [notification({ id: 1 })] }), { status: 200 }),
+      )
+      .mockResolvedValueOnce(new Response(JSON.stringify({ count: 1 }), { status: 200 }));
+
+    render(
+      <NotificationProvider>
+        <span>child</span>
+      </NotificationProvider>,
+    );
+
+    await flushAsyncWork();
+    expect(useNotificationStore.getState().unreadCount).toBe(1);
+
+    await act(async () => {
+      vi.advanceTimersByTime(8000);
+    });
+    await flushAsyncWork();
+
+    expect(global.fetch).toHaveBeenCalledTimes(3);
+    expect(global.fetch).toHaveBeenLastCalledWith("/api/notifications/unread-count", undefined);
+    expect(useNotificationStore.getState().listSyncVersion).toBe(0);
+  });
+
+  it("轮询发现未读数变化后补拉最新未读，只弹新增未读并可点击跳转", async () => {
     global.fetch = vi
       .fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({ count: 1 }), { status: 200 }))
@@ -115,15 +129,17 @@ describe("NotificationProvider", () => {
       </NotificationProvider>,
     );
 
-    await waitFor(() => expect(MockEventSource.instances).toHaveLength(1));
+    await flushAsyncWork();
+    expect(useNotificationStore.getState().unreadCount).toBe(1);
     await act(async () => {
-      MockEventSource.instances[0]?.emit("notification");
+      vi.advanceTimersByTime(8000);
     });
+    await flushAsyncWork();
 
-    await waitFor(() => expect(useNotificationStore.getState().listSyncVersion).toBe(1));
+    expect(useNotificationStore.getState().listSyncVersion).toBe(1);
 
-    const toast = await screen.findByRole("button", { name: /新的碎语回复/ });
-    await userEvent.click(toast);
+    const toast = screen.getByRole("button", { name: /新的碎语回复/ });
+    fireEvent.click(toast);
 
     expect(mockPush).toHaveBeenCalledWith("/moments");
   });
@@ -139,6 +155,7 @@ describe("NotificationProvider", () => {
     );
 
     expect(useNotificationStore.getState().unreadCount).toBe(0);
-    expect(MockEventSource.instances).toHaveLength(0);
+    expect(global.EventSource).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });

@@ -3,7 +3,7 @@ import { create } from "zustand";
 interface NotificationStore {
   unreadCount: number;
   hasLoaded: boolean;
-  /** SSE 推送后递增，供消息中心列表静默合并首页 */
+  /** 通知同步后递增，供消息中心列表静默合并首页 */
   listSyncVersion: number;
   setUnreadCount: (count: number) => void;
   bumpListSync: () => void;

@@ -124,45 +124,6 @@ export async function proxyGet(req: NextRequest, path: string): Promise<NextResp
   }
 }
 
-/** SSE GET 代理：保持流式响应，携带 access token 和 Cookie */
-export async function proxySseGet(req: NextRequest, path: string): Promise<Response> {
-  let t = token(req);
-  let tokens: AuthTokens | null = null;
-  if (!t) {
-    tokens = await refreshFromRequest(req);
-    t = tokens?.accessToken;
-  }
-  if (!t) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const qs = req.nextUrl.searchParams.toString();
-  try {
-    const res = await fetch(`${apiBaseUrl()}${path}${qs ? `?${qs}` : ""}`, {
-      method: "GET",
-      headers: {
-        Accept: "text/event-stream",
-        ...authHeader(t),
-        ...cookieHeader(req, tokens),
-      },
-    });
-    if (!res.ok) return await parseBackendJson(res);
-
-    const response = new NextResponse(res.body, {
-      status: res.status,
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache, no-transform",
-        // 不设 Connection：HTTP/2 禁止连接级 header（RFC 9113 §8.2.2），
-        // 否则生产 HTTP/2 下浏览器报 ERR_HTTP2_PROTOCOL_ERROR 中断流
-        "X-Accel-Buffering": "no",
-      },
-    });
-    if (tokens) setAuthCookies(response, tokens);
-    return response;
-  } catch {
-    return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
-  }
-}
-
 /** POST 代理：转发 JSON body，携带 access token 和 Cookie（requireAuth=true 时无 token 直接 401） */
 export async function proxyPost(
   req: NextRequest,
