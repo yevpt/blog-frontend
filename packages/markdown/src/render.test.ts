@@ -97,6 +97,25 @@ describe("markdownToHtml", () => {
     const html = markdownToHtmlSync("Token😂）。\r\n\r\n\r\n\r\n之前都是爬的景区");
     expect(html.match(/<p>/g)).toHaveLength(3);
   });
+
+  it("默认不处理外部链接（文章/碎语正文场景）", () => {
+    const html = markdownToHtmlSync("[官网](https://example.com)");
+    expect(html).toContain('href="https://example.com"');
+    expect(html).not.toContain("nofollow");
+    expect(html).not.toContain("target=");
+  });
+
+  it("treatLinksAsUgc 给外部 http(s) 链接加 nofollow ugc + 新窗口打开（留言板/评论场景）", () => {
+    const html = markdownToHtmlSync("[官网](https://example.com)", { treatLinksAsUgc: true });
+    expect(html).toContain('rel="nofollow ugc noopener noreferrer"');
+    expect(html).toContain('target="_blank"');
+  });
+
+  it("treatLinksAsUgc 不影响站内锚点等非 http(s) 链接", () => {
+    const html = markdownToHtmlSync("## 标题\n\n[跳转](#标题)", { treatLinksAsUgc: true });
+    expect(html).toContain('href="#');
+    expect(html).not.toContain("nofollow");
+  });
 });
 
 describe("extractTocFromHtml", () => {

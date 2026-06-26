@@ -20,6 +20,12 @@ export interface TocItem {
 export interface MarkdownRenderOptions {
   /** 摘录场景：仅移除无效/相对路径图片，保留合法 http(s) 与站内绝对路径。 */
   stripInvalidImages?: boolean;
+  /**
+   * UGC 场景（留言板留言、评论/回复）：外部 http(s) 链接加
+   * rel="nofollow ugc noopener noreferrer" 并新窗口打开。
+   * 与链接是否失效无关——避免本站权重外泄给不可控的第三方链接，且不影响文章/碎语正文。
+   */
+  treatLinksAsUgc?: boolean;
 }
 
 /**
@@ -259,6 +265,20 @@ function rehypeStripInvalidImages() {
   };
 }
 
+const UGC_LINK_REL = "nofollow ugc noopener noreferrer";
+
+/** 给外部 http(s) 链接加 nofollow ugc + 新窗口打开；站内锚点/相对路径不处理。 */
+function rehypeUgcLinks() {
+  return (tree: Root) => {
+    visit(tree, "element", (node: Element) => {
+      if (node.tagName !== "a") return;
+      const href = node.properties?.href;
+      if (typeof href !== "string" || !/^https?:\/\//i.test(href)) return;
+      node.properties = { ...node.properties, rel: UGC_LINK_REL, target: "_blank" };
+    });
+  };
+}
+
 /**
  * 构建统一的 unified 管线。
  * 顺序：remark-parse → remark-rehype → rehype-raw → rehype-slug
@@ -276,6 +296,10 @@ function buildPipeline(options: MarkdownRenderOptions = {}) {
 
   if (options.stripInvalidImages) {
     processor.use(rehypeStripInvalidImages);
+  }
+
+  if (options.treatLinksAsUgc) {
+    processor.use(rehypeUgcLinks);
   }
 
   return processor.use(rehypeStringify);
