@@ -10,6 +10,7 @@ describe("admin 模块注册表", () => {
       "/tags",
       "/music",
       "/links",
+      "/analytics",
     ]);
   });
 
@@ -25,6 +26,7 @@ describe("admin 模块注册表", () => {
       "/tags",
       "/music",
       "/links",
+      "/analytics",
     ]);
   });
 

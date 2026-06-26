@@ -91,7 +91,7 @@ export function DashboardPage() {
     <div className="grid gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="text-xl font-medium">你好，{displayName}</div>
+          <h1 className="text-xl font-medium">你好，{displayName}</h1>
           <div className="text-sm text-text-muted">这是你站点今天的表现</div>
         </div>
         <span className="inline-flex items-center gap-2 text-sm text-text-secondary">

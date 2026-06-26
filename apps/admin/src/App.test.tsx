@@ -10,6 +10,25 @@ vi.mock("./lib/api", () => ({
     auth: { refresh: vi.fn() },
     adminAuth: { login: vi.fn() },
     users: { getMe: vi.fn() },
+    analytics: {
+      getOverview: vi.fn().mockResolvedValue({
+        today_pv: 0,
+        today_uv: 0,
+        online: 0,
+        total_pv: 0,
+        total_uv: 0,
+        registered: { today_pv: 0, today_uv: 0 },
+        anonymous: { today_pv: 0, today_uv: 0 },
+      }),
+      getTrend: vi.fn().mockResolvedValue([]),
+      getDimensions: vi.fn().mockResolvedValue([]),
+      getPages: vi.fn().mockResolvedValue([]),
+      getOverviewSummary: vi.fn().mockResolvedValue({
+        content: { articles: 0, categories: 0, tags: 0, music: 0, friend_links: 0 },
+        interactions: { new_comments: 0, new_guestbook: 0, new_moments: 0 },
+        users: { total: 0, today_new: 0, today_active: 0 },
+      }),
+    },
   },
 }));
 
