@@ -1,7 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
-import { flushSync } from "react-dom";
+import { useLayoutEffect, useEffect, useRef, useState } from "react";
 import { SvgIcon } from "@repo/icons";
 import { cn } from "@repo/ui";
 import type { ArticleMusicSyncInput } from "@/lib/article-music";
@@ -115,31 +114,44 @@ function isTextTruncated(el: HTMLElement): boolean {
   return el.scrollWidth > el.clientWidth;
 }
 
+const trackNameClass = "min-w-0 truncate text-foreground/80 dark:text-foreground/90";
+const trackArtistClass = "shrink-0 text-foreground/80 dark:text-foreground/90";
+
 function MusicTrackText({ name, artist }: { name: string; artist?: string }) {
   const rowRef = useRef<HTMLDivElement>(null);
-  const songNameRef = useRef<HTMLSpanElement>(null);
+  const titleRef = useRef<HTMLDivElement>(null);
+  const nameOnlyMeasureRef = useRef<HTMLSpanElement>(null);
+  const withArtistNameMeasureRef = useRef<HTMLSpanElement>(null);
+  const nameOnlyRowRef = useRef<HTMLDivElement>(null);
+  const withArtistRowRef = useRef<HTMLDivElement>(null);
   const [showArtist, setShowArtist] = useState(false);
 
   useLayoutEffect(() => {
     const row = rowRef.current;
-    const songEl = songNameRef.current;
+    const title = titleRef.current;
+    const nameOnly = nameOnlyMeasureRef.current;
+    const withArtistName = withArtistNameMeasureRef.current;
+    const nameOnlyRow = nameOnlyRowRef.current;
+    const withArtistRow = withArtistRowRef.current;
 
     const evaluate = () => {
-      if (!artist || !songEl) {
+      if (!artist || !title || !nameOnly || !withArtistName || !nameOnlyRow || !withArtistRow) {
         setShowArtist(false);
         return;
       }
 
-      // 先仅渲染歌名：歌名自身已被截断则不再展示歌手
-      flushSync(() => setShowArtist(false));
-      if (isTextTruncated(songEl)) {
+      const width = `${title.clientWidth}px`;
+      nameOnlyRow.style.width = width;
+      withArtistRow.style.width = width;
+
+      // 离屏复刻可见 flex 布局：歌名单独占满时已截断则不再展示歌手
+      if (isTextTruncated(nameOnly)) {
         setShowArtist(false);
         return;
       }
 
-      // 歌名完整时尝试加入歌手，若导致歌名截断则仍隐藏歌手
-      flushSync(() => setShowArtist(true));
-      setShowArtist(!isTextTruncated(songEl));
+      // 加入歌手后若导致歌名截断则仍隐藏歌手
+      setShowArtist(!isTextTruncated(withArtistName));
     };
 
     evaluate();
@@ -162,21 +174,40 @@ function MusicTrackText({ name, artist }: { name: string; artist?: string }) {
         ·
       </span>
       <div
+        ref={titleRef}
         data-testid="article-music-track-title"
-        className="flex min-w-0 flex-1 items-center overflow-hidden"
+        className="relative flex min-w-0 flex-1 items-center overflow-hidden"
       >
-        <span
-          ref={songNameRef}
-          data-testid="article-music-track-name"
-          className="min-w-0 truncate text-foreground/80 dark:text-foreground/90"
+        {/* 离屏测量：与可见区相同的 flex + truncate，避免在 effect 内 flushSync */}
+        <div
+          className="pointer-events-none absolute left-0 top-0 h-0 w-full overflow-hidden opacity-0"
+          aria-hidden
         >
+          <div ref={nameOnlyRowRef} className="flex min-w-0 items-center overflow-hidden">
+            <span
+              ref={nameOnlyMeasureRef}
+              data-testid="article-music-track-name-measure-only"
+              className={trackNameClass}
+            >
+              {name}
+            </span>
+          </div>
+          <div ref={withArtistRowRef} className="flex min-w-0 items-center overflow-hidden">
+            <span
+              ref={withArtistNameMeasureRef}
+              data-testid="article-music-track-name-measure-with-artist"
+              className={trackNameClass}
+            >
+              {name}
+            </span>
+            <span className={trackArtistClass}>· {artist}</span>
+          </div>
+        </div>
+        <span data-testid="article-music-track-name" className={trackNameClass}>
           {name}
         </span>
         {artist && showArtist ? (
-          <span
-            data-testid="article-music-track-artist"
-            className="shrink-0 text-foreground/80 dark:text-foreground/90"
-          >
+          <span data-testid="article-music-track-artist" className={trackArtistClass}>
             · {artist}
           </span>
         ) : null}
@@ -208,8 +239,27 @@ export function ArticleMusicBar({ preview }: ArticleMusicBarProps = {}) {
   const toggle = useArticleMusic((state) => state.toggle);
   const seek = useArticleMusic((state) => state.seek);
   const retry = useArticleMusic((state) => state.retry);
+  const setMusicBarInView = useArticleMusic((state) => state.setMusicBarInView);
+  const barRef = useRef<HTMLElement>(null);
 
   const displayTrack = track ?? (preview ? previewToTrack(preview) : null);
+
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setMusicBarInView(entry.isIntersecting),
+      { threshold: 0 },
+    );
+    observer.observe(el);
+
+    return () => {
+      observer.disconnect();
+      setMusicBarInView(true);
+    };
+  }, [displayTrack?.url, setMusicBarInView]);
+
   if (!displayTrack) return null;
 
   const isPlaying = playbackState === "playing";
@@ -230,6 +280,7 @@ export function ArticleMusicBar({ preview }: ArticleMusicBarProps = {}) {
   if (isError) {
     return (
       <section
+        ref={barRef}
         data-testid="article-music-bar"
         aria-label="文章配乐"
         className={cn(
@@ -260,6 +311,7 @@ export function ArticleMusicBar({ preview }: ArticleMusicBarProps = {}) {
 
   return (
     <section
+      ref={barRef}
       data-testid="article-music-bar"
       aria-label="文章配乐"
       className={articleMusicShellClass}

@@ -46,12 +46,39 @@ describe("ArticleMusicControl", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("float 变体渲染进度环按钮", () => {
+  it("float 变体未播放时不显示进度环", () => {
     useArticleMusic.getState().init({ url: "https://example.com/a.mp3", name: "雨夜" });
 
     render(<ArticleMusicControl variant="float" />);
 
-    expect(screen.getByRole("button", { name: /播放 雨夜/ })).toHaveClass("h-10", "w-10");
+    expect(screen.queryByTestId("music-progress-ring")).not.toBeInTheDocument();
+    expect(screen.getByTestId("icon-music")).toBeInTheDocument();
+  });
+
+  it("float 变体播放过后显示进度环", () => {
+    useArticleMusic.setState({
+      track: { url: "https://example.com/a.mp3", name: "雨夜" },
+      playbackState: "paused",
+      progress: 0.3,
+      hasPlayedOnce: true,
+      audioEl: null,
+    });
+
+    render(<ArticleMusicControl variant="float" />);
+
+    expect(screen.getByTestId("music-progress-ring")).toBeInTheDocument();
+  });
+
+  it("float 变体渲染毛玻璃按钮", () => {
+    useArticleMusic.getState().init({ url: "https://example.com/a.mp3", name: "雨夜" });
+
+    render(<ArticleMusicControl variant="float" />);
+
+    expect(screen.getByRole("button", { name: /播放 雨夜/ })).toHaveClass(
+      "size-10",
+      "backdrop-blur-xl",
+      "hover:scale-[1.04]",
+    );
     expect(screen.getByTestId("icon-music")).toBeInTheDocument();
   });
 
@@ -63,11 +90,12 @@ describe("ArticleMusicControl", () => {
     expect(screen.getByRole("button", { name: /播放 雨夜/ })).toHaveClass("h-8", "w-8");
   });
 
-  it("播放中显示暂停图标", () => {
+  it("播放中显示暂停图标与进度环", () => {
     useArticleMusic.setState({
       track: { url: "https://example.com/a.mp3", name: "雨夜" },
       playbackState: "playing",
       progress: 0.3,
+      hasPlayedOnce: true,
       audioEl: null,
     });
 
@@ -75,6 +103,7 @@ describe("ArticleMusicControl", () => {
 
     expect(screen.getByRole("button", { name: /暂停 雨夜/ })).toBeInTheDocument();
     expect(screen.getByTestId("icon-pause")).toBeInTheDocument();
+    expect(screen.getByTestId("music-progress-ring")).toBeInTheDocument();
   });
 
   it("点击调用 toggle", async () => {

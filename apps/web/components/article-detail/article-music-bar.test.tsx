@@ -25,6 +25,18 @@ class ResizeObserverMock {
 
 let resizeObserver: ResizeObserverMock | undefined;
 
+let ioCallback:
+  | ((entries: IntersectionObserverEntry[], observer: IntersectionObserver) => void)
+  | null = null;
+const ioObserve = vi.fn();
+const ioDisconnect = vi.fn();
+
+function fireIntersection(isIntersecting: boolean) {
+  act(() => {
+    ioCallback?.([{ isIntersecting } as IntersectionObserverEntry], {} as IntersectionObserver);
+  });
+}
+
 beforeAll(() => {
   vi.stubGlobal(
     "ResizeObserver",
@@ -38,8 +50,22 @@ beforeAll(() => {
 describe("ArticleMusicBar", () => {
   beforeEach(() => {
     resizeObserver = undefined;
+    ioCallback = null;
     useArticleMusic.getState().clear();
     vi.clearAllMocks();
+
+    class MockIntersectionObserver {
+      constructor(
+        cb: (entries: IntersectionObserverEntry[], observer: IntersectionObserver) => void,
+      ) {
+        ioCallback = cb;
+      }
+      observe = ioObserve;
+      disconnect = ioDisconnect;
+      unobserve = vi.fn();
+      takeRecords = vi.fn(() => []);
+    }
+    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
   });
 
   it("无曲目且无 preview 时不渲染", () => {
@@ -152,9 +178,9 @@ describe("ArticleMusicBar", () => {
     });
 
     render(<ArticleMusicBar />);
-    const songEl = screen.getByTestId("article-music-track-name");
-    vi.spyOn(songEl, "scrollWidth", "get").mockReturnValue(200);
-    vi.spyOn(songEl, "clientWidth", "get").mockReturnValue(100);
+    const nameOnlyMeasure = screen.getByTestId("article-music-track-name-measure-only");
+    vi.spyOn(nameOnlyMeasure, "scrollWidth", "get").mockReturnValue(200);
+    vi.spyOn(nameOnlyMeasure, "clientWidth", "get").mockReturnValue(100);
 
     act(() => {
       resizeObserver?.trigger();
@@ -172,9 +198,12 @@ describe("ArticleMusicBar", () => {
     });
 
     render(<ArticleMusicBar />);
-    const songEl = screen.getByTestId("article-music-track-name");
-    vi.spyOn(songEl, "scrollWidth", "get").mockReturnValueOnce(80).mockReturnValueOnce(150);
-    vi.spyOn(songEl, "clientWidth", "get").mockReturnValue(100);
+    const nameOnlyMeasure = screen.getByTestId("article-music-track-name-measure-only");
+    const withArtistMeasure = screen.getByTestId("article-music-track-name-measure-with-artist");
+    vi.spyOn(nameOnlyMeasure, "scrollWidth", "get").mockReturnValue(80);
+    vi.spyOn(nameOnlyMeasure, "clientWidth", "get").mockReturnValue(100);
+    vi.spyOn(withArtistMeasure, "scrollWidth", "get").mockReturnValue(150);
+    vi.spyOn(withArtistMeasure, "clientWidth", "get").mockReturnValue(100);
 
     act(() => {
       resizeObserver?.trigger();
@@ -217,5 +246,20 @@ describe("ArticleMusicBar", () => {
     expect(screen.getByText("随文配乐暂时不可用")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "重试播放配乐" }));
     expect(retry).toHaveBeenCalledOnce();
+  });
+
+  it("配乐条进出视口时同步 isMusicBarInView", () => {
+    useArticleMusic.getState().init({ url: "https://example.com/a.mp3", name: "雨夜" });
+
+    render(<ArticleMusicBar />);
+
+    expect(ioObserve).toHaveBeenCalled();
+    expect(useArticleMusic.getState().isMusicBarInView).toBe(true);
+
+    fireIntersection(false);
+    expect(useArticleMusic.getState().isMusicBarInView).toBe(false);
+
+    fireIntersection(true);
+    expect(useArticleMusic.getState().isMusicBarInView).toBe(true);
   });
 });
