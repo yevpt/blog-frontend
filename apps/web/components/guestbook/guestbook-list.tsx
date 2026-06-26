@@ -3,38 +3,19 @@
 import type { CommentReplyResp, GuestbookItemResp } from "@repo/api";
 import { Card, Pagination } from "@repo/ui";
 import type { RefObject } from "react";
+import { CommentItemSkeleton, type ReplyTarget } from "@/components/comments";
 import { GuestbookItem } from "./guestbook-item";
-import type { ReplyTarget } from "@/components/comments";
 
-/** 单条骨架占位 */
-function SkeletonItem() {
-  return (
-    <div className="animate-pulse py-4">
-      <div className="mb-2 flex gap-2.5">
-        {/* 头像 */}
-        <div className="size-[30px] shrink-0 rounded-full bg-border" />
-        <div className="flex-1 space-y-2">
-          {/* 用户名 + 时间 */}
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-20 rounded bg-border" />
-            <div className="h-3 w-14 rounded bg-border" />
-          </div>
-        </div>
-      </div>
-      {/* 正文占满卡片宽度 */}
-      <div className="space-y-1.5">
-        <div className="h-3 w-full rounded bg-border" />
-        <div className="h-3 w-4/5 rounded bg-border" />
-      </div>
-    </div>
-  );
-}
+/** 与 use-guestbook-list 的 PAGE_SIZE 保持一致 */
+const SKELETON_ITEM_COUNT = 20;
 
-function GuestbookSkeleton({ count = 5 }: { count?: number }) {
+function GuestbookSkeleton({ count = SKELETON_ITEM_COUNT }: { count?: number }) {
   return (
     <div aria-label="加载中" className="divide-y divide-border px-[18px]">
       {Array.from({ length: count }).map((_, i) => (
-        <SkeletonItem key={i} />
+        <div key={i} className="pt-4 pb-2">
+          <CommentItemSkeleton />
+        </div>
       ))}
     </div>
   );

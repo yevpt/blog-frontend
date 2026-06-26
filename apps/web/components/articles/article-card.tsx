@@ -31,7 +31,7 @@ export function ArticleCard({
 
   return (
     // 外层 div 作为稳定的 hover 触发区，自身不位移，避免卡片上移后鼠标脱离触发区导致抖动
-    <div className="group border-b border-border last:border-b-0 md:border-b-0">
+    <div className="group">
       <article className="flex h-full flex-col overflow-hidden bg-transparent transition-shadow md:rounded-2xl md:bg-card md:shadow-card md:group-hover:shadow-card-hover">
         {article.cover_img_url && (
           <Link
