@@ -606,40 +606,29 @@ describe("MomentCard", () => {
     expect(s.index).toBe(8); // 第一张被折叠的图片
   });
 
-  // ── 长文本展开/收起：仅首页内嵌条目（embedded）折叠，独立页（standalone）完整展示 ──
+  // ── 长文本：首页内嵌与独立页均完整展示，不渲染展开/收起 ──
   const LONG_CONTENT =
     "这是一条很长的碎语内容，超过了一百二十个字符的限制，需要显示展开按钮。" +
     "这是一条很长的碎语内容，超过了一百二十个字符的限制，需要显示展开按钮。" +
     "这是一条很长的碎语内容，超过了一百二十个字符的限制，需要显示展开按钮。" +
     "这是尾部补充内容用于确保超过阈值。";
 
-  it("embedded 布局长文本默认折叠并显示展开按钮", () => {
-    render(<MomentCard moment={makeMoment({ content: LONG_CONTENT })} layout="embedded" />);
-    // 展开按钮文案直接走 mock 的 t(key)
-    const expandBtn = screen.getByText("moment.expand");
-    expect(expandBtn).toBeTruthy();
-    // 折叠时正文截断，不包含完整内容
-    expect(screen.queryByText(LONG_CONTENT)).toBeNull();
-  });
+  it.each(["embedded", "standalone"] as const)(
+    "layout=%s 时长文本完整展示且不渲染展开/收起按钮",
+    (layout) => {
+      render(
+        <MomentCard
+          moment={makeMoment({ content: LONG_CONTENT })}
+          layout={layout === "standalone" ? undefined : layout}
+        />,
+      );
+      expect(screen.getByText(LONG_CONTENT)).toBeTruthy();
+      expect(screen.queryByText("moment.expand")).toBeNull();
+      expect(screen.queryByText("moment.collapse")).toBeNull();
+    },
+  );
 
-  it("embedded 布局点击展开按钮后显示完整正文并切换为收起按钮", async () => {
-    const user = userEvent.setup();
-    render(<MomentCard moment={makeMoment({ content: LONG_CONTENT })} layout="embedded" />);
-
-    await user.click(screen.getByText("moment.expand"));
-
-    expect(screen.getByText(LONG_CONTENT)).toBeTruthy();
-    expect(screen.getByText("moment.collapse")).toBeTruthy();
-  });
-
-  it("standalone 布局长文本完整展示且不渲染展开/收起按钮", () => {
-    render(<MomentCard moment={makeMoment({ content: LONG_CONTENT })} />);
-    expect(screen.getByText(LONG_CONTENT)).toBeTruthy();
-    expect(screen.queryByText("moment.expand")).toBeNull();
-    expect(screen.queryByText("moment.collapse")).toBeNull();
-  });
-
-  it("standalone 布局短文本同样不渲染展开/收起按钮", () => {
+  it("短文本不渲染展开/收起按钮", () => {
     render(<MomentCard moment={makeMoment({ content: "短碎语" })} />);
     expect(screen.getByText("短碎语")).toBeTruthy();
     expect(screen.queryByText("moment.expand")).toBeNull();

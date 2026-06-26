@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, act, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { readFileSync } from "node:fs";
@@ -212,44 +212,11 @@ describe("MomentsSection", () => {
     expect(screen.getAllByText(SHORT_CONTENT).length).toBeGreaterThan(0);
   });
 
-  it("长内容默认截断，显示展开按钮", () => {
+  it("长内容完整展示，不显示展开按钮", () => {
     render(<MomentsSection initialMoments={mockMoments} />);
-    const expandBtns = screen.getAllByText("展开");
-    expect(expandBtns.length).toBeGreaterThan(0);
-    const truncated = LONG_CONTENT.slice(0, 120) + "...";
-    expect(screen.getByText(truncated)).toBeTruthy();
-    expect(screen.queryByText(LONG_CONTENT)).toBeNull();
-  });
-
-  it("点击展开后显示全部内容", async () => {
-    const user = userEvent.setup();
-    render(<MomentsSection initialMoments={mockMoments} />);
-
-    const expandBtn = screen.getAllByText("展开")[0];
-    await act(async () => {
-      await user.click(expandBtn);
-    });
-
     expect(screen.getByText(LONG_CONTENT)).toBeTruthy();
-    expect(screen.getByText("收起")).toBeTruthy();
-  });
-
-  it("点击收起后重新截断", async () => {
-    const user = userEvent.setup();
-    render(<MomentsSection initialMoments={mockMoments} />);
-
-    const expandBtn = screen.getAllByText("展开")[0];
-    await act(async () => {
-      await user.click(expandBtn);
-    });
-
-    const collapseBtn = screen.getByText("收起");
-    await act(async () => {
-      await user.click(collapseBtn);
-    });
-
-    expect(screen.queryByText(LONG_CONTENT)).toBeNull();
-    expect(screen.getAllByText("展开").length).toBeGreaterThan(0);
+    expect(screen.queryByText("展开")).toBeNull();
+    expect(screen.queryByText("收起")).toBeNull();
   });
 
   it("底部渲染发表碎语（主操作）与查看更多（次操作）", () => {

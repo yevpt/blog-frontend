@@ -8,10 +8,7 @@ import { PreviewableMarkdown } from "@/components/common/previewable-markdown";
 
 interface MomentContentProps {
   content: string;
-  /**
-   * 是否允许折叠长文本并显示展开/收起按钮。
-   * 首页内嵌条目需要 true，碎语独立页完整展示传 false。默认 true。
-   */
+  /** 是否折叠长文本并显示展开/收起按钮。MomentCard 统一传 false 完整展示。默认 true。 */
   collapsible?: boolean;
 }
 

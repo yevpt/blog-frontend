@@ -130,7 +130,7 @@ export function MomentCard({
         </div>
       </div>
 
-      <MomentContent content={moment.content} collapsible={layout === "embedded"} />
+      <MomentContent content={moment.content} collapsible={false} />
 
       <MomentImageGrid
         images={images}

@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import { MomentContent } from "./moment-content";
@@ -38,14 +37,13 @@ describe("MomentContent", () => {
     expect(container.textContent).not.toContain("**333 434**");
   });
 
-  it("embedded 长正文展开后仍按 Markdown 渲染", async () => {
-    const user = userEvent.setup();
+  it("长正文完整展示时仍按 Markdown 渲染", () => {
     const longContent = `**333 434** ${"长文本".repeat(70)}`;
 
-    const { container } = render(<MomentContent content={longContent} />);
-    await user.click(screen.getByText("moment.expand"));
+    const { container } = render(<MomentContent collapsible={false} content={longContent} />);
 
     expect(container.querySelector("strong")?.textContent).toBe("333 434");
+    expect(screen.queryByText("moment.expand")).toBeNull();
   });
 
   it("碎语正文（管理员发布）的外部链接不受留言板/评论 UGC 加固影响", () => {

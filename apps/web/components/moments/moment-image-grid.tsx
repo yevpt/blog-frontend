@@ -51,7 +51,7 @@ export function MomentImageGrid({ images, onOpen, priority = false }: MomentImag
         type="button"
         aria-label={`查看图片 ${img.name}`}
         onClick={() => onOpen(0)}
-        className="relative mt-2.5 flex max-w-full cursor-zoom-in overflow-hidden rounded-[6px]"
+        className="relative mt-3 flex max-w-full cursor-zoom-in overflow-hidden rounded-[6px]"
       >
         {/* width/height 设 0 + sizes：next/image 的「未知尺寸」用法，按原始比例自适应 */}
         {isGifImage(img) ? (
@@ -84,7 +84,7 @@ export function MomentImageGrid({ images, onOpen, priority = false }: MomentImag
   return (
     <div
       className={cn(
-        "mt-2.5 grid gap-1",
+        "mt-3 grid gap-1",
         columns === 2 ? "max-w-[300px] grid-cols-2" : "max-w-[360px] grid-cols-3",
       )}
     >
