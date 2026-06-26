@@ -18,6 +18,7 @@ export interface UseCommentSectionStateOptions {
   onCommentAdded?: () => void;
   onScrollToListTop?: () => void;
   onScrollToComment?: (commentId: number) => void;
+  onScrollToEditor?: () => void;
 }
 
 export function useCommentSectionState({
@@ -26,6 +27,7 @@ export function useCommentSectionState({
   onCommentAdded,
   onScrollToListTop,
   onScrollToComment,
+  onScrollToEditor,
 }: UseCommentSectionStateOptions) {
   const { userId } = useSession();
   const openLoginModal = useLoginModal((state) => state.open);
@@ -63,8 +65,9 @@ export function useCommentSectionState({
       }
       setReplyTarget(target);
       setContent("");
+      onScrollToEditor?.();
     },
-    [openLoginModal, userId],
+    [onScrollToEditor, openLoginModal, userId],
   );
 
   const handleCancelReply = useCallback(() => {

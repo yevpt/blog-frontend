@@ -74,7 +74,7 @@ describe("PillCommentInput（已登录）", () => {
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 
-  it("回复模式下显示正在回复 @用户名 和取消按钮", () => {
+  it("回复模式下显示回复 @用户名 和取消按钮", () => {
     render(
       <PillCommentInput
         value=""
@@ -85,9 +85,9 @@ describe("PillCommentInput（已登录）", () => {
       />,
     );
 
-    expect(screen.getByText("正在回复")).toBeTruthy();
+    expect(screen.getByText("回复")).toBeTruthy();
     expect(screen.getByText("@Alice")).toBeTruthy();
-    expect(screen.getByText("取消")).toBeTruthy();
+    expect(screen.getByLabelText("取消回复")).toBeTruthy();
   });
 
   it("回复模式下 placeholder 变为「写下你的回复...」", () => {

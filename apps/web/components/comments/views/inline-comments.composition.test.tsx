@@ -38,7 +38,9 @@ vi.mock("@/store/use-login-modal", () => ({
 }));
 
 vi.mock("../inputs/rich-comment-input", () => ({
-  RichCommentInput: () => <div data-testid="rich-comment-input" />,
+  RichCommentInput: ({ header }: { header?: React.ReactNode }) => (
+    <div data-testid="rich-comment-input">{header}</div>
+  ),
 }));
 
 vi.mock("../parts/comment-list", () => ({
@@ -73,17 +75,17 @@ describe("InlineComments 组合渲染", () => {
     hookState.value = makeHookState();
     render(<InlineComments targetType="article" targetId={1} />);
 
-    expect(screen.queryByText("正在回复")).toBeNull();
+    expect(screen.queryByText("回复")).toBeNull();
     expect(screen.getByTestId("rich-comment-input")).toBeTruthy();
   });
 
-  it("replyTarget 存在时渲染 ReplyBanner 并展示 @用户名", () => {
+  it("replyTarget 存在时在编辑器 header 展示回复指示条", () => {
     hookState.value = makeHookState({
       replyTarget: { commentId: 1, toUsername: "bob" },
     });
     render(<InlineComments targetType="article" targetId={1} />);
 
-    expect(screen.getByText("正在回复")).toBeTruthy();
+    expect(screen.getByText("回复")).toBeTruthy();
     expect(screen.getByText("@bob")).toBeTruthy();
   });
 });

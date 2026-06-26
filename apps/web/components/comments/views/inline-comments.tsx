@@ -1,6 +1,8 @@
 "use client";
 
+import { useCallback, useRef, useState } from "react";
 import { useLoginModal } from "@/store/use-login-modal";
+import { runAfterSmoothScroll, scrollIntoViewBelowFixedHeader } from "@/lib/scroll-into-view";
 import { useCommentSectionState } from "../hooks/use-comment-section-state";
 import { CommentList } from "../parts/comment-list";
 import { RichCommentInput } from "../inputs/rich-comment-input";
@@ -16,6 +18,17 @@ interface InlineCommentsProps {
 
 export function InlineComments({ targetType, targetId, onCommentAdded }: InlineCommentsProps) {
   const openLoginModal = useLoginModal((state) => state.open);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [focusNonce, setFocusNonce] = useState<number | null>(null);
+
+  const scrollToEditor = useCallback(() => {
+    requestAnimationFrame(() => {
+      const el = editorRef.current;
+      if (!el) return;
+      scrollIntoViewBelowFixedHeader(el);
+      runAfterSmoothScroll(() => setFocusNonce((n) => (n ?? 0) + 1));
+    });
+  }, []);
 
   const {
     userId,
@@ -35,23 +48,36 @@ export function InlineComments({ targetType, targetId, onCommentAdded }: InlineC
     handleCommentDelete,
     handleReplyDelete,
     handleChange,
-  } = useCommentSectionState({ targetType, targetId, onCommentAdded });
+  } = useCommentSectionState({
+    targetType,
+    targetId,
+    onCommentAdded,
+    onScrollToEditor: scrollToEditor,
+  });
+
+  const placeholder = replyTarget ? `回复 @${replyTarget.toUsername}…` : "写下你的评论...";
+
+  const replyHeader = replyTarget ? (
+    <ReplyBanner toUsername={replyTarget.toUsername} onCancel={handleCancelReply} />
+  ) : undefined;
 
   return (
     <div className="flex flex-col gap-6">
-      <RichCommentInput
-        value={content}
-        onChange={handleChange}
-        onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
-        isLoggedIn={!!userId}
-        onLoginRequired={openLoginModal}
-        placeholder={replyTarget ? "写下你的回复..." : "写下你的评论..."}
-        maxLength={2000}
-      />
-      {replyTarget && (
-        <ReplyBanner toUsername={replyTarget.toUsername} onCancel={handleCancelReply} />
-      )}
+      <div ref={editorRef}>
+        <RichCommentInput
+          value={content}
+          onChange={handleChange}
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+          isLoggedIn={!!userId}
+          onLoginRequired={openLoginModal}
+          placeholder={placeholder}
+          header={replyHeader}
+          focusTrigger={focusNonce}
+          maxLength={2000}
+          className="focus-within:border-foreground/15 transition-colors duration-200"
+        />
+      </div>
       <div>
         <CommentList
           comments={comments}

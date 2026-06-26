@@ -114,8 +114,13 @@ describe("useCommentSectionState", () => {
 
   it("reply action opens login modal when logged out", () => {
     mockSessionUserId = null;
+    const onScrollToEditor = vi.fn();
     const { result } = renderHook(() =>
-      useCommentSectionState({ targetType: "article", targetId: 1 }),
+      useCommentSectionState({
+        targetType: "article",
+        targetId: 1,
+        onScrollToEditor,
+      }),
     );
 
     const target: ReplyTarget = { commentId: 1, toUsername: "Alice" };
@@ -125,6 +130,26 @@ describe("useCommentSectionState", () => {
 
     expect(mockOpenLoginModal).toHaveBeenCalledOnce();
     expect(result.current.replyTarget).toBeNull();
+    expect(onScrollToEditor).not.toHaveBeenCalled();
+  });
+
+  it("reply action sets target and scrolls to editor when logged in", () => {
+    const onScrollToEditor = vi.fn();
+    const { result } = renderHook(() =>
+      useCommentSectionState({
+        targetType: "article",
+        targetId: 1,
+        onScrollToEditor,
+      }),
+    );
+
+    const target: ReplyTarget = { commentId: 1, toUsername: "Alice" };
+    act(() => {
+      result.current.handleReply(target);
+    });
+
+    expect(result.current.replyTarget).toEqual(target);
+    expect(onScrollToEditor).toHaveBeenCalledOnce();
   });
 
   it("comment submit calls addComment, clears content, and calls onCommentAdded", async () => {

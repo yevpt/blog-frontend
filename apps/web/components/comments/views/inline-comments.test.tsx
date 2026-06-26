@@ -2,6 +2,7 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { CommentItemResp, CommentPageResp } from "@repo/api";
 import { InlineComments } from "./inline-comments";
 
@@ -83,9 +84,23 @@ vi.mock("../parts/comment-replies", () => ({
   CommentReplies: () => null,
 }));
 vi.mock("../parts/comment-item", () => ({
-  CommentItem: ({ comment }: { comment: CommentItemResp }) => (
+  CommentItem: ({
+    comment,
+    onReply,
+  }: {
+    comment: CommentItemResp;
+    onReply?: (target: { commentId: number; toUsername: string }) => void;
+  }) => (
     <div data-testid="comment-item" data-comment-id={comment.id}>
       {comment.content}
+      {onReply ? (
+        <button
+          type="button"
+          onClick={() => onReply({ commentId: comment.id, toUsername: "Alice" })}
+        >
+          回复
+        </button>
+      ) : null}
     </div>
   ),
 }));
@@ -129,5 +144,40 @@ describe("InlineComments", () => {
   it("评论列表渲染", async () => {
     render(<InlineComments targetType="article" targetId={1} />);
     await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
+  });
+
+  it("点击回复时平滑滚动到编辑器（避开顶栏）", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
+    Object.defineProperty(window, "scrollY", { value: 0, configurable: true });
+
+    const navbar = document.createElement("nav");
+    navbar.id = "navbar";
+    vi.spyOn(navbar, "getBoundingClientRect").mockReturnValue({
+      height: 72,
+      top: 0,
+      bottom: 72,
+      left: 0,
+      right: 0,
+      width: 390,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    document.body.appendChild(navbar);
+
+    const user = userEvent.setup();
+    render(<InlineComments targetType="article" targetId={1} />);
+    await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
+
+    await user.click(screen.getAllByRole("button", { name: "回复" })[0]!);
+
+    await waitFor(() => {
+      expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ behavior: "smooth" }));
+    });
+
+    vi.useRealTimers();
+    navbar.remove();
   });
 });
