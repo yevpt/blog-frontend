@@ -4,6 +4,7 @@ import { articlesModule } from "../modules/articles/module";
 import { commentsModule } from "../modules/comments/module";
 import { guestbookModule } from "../modules/guestbook/module";
 import { momentsModule } from "../modules/moments/module";
+import { usersModule } from "../modules/users/module";
 import { categoriesModule } from "../modules/categories/module";
 import { tagsModule } from "../modules/tags/module";
 import { musicModule } from "../modules/music/module";
@@ -17,6 +18,7 @@ export const adminModules: AdminModule[] = [
   commentsModule,
   guestbookModule,
   momentsModule,
+  usersModule,
   categoriesModule,
   tagsModule,
   musicModule,
