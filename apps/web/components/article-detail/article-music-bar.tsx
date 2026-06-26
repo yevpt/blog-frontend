@@ -18,7 +18,7 @@ const VISUALIZER_BARS = [
 
 const articleMusicHeightClass = "h-16 max-sm:h-14";
 
-const articleMusicSpacingClass = "mt-6 mb-2 max-sm:mt-5 max-sm:mb-1.5";
+const articleMusicSpacingClass = "mt-8 mb-2 max-sm:mt-7 max-sm:mb-1.5";
 
 const articleMusicShellClass = cn(
   "group/article-music relative flex items-center gap-3 px-4",
