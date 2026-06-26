@@ -270,4 +270,50 @@ describe("ResponsiveModalShell", () => {
 
     await waitFor(() => expect(panel.style.height).toBe("424px"));
   });
+
+  it("桌面弹窗内容清空时先解除固定高度再测量，避免虚高 scrollHeight 导致收缩卡顿", async () => {
+    if (window.visualViewport) {
+      Object.defineProperty(window.visualViewport, "height", {
+        configurable: true,
+        value: 1000,
+      });
+    }
+
+    render(
+      <ResponsiveModalShell isOpen title="写碎语" onClose={() => {}} footer={<span>底栏</span>}>
+        {() => <div data-testid="body">正文</div>}
+      </ResponsiveModalShell>,
+    );
+
+    const panel = await screen.findByTestId("modal-panel");
+    const body = screen.getByTestId("body");
+    const scrollNode = body.parentElement as HTMLElement;
+    const header = scrollNode.previousElementSibling as HTMLElement;
+    const footer = scrollNode.nextElementSibling as HTMLElement;
+
+    Object.defineProperty(header, "offsetHeight", { configurable: true, value: 48 });
+    Object.defineProperty(footer, "offsetHeight", { configurable: true, value: 56 });
+
+    let compactContent = false;
+    Object.defineProperty(scrollNode, "scrollHeight", {
+      configurable: true,
+      get() {
+        if (panel.style.height === "auto") {
+          return compactContent ? 80 : 320;
+        }
+        return 320;
+      },
+    });
+
+    window.dispatchEvent(new Event("resize"));
+    await waitFor(() => expect(panel.style.height).toBe("424px"));
+
+    compactContent = true;
+    await act(async () => {
+      window.dispatchEvent(new Event("resize"));
+    });
+
+    await waitFor(() => expect(panel.style.height).toBe("184px"));
+    expect(panel.style.transition).toContain("0.22s");
+  });
 });

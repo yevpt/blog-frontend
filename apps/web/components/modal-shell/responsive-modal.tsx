@@ -56,7 +56,8 @@ function useAnimatedClose(onClose: () => void) {
   return { isOpen, requestClose };
 }
 
-const DESKTOP_HEIGHT_SPRING = "0.35s cubic-bezier(0.2, 0.9, 0.24, 1)";
+const DESKTOP_HEIGHT_SPRING_GROW = "0.35s cubic-bezier(0.2, 0.9, 0.24, 1)";
+const DESKTOP_HEIGHT_SPRING_SHRINK = "0.22s cubic-bezier(0.4, 0, 0.2, 1)";
 
 function getDesktopModalMaxHeight() {
   if (typeof window === "undefined") return Number.POSITIVE_INFINITY;
@@ -73,24 +74,29 @@ function prefersReducedMotion() {
 
 /**
  * 测量桌面弹窗自然高度。
+ * 先临时解除固定高度再量，否则 scroll 区在 flex-1 撑满旧高度时 scrollHeight
+ * 会虚高，清空内容后只能逐步回落，收缩过渡会显得极慢。
  * 有 scroll 区时累加 header + scrollHeight + footer，避免 flex-1/min-h-0
  * 滚动容器在 height:auto 下不把内容高度传给面板（碎语弹窗底部图片区被裁切）。
  */
 function measurePanelNaturalHeight(panel: HTMLDivElement, scrollNode?: HTMLDivElement | null) {
+  const previousHeight = panel.style.height;
+  const previousTransition = panel.style.transition;
+  panel.style.transition = "none";
+  panel.style.height = "auto";
+
+  let naturalHeight: number;
   if (scrollNode) {
     const headerEl = scrollNode.previousElementSibling;
     const footerEl = scrollNode.nextElementSibling;
     const headerHeight = headerEl instanceof HTMLElement ? headerEl.offsetHeight : 0;
     const footerHeight = footerEl instanceof HTMLElement ? footerEl.offsetHeight : 0;
     const bodyHeight = scrollNode.scrollHeight;
-    return Math.min(headerHeight + bodyHeight + footerHeight, getDesktopModalMaxHeight());
+    naturalHeight = Math.min(headerHeight + bodyHeight + footerHeight, getDesktopModalMaxHeight());
+  } else {
+    naturalHeight = Math.min(panel.getBoundingClientRect().height, getDesktopModalMaxHeight());
   }
 
-  const previousHeight = panel.style.height;
-  const previousTransition = panel.style.transition;
-  panel.style.transition = "none";
-  panel.style.height = "auto";
-  const naturalHeight = Math.min(panel.getBoundingClientRect().height, getDesktopModalMaxHeight());
   panel.style.height = previousHeight;
   panel.style.transition = previousTransition;
   return naturalHeight;
@@ -101,6 +107,7 @@ function useAnimatedPanelHeight(
   scrollRef?: RefObject<HTMLDivElement | null>,
 ) {
   const [panelHeight, setPanelHeight] = useState<number | undefined>();
+  const previousHeightRef = useRef<number | undefined>(undefined);
 
   const measurePanelHeight = useCallback(() => {
     const panel = panelRef.current;
@@ -122,13 +129,23 @@ function useAnimatedPanelHeight(
     };
   }, [measurePanelHeight]);
 
+  const isShrinking =
+    panelHeight !== undefined &&
+    previousHeightRef.current !== undefined &&
+    panelHeight < previousHeightRef.current;
+  const heightSpring = isShrinking ? DESKTOP_HEIGHT_SPRING_SHRINK : DESKTOP_HEIGHT_SPRING_GROW;
+
   const modalStyle: CSSProperties | undefined =
     panelHeight === undefined
       ? undefined
       : {
           height: panelHeight,
-          transition: !prefersReducedMotion() ? `height ${DESKTOP_HEIGHT_SPRING}` : undefined,
+          transition: !prefersReducedMotion() ? `height ${heightSpring}` : undefined,
         };
+
+  useLayoutEffect(() => {
+    previousHeightRef.current = panelHeight;
+  }, [panelHeight]);
 
   return { modalStyle, measurePanelHeight };
 }
