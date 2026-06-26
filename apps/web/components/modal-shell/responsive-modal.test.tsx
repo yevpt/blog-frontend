@@ -103,6 +103,80 @@ describe("ResponsiveModalShell", () => {
     await waitFor(() => expect(onClose).toHaveBeenCalled());
   });
 
+  it("移动端内容溢出折叠高度时，调用 onContentResize 会自动展开为全屏", async () => {
+    mockMatch(false);
+    let onContentResize: (() => void) | undefined;
+
+    render(
+      <ResponsiveModalShell isOpen title="写碎语" onClose={() => {}}>
+        {(args) => {
+          onContentResize = args.onContentResize;
+          return <p>正文</p>;
+        }}
+      </ResponsiveModalShell>,
+    );
+
+    const panel = await screen.findByTestId("modal-panel");
+    await waitFor(() => expect(panel.style.height).toBe("70dvh"));
+
+    const scrollNode = screen.getByText("正文").parentElement as HTMLElement;
+    Object.defineProperty(scrollNode, "scrollHeight", { value: 800, configurable: true });
+    Object.defineProperty(scrollNode, "clientHeight", { value: 400, configurable: true });
+
+    expect(onContentResize).toBeDefined();
+    act(() => onContentResize?.());
+
+    await waitFor(() => expect(panel.style.height).toBe("100dvh"));
+  });
+
+  it("移动端内容未溢出时保持折叠高度，不主动展开", async () => {
+    mockMatch(false);
+    let onContentResize: (() => void) | undefined;
+
+    render(
+      <ResponsiveModalShell isOpen title="写碎语" onClose={() => {}}>
+        {(args) => {
+          onContentResize = args.onContentResize;
+          return <p>正文</p>;
+        }}
+      </ResponsiveModalShell>,
+    );
+
+    const panel = await screen.findByTestId("modal-panel");
+    await waitFor(() => expect(panel.style.height).toBe("70dvh"));
+
+    const scrollNode = screen.getByText("正文").parentElement as HTMLElement;
+    Object.defineProperty(scrollNode, "scrollHeight", { value: 200, configurable: true });
+    Object.defineProperty(scrollNode, "clientHeight", { value: 400, configurable: true });
+
+    act(() => onContentResize?.());
+
+    expect(panel.style.height).toBe("70dvh");
+  });
+
+  it("移动端不监听 scrollRef 自身尺寸变化（避免与手动收起手势打架）", async () => {
+    mockMatch(false);
+    const observe = vi.fn();
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor() {}
+        observe = observe;
+        disconnect = vi.fn();
+      },
+    );
+
+    render(
+      <ResponsiveModalShell isOpen title="写碎语" onClose={() => {}}>
+        {() => <p>正文</p>}
+      </ResponsiveModalShell>,
+    );
+
+    await screen.findByTestId("modal-panel");
+    expect(observe).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
   it("桌面内容尺寸变化时自动重测面板高度", async () => {
     if (window.visualViewport) {
       Object.defineProperty(window.visualViewport, "height", {

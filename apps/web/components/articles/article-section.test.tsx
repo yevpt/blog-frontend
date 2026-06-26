@@ -10,6 +10,7 @@ const toastMockState = vi.hoisted(() => ({
   addToast: vi.fn(),
 }));
 let mockSessionUserId: number | null = 7;
+let isDesktopLayout = true;
 let intersectionObserverCallback:
   | ((entries: IntersectionObserverEntry[], observer: IntersectionObserver) => void)
   | undefined;
@@ -49,16 +50,20 @@ vi.mock("@repo/ui", () => ({
     onPress,
     variant,
     isDisabled,
+    isLoading,
+    loadingText,
     ...props
   }: {
     children: ReactNode;
     onPress?: () => void;
     variant?: string;
     isDisabled?: boolean;
+    isLoading?: boolean;
+    loadingText?: ReactNode;
     [key: string]: unknown;
   }) => (
-    <button data-variant={variant} onClick={onPress} disabled={isDisabled} {...props}>
-      {children}
+    <button data-variant={variant} onClick={onPress} disabled={isDisabled || isLoading} {...props}>
+      {isLoading ? (loadingText ?? children) : children}
     </button>
   ),
   ToastQueue: class {
@@ -209,10 +214,23 @@ const mockCategories: CategoryTabItem[] = [
   { id: 3, name: "空分类", seq: 2, article_count: 0 },
 ];
 
+function mockLayoutMediaQuery(desktop: boolean) {
+  isDesktopLayout = desktop;
+  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+    get matches() {
+      return query === "(min-width: 1024px)" ? isDesktopLayout : false;
+    },
+    media: query,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  })) as typeof window.matchMedia;
+}
+
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn());
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
   intersectionObserverCallback = undefined;
+  mockLayoutMediaQuery(true);
   vi.stubGlobal(
     "IntersectionObserver",
     class MockIntersectionObserver {
@@ -269,6 +287,75 @@ describe("ArticleSection", () => {
     );
     expect(document.querySelector(".h-px")).toBeTruthy();
     expect(screen.queryByLabelText("分页导航")).toBeNull();
+    expect(screen.queryByRole("button", { name: "加载更多" })).toBeNull();
+  });
+
+  it("移动端滚动加载场景显示加载更多按钮而非哨兵", async () => {
+    mockLayoutMediaQuery(false);
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(
+        makePageResp({ page: 2, pages: 3, total: 25, list: [makeArticle(11, "第二页文章")] }),
+      ),
+    );
+
+    render(
+      <ArticleSection
+        initialPage={makePageResp({ total: 25, pages: 3 })}
+        categories={mockCategories}
+      />,
+    );
+
+    expect(document.querySelector(".h-px")).toBeNull();
+    expect(screen.getByRole("button", { name: "加载更多" })).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: "加载更多" }));
+
+    await waitFor(() => {
+      const call = vi.mocked(fetch).mock.calls[0][0] as string;
+      const url = new URL(call, "http://localhost");
+      expect(url.searchParams.get("page")).toBe("2");
+      expect(screen.getByText("第二页文章")).toBeTruthy();
+    });
+  });
+
+  it("移动端加载更多时按钮保持可见并显示加载文案", async () => {
+    mockLayoutMediaQuery(false);
+    const user = userEvent.setup();
+    let resolveFetch!: (value: Response) => void;
+    vi.mocked(fetch).mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveFetch = resolve;
+        }),
+    );
+
+    render(
+      <ArticleSection
+        initialPage={makePageResp({ total: 25, pages: 3 })}
+        categories={mockCategories}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "加载更多" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "加载中..." })).toBeTruthy();
+      expect(screen.queryByText("正在加载更多...")).toBeNull();
+    });
+
+    await act(async () => {
+      resolveFetch(
+        jsonResponse(
+          makePageResp({ page: 2, pages: 3, total: 25, list: [makeArticle(11, "第二页文章")] }),
+        ),
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("第二页文章")).toBeTruthy();
+      expect(screen.getByRole("button", { name: "加载更多" })).toBeTruthy();
+    });
   });
 
   it("文章数超过 60 时显示分页组件而非滚动哨兵", () => {

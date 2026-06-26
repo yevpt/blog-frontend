@@ -106,6 +106,7 @@ describe("GuestbookList", () => {
   it("isLoading=true 且空列表时显示加载态", () => {
     render(<GuestbookList {...defaultProps} items={[]} isLoading={true} />);
     expect(screen.getByLabelText("加载中")).toBeTruthy();
+    expect(document.querySelectorAll(".animate-pulse")).toHaveLength(20);
   });
 
   it("error 时显示错误信息", () => {

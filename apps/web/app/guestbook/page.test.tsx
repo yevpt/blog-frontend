@@ -52,7 +52,7 @@ describe("GuestbookPageRoute", () => {
     const { default: GuestbookPageRoute } = await import("./page");
     const element = await GuestbookPageRoute({ searchParams: Promise.resolve({ page: "2" }) });
     render(element);
-    expect(mockList).toHaveBeenCalledWith({ page: 2, page_size: 10 });
+    expect(mockList).toHaveBeenCalledWith({ page: 2, page_size: 20 });
     expect(screen.getByText("15 条留言")).toBeTruthy();
   });
 });

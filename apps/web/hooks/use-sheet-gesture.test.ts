@@ -224,6 +224,21 @@ describe("useSheetGesture", () => {
     cleanup(sheet, scroll);
   });
 
+  it("外部调用 expand() 可直接切换为 expanded（无需手势）", () => {
+    const { sheet, scroll } = makeEls();
+    const { result, unmount } = renderHook(() =>
+      useSheetGesture({ current: sheet } as never, { current: scroll } as never, { onDismiss }),
+    );
+
+    expect(result.current.isExpanded).toBe(false);
+    act(() => {
+      result.current.expand();
+    });
+    expect(result.current.isExpanded).toBe(true);
+    unmount();
+    cleanup(sheet, scroll);
+  });
+
   it("卸载时不报错（事件监听器已清理）", () => {
     const { sheet, scroll } = makeEls();
     const { unmount } = renderHook(() =>
