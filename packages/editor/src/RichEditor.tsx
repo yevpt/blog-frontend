@@ -227,29 +227,58 @@ export function RichEditor({
   // Tiptap 就绪前显示骨架屏，高度与真实编辑器完全一致，防止布局跳动
   if (!editor) {
     const bone = "animate-pulse rounded-md bg-foreground/[0.08]";
-    return (
-      <div className={shell} aria-hidden>
-        {isPlain && toolbarOnTop ? (
-          <div className={clsx("flex shrink-0 gap-1 py-2.5", PLAIN_TOOLBAR_INSET_X)}>
-            <div className={clsx(bone, "size-[30px]")} />
-            <div className={clsx(bone, "size-[30px]")} />
-            <div className={clsx(bone, "size-[30px]")} />
-          </div>
-        ) : null}
-        <div className={isPlain ? "min-h-[320px] flex-1" : "min-h-[88px]"}>
-          {!isPlain || !toolbarOnTop ? (
-            <div className={clsx(bone, "mt-[3px] h-[14px] w-2/5")} />
-          ) : null}
+    const Bone = ({ className }: { className?: string }) => (
+      <div className={clsx(bone, className)} aria-hidden />
+    );
+    const showTopToolbar = isPlain && toolbarOnTop;
+    const toolbarButtonClass = showTopToolbar ? "size-[30px] rounded-md" : "h-7 w-7 shrink-0";
+    const toolbarSkeleton = (
+      <div
+        className={clsx(
+          "flex items-center gap-1.5",
+          showTopToolbar && clsx("shrink-0 py-2.5", PLAIN_TOOLBAR_INSET_X),
+          !showTopToolbar && "mt-1.5",
+        )}
+      >
+        <div
+          className={clsx(
+            "flex min-w-0 flex-1 items-center",
+            showTopToolbar
+              ? "gap-1"
+              : "gap-0.5 overflow-x-auto scrollbar-none sm:overflow-x-visible",
+          )}
+        >
+          <Bone className={toolbarButtonClass} />
+          <Bone className={toolbarButtonClass} />
+          <Bone className={toolbarButtonClass} />
+          {enableBlockquote ? <Bone className={toolbarButtonClass} /> : null}
+          <div className="mx-1 h-4 w-px shrink-0 bg-border" aria-hidden />
+          {onInsertLink ? <Bone className={toolbarButtonClass} /> : null}
+          {onInsertImage ? <Bone className={toolbarButtonClass} /> : null}
+          <Bone className={toolbarButtonClass} />
         </div>
-        {!isPlain || !toolbarOnTop ? (
-          <div className="mt-1.5 flex items-center gap-1.5">
-            <div className="flex flex-1 items-center gap-0.5">
-              <div className={clsx(bone, "h-7 w-7")} />
-              <div className={clsx(bone, "h-7 w-7")} />
-              <div className={clsx(bone, "h-7 w-7")} />
+        {onSubmit ? <Bone className="h-8 w-14 shrink-0 rounded-full" /> : null}
+      </div>
+    );
+
+    return (
+      <div className={shell} aria-hidden data-rich-editor-skeleton>
+        {showTopToolbar ? toolbarSkeleton : null}
+        <div data-rich-editor-area className={editorAreaClassName}>
+          {header ? (
+            <div className="flex h-6 items-center">
+              <Bone className="h-3 w-28" />
             </div>
-          </div>
-        ) : null}
+          ) : null}
+          {isPlain ? (
+            <div className={clsx("w-full pb-10 pt-2", PLAIN_SURFACE_INSET_X)}>
+              <Bone className="h-[14px] w-2/5" />
+            </div>
+          ) : (
+            <Bone className="h-[14px] w-2/5" />
+          )}
+        </div>
+        {!showTopToolbar ? toolbarSkeleton : null}
       </div>
     );
   }
