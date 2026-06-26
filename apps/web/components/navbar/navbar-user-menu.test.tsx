@@ -4,6 +4,11 @@ import userEvent from "@testing-library/user-event";
 import type { UserDetailResp } from "@repo/api";
 import { NavbarUserMenu } from "./navbar-user-menu";
 
+const mockOpenAdminPanel = vi.fn();
+vi.mock("./admin-panel", () => ({
+  openAdminPanel: () => mockOpenAdminPanel(),
+}));
+
 const mockPush = vi.fn();
 const mockRefresh = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -50,6 +55,7 @@ describe("NavbarUserMenu", () => {
     mockPush.mockClear();
     mockRefresh.mockClear();
     mockOpenMomentModal.mockClear();
+    mockOpenAdminPanel.mockClear();
     global.fetch = vi.fn().mockResolvedValue({ json: async () => ({}) });
     mobileMediaListener = null;
     Object.defineProperty(window, "matchMedia", {
@@ -101,6 +107,7 @@ describe("NavbarUserMenu", () => {
     expect(screen.getByText("管理账号", { exact: false })).toBeInTheDocument();
     expect(screen.getByText("发表碎语")).toBeInTheDocument();
     expect(screen.getByText("我的消息")).toBeInTheDocument();
+    expect(screen.getByText("管理后台")).toBeInTheDocument();
     expect(screen.getByText("退出登录")).toBeInTheDocument();
   });
 
@@ -173,6 +180,15 @@ describe("NavbarUserMenu", () => {
     await user.click(screen.getByText("我的消息"));
     expect(mockPush).toHaveBeenCalledWith("/notifications");
     expect(screen.queryByText("我的消息")).not.toBeInTheDocument();
+  });
+
+  it("点击「管理后台」在新标签打开管理后台并关闭下拉", async () => {
+    const user = userEvent.setup();
+    render(<NavbarUserMenu />);
+    await user.click(screen.getByRole("button", { name: /账号菜单/ }));
+    await user.click(screen.getByText("管理后台"));
+    expect(mockOpenAdminPanel).toHaveBeenCalledOnce();
+    expect(screen.queryByText("管理后台")).not.toBeInTheDocument();
   });
 
   it("点击「退出登录」调用 /api/auth/logout 并 refresh 页面", async () => {

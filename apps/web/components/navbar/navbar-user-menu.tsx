@@ -8,6 +8,7 @@ import { Button, cn } from "@repo/ui";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { useMomentModal } from "@/store/use-moment-modal";
 import { useSession } from "@/app/providers/session-provider";
+import { openAdminPanel } from "./admin-panel";
 
 interface NavbarUserMenuProps {
   isGlass?: boolean;
@@ -140,6 +141,24 @@ export function NavbarUserMenu({ isGlass = false, unreadCount = 0 }: NavbarUserM
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}
+        </Button>
+        <Button
+          type="button"
+          variant={null}
+          size={null}
+          onPress={() => {
+            setOpen(false);
+            openAdminPanel();
+          }}
+          className="flex h-auto w-full cursor-pointer items-center justify-start gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-violet-500/[0.06] dark:hover:bg-violet-400/[0.08]"
+        >
+          <SvgIcon
+            name="monitor"
+            size={14}
+            className="shrink-0 text-violet-600/80 dark:text-violet-400/80"
+          />
+          <span className="flex-1">管理后台</span>
+          <SvgIcon name="arrow-up-right" size={12} className="shrink-0 text-muted-foreground/50" />
         </Button>
       </div>
 

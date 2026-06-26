@@ -10,6 +10,7 @@ import { useLoginModal } from "@/store/use-login-modal";
 import { useSession } from "@/app/providers/session-provider";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { NAV_ITEMS } from "./nav-items";
+import { openAdminPanel } from "./admin-panel";
 
 interface NavbarMobileMenuProps {
   isOpen: boolean;
@@ -181,6 +182,32 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
                     </span>
                   )}
                 </Link>
+              )}
+              {userId != null && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    openAdminPanel();
+                    onClose();
+                  }}
+                  aria-label="管理后台"
+                  className={cn(
+                    listRowClass,
+                    "border-0 bg-transparent font-inherit outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                  )}
+                >
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-500/[0.10]">
+                    <SvgIcon
+                      name="monitor"
+                      size={14}
+                      className="text-violet-600 dark:text-violet-400"
+                    />
+                  </div>
+                  <span className="flex-1 text-left text-[13px] font-medium text-foreground">
+                    管理后台
+                  </span>
+                  <SvgIcon name="arrow-up-right" size={13} className="shrink-0 text-(--fg3)" />
+                </button>
               )}
               {themeRow}
             </div>

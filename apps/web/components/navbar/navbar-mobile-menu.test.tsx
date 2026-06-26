@@ -5,6 +5,11 @@ import { NavbarMobileMenu } from "./navbar-mobile-menu";
 import { useSession } from "@/app/providers/session-provider";
 import type { AnchorHTMLAttributes } from "react";
 
+const mockOpenAdminPanel = vi.fn();
+vi.mock("./admin-panel", () => ({
+  openAdminPanel: () => mockOpenAdminPanel(),
+}));
+
 let mockResolvedTheme: "light" | "dark" = "light";
 
 vi.mock("../../app/providers/theme-provider", () => ({
@@ -59,6 +64,7 @@ describe("NavbarMobileMenu", () => {
     vi.mocked(useSession).mockReturnValue({ userId: null, profile: null, patchProfile: () => {} });
     mockRefresh.mockClear();
     mockOnClose.mockClear();
+    mockOpenAdminPanel.mockClear();
     global.fetch = vi.fn().mockResolvedValue({ json: async () => ({}) });
   });
 
@@ -168,6 +174,27 @@ describe("NavbarMobileMenu", () => {
     vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null, patchProfile: () => {} });
     render(<NavbarMobileMenu isOpen onClose={mockOnClose} unreadCount={100} />);
     expect(screen.getByText("99+")).toBeInTheDocument();
+  });
+
+  it("已登录：显示管理后台入口", () => {
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null, patchProfile: () => {} });
+    render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
+    expect(screen.getByRole("button", { name: "管理后台" })).toBeInTheDocument();
+    expect(screen.getByTestId("icon-monitor")).toBeInTheDocument();
+  });
+
+  it("已登录：点击管理后台在新标签打开并关闭菜单", async () => {
+    const user = userEvent.setup();
+    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null, patchProfile: () => {} });
+    render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
+    await user.click(screen.getByRole("button", { name: "管理后台" }));
+    expect(mockOpenAdminPanel).toHaveBeenCalledOnce();
+    expect(mockOnClose).toHaveBeenCalledOnce();
+  });
+
+  it("未登录：不显示管理后台入口", () => {
+    render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
+    expect(screen.queryByRole("button", { name: "管理后台" })).not.toBeInTheDocument();
   });
 
   it("已登录：主题行含 amber 图标（icon-sun 或 icon-moon）", () => {
