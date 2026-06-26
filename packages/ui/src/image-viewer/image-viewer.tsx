@@ -17,9 +17,10 @@ export function ImageViewer({ images, index, isOpen, onClose, onIndexChange }: I
   // 下载文件名取自 URL 末段路径（剥离查询串），无法解析时回退空串
   const downloadName = current?.src.split(/[?#]/, 1)[0]?.split("/").pop() ?? "";
 
-  // 切换图片或开关时重置变换
+  // 切换图片或打开时重置变换；关闭时不重置，否则旋转/缩放会在退场动画播放期间
+  // 瞬间跳回原状，和 Modal 的淡出/缩小动效叠在一起显得很突兀
   useEffect(() => {
-    reset();
+    if (isOpen) reset();
   }, [index, isOpen, reset]);
 
   const goPrev = () => onIndexChange?.((index - 1 + images.length) % images.length);
@@ -58,7 +59,8 @@ export function ImageViewer({ images, index, isOpen, onClose, onIndexChange }: I
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
       <div
         data-testid="image-viewer-stage"
-        className="relative flex h-dvh w-screen touch-none items-center justify-center overflow-hidden"
+        // 底部预留安全间距，防止竖向（非 16:9）照片被悬浮工具栏遮挡
+        className="relative flex h-dvh w-screen touch-none items-center justify-center overflow-hidden pb-24"
         onWheel={handlers.onWheel}
         onPointerDown={handlers.onPointerDown}
         onPointerMove={handlers.onPointerMove}
