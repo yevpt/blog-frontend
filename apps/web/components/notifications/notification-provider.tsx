@@ -1,24 +1,34 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type {
   NotificationItemResp,
   NotificationPageResp,
   NotificationUnreadCountResp,
 } from "@repo/api";
-import { htmlExcerptToPlainText } from "@repo/markdown";
 import { SvgIcon } from "@repo/icons";
-import { cn } from "@repo/ui";
+import { Button, ToastQueue, ToastRegion } from "@repo/ui";
+import { UserAvatar } from "@/components/common/user-avatar";
 import { useSession } from "@/app/providers/session-provider";
 import { apiJson } from "@/lib/client-fetch";
 import { useNotificationStore } from "@/store/use-notification-store";
 import { getNotificationHref } from "./notification-target";
+import {
+  getNotificationActionText,
+  getNotificationActorName,
+  getNotificationQuote,
+} from "./notification-type";
 
 const LATEST_UNREAD_PATH = "/api/notifications?unread_only=true&page=1&page_size=5";
 const POLL_INTERVAL_MS = 8000;
 const MAX_POLL_RETRY_DELAY_MS = 60_000;
 const TOAST_TIMEOUT_MS = 6000;
+
+/** 实时消息通知弹窗用的 toast 队列；导出供测试在 beforeEach 里 clear()。 */
+export const notificationToastQueue = new ToastQueue<NotificationItemResp>({
+  maxVisibleToasts: 3,
+});
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -26,7 +36,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
   const bumpListSync = useNotificationStore((state) => state.bumpListSync);
   const reset = useNotificationStore((state) => state.reset);
-  const [popups, setPopups] = useState<NotificationItemResp[]>([]);
   const knownUnreadIdsRef = useRef<Set<number>>(new Set());
   const lastUnreadCountRef = useRef<number | null>(null);
 
@@ -34,7 +43,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     if (userId == null) {
       knownUnreadIdsRef.current = new Set();
       lastUnreadCountRef.current = null;
-      setPopups([]);
+      notificationToastQueue.clear();
       reset();
       return;
     }
@@ -105,9 +114,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         const freshItems = items.filter((item) => !known.has(item.id));
         knownUnreadIdsRef.current = new Set([...items.map((item) => item.id), ...known]);
 
-        if (freshItems.length > 0) {
-          setPopups((current) => [...freshItems, ...current].slice(0, 3));
-        }
+        freshItems.forEach((item) =>
+          notificationToastQueue.add(item, { timeout: TOAST_TIMEOUT_MS }),
+        );
         bumpListSync();
         retryDelay = POLL_INTERVAL_MS;
       } catch {
@@ -151,55 +160,62 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     };
   }, [bumpListSync, reset, setUnreadCount, userId]);
 
-  useEffect(() => {
-    if (popups.length === 0) return;
-    const timer = window.setTimeout(() => {
-      setPopups((current) => current.slice(0, -1));
-    }, TOAST_TIMEOUT_MS);
-    return () => window.clearTimeout(timer);
-  }, [popups]);
-
-  function openNotification(item: NotificationItemResp) {
-    setPopups((current) => current.filter((candidate) => candidate.id !== item.id));
-    router.push(getNotificationHref(item));
-  }
-
   return (
     <>
       {children}
-      <div className="fixed right-4 top-20 z-[9999] flex w-[340px] max-w-[calc(100vw-2rem)] flex-col gap-2">
-        {popups.map((item) => {
-          const excerpt = item.content_excerpt ? htmlExcerptToPlainText(item.content_excerpt) : "";
+      <ToastRegion
+        queue={notificationToastQueue}
+        position="top-right"
+        className="top-20"
+        itemClassName="w-[340px] max-w-[calc(100vw-2rem)] items-start"
+        renderToast={(toast, { close }) => {
+          const item = toast.content;
+          const actorName = getNotificationActorName(item);
+          const actionText = getNotificationActionText(item);
+          const quote = getNotificationQuote(item);
           return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => openNotification(item)}
-              className={cn(
-                "rounded-xl border border-border bg-card px-4 py-3 text-left shadow-xl transition-transform hover:-translate-y-0.5 hover:bg-background",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              )}
-              aria-label={`${item.title || "新消息"} ${excerpt}`}
-            >
-              <span className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <SvgIcon name="bell" size={15} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] font-bold text-foreground">
-                    {item.title || "你有一条新消息"}
-                  </span>
-                  {excerpt ? (
-                    <span className="mt-1 line-clamp-2 block text-[12px] leading-relaxed text-muted-foreground">
-                      {excerpt}
-                    </span>
+            <>
+              <UserAvatar
+                src={item.actor_user?.avatar_url}
+                name={actorName}
+                size="md"
+                className="mt-0.5"
+              />
+              <button
+                type="button"
+                className="min-w-0 flex-1 cursor-pointer text-left"
+                onClick={() => {
+                  close();
+                  router.push(getNotificationHref(item));
+                }}
+              >
+                <span role="alert" aria-atomic="true" className="block">
+                  <p className="truncate text-[13px] text-foreground">
+                    <span className="font-semibold">{actorName}</span>{" "}
+                    <span className="text-muted-foreground">{actionText}</span>
+                  </p>
+                  {quote?.text ? (
+                    <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
+                      {quote.title ? `${quote.title} ` : ""}
+                      {quote.text}
+                    </p>
                   ) : null}
                 </span>
-              </span>
-            </button>
+              </button>
+              <Button
+                type="button"
+                variant={null}
+                size={null}
+                aria-label="关闭通知"
+                onPress={close}
+                className="flex size-7 shrink-0 items-center justify-center self-start rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <SvgIcon name="close" size={12} />
+              </Button>
+            </>
           );
-        })}
-      </div>
+        }}
+      />
     </>
   );
 }

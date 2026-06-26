@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import type { NotificationItemResp } from "@repo/api";
-import { NotificationProvider } from "./notification-provider";
+import { NotificationProvider, notificationToastQueue } from "./notification-provider";
 import { useNotificationStore } from "@/store/use-notification-store";
 
 const mockPush = vi.fn();
@@ -47,6 +47,7 @@ describe("NotificationProvider", () => {
     vi.clearAllMocks();
     vi.stubGlobal("EventSource", vi.fn());
     useNotificationStore.getState().reset();
+    notificationToastQueue.clear();
     mockUseSession.mockReturnValue({ userId: 1, profile: null });
     global.fetch = vi
       .fn()
@@ -117,7 +118,14 @@ describe("NotificationProvider", () => {
       .mockResolvedValueOnce(
         new Response(
           JSON.stringify({
-            list: [notification({ id: 2, root_id: 9, title: "新的碎语回复", root_type: "moment" })],
+            list: [
+              notification({
+                id: 2,
+                root_id: 9,
+                root_type: "moment",
+                actor_user: { id: 8, nickname: "寒蝉" },
+              }),
+            ],
           }),
           { status: 200 },
         ),
@@ -138,10 +146,46 @@ describe("NotificationProvider", () => {
 
     expect(useNotificationStore.getState().listSyncVersion).toBe(1);
 
-    const toast = screen.getByRole("button", { name: /新的碎语回复/ });
-    fireEvent.click(toast);
+    const toastButton = screen.getByRole("button", { name: /寒蝉.*评论了你的碎语/ });
+    fireEvent.click(toastButton);
 
     expect(mockPush).toHaveBeenCalledWith("/moments");
+  });
+
+  it("点击弹窗的关闭按钮只消失，不触发跳转", async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ count: 1 }), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ list: [notification({ id: 1 })] }), { status: 200 }),
+      )
+      .mockResolvedValueOnce(new Response(JSON.stringify({ count: 2 }), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            list: [notification({ id: 2, actor_user: { id: 7, nickname: "萨" } })],
+          }),
+          { status: 200 },
+        ),
+      );
+
+    render(
+      <NotificationProvider>
+        <span>child</span>
+      </NotificationProvider>,
+    );
+
+    await flushAsyncWork();
+    await act(async () => {
+      vi.advanceTimersByTime(8000);
+    });
+    await flushAsyncWork();
+
+    const closeButton = screen.getByRole("button", { name: "关闭通知" });
+    fireEvent.click(closeButton);
+
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: /萨/ })).not.toBeInTheDocument();
   });
 
   it("未登录时重置未读数且不建立 SSE", () => {
