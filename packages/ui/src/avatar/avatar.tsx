@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SvgIcon } from "@repo/icons";
 import { cn } from "../lib/utils";
 import { AvatarOnlineIndicator, VerifiedTick } from "./internal";
@@ -61,6 +61,12 @@ export const Avatar = ({
   contentClassName,
 }: AvatarProps) => {
   const [isFailed, setIsFailed] = useState(false);
+
+  // src 变化时重置失败态，避免先失败后换址仍停留在 fallback
+  useEffect(() => {
+    setIsFailed(false);
+  }, [src]);
+
   const canShowImage = src && !isFailed;
 
   const renderMain = () => {

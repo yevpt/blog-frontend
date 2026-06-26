@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
@@ -46,5 +46,17 @@ describe("Avatar", () => {
   it("status=online 时渲染在线指示器（span 元素）", () => {
     const { container } = render(<Avatar status="online" />);
     expect(container.querySelector("span")).toBeTruthy();
+  });
+
+  it("src 变化后重新尝试加载图片", () => {
+    const { rerender } = render(<Avatar src="https://bad.example/a.png" alt="头像" />);
+    fireEvent.error(screen.getByRole("img", { name: "头像" }));
+    expect(screen.queryByRole("img", { name: "头像" })).toBeNull();
+
+    rerender(<Avatar src="https://good.example/b.png" alt="头像" />);
+    expect(screen.getByRole("img", { name: "头像" })).toHaveAttribute(
+      "src",
+      "https://good.example/b.png",
+    );
   });
 });
