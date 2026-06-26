@@ -13,6 +13,7 @@ import { useImageViewer } from "@/store/use-image-viewer";
 import { MomentContent } from "./moment-content";
 import { RelativeTime } from "@/components/common/relative-time";
 import { MomentImageGrid } from "./moment-image-grid";
+import { shouldShowMomentEditedAt } from "./should-show-moment-edited-at";
 
 export type MomentCardLayout = "standalone" | "embedded";
 
@@ -29,14 +30,6 @@ interface MomentCardProps {
   onToggleTop?: (moment: MomentItemResp) => void;
   onDelete?: (moment: MomentItemResp) => Promise<void> | void;
   actionDisabled?: boolean;
-}
-
-/** 碎语是否被编辑过：updated_at 明显晚于 created_at 时视为已编辑 */
-function isMomentEdited(createdAt: string, updatedAt: string): boolean {
-  const created = new Date(createdAt).getTime();
-  const updated = new Date(updatedAt).getTime();
-  if (!Number.isFinite(created) || !Number.isFinite(updated)) return false;
-  return updated - created > 1000;
 }
 
 /**
@@ -90,7 +83,7 @@ export function MomentCard({
   const viewerImages = images.map((img) => ({ src: img.access_url, alt: img.name }));
   const isOwner = userId !== null && userId === (moment.user?.id ?? moment.user_id);
   const topLabel = moment.is_top ? "取消置顶" : "置顶";
-  const edited = isMomentEdited(moment.created_at, moment.updated_at);
+  const edited = shouldShowMomentEditedAt(moment.created_at, moment.updated_at);
 
   const body = (
     <>

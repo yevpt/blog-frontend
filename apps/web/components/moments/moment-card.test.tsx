@@ -297,18 +297,23 @@ describe("MomentCard", () => {
     expect(screen.getByText("2")).toBeTruthy();
   });
 
-  it("updated_at 晚于 created_at 时在操作栏上方显示编辑时间", () => {
+  it("近期编辑且与发布时间差异明显时在操作栏上方显示编辑时间", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-26T12:00:00Z"));
+
     render(
       <MomentCard
         moment={makeMoment({
-          created_at: "2026-05-30T09:00:00Z",
-          updated_at: "2026-05-31T10:00:00Z",
+          created_at: "2021-06-26T12:00:00Z",
+          updated_at: "2026-06-25T12:00:00Z",
         })}
       />,
     );
     expect(screen.getByText(/编辑于/)).toBeTruthy();
     const editedTime = screen.getByText(/编辑于/).querySelector("time");
-    expect(editedTime?.getAttribute("datetime")).toBe("2026-05-31T10:00:00.000Z");
+    expect(editedTime?.getAttribute("datetime")).toBe("2026-06-25T12:00:00.000Z");
+
+    vi.useRealTimers();
   });
 
   it("未编辑时不显示编辑时间", () => {
@@ -321,6 +326,23 @@ describe("MomentCard", () => {
       />,
     );
     expect(screen.queryByText(/编辑于/)).toBeNull();
+  });
+
+  it("编辑与发布相对文案一致时不显示编辑时间", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-26T12:00:00Z"));
+
+    render(
+      <MomentCard
+        moment={makeMoment({
+          created_at: "2021-06-26T12:00:00Z",
+          updated_at: "2021-07-01T12:00:00Z",
+        })}
+      />,
+    );
+    expect(screen.queryByText(/编辑于/)).toBeNull();
+
+    vi.useRealTimers();
   });
 
   it("渲染正确的 data-testid", () => {
