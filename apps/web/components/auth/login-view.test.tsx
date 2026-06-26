@@ -10,9 +10,9 @@ vi.stubGlobal("fetch", mockFetch);
 
 // jsdom 缺 window.matchMedia，OAuthGrid handleOAuthLogin 用它判断移动端 features，
 // 不补会导致 TypeError 被 catch 吞掉、OAuth popup 流程静默失败
-function mockMatchMedia() {
+function mockMatchMedia(mobile = false) {
   window.matchMedia = vi.fn().mockImplementation((q: string) => ({
-    matches: q.includes("max-width: 768px"),
+    matches: mobile && q.includes("max-width: 768px"),
     media: q,
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),

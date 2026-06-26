@@ -25,11 +25,15 @@ function mockMatchMedia(mobile = false) {
   }));
 }
 
+const defaultLocation = window.location;
+
 // 每个测试前重置模块级 providers 缓存，确保 fetch 重新触发
 beforeEach(() => {
   _resetProvidersCache();
   mockFetch.mockClear();
   mockWindowOpen.mockClear();
+  sessionStorage.clear();
+  Object.defineProperty(window, "location", { writable: true, value: defaultLocation });
   mockMatchMedia();
 });
 
@@ -76,9 +80,10 @@ describe("OAuthGrid — OAuth Popup 登录流程", () => {
   it("移动端使用全页跳转而非 popup", async () => {
     const user = userEvent.setup();
     const assignMock = vi.fn();
+    const mockHref = "http://localhost/login";
     Object.defineProperty(window, "location", {
       writable: true,
-      value: { ...window.location, assign: assignMock },
+      value: { ...window.location, href: mockHref, assign: assignMock },
     });
     mockMatchMedia(true);
 
@@ -95,7 +100,7 @@ describe("OAuthGrid — OAuth Popup 登录流程", () => {
       expect(assignMock).toHaveBeenCalledWith("https://graph.qq.com/oauth2.0/authorize"),
     );
     expect(mockWindowOpen).not.toHaveBeenCalled();
-    expect(sessionStorage.getItem("oauth_return_url")).toBe(window.location.href);
+    expect(sessionStorage.getItem("oauth_return_url")).toBe(mockHref);
   });
 
   it("点击已启用的 provider 按钮后调用 authorize 接口并弹出 popup", async () => {
