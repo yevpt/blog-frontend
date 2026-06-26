@@ -1,0 +1,1 @@
+export { guestbookModule } from "./module";

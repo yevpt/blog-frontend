@@ -30,6 +30,20 @@ export interface GuestbookPageResp {
   list: GuestbookItemResp[];
 }
 
+export interface AdminGuestbookListReq {
+  page?: number;
+  page_size?: number;
+  search?: string;
+}
+
+export interface AdminGuestbookPageResp {
+  total: number;
+  pages: number;
+  page: number;
+  page_size: number;
+  list: GuestbookItemResp[];
+}
+
 export interface GuestbookListReq {
   owner_user_id?: number;
   page?: number;

@@ -100,6 +100,8 @@ export type {
   CommentDeleteResp,
 } from "./types/comment";
 export type {
+  AdminGuestbookListReq,
+  AdminGuestbookPageResp,
   GuestbookUserResp,
   GuestbookItemResp,
   GuestbookPageResp,

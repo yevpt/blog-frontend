@@ -74,6 +74,8 @@ import type {
   CommentDeleteResp,
 } from "./types/comment";
 import type {
+  AdminGuestbookListReq,
+  AdminGuestbookPageResp,
   GuestbookCreateReq,
   GuestbookDeleteResp,
   GuestbookItemResp,
@@ -773,6 +775,17 @@ export function createApiClient(config: ApiClientConfig) {
         }),
     },
     guestbook: {
+      /** 后台分页查询全站留言（需管理员） */
+      listAdmin: (req: AdminGuestbookListReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        if (req.search !== undefined && req.search !== "") p.set("search", req.search);
+        const qs = p.toString();
+        return fetchAuthed<AdminGuestbookPageResp>(`/admin/guestbook${qs ? `?${qs}` : ""}`, {
+          method: "GET",
+        });
+      },
       /** 分页查询留言（可选登录） */
       list: (req: GuestbookListReq = {}) => {
         const p = new URLSearchParams();

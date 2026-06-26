@@ -2,6 +2,7 @@ import type { AdminModule, AdminNavItem, AdminRoute } from "./module-types";
 import { dashboardModule } from "../modules/dashboard/module";
 import { articlesModule } from "../modules/articles/module";
 import { commentsModule } from "../modules/comments/module";
+import { guestbookModule } from "../modules/guestbook/module";
 import { categoriesModule } from "../modules/categories/module";
 import { tagsModule } from "../modules/tags/module";
 import { musicModule } from "../modules/music/module";
@@ -13,6 +14,7 @@ export const adminModules: AdminModule[] = [
   dashboardModule,
   articlesModule,
   commentsModule,
+  guestbookModule,
   categoriesModule,
   tagsModule,
   musicModule,

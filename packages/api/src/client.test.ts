@@ -1459,6 +1459,30 @@ describe("createApiClient", () => {
   });
 
   describe("guestbook", () => {
+    it("listAdmin 使用后台留言查询路径并拼接搜索参数", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({
+          code: 0,
+          message: "ok",
+          data: { total: 1, pages: 1, page: 2, page_size: 20, list: [] },
+        }),
+      );
+      const client = createApiClient({
+        baseUrl: "http://api",
+        getAccessToken: () => "token123",
+      });
+
+      await client.guestbook.listAdmin({ page: 2, page_size: 20, search: "你好" });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/admin/guestbook?page=2&page_size=20&search=%E4%BD%A0%E5%A5%BD",
+        expect.objectContaining({
+          method: "GET",
+          headers: expect.objectContaining({ Authorization: "Bearer token123" }),
+        }),
+      );
+    });
+
     it("delete 和 deleteReply 调用留言删除路径", async () => {
       vi.mocked(global.fetch).mockResolvedValue(
         mockResponse({ code: 0, message: "ok", data: { id: 5 } }),
