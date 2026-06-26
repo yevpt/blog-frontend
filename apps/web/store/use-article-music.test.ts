@@ -15,15 +15,18 @@ describe("useArticleMusic", () => {
     });
     expect(useArticleMusic.getState().playbackState).toBe("idle");
     expect(useArticleMusic.getState().progress).toBe(0);
+    expect(useArticleMusic.getState().hasPlayedOnce).toBe(false);
+    expect(useArticleMusic.getState().isMusicBarInView).toBe(true);
   });
 
   it("相同曲目重复 init 不重置", () => {
     useArticleMusic.getState().init({ url: "https://example.com/a.mp3", name: "雨夜" });
-    useArticleMusic.setState({ playbackState: "playing", progress: 0.5 });
+    useArticleMusic.setState({ playbackState: "playing", progress: 0.5, hasPlayedOnce: true });
     useArticleMusic.getState().init({ url: "https://example.com/a.mp3", name: "雨夜" });
 
     expect(useArticleMusic.getState().playbackState).toBe("playing");
     expect(useArticleMusic.getState().progress).toBe(0.5);
+    expect(useArticleMusic.getState().hasPlayedOnce).toBe(true);
   });
 
   it("clear 清空曲目与进度", () => {
@@ -41,6 +44,8 @@ describe("useArticleMusic", () => {
     expect(useArticleMusic.getState().track).toBeNull();
     expect(useArticleMusic.getState().playbackState).toBe("idle");
     expect(useArticleMusic.getState().progress).toBe(0);
+    expect(useArticleMusic.getState().hasPlayedOnce).toBe(false);
+    expect(useArticleMusic.getState().isMusicBarInView).toBe(true);
   });
 
   it("seek 写入 audio.currentTime 并同步进度", () => {
@@ -79,6 +84,7 @@ describe("useArticleMusic", () => {
     expect(audioEl.currentTime).toBe(80);
     expect(play).toHaveBeenCalledOnce();
     expect(useArticleMusic.getState().playbackState).toBe("playing");
+    expect(useArticleMusic.getState().hasPlayedOnce).toBe(true);
   });
 
   it("seek 未 commit 时 paused 不自动续播", async () => {
@@ -136,16 +142,35 @@ describe("useArticleMusic", () => {
     expect(useArticleMusic.getState().playbackState).toBe("playing");
   });
 
-  it("toggle 播放失败时进入 error", async () => {
+  it("toggle 首次播放成功后标记 hasPlayedOnce", async () => {
+    const play = vi.fn().mockResolvedValue(undefined);
+    useArticleMusic.setState({
+      track: { url: "https://example.com/a.mp3", name: "雨夜" },
+      playbackState: "idle",
+      hasPlayedOnce: false,
+      audioEl: { pause: vi.fn(), play, currentTime: 0 } as unknown as HTMLAudioElement,
+    });
+
+    await useArticleMusic.getState().toggle();
+
+    expect(play).toHaveBeenCalledOnce();
+    expect(useArticleMusic.getState().playbackState).toBe("playing");
+    expect(useArticleMusic.getState().hasPlayedOnce).toBe(true);
+  });
+
+  it("toggle 播放失败时不标记 hasPlayedOnce", async () => {
     const play = vi.fn().mockRejectedValue(new Error("blocked"));
     useArticleMusic.setState({
       track: { url: "https://example.com/a.mp3", name: "雨夜" },
       playbackState: "idle",
+      hasPlayedOnce: false,
       audioEl: { pause: vi.fn(), play, currentTime: 0 } as unknown as HTMLAudioElement,
     });
 
     await useArticleMusic.getState().toggle();
 
     expect(useArticleMusic.getState().playbackState).toBe("error");
+    expect(useArticleMusic.getState().hasPlayedOnce).toBe(false);
+    expect(useArticleMusic.getState().isMusicBarInView).toBe(true);
   });
 });

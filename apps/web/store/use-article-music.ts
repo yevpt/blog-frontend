@@ -14,6 +14,10 @@ interface ArticleMusicStore {
   track: ArticleMusicTrack | null;
   playbackState: ArticleMusicPlaybackState;
   progress: number;
+  /** 是否曾成功开始播放（用于控制进度环显隐） */
+  hasPlayedOnce: boolean;
+  /** 配乐条是否在视口内（浮动区音乐钮仅在不可见时显示） */
+  isMusicBarInView: boolean;
   audioEl: HTMLAudioElement | null;
   bindAudio: (el: HTMLAudioElement | null) => void;
   init: (track: ArticleMusicTrack) => void;
@@ -21,6 +25,7 @@ interface ArticleMusicStore {
   patchTrack: (patch: Partial<ArticleMusicTrack>) => void;
   setPlaybackState: (state: ArticleMusicPlaybackState) => void;
   setProgress: (progress: number) => void;
+  setMusicBarInView: (inView: boolean) => void;
   /** commit 为 true 时（点击/拖拽结束/键盘），暂停态会自动续播 */
   seek: (ratio: number, commit?: boolean) => Promise<void>;
   toggle: () => Promise<void>;
@@ -38,6 +43,8 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => ({
   track: null,
   playbackState: "idle",
   progress: 0,
+  hasPlayedOnce: false,
+  isMusicBarInView: true,
   audioEl: null,
 
   bindAudio: (el) => set({ audioEl: el }),
@@ -59,6 +66,8 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => ({
       track,
       playbackState: "idle",
       progress: 0,
+      hasPlayedOnce: false,
+      isMusicBarInView: true,
     });
   },
 
@@ -69,6 +78,8 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => ({
       track: null,
       playbackState: "idle",
       progress: 0,
+      hasPlayedOnce: false,
+      isMusicBarInView: true,
     });
   },
 
@@ -81,6 +92,8 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => ({
   setPlaybackState: (playbackState) => set({ playbackState }),
 
   setProgress: (progress) => set({ progress }),
+
+  setMusicBarInView: (isMusicBarInView) => set({ isMusicBarInView }),
 
   // 拖拽/点击进度条切歌位置：ratio 为 0..1，直接写 audio.currentTime 并同步进度
   seek: async (ratio, commit = false) => {
@@ -98,7 +111,7 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => ({
       set({ playbackState: "loading" });
       try {
         await audioEl.play();
-        set({ playbackState: "playing" });
+        set({ playbackState: "playing", hasPlayedOnce: true });
       } catch {
         set({ playbackState: "error" });
       }
@@ -118,7 +131,7 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => ({
     set({ playbackState: "loading" });
     try {
       await audioEl.play();
-      set({ playbackState: "playing" });
+      set({ playbackState: "playing", hasPlayedOnce: true });
     } catch {
       set({ playbackState: "error" });
     }
@@ -132,7 +145,7 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => ({
     audioEl.load();
     try {
       await audioEl.play();
-      set({ playbackState: "playing" });
+      set({ playbackState: "playing", hasPlayedOnce: true });
     } catch {
       set({ playbackState: "error" });
     }
