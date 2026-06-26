@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { resolveAudioCrossOrigin } from "@/lib/audio-cross-origin";
 import { useArticleMusic } from "@/store/use-article-music";
 
 /** 文章页单例 audio，与 useArticleMusic store 绑定 */
@@ -19,11 +20,15 @@ export function ArticleMusicHost() {
 
   if (!track?.url) return null;
 
+  const crossOrigin = resolveAudioCrossOrigin(track.url);
+
   return (
     // eslint-disable-next-line jsx-a11y/media-has-caption
     <audio
       ref={audioRef}
+      data-testid="article-music-audio"
       src={track.url}
+      crossOrigin={crossOrigin}
       loop
       preload="metadata"
       className="hidden"
