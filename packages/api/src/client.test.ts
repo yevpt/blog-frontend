@@ -1801,4 +1801,24 @@ describe("createApiClient", () => {
     expect(body.get("name")).toBe("VPT Blog");
     expect(body.get("logo")).toBeNull();
   });
+
+  it("analytics.backfill 使用 fetchAuthed 调用 POST /admin/analytics/backfill", async () => {
+    const data = { from: "2026-06-01", to: "2026-06-03", days: 3 };
+    vi.mocked(global.fetch).mockResolvedValue(mockResponse({ code: 0, message: "ok", data }));
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    const result = await client.analytics.backfill({ from: "2026-06-01", to: "2026-06-03" });
+
+    expect(result).toEqual(data);
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/analytics/backfill?from=2026-06-01&to=2026-06-03",
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({ Authorization: "Bearer admin-token" }),
+      }),
+    );
+  });
 });

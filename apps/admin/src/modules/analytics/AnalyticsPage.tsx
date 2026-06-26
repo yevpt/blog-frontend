@@ -1,5 +1,6 @@
 import { Tabs, TabsItem, TabsList, TabsPanel, TabsPanels } from "@repo/ui";
 import { AdminPageHeader } from "../../components/AdminPageHeader";
+import { AnalyticsBackfillTool } from "./components/AnalyticsBackfillTool";
 import { AnalyticsRangeControl } from "./components/AnalyticsRangeControl";
 import { useAnalyticsRange } from "./hooks/use-analytics-range";
 import { TrendTab } from "./tabs/TrendTab";
@@ -19,6 +20,7 @@ export function AnalyticsPage() {
         description="站点流量、受众与来源、页面、友链、实时与路径分析"
         action={<AnalyticsRangeControl range={range} />}
       />
+      <AnalyticsBackfillTool range={range.query} />
       <Tabs defaultSelectedKey="trend">
         <TabsList aria-label="数据统计分类">
           <TabsItem id="trend">趋势</TabsItem>

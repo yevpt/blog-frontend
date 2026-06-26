@@ -171,5 +171,7 @@ export type {
   AnalyticsPathSequence,
   AnalyticsFunnelStep,
   AnalyticsRangeReq,
+  AnalyticsBackfillReq,
+  AnalyticsBackfillResp,
   AdminOverviewSummaryResp,
 } from "./types/analytics";

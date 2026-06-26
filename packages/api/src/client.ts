@@ -128,6 +128,8 @@ import type {
   AnalyticsPathSequence,
   AnalyticsFunnelStep,
   AnalyticsRangeReq,
+  AnalyticsBackfillReq,
+  AnalyticsBackfillResp,
   AdminOverviewSummaryResp,
 } from "./types/analytics";
 
@@ -1022,6 +1024,15 @@ export function createApiClient(config: ApiClientConfig) {
         if (req.to !== undefined) p.set("to", req.to);
         return fetchAuthed<AnalyticsFunnelStep[]>(`/admin/analytics/funnel?${p.toString()}`, {
           method: "GET",
+        });
+      },
+      /** 回填日聚合：按闭区间逐日重算 */
+      backfill: (req: AnalyticsBackfillReq) => {
+        const p = new URLSearchParams();
+        p.set("from", req.from);
+        p.set("to", req.to);
+        return fetchAuthed<AnalyticsBackfillResp>(`/admin/analytics/backfill?${p.toString()}`, {
+          method: "POST",
         });
       },
       /** 后台首页汇总：内容总量、互动待办、用户统计 */

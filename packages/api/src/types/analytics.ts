@@ -95,6 +95,19 @@ export interface AnalyticsRangeReq {
   limit?: number;
 }
 
+/** POST /admin/analytics/backfill 请求参数。 */
+export interface AnalyticsBackfillReq {
+  from: string;
+  to: string;
+}
+
+/** 回填日聚合结果：成功重算的天数与区间。 */
+export interface AnalyticsBackfillResp {
+  from: string;
+  to: string;
+  days: number;
+}
+
 /** 后台首页汇总（非流量块）：内容总量、互动待办、用户统计。 */
 export interface AdminOverviewSummaryResp {
   content: {
