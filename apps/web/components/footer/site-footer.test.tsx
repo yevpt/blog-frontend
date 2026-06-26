@@ -2,18 +2,12 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { SiteFooter } from "./site-footer";
 
-vi.mock("next/image", () => ({
-  default: ({
-    src,
-    alt,
-    width,
-    height,
-  }: {
-    src: string;
-    alt: string;
-    width: number;
-    height: number;
-  }) => <img src={src} alt={alt} width={width} height={height} />,
+vi.mock("@repo/icons", () => ({
+  SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
+}));
+
+vi.mock("./site-uptime", () => ({
+  SiteUptime: () => <p>已运行 0 天 0 小时 0 分钟</p>,
 }));
 
 describe("SiteFooter", () => {
@@ -22,13 +16,14 @@ describe("SiteFooter", () => {
     expect(screen.getByRole("contentinfo")).toBeTruthy();
   });
 
-  it("展示版权与备案信息链接", () => {
+  it("展示版权、Powered by 与备案信息", () => {
     render(<SiteFooter />);
 
-    expect(screen.getByText("© 2026 yevpt.com All Rights Reserved.")).toHaveAttribute(
-      "href",
-      "https://www.yevpt.com",
-    );
+    const nav = screen.getByRole("navigation", { name: "站点信息" });
+    expect(nav.className).toContain("flex-col");
+    expect(nav.className).toContain("md:flex-row");
+
+    expect(screen.getByText("© 2026 yevpt.com")).toHaveAttribute("href", "https://www.yevpt.com");
     expect(screen.getByText("鲁公网安备 37011202000953号").closest("a")).toHaveAttribute(
       "href",
       "http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=37011202000953",
@@ -37,22 +32,33 @@ describe("SiteFooter", () => {
       "href",
       "https://beian.miit.gov.cn/",
     );
+    expect(screen.getByText("Next")).toHaveAttribute("href", "https://nextjs.org");
+    expect(screen.getByText("Gin")).toHaveAttribute("href", "https://gin-gonic.com");
   });
 
-  it("监控链接在新窗口打开", () => {
+  it("Powered by 排在公安备案之前", () => {
     render(<SiteFooter />);
 
-    const monitorLink = screen.getByText("监控");
+    const nav = screen.getByRole("navigation", { name: "站点信息" });
+    const text = nav.textContent ?? "";
 
-    expect(monitorLink).toHaveAttribute("href", "https://vps.yevpt.com");
-    expect(monitorLink).toHaveAttribute("target", "_blank");
-    expect(monitorLink).toHaveAttribute("rel", "noopener noreferrer");
+    expect(text.indexOf("Powered by")).toBeLessThan(text.indexOf("鲁公网安备"));
   });
 
-  it("公安备案链接展示备案图标", () => {
+  it("公安备案使用盾牌图标", () => {
     render(<SiteFooter />);
 
     const beianLink = screen.getByText("鲁公网安备 37011202000953号").closest("a");
-    expect(beianLink?.querySelector("img")).toHaveAttribute("src", "/image/beian110.png");
+    expect(beianLink?.querySelector('[data-testid="icon-shield"]')).toBeTruthy();
+  });
+
+  it("外链在新窗口打开", () => {
+    render(<SiteFooter />);
+
+    for (const label of ["鲁公网安备 37011202000953号", "Next", "Gin"]) {
+      const link = screen.getByText(label);
+      expect(link).toHaveAttribute("target", "_blank");
+      expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    }
   });
 });

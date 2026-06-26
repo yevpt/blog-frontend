@@ -1,82 +1,105 @@
-import Image from "next/image";
+import type { ReactNode } from "react";
+import { SvgIcon } from "@repo/icons";
 import { cn } from "@repo/ui";
+import { SiteUptime } from "./site-uptime";
 
-interface FooterLinkItem {
-  href: string;
-  label: string;
-  openInNewTab?: boolean;
-  showBeianIcon?: boolean;
-}
-
-const LINK_CLASS_NAME = cn(
-  "text-muted-foreground hover:text-foreground transition-colors",
+const FOOTER_LINK_CLASS = cn(
+  "text-muted-foreground/70 hover:text-foreground transition-colors",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
 );
 
-/** 版权与备案信息，每项独占一行 */
-const FOOTER_INFO_LINKS: FooterLinkItem[] = [
-  {
-    href: "https://www.yevpt.com",
-    label: "© 2026 yevpt.com All Rights Reserved.",
-  },
-  {
-    href: "http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=37011202000953",
-    label: "鲁公网安备 37011202000953号",
-    openInNewTab: true,
-    showBeianIcon: true,
-  },
-  {
-    href: "https://beian.miit.gov.cn/",
-    label: "京ICP备2023025236",
-  },
-];
+const EXTERNAL_LINK_PROPS = {
+  target: "_blank",
+  rel: "noopener noreferrer",
+} as const;
 
-/** 外部工具链接，同一行展示 */
-const FOOTER_TOOL_LINKS: FooterLinkItem[] = [
-  { href: "https://vps.yevpt.com", label: "监控", openInNewTab: true },
-];
+function FooterSeparator({ className }: { className?: string }) {
+  return (
+    <span className={cn("text-muted-foreground/25 select-none", className)} aria-hidden>
+      ·
+    </span>
+  );
+}
 
-function FooterLink({ href, label, openInNewTab = false, showBeianIcon = false }: FooterLinkItem) {
+interface FooterAnchorProps {
+  href: string;
+  children: ReactNode;
+  external?: boolean;
+  className?: string;
+}
+
+function FooterAnchor({ href, children, external = false, className }: FooterAnchorProps) {
   return (
     <a
       href={href}
-      className={cn(LINK_CLASS_NAME, showBeianIcon && "inline-flex items-center h-5 leading-5")}
-      {...(openInNewTab ? { target: "_blank", rel: "noopener noreferrer" } : undefined)}
+      className={cn(FOOTER_LINK_CLASS, className)}
+      {...(external ? EXTERNAL_LINK_PROPS : undefined)}
     >
-      {showBeianIcon ? (
-        <>
-          <Image
-            src="/image/beian110.png"
-            alt=""
-            width={20}
-            height={20}
-            className="shrink-0"
-            suppressHydrationWarning
-          />
-          <span className="ml-1.5">{label}</span>
-        </>
-      ) : (
-        label
-      )}
+      {children}
     </a>
   );
 }
 
-function FooterLinkList({ items }: { items: FooterLinkItem[] }) {
-  return items.map((item) => <FooterLink key={item.href} {...item} />);
+function PoweredByStack() {
+  return (
+    <span className="text-muted-foreground/70">
+      Powered by{" "}
+      <FooterAnchor
+        href="https://nextjs.org"
+        external
+        className="underline-offset-2 hover:underline"
+      >
+        Next
+      </FooterAnchor>
+      {" & "}
+      <FooterAnchor
+        href="https://gin-gonic.com"
+        external
+        className="underline-offset-2 hover:underline"
+      >
+        Gin
+      </FooterAnchor>
+    </span>
+  );
+}
+
+function ComplianceLinks() {
+  return (
+    <div className="flex flex-col items-center gap-1 md:flex-row md:flex-wrap md:justify-center md:gap-x-2 md:gap-y-1">
+      <FooterAnchor
+        href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=37011202000953"
+        external
+        className="inline-flex items-center gap-1"
+      >
+        <SvgIcon name="shield" size={13} className="shrink-0 opacity-55" aria-hidden />
+        鲁公网安备 37011202000953号
+      </FooterAnchor>
+      <FooterSeparator className="hidden md:inline" />
+      <FooterAnchor href="https://beian.miit.gov.cn/">京ICP备2023025236</FooterAnchor>
+    </div>
+  );
 }
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12 text-center text-sm">
-        <nav aria-label="站点信息" className="flex flex-col items-center gap-1">
-          <FooterLinkList items={FOOTER_INFO_LINKS} />
+    <footer className="border-t border-border/50 mt-auto">
+      <div className="mx-auto max-w-[1120px] px-5 py-7">
+        <nav
+          aria-label="站点信息"
+          className="flex flex-col items-center gap-2 text-center text-xs tracking-wide md:flex-row md:flex-wrap md:justify-center md:gap-x-2.5 md:gap-y-1"
+        >
+          <FooterAnchor href="https://www.yevpt.com">© 2026 yevpt.com</FooterAnchor>
 
-          <div className="flex items-center justify-center gap-4">
-            <FooterLinkList items={FOOTER_TOOL_LINKS} />
-          </div>
+          <FooterSeparator className="hidden md:inline" />
+
+          <PoweredByStack />
+
+          <FooterSeparator className="hidden md:inline" />
+
+          <ComplianceLinks />
         </nav>
+
+        <SiteUptime className="text-center" />
       </div>
     </footer>
   );
