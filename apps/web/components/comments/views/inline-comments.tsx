@@ -78,7 +78,7 @@ export function InlineComments({ targetType, targetId, onCommentAdded }: InlineC
           className="focus-within:border-foreground/15 transition-colors duration-200"
         />
       </div>
-      <div>
+      <div className="px-3">
         <CommentList
           comments={comments}
           isLoading={isLoading}

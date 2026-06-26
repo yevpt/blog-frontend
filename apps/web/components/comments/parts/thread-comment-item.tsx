@@ -89,11 +89,11 @@ export const ThreadLikeButton = memo(function ThreadLikeButton({
       )}
     >
       <span className="inline-flex transform-gpu animate-[heartbeat_3s_ease-in-out_infinite] will-change-transform">
-        <SvgIcon name="heart-fill" size={24} />
+        <SvgIcon name="heart-fill" size={20} />
       </span>
       <span
         data-testid="like-count"
-        className="block h-3.5 min-w-[1ch] text-center text-[10px] leading-3.5 font-medium tabular-nums"
+        className="block h-3 min-w-[1ch] text-center text-[9px] leading-3 font-medium tabular-nums"
       >
         {likeCount}
       </span>
