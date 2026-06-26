@@ -47,4 +47,15 @@ describe("MomentContent", () => {
 
     expect(container.querySelector("strong")?.textContent).toBe("333 434");
   });
+
+  it("碎语正文（管理员发布）的外部链接不受留言板/评论 UGC 加固影响", () => {
+    const { container } = render(
+      <MomentContent collapsible={false} content="[官网](https://example.com)" />,
+    );
+
+    const link = container.querySelector("a");
+    expect(link?.getAttribute("href")).toBe("https://example.com");
+    expect(link?.getAttribute("rel")).toBeNull();
+    expect(link?.getAttribute("target")).toBeNull();
+  });
 });
