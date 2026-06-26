@@ -297,6 +297,32 @@ describe("MomentCard", () => {
     expect(screen.getByText("2")).toBeTruthy();
   });
 
+  it("updated_at 晚于 created_at 时在操作栏上方显示编辑时间", () => {
+    render(
+      <MomentCard
+        moment={makeMoment({
+          created_at: "2026-05-30T09:00:00Z",
+          updated_at: "2026-05-31T10:00:00Z",
+        })}
+      />,
+    );
+    expect(screen.getByText(/编辑于/)).toBeTruthy();
+    const editedTime = screen.getByText(/编辑于/).querySelector("time");
+    expect(editedTime?.getAttribute("datetime")).toBe("2026-05-31T10:00:00.000Z");
+  });
+
+  it("未编辑时不显示编辑时间", () => {
+    render(
+      <MomentCard
+        moment={makeMoment({
+          created_at: "2026-05-30T09:00:00Z",
+          updated_at: "2026-05-30T09:00:00Z",
+        })}
+      />,
+    );
+    expect(screen.queryByText(/编辑于/)).toBeNull();
+  });
+
   it("渲染正确的 data-testid", () => {
     render(<MomentCard moment={makeMoment()} />);
     expect(screen.getByTestId("moment-card")).toBeTruthy();

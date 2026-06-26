@@ -31,6 +31,14 @@ interface MomentCardProps {
   actionDisabled?: boolean;
 }
 
+/** 碎语是否被编辑过：updated_at 明显晚于 created_at 时视为已编辑 */
+function isMomentEdited(createdAt: string, updatedAt: string): boolean {
+  const created = new Date(createdAt).getTime();
+  const updated = new Date(updatedAt).getTime();
+  if (!Number.isFinite(created) || !Number.isFinite(updated)) return false;
+  return updated - created > 1000;
+}
+
 /**
  * 格式化数字：>= 1000 时显示带 k 后缀的简写，否则直接显示。
  * 与 ArticleCardStats 保持一致。
@@ -82,6 +90,7 @@ export function MomentCard({
   const viewerImages = images.map((img) => ({ src: img.access_url, alt: img.name }));
   const isOwner = userId !== null && userId === (moment.user?.id ?? moment.user_id);
   const topLabel = moment.is_top ? "取消置顶" : "置顶";
+  const edited = isMomentEdited(moment.created_at, moment.updated_at);
 
   const body = (
     <>
@@ -136,7 +145,15 @@ export function MomentCard({
         onOpen={(idx) => openViewer(viewerImages, idx)}
       />
 
-      <div className="mt-3 flex items-end justify-between gap-2 text-xs text-(--fg3)">
+      {edited && (
+        <p className="mt-3 text-[11px] text-(--fg3)">
+          编辑于 <RelativeTime dateTime={moment.updated_at} />
+        </p>
+      )}
+
+      <div
+        className={`flex items-end justify-between gap-2 text-xs text-(--fg3) ${edited ? "mt-1" : "mt-3"}`}
+      >
         {isOwner ? (
           <div data-testid="moment-owner-actions" className="flex items-center">
             <Dropdown.Root onOpenChange={setIsMenuOpen}>
