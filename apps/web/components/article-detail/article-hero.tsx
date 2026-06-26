@@ -7,7 +7,9 @@ import { UserAvatar } from "@/components/common/user-avatar";
 import { useActiveArticle } from "@/store/use-active-article";
 import { useImageViewer } from "@/store/use-image-viewer";
 import { formatDate } from "@/lib/format-time.ts";
+import { mapArticleMusicToSyncInput } from "@/lib/article-music";
 import { ArticleDateCategory } from "@/components/articles/article-date-category";
+import { ArticleMusicBar } from "./article-music-bar";
 
 interface ArticleHeroProps {
   article: ArticleDetailResp;
@@ -24,6 +26,7 @@ export function ArticleHero({ article }: ArticleHeroProps) {
   const { locale } = useLocale();
   const openViewer = useImageViewer((s) => s.open);
   const formattedDate = formatDate(article.created_at, locale);
+  const musicPreview = mapArticleMusicToSyncInput(article.music);
 
   return (
     <div className="mx-auto max-w-[720px]">
@@ -80,6 +83,8 @@ export function ArticleHero({ article }: ArticleHeroProps) {
         <span aria-hidden>·</span>
         <span>{String(readCount)} 阅读</span>
       </div>
+
+      <ArticleMusicBar preview={musicPreview} />
     </div>
   );
 }

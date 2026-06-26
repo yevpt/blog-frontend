@@ -20,7 +20,7 @@ export function ArticleContent({ contentHtml }: ArticleContentProps) {
         style={{ width: `${progress * 100}%` }}
       />
       {/* 外层 article 保持语义标签和定位样式，prose 样式由 MarkdownContent 管理 */}
-      <article ref={articleRef} className="mx-auto max-w-[720px] pb-10 px-2 md:px-0 pt-8">
+      <article ref={articleRef} className="mx-auto max-w-[720px] px-2 pt-4 pb-10 md:px-0">
         <PreviewableMarkdown html={contentHtml} variant="article" />
       </article>
     </>

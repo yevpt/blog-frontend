@@ -4,17 +4,17 @@ import { useEffect, useState } from "react";
 import { Button } from "@repo/ui";
 import { useArticleEngagement } from "@/hooks/use-article-engagement";
 import { useActiveArticle } from "@/store/use-active-article";
-import { MusicPlayer } from "./music-player";
+import { useArticleMusic } from "@/store/use-article-music";
+import { ArticleMusicControl } from "./article-music-control";
 
 interface ArticleFloatActionsProps {
   articleId: number;
-  musicUrl?: string;
-  musicName?: string;
 }
 
-export function ArticleFloatActions({ articleId, musicUrl, musicName }: ArticleFloatActionsProps) {
+export function ArticleFloatActions({ articleId }: ArticleFloatActionsProps) {
   const { isLiked, isLiking, toggleLike } = useArticleEngagement();
   const patchViewCount = useActiveArticle((state) => state.patchViewCount);
+  const hasMusic = Boolean(useArticleMusic((state) => state.track));
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   // 进入页面后上报一次阅读，成功后更新阅读数
@@ -41,14 +41,18 @@ export function ArticleFloatActions({ articleId, musicUrl, musicName }: ArticleF
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-center gap-3">
-      <MusicPlayer url={musicUrl} name={musicName} />
+      {hasMusic ? (
+        <div className="hidden md:block">
+          <ArticleMusicControl variant="float" />
+        </div>
+      ) : null}
 
       <Button
         variant="ghost"
         aria-label={isLiked ? "取消点赞" : "点赞"}
         onPress={() => void toggleLike()}
         isDisabled={isLiking}
-        className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full shadow-md transition-colors disabled:cursor-not-allowed ${
+        className={`hidden h-10 w-10 cursor-pointer items-center justify-center rounded-full shadow-md transition-colors disabled:cursor-not-allowed md:flex ${
           isLiked
             ? "bg-rose-500 text-white hover:bg-rose-600"
             : "border border-border bg-card text-muted-foreground hover:bg-muted"

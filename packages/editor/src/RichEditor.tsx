@@ -93,7 +93,8 @@ export function RichEditor({
 
   useEffect(() => {
     if (focusTrigger != null) {
-      editor?.commands.focus();
+      // 由父组件控制滚动定位，避免 focus 再次触发浏览器默认 scrollIntoView 顶到 fixed 导航下
+      editor?.commands.focus("end", { scrollIntoView: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusTrigger]);

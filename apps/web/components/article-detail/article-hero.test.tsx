@@ -1,8 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeAll } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ArticleHero } from "./article-hero";
 import { useImageViewer } from "@/store/use-image-viewer";
-import type { ArticleDetailResp } from "@repo/api";
+import type { ArticleDetailResp, MusicItemResp } from "@repo/api";
 
 vi.mock("next/image", () => ({
   default: ({
@@ -17,6 +17,19 @@ vi.mock("next/image", () => ({
     sizes?: string;
   }) => <img src={src} alt={alt} className={className} sizes={sizes} />,
 }));
+
+beforeAll(() => {
+  vi.stubGlobal(
+    "ResizeObserver",
+    vi.fn(function ResizeObserver() {
+      return {
+        observe: vi.fn(),
+        disconnect: vi.fn(),
+        unobserve: vi.fn(),
+      };
+    }),
+  );
+});
 
 const base: ArticleDetailResp = {
   id: 1,
@@ -110,5 +123,21 @@ describe("ArticleHero", () => {
     expect(state.isOpen).toBe(true);
     expect(state.images).toEqual([{ src: "https://example.com/img.jpg", alt: "Rust Web 框架" }]);
     expect(state.index).toBe(0);
+  });
+
+  it("有配乐时首屏直接渲染配乐条", () => {
+    const music: MusicItemResp = {
+      id: 1,
+      name: "春夏秋冬",
+      artist_display_name: "GILLE",
+      audio_url: "https://example.com/a.mp3",
+      duration: 222,
+      seq: 0,
+    };
+
+    render(<ArticleHero article={{ ...base, music: [music] }} />);
+
+    expect(screen.getByTestId("article-music-bar")).toBeInTheDocument();
+    expect(screen.getByTestId("article-music-track-name")).toHaveTextContent("春夏秋冬");
   });
 });

@@ -599,6 +599,18 @@ body {
   }
 }
 
+/* 随文配乐播放中的频谱条跳动，用于 ArticleMusicBar，origin-bottom 自底部伸缩。 */
+@keyframes equalize {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+
+  50% {
+    transform: scaleY(1);
+  }
+}
+
 /* 卡片从下方轻微浮入。 */
 @keyframes slideUpCard {
   from {
