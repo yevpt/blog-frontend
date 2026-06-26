@@ -33,7 +33,6 @@ const FOOTER_INFO_LINKS: FooterLinkItem[] = [
 
 /** 外部工具链接，同一行展示 */
 const FOOTER_TOOL_LINKS: FooterLinkItem[] = [
-  { href: "https://tc.yevpt.com", label: "图床", openInNewTab: true },
   { href: "https://vps.yevpt.com", label: "监控", openInNewTab: true },
 ];
 

@@ -39,19 +39,10 @@ describe("SiteFooter", () => {
     );
   });
 
-  it("图床与监控在同一行展示并在新窗口打开", () => {
+  it("监控链接在新窗口打开", () => {
     render(<SiteFooter />);
 
-    const imageHostLink = screen.getByText("图床");
     const monitorLink = screen.getByText("监控");
-    const toolRow = imageHostLink.parentElement;
-
-    expect(toolRow).toBe(monitorLink.parentElement);
-    expect(toolRow?.className).toContain("flex");
-
-    expect(imageHostLink).toHaveAttribute("href", "https://tc.yevpt.com");
-    expect(imageHostLink).toHaveAttribute("target", "_blank");
-    expect(imageHostLink).toHaveAttribute("rel", "noopener noreferrer");
 
     expect(monitorLink).toHaveAttribute("href", "https://vps.yevpt.com");
     expect(monitorLink).toHaveAttribute("target", "_blank");
