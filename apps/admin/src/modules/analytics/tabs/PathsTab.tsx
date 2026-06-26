@@ -5,10 +5,15 @@ import { Button, Card, CardContent } from "@repo/ui";
 import { apiClient } from "../../../lib/api";
 import { addToast } from "../../../lib/toast";
 import { useAnalyticsData } from "../hooks/use-analytics-data";
+import type { AnalyticsDateRange } from "../hooks/use-analytics-range";
 
-export function PathsTab() {
-  const fetcher = useCallback(() => apiClient.analytics.getPaths({ limit: 20 }), []);
-  const { data: paths, loading } = useAnalyticsData(fetcher, [], []);
+interface PathsTabProps {
+  range: AnalyticsDateRange;
+}
+
+export function PathsTab({ range }: PathsTabProps) {
+  const fetcher = useCallback(() => apiClient.analytics.getPaths({ limit: 20, ...range }), [range]);
+  const { data: paths, loading } = useAnalyticsData(fetcher, [range.from, range.to], []);
 
   const [stepsText, setStepsText] = useState("/\n/articles");
   const [funnel, setFunnel] = useState<AnalyticsFunnelStep[]>([]);
@@ -25,7 +30,7 @@ export function PathsTab() {
     }
     setRunning(true);
     apiClient.analytics
-      .getFunnel(steps)
+      .getFunnel(steps, range)
       .then(setFunnel)
       .catch((err) => {
         if (err instanceof ApiError) addToast(err.message, "error");

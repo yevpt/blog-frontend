@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import { ApiError } from "@repo/api";
+import { useCallback, useState } from "react";
 import type { AnalyticsMetric, AnalyticsSegment, AnalyticsTrendPoint } from "@repo/api";
 import { Card, CardContent } from "@repo/ui";
 import { apiClient } from "../../../lib/api";
-import { addToast } from "../../../lib/toast";
 import { TrendChart } from "../components/TrendChart";
 import { SegToggle } from "../components/SegToggle";
+import { useAnalyticsData } from "../hooks/use-analytics-data";
+import type { AnalyticsDateRange } from "../hooks/use-analytics-range";
 
 const METRICS: { id: AnalyticsMetric; label: string }[] = [
   { id: "pv", label: "浏览量" },
@@ -19,30 +19,22 @@ const SEGMENTS: { id: AnalyticsSegment; label: string }[] = [
   { id: "anonymous", label: "匿名" },
 ];
 
-export function TrendTab() {
+interface TrendTabProps {
+  range: AnalyticsDateRange;
+}
+
+export function TrendTab({ range }: TrendTabProps) {
   const [metric, setMetric] = useState<AnalyticsMetric>("pv");
   const [segment, setSegment] = useState<AnalyticsSegment>("all");
-  const [data, setData] = useState<AnalyticsTrendPoint[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let alive = true;
-    setLoading(true);
-    apiClient.analytics
-      .getTrend({ metric, segment })
-      .then((d) => {
-        if (alive) setData(d);
-      })
-      .catch((err) => {
-        if (err instanceof ApiError) addToast(err.message, "error");
-      })
-      .finally(() => {
-        if (alive) setLoading(false);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [metric, segment]);
+  const fetcher = useCallback(
+    () => apiClient.analytics.getTrend({ metric, segment, ...range }),
+    [metric, range, segment],
+  );
+  const { data, loading } = useAnalyticsData<AnalyticsTrendPoint[]>(
+    fetcher,
+    [metric, segment, range.from, range.to],
+    [],
+  );
 
   return (
     <div className="grid gap-4">

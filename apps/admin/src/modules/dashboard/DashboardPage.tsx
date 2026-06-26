@@ -4,6 +4,8 @@ import { Card, CardContent } from "@repo/ui";
 import { apiClient } from "../../lib/api";
 import { useAuthStore } from "../../store/auth";
 import { useAnalyticsData } from "../analytics/hooks/use-analytics-data";
+import { useAnalyticsRange } from "../analytics/hooks/use-analytics-range";
+import { AnalyticsRangeControl } from "../analytics/components/AnalyticsRangeControl";
 import { TrendChart } from "../analytics/components/TrendChart";
 import { BarList, type BarListItem } from "../analytics/components/BarList";
 
@@ -44,6 +46,7 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
 export function DashboardPage() {
   const displayName =
     useAuthStore((state) => state.user?.nickname || state.user?.username) ?? "管理员";
+  const range = useAnalyticsRange();
 
   const { data: overview } = useAnalyticsData(
     useCallback(() => apiClient.analytics.getOverview(), []),
@@ -51,18 +54,24 @@ export function DashboardPage() {
     EMPTY_OVERVIEW,
   );
   const { data: trend } = useAnalyticsData(
-    useCallback(() => apiClient.analytics.getTrend({ metric: "pv" }), []),
-    [],
+    useCallback(
+      () => apiClient.analytics.getTrend({ metric: "pv", ...range.query }),
+      [range.query],
+    ),
+    [range.query.from, range.query.to],
     [],
   );
   const { data: dims } = useAnalyticsData(
-    useCallback(() => apiClient.analytics.getDimensions("referer_type"), []),
-    [],
+    useCallback(
+      () => apiClient.analytics.getDimensions("referer_type", range.query),
+      [range.query],
+    ),
+    [range.query.from, range.query.to],
     [],
   );
   const { data: pages } = useAnalyticsData(
-    useCallback(() => apiClient.analytics.getPages({ limit: 5 }), []),
-    [],
+    useCallback(() => apiClient.analytics.getPages({ limit: 5, ...range.query }), [range.query]),
+    [range.query.from, range.query.to],
     [],
   );
   const { data: summary } = useAnalyticsData(
@@ -92,12 +101,15 @@ export function DashboardPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-medium">你好，{displayName}</h1>
-          <div className="text-sm text-text-muted">这是你站点今天的表现</div>
+          <div className="text-sm text-text-muted">趋势与排行范围：{range.label}</div>
         </div>
-        <span className="inline-flex items-center gap-2 text-sm text-text-secondary">
-          <span className="inline-block h-2 w-2 rounded-full bg-success" />
-          {overview.online} 人在线
-        </span>
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <AnalyticsRangeControl range={range} />
+          <span className="inline-flex items-center gap-2 text-sm text-text-secondary">
+            <span className="inline-block h-2 w-2 rounded-full bg-success" />
+            {overview.online} 人在线
+          </span>
+        </div>
       </div>
 
       <Card>

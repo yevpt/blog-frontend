@@ -1,5 +1,7 @@
 import { Tabs, TabsItem, TabsList, TabsPanel, TabsPanels } from "@repo/ui";
 import { AdminPageHeader } from "../../components/AdminPageHeader";
+import { AnalyticsRangeControl } from "./components/AnalyticsRangeControl";
+import { useAnalyticsRange } from "./hooks/use-analytics-range";
 import { TrendTab } from "./tabs/TrendTab";
 import { AudienceTab } from "./tabs/AudienceTab";
 import { PagesTab } from "./tabs/PagesTab";
@@ -8,11 +10,14 @@ import { RealtimeTab } from "./tabs/RealtimeTab";
 import { PathsTab } from "./tabs/PathsTab";
 
 export function AnalyticsPage() {
+  const range = useAnalyticsRange();
+
   return (
     <div className="grid gap-6">
       <AdminPageHeader
         title="数据统计"
         description="站点流量、受众与来源、页面、友链、实时与路径分析"
+        action={<AnalyticsRangeControl range={range} />}
       />
       <Tabs defaultSelectedKey="trend">
         <TabsList aria-label="数据统计分类">
@@ -25,22 +30,22 @@ export function AnalyticsPage() {
         </TabsList>
         <TabsPanels>
           <TabsPanel id="trend">
-            <TrendTab />
+            <TrendTab range={range.query} />
           </TabsPanel>
           <TabsPanel id="audience">
-            <AudienceTab />
+            <AudienceTab range={range.query} />
           </TabsPanel>
           <TabsPanel id="pages">
-            <PagesTab />
+            <PagesTab range={range.query} />
           </TabsPanel>
           <TabsPanel id="friends">
-            <FriendsTab />
+            <FriendsTab range={range.query} />
           </TabsPanel>
           <TabsPanel id="realtime">
             <RealtimeTab />
           </TabsPanel>
           <TabsPanel id="paths">
-            <PathsTab />
+            <PathsTab range={range.query} />
           </TabsPanel>
         </TabsPanels>
       </Tabs>

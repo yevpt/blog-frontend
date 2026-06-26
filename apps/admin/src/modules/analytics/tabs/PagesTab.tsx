@@ -2,10 +2,15 @@ import { useCallback } from "react";
 import { Card, CardContent } from "@repo/ui";
 import { apiClient } from "../../../lib/api";
 import { useAnalyticsData } from "../hooks/use-analytics-data";
+import type { AnalyticsDateRange } from "../hooks/use-analytics-range";
 
-export function PagesTab() {
-  const fetcher = useCallback(() => apiClient.analytics.getPages({ limit: 30 }), []);
-  const { data, loading } = useAnalyticsData(fetcher, [], []);
+interface PagesTabProps {
+  range: AnalyticsDateRange;
+}
+
+export function PagesTab({ range }: PagesTabProps) {
+  const fetcher = useCallback(() => apiClient.analytics.getPages({ limit: 30, ...range }), [range]);
+  const { data, loading } = useAnalyticsData(fetcher, [range.from, range.to], []);
 
   return (
     <Card>

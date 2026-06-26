@@ -5,6 +5,7 @@ import { apiClient } from "../../../lib/api";
 import { useAnalyticsData } from "../hooks/use-analytics-data";
 import { SegToggle } from "../components/SegToggle";
 import { BarList, type BarListItem } from "../components/BarList";
+import type { AnalyticsDateRange } from "../hooks/use-analytics-range";
 
 const DIMS: { id: AnalyticsDimension; label: string }[] = [
   { id: "referer_type", label: "来源" },
@@ -22,10 +23,14 @@ const REFERER_LABELS: Record<string, string> = {
   internal: "站内跳转",
 };
 
-export function AudienceTab() {
+interface AudienceTabProps {
+  range: AnalyticsDateRange;
+}
+
+export function AudienceTab({ range }: AudienceTabProps) {
   const [dim, setDim] = useState<AnalyticsDimension>("referer_type");
-  const fetcher = useCallback(() => apiClient.analytics.getDimensions(dim), [dim]);
-  const { data, loading } = useAnalyticsData(fetcher, [dim], []);
+  const fetcher = useCallback(() => apiClient.analytics.getDimensions(dim, range), [dim, range]);
+  const { data, loading } = useAnalyticsData(fetcher, [dim, range.from, range.to], []);
 
   const items: BarListItem[] = useMemo(() => {
     const agg = new Map<string, number>();
