@@ -3,6 +3,10 @@ export interface MomentListReq {
   role_id?: number;
   page?: number;
   page_size?: number;
+  /** 随机抽样模式：忽略 page，从公开碎语池中随机抽 page_size 条 */
+  random?: boolean;
+  /** 随机模式下排除的碎语 ID，用于避免连续换一批时重复展示 */
+  exclude_ids?: number[];
 }
 
 export type AdminMomentStatusFilter = "all" | "public" | "hidden";

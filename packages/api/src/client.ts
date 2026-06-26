@@ -527,6 +527,10 @@ export function createApiClient(config: ApiClientConfig) {
         if (req.page_size !== undefined) params.set("page_size", String(req.page_size));
         if (req.user_id !== undefined) params.set("user_id", String(req.user_id));
         if (req.role_id !== undefined) params.set("role_id", String(req.role_id));
+        if (req.random !== undefined) params.set("random", String(req.random));
+        if (req.exclude_ids !== undefined && req.exclude_ids.length > 0) {
+          params.set("exclude_ids", req.exclude_ids.join(","));
+        }
         const qs = params.toString();
         return fetchOptionalAuth<MomentPageResp>(`/moments${qs ? `?${qs}` : ""}`, {
           method: "GET",

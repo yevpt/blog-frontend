@@ -829,6 +829,42 @@ describe("createApiClient", () => {
     expect(url.searchParams.get("user_id")).toBe("2");
   });
 
+  it("moments.listPublic 带 random 和 exclude_ids 时构造正确 query string", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { total: 0, pages: 0, page: 1, page_size: 3, list: [] },
+      }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    await client.moments.listPublic({ random: true, exclude_ids: [1, 2, 3], page_size: 3 });
+
+    const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
+    const url = new URL(calledUrl);
+    expect(url.pathname).toBe("/moments");
+    expect(url.searchParams.get("random")).toBe("true");
+    expect(url.searchParams.get("exclude_ids")).toBe("1,2,3");
+  });
+
+  it("moments.listPublic exclude_ids 为空数组时不附加该参数", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { total: 0, pages: 0, page: 1, page_size: 3, list: [] },
+      }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    await client.moments.listPublic({ random: true, exclude_ids: [] });
+
+    const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
+    const url = new URL(calledUrl);
+    expect(url.searchParams.has("exclude_ids")).toBe(false);
+  });
+
   it("moments.feed 构造 scope/sort 与分页 query string", async () => {
     vi.mocked(global.fetch).mockResolvedValue(
       mockResponse({
