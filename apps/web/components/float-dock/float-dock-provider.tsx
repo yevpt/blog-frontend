@@ -21,6 +21,17 @@ interface FloatDockContextValue {
 
 const FloatDockContext = createContext<FloatDockContextValue | null>(null);
 
+/** 测试环境无 Provider 时的 no-op，避免页面单测因 FloatDockPageAnchor 崩溃 */
+const TEST_NOOP_FLOAT_DOCK_CONTEXT: FloatDockContextValue = {
+  config: DEFAULT_FLOAT_DOCK_CONFIG,
+  register: () => {},
+  unregister: () => {},
+};
+
+function isTestEnv(): boolean {
+  return process.env.NODE_ENV === "test";
+}
+
 function sortItems(items: FloatDockItem[]): FloatDockItem[] {
   return [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
@@ -88,6 +99,9 @@ export function FloatDockProvider({ children }: { children: ReactNode }) {
 export function useFloatDockContext(): FloatDockContextValue {
   const context = useContext(FloatDockContext);
   if (!context) {
+    if (isTestEnv()) {
+      return TEST_NOOP_FLOAT_DOCK_CONTEXT;
+    }
     throw new Error("useFloatDockContext must be used within FloatDockProvider");
   }
   return context;

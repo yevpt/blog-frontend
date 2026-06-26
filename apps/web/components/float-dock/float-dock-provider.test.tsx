@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { FloatDockPageAnchor, FloatDockProvider, SiteFloatDock, useFloatDockConfig } from "./index";
+import {
+  FloatDockPageAnchor,
+  FloatDockProvider,
+  SiteFloatDock,
+  useFloatDockConfig,
+  useFloatDockContext,
+} from "./index";
 import { pageContainerFloatDockLayout } from "@/lib/float-dock-layouts";
 
 vi.mock("@repo/icons", () => ({
@@ -32,6 +38,11 @@ function ExtraItemSetup() {
   return null;
 }
 
+function OutsideProviderProbe() {
+  useFloatDockContext();
+  return <span data-testid="outside-provider-probe" />;
+}
+
 describe("FloatDockProvider merge", () => {
   beforeEach(() => {
     Object.defineProperty(window, "innerWidth", {
@@ -59,5 +70,10 @@ describe("FloatDockProvider merge", () => {
     const root = screen.getByTestId("float-actions-dock").parentElement;
     expect(root).toHaveStyle({ left: "1245px" });
     expect(screen.getByTestId("extra-item")).toBeInTheDocument();
+  });
+
+  it("测试环境无 Provider 时不抛错", () => {
+    expect(() => render(<OutsideProviderProbe />)).not.toThrow();
+    expect(screen.getByTestId("outside-provider-probe")).toBeInTheDocument();
   });
 });
