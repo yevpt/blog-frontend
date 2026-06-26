@@ -1297,6 +1297,35 @@ describe("createApiClient", () => {
       );
     });
 
+    it("listAdmin 使用后台评论查询路径并拼接筛选参数", async () => {
+      vi.mocked(global.fetch).mockResolvedValue(
+        mockResponse({
+          code: 0,
+          message: "ok",
+          data: { total: 1, pages: 1, page: 2, page_size: 20, list: [] },
+        }),
+      );
+      const client = createApiClient({
+        baseUrl: "http://api",
+        getAccessToken: () => "token123",
+      });
+
+      await client.comments.listAdmin({
+        page: 2,
+        page_size: 20,
+        target_type: "moment",
+        search: "测试",
+      });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/admin/comments?page=2&page_size=20&target_type=moment&search=%E6%B5%8B%E8%AF%95",
+        expect.objectContaining({
+          method: "GET",
+          headers: expect.objectContaining({ Authorization: "Bearer token123" }),
+        }),
+      );
+    });
+
     it("createArticle 使用 fetchAuthed 并发送正确 body", async () => {
       vi.mocked(global.fetch).mockResolvedValue(
         mockResponse({

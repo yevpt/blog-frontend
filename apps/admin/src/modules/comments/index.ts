@@ -1,0 +1,1 @@
+export { commentsModule } from "./module";

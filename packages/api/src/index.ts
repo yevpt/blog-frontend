@@ -84,6 +84,9 @@ export type {
   MomentPageResp,
 } from "./types/moment";
 export type {
+  AdminCommentListReq,
+  AdminCommentPageResp,
+  AdminCommentTargetType,
   CommentUserResp,
   CommentReplyResp,
   CommentItemResp,

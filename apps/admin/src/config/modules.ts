@@ -1,6 +1,7 @@
 import type { AdminModule, AdminNavItem, AdminRoute } from "./module-types";
 import { dashboardModule } from "../modules/dashboard/module";
 import { articlesModule } from "../modules/articles/module";
+import { commentsModule } from "../modules/comments/module";
 import { categoriesModule } from "../modules/categories/module";
 import { tagsModule } from "../modules/tags/module";
 import { musicModule } from "../modules/music/module";
@@ -11,6 +12,7 @@ import { analyticsModule } from "../modules/analytics/module";
 export const adminModules: AdminModule[] = [
   dashboardModule,
   articlesModule,
+  commentsModule,
   categoriesModule,
   tagsModule,
   musicModule,

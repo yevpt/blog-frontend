@@ -47,6 +47,23 @@ export interface CommentPageResp {
   list: CommentItemResp[];
 }
 
+export type AdminCommentTargetType = "all" | "article" | "moment";
+
+export interface AdminCommentListReq {
+  page?: number;
+  page_size?: number;
+  target_type?: AdminCommentTargetType;
+  search?: string;
+}
+
+export interface AdminCommentPageResp {
+  total: number;
+  pages: number;
+  page: number;
+  page_size: number;
+  list: Array<CommentItemResp & { target_type: Exclude<AdminCommentTargetType, "all"> }>;
+}
+
 export interface CommentReplyPageResp {
   total: number;
   pages: number;

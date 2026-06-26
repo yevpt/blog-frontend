@@ -6,6 +6,7 @@ describe("admin 模块注册表", () => {
     expect(adminNavItems.map((item) => item.path)).toEqual([
       "/",
       "/articles",
+      "/comments",
       "/categories",
       "/tags",
       "/music",
@@ -22,6 +23,7 @@ describe("admin 模块注册表", () => {
       "/articles/new",
       "/articles/pinned",
       "/articles/:articleId/edit",
+      "/comments",
       "/categories",
       "/tags",
       "/music",

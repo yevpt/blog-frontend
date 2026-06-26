@@ -60,6 +60,8 @@ import type {
   MomentTopResp,
 } from "./types/moment";
 import type {
+  AdminCommentListReq,
+  AdminCommentPageResp,
   CommentCreateReq,
   CommentItemResp,
   CommentListReq,
@@ -653,6 +655,18 @@ export function createApiClient(config: ApiClientConfig) {
         }),
     },
     comments: {
+      /** 后台分页查询文章与碎语评论（需管理员） */
+      listAdmin: (req: AdminCommentListReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        if (req.target_type !== undefined) p.set("target_type", req.target_type);
+        if (req.search !== undefined && req.search !== "") p.set("search", req.search);
+        const qs = p.toString();
+        return fetchAuthed<AdminCommentPageResp>(`/admin/comments${qs ? `?${qs}` : ""}`, {
+          method: "GET",
+        });
+      },
       /** 分页查询文章评论（可选登录，登录后返回 is_liked） */
       listArticle: (articleId: number, req: CommentListReq = {}) => {
         const p = new URLSearchParams();
