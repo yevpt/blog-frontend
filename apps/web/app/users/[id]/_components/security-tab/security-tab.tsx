@@ -9,7 +9,12 @@ import { EmailSheet, type EmailSheetIntent } from "./email-sheet";
 import { PasswordSheet } from "./password-sheet";
 import { UnbindConfirm } from "./unbind-confirm";
 import { addToast } from "@/lib/toast";
-import { openOAuthPopup } from "@/lib/oauth";
+import {
+  isMobileOAuthContext,
+  openOAuthPopup,
+  saveOAuthReturnUrl,
+  startOAuthRedirect,
+} from "@/lib/oauth";
 import type { EmailDisplayValue } from "../../_lib/display-email";
 
 interface SecurityTabProps {
@@ -56,6 +61,12 @@ export function SecurityTab({ onDisplayEmailChanged }: SecurityTabProps) {
       const d = await res.json();
       if (d.code !== 0 || !d.data?.authorize_url) {
         addToast(d.message ?? "获取授权地址失败", "error");
+        return;
+      }
+
+      saveOAuthReturnUrl();
+      if (isMobileOAuthContext()) {
+        startOAuthRedirect(d.data.authorize_url);
         return;
       }
 

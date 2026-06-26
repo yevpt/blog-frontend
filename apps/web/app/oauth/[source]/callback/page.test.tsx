@@ -10,9 +10,9 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("OAuth 回调接收页", () => {
-  const mockReplace = vi.fn();
   const mockPostMessage = vi.fn();
   const mockClose = vi.fn();
+  const mockLocationReplace = vi.fn();
 
   beforeEach(() => {
     vi.resetAllMocks();
@@ -20,7 +20,7 @@ describe("OAuth 回调接收页", () => {
     process.env.NEXT_PUBLIC_APP_URL = "";
 
     vi.mocked(useParams).mockReturnValue({ source: "github" });
-    vi.mocked(useRouter).mockReturnValue({ replace: mockReplace } as unknown as ReturnType<
+    vi.mocked(useRouter).mockReturnValue({ replace: vi.fn() } as unknown as ReturnType<
       typeof useRouter
     >);
 
@@ -36,6 +36,11 @@ describe("OAuth 回调接收页", () => {
       value: { closed: false, postMessage: mockPostMessage },
     });
     Object.defineProperty(window, "close", { writable: true, value: mockClose });
+    Object.defineProperty(window, "location", {
+      writable: true,
+      value: { ...window.location, replace: mockLocationReplace },
+    });
+    sessionStorage.setItem("oauth_return_url", "http://localhost/articles");
   });
 
   afterEach(() => {
@@ -62,8 +67,7 @@ describe("OAuth 回调接收页", () => {
       ),
     );
     expect(mockClose).toHaveBeenCalled();
-    // Popup 模式不应触发路由跳转
-    expect(mockReplace).not.toHaveBeenCalled();
+    expect(mockLocationReplace).not.toHaveBeenCalled();
   });
 
   it("Popup 模式：后端返回错误时 postMessage 错误消息", async () => {
@@ -82,7 +86,7 @@ describe("OAuth 回调接收页", () => {
     expect(mockClose).toHaveBeenCalled();
   });
 
-  it("直接导航模式（无 opener）：将结果存入 sessionStorage 并重定向至 /", async () => {
+  it("直接导航模式（无 opener）：将结果存入 sessionStorage 并硬跳转回发起页", async () => {
     // 模拟无 opener
     Object.defineProperty(window, "opener", { writable: true, value: null });
 
@@ -92,7 +96,9 @@ describe("OAuth 回调接收页", () => {
 
     render(<OAuthCallbackPage />);
 
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/"));
+    await waitFor(() =>
+      expect(mockLocationReplace).toHaveBeenCalledWith("http://localhost/articles"),
+    );
     const stored = JSON.parse(sessionStorage.getItem("oauth_result") ?? "{}");
     expect(stored.type).toBe("oauth_success");
     expect(stored.user.username).toBe("vpt");
@@ -115,8 +121,7 @@ describe("OAuth 回调接收页", () => {
       ),
     );
     expect(mockClose).toHaveBeenCalled();
-    // 绑定不写登录态，也不触发路由跳转
-    expect(mockReplace).not.toHaveBeenCalled();
+    expect(mockLocationReplace).not.toHaveBeenCalled();
   });
 
   it("缺少 code 或 state 时，直接发送错误消息", async () => {

@@ -4,7 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import { SvgIcon, type IconName } from "@repo/icons";
 import { Button, cn } from "@repo/ui";
 import type { UserResp } from "@repo/api";
-import { openOAuthPopup } from "@/lib/oauth";
+import {
+  isMobileOAuthContext,
+  openOAuthPopup,
+  saveOAuthReturnUrl,
+  startOAuthRedirect,
+} from "@/lib/oauth";
 import { addToast } from "@/lib/toast";
 
 // 模块级缓存：整个页面生命周期内只发一次请求，React StrictMode 双执行不重复请求
@@ -86,6 +91,12 @@ export function OAuthGrid({ className, onSuccess }: OAuthGridProps) {
 
       if (data.code !== 0 || !data.data?.authorize_url) {
         addToast(data.message ?? "获取授权地址失败，请稍后重试", "error");
+        return;
+      }
+
+      saveOAuthReturnUrl();
+      if (isMobileOAuthContext()) {
+        startOAuthRedirect(data.data.authorize_url);
         return;
       }
 

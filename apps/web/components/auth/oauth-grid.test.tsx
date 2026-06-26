@@ -12,9 +12,9 @@ import { OAuthGrid, _resetProvidersCache } from "./oauth-grid";
 
 // jsdom 缺 window.matchMedia，OAuthGrid handleOAuthLogin 用它判断移动端 features，
 // 不补会导致 TypeError 被 catch 吞掉、window.open 永不调用
-function mockMatchMedia() {
+function mockMatchMedia(mobile = false) {
   window.matchMedia = vi.fn().mockImplementation((q: string) => ({
-    matches: q.includes("max-width: 768px"),
+    matches: mobile && q.includes("max-width: 768px"),
     media: q,
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
@@ -71,6 +71,31 @@ describe("OAuthGrid — OAuth Popup 登录流程", () => {
 
   beforeEach(() => {
     mockSuccess.mockClear();
+  });
+
+  it("移动端使用全页跳转而非 popup", async () => {
+    const user = userEvent.setup();
+    const assignMock = vi.fn();
+    Object.defineProperty(window, "location", {
+      writable: true,
+      value: { ...window.location, assign: assignMock },
+    });
+    mockMatchMedia(true);
+
+    mockFetch
+      .mockResolvedValueOnce(mockProviders(["qq"]))
+      .mockResolvedValueOnce(mockAuthorize("https://graph.qq.com/oauth2.0/authorize"));
+
+    render(<OAuthGrid onSuccess={mockSuccess} />);
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/oauth/providers"));
+    await waitFor(() => expect(screen.getByLabelText("QQ")).not.toHaveClass("opacity-40"));
+    await user.click(screen.getByLabelText("QQ"));
+
+    await waitFor(() =>
+      expect(assignMock).toHaveBeenCalledWith("https://graph.qq.com/oauth2.0/authorize"),
+    );
+    expect(mockWindowOpen).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem("oauth_return_url")).toBe(window.location.href);
   });
 
   it("点击已启用的 provider 按钮后调用 authorize 接口并弹出 popup", async () => {

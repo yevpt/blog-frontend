@@ -1,6 +1,11 @@
 // apps/web/lib/oauth.ts
 import type { UserResp } from "@repo/api";
 
+/** OAuth 全页跳转回跳后暂存结果的 sessionStorage 键 */
+export const OAUTH_RESULT_KEY = "oauth_result";
+/** 发起 OAuth 前记录的回跳地址 */
+export const OAUTH_RETURN_URL_KEY = "oauth_return_url";
+
 /**
  * Popup 窗口与父窗口之间的 postMessage 通信格式。
  * - OAuth 回调页（popup）在处理完 callback 后发送此消息
@@ -16,6 +21,50 @@ export type OAuthMessage =
   | { type: "oauth_success"; user: UserResp }
   | { type: "oauth_bind_success"; source: string }
   | { type: "oauth_error"; message: string };
+
+/** 移动端 OAuth 使用全页跳转而非 popup（跨域授权后 opener 常被置空） */
+export function isMobileOAuthContext(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
+}
+
+export function getOAuthUserDisplayName(user?: UserResp | null): string {
+  return user?.nickname ?? user?.username ?? "用户";
+}
+
+/** 记录当前页 URL，供 OAuth 回调后硬跳转回来 */
+export function saveOAuthReturnUrl(): void {
+  sessionStorage.setItem(OAUTH_RETURN_URL_KEY, window.location.href);
+}
+
+/** 读取并清除回跳地址，缺省为首页 */
+export function consumeOAuthReturnUrl(): string {
+  const url = sessionStorage.getItem(OAUTH_RETURN_URL_KEY) ?? "/";
+  sessionStorage.removeItem(OAUTH_RETURN_URL_KEY);
+  return url;
+}
+
+export function peekOAuthResult(): OAuthMessage | null {
+  const raw = sessionStorage.getItem(OAUTH_RESULT_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as OAuthMessage;
+  } catch {
+    return null;
+  }
+}
+
+/** 读取并清除 OAuth 回调结果（全页跳转场景） */
+export function consumeOAuthResult(): OAuthMessage | null {
+  const result = peekOAuthResult();
+  if (result) sessionStorage.removeItem(OAUTH_RESULT_KEY);
+  return result;
+}
+
+/** 移动端 / 无 opener 场景：整页跳转到授权地址 */
+export function startOAuthRedirect(authorizeUrl: string): void {
+  saveOAuthReturnUrl();
+  window.location.assign(authorizeUrl);
+}
 
 /**
  * 打开 OAuth 授权 popup 并监听回调页回传的 postMessage。

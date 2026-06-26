@@ -1,9 +1,9 @@
 "use client";
 
 import { Suspense, useEffect, useRef } from "react";
-import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import type { UserResp } from "@repo/api";
-import type { OAuthMessage } from "@/lib/oauth";
+import { OAUTH_RESULT_KEY, consumeOAuthReturnUrl, type OAuthMessage } from "@/lib/oauth";
 
 interface OAuthCallbackResult {
   code?: number;
@@ -42,7 +42,6 @@ export default function OAuthCallbackPage() {
 function OAuthCallbackContent() {
   const params = useParams<{ source: string }>();
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   // 防止 React StrictMode 下 useEffect 双执行导致重复处理
   const processed = useRef(false);
@@ -93,12 +92,13 @@ function OAuthCallbackContent() {
       if (window.opener && !window.opener.closed) {
         window.opener.postMessage(msg, window.location.origin);
         window.close();
-      } else {
-        sessionStorage.setItem("oauth_result", JSON.stringify(msg));
-        router.replace("/");
+        return;
       }
+      // 移动端跨域授权后 opener 常失效；硬跳转确保 layout 重新读取 Cookie 登录态
+      sessionStorage.setItem(OAUTH_RESULT_KEY, JSON.stringify(msg));
+      window.location.replace(consumeOAuthReturnUrl());
     }
-  }, [params.source, searchParams, router]);
+  }, [params.source, searchParams]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">
