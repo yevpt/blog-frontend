@@ -7,7 +7,7 @@ import { cn } from "@repo/ui";
 /** 友链申请模板，供展示与一键复制共用 */
 export const FRIEND_LINK_TEMPLATE = `博客名字: YEVPT
 博客地址: https://www.yevpt.com
-博客简介: 浮墨几许，落在此刻。。
+博客简介: 浮墨几许，落于此刻
 博客头像: https://www.yevpt.com/logo.jpg`;
 
 export function FriendLinksRulesCard() {

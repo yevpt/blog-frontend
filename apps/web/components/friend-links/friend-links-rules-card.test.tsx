@@ -12,11 +12,18 @@ describe("FriendLinksRulesCard", () => {
     });
   });
 
-  it("默认展开，渲染申请规则内容", () => {
+  it("渲染申请规则内容", () => {
     render(<FriendLinksRulesCard />);
     expect(screen.getByText(/vpt940417@gmail\.com/)).toBeTruthy();
     expect(screen.getByText(/YEVPT/)).toBeTruthy();
     expect(screen.getByText(/注①/)).toBeTruthy();
+  });
+
+  it("不渲染交换友链标题和展开收起按钮", () => {
+    render(<FriendLinksRulesCard />);
+    expect(screen.queryByText("交换友链")).toBeNull();
+    expect(screen.queryByRole("button", { name: /收起/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /展开/ })).toBeNull();
   });
 
   it("点击复制按钮将友链模板写入剪贴板", async () => {
@@ -29,24 +36,5 @@ describe("FriendLinksRulesCard", () => {
     render(<FriendLinksRulesCard />);
     await userEvent.click(screen.getByRole("button", { name: "复制模板" }));
     expect(screen.getByRole("button", { name: "已复制" })).toBeTruthy();
-  });
-
-  it("点击「收起」后 aria-expanded 变为 false", async () => {
-    render(<FriendLinksRulesCard />);
-    const toggleBtn = screen.getByRole("button", { name: /收起/ });
-    await userEvent.click(toggleBtn);
-    // 内容保留在 DOM 中，通过 CSS grid 动画隐藏，以 aria-expanded 验证折叠状态
-    expect(screen.getByRole("button", { name: /展开/ }).getAttribute("aria-expanded")).toBe(
-      "false",
-    );
-  });
-
-  it("折叠后点击「展开」aria-expanded 恢复 true", async () => {
-    render(<FriendLinksRulesCard />);
-    const toggleBtn = screen.getByRole("button", { name: /收起/ });
-    await userEvent.click(toggleBtn);
-    const expandBtn = screen.getByRole("button", { name: /展开/ });
-    await userEvent.click(expandBtn);
-    expect(screen.getByRole("button", { name: /收起/ }).getAttribute("aria-expanded")).toBe("true");
   });
 });

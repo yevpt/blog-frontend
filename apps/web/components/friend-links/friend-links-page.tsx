@@ -1,5 +1,6 @@
 import type { FriendLinkItemResp } from "@repo/api";
 import { FadeInUp } from "@repo/ui";
+import { FriendLinksPausedSection } from "./friend-links-paused-section";
 import { FriendLinksRulesCard } from "./friend-links-rules-card";
 import { FriendLinksList } from "./friend-links-list";
 
@@ -8,6 +9,9 @@ interface FriendLinksPageProps {
 }
 
 export function FriendLinksPage({ links }: FriendLinksPageProps) {
+  const activeLinks = links.filter((link) => link.status === 1);
+  const pausedLinks = links.filter((link) => link.status === 2);
+
   return (
     <>
       <div className="mb-8">
@@ -21,7 +25,8 @@ export function FriendLinksPage({ links }: FriendLinksPageProps) {
         <FriendLinksRulesCard />
       </FadeInUp>
 
-      <FriendLinksList links={links} />
+      <FriendLinksList links={activeLinks} />
+      <FriendLinksPausedSection links={pausedLinks} />
     </>
   );
 }

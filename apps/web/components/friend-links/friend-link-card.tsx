@@ -16,7 +16,7 @@ function AvatarFallback({ name }: { name: string }) {
 }
 
 const baseCardClass =
-  "flex items-center gap-3 rounded-xl border border-border bg-secondary px-4 py-3.5";
+  "flex items-center gap-3 rounded-xl border border-border bg-secondary px-4 py-3.5 transition-colors duration-150";
 
 export function FriendLinkCard({ link }: FriendLinkCardProps) {
   // status=0（隐藏）不应出现在公开列表，防御性处理
@@ -53,37 +53,34 @@ export function FriendLinkCard({ link }: FriendLinkCardProps) {
           >
             {link.name}
           </span>
-          {disconnected && (
-            <span className="flex-shrink-0 rounded border border-destructive/30 bg-destructive/10 px-1.5 py-px text-[10px] font-semibold text-destructive">
-              失联
-            </span>
-          )}
         </div>
         {link.description && (
           <p className="truncate text-xs text-muted-foreground">{link.description}</p>
         )}
       </div>
 
-      {!disconnected && (
-        <SvgIcon
-          name="arrow-up-right"
-          size={14}
-          className="flex-shrink-0 text-muted-foreground/40"
-        />
-      )}
+      <SvgIcon
+        name="arrow-up-right"
+        size={14}
+        className={cn(
+          "flex-shrink-0",
+          disconnected ? "text-muted-foreground/25" : "text-muted-foreground/40",
+        )}
+      />
     </>
   );
-
-  if (disconnected) {
-    return <div className={cn(baseCardClass, "cursor-not-allowed opacity-55")}>{inner}</div>;
-  }
 
   return (
     <a
       href={link.site}
       target="_blank"
       rel="noopener noreferrer"
-      className={cn(baseCardClass, "transition-colors duration-150 hover:border-primary")}
+      className={cn(
+        baseCardClass,
+        disconnected
+          ? "border-border/70 bg-secondary/60 hover:border-muted-foreground/30 hover:bg-secondary/80"
+          : "hover:border-primary",
+      )}
     >
       {inner}
     </a>

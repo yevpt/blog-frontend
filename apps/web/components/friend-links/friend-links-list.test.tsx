@@ -25,10 +25,10 @@ const links: FriendLinkItemResp[] = [
 ];
 
 describe("FriendLinksList", () => {
-  it("渲染所有友链卡片", () => {
-    render(<FriendLinksList links={links} />);
+  it("渲染传入的友链卡片", () => {
+    render(<FriendLinksList links={[links[0]]} />);
     expect(screen.getByText("Blog A")).toBeTruthy();
-    expect(screen.getByText("Blog B")).toBeTruthy();
+    expect(screen.queryByText("Blog B")).toBeNull();
   });
 
   it("空列表不崩溃", () => {
@@ -36,8 +36,8 @@ describe("FriendLinksList", () => {
     expect(container.firstChild).toBeTruthy();
   });
 
-  it("失联友链显示「失联」badge", () => {
+  it("暂别友链不显示「失联」badge", () => {
     render(<FriendLinksList links={links} />);
-    expect(screen.getByText("失联")).toBeTruthy();
+    expect(screen.queryByText("失联")).toBeNull();
   });
 });

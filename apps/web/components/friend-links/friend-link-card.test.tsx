@@ -20,7 +20,7 @@ vi.mock("next/image", () => ({
 const base: FriendLinkItemResp = {
   id: 1,
   name: "YEVPT Blog",
-  description: "浮墨几许，落在此刻。。",
+  description: "浮墨几许，落于此刻",
   site: "https://www.yevpt.com",
   seq: 0,
   status: 1,
@@ -32,7 +32,7 @@ describe("FriendLinkCard", () => {
   it("渲染名称和简介", () => {
     render(<FriendLinkCard link={base} />);
     expect(screen.getByText("YEVPT Blog")).toBeTruthy();
-    expect(screen.getByText("浮墨几许，落在此刻。。")).toBeTruthy();
+    expect(screen.getByText("浮墨几许，落于此刻")).toBeTruthy();
   });
 
   it("status=1 渲染为可点击链接，href 为 site", () => {
@@ -42,21 +42,23 @@ describe("FriendLinkCard", () => {
     expect(anchor.getAttribute("target")).toBe("_blank");
   });
 
-  it("status=2 不渲染链接，显示「失联」badge", () => {
+  it("status=2 仍渲染为可点击链接，href 为 site", () => {
     render(<FriendLinkCard link={{ ...base, status: 2 }} />);
-    expect(screen.queryByRole("link")).toBeNull();
-    expect(screen.getByText("失联")).toBeTruthy();
+    const anchor = screen.getByRole("link");
+    expect(anchor.getAttribute("href")).toBe("https://www.yevpt.com");
+    expect(anchor.getAttribute("target")).toBe("_blank");
   });
 
-  it("status=2 卡片带 cursor-not-allowed class", () => {
+  it("status=2 不显示「失联」badge，也不使用禁用光标", () => {
     const { container } = render(<FriendLinkCard link={{ ...base, status: 2 }} />);
-    const card = container.firstChild as HTMLElement;
-    expect(card.className).toContain("cursor-not-allowed");
+    const anchor = container.firstChild as HTMLElement;
+    expect(screen.queryByText("失联")).toBeNull();
+    expect(anchor.className).not.toContain("cursor-not-allowed");
   });
 
   it("无 description 时不渲染简介行", () => {
     render(<FriendLinkCard link={{ ...base, description: undefined }} />);
-    expect(screen.queryByText("浮墨几许，落在此刻。。")).toBeNull();
+    expect(screen.queryByText("浮墨几许，落于此刻")).toBeNull();
   });
 
   it("无 avatar_url 时渲染首字母占位", () => {
