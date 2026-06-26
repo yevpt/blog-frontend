@@ -30,12 +30,35 @@ describe("ToastRegion", () => {
     expect(screen.getByText("操作失败")).toBeInTheDocument();
   });
 
-  it("error toast 使用高对比度样式", () => {
+  it("不同类型渲染各自对应的图标", () => {
+    const queue = makeQueue(
+      { message: "登录成功", type: "success" },
+      { message: "操作失败", type: "error" },
+      { message: "测试通知", type: "info" },
+    );
+    render(<ToastRegion queue={queue} />);
+    const hrefs = Array.from(document.body.querySelectorAll("use")).map((el) =>
+      el.getAttribute("href"),
+    );
+    expect(hrefs).toContain("#icon-check");
+    expect(hrefs).toContain("#icon-alert-circle");
+    expect(hrefs).toContain("#icon-info-circle");
+  });
+
+  it("error toast 的图标芯片使用 destructive 色调", () => {
     const queue = makeQueue({ message: "操作失败", type: "error" });
     render(<ToastRegion queue={queue} />);
-    const toast = screen.getByText("操作失败").closest('[role="alertdialog"]');
-    expect(toast).toHaveClass("bg-destructive");
-    expect(toast).toHaveClass("text-destructive-foreground");
+    const chip = document.body.querySelector('[role="alertdialog"] > span');
+    expect(chip).toHaveClass("text-destructive");
+  });
+
+  it("容器宽度跟随内容，不是写死的固定像素宽度", () => {
+    const queue = makeQueue({ message: "已置顶", type: "success" });
+    render(<ToastRegion queue={queue} />);
+    const toast = screen.getByText("已置顶").closest('[role="alertdialog"]');
+    // 排除 min-w-[..]/max-w-[..]，只检测写死的固定宽度（如旧版 w-[320px]）
+    expect(toast?.className).not.toMatch(/(?<!min-|max-)\bw-\[\d/);
+    expect(toast).toHaveClass("w-fit");
   });
 
   it("点击关闭按钮后 toast 消失", async () => {
