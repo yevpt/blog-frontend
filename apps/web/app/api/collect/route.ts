@@ -5,6 +5,16 @@ function apiBaseUrl(): string {
   return process.env.API_BASE_URL!;
 }
 
+// clientIP 从 CDN/反代链取最左侧真实访客 IP，避免整串 XFF 被 Gin 从右解析成边缘节点 IP。
+function clientIP(req: NextRequest): string | undefined {
+  const xff = req.headers.get("x-forwarded-for");
+  if (xff) {
+    const first = xff.split(",")[0]?.trim();
+    if (first) return first;
+  }
+  return req.headers.get("x-real-ip") ?? undefined;
+}
+
 // 站点分析上报薄代理：登录态由服务端 cookie 转 Bearer；透传 visitor_id/Origin/XFF；恒回 204。
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const body = await req.text();
@@ -23,11 +33,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const origin = req.headers.get("origin");
   if (origin) headers.Origin = origin;
 
-  // 透传真实客户端 IP，供后端地理解析与 ip_hash（c.ClientIP 依赖 XFF/Real-IP）。
-  const xff = req.headers.get("x-forwarded-for");
-  if (xff) headers["X-Forwarded-For"] = xff;
-  const realIp = req.headers.get("x-real-ip");
-  if (realIp) headers["X-Real-IP"] = realIp;
+  // 只传单一访客 IP：www 前有 CDN 时 XFF 常为「用户, 边缘节点」，整串透传会导致地理解析到 CDN 节点。
+  const ip = clientIP(req);
+  if (ip) {
+    headers["X-Forwarded-For"] = ip;
+    headers["X-Real-IP"] = ip;
+  }
 
   const res = new NextResponse(null, { status: 204 });
   try {

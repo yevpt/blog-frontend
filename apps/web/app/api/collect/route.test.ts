@@ -47,12 +47,20 @@ describe("POST /api/collect", () => {
     expect(fetchInitHeaders(init).get("Authorization")).toBeNull();
   });
 
-  it("转发 Cookie / Origin / X-Forwarded-For 到后端", async () => {
+  it("转发 Cookie / Origin / 访客 IP 到后端", async () => {
     await POST(makeReq({ cookies: "visitor_id=v1", origin: "https://yevpt.com", xff: "1.2.3.4" }));
     const headers = fetchInitHeaders(vi.mocked(fetch).mock.lastCall?.[1]);
     expect(headers.get("Cookie")).toContain("visitor_id=v1");
     expect(headers.get("Origin")).toBe("https://yevpt.com");
     expect(headers.get("X-Forwarded-For")).toBe("1.2.3.4");
+    expect(headers.get("X-Real-IP")).toBe("1.2.3.4");
+  });
+
+  it("CDN 多跳 XFF 只取最左侧访客 IP 转给后端", async () => {
+    await POST(makeReq({ xff: "111.197.83.233, 1.2.3.4" }));
+    const headers = fetchInitHeaders(vi.mocked(fetch).mock.lastCall?.[1]);
+    expect(headers.get("X-Forwarded-For")).toBe("111.197.83.233");
+    expect(headers.get("X-Real-IP")).toBe("111.197.83.233");
   });
 
   it("回写后端 Set-Cookie（首次下发 visitor_id）", async () => {
