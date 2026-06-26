@@ -187,13 +187,15 @@ describe("SiteFloatDock", () => {
     expect(screen.getByRole("button", { name: /播放 雨夜/ })).toBeInTheDocument();
   });
 
-  it("滚动超过阈值后显示回顶钮", () => {
+  it("滚动超过阈值并上滑后显示回顶钮", () => {
     renderDock(<ArticleDockHarness />);
     Object.defineProperty(window, "innerHeight", {
       value: 900,
       writable: true,
       configurable: true,
     });
+    Object.defineProperty(window, "scrollY", { value: 1500, writable: true, configurable: true });
+    fireEvent.scroll(window);
     Object.defineProperty(window, "scrollY", { value: 1400, writable: true, configurable: true });
     fireEvent.scroll(window);
     expect(screen.getByRole("button", { name: /回到顶部/ })).not.toHaveClass("opacity-0");
