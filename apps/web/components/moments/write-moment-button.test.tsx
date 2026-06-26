@@ -52,6 +52,17 @@ describe("WriteMomentButton", () => {
     expect(icon?.getAttribute("class")).toContain("md:size-[18px]");
   });
 
+  it("float 变体使用低调主体色毛玻璃样式", () => {
+    vi.mocked(useSession).mockReturnValue({ userId: null, profile: null, patchProfile: () => {} });
+    render(<WriteMomentButton variant="float" />);
+    const button = screen.getByRole("button", { name: "写碎语" });
+    expect(button.className).toContain("backdrop-blur-xl");
+    expect(button.className).toContain("bg-primary/12");
+    expect(button.className).toContain("ring-primary/25");
+    expect(button.className).toContain("text-primary");
+    expect(button.className).not.toContain("bg-primary ");
+  });
+
   it("未登录时点击弹出登录弹窗", async () => {
     const user = userEvent.setup();
     vi.mocked(useSession).mockReturnValue({ userId: null, profile: null, patchProfile: () => {} });
