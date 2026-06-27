@@ -68,6 +68,7 @@ export function ArticleHero({ article }: ArticleHeroProps) {
           >
             <UserAvatar
               src={article.user.avatar_url}
+              userId={article.user.id}
               name={authorName}
               size="sm"
               className="h-6 w-6"
