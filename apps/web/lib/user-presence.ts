@@ -54,8 +54,14 @@ export function resolvePresenceFromSubscription(
 }
 
 function pickActiveTime(input: PresenceInput): Date | null {
-  if (input.last_active_at) return new Date(input.last_active_at);
-  if (input.last_login_at) return new Date(input.last_login_at);
+  if (input.last_active_at) {
+    const active = new Date(input.last_active_at);
+    if (!Number.isNaN(active.getTime())) return active;
+  }
+  if (input.last_login_at) {
+    const login = new Date(input.last_login_at);
+    if (!Number.isNaN(login.getTime())) return login;
+  }
   return null;
 }
 
