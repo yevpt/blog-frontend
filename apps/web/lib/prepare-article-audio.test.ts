@@ -46,7 +46,7 @@ describe("prepareArticleAudioElement", () => {
 
     expect(audio.src).toBe("https://example.com/a.mp3");
     expect(audio.crossOrigin).toBe("anonymous");
-    expect(audio.load).toHaveBeenCalledOnce();
+    expect(audio.load).not.toHaveBeenCalled();
 
     audio.emit("canplay");
     await expect(promise).resolves.toBeUndefined();

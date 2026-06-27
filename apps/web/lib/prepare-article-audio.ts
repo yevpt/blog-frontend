@@ -22,8 +22,8 @@ export function prepareArticleAudioElement(audio: HTMLAudioElement, url: string)
     } else {
       audio.removeAttribute("crossorigin");
     }
-    audio.src = url;
-    audio.load();
+    // 赋值 src 即会触发浏览器加载，勿再调 load() 以免重复请求
+    audio.src = targetSrc;
   }
 
   if (audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
