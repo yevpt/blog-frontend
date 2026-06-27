@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ToastRegion } from "@repo/ui";
 import { apiClient } from "../../lib/api";
 import { toastQueue } from "../../lib/toast";
+import { renderWithAdminRouter } from "../../test/render-with-admin-router";
 import { MusicPage } from "./MusicPage";
 import { useMusicCatalog } from "./hooks/use-music-catalog";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
@@ -70,7 +71,7 @@ vi.mock("../../lib/api", () => ({
 }));
 
 function renderMusicPage() {
-  return render(
+  return renderWithAdminRouter(
     <>
       <MusicPage />
       <ToastRegion queue={toastQueue} />

@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, waitFor } from "@testing-library/react";
 import type { AdminCommentPageResp } from "@repo/api";
 import { apiClient } from "../../../lib/api";
+import { renderHookWithAdminRouter } from "../../../test/render-with-admin-router";
 import { useAdminCommentList } from "./use-admin-comment-list";
 
 vi.mock("../../../lib/api", () => ({
@@ -42,7 +43,7 @@ describe("useAdminCommentList", () => {
   });
 
   it("挂载后请求后台评论列表并映射行数据", async () => {
-    const { result } = renderHook(() => useAdminCommentList());
+    const { result } = renderHookWithAdminRouter(() => useAdminCommentList());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -59,7 +60,7 @@ describe("useAdminCommentList", () => {
   });
 
   it("目标类型筛选变更时回到第一页并携带筛选参数", async () => {
-    const { result } = renderHook(() => useAdminCommentList());
+    const { result } = renderHookWithAdminRouter(() => useAdminCommentList());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -79,7 +80,7 @@ describe("useAdminCommentList", () => {
   });
 
   it("搜索输入会去除首尾空白后发起查询", async () => {
-    const { result } = renderHook(() => useAdminCommentList());
+    const { result } = renderHookWithAdminRouter(() => useAdminCommentList());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -102,7 +103,7 @@ describe("useAdminCommentList", () => {
   it("请求失败时暴露 error 并清空行数据", async () => {
     vi.mocked(apiClient.comments.listAdmin).mockRejectedValue(new Error("加载失败"));
 
-    const { result } = renderHook(() => useAdminCommentList());
+    const { result } = renderHookWithAdminRouter(() => useAdminCommentList());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);

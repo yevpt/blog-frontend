@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, waitFor } from "@testing-library/react";
 import type { AdminArticlePageResp } from "@repo/api";
+import { renderHookWithAdminRouter } from "../../../test/render-with-admin-router";
 import { useAdminArticleList } from "./use-article-list";
 import { apiClient } from "../../../lib/api";
 
@@ -46,7 +47,7 @@ describe("useAdminArticleList", () => {
   });
 
   it("挂载后请求管理端文章列表并映射表格行", async () => {
-    const { result } = renderHook(() => useAdminArticleList());
+    const { result } = renderHookWithAdminRouter(() => useAdminArticleList());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -62,14 +63,38 @@ describe("useAdminArticleList", () => {
     expect(result.current.error).toBeNull();
   });
 
-  it("分类筛选变更时携带 query 参数", async () => {
-    const { result } = renderHook(() => useAdminArticleList());
+  it("从 URL 查询参数恢复列表状态", async () => {
+    const { result } = renderHookWithAdminRouter(() => useAdminArticleList(), {
+      initialEntry: "/articles?page=2&q=Go&category=3&sort=status&order=asc",
+    });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    result.current.setCategoryId("3");
+    expect(result.current.page).toBe(2);
+    expect(result.current.filters).toEqual({ categoryId: "3", search: "Go" });
+    expect(result.current.sort).toEqual({ column: "status", direction: "ascending" });
+    expect(apiClient.articles.listAdmin).toHaveBeenLastCalledWith({
+      page: 2,
+      page_size: 10,
+      category_id: 3,
+      search: "Go",
+      sort_by: "status",
+      sort_order: "asc",
+    });
+  });
+
+  it("分类筛选变更时携带 query 参数", async () => {
+    const { result } = renderHookWithAdminRouter(() => useAdminArticleList());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    act(() => {
+      result.current.setCategoryId("3");
+    });
 
     await waitFor(() => {
       expect(apiClient.articles.listAdmin).toHaveBeenLastCalledWith({
@@ -81,7 +106,7 @@ describe("useAdminArticleList", () => {
   });
 
   it("setSort 更新排序参数", async () => {
-    const { result } = renderHook(() => useAdminArticleList());
+    const { result } = renderHookWithAdminRouter(() => useAdminArticleList());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -102,7 +127,9 @@ describe("useAdminArticleList", () => {
   });
 
   it("setSort 清空排序时不携带排序 query 参数", async () => {
-    const { result } = renderHook(() => useAdminArticleList());
+    const { result } = renderHookWithAdminRouter(() => useAdminArticleList(), {
+      initialEntry: "/articles?sort=status&order=asc",
+    });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -121,7 +148,7 @@ describe("useAdminArticleList", () => {
   });
 
   it("setSearch 更新 filters.search", async () => {
-    const { result } = renderHook(() => useAdminArticleList());
+    const { result } = renderHookWithAdminRouter(() => useAdminArticleList());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -136,10 +163,38 @@ describe("useAdminArticleList", () => {
     });
   });
 
+  it("resetListQuery 清空 URL 中的列表配置", async () => {
+    const { result } = renderHookWithAdminRouter(() => useAdminArticleList(), {
+      initialEntry: "/articles?page=2&q=Go&category=3&sort=status&order=asc",
+    });
+
+    await waitFor(() => {
+      expect(result.current.hasActiveListQuery).toBe(true);
+    });
+
+    act(() => {
+      result.current.resetListQuery();
+    });
+
+    await waitFor(() => {
+      expect(result.current.hasActiveListQuery).toBe(false);
+      expect(result.current.page).toBe(1);
+      expect(result.current.filters).toEqual({ categoryId: "all", search: "" });
+      expect(result.current.sort).toBeUndefined();
+    });
+
+    await waitFor(() => {
+      expect(apiClient.articles.listAdmin).toHaveBeenLastCalledWith({
+        page: 1,
+        page_size: 10,
+      });
+    });
+  });
+
   it("请求失败时暴露 error", async () => {
     vi.mocked(apiClient.articles.listAdmin).mockRejectedValue(new Error("网络错误"));
 
-    const { result } = renderHook(() => useAdminArticleList());
+    const { result } = renderHookWithAdminRouter(() => useAdminArticleList());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);

@@ -130,7 +130,7 @@ export function RichEditor({
 
   const shell = clsx(
     isPlain
-      ? "flex h-full min-h-0 flex-col overflow-hidden bg-transparent"
+      ? "flex min-h-0 flex-col bg-transparent max-xl:h-auto max-xl:overflow-visible xl:h-full xl:overflow-hidden"
       : "overflow-hidden rounded-xl border border-border bg-card px-3 py-3 sm:px-4 sm:py-3.5",
     disabled && "opacity-60",
     className,
@@ -140,7 +140,9 @@ export function RichEditor({
     "w-full",
     isPlain
       ? [
-          "min-h-0 flex-1 overflow-y-auto overscroll-y-contain",
+          "min-h-0 flex-1 overscroll-y-contain",
+          "max-xl:flex-none max-xl:overflow-visible",
+          "xl:overflow-y-auto",
           "[&_.tiptap]:block [&_.tiptap]:w-full",
           header ? "[&_.tiptap]:min-h-[64px]" : "[&_.tiptap]:min-h-[320px]",
           "[&_.tiptap]:max-h-none [&_.tiptap]:overflow-visible",

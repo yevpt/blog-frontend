@@ -100,6 +100,59 @@ describe("useMomentList", () => {
     });
   });
 
+  // 回归：StrictMode 双执行 / userId 切换导致旧 effect 被取消时，
+  // 旧拉取不能置 isLoadingInitial=false，否则新拉取完成前会闪现空态（如「暂无碎语」）。
+  it("cancelled user-mode fetch keeps loading true until the new fetch resolves", async () => {
+    let resolveFirst: (value: Response) => void = () => {};
+    let resolveSecond: (value: Response) => void = () => {};
+    vi.mocked(fetch).mockImplementationOnce(
+      () => new Promise<Response>((resolve) => (resolveFirst = resolve)),
+    );
+    vi.mocked(fetch).mockImplementationOnce(
+      () => new Promise<Response>((resolve) => (resolveSecond = resolve)),
+    );
+
+    const emptyInitial: MomentPageResp = {
+      total: 0,
+      pages: 0,
+      page: 1,
+      page_size: 10,
+      list: [],
+    };
+
+    // 先以 userId=42 挂载，发起首个拉取（暂不 resolve）
+    const { result, rerender } = renderHook(
+      ({ userId }: { userId: number }) =>
+        useMomentList({ initialPage: emptyInitial, mode: "user", userId }),
+      { initialProps: { userId: 42 } },
+    );
+
+    expect(result.current.isLoadingInitial).toBe(true);
+
+    // 切到 userId=43：旧 effect 被取消，新 effect 发起第二个拉取
+    rerender({ userId: 43 });
+
+    // 让被取消的旧拉取 resolve —— 不应解锁 loading，也不应写入 moments
+    await act(async () => {
+      resolveFirst(jsonResponse(makePageResp({ list: [makeMoment(999)] })));
+      await Promise.resolve();
+    });
+
+    expect(result.current.isLoadingInitial).toBe(true);
+    expect(result.current.moments).toHaveLength(0);
+
+    // 新拉取 resolve 后才解锁 loading 并写入数据
+    await act(async () => {
+      resolveSecond(jsonResponse(makePageResp({ list: [makeMoment(5)] })));
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoadingInitial).toBe(false);
+      expect(result.current.moments.map((item) => item.id)).toEqual([5]);
+    });
+  });
+
   it("feed mode does not load user page on mount", () => {
     renderHook(() =>
       useMomentList({

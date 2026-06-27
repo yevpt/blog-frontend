@@ -89,6 +89,7 @@ export function mapDetailToFormState(detail: AdminArticleDetailResp) {
     musicId,
     articleStatus: detail.status,
     commentStatus: detail.comment_status,
+    isRecommended: detail.is_recommended === true,
     isPassworded: detail.passworded === true || detail.status === 2,
     savedArticleId: detail.id,
   };
@@ -104,6 +105,7 @@ interface BuildSaveReqInput {
   musicId: number | null;
   targetStatus: 0 | 1;
   commentStatus: 0 | 1;
+  isRecommended: boolean;
   articleId?: number;
 }
 
@@ -123,7 +125,6 @@ export function buildArticleSaveReq(input: BuildSaveReqInput): ArticleSaveReq {
     category_ids: [input.categoryId],
     tags: input.selectedTags.map((tag, index) => ({ tag_id: tag.id, seq: index })),
     music_ids: input.musicId !== null ? [input.musicId] : [],
-    recommend: false,
-    recommend_seq: 0,
+    recommend: input.isRecommended,
   };
 }

@@ -1,12 +1,19 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ArticleLikeResp, ArticleListItemResp, ArticlePageResp } from "@repo/api";
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
 import { addToast } from "@/lib/toast";
 import { apiJson, ApiClientError, getApiErrorMessage } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
+import {
+  getArticleListCache,
+  getLastArticleListCategoryId,
+  setArticleListCache,
+  setLastArticleListCategoryId,
+  shouldRestoreArticleListCache,
+} from "@/lib/article-list-cache";
 
 export const ALL_CATEGORY_ID = 0;
 
@@ -23,20 +30,53 @@ function isAbortError(err: unknown): boolean {
   );
 }
 
+function resolveBootCategoryId(isControlled: boolean, controlledCategoryId?: number): number {
+  if (isControlled) {
+    return controlledCategoryId ?? ALL_CATEGORY_ID;
+  }
+  return getLastArticleListCategoryId();
+}
+
+function resolveBootListState(
+  categoryId: number,
+  initialPage: ArticlePageResp,
+): {
+  articles: ArticleListItemResp[];
+  currentPage: number;
+  pageData: ArticlePageResp;
+  endReached: boolean;
+} {
+  const cached = getArticleListCache(categoryId);
+  if (cached && shouldRestoreArticleListCache(cached, initialPage)) {
+    return cached;
+  }
+  return {
+    articles: initialPage.list,
+    currentPage: initialPage.page || 1,
+    pageData: initialPage,
+    endReached: (initialPage.page || 1) >= initialPage.pages,
+  };
+}
+
 export function useArticleList({ initialPage, controlledCategoryId }: UseArticleListOptions) {
   const { userId } = useSession();
   const { open: openLoginModal } = useLoginModal();
 
   const isControlled = controlledCategoryId !== undefined;
-  const [internalCategoryId, setInternalCategoryId] = useState(ALL_CATEGORY_ID);
+  const bootCategoryId = resolveBootCategoryId(isControlled, controlledCategoryId);
+  const bootListState = resolveBootListState(bootCategoryId, initialPage);
+
+  const [internalCategoryId, setInternalCategoryId] = useState(
+    isControlled ? ALL_CATEGORY_ID : bootCategoryId,
+  );
   const currentCategoryId = isControlled ? controlledCategoryId : internalCategoryId;
 
-  const [currentPage, setCurrentPage] = useState(initialPage.page || 1);
-  const [pageData, setPageData] = useState(initialPage);
-  const [articles, setArticles] = useState(initialPage.list);
+  const [currentPage, setCurrentPage] = useState(bootListState.currentPage);
+  const [pageData, setPageData] = useState(bootListState.pageData);
+  const [articles, setArticles] = useState(bootListState.articles);
   const [isLoadingInitial, setIsLoadingInitial] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [endReached, setEndReached] = useState((initialPage.page || 1) >= initialPage.pages);
+  const [endReached, setEndReached] = useState(bootListState.endReached);
   const [fetchError, setFetchError] = useState(false);
   const [pendingLikeIds, setPendingLikeIds] = useState<ReadonlySet<number>>(() => new Set());
 
@@ -45,6 +85,28 @@ export function useArticleList({ initialPage, controlledCategoryId }: UseArticle
   categoryRef.current = currentCategoryId;
   const pendingLikeIdsRef = useRef(pendingLikeIds);
   pendingLikeIdsRef.current = pendingLikeIds;
+  const isLoadingMoreRef = useRef(isLoadingMore);
+  isLoadingMoreRef.current = isLoadingMore;
+  const isLoadingInitialRef = useRef(isLoadingInitial);
+  isLoadingInitialRef.current = isLoadingInitial;
+  const endReachedRef = useRef(endReached);
+  endReachedRef.current = endReached;
+  const pageDataRef = useRef(pageData);
+  pageDataRef.current = pageData;
+  const currentPageRef = useRef(currentPage);
+  currentPageRef.current = currentPage;
+
+  useEffect(() => {
+    setArticleListCache(currentCategoryId, {
+      articles,
+      currentPage,
+      pageData,
+      endReached,
+    });
+    if (!isControlled) {
+      setLastArticleListCategoryId(currentCategoryId);
+    }
+  }, [articles, currentCategoryId, currentPage, endReached, isControlled, pageData]);
 
   const fetchPage = useCallback(async (categoryId: number, page: number, signal?: AbortSignal) => {
     const qs = buildQuery({
@@ -91,7 +153,20 @@ export function useArticleList({ initialPage, controlledCategoryId }: UseArticle
     (id: number) => {
       if (!isControlled) {
         setInternalCategoryId(id);
+        setLastArticleListCategoryId(id);
       }
+
+      const cached = getArticleListCache(id);
+      if (cached) {
+        setArticles(cached.articles);
+        setPageData(cached.pageData);
+        setCurrentPage(cached.currentPage);
+        setEndReached(cached.endReached);
+        setFetchError(false);
+        setIsLoadingInitial(false);
+        return;
+      }
+
       setCurrentPage(1);
       void reloadFirstPage(id);
     },
@@ -129,16 +204,16 @@ export function useArticleList({ initialPage, controlledCategoryId }: UseArticle
   );
 
   const loadMore = useCallback(async () => {
-    if (isLoadingMore || isLoadingInitial || endReached) {
+    if (isLoadingMoreRef.current || isLoadingInitialRef.current || endReachedRef.current) {
       return;
     }
-    if (currentPage >= pageData.pages) {
+    if (currentPageRef.current >= pageDataRef.current.pages) {
       setEndReached(true);
       return;
     }
 
     const categoryId = currentCategoryId;
-    const nextPage = currentPage + 1;
+    const nextPage = currentPageRef.current + 1;
     setIsLoadingMore(true);
     setFetchError(false);
 
@@ -162,15 +237,7 @@ export function useArticleList({ initialPage, controlledCategoryId }: UseArticle
         setIsLoadingMore(false);
       }
     }
-  }, [
-    currentCategoryId,
-    currentPage,
-    endReached,
-    fetchPage,
-    isLoadingInitial,
-    isLoadingMore,
-    pageData.pages,
-  ]);
+  }, [currentCategoryId, fetchPage]);
 
   const refreshForSessionChange = useCallback(async () => {
     setFetchError(false);

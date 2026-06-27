@@ -1,5 +1,20 @@
 import type { AdminArticleListItemResp, ArticleListSortBy, ArticleListSortOrder } from "@repo/api";
-import type { DataTableSortDirection } from "@repo/ui";
+import type { DataTableSortDirection, DataTableSortState } from "@repo/ui";
+import type { AdminListQueryCodec } from "../../lib/admin-list-query";
+import {
+  hasActiveListPage,
+  hasActiveListSearch,
+  hasActiveListSort,
+  hasActiveStringFilters,
+  parseListPage,
+  parseListSearch,
+  parseListSort,
+  parseStringFilter,
+  writeListPage,
+  writeListSearch,
+  writeListSort,
+  writeStringFilter,
+} from "../../lib/admin-list-query";
 
 /** 与后端 status(0 隐藏 / 1 公开 / 2 加密) 及软删除对齐 */
 export type ArticleStatus = "published" | "hidden" | "encrypted" | "archived";
@@ -26,6 +41,92 @@ export interface ArticleRow {
 export interface FilterOption<T extends string = string> {
   value: T;
   label: string;
+}
+
+export interface AdminArticleListFilters {
+  categoryId: string;
+  search: string;
+  [key: string]: string | undefined;
+}
+
+export interface AdminArticleListQueryState {
+  page: number;
+  filters: AdminArticleListFilters;
+  sort?: DataTableSortState;
+}
+
+const ARTICLE_TABLE_SORT_COLUMNS: ArticleTableSortColumn[] = [
+  "createdAt",
+  "updatedAt",
+  "category",
+  "status",
+  "pinned",
+];
+
+const DEFAULT_ARTICLE_LIST_FILTERS: AdminArticleListFilters = {
+  categoryId: "all",
+  search: "",
+};
+
+export const DEFAULT_ARTICLE_LIST_QUERY_STATE: AdminArticleListQueryState = {
+  page: 1,
+  filters: DEFAULT_ARTICLE_LIST_FILTERS,
+};
+
+/** 列表是否存在非默认的搜索、筛选、排序或分页配置 */
+export function hasActiveArticleListQuery(state: AdminArticleListQueryState): boolean {
+  return articleListQueryCodec.hasActive(state);
+}
+
+export const articleListQueryCodec: AdminListQueryCodec<AdminArticleListQueryState> = {
+  defaultState: DEFAULT_ARTICLE_LIST_QUERY_STATE,
+  parse(params) {
+    return {
+      page: parseListPage(params),
+      filters: {
+        categoryId: parseStringFilter(params, "category", DEFAULT_ARTICLE_LIST_FILTERS.categoryId),
+        search: parseListSearch(params, DEFAULT_ARTICLE_LIST_FILTERS.search),
+      },
+      sort: parseListSort(params, ARTICLE_TABLE_SORT_COLUMNS),
+    };
+  },
+  write(state) {
+    const params = new URLSearchParams();
+    writeListPage(params, state.page);
+    writeListSearch(params, state.filters.search);
+    writeStringFilter(
+      params,
+      "category",
+      state.filters.categoryId,
+      DEFAULT_ARTICLE_LIST_FILTERS.categoryId,
+    );
+    writeListSort(params, state.sort);
+    return params;
+  },
+  hasActive(state) {
+    return (
+      hasActiveListPage(state.page) ||
+      hasActiveListSearch(state.filters.search) ||
+      hasActiveStringFilters(state.filters, {
+        categoryId: DEFAULT_ARTICLE_LIST_FILTERS.categoryId,
+      }) ||
+      hasActiveListSort(state.sort)
+    );
+  },
+};
+
+/** 从 URL 查询参数解析文章列表状态 */
+export function parseArticleListSearchParams(params: URLSearchParams): AdminArticleListQueryState {
+  return articleListQueryCodec.parse(params);
+}
+
+/** 将文章列表状态写入 URL 查询参数（省略默认值以保持 URL 简洁） */
+export function writeArticleListSearchParams(state: AdminArticleListQueryState): URLSearchParams {
+  return articleListQueryCodec.write(state);
+}
+
+export function buildArticleEditorLinkState(listSearch: string) {
+  return listSearch ? { listSearch } : {};
 }
 
 export const articleStatusText: Record<ArticleStatus, string> = {
@@ -75,8 +176,8 @@ export function parseOptionalIdFilter(value: string): number | undefined {
   return Number.isInteger(id) && id > 0 ? id : undefined;
 }
 
-export function toArticleListSortBy(column: ArticleTableSortColumn): ArticleListSortBy {
-  return COLUMN_TO_SORT_BY[column];
+export function toArticleListSortBy(column: string): ArticleListSortBy {
+  return COLUMN_TO_SORT_BY[column as ArticleTableSortColumn];
 }
 
 export function toArticleListSortOrder(direction: DataTableSortDirection): ArticleListSortOrder {

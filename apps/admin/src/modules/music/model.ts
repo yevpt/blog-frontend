@@ -8,6 +8,7 @@ import type {
   MusicUploadResp,
 } from "@repo/api";
 import type { DataTableState } from "@repo/ui";
+import { createClientTableQueryCodec } from "../../lib/admin-list-query";
 
 export type MusicCatalogTab = "songs" | "artists" | "albums";
 
@@ -321,3 +322,14 @@ export function countMusicStatus(rows: MusicRow[]): MusicStatusCounts {
     { total: 0, publicCount: 0, hiddenCount: 0, withAudioCount: 0 },
   );
 }
+
+export const MUSIC_TABLE_DEFAULT_STATE: DataTableState = {
+  searchValue: "",
+  filters: { visibility: "all" },
+  sort: { column: "seq", direction: "ascending" },
+};
+
+export const musicTableQueryCodec = createClientTableQueryCodec({
+  defaultState: MUSIC_TABLE_DEFAULT_STATE,
+  sortColumns: ["seq", "name", "duration"],
+});

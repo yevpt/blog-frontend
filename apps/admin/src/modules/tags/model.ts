@@ -1,5 +1,6 @@
 import type { TagCreateReq, TagItemResp, TagUpdateReq } from "@repo/api";
 import type { DataTableState } from "@repo/ui";
+import { createClientTableQueryCodec } from "../../lib/admin-list-query";
 
 export interface TagRow {
   id: string;
@@ -158,3 +159,14 @@ export function filterAndSortTagRows(rows: TagRow[], state: DataTableState): Tag
 
   return sorted;
 }
+
+export const TAG_TABLE_DEFAULT_STATE: DataTableState = {
+  searchValue: "",
+  filters: {},
+  sort: { column: "seq", direction: "ascending" },
+};
+
+export const tagTableQueryCodec = createClientTableQueryCodec({
+  defaultState: TAG_TABLE_DEFAULT_STATE,
+  sortColumns: ["seq", "name", "url", "articleCount"],
+});

@@ -71,6 +71,8 @@ describe("CommentsPage", () => {
       filters: { targetType: "all", search: "" },
       setSearch: mockSetSearch,
       setTargetType: mockSetTargetType,
+      resetListQuery: vi.fn(),
+      hasActiveListQuery: false,
       refetch: mockRefetch,
     });
   });
@@ -116,6 +118,8 @@ describe("CommentsPage", () => {
       filters: { targetType: "all", search: "" },
       setSearch: mockSetSearch,
       setTargetType: mockSetTargetType,
+      resetListQuery: vi.fn(),
+      hasActiveListQuery: false,
       refetch: mockRefetch,
     });
 

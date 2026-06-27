@@ -22,8 +22,19 @@ import { useAdminGuestbookList } from "./hooks/use-admin-guestbook-list";
 import type { GuestbookRow } from "./model";
 
 export function GuestbookPage() {
-  const { rows, pageData, isLoading, error, page, setPage, filters, setSearch, refetch } =
-    useAdminGuestbookList();
+  const {
+    rows,
+    pageData,
+    isLoading,
+    error,
+    page,
+    setPage,
+    filters,
+    setSearch,
+    resetListQuery,
+    hasActiveListQuery,
+    refetch,
+  } = useAdminGuestbookList();
   const isMdScreen = useIsMdScreen();
   const [deletingMessage, setDeletingMessage] = useState<GuestbookRow | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -152,7 +163,12 @@ export function GuestbookPage() {
         ) : null}
 
         <AdminListCard className="md:min-h-[360px]">
-          <GuestbookListToolbar searchValue={filters.search} onSearchChange={setSearch} />
+          <GuestbookListToolbar
+            searchValue={filters.search}
+            onSearchChange={setSearch}
+            canClear={hasActiveListQuery}
+            onClear={resetListQuery}
+          />
 
           <div className="min-h-0 flex-1 overflow-hidden">
             {isMdScreen ? (

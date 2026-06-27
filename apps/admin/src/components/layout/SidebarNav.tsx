@@ -24,7 +24,10 @@ export function SidebarNav({ isCollapsed, onNavigate }: SidebarNavProps) {
   return (
     <nav
       aria-label="后台导航"
-      className={cn("flex flex-1 flex-col gap-4 px-3 py-4", isCollapsed && "px-2")}
+      className={cn(
+        "flex flex-1 min-h-0 flex-col gap-4 overflow-y-auto px-3 py-4",
+        isCollapsed && "px-2",
+      )}
     >
       {navGroups.map((group) => (
         <div key={group.group ?? "overview"} className="grid gap-1.5">

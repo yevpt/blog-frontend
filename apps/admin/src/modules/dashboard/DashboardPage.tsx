@@ -230,10 +230,10 @@ export function DashboardPage() {
             </Link>
             <Link
               to="/moments"
-              aria-label="查看动态管理"
+              aria-label="查看碎语管理"
               className="rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              新动态 <span className="font-medium">{summary.interactions.new_moments}</span>
+              新碎语 <span className="font-medium">{summary.interactions.new_moments}</span>
             </Link>
             <Link
               to="/users"

@@ -88,9 +88,9 @@ describe("ArticleEditorWritingPanel", () => {
     );
 
     const panel = screen.getByLabelText("写作区");
-    expect(panel).toHaveClass("overflow-hidden");
-    expect(panel).toHaveClass("h-full");
-    expect(panel).toHaveClass("xl:min-h-full");
-    expect(container.querySelector(".border-t")).toHaveClass("min-h-0");
+    expect(panel).toHaveClass("xl:overflow-hidden");
+    expect(panel).toHaveClass("xl:h-full");
+    expect(panel).toHaveClass("max-xl:overflow-visible");
+    expect(container.querySelector(".border-t")).toHaveClass("xl:min-h-0");
   });
 });

@@ -8,7 +8,7 @@ export const commentsModule: AdminModule = {
     icon: "message-circle",
     path: "/comments",
     group: "内容",
-    description: "管理文章与动态评论",
+    description: "管理文章与碎语评论",
   },
   routes: [{ path: "/comments", element: <CommentsPage /> }],
 };

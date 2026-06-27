@@ -5,6 +5,7 @@ import type {
   FriendLinkUpdateReq,
 } from "@repo/api";
 import type { DataTableState } from "@repo/ui";
+import { createClientTableQueryCodec } from "../../lib/admin-list-query";
 
 /** 选图后、压缩前原始体积上限，对齐后端 MaxFriendLinkLogoBytes */
 export const FRIEND_LINK_LOGO_RAW_MAX_BYTES = 2 * 1024 * 1024;
@@ -297,3 +298,14 @@ export function countFriendLinksByStatus(rows: FriendLinkRow[]): FriendLinkStatu
     { total: 0, visible: 0, hidden: 0, disconnected: 0 },
   );
 }
+
+export const FRIEND_LINK_TABLE_DEFAULT_STATE: DataTableState = {
+  searchValue: "",
+  filters: { status: "all" },
+  sort: { column: "seq", direction: "ascending" },
+};
+
+export const friendLinkTableQueryCodec = createClientTableQueryCodec({
+  defaultState: FRIEND_LINK_TABLE_DEFAULT_STATE,
+  sortColumns: ["seq", "name", "updatedAt"],
+});

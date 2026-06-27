@@ -1,11 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AdminGuestbookPageResp } from "@repo/api";
+import { useAdminListQuery, useDebouncedValue } from "../../../lib/admin-list-query";
 import { apiClient } from "../../../lib/api";
-import { mapGuestbookToRow, type GuestbookRow } from "../model";
+import {
+  guestbookListQueryCodec,
+  mapGuestbookToRow,
+  type AdminGuestbookListFilters,
+  type GuestbookRow,
+} from "../model";
 
-interface AdminGuestbookListFilters {
-  search: string;
-}
+export type { AdminGuestbookListFilters };
 
 export interface UseAdminGuestbookListResult {
   rows: GuestbookRow[];
@@ -16,6 +20,8 @@ export interface UseAdminGuestbookListResult {
   setPage: (page: number) => void;
   filters: AdminGuestbookListFilters;
   setSearch: (value: string) => void;
+  resetListQuery: () => void;
+  hasActiveListQuery: boolean;
   refetch: () => Promise<void>;
 }
 
@@ -23,32 +29,18 @@ const DEFAULT_PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function useAdminGuestbookList(): UseAdminGuestbookListResult {
-  const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState<AdminGuestbookListFilters>({ search: "" });
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const { state, patchState, resetListQuery, hasActiveListQuery } =
+    useAdminListQuery(guestbookListQueryCodec);
+  const { page, filters } = state;
+  const debouncedSearch = useDebouncedValue(filters.search.trim(), SEARCH_DEBOUNCE_MS);
   const [pageData, setPageData] = useState<AdminGuestbookPageResp | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
-  const previousDebouncedSearchRef = useRef(debouncedSearch);
 
   const refetch = useCallback(async () => {
     setReloadToken((current) => current + 1);
   }, []);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setDebouncedSearch(filters.search.trim());
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [filters.search]);
-
-  useEffect(() => {
-    if (previousDebouncedSearchRef.current === debouncedSearch) return;
-    previousDebouncedSearchRef.current = debouncedSearch;
-    setPage(1);
-  }, [debouncedSearch]);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,11 +73,37 @@ export function useAdminGuestbookList(): UseAdminGuestbookListResult {
     };
   }, [debouncedSearch, page, reloadToken]);
 
-  const setSearch = useCallback((value: string) => {
-    setFilters({ search: value });
-  }, []);
+  const setPage = useCallback(
+    (nextPage: number) => {
+      patchState((previous) => ({ ...previous, page: nextPage }));
+    },
+    [patchState],
+  );
+
+  const setSearch = useCallback(
+    (value: string) => {
+      patchState((previous) => ({
+        ...previous,
+        page: 1,
+        filters: { search: value },
+      }));
+    },
+    [patchState],
+  );
 
   const rows = useMemo(() => pageData?.list.map(mapGuestbookToRow) ?? [], [pageData]);
 
-  return { rows, pageData, isLoading, error, page, setPage, filters, setSearch, refetch };
+  return {
+    rows,
+    pageData,
+    isLoading,
+    error,
+    page,
+    setPage,
+    filters,
+    setSearch,
+    resetListQuery,
+    hasActiveListQuery,
+    refetch,
+  };
 }

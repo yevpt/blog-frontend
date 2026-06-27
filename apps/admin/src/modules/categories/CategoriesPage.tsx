@@ -1,17 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
 import { ApiError } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
-import {
-  Button,
-  DataTable,
-  type DataTableColumn,
-  type DataTableEmptyState,
-  type DataTableState,
-} from "@repo/ui";
+import { Button, DataTable, type DataTableColumn, type DataTableEmptyState } from "@repo/ui";
 import { AdminPageHeader } from "../../components/AdminPageHeader";
 import { AdminListCard } from "../../components/AdminListCard";
 import { AdminListSummary } from "../../components/AdminListSummary";
 import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
+import { useClientTableQuery } from "../../lib/admin-list-query";
 import { apiClient } from "../../lib/api";
 import { addToast } from "../../lib/toast";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
@@ -26,6 +21,7 @@ import {
   filterAndSortCategoryRows,
   matchCategorySearch,
   suggestNextSeq,
+  categoryTableQueryCodec,
   toCategoryCreateReq,
   toCategoryUpdateReq,
   type CategoryFormValues,
@@ -44,11 +40,13 @@ export function CategoriesPage() {
   const [articlesCategory, setArticlesCategory] = useState<CategoryRow | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [tableState, setTableState] = useState<DataTableState>({
-    searchValue: "",
-    filters: {},
-    sort: { column: "seq", direction: "ascending" },
-  });
+  const {
+    tableState,
+    handleSearchChange,
+    handleTableStateChange,
+    resetListQuery,
+    hasActiveListQuery,
+  } = useClientTableQuery(categoryTableQueryCodec);
 
   const nextSeq = useMemo(() => suggestNextSeq(items), [items]);
   const totalArticles = useMemo(() => rows.reduce((sum, row) => sum + row.articleCount, 0), [rows]);
@@ -67,10 +65,6 @@ export function CategoriesPage() {
     setFormMode("edit");
     setEditingCategory(category);
     setFormOpen(true);
-  }, []);
-
-  const handleSearchChange = useCallback((searchValue: string) => {
-    setTableState((current) => ({ ...current, searchValue }));
   }, []);
 
   const handleSubmit = useCallback(
@@ -212,7 +206,7 @@ export function CategoriesPage() {
     [openEditDialog],
   );
 
-  const hasActiveSearch = tableState.searchValue.trim().length > 0;
+  const hasActiveSearch = hasActiveListQuery;
   const emptyState: DataTableEmptyState = hasActiveSearch
     ? {
         icon: "search",
@@ -257,6 +251,8 @@ export function CategoriesPage() {
           <CategoryListToolbar
             searchValue={tableState.searchValue}
             onSearchChange={handleSearchChange}
+            canClear={hasActiveListQuery}
+            onClear={resetListQuery}
           />
 
           <div className="min-h-0 flex-1 overflow-hidden">
@@ -267,7 +263,7 @@ export function CategoriesPage() {
                 columns={columns}
                 getRowId={(category) => category.id}
                 state={tableState}
-                onStateChange={setTableState}
+                onStateChange={handleTableStateChange}
                 search={{
                   placeholder: "搜索分类名称、别名或描述…",
                   match: matchCategorySearch,

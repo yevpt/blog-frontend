@@ -28,6 +28,8 @@ export function MomentsPage() {
     filters,
     setSearch,
     setStatus,
+    resetListQuery,
+    hasActiveListQuery,
     refetch,
   } = useAdminMomentList();
   const isMdScreen = useIsMdScreen();
@@ -62,7 +64,7 @@ export function MomentsPage() {
       setIsSubmitting(true);
       try {
         await apiClient.moments.save(toMomentSaveReq(values, moment));
-        addToast(mode === "create" ? "动态已创建" : "动态已保存", "success");
+        addToast(mode === "create" ? "碎语已创建" : "碎语已保存", "success");
         setIsFormOpen(false);
         setEditingMoment(null);
         await refetch();
@@ -81,7 +83,7 @@ export function MomentsPage() {
       setIsDeleting(true);
       try {
         await apiClient.moments.delete(Number(moment.id));
-        addToast("动态已删除", "success");
+        addToast("碎语已删除", "success");
         setDeletingMoment(null);
         await refetch();
       } catch (err) {
@@ -103,7 +105,7 @@ export function MomentsPage() {
           addToast("已取消置顶", "success");
         } else {
           await apiClient.moments.setTop(Number(moment.id));
-          addToast("动态已置顶", "success");
+          addToast("碎语已置顶", "success");
         }
         await refetch();
       } catch (err) {
@@ -131,13 +133,13 @@ export function MomentsPage() {
   const emptyState: DataTableEmptyState = hasActiveFilter
     ? {
         icon: "search",
-        title: "未找到匹配的动态",
+        title: "未找到匹配的碎语",
         description: "调整搜索或筛选条件后再试。",
       }
     : {
         icon: "message-circle",
-        title: "还没有动态",
-        description: "用户发布动态后会出现在这里。",
+        title: "还没有碎语",
+        description: "用户发布碎语后会出现在这里。",
       };
 
   const total = pageData?.total ?? 0;
@@ -148,13 +150,13 @@ export function MomentsPage() {
   return (
     <div className="grid min-h-0 min-w-0 max-w-full gap-4 overflow-hidden md:max-h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:max-h-[calc(100dvh-3.5rem)]">
       <AdminPageHeader
-        title="动态管理"
-        description="管理全站动态内容、公开状态与置顶顺序。"
+        title="碎语管理"
+        description="管理全站碎语内容、公开状态与置顶顺序。"
         action={
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Button size="sm" className="w-full shrink-0 sm:w-auto" onPress={openCreateDialog}>
               <SvgIcon name="plus" size={15} />
-              新建动态
+              新建碎语
             </Button>
             <Button
               size="sm"
@@ -169,7 +171,7 @@ export function MomentsPage() {
         }
       />
 
-      <section className="flex min-h-0 min-w-0 max-w-full flex-col" aria-label="动态列表">
+      <section className="flex min-h-0 min-w-0 max-w-full flex-col" aria-label="碎语列表">
         {error ? (
           <p role="alert" className="pb-3 text-sm text-destructive">
             {error.message}
@@ -182,12 +184,14 @@ export function MomentsPage() {
             status={filters.status}
             onSearchChange={setSearch}
             onStatusChange={setStatus}
+            canClear={hasActiveListQuery}
+            onClear={resetListQuery}
           />
 
           <div className="min-h-0 flex-1 overflow-hidden">
             {isMdScreen ? (
               <DataTable
-                aria-label="动态列表"
+                aria-label="碎语列表"
                 items={rows}
                 columns={columns}
                 getRowId={(moment) => moment.id}

@@ -1,20 +1,26 @@
-import { SearchField } from "@repo/ui";
+import { AdminListToolbar } from "../../../components/AdminListToolbar";
 
 interface GuestbookListToolbarProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
+  canClear?: boolean;
+  onClear?: () => void;
 }
 
-export function GuestbookListToolbar({ searchValue, onSearchChange }: GuestbookListToolbarProps) {
+export function GuestbookListToolbar({
+  searchValue,
+  onSearchChange,
+  canClear = false,
+  onClear,
+}: GuestbookListToolbarProps) {
   return (
-    <div className="flex min-w-0 shrink-0 px-4 py-3">
-      <SearchField
-        aria-label="搜索留言"
-        placeholder="搜索留言内容…"
-        value={searchValue}
-        onChange={onSearchChange}
-        className="w-full max-w-none"
-      />
-    </div>
+    <AdminListToolbar
+      searchLabel="搜索留言"
+      searchPlaceholder="搜索留言内容…"
+      searchValue={searchValue}
+      onSearchChange={onSearchChange}
+      canClear={canClear}
+      onClear={onClear}
+    />
   );
 }

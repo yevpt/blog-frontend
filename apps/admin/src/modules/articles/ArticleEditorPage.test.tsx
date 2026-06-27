@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ToastRegion } from "@repo/ui";
@@ -137,11 +137,14 @@ const mockDetail = {
   updated_at: "2026-01-01",
 };
 
-function renderEditorPage(route = "/articles/new") {
-  window.history.pushState({}, "", route);
+function renderEditorPage(route: string | { pathname: string; state?: unknown } = "/articles/new") {
+  const entry = typeof route === "string" ? route : route;
+  if (typeof route === "string") {
+    window.history.pushState({}, "", route);
+  }
 
   return render(
-    <MemoryRouter initialEntries={[route]}>
+    <MemoryRouter initialEntries={[entry]}>
       <Routes>
         <Route
           path="/articles/new"
@@ -206,14 +209,31 @@ describe("ArticleEditorPage", () => {
 
     const layout = screen.getByTestId("article-editor-layout");
     expect(layout).toHaveClass("xl:min-h-[calc(100dvh-3.5rem)]");
+    expect(layout).toHaveClass("xl:overflow-hidden");
+    expect(layout).not.toHaveClass("max-h-[calc(100dvh-3rem)]");
     expect(layout).toHaveClass("motion-safe:animate-in");
     expect(layout).toHaveClass("motion-safe:fade-in");
-    expect(layout).not.toHaveClass("xl:overflow-visible");
 
     const main = screen.getByTestId("article-editor-main");
-    expect(main).toHaveClass("flex-1");
+    expect(main).toHaveClass("xl:flex-1");
     expect(main).toHaveClass("xl:items-stretch");
-    expect(main).toHaveClass("overflow-hidden");
+    expect(main).toHaveClass("xl:overflow-hidden");
+  });
+
+  it("移动端不锁视口高度，发布栏可随页面滚动触达", async () => {
+    renderEditorPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole("textbox", { name: "文章标题" })).toBeInTheDocument();
+    });
+
+    const layout = screen.getByTestId("article-editor-layout");
+    expect(layout).not.toHaveClass("overflow-hidden");
+    expect(layout).not.toHaveClass("max-h-[calc(100dvh-3rem)]");
+
+    const main = screen.getByTestId("article-editor-main");
+    expect(main).not.toHaveClass("overflow-hidden");
+    expect(main).not.toHaveClass("flex-1");
   });
 
   it("编辑页加载详情并回填", async () => {
@@ -226,6 +246,40 @@ describe("ArticleEditorPage", () => {
     expect(apiClient.articles.getAdminDetail).toHaveBeenCalledWith(12);
     expect(screen.getByText("Midnight Drafts")).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "文章描述" })).toHaveValue("摘要");
+  });
+
+  it("编辑页回填推荐状态", async () => {
+    vi.mocked(apiClient.articles.getAdminDetail).mockResolvedValue({
+      ...mockDetail,
+      is_recommended: true,
+    });
+
+    renderEditorPage("/articles/12/edit");
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("推荐到首页")).toBeChecked();
+    });
+  });
+
+  it("开启推荐后保存携带 recommend: true", async () => {
+    const user = userEvent.setup();
+    renderEditorPage("/articles/12/edit");
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "存草稿" })).toBeEnabled();
+    });
+
+    await user.click(screen.getByLabelText("推荐到首页"));
+    await user.click(screen.getByRole("button", { name: "存草稿" }));
+
+    await waitFor(() => {
+      expect(apiClient.articles.saveAdmin).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 12,
+          recommend: true,
+        }),
+      );
+    });
   });
 
   it("编辑页在公开曲库缺失时用详情 music 展示非公开曲目", async () => {
@@ -270,6 +324,7 @@ describe("ArticleEditorPage", () => {
           selectedTags: [],
           musicId: null,
           commentStatus: 1,
+          isRecommended: false,
         },
       }),
     );
@@ -302,6 +357,7 @@ describe("ArticleEditorPage", () => {
           selectedTags: [],
           musicId: null,
           commentStatus: 1,
+          isRecommended: false,
         },
       }),
     );
@@ -347,6 +403,7 @@ describe("ArticleEditorPage", () => {
           status: 0,
           category_ids: [1],
           cover_img_url: undefined,
+          recommend: false,
         }),
       );
     });
@@ -373,6 +430,7 @@ describe("ArticleEditorPage", () => {
           selectedTags: [],
           musicId: null,
           commentStatus: 1,
+          isRecommended: false,
         },
       }),
     );
@@ -385,7 +443,26 @@ describe("ArticleEditorPage", () => {
     await user.click(screen.getByRole("button", { name: "返回文章列表" }));
 
     expect(localStorage.getItem(key)).toBeNull();
-    expect(mockNavigate).toHaveBeenCalledWith("/articles");
+    expect(mockNavigate).toHaveBeenCalledWith({ pathname: "/articles", search: "" });
+  });
+
+  it("返回文章列表时恢复进入编辑页前的筛选状态", async () => {
+    const user = userEvent.setup();
+    renderEditorPage({
+      pathname: "/articles/12/edit",
+      state: { listSearch: "page=2&q=Go&category=3" },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "返回文章列表" })).toBeEnabled();
+    });
+
+    await user.click(screen.getByRole("button", { name: "返回文章列表" }));
+
+    expect(mockNavigate).toHaveBeenCalledWith({
+      pathname: "/articles",
+      search: "?page=2&q=Go&category=3",
+    });
   });
 
   it("发布使用 status 1", async () => {
@@ -434,6 +511,13 @@ describe("ArticleEditorPage", () => {
   it("封面上传后保存请求不使用 blob URL", async () => {
     const user = userEvent.setup();
     renderEditorPage("/articles/12/edit");
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "插入图片" })).toBeInTheDocument();
+    });
+
+    const coverImg = screen.getByAltText("文章封面预览");
+    fireEvent.load(coverImg);
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "更换" })).toBeEnabled();

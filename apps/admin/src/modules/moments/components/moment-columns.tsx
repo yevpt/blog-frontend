@@ -17,7 +17,7 @@ export function createMomentColumns({
   return [
     {
       id: "content",
-      header: "动态内容",
+      header: "碎语内容",
       isRowHeader: true,
       width: "36%",
       minWidth: 220,

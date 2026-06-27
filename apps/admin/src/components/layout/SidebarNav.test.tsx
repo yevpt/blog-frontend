@@ -17,6 +17,19 @@ describe("SidebarNav", () => {
     }
   });
 
+  it("导航区可内部滚动，保证底部用户按钮不被挤出视口", () => {
+    render(
+      <MemoryRouter>
+        <SidebarNav isCollapsed={false} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("navigation", { name: "后台导航" })).toHaveClass(
+      "min-h-0",
+      "overflow-y-auto",
+    );
+  });
+
   it("根据当前路由标记激活菜单", () => {
     render(
       <MemoryRouter initialEntries={["/tags"]}>

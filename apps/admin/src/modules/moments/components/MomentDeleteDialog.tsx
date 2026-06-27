@@ -23,10 +23,10 @@ export function MomentDeleteDialog({
       isDismissable={!isDeleting}
       placement="fullscreen-mobile"
       size="sm"
-      aria-label={moment ? `删除动态 ${moment.id}` : "删除动态"}
+      aria-label={moment ? `删除碎语 ${moment.id}` : "删除碎语"}
     >
       <div className="flex flex-col gap-4 p-4 sm:p-5">
-        <h2 className="text-base font-semibold text-foreground">删除这条动态？</h2>
+        <h2 className="text-base font-semibold text-foreground">删除这条碎语？</h2>
         <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">
           {moment?.content ?? ""}
         </p>

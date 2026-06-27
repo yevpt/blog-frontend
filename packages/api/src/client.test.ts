@@ -766,7 +766,7 @@ describe("createApiClient", () => {
     );
   });
 
-  it("moments.listAdmin 使用后台动态查询路径并拼接筛选参数", async () => {
+  it("moments.listAdmin 使用后台碎语查询路径并拼接筛选参数", async () => {
     vi.mocked(global.fetch).mockResolvedValue(
       mockResponse({
         code: 0,

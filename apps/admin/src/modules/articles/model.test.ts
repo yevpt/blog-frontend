@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 import type { AdminArticleListItemResp } from "@repo/api";
 import {
   buildIdFilterOptions,
+  hasActiveArticleListQuery,
   mapAdminArticleToRow,
+  parseArticleListSearchParams,
   parseOptionalIdFilter,
   toArticleListSortBy,
   toArticleListSortOrder,
+  writeArticleListSearchParams,
 } from "./model";
 
 function createArticle(
@@ -49,6 +52,52 @@ describe("model helpers", () => {
     expect(toArticleListSortBy("pinned")).toBe("recommended");
     expect(toArticleListSortOrder("ascending")).toBe("asc");
     expect(toArticleListSortOrder("descending")).toBe("desc");
+  });
+
+  it("parseArticleListSearchParams / writeArticleListSearchParams 往返列表状态", () => {
+    const params = writeArticleListSearchParams({
+      page: 2,
+      filters: { categoryId: "3", search: "Go" },
+      sort: { column: "status", direction: "ascending" },
+    });
+
+    expect(params.toString()).toBe("page=2&q=Go&category=3&sort=status&order=asc");
+    expect(parseArticleListSearchParams(params)).toEqual({
+      page: 2,
+      filters: { categoryId: "3", search: "Go" },
+      sort: { column: "status", direction: "ascending" },
+    });
+  });
+
+  it("writeArticleListSearchParams 省略默认查询参数", () => {
+    expect(
+      writeArticleListSearchParams({
+        page: 1,
+        filters: { categoryId: "all", search: "" },
+      }).toString(),
+    ).toBe("");
+  });
+
+  it("hasActiveArticleListQuery 识别非默认列表配置", () => {
+    expect(
+      hasActiveArticleListQuery({
+        page: 1,
+        filters: { categoryId: "all", search: "" },
+      }),
+    ).toBe(false);
+    expect(
+      hasActiveArticleListQuery({
+        page: 2,
+        filters: { categoryId: "all", search: "" },
+      }),
+    ).toBe(true);
+    expect(
+      hasActiveArticleListQuery({
+        page: 1,
+        filters: { categoryId: "3", search: "Go" },
+        sort: { column: "status", direction: "ascending" },
+      }),
+    ).toBe(true);
   });
 });
 

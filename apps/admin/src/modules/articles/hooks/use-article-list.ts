@@ -1,19 +1,19 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AdminArticlePageResp } from "@repo/api";
+import type { DataTableSortState } from "@repo/ui";
+import { useAdminListQuery, useDebouncedValue } from "../../../lib/admin-list-query";
 import { apiClient } from "../../../lib/api";
 import {
+  articleListQueryCodec,
   mapAdminArticleToRow,
   parseOptionalIdFilter,
   toArticleListSortBy,
   toArticleListSortOrder,
+  type AdminArticleListFilters,
   type ArticleRow,
-  type ArticleTableSort,
 } from "../model";
 
-export interface AdminArticleListFilters {
-  categoryId: string;
-  search: string;
-}
+export type { AdminArticleListFilters };
 
 export interface UseAdminArticleListResult {
   rows: ArticleRow[];
@@ -23,51 +23,31 @@ export interface UseAdminArticleListResult {
   page: number;
   setPage: (page: number) => void;
   filters: AdminArticleListFilters;
-  sort?: ArticleTableSort;
-  setSort: (sort?: ArticleTableSort) => void;
+  sort?: DataTableSortState;
+  setSort: (sort?: DataTableSortState) => void;
   setSearch: (value: string) => void;
   setCategoryId: (value: string) => void;
+  resetListQuery: () => void;
+  hasActiveListQuery: boolean;
   refetch: () => Promise<void>;
 }
 
 const DEFAULT_PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
 
-const DEFAULT_FILTERS: AdminArticleListFilters = {
-  categoryId: "all",
-  search: "",
-};
-
 export function useAdminArticleList(): UseAdminArticleListResult {
-  const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState<AdminArticleListFilters>(DEFAULT_FILTERS);
-  const [sort, setSortState] = useState<ArticleTableSort | undefined>();
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const { state, patchState, resetListQuery, hasActiveListQuery } =
+    useAdminListQuery(articleListQueryCodec);
+  const { page, filters, sort } = state;
+  const debouncedSearch = useDebouncedValue(filters.search.trim(), SEARCH_DEBOUNCE_MS);
   const [pageData, setPageData] = useState<AdminArticlePageResp | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
-  const previousDebouncedSearchRef = useRef(debouncedSearch);
 
   const refetch = useCallback(async () => {
     setReloadToken((current) => current + 1);
   }, []);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setDebouncedSearch(filters.search.trim());
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [filters.search]);
-
-  useEffect(() => {
-    if (previousDebouncedSearchRef.current === debouncedSearch) return;
-    previousDebouncedSearchRef.current = debouncedSearch;
-    setPage(1);
-  }, [debouncedSearch]);
 
   const query = useMemo(
     () => ({
@@ -116,19 +96,45 @@ export function useAdminArticleList(): UseAdminArticleListResult {
     };
   }, [page, query, reloadToken]);
 
-  const setSearch = useCallback((value: string) => {
-    setFilters((current) => ({ ...current, search: value }));
-  }, []);
+  const setPage = useCallback(
+    (nextPage: number) => {
+      patchState((previous) => ({ ...previous, page: nextPage }));
+    },
+    [patchState],
+  );
 
-  const setCategoryId = useCallback((value: string) => {
-    setPage(1);
-    setFilters((current) => ({ ...current, categoryId: value }));
-  }, []);
+  const setSearch = useCallback(
+    (value: string) => {
+      patchState((previous) => ({
+        ...previous,
+        page: 1,
+        filters: { ...previous.filters, search: value },
+      }));
+    },
+    [patchState],
+  );
 
-  const setSort = useCallback((nextSort?: ArticleTableSort) => {
-    setPage(1);
-    setSortState(nextSort);
-  }, []);
+  const setCategoryId = useCallback(
+    (value: string) => {
+      patchState((previous) => ({
+        ...previous,
+        page: 1,
+        filters: { ...previous.filters, categoryId: value },
+      }));
+    },
+    [patchState],
+  );
+
+  const setSort = useCallback(
+    (nextSort?: DataTableSortState) => {
+      patchState((previous) => ({
+        ...previous,
+        page: 1,
+        sort: nextSort,
+      }));
+    },
+    [patchState],
+  );
 
   const rows = pageData?.list.map(mapAdminArticleToRow) ?? [];
 
@@ -144,6 +150,8 @@ export function useAdminArticleList(): UseAdminArticleListResult {
     setSort,
     setSearch,
     setCategoryId,
+    resetListQuery,
+    hasActiveListQuery,
     refetch,
   };
 }

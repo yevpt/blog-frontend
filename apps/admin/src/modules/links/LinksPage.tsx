@@ -1,17 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
 import { ApiError } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
-import {
-  Button,
-  DataTable,
-  type DataTableColumn,
-  type DataTableEmptyState,
-  type DataTableState,
-} from "@repo/ui";
+import { Button, DataTable, type DataTableColumn, type DataTableEmptyState } from "@repo/ui";
 import { AdminPageHeader } from "../../components/AdminPageHeader";
 import { AdminListCard } from "../../components/AdminListCard";
 import { AdminListSummary } from "../../components/AdminListSummary";
 import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
+import { useClientTableQuery } from "../../lib/admin-list-query";
 import { apiClient } from "../../lib/api";
 import { addToast } from "../../lib/toast";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
@@ -25,6 +20,7 @@ import { useFriendLinkList } from "./hooks/use-friend-link-list";
 import {
   countFriendLinksByStatus,
   filterAndSortFriendLinkRows,
+  friendLinkTableQueryCodec,
   matchFriendLinkSearch,
   suggestNextSeq,
   toFriendLinkCreateReq,
@@ -45,11 +41,14 @@ export function LinksPage() {
   const [deletingLink, setDeletingLink] = useState<FriendLinkRow | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [tableState, setTableState] = useState<DataTableState>({
-    searchValue: "",
-    filters: { status: "all" },
-    sort: { column: "seq", direction: "ascending" },
-  });
+  const {
+    tableState,
+    handleSearchChange,
+    handleTableStateChange,
+    setStringFilter,
+    resetListQuery,
+    hasActiveListQuery,
+  } = useClientTableQuery(friendLinkTableQueryCodec);
 
   const nextSeq = useMemo(() => suggestNextSeq(items), [items]);
   const statusCounts = useMemo(() => countFriendLinksByStatus(rows), [rows]);
@@ -71,16 +70,12 @@ export function LinksPage() {
     setFormOpen(true);
   }, []);
 
-  const handleSearchChange = useCallback((searchValue: string) => {
-    setTableState((current) => ({ ...current, searchValue }));
-  }, []);
-
-  const handleStatusFilterChange = useCallback((status: string) => {
-    setTableState((current) => ({
-      ...current,
-      filters: { ...current.filters, status },
-    }));
-  }, []);
+  const handleStatusFilterChange = useCallback(
+    (status: string) => {
+      setStringFilter("status", status);
+    },
+    [setStringFilter],
+  );
 
   const handleSubmit = useCallback(
     async (
@@ -231,7 +226,7 @@ export function LinksPage() {
     [openEditDialog],
   );
 
-  const hasActiveSearch = tableState.searchValue.trim().length > 0;
+  const hasActiveSearch = hasActiveListQuery;
   const hasActiveStatusFilter = statusFilter !== "all";
   const emptyState: DataTableEmptyState =
     hasActiveSearch || hasActiveStatusFilter
@@ -280,6 +275,8 @@ export function LinksPage() {
             statusFilter={statusFilter}
             onSearchChange={handleSearchChange}
             onStatusFilterChange={handleStatusFilterChange}
+            canClear={hasActiveListQuery}
+            onClear={resetListQuery}
           />
 
           <div className="min-h-0 flex-1 overflow-hidden">
@@ -290,7 +287,7 @@ export function LinksPage() {
                 columns={columns}
                 getRowId={(link) => link.id}
                 state={tableState}
-                onStateChange={setTableState}
+                onStateChange={handleTableStateChange}
                 search={{
                   placeholder: "搜索名称、站点或描述…",
                   match: matchFriendLinkSearch,

@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import type { ArticleListItemResp, ArticlePageResp } from "@repo/api";
 import { useArticleList } from "./use-article-list";
+import { clearArticleListCache, setArticleListCache } from "@/lib/article-list-cache";
 
 const { mockOpenLoginModal, mockAddToast } = vi.hoisted(() => ({
   mockOpenLoginModal: vi.fn(),
@@ -56,6 +57,7 @@ describe("useArticleList", () => {
     mockSessionUserId = 7;
     mockOpenLoginModal.mockReset();
     mockAddToast.mockReset();
+    clearArticleListCache();
   });
 
   afterEach(() => {
@@ -156,6 +158,49 @@ describe("useArticleList", () => {
       const lastCall = vi.mocked(fetch).mock.calls.at(-1);
       expect(lastCall?.[0]).toBe("/api/articles?page=2");
     });
+  });
+
+  it("remount 后从缓存恢复 loadMore 后的列表", async () => {
+    const initialPage = makePageResp({
+      total: 4,
+      pages: 2,
+      page: 1,
+      list: [makeArticle(1, "第一页")],
+    });
+
+    setArticleListCache(0, {
+      articles: [makeArticle(1, "第一页"), makeArticle(11, "第二页")],
+      currentPage: 2,
+      pageData: makePageResp({ page: 2, pages: 2, list: [makeArticle(11, "第二页")] }),
+      endReached: true,
+    });
+
+    const { result } = renderHook(() => useArticleList({ initialPage }));
+
+    expect(result.current.articles).toHaveLength(2);
+    expect(result.current.articles.map((item) => item.id)).toEqual([1, 11]);
+    expect(result.current.currentPage).toBe(2);
+    expect(result.current.endReached).toBe(true);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("changeCategory 命中缓存时不重复请求", async () => {
+    setArticleListCache(1, {
+      articles: [makeArticle(3, "编程文章")],
+      currentPage: 1,
+      pageData: makePageResp({ list: [makeArticle(3, "编程文章")] }),
+      endReached: true,
+    });
+
+    const { result } = renderHook(() => useArticleList({ initialPage: makePageResp() }));
+
+    await act(async () => {
+      result.current.changeCategory(1);
+    });
+
+    expect(result.current.currentCategoryId).toBe(1);
+    expect(result.current.articles[0]?.title).toBe("编程文章");
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("aborts/replaces in-flight list request when a new list request starts", async () => {

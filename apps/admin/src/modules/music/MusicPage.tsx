@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { ApiError, type MusicAlbumResp, type MusicArtistResp } from "@repo/api";
-import { type DataTableState } from "@repo/ui";
+import { useClientTableQuery } from "../../lib/admin-list-query";
 import { AdminListCard } from "../../components/AdminListCard";
 import { apiClient } from "../../lib/api";
 import { addToast } from "../../lib/toast";
@@ -13,6 +13,7 @@ import { useMusicCatalog } from "./hooks/use-music-catalog";
 import {
   countMusicStatus,
   filterAndSortMusicRows,
+  musicTableQueryCodec,
   suggestNextMusicSeq,
   toAlbumSaveReq,
   toArtistSaveReq,
@@ -44,11 +45,14 @@ export function MusicPage() {
   const [deleteTarget, setDeleteTarget] = useState<MusicDeleteTarget | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [tableState, setTableState] = useState<DataTableState>({
-    searchValue: "",
-    filters: { visibility: "all" },
-    sort: { column: "seq", direction: "ascending" },
-  });
+  const {
+    tableState,
+    handleSearchChange,
+    handleTableStateChange,
+    setStringFilter,
+    resetListQuery,
+    hasActiveListQuery,
+  } = useClientTableQuery(musicTableQueryCodec);
 
   const nextSeq = useMemo(() => suggestNextMusicSeq(musicItems), [musicItems]);
   const statusCounts = useMemo(() => countMusicStatus(rows), [rows]);
@@ -91,16 +95,12 @@ export function MusicPage() {
     setAlbumOpen(true);
   }, []);
 
-  const handleSearchChange = useCallback((searchValue: string) => {
-    setTableState((current) => ({ ...current, searchValue }));
-  }, []);
-
-  const handleVisibilityFilterChange = useCallback((visibility: string) => {
-    setTableState((current) => ({
-      ...current,
-      filters: { ...current.filters, visibility },
-    }));
-  }, []);
+  const handleVisibilityFilterChange = useCallback(
+    (visibility: string) => {
+      setStringFilter("visibility", visibility);
+    },
+    [setStringFilter],
+  );
 
   const handleSongSubmit = useCallback(
     async (values: MusicFormValues, mode: FormMode, id?: string) => {
@@ -228,9 +228,11 @@ export function MusicPage() {
             visibilityFilter={visibilityFilter}
             isLoading={isLoading}
             isMdScreen={isMdScreen}
-            onTableStateChange={setTableState}
+            onTableStateChange={handleTableStateChange}
             onSearchChange={handleSearchChange}
             onVisibilityFilterChange={handleVisibilityFilterChange}
+            canClear={hasActiveListQuery}
+            onClear={resetListQuery}
             onCreate={openCreateSong}
             onEdit={openEditSong}
             onDelete={(row) => setDeleteTarget({ kind: "song", row })}

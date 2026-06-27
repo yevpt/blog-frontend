@@ -29,6 +29,7 @@ export type IconName =
   | "email"
   | "eye-off"
   | "eye"
+  | "feather"
   | "filter"
   | "folder"
   | "gender"

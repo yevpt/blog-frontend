@@ -64,6 +64,14 @@ describe("AdminLayout", () => {
     expect(screen.getByTestId("admin-content-shell")).toHaveClass("lg:pl-[56px]");
   });
 
+  it("侧栏容器使用动态视口高度，避免移动端底部被地址栏遮挡", () => {
+    renderLayout();
+
+    const shell = screen.getByTestId("admin-sidebar-shell");
+    expect(shell).toHaveClass("h-dvh", "top-0");
+    expect(shell).not.toHaveClass("inset-y-0");
+  });
+
   it("折叠按钮内嵌在侧栏里，不再凸出侧栏边缘", () => {
     renderLayout();
 

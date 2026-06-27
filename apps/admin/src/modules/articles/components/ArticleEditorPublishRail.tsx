@@ -1,6 +1,7 @@
 import { forwardRef, type ChangeEvent, type ReactNode, type RefObject } from "react";
 import { SvgIcon } from "@repo/icons";
-import { Button, Label, PopoverTrigger, Select, Card, cn } from "@repo/ui";
+import { Button, Label, PopoverTrigger, Select, Toggle, Card, cn } from "@repo/ui";
+import { ArticleCoverPreview } from "./ArticleCoverPreview";
 import { ArticleMusicPreviewRow } from "./ArticleMusicPreviewRow";
 import { ArticleTagPicker } from "./ArticleTagPicker";
 import type { ArticleTag } from "../editor-options";
@@ -29,6 +30,7 @@ interface ArticleEditorPublishRailProps {
   selectedMusic: MusicOption | null;
   musicPickerOpen: boolean;
   commentStatus: 0 | 1;
+  isRecommended: boolean;
   musicPickerTrigger: ReactNode;
   onCoverFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onRemoveCover: () => void;
@@ -37,20 +39,12 @@ interface ArticleEditorPublishRailProps {
   onMusicPickerOpenChange: (open: boolean) => void;
   onRemoveMusic: () => void;
   onCommentStatusChange: (key: string | number | null) => void;
+  onIsRecommendedChange: (isRecommended: boolean) => void;
 }
 
 const panelShellClassName = cn("flex flex-col overflow-hidden");
 const sectionPaddingClassName = "px-5";
 const fieldBlockClassName = "grid gap-2.5";
-
-/** 封面预览浮层上的紧凑操作钮，对齐推荐稿 chip-btn（26px 高、11px 字） */
-const coverChipClassName = cn(
-  "inline-flex h-[26px] w-auto shrink-0 items-center justify-center rounded-md px-2.5 py-0",
-  "text-[11px] font-semibold leading-none shadow-none",
-  "bg-black/55 text-white backdrop-blur-sm",
-  "hover:bg-black/70 hover:text-white",
-  "focus-visible:ring-1 focus-visible:ring-white/50 focus-visible:ring-offset-0",
-);
 
 export const ArticleEditorPublishRail = forwardRef<HTMLElement, ArticleEditorPublishRailProps>(
   function ArticleEditorPublishRail(
@@ -65,6 +59,7 @@ export const ArticleEditorPublishRail = forwardRef<HTMLElement, ArticleEditorPub
       selectedMusic,
       musicPickerOpen,
       commentStatus,
+      isRecommended,
       musicPickerTrigger,
       onCoverFileChange,
       onRemoveCover,
@@ -73,66 +68,21 @@ export const ArticleEditorPublishRail = forwardRef<HTMLElement, ArticleEditorPub
       onMusicPickerOpenChange,
       onRemoveMusic,
       onCommentStatusChange,
+      onIsRecommendedChange,
     },
     ref,
   ) {
     return (
-      <aside
-        ref={ref}
-        className={cn(
-          "max-xl:sticky max-xl:top-4 max-xl:max-h-[calc(100dvh-5rem)] max-xl:self-start max-xl:overflow-auto",
-          "xl:w-[320px] xl:self-start",
-        )}
-      >
+      <aside ref={ref} className="xl:w-[320px] xl:self-start">
         <Card className={panelShellClassName} aria-label="发布配置">
           <div className={cn(sectionPaddingClassName, "pt-5")}>
             <Label className="mb-2.5 text-xs font-medium text-muted-foreground">封面</Label>
-            <div className="group relative aspect-video overflow-hidden rounded-lg bg-muted shadow-card">
-              {coverUrl ? (
-                <img src={coverUrl} alt="文章封面预览" className="size-full object-cover" />
-              ) : (
-                <button
-                  type="button"
-                  aria-label="添加封面"
-                  disabled={isCoverUploading}
-                  onClick={() => coverInputRef.current?.click()}
-                  className="flex size-full flex-col items-center justify-center gap-1.5 text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground disabled:opacity-60"
-                >
-                  <SvgIcon name="image" size={20} />
-                  <span className="text-xs font-medium">
-                    {isCoverUploading ? "上传中…" : "添加封面"}
-                  </span>
-                </button>
-              )}
-              {coverUrl ? (
-                <div
-                  className={cn(
-                    "absolute inset-x-2 bottom-2 flex justify-end gap-1",
-                    "opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100",
-                  )}
-                >
-                  <Button
-                    type="button"
-                    variant="text"
-                    size="sm"
-                    isDisabled={isCoverUploading}
-                    onPress={() => coverInputRef.current?.click()}
-                    className={coverChipClassName}
-                  >
-                    {isCoverUploading ? "上传中…" : "更换"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="text"
-                    size="sm"
-                    onPress={onRemoveCover}
-                    className={coverChipClassName}
-                  >
-                    移除
-                  </Button>
-                </div>
-              ) : null}
-            </div>
+            <ArticleCoverPreview
+              coverUrl={coverUrl}
+              isCoverUploading={isCoverUploading}
+              onPickCover={() => coverInputRef.current?.click()}
+              onRemoveCover={onRemoveCover}
+            />
             <p className="mt-2.5 text-[11px] leading-relaxed text-muted-foreground">
               用于文章列表卡片与详情页顶部展示
             </p>
@@ -240,23 +190,43 @@ export const ArticleEditorPublishRail = forwardRef<HTMLElement, ArticleEditorPub
           <div
             className={cn(
               sectionPaddingClassName,
-              "flex items-center justify-between gap-4 border-t border-border/60 py-4",
+              "flex flex-col gap-4 border-t border-border/60 py-4",
             )}
           >
-            <Label htmlFor="article-comment" className="text-xs font-medium text-muted-foreground">
-              评论
-            </Label>
-            <Select
-              id="article-comment"
-              aria-label="评论设置"
-              size="sm"
-              selectedKey={String(commentStatus)}
-              onSelectionChange={onCommentStatusChange}
-              className="w-auto min-w-[7.5rem]"
-            >
-              <Select.Item id="1" label="允许评论" />
-              <Select.Item id="0" label="关闭评论" />
-            </Select>
+            <div className="flex items-center justify-between gap-4">
+              <Label
+                htmlFor="article-recommend"
+                className="text-xs font-medium text-muted-foreground"
+              >
+                推荐到首页
+              </Label>
+              <Toggle
+                id="article-recommend"
+                aria-label="推荐到首页"
+                isSelected={isRecommended}
+                onChange={onIsRecommendedChange}
+                slim
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <Label
+                htmlFor="article-comment"
+                className="text-xs font-medium text-muted-foreground"
+              >
+                评论
+              </Label>
+              <Select
+                id="article-comment"
+                aria-label="评论设置"
+                size="sm"
+                selectedKey={String(commentStatus)}
+                onSelectionChange={onCommentStatusChange}
+                className="w-auto min-w-[7.5rem]"
+              >
+                <Select.Item id="1" label="允许评论" />
+                <Select.Item id="0" label="关闭评论" />
+              </Select>
+            </div>
           </div>
         </Card>
       </aside>

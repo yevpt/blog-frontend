@@ -1,4 +1,42 @@
 import type { UserListItemResp } from "@repo/api";
+import type { AdminListQueryCodec } from "../../lib/admin-list-query";
+import {
+  hasActiveListPage,
+  hasActiveListSearch,
+  parseListPage,
+  parseListSearch,
+  writeListPage,
+  writeListSearch,
+} from "../../lib/admin-list-query";
+
+export interface AdminUserListQueryState {
+  page: number;
+  search: string;
+}
+
+export const DEFAULT_USER_LIST_QUERY_STATE: AdminUserListQueryState = {
+  page: 1,
+  search: "",
+};
+
+export const userListQueryCodec: AdminListQueryCodec<AdminUserListQueryState> = {
+  defaultState: DEFAULT_USER_LIST_QUERY_STATE,
+  parse(params) {
+    return {
+      page: parseListPage(params),
+      search: parseListSearch(params, DEFAULT_USER_LIST_QUERY_STATE.search),
+    };
+  },
+  write(state) {
+    const params = new URLSearchParams();
+    writeListPage(params, state.page);
+    writeListSearch(params, state.search);
+    return params;
+  },
+  hasActive(state) {
+    return hasActiveListPage(state.page) || hasActiveListSearch(state.search);
+  },
+};
 
 export interface UserRow {
   id: string;

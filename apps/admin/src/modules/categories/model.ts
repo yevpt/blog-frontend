@@ -5,6 +5,7 @@ import type {
   CategoryUpdateReq,
 } from "@repo/api";
 import type { DataTableState } from "@repo/ui";
+import { createClientTableQueryCodec } from "../../lib/admin-list-query";
 
 export interface CategoryRow {
   id: string;
@@ -159,7 +160,10 @@ export function matchCategorySearch(row: CategoryRow, keyword: string): boolean 
   );
 }
 
-export function filterAndSortCategoryRows(rows: CategoryRow[], state: DataTableState): CategoryRow[] {
+export function filterAndSortCategoryRows(
+  rows: CategoryRow[],
+  state: DataTableState,
+): CategoryRow[] {
   const keyword = state.searchValue.trim();
   const filtered = rows.filter((row) => matchCategorySearch(row, keyword));
 
@@ -180,3 +184,14 @@ export function filterAndSortCategoryRows(rows: CategoryRow[], state: DataTableS
 
   return sorted;
 }
+
+export const CATEGORY_TABLE_DEFAULT_STATE: DataTableState = {
+  searchValue: "",
+  filters: {},
+  sort: { column: "seq", direction: "ascending" },
+};
+
+export const categoryTableQueryCodec = createClientTableQueryCodec({
+  defaultState: CATEGORY_TABLE_DEFAULT_STATE,
+  sortColumns: ["seq", "name", "url", "articleCount"],
+});

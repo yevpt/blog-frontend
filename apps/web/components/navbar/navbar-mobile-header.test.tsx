@@ -137,7 +137,7 @@ describe("NavbarMobileHeader", () => {
     expect(mockUseArticleEngagement).not.toHaveBeenCalled();
   });
 
-  it("article 变体渲染返回首页、点赞数字按钮、评论数字按钮、menu", () => {
+  it("article 变体渲染返回、点赞数字按钮、评论数字按钮、menu", () => {
     render(
       <NavbarMobileHeader
         mobileVariant="article"
@@ -154,7 +154,7 @@ describe("NavbarMobileHeader", () => {
     expect(screen.getByLabelText("打开导航菜单")).toBeInTheDocument();
   });
 
-  it("default 变体渲染返回首页、标题、menu", () => {
+  it("default 变体渲染返回、标题、menu", () => {
     render(
       <NavbarMobileHeader
         mobileVariant="default"

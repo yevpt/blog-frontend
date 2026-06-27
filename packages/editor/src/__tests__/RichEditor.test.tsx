@@ -118,6 +118,23 @@ describe("RichEditor", () => {
     expect(editorArea?.className).not.toContain("[&_.tiptap_img]:max-w-[240px]");
   });
 
+  it("plain 变体小屏随内容增高、桌面端编辑区内部滚动", async () => {
+    const { container } = render(
+      <RichEditor value="" onChange={() => {}} variant="plain" toolbarPlacement="top" />,
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector("[data-rich-editor-area]")).toBeTruthy();
+    });
+
+    const root = container.firstElementChild;
+    const editorArea = container.querySelector("[data-rich-editor-area]");
+    expect(root?.className).toContain("max-xl:h-auto");
+    expect(root?.className).toContain("xl:h-full");
+    expect(editorArea?.className).toContain("max-xl:overflow-visible");
+    expect(editorArea?.className).toContain("xl:overflow-y-auto");
+  });
+
   it("plain 变体使用文章详情同款正文排版节奏", async () => {
     const { container } = render(
       <RichEditor value="" onChange={() => {}} variant="plain" toolbarPlacement="top" />,

@@ -51,6 +51,17 @@ describe("admin 模块注册表", () => {
     expect(getNavItemByPath("/not-exist")).toBe(adminNavItems[0]);
   });
 
+  it("nav 图标两两不同，避免侧栏出现重复或近似图标", () => {
+    const icons = adminNavItems.map((item) => item.icon);
+    expect(new Set(icons).size).toBe(icons.length);
+    // 评论/留言/碎语三者曾共用 message-circle 系图标，显式断言互不相同
+    // 语义：评论=message-circle 气泡；留言=quote 引号；碎语=feather 羽毛笔速记
+    const byLabel = Object.fromEntries(adminNavItems.map((item) => [item.label, item.icon]));
+    expect(byLabel["评论"]).toBe("message-circle");
+    expect(byLabel["留言"]).toBe("quote");
+    expect(byLabel["碎语"]).toBe("feather");
+  });
+
   it("路由唯一：无重复 path 且至多一个 index 路由（兜住 React key 策略）", () => {
     const paths = adminRoutes.filter((route) => !route.index).map((route) => route.path);
     expect(new Set(paths).size).toBe(paths.length);

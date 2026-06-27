@@ -1,0 +1,135 @@
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { SvgIcon } from "@repo/icons";
+import { Button, cn } from "@repo/ui";
+
+/** 封面预览浮层上的紧凑操作钮，对齐推荐稿 chip-btn（26px 高、11px 字） */
+const coverChipClassName = cn(
+  "inline-flex h-[26px] w-auto shrink-0 items-center justify-center rounded-md px-2.5 py-0",
+  "text-[11px] font-semibold leading-none shadow-none",
+  "bg-black/55 text-white backdrop-blur-sm",
+  "hover:bg-black/70 hover:text-white",
+  "focus-visible:ring-1 focus-visible:ring-white/50 focus-visible:ring-offset-0",
+);
+
+interface ArticleCoverPreviewProps {
+  coverUrl: string;
+  isCoverUploading: boolean;
+  onPickCover: () => void;
+  onRemoveCover: () => void;
+}
+
+function CoverBusyOverlay({ label }: { label: string }) {
+  return (
+    <div
+      aria-label={label}
+      className="absolute inset-0 z-10 flex items-center justify-center bg-background/60"
+    >
+      <span
+        aria-hidden="true"
+        className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-foreground"
+      />
+    </div>
+  );
+}
+
+/** 封面预览：上传 API 返回后仍保持加载态，直到新 URL 的图片解码完成。 */
+export function ArticleCoverPreview({
+  coverUrl,
+  isCoverUploading,
+  onPickCover,
+  onRemoveCover,
+}: ArticleCoverPreviewProps) {
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [isImageLoading, setIsImageLoading] = useState(false);
+
+  const markImageLoading = useCallback(() => {
+    setIsImageLoading(true);
+  }, []);
+
+  const markImageReady = useCallback(() => {
+    setIsImageLoading(false);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!coverUrl) {
+      markImageReady();
+      return;
+    }
+
+    const img = imgRef.current;
+    if (img?.complete && img.naturalWidth > 0) {
+      markImageReady();
+      return;
+    }
+
+    markImageLoading();
+  }, [coverUrl, markImageLoading, markImageReady]);
+
+  const isCoverBusy = isCoverUploading || (!!coverUrl && isImageLoading);
+  const busyLabel = isCoverUploading ? "封面上传中" : "封面加载中";
+
+  return (
+    <div
+      aria-busy={isCoverBusy}
+      className="group relative aspect-video overflow-hidden rounded-lg bg-muted shadow-card"
+    >
+      {coverUrl ? (
+        <img
+          ref={imgRef}
+          src={coverUrl}
+          alt="文章封面预览"
+          onLoad={markImageReady}
+          onError={markImageReady}
+          className={cn(
+            "size-full object-cover transition-opacity duration-300",
+            isCoverBusy ? "opacity-0" : "opacity-100",
+          )}
+        />
+      ) : (
+        <button
+          type="button"
+          aria-label="添加封面"
+          disabled={isCoverUploading}
+          onClick={onPickCover}
+          className={cn(
+            "flex size-full flex-col items-center justify-center gap-1.5 text-muted-foreground transition-colors",
+            "hover:bg-muted/70 hover:text-foreground disabled:cursor-wait disabled:opacity-60",
+          )}
+        >
+          <SvgIcon name="image" size={20} />
+          <span className="text-xs font-medium">添加封面</span>
+        </button>
+      )}
+
+      {coverUrl && !isCoverBusy ? (
+        <div
+          className={cn(
+            "absolute inset-x-2 bottom-2 flex justify-end gap-1",
+            "opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100",
+          )}
+        >
+          <Button
+            type="button"
+            variant="text"
+            size="sm"
+            onPress={onPickCover}
+            className={coverChipClassName}
+          >
+            更换
+          </Button>
+          <Button
+            type="button"
+            variant="text"
+            size="sm"
+            onPress={onRemoveCover}
+            className={coverChipClassName}
+          >
+            移除
+          </Button>
+        </div>
+      ) : null}
+
+      {isCoverBusy ? <CoverBusyOverlay label={busyLabel} /> : null}
+    </div>
+  );
+}

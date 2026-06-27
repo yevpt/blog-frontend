@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { ApiError } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
 import {
@@ -34,10 +34,13 @@ import {
 } from "./hooks/use-article-editor-autosave";
 import { useArticleEditorMainLayout } from "./hooks/use-article-editor-main-layout";
 import { useArticleEditorOptions } from "./hooks/use-article-editor-options";
+import type { AdminListEditorLocationState } from "../../lib/admin-list-query";
+import { resolveAdminListReturnSearch } from "../../lib/admin-list-query";
 import { useArticleImageUpload } from "./hooks/use-article-image-upload";
 
 export function ArticleEditorPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { articleId } = useParams();
   const isEditing = articleId !== undefined;
 
@@ -75,6 +78,7 @@ export function ArticleEditorPage() {
   const [musicSearchQuery, setMusicSearchQuery] = useState("");
   const [statusLabel, setStatusLabel] = useState<ArticleEditorStatusLabel>("草稿");
   const [commentStatus, setCommentStatus] = useState<0 | 1>(1);
+  const [isRecommended, setIsRecommended] = useState(false);
   const [isPassworded, setIsPassworded] = useState(false);
   const [savedArticleId, setSavedArticleId] = useState<number | undefined>(undefined);
   const [savingAction, setSavingAction] = useState<"draft" | "publish" | null>(null);
@@ -101,6 +105,7 @@ export function ArticleEditorPage() {
     setMusicId(form.musicId);
     setStatusLabel(statusToLabel(form.articleStatus));
     setCommentStatus(form.commentStatus === 0 ? 0 : 1);
+    setIsRecommended(form.isRecommended);
     setIsPassworded(form.isPassworded);
     setSavedArticleId(form.savedArticleId);
     setDetailApplied(true);
@@ -146,8 +151,19 @@ export function ArticleEditorPage() {
       selectedTags,
       musicId,
       commentStatus,
+      isRecommended,
     }),
-    [title, description, content, coverUrl, categoryId, selectedTags, musicId, commentStatus],
+    [
+      title,
+      description,
+      content,
+      coverUrl,
+      categoryId,
+      selectedTags,
+      musicId,
+      commentStatus,
+      isRecommended,
+    ],
   );
 
   const handleRestoreAutosave = useCallback((form: ArticleEditorAutosaveFormState) => {
@@ -159,6 +175,7 @@ export function ArticleEditorPage() {
     setSelectedTags(form.selectedTags);
     setMusicId(form.musicId);
     setCommentStatus(form.commentStatus);
+    setIsRecommended(form.isRecommended);
   }, []);
 
   const { statusText: autosaveStatusText, clearBackup } = useArticleEditorAutosave({
@@ -203,7 +220,10 @@ export function ArticleEditorPage() {
 
   const handleBack = () => {
     clearBackup();
-    navigate("/articles");
+    navigate({
+      pathname: "/articles",
+      search: resolveAdminListReturnSearch(location.state as AdminListEditorLocationState | null),
+    });
   };
 
   const handleSave = async (targetStatus: 0 | 1) => {
@@ -221,6 +241,7 @@ export function ArticleEditorPage() {
         musicId,
         targetStatus,
         commentStatus,
+        isRecommended,
         articleId: savedArticleId,
       });
       const resp = await apiClient.articles.saveAdmin(req);
@@ -321,10 +342,9 @@ export function ArticleEditorPage() {
       data-testid="article-editor-layout"
       className={cn(
         "flex flex-col motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-200",
-        // 小屏：锁在视口内，正文在编辑器内滚动
-        "max-h-[calc(100dvh-3rem)] overflow-hidden lg:max-h-[calc(100dvh-3.5rem)]",
-        // 桌面：至少铺满视口；右栏更高时由主区域增高触发页面滚动
-        "xl:min-h-[calc(100dvh-3.5rem)]",
+        // 小屏：整页滚动，写作区与发布栏纵向堆叠均可触达
+        // 桌面：锁在视口内，正文在编辑器内滚动
+        "xl:max-h-[calc(100dvh-3.5rem)] xl:overflow-hidden xl:min-h-[calc(100dvh-3.5rem)]",
       )}
     >
       <div className="grid shrink-0 gap-3">
@@ -349,11 +369,11 @@ export function ArticleEditorPage() {
         ref={mainRef}
         data-testid="article-editor-main"
         className={cn(
-          "grid min-h-0 min-w-0 flex-1 gap-5 overflow-hidden",
-          "xl:grid-cols-[minmax(0,1fr)_320px] xl:items-stretch xl:gap-6",
+          "grid min-h-0 min-w-0 gap-5",
+          "xl:flex-1 xl:overflow-hidden xl:grid-cols-[minmax(0,1fr)_320px] xl:items-stretch xl:gap-6",
         )}
       >
-        <div className="min-h-0 h-full overflow-hidden">
+        <div className="max-xl:overflow-visible xl:min-h-0 xl:h-full xl:overflow-hidden">
           <ArticleEditorWritingPanel
             title={title}
             description={description}
@@ -383,6 +403,7 @@ export function ArticleEditorPage() {
           selectedMusic={selectedMusic}
           musicPickerOpen={musicPickerOpen}
           commentStatus={commentStatus}
+          isRecommended={isRecommended}
           musicPickerTrigger={musicPickerPopover}
           onCoverFileChange={(event) => void handleCoverFileChange(event, setCoverUrl)}
           onRemoveCover={() => setCoverUrl("")}
@@ -391,6 +412,7 @@ export function ArticleEditorPage() {
           onMusicPickerOpenChange={handleMusicPickerOpenChange}
           onRemoveMusic={handleRemoveMusic}
           onCommentStatusChange={handleCommentStatusChange}
+          onIsRecommendedChange={setIsRecommended}
         />
       </div>
     </div>

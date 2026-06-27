@@ -3,7 +3,7 @@ import { SvgIcon } from "@repo/icons";
 import { Badge, cn, type DataTableEmptyState } from "@repo/ui";
 import { ArticleDeleteButton } from "./ArticleDeleteButton";
 import { ArticleStatusBadge } from "./ArticleStatusBadge";
-import type { ArticleRow } from "../model";
+import { buildArticleEditorLinkState, type ArticleRow } from "../model";
 
 interface ArticleMobileListProps {
   items: ArticleRow[];
@@ -11,6 +11,7 @@ interface ArticleMobileListProps {
   emptyState?: DataTableEmptyState;
   deletingArticleId: string | null;
   onConfirmDelete: (articleId: string) => Promise<void>;
+  listSearch?: string;
 }
 
 function ArticleMobileListSkeleton() {
@@ -55,6 +56,7 @@ export function ArticleMobileList({
   emptyState,
   deletingArticleId,
   onConfirmDelete,
+  listSearch = "",
 }: ArticleMobileListProps) {
   if (isLoading) {
     return <ArticleMobileListSkeleton />;
@@ -71,6 +73,7 @@ export function ArticleMobileList({
           <div className="min-w-0 flex-1">
             <Link
               to={`/articles/${article.id}/edit`}
+              state={buildArticleEditorLinkState(listSearch)}
               className={cn(
                 "block text-sm font-medium text-foreground underline-offset-4",
                 "hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",

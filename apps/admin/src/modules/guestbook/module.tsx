@@ -5,7 +5,7 @@ export const guestbookModule: AdminModule = {
   id: "guestbook",
   nav: {
     label: "留言",
-    icon: "message-circle-line",
+    icon: "quote",
     path: "/guestbook",
     group: "内容",
     description: "管理留言板内容",

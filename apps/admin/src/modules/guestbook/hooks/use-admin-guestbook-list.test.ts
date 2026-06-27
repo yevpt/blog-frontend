@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, waitFor } from "@testing-library/react";
 import type { AdminGuestbookPageResp } from "@repo/api";
 import { apiClient } from "../../../lib/api";
+import { renderHookWithAdminRouter } from "../../../test/render-with-admin-router";
 import { useAdminGuestbookList } from "./use-admin-guestbook-list";
 
 vi.mock("../../../lib/api", () => ({
@@ -41,7 +42,7 @@ describe("useAdminGuestbookList", () => {
   });
 
   it("挂载后请求后台留言列表并映射行数据", async () => {
-    const { result } = renderHook(() => useAdminGuestbookList());
+    const { result } = renderHookWithAdminRouter(() => useAdminGuestbookList());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -53,7 +54,7 @@ describe("useAdminGuestbookList", () => {
   });
 
   it("搜索输入会去除首尾空白后发起查询", async () => {
-    const { result } = renderHook(() => useAdminGuestbookList());
+    const { result } = renderHookWithAdminRouter(() => useAdminGuestbookList());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -75,7 +76,7 @@ describe("useAdminGuestbookList", () => {
   it("请求失败时暴露 error 并清空行数据", async () => {
     vi.mocked(apiClient.guestbook.listAdmin).mockRejectedValue(new Error("加载失败"));
 
-    const { result } = renderHook(() => useAdminGuestbookList());
+    const { result } = renderHookWithAdminRouter(() => useAdminGuestbookList());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);

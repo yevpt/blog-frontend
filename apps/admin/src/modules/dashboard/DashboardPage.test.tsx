@@ -125,7 +125,7 @@ describe("DashboardPage", () => {
       "href",
       "/guestbook",
     );
-    expect(screen.getByRole("link", { name: "查看动态管理" })).toHaveAttribute("href", "/moments");
+    expect(screen.getByRole("link", { name: "查看碎语管理" })).toHaveAttribute("href", "/moments");
     expect(screen.getAllByRole("link", { name: "查看用户管理" })[0]).toHaveAttribute(
       "href",
       "/users",

@@ -69,6 +69,8 @@ describe("UsersPage", () => {
       setPage: mockSetPage,
       search: "",
       setSearch: mockSetSearch,
+      resetListQuery: vi.fn(),
+      hasActiveListQuery: false,
       refetch: mockRefetch,
     });
   });
@@ -112,6 +114,8 @@ describe("UsersPage", () => {
       setPage: mockSetPage,
       search: "",
       setSearch: mockSetSearch,
+      resetListQuery: vi.fn(),
+      hasActiveListQuery: false,
       refetch: mockRefetch,
     });
 

@@ -201,8 +201,10 @@ export function useMomentList({
 
       const data = await fetchPage(1, activeTab, activeSort);
 
+      // 已被取消或 userId 已切换：本次拉取作废，新拉取由新 effect 实例负责
+      // isLoadingInitial 状态，这里不能置 false，否则在 StrictMode 双执行 / 切换
+      // 用户时会提前结束 loading，导致短暂闪现「暂无碎语」空态。
       if (cancelled || userIdRef.current !== userId) {
-        setIsLoadingInitial(false);
         return;
       }
 

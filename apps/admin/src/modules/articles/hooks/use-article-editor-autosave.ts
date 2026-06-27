@@ -16,6 +16,7 @@ export interface ArticleEditorAutosaveFormState {
   selectedTags: ArticleTag[];
   musicId: number | null;
   commentStatus: 0 | 1;
+  isRecommended: boolean;
 }
 
 type AutosaveStatus =
@@ -90,6 +91,7 @@ function parseForm(value: unknown): ArticleEditorAutosaveFormState | null {
     selectedTags,
     musicId,
     commentStatus: value.commentStatus,
+    isRecommended: typeof value.isRecommended === "boolean" ? value.isRecommended : false,
   };
 }
 
@@ -210,6 +212,7 @@ function areFormsEqual(
     left.categoryId === right.categoryId &&
     left.musicId === right.musicId &&
     left.commentStatus === right.commentStatus &&
+    left.isRecommended === right.isRecommended &&
     areTagsEqual(left.selectedTags, right.selectedTags)
   );
 }

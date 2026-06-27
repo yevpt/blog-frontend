@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AdminMomentPageResp, AdminMomentStatusFilter } from "@repo/api";
+import { useAdminListQuery, useDebouncedValue } from "../../../lib/admin-list-query";
 import { apiClient } from "../../../lib/api";
-import { mapMomentToRow, type MomentRow } from "../model";
+import {
+  mapMomentToRow,
+  momentListQueryCodec,
+  type AdminMomentListFilters,
+  type MomentRow,
+} from "../model";
 
-interface AdminMomentListFilters {
-  status: AdminMomentStatusFilter;
-  search: string;
-}
+export type { AdminMomentListFilters };
 
 export interface UseAdminMomentListResult {
   rows: MomentRow[];
@@ -18,6 +21,8 @@ export interface UseAdminMomentListResult {
   filters: AdminMomentListFilters;
   setSearch: (value: string) => void;
   setStatus: (value: AdminMomentStatusFilter) => void;
+  resetListQuery: () => void;
+  hasActiveListQuery: boolean;
   refetch: () => Promise<void>;
 }
 
@@ -25,35 +30,18 @@ const DEFAULT_PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function useAdminMomentList(): UseAdminMomentListResult {
-  const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState<AdminMomentListFilters>({
-    status: "all",
-    search: "",
-  });
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const { state, patchState, resetListQuery, hasActiveListQuery } =
+    useAdminListQuery(momentListQueryCodec);
+  const { page, filters } = state;
+  const debouncedSearch = useDebouncedValue(filters.search.trim(), SEARCH_DEBOUNCE_MS);
   const [pageData, setPageData] = useState<AdminMomentPageResp | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
-  const previousDebouncedSearchRef = useRef(debouncedSearch);
 
   const refetch = useCallback(async () => {
     setReloadToken((current) => current + 1);
   }, []);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setDebouncedSearch(filters.search.trim());
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [filters.search]);
-
-  useEffect(() => {
-    if (previousDebouncedSearchRef.current === debouncedSearch) return;
-    previousDebouncedSearchRef.current = debouncedSearch;
-    setPage(1);
-  }, [debouncedSearch]);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,7 +61,7 @@ export function useAdminMomentList(): UseAdminMomentListResult {
         setPageData(data);
       } catch (err) {
         if (cancelled) return;
-        setError(err instanceof Error ? err : new Error("加载动态失败"));
+        setError(err instanceof Error ? err : new Error("加载碎语失败"));
         setPageData(null);
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -87,14 +75,34 @@ export function useAdminMomentList(): UseAdminMomentListResult {
     };
   }, [debouncedSearch, filters.status, page, reloadToken]);
 
-  const setSearch = useCallback((value: string) => {
-    setFilters((current) => ({ ...current, search: value }));
-  }, []);
+  const setPage = useCallback(
+    (nextPage: number) => {
+      patchState((previous) => ({ ...previous, page: nextPage }));
+    },
+    [patchState],
+  );
 
-  const setStatus = useCallback((value: AdminMomentStatusFilter) => {
-    setPage(1);
-    setFilters((current) => ({ ...current, status: value }));
-  }, []);
+  const setSearch = useCallback(
+    (value: string) => {
+      patchState((previous) => ({
+        ...previous,
+        page: 1,
+        filters: { ...previous.filters, search: value },
+      }));
+    },
+    [patchState],
+  );
+
+  const setStatus = useCallback(
+    (value: AdminMomentStatusFilter) => {
+      patchState((previous) => ({
+        ...previous,
+        page: 1,
+        filters: { ...previous.filters, status: value },
+      }));
+    },
+    [patchState],
+  );
 
   const rows = useMemo(() => pageData?.list.map(mapMomentToRow) ?? [], [pageData]);
 
@@ -108,6 +116,8 @@ export function useAdminMomentList(): UseAdminMomentListResult {
     filters,
     setSearch,
     setStatus,
+    resetListQuery,
+    hasActiveListQuery,
     refetch,
   };
 }

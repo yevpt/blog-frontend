@@ -71,7 +71,7 @@ describe("MomentsPage", () => {
     vi.mocked(apiClient.moments.save).mockResolvedValue({
       id: 9,
       user_id: 1,
-      content: "新动态",
+      content: "新碎语",
       status: 1,
       comment_status: 1,
       read_count: 0,
@@ -95,14 +95,16 @@ describe("MomentsPage", () => {
       filters: { status: "all", search: "" },
       setSearch: mockSetSearch,
       setStatus: mockSetStatus,
+      resetListQuery: vi.fn(),
+      hasActiveListQuery: false,
       refetch: mockRefetch,
     });
   });
 
-  it("渲染动态表格与标题", () => {
+  it("渲染碎语表格与标题", () => {
     renderMomentsPage();
 
-    expect(screen.getByRole("heading", { name: "动态管理" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "碎语管理" })).toBeInTheDocument();
     expect(screen.getByText("风")).toBeInTheDocument();
     expect(screen.getByText("vpt")).toBeInTheDocument();
   });
@@ -112,7 +114,7 @@ describe("MomentsPage", () => {
 
     renderMomentsPage();
 
-    expect(screen.getByRole("region", { name: "动态列表" })).toHaveClass("min-w-0", "max-w-full");
+    expect(screen.getByRole("region", { name: "碎语列表" })).toHaveClass("min-w-0", "max-w-full");
   });
 
   it("点击置顶后调用置顶接口并刷新", async () => {
@@ -127,18 +129,18 @@ describe("MomentsPage", () => {
     expect(mockRefetch).toHaveBeenCalled();
   });
 
-  it("新建动态时调用保存接口并刷新", async () => {
+  it("新建碎语时调用保存接口并刷新", async () => {
     const user = userEvent.setup();
     renderMomentsPage();
 
-    await user.click(screen.getByRole("button", { name: "新建动态" }));
-    await user.type(screen.getByLabelText("动态内容"), "新动态");
+    await user.click(screen.getByRole("button", { name: "新建碎语" }));
+    await user.type(screen.getByLabelText("碎语内容"), "新碎语");
     await user.click(screen.getByRole("button", { name: "创建" }));
 
     await waitFor(() => {
       expect(apiClient.moments.save).toHaveBeenCalledWith({
         id: undefined,
-        content: "新动态",
+        content: "新碎语",
         status: 1,
         comment_status: 1,
         image_urls: [],
@@ -148,12 +150,12 @@ describe("MomentsPage", () => {
     expect(mockRefetch).toHaveBeenCalled();
   });
 
-  it("编辑动态时保留已有图片并调用保存接口", async () => {
+  it("编辑碎语时保留已有图片并调用保存接口", async () => {
     const user = userEvent.setup();
     renderMomentsPage();
 
     await user.click(screen.getByRole("button", { name: "编辑" }));
-    const contentInput = screen.getByLabelText("动态内容");
+    const contentInput = screen.getByLabelText("碎语内容");
     await user.clear(contentInput);
     await user.type(contentInput, "风很温柔");
     await user.click(screen.getByRole("button", { name: "保存" }));
@@ -170,7 +172,7 @@ describe("MomentsPage", () => {
     });
   });
 
-  it("点击删除动态后调用删除接口并刷新", async () => {
+  it("点击删除碎语后调用删除接口并刷新", async () => {
     const user = userEvent.setup();
     renderMomentsPage();
 
@@ -188,17 +190,19 @@ describe("MomentsPage", () => {
       rows: [],
       pageData: null,
       isLoading: false,
-      error: new Error("加载动态失败"),
+      error: new Error("加载碎语失败"),
       page: 1,
       setPage: mockSetPage,
       filters: { status: "all", search: "" },
       setSearch: mockSetSearch,
       setStatus: mockSetStatus,
+      resetListQuery: vi.fn(),
+      hasActiveListQuery: false,
       refetch: mockRefetch,
     });
 
     renderMomentsPage();
 
-    expect(screen.getByRole("alert")).toHaveTextContent("加载动态失败");
+    expect(screen.getByRole("alert")).toHaveTextContent("加载碎语失败");
   });
 });

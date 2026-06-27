@@ -192,7 +192,7 @@ describe("SiteNavbar", () => {
     expect(screen.getByLabelText("打开导航菜单")).toBeTruthy();
   });
 
-  it("文章详情页移动端头部显示返回首页、点赞、评论、menu", () => {
+  it("文章详情页移动端头部显示返回、点赞、评论、menu", () => {
     mockPathname.mockReturnValue("/articles/18");
     render(<SiteNavbar />);
     expect(screen.getByLabelText("返回")).toBeInTheDocument();

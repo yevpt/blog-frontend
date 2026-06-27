@@ -1,6 +1,77 @@
 import type { AdminCommentTargetType, CommentItemResp } from "@repo/api";
+import type { AdminListQueryCodec } from "../../lib/admin-list-query";
+import {
+  hasActiveListPage,
+  hasActiveListSearch,
+  hasActiveStringFilters,
+  parseListPage,
+  parseListSearch,
+  parseStringFilter,
+  writeListPage,
+  writeListSearch,
+  writeStringFilter,
+} from "../../lib/admin-list-query";
 
 export type CommentTargetType = Exclude<AdminCommentTargetType, "all">;
+
+export interface AdminCommentListFilters {
+  [key: string]: string | undefined;
+  targetType: AdminCommentTargetType;
+  search: string;
+}
+
+export interface AdminCommentListQueryState {
+  page: number;
+  filters: AdminCommentListFilters;
+}
+
+const DEFAULT_COMMENT_LIST_FILTERS: AdminCommentListFilters = {
+  targetType: "all",
+  search: "",
+};
+
+export const DEFAULT_COMMENT_LIST_QUERY_STATE: AdminCommentListQueryState = {
+  page: 1,
+  filters: DEFAULT_COMMENT_LIST_FILTERS,
+};
+
+export const commentListQueryCodec: AdminListQueryCodec<AdminCommentListQueryState> = {
+  defaultState: DEFAULT_COMMENT_LIST_QUERY_STATE,
+  parse(params) {
+    return {
+      page: parseListPage(params),
+      filters: {
+        targetType: parseStringFilter(
+          params,
+          "target",
+          DEFAULT_COMMENT_LIST_FILTERS.targetType,
+        ) as AdminCommentTargetType,
+        search: parseListSearch(params, DEFAULT_COMMENT_LIST_FILTERS.search),
+      },
+    };
+  },
+  write(state) {
+    const params = new URLSearchParams();
+    writeListPage(params, state.page);
+    writeListSearch(params, state.filters.search);
+    writeStringFilter(
+      params,
+      "target",
+      state.filters.targetType,
+      DEFAULT_COMMENT_LIST_FILTERS.targetType,
+    );
+    return params;
+  },
+  hasActive(state) {
+    return (
+      hasActiveListPage(state.page) ||
+      hasActiveListSearch(state.filters.search) ||
+      hasActiveStringFilters(state.filters, {
+        targetType: DEFAULT_COMMENT_LIST_FILTERS.targetType,
+      })
+    );
+  },
+};
 
 export interface CommentRow {
   id: string;
@@ -20,11 +91,11 @@ export const COMMENT_TARGET_FILTER_OPTIONS: Array<{
 }> = [
   { value: "all", label: "全部评论" },
   { value: "article", label: "文章" },
-  { value: "moment", label: "动态" },
+  { value: "moment", label: "碎语" },
 ];
 
 export function commentTargetLabel(targetType: CommentTargetType) {
-  return targetType === "article" ? "文章" : "动态";
+  return targetType === "article" ? "文章" : "碎语";
 }
 
 export function mapCommentToRow(item: CommentItemResp): CommentRow {

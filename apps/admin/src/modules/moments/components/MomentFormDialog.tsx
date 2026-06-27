@@ -76,7 +76,7 @@ export function MomentFormDialog({
       isDismissable={!isSubmitting}
       placement="fullscreen-mobile"
       size="lg"
-      aria-label={mode === "create" ? "新建动态" : "编辑动态"}
+      aria-label={mode === "create" ? "新建碎语" : "编辑碎语"}
       dialogClassName="min-h-0 min-w-0 flex-1 overflow-x-hidden"
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden">
@@ -88,7 +88,7 @@ export function MomentFormDialog({
           )}
         >
           <h2 className="text-lg font-semibold text-foreground">
-            {mode === "create" ? "新建动态" : "编辑动态"}
+            {mode === "create" ? "新建碎语" : "编辑碎语"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             编辑正文、公开状态和评论开关；已有图片会保持原顺序。
@@ -98,12 +98,12 @@ export function MomentFormDialog({
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain">
           <div className={cn(contentInsetClassName, "grid gap-5 py-5")}>
             <div className="grid min-w-0 gap-2">
-              <p className="text-sm font-medium text-foreground">动态内容</p>
+              <p className="text-sm font-medium text-foreground">碎语内容</p>
               <textarea
-                aria-label="动态内容"
+                aria-label="碎语内容"
                 value={values.content}
                 onChange={(event) => updateField("content", event.target.value)}
-                placeholder="写点新的动态…"
+                placeholder="写点新的碎语…"
                 className={textareaClassName}
               />
               {errors.content ? <p className="text-sm text-destructive">{errors.content}</p> : null}

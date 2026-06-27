@@ -32,6 +32,8 @@ export function UsersPage() {
     setPage,
     search,
     setSearch,
+    resetListQuery,
+    hasActiveListQuery,
     refetch,
   } = useAdminUserList();
   const isMdScreen = useIsMdScreen();
@@ -186,7 +188,12 @@ export function UsersPage() {
         ) : null}
 
         <AdminListCard className="md:min-h-[360px]">
-          <UserListToolbar searchValue={search} onSearchChange={setSearch} />
+          <UserListToolbar
+            searchValue={search}
+            onSearchChange={setSearch}
+            canClear={hasActiveListQuery}
+            onClear={resetListQuery}
+          />
 
           <div className="min-h-0 flex-1 overflow-hidden">
             {isMdScreen ? (

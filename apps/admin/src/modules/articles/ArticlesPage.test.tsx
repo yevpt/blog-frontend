@@ -41,6 +41,7 @@ const mockSetSearch = vi.fn();
 const mockSetCategoryId = vi.fn();
 const mockSetSort = vi.fn();
 const mockSetPage = vi.fn();
+const mockResetListQuery = vi.fn();
 
 vi.mock("./hooks/use-article-list", () => ({
   useAdminArticleList: vi.fn(),
@@ -92,6 +93,8 @@ describe("ArticlesPage", () => {
       setSort: mockSetSort,
       setSearch: mockSetSearch,
       setCategoryId: mockSetCategoryId,
+      resetListQuery: mockResetListQuery,
+      hasActiveListQuery: false,
       refetch: mockRefetch,
     });
     vi.mocked(useAdminArticleFilterOptions).mockReturnValue({
@@ -160,6 +163,8 @@ describe("ArticlesPage", () => {
       setSort: mockSetSort,
       setSearch: mockSetSearch,
       setCategoryId: mockSetCategoryId,
+      resetListQuery: mockResetListQuery,
+      hasActiveListQuery: false,
       refetch: mockRefetch,
     });
 
@@ -191,6 +196,8 @@ describe("ArticlesPage", () => {
           setSearchState(value);
         },
         setCategoryId: mockSetCategoryId,
+        resetListQuery: mockResetListQuery,
+        hasActiveListQuery: search.trim().length > 0,
         refetch: mockRefetch,
       };
     });
@@ -242,6 +249,8 @@ describe("ArticlesPage", () => {
       setSort: mockSetSort,
       setSearch: mockSetSearch,
       setCategoryId: mockSetCategoryId,
+      resetListQuery: mockResetListQuery,
+      hasActiveListQuery: false,
       refetch: mockRefetch,
     });
     renderArticlesPage();
@@ -270,6 +279,8 @@ describe("ArticlesPage", () => {
       setSort: mockSetSort,
       setSearch: mockSetSearch,
       setCategoryId: mockSetCategoryId,
+      resetListQuery: mockResetListQuery,
+      hasActiveListQuery: false,
       refetch: mockRefetch,
     });
 
@@ -294,6 +305,8 @@ describe("ArticlesPage", () => {
       setSort: mockSetSort,
       setSearch: mockSetSearch,
       setCategoryId: mockSetCategoryId,
+      resetListQuery: mockResetListQuery,
+      hasActiveListQuery: false,
       refetch: mockRefetch,
     });
 

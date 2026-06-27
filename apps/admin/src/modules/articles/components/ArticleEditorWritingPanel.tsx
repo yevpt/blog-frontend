@@ -19,8 +19,9 @@ interface ArticleEditorWritingPanelProps {
 }
 
 const panelShellClassName = cn(
-  "grid h-full min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden",
-  "xl:min-h-full",
+  "grid min-h-0 min-w-0",
+  "max-xl:grid-rows-[auto_auto] max-xl:overflow-visible",
+  "xl:h-full xl:grid-rows-[auto_minmax(0,1fr)] xl:overflow-hidden xl:min-h-full",
 );
 
 export function ArticleEditorWritingPanel({
@@ -76,7 +77,13 @@ export function ArticleEditorWritingPanel({
         />
       </div>
 
-      <div className="mt-7 grid min-h-0 overflow-hidden grid-rows-[minmax(0,1fr)_auto] border-t border-border/60">
+      <div
+        className={cn(
+          "mt-7 grid border-t border-border/60",
+          "max-xl:grid-rows-[auto_auto] max-xl:overflow-visible",
+          "xl:min-h-0 xl:grid-rows-[minmax(0,1fr)_auto] xl:overflow-hidden",
+        )}
+      >
         <RichEditor
           value={content}
           onChange={onContentChange}
@@ -89,7 +96,10 @@ export function ArticleEditorWritingPanel({
               Markdown
             </span>
           }
-          className="h-full min-h-0 overflow-hidden"
+          className={cn(
+            "max-xl:min-h-[320px] max-xl:h-auto max-xl:overflow-visible",
+            "xl:h-full xl:min-h-0 xl:overflow-hidden",
+          )}
           onInsertImage={onInsertImage}
           onInsertLink={handleInsertLink}
           enableBlockquote

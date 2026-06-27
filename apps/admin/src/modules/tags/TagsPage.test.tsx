@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ToastRegion } from "@repo/ui";
 import { TagsPage } from "./TagsPage";
 import { toastQueue } from "../../lib/toast";
+import { renderWithAdminRouter } from "../../test/render-with-admin-router";
 import { useTagList } from "./hooks/use-tag-list";
 import type { TagRow } from "./model";
 
@@ -40,7 +41,7 @@ vi.mock("../../lib/api", () => ({
 }));
 
 function renderTagsPage() {
-  return render(
+  return renderWithAdminRouter(
     <>
       <TagsPage />
       <ToastRegion queue={toastQueue} />

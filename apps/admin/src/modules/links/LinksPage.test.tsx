@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ToastRegion } from "@repo/ui";
 import { LinksPage } from "./LinksPage";
 import { toastQueue } from "../../lib/toast";
+import { renderWithAdminRouter } from "../../test/render-with-admin-router";
 import { useFriendLinkList } from "./hooks/use-friend-link-list";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
 import type { FriendLinkRow } from "./model";
@@ -41,7 +42,7 @@ vi.mock("../../lib/api", () => ({
 }));
 
 function renderLinksPage() {
-  return render(
+  return renderWithAdminRouter(
     <>
       <LinksPage />
       <ToastRegion queue={toastQueue} />

@@ -66,6 +66,8 @@ describe("GuestbookPage", () => {
       setPage: mockSetPage,
       filters: { search: "" },
       setSearch: mockSetSearch,
+      resetListQuery: vi.fn(),
+      hasActiveListQuery: false,
       refetch: mockRefetch,
     });
   });
@@ -109,6 +111,8 @@ describe("GuestbookPage", () => {
       setPage: mockSetPage,
       filters: { search: "" },
       setSearch: mockSetSearch,
+      resetListQuery: vi.fn(),
+      hasActiveListQuery: false,
       refetch: mockRefetch,
     });
 

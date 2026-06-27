@@ -26,6 +26,7 @@ const baseState: ArticleEditorAutosaveFormState = {
   selectedTags: [],
   musicId: null,
   commentStatus: 1,
+  isRecommended: false,
 };
 
 function getStoredValue(key: string) {

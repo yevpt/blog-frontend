@@ -110,6 +110,22 @@ describe("ArticleHero", () => {
     expect(screen.getByText("博主、前端攻城狮")).toBeInTheDocument();
   });
 
+  it("作者头像和昵称链接到个人主页", () => {
+    const user = {
+      id: 42,
+      username: "vpt940417",
+      nickname: "Vpt",
+      avatar_url: "https://example.com/avatar.jpg",
+    };
+    render(<ArticleHero article={{ ...base, user }} />);
+
+    expect(screen.getByRole("link", { name: "查看Vpt的主页" })).toHaveAttribute(
+      "href",
+      "/users/42",
+    );
+    expect(screen.getByRole("link", { name: "Vpt" })).toHaveAttribute("href", "/users/42");
+  });
+
   it("无 user 时不渲染作者区块", () => {
     render(<ArticleHero article={base} />);
     expect(screen.queryByText(/博主/)).not.toBeInTheDocument();

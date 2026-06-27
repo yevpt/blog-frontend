@@ -169,6 +169,14 @@ vi.mock("@/lib/toast", () => ({
   addToast: toastMockState.addToast,
 }));
 
+vi.mock("@/lib/article-list-cache", () => ({
+  getArticleListCache: () => undefined,
+  setArticleListCache: () => undefined,
+  getLastArticleListCategoryId: () => 0,
+  setLastArticleListCategoryId: () => undefined,
+  shouldRestoreArticleListCache: () => false,
+}));
+
 vi.mock("@/components/comments", () => ({
   // CommentModal 不接受 open prop，由父组件条件挂载控制显隐
   CommentModal: ({ targetId }: { targetId: number; targetType: string; onClose: () => void }) => (

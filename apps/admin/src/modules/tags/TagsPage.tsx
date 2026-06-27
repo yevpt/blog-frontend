@@ -1,17 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
 import { ApiError } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
-import {
-  Button,
-  DataTable,
-  type DataTableColumn,
-  type DataTableEmptyState,
-  type DataTableState,
-} from "@repo/ui";
+import { Button, DataTable, type DataTableColumn, type DataTableEmptyState } from "@repo/ui";
 import { AdminPageHeader } from "../../components/AdminPageHeader";
 import { AdminListCard } from "../../components/AdminListCard";
 import { AdminListSummary } from "../../components/AdminListSummary";
 import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
+import { useClientTableQuery } from "../../lib/admin-list-query";
 import { TagDeleteDialog } from "./components/TagDeleteDialog";
 import { TagFormDialog } from "./components/TagFormDialog";
 import { TagListToolbar } from "./components/TagListToolbar";
@@ -25,6 +20,7 @@ import {
   filterAndSortTagRows,
   matchTagSearch,
   suggestNextSeq,
+  tagTableQueryCodec,
   toTagBasicUpdateReq,
   toTagCreateReq,
   type TagFormValues,
@@ -42,11 +38,13 @@ export function TagsPage() {
   const [deletingTag, setDeletingTag] = useState<TagRow | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [tableState, setTableState] = useState<DataTableState>({
-    searchValue: "",
-    filters: {},
-    sort: { column: "seq", direction: "ascending" },
-  });
+  const {
+    tableState,
+    handleSearchChange,
+    handleTableStateChange,
+    resetListQuery,
+    hasActiveListQuery,
+  } = useClientTableQuery(tagTableQueryCodec);
 
   const nextSeq = useMemo(() => suggestNextSeq(items), [items]);
   const totalArticles = useMemo(() => rows.reduce((sum, row) => sum + row.articleCount, 0), [rows]);
@@ -62,10 +60,6 @@ export function TagsPage() {
     setFormMode("edit");
     setEditingTag(tag);
     setFormOpen(true);
-  }, []);
-
-  const handleSearchChange = useCallback((searchValue: string) => {
-    setTableState((current) => ({ ...current, searchValue }));
   }, []);
 
   const handleSubmit = useCallback(
@@ -193,7 +187,7 @@ export function TagsPage() {
     [openEditDialog],
   );
 
-  const hasActiveSearch = tableState.searchValue.trim().length > 0;
+  const hasActiveSearch = hasActiveListQuery;
   const emptyState: DataTableEmptyState = hasActiveSearch
     ? {
         icon: "search",
@@ -238,6 +232,8 @@ export function TagsPage() {
           <TagListToolbar
             searchValue={tableState.searchValue}
             onSearchChange={handleSearchChange}
+            canClear={hasActiveListQuery}
+            onClear={resetListQuery}
           />
 
           <div className="min-h-0 flex-1 overflow-hidden">
@@ -248,7 +244,7 @@ export function TagsPage() {
                 columns={columns}
                 getRowId={(tag) => tag.id}
                 state={tableState}
-                onStateChange={setTableState}
+                onStateChange={handleTableStateChange}
                 search={{
                   placeholder: "搜索标签名称或别名…",
                   match: matchTagSearch,

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { ArticleDetailResp } from "@repo/api";
 import { useLocale } from "@repo/hooks";
 import { LoadingImage } from "@/components/common/loading-image";
@@ -28,6 +29,8 @@ export function ArticleHero({ article }: ArticleHeroProps) {
   const openViewer = useImageViewer((s) => s.open);
   const formattedDate = formatDate(article.created_at, locale);
   const musicPreview = mapArticleMusicToSyncInput(article.music);
+  const authorName = article.user ? (article.user.nickname ?? article.user.username) : undefined;
+  const authorProfileHref = article.user?.id ? `/users/${article.user.id}` : undefined;
 
   return (
     <div className="mx-auto max-w-[720px]">
@@ -53,17 +56,32 @@ export function ArticleHero({ article }: ArticleHeroProps) {
         {article.title}
       </h1>
 
-      {article.user && (
+      {article.user && authorName && (
         <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
-          <UserAvatar
-            src={article.user.avatar_url}
-            name={article.user.nickname ?? article.user.username}
-            size="sm"
-            className="h-6 w-6"
-          />
-          <span className="font-medium text-foreground">
-            {article.user.nickname ?? article.user.username}
-          </span>
+          <Link
+            href={authorProfileHref ?? "#"}
+            className="shrink-0"
+            aria-label={`查看${authorName}的主页`}
+            onClick={(e) => {
+              if (!authorProfileHref) e.preventDefault();
+            }}
+          >
+            <UserAvatar
+              src={article.user.avatar_url}
+              name={authorName}
+              size="sm"
+              className="h-6 w-6"
+            />
+          </Link>
+          <Link
+            href={authorProfileHref ?? "#"}
+            className="font-medium text-foreground"
+            onClick={(e) => {
+              if (!authorProfileHref) e.preventDefault();
+            }}
+          >
+            {authorName}
+          </Link>
           {article.user.mark && (
             <>
               <span aria-hidden>·</span>

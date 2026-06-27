@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { UserPageResp } from "@repo/api";
+import { useAdminListQuery } from "../../../lib/admin-list-query";
 import { apiClient } from "../../../lib/api";
-import { mapUserToRow, matchUserSearch, type UserRow } from "../model";
+import { mapUserToRow, matchUserSearch, userListQueryCodec, type UserRow } from "../model";
 
 export interface UseAdminUserListResult {
   rows: UserRow[];
@@ -13,14 +14,17 @@ export interface UseAdminUserListResult {
   setPage: (page: number) => void;
   search: string;
   setSearch: (value: string) => void;
+  resetListQuery: () => void;
+  hasActiveListQuery: boolean;
   refetch: () => Promise<void>;
 }
 
 const DEFAULT_PAGE_SIZE = 10;
 
 export function useAdminUserList(): UseAdminUserListResult {
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
+  const { state, patchState, resetListQuery, hasActiveListQuery } =
+    useAdminListQuery(userListQueryCodec);
+  const { page, search } = state;
   const [pageData, setPageData] = useState<UserPageResp | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -57,6 +61,24 @@ export function useAdminUserList(): UseAdminUserListResult {
     };
   }, [page, reloadToken]);
 
+  const setPage = useCallback(
+    (nextPage: number) => {
+      patchState((previous) => ({ ...previous, page: nextPage }));
+    },
+    [patchState],
+  );
+
+  const setSearch = useCallback(
+    (value: string) => {
+      patchState((previous) => ({
+        ...previous,
+        page: 1,
+        search: value,
+      }));
+    },
+    [patchState],
+  );
+
   const rows = useMemo(() => pageData?.list.map(mapUserToRow) ?? [], [pageData]);
   const visibleRows = useMemo(
     () => rows.filter((row) => matchUserSearch(row, search)),
@@ -73,6 +95,8 @@ export function useAdminUserList(): UseAdminUserListResult {
     setPage,
     search,
     setSearch,
+    resetListQuery,
+    hasActiveListQuery,
     refetch,
   };
 }

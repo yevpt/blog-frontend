@@ -26,7 +26,7 @@ export function AdminLayout() {
       <div
         data-testid="admin-sidebar-shell"
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-[260px] transition-[width,translate,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] lg:translate-x-0 lg:opacity-100",
+          "fixed left-0 top-0 z-50 h-dvh w-[260px] transition-[width,translate,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] lg:translate-x-0 lg:opacity-100",
           isMobileSidebarVisible && !sidebar.isMobileClosing
             ? "translate-x-0"
             : "-translate-x-full",

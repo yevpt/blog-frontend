@@ -1,4 +1,70 @@
 import type { AdminMomentStatusFilter, MomentItemResp, MomentSaveReq } from "@repo/api";
+import type { AdminListQueryCodec } from "../../lib/admin-list-query";
+import {
+  hasActiveListPage,
+  hasActiveListSearch,
+  hasActiveStringFilters,
+  parseListPage,
+  parseListSearch,
+  parseStringFilter,
+  writeListPage,
+  writeListSearch,
+  writeStringFilter,
+} from "../../lib/admin-list-query";
+
+export interface AdminMomentListFilters {
+  status: AdminMomentStatusFilter;
+  search: string;
+  [key: string]: string | undefined;
+}
+
+export interface AdminMomentListQueryState {
+  page: number;
+  filters: AdminMomentListFilters;
+}
+
+const DEFAULT_MOMENT_LIST_FILTERS: AdminMomentListFilters = {
+  status: "all",
+  search: "",
+};
+
+export const DEFAULT_MOMENT_LIST_QUERY_STATE: AdminMomentListQueryState = {
+  page: 1,
+  filters: DEFAULT_MOMENT_LIST_FILTERS,
+};
+
+export const momentListQueryCodec: AdminListQueryCodec<AdminMomentListQueryState> = {
+  defaultState: DEFAULT_MOMENT_LIST_QUERY_STATE,
+  parse(params) {
+    return {
+      page: parseListPage(params),
+      filters: {
+        status: parseStringFilter(
+          params,
+          "status",
+          DEFAULT_MOMENT_LIST_FILTERS.status,
+        ) as AdminMomentStatusFilter,
+        search: parseListSearch(params, DEFAULT_MOMENT_LIST_FILTERS.search),
+      },
+    };
+  },
+  write(state) {
+    const params = new URLSearchParams();
+    writeListPage(params, state.page);
+    writeListSearch(params, state.filters.search);
+    writeStringFilter(params, "status", state.filters.status, DEFAULT_MOMENT_LIST_FILTERS.status);
+    return params;
+  },
+  hasActive(state) {
+    return (
+      hasActiveListPage(state.page) ||
+      hasActiveListSearch(state.filters.search) ||
+      hasActiveStringFilters(state.filters, {
+        status: DEFAULT_MOMENT_LIST_FILTERS.status,
+      })
+    );
+  },
+};
 
 export interface MomentImageRow {
   id: string;
@@ -33,7 +99,7 @@ export const MOMENT_STATUS_FILTER_OPTIONS: Array<{
   value: AdminMomentStatusFilter;
   label: string;
 }> = [
-  { value: "all", label: "全部动态" },
+  { value: "all", label: "全部碎语" },
   { value: "public", label: "公开" },
   { value: "hidden", label: "隐藏" },
 ];
@@ -76,8 +142,8 @@ export function mapMomentToFormValues(moment: MomentRow): MomentFormValues {
 export function validateMomentForm(values: MomentFormValues) {
   const errors: Partial<Record<keyof MomentFormValues, string>> = {};
   const content = values.content.trim();
-  if (!content) errors.content = "请输入动态内容";
-  if (content.length > 800) errors.content = "动态内容不能超过 800 个字符";
+  if (!content) errors.content = "请输入碎语内容";
+  if (content.length > 800) errors.content = "碎语内容不能超过 800 个字符";
   return errors;
 }
 

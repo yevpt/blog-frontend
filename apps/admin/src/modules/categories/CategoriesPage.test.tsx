@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ToastRegion } from "@repo/ui";
 import { CategoriesPage } from "./CategoriesPage";
 import { toastQueue } from "../../lib/toast";
+import { renderWithAdminRouter } from "../../test/render-with-admin-router";
 import { useCategoryList } from "./hooks/use-category-list";
 import type { CategoryRow } from "./model";
 
@@ -51,7 +52,7 @@ vi.mock("../../lib/api", () => ({
 }));
 
 function renderCategoriesPage() {
-  return render(
+  return renderWithAdminRouter(
     <>
       <CategoriesPage />
       <ToastRegion queue={toastQueue} />

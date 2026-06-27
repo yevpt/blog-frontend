@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ApiError } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
 import {
@@ -26,18 +26,21 @@ import { useAdminArticleList } from "./hooks/use-article-list";
 import { apiClient } from "../../lib/api";
 import { addToast } from "../../lib/toast";
 import {
+  buildArticleEditorLinkState,
   passThroughFilter,
   serverSideColumnSort,
   type ArticleRow,
   type ArticleTableSort,
 } from "./model";
 
-function isSameSort(a: ArticleTableSort | undefined, b?: DataTableState["sort"]) {
+function isSameSort(a?: DataTableState["sort"], b?: DataTableState["sort"]) {
   if (!a || !b) return false;
   return b.column === a.column && b.direction === a.direction;
 }
 
 export function ArticlesPage() {
+  const [searchParams] = useSearchParams();
+  const listSearch = searchParams.toString();
   const {
     rows,
     pageData,
@@ -50,6 +53,8 @@ export function ArticlesPage() {
     setSort,
     setSearch,
     setCategoryId,
+    resetListQuery,
+    hasActiveListQuery,
     refetch,
   } = useAdminArticleList();
   const {
@@ -107,6 +112,7 @@ export function ArticlesPage() {
           <>
             <Link
               to={`/articles/${article.id}/edit`}
+              state={buildArticleEditorLinkState(listSearch)}
               className={cn(
                 "block truncate font-medium text-foreground underline-offset-4",
                 "hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -190,7 +196,14 @@ export function ArticlesPage() {
         ),
       },
     ],
-    [deletingArticleId, handleDeleteArticle, filters.categoryId, categoryOptions, setCategoryId],
+    [
+      deletingArticleId,
+      handleDeleteArticle,
+      filters.categoryId,
+      categoryOptions,
+      setCategoryId,
+      listSearch,
+    ],
   );
 
   const listError = error ?? filterOptionsError;
@@ -252,6 +265,8 @@ export function ArticlesPage() {
             categoryId={filters.categoryId}
             categoryOptions={categoryOptions}
             onCategoryChange={setCategoryId}
+            canClear={hasActiveListQuery}
+            onClear={resetListQuery}
           />
 
           <div className="min-h-0 flex-1 overflow-hidden">
@@ -279,6 +294,7 @@ export function ArticlesPage() {
                   emptyState={articleEmptyState}
                   deletingArticleId={deletingArticleId}
                   onConfirmDelete={handleDeleteArticle}
+                  listSearch={listSearch}
                 />
               </div>
             )}

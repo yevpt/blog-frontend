@@ -19,6 +19,8 @@ interface MusicSongsPanelProps {
   onTableStateChange: (state: DataTableState) => void;
   onSearchChange: (value: string) => void;
   onVisibilityFilterChange: (value: string) => void;
+  canClear?: boolean;
+  onClear?: () => void;
   onCreate: () => void;
   onEdit: (row: MusicRow) => void;
   onDelete: (row: MusicRow) => void;
@@ -35,12 +37,14 @@ export function MusicSongsPanel({
   onTableStateChange,
   onSearchChange,
   onVisibilityFilterChange,
+  canClear = false,
+  onClear,
   onCreate,
   onEdit,
   onDelete,
 }: MusicSongsPanelProps) {
   const columns = createMusicColumns(onEdit, onDelete);
-  const hasActiveFilter = tableState.searchValue.trim() || visibilityFilter !== "all";
+  const hasActiveFilter = canClear;
   const emptyState: DataTableEmptyState = hasActiveFilter
     ? { icon: "search", title: "未找到匹配的音乐", description: "调整搜索或筛选条件后再试。" }
     : {
@@ -62,6 +66,8 @@ export function MusicSongsPanel({
         visibilityFilter={visibilityFilter}
         onSearchChange={onSearchChange}
         onVisibilityFilterChange={onVisibilityFilterChange}
+        canClear={canClear}
+        onClear={onClear}
       />
       <div className="min-h-0 flex-1 overflow-hidden">
         {isMdScreen ? (

@@ -1,4 +1,53 @@
 import type { GuestbookItemResp } from "@repo/api";
+import type { AdminListQueryCodec } from "../../lib/admin-list-query";
+import {
+  hasActiveListPage,
+  hasActiveListSearch,
+  parseListPage,
+  parseListSearch,
+  writeListPage,
+  writeListSearch,
+} from "../../lib/admin-list-query";
+
+export interface AdminGuestbookListFilters {
+  search: string;
+  [key: string]: string | undefined;
+}
+
+export interface AdminGuestbookListQueryState {
+  page: number;
+  filters: AdminGuestbookListFilters;
+}
+
+const DEFAULT_GUESTBOOK_LIST_FILTERS: AdminGuestbookListFilters = {
+  search: "",
+};
+
+export const DEFAULT_GUESTBOOK_LIST_QUERY_STATE: AdminGuestbookListQueryState = {
+  page: 1,
+  filters: DEFAULT_GUESTBOOK_LIST_FILTERS,
+};
+
+export const guestbookListQueryCodec: AdminListQueryCodec<AdminGuestbookListQueryState> = {
+  defaultState: DEFAULT_GUESTBOOK_LIST_QUERY_STATE,
+  parse(params) {
+    return {
+      page: parseListPage(params),
+      filters: {
+        search: parseListSearch(params, DEFAULT_GUESTBOOK_LIST_FILTERS.search),
+      },
+    };
+  },
+  write(state) {
+    const params = new URLSearchParams();
+    writeListPage(params, state.page);
+    writeListSearch(params, state.filters.search);
+    return params;
+  },
+  hasActive(state) {
+    return hasActiveListPage(state.page) || hasActiveListSearch(state.filters.search);
+  },
+};
 
 export interface GuestbookRow {
   id: string;

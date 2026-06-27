@@ -53,6 +53,7 @@ describe("article-editor-utils", () => {
       musicId: 7,
       articleStatus: 1,
       commentStatus: 1,
+      isRecommended: false,
       isPassworded: false,
       savedArticleId: 12,
     });
@@ -106,6 +107,27 @@ describe("article-editor-utils", () => {
     expect(resolveEditorMusicOption(99, [], undefined)).toBeNull();
   });
 
+  it("mapDetailToFormState 回填推荐状态", () => {
+    const detail: AdminArticleDetailResp = {
+      id: 12,
+      title: "标题",
+      content: "正文",
+      user_id: 1,
+      status: 1,
+      comment_status: 1,
+      read_count: 0,
+      like_count: 0,
+      comment_count: 0,
+      is_recommended: true,
+      passworded: false,
+      category_ids: [3],
+      created_at: "2026-01-01",
+      updated_at: "2026-01-01",
+    };
+
+    expect(mapDetailToFormState(detail).isRecommended).toBe(true);
+  });
+
   it("buildArticleSaveReq 构造保存请求", () => {
     expect(
       buildArticleSaveReq({
@@ -118,6 +140,7 @@ describe("article-editor-utils", () => {
         musicId: 9,
         targetStatus: 0,
         commentStatus: 1,
+        isRecommended: true,
         articleId: 12,
       }),
     ).toEqual({
@@ -131,8 +154,7 @@ describe("article-editor-utils", () => {
       category_ids: [1],
       tags: [{ tag_id: 2, seq: 0 }],
       music_ids: [9],
-      recommend: false,
-      recommend_seq: 0,
+      recommend: true,
     });
   });
 });

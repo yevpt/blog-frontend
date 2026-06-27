@@ -33,6 +33,8 @@ export function CommentsPage() {
     filters,
     setSearch,
     setTargetType,
+    resetListQuery,
+    hasActiveListQuery,
     refetch,
   } = useAdminCommentList();
   const isMdScreen = useIsMdScreen();
@@ -143,7 +145,7 @@ export function CommentsPage() {
     : {
         icon: "message-circle",
         title: "还没有评论",
-        description: "文章或动态收到评论后会出现在这里。",
+        description: "文章或碎语收到评论后会出现在这里。",
       };
 
   const total = pageData?.total ?? 0;
@@ -155,7 +157,7 @@ export function CommentsPage() {
     <div className="grid min-h-0 min-w-0 max-w-full gap-4 overflow-hidden md:max-h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:max-h-[calc(100dvh-3.5rem)]">
       <AdminPageHeader
         title="评论管理"
-        description="管理文章与动态评论，快速定位异常互动并清理。"
+        description="管理文章与碎语评论，快速定位异常互动并清理。"
         action={
           <Button
             size="sm"
@@ -182,6 +184,8 @@ export function CommentsPage() {
             targetType={filters.targetType}
             onSearchChange={setSearch}
             onTargetTypeChange={setTargetType}
+            canClear={hasActiveListQuery}
+            onClear={resetListQuery}
           />
 
           <div className="min-h-0 flex-1 overflow-hidden">
