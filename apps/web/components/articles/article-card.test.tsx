@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import type { ArticleListItemResp } from "@repo/api";
+import type * as RepoHooks from "@repo/hooks";
 import { ArticleCard } from "./article-card";
 
 vi.mock("@repo/hooks/locale", () => ({
@@ -50,7 +51,7 @@ vi.mock("next/link", () => ({
 }));
 
 vi.mock("@repo/hooks", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@repo/hooks")>();
+  const actual = (await importOriginal()) as typeof RepoHooks;
   return {
     ...actual,
     useDeferredMediaActivation: () => true,

@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { ArticleHero } from "./article-hero";
 import { useImageViewer } from "@/store/use-image-viewer";
 import type { ArticleDetailResp, MusicItemResp } from "@repo/api";
+import type * as RepoHooks from "@repo/hooks";
 
 vi.mock("next/image", () => ({
   default: ({
@@ -23,7 +24,7 @@ const deferredMediaMock = vi.hoisted(() => ({
 }));
 
 vi.mock("@repo/hooks", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@repo/hooks")>();
+  const actual = (await importOriginal()) as typeof RepoHooks;
   return {
     ...actual,
     useDeferredMediaActivation: deferredMediaMock.useDeferredMediaActivation,

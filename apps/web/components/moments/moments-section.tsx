@@ -124,7 +124,7 @@ export function MomentsSection({ initialMoments, loading, ownerUserId }: Moments
             ? Array.from({ length: MAX_MOMENTS }, (_, i) => (
                 <MomentCardSkeleton key={i} variant={i} layout="embedded" />
               ))
-            : visibleMoments.map((moment, index) => (
+            : visibleMoments.map((moment) => (
                 <MomentCard
                   key={moment.id}
                   layout="embedded"

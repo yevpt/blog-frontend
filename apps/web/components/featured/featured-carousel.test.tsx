@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { FeaturedCarousel } from "./featured-carousel";
 import type { FeaturedPost } from "../../app/_mock/types";
+import type * as RepoHooks from "@repo/hooks";
 
 type MockWatchDrag = (_emblaApi: unknown, event: { target: EventTarget | null }) => boolean;
 
@@ -54,7 +55,7 @@ const deferredMediaMock = vi.hoisted(() => ({
 }));
 
 vi.mock("@repo/hooks", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@repo/hooks")>();
+  const actual = (await importOriginal()) as typeof RepoHooks;
   return {
     ...actual,
     useDeferredMediaActivation: deferredMediaMock.useDeferredMediaActivation,

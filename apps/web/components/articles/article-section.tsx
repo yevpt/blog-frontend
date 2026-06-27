@@ -173,7 +173,7 @@ export function ArticleSection({
       <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:gap-5">
         {isLoadingInitial
           ? Array.from({ length: skeletonCount }, (_, i) => <ArticleCardSkeleton key={i} />)
-          : articles.map((article, index) => (
+          : articles.map((article) => (
               <ArticleCard
                 key={article.id}
                 article={article}

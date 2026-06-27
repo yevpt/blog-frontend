@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import type * as RepoHooks from "@repo/hooks";
 import { LoadingImage } from "./loading-image";
 
 const IMAGE_PLACEHOLDER_DELAY_MS = 200;
@@ -10,7 +11,7 @@ const deferredMediaMock = vi.hoisted(() => ({
 }));
 
 vi.mock("@repo/hooks", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@repo/hooks")>();
+  const actual = (await importOriginal()) as typeof RepoHooks;
   return {
     ...actual,
     useDeferredMediaActivation: deferredMediaMock.useDeferredMediaActivation,

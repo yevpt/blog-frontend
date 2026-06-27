@@ -3,13 +3,14 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ArticleMusicBar } from "./article-music-bar";
 import { useArticleMusic } from "@/store/use-article-music";
+import type * as RepoHooks from "@repo/hooks";
 
 const hydratedMock = vi.hoisted(() => ({
   useHydrated: vi.fn(() => true),
 }));
 
 vi.mock("@repo/hooks", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@repo/hooks")>();
+  const actual = (await importOriginal()) as typeof RepoHooks;
   return {
     ...actual,
     useHydrated: hydratedMock.useHydrated,

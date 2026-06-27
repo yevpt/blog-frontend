@@ -202,7 +202,7 @@ export function MomentsList({ initialPage }: MomentsListProps) {
           <div className="flex gap-[14px]">
             {columnItems.map((col, colIdx) => (
               <div key={colIdx} className="flex min-w-0 flex-1 flex-col gap-[14px]">
-                {col.map(({ moment, delay }, idx) => (
+                {col.map(({ moment, delay }) => (
                   <div
                     key={moment.id}
                     className="animate-[momentCardEnter_0.4s_cubic-bezier(0.16,1,0.3,1)_both]"
