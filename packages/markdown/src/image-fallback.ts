@@ -57,7 +57,12 @@ export function attachMarkdownImageFallbacks(container: HTMLElement): void {
     };
 
     img.addEventListener("error", swap, { once: true });
-    if (img.complete && img.naturalWidth === 0 && img.getAttribute("src")) {
+    if (
+      !img.dataset.mdImageOptimized &&
+      img.complete &&
+      img.naturalWidth === 0 &&
+      img.getAttribute("src")
+    ) {
       swap();
     }
   }

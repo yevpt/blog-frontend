@@ -3,6 +3,7 @@
 import { useRef, useEffect } from "react";
 import clsx from "clsx";
 import { attachMarkdownImageFallbacks, MD_IMAGE_FALLBACK_CLASS } from "./image-fallback";
+import { attachMarkdownImageRetries } from "./image-retry";
 import { PROSE_BLOCKQUOTE_QUOTELESS_CLASSES } from "./prose-blockquote-classes";
 
 export interface MarkdownContentProps {
@@ -96,7 +97,7 @@ export function MarkdownContent({
       if (img && onImagePreview) {
         const all = Array.from(container.querySelectorAll("img"));
         const items = all.map((el) => ({
-          src: el.currentSrc || el.src,
+          src: el.dataset.originalSrc || el.currentSrc || el.src,
           alt: el.alt || undefined,
         }));
         const index = all.indexOf(img);
@@ -126,6 +127,12 @@ export function MarkdownContent({
     container.addEventListener("click", handleClick);
     return () => container.removeEventListener("click", handleClick);
   }, [onImagePreview]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    return attachMarkdownImageRetries(container);
+  }, [html]);
 
   useEffect(() => {
     if (!imageErrorFallback) return;

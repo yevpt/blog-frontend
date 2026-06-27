@@ -115,6 +115,19 @@ describe("MarkdownContent 图片预览", () => {
     render(<MarkdownContent html={html} />);
     expect(() => fireEvent.click(screen.getByAltText("图"))).not.toThrow();
   });
+
+  it("优化图片点击预览时使用原图地址", () => {
+    const onImagePreview = vi.fn();
+    const original = "https://blog-oss.yevpt.com/original.jpg";
+    render(
+      <MarkdownContent
+        html={`<img src="/_next/image?url=x&w=640&q=75" data-original-src="${original}" data-md-image-optimized="true" alt="图">`}
+        onImagePreview={onImagePreview}
+      />,
+    );
+    fireEvent.click(screen.getByAltText("图"));
+    expect(onImagePreview).toHaveBeenCalledWith([{ src: original, alt: "图" }], 0);
+  });
 });
 
 describe("MarkdownContent 图片加载失败", () => {
@@ -125,5 +138,30 @@ describe("MarkdownContent 图片加载失败", () => {
     fireEvent.error(img);
     expect(container.querySelector("img")).toBeNull();
     expect(container.querySelector(".md-image-fallback")).toBeInTheDocument();
+  });
+
+  it("优化地址失败重试三次后回退原图，原图失败后才显示占位", () => {
+    vi.useFakeTimers();
+    const original = "https://blog-oss.yevpt.com/original.jpg";
+    const { container } = render(
+      <MarkdownContent
+        variant="comment"
+        html={`<img src="/_next/image?url=x&w=640&q=75" data-original-src="${original}" data-md-image-optimized="true" alt="图">`}
+      />,
+    );
+    const image = screen.getByAltText("图") as HTMLImageElement;
+
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      fireEvent.error(image);
+      act(() => vi.advanceTimersByTime(1500));
+      expect(image.src).toContain(`md_retry=${attempt}`);
+    }
+    fireEvent.error(image);
+    expect(image.src).toBe(original);
+    expect(container.querySelector(".md-image-fallback")).toBeNull();
+
+    fireEvent.error(image);
+    expect(container.querySelector(".md-image-fallback")).toBeInTheDocument();
+    vi.useRealTimers();
   });
 });
