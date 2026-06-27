@@ -26,13 +26,14 @@ export function SiteUptime({ className }: SiteUptimeProps) {
   }
 
   return (
-    <p
-      className={cn(
-        "mt-3 text-[11px] text-muted-foreground/45 tabular-nums tracking-wide",
-        className,
+    <div className={cn("mt-3", className)}>
+      {uptimeText ? (
+        <p className="m-0 text-[11px] leading-[16px] text-muted-foreground/45 tabular-nums tracking-wide">
+          {uptimeText}
+        </p>
+      ) : (
+        <div className="h-[16px]" aria-hidden="true" />
       )}
-    >
-      {uptimeText}
-    </p>
+    </div>
   );
 }

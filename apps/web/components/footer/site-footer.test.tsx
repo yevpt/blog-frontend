@@ -20,8 +20,7 @@ describe("SiteFooter", () => {
     render(<SiteFooter />);
 
     const nav = screen.getByRole("navigation", { name: "站点信息" });
-    expect(nav.className).toContain("flex-col");
-    expect(nav.className).toContain("md:flex-row");
+    expect(nav.className).toContain("flex-row");
 
     expect(screen.getByText("© 2026 yevpt.com")).toHaveAttribute("href", "https://www.yevpt.com");
     expect(screen.getByText("鲁公网安备 37011202000953号").closest("a")).toHaveAttribute(

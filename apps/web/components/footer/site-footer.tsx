@@ -65,7 +65,7 @@ function PoweredByStack() {
 
 function ComplianceLinks() {
   return (
-    <div className="flex flex-col items-center gap-1 md:flex-row md:flex-wrap md:justify-center md:gap-x-2 md:gap-y-1">
+    <div className="flex flex-row flex-wrap justify-center gap-x-2 gap-y-1">
       <FooterAnchor
         href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=37011202000953"
         external
@@ -74,7 +74,7 @@ function ComplianceLinks() {
         <SvgIcon name="shield" size={13} className="shrink-0 opacity-55" aria-hidden />
         鲁公网安备 37011202000953号
       </FooterAnchor>
-      <FooterSeparator className="hidden md:inline" />
+      <FooterSeparator />
       <FooterAnchor href="https://beian.miit.gov.cn/">京ICP备2023025236</FooterAnchor>
     </div>
   );
@@ -86,15 +86,15 @@ export function SiteFooter() {
       <div className="mx-auto max-w-[1120px] px-5 py-7">
         <nav
           aria-label="站点信息"
-          className="flex flex-col items-center gap-2 text-center text-xs tracking-wide md:flex-row md:flex-wrap md:justify-center md:gap-x-2.5 md:gap-y-1"
+          className="flex flex-row flex-wrap justify-center gap-x-2.5 gap-y-1 text-center text-xs tracking-wide"
         >
           <FooterAnchor href="https://www.yevpt.com">© 2026 yevpt.com</FooterAnchor>
 
-          <FooterSeparator className="hidden md:inline" />
+          <FooterSeparator />
 
           <PoweredByStack />
 
-          <FooterSeparator className="hidden md:inline" />
+          <FooterSeparator />
 
           <ComplianceLinks />
         </nav>
