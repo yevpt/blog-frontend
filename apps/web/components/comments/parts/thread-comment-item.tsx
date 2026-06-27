@@ -189,6 +189,7 @@ export const ThreadCommentHeader = memo(function ThreadCommentHeader({
   const avatar = (
     <UserAvatar
       src={user?.avatar_url}
+      userId={user?.id}
       name={displayName}
       size="ml"
       isVip={isVipUser(user?.roles)}
@@ -286,6 +287,7 @@ export const ThreadReplyItem = memo(function ThreadReplyItem({
   const avatar = (
     <UserAvatar
       src={user?.avatar_url}
+      userId={user?.id}
       name={displayName}
       size="ml"
       isVip={isVipUser(user?.roles)}

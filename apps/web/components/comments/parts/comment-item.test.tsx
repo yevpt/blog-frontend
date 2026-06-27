@@ -192,8 +192,11 @@ describe("CommentItem", () => {
 
   it("有 user 时昵称渲染为跳转链接", () => {
     render(<CommentItem comment={baseComment} targetType="article" />);
-    const link = screen.getByRole("link", { name: "Alice" });
-    expect(link.getAttribute("href")).toBe("/users/10");
+    const nicknameLink = screen
+      .getAllByRole("link", { name: "Alice" })
+      .find((link) => link.textContent === "Alice");
+    expect(nicknameLink).toBeTruthy();
+    expect(nicknameLink?.getAttribute("href")).toBe("/users/10");
   });
 
   it("无 user 时昵称为普通文本", () => {
