@@ -88,7 +88,9 @@ describe("UsersPage", () => {
 
     renderUsersPage();
 
-    expect(screen.getByRole("region", { name: "用户列表" })).toHaveClass("min-w-0", "max-w-full");
+    const region = screen.getByRole("region", { name: "用户列表" });
+    expect(region).toHaveClass("min-w-0");
+    expect(region.parentElement).toHaveClass("max-w-full");
   });
 
   it("点击授予 VIP 后调用接口并刷新", async () => {
