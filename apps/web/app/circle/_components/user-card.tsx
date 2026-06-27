@@ -25,7 +25,9 @@ export function UserCard({ user, index, animatedIds }: UserCardProps) {
       user={user}
       variant="normal"
       showRoleLabel={false}
+      presenceStatic
       className="h-full"
+      deferAvatar
       animateEnter={isNewRef.current}
       animationDelay={isNewRef.current && index < 40 ? `${index * 30}ms` : "0ms"}
     />

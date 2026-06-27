@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 import CirclePage from "./page";
@@ -8,8 +7,8 @@ vi.mock("react-virtuoso", () => ({
     data,
     itemContent,
   }: {
-    data: Array<{ id: number }>;
-    itemContent: (index: number, item: { id: number }) => ReactNode;
+    data: Array<{ id: number; nickname?: string }>;
+    itemContent: (index: number, item: { id: number; nickname?: string }) => React.ReactNode;
   }) => <div data-testid="virtuoso-grid">{data.map((item, i) => itemContent(i, item))}</div>,
 }));
 
@@ -25,17 +24,16 @@ vi.mock("@/lib/server-api", () => ({
         total: 3,
         pages: 1,
         page: 1,
-        page_size: 40,
+        page_size: 50,
       }),
     },
   }),
 }));
 
-test("CirclePage sorts users by role", async () => {
+test("CirclePage 服务端拉取用户并按角色排序", async () => {
   const jsx = await CirclePage();
   render(jsx);
 
-  // 用户卡片，排序 Admin > VIP > Regular
   const headings = await screen.findAllByRole("heading", { level: 3 });
   expect(headings).toHaveLength(3);
   expect(headings[0]).toHaveTextContent("Admin User");
