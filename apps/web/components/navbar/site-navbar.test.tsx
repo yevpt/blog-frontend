@@ -142,18 +142,20 @@ describe("SiteNavbar", () => {
     expect(document.querySelector("nav#navbar")).toBeTruthy();
   });
 
-  it("IO 首次回调前导航不可见（opacity-0），回调后整体弹出（opacity-100）", () => {
+  it("IO 首次回调前导航不可见（opacity-0），但展示骨架屏", () => {
     render(<SiteNavbar />);
     const navbar = document.querySelector("nav#navbar");
     // 未触发 IO 回调前：opacity-0 隐藏
     expect(navbar?.className).toContain("opacity-0");
     expect(navbar?.className).not.toContain("opacity-100");
+    expect(document.querySelector("#navbar-skeleton")).toBeTruthy();
 
     // 触发首次回调（哨兵在视口内 = 未滚动）
     fireIntersection(true);
 
     expect(navbar?.className).toContain("opacity-100");
     expect(navbar?.className).not.toContain("opacity-0");
+    expect(document.querySelector("#navbar-skeleton")).toBeNull();
   });
 
   it("桌面导航容器宽度与首页轮播容器齐平", () => {
@@ -273,8 +275,9 @@ describe("SiteNavbar", () => {
     render(<SiteNavbar />);
     const navbar = document.querySelector("nav#navbar");
 
-    // IO 回调前：nav 不可见
+    // IO 回调前：nav 不可见，骨架屏占位
     expect(navbar?.className).toContain("opacity-0");
+    expect(document.querySelector("#navbar-skeleton")).toBeTruthy();
     // 玻璃态此刻为 false（初始值），但用户不可见，无影响
     expect(navbar).toHaveAttribute("data-glass", "false");
 
@@ -284,6 +287,7 @@ describe("SiteNavbar", () => {
     // 弹出后：glass=true 且可见，用户看到的第一眼就是完整胶囊
     expect(navbar).toHaveAttribute("data-glass", "true");
     expect(navbar?.className).toContain("opacity-100");
+    expect(document.querySelector("#navbar-skeleton")).toBeNull();
   });
 
   it("滚动超过阈值后进入玻璃态，回到顶部（防抖 80ms 后）恢复非玻璃态", () => {

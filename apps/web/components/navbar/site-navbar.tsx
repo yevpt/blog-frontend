@@ -9,6 +9,7 @@ import { NavbarMobileHeader } from "./navbar-mobile-header";
 import { NavbarMobileMenu } from "./navbar-mobile-menu";
 import { useNavbarContext } from "./use-navbar-context";
 import { useNotificationStore } from "@/store/use-notification-store";
+import { SiteNavbarSkeleton } from "./site-navbar-skeleton";
 
 interface SiteNavbarProps {
   initialUnreadCount?: number;
@@ -99,6 +100,7 @@ export function SiteNavbar({ initialUnreadCount = 0 }: SiteNavbarProps) {
           className="fixed inset-0 z-40 border-0 bg-black/20 p-0 backdrop-blur-sm transition-opacity dark:bg-black/40 md:hidden"
         />
       )}
+      {!mounted && <SiteNavbarSkeleton mobileVariant={navbarContext.mobileVariant} />}
       <nav
         id="navbar"
         data-glass={isGlass}
