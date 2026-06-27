@@ -22,6 +22,17 @@ vi.mock("@repo/hooks", () => ({
     },
   }),
   useHydrated: () => true,
+  usePresence: () => ({ record: undefined }),
+  useDeferredMediaActivation: () => true,
+  useImageLoadPlaceholder: () => ({
+    isLoading: false,
+    state: undefined,
+    hideImage: false,
+    renderPlaceholder: false,
+    placeholderOpaque: false,
+    animateImage: false,
+  }),
+  shouldDeferRemoteMediaSrc: () => false,
 }));
 
 // Mock @repo/icons

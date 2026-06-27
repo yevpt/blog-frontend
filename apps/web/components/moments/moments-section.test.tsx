@@ -88,6 +88,16 @@ vi.mock("@repo/hooks", () => ({
     },
   }),
   useHydrated: () => true,
+  useDeferredMediaActivation: () => true,
+  useImageLoadPlaceholder: () => ({
+    isLoading: false,
+    state: undefined,
+    hideImage: false,
+    renderPlaceholder: false,
+    placeholderOpaque: false,
+    animateImage: false,
+  }),
+  shouldDeferRemoteMediaSrc: () => false,
 }));
 
 vi.mock("@/app/providers/session-provider", () => ({
