@@ -12,24 +12,7 @@ function resolveAudioSrc(url: string): string {
   return new URL(url, window.location.href).href;
 }
 
-/** 首次播放前挂载 src 并等待可播放；已就绪则直接返回。 */
-export function prepareArticleAudioElement(audio: HTMLAudioElement, url: string): Promise<void> {
-  const targetSrc = resolveAudioSrc(url);
-  if (audio.src !== targetSrc) {
-    const crossOrigin = resolveAudioCrossOrigin(url);
-    if (crossOrigin) {
-      audio.crossOrigin = crossOrigin;
-    } else {
-      audio.removeAttribute("crossorigin");
-    }
-    // 赋值 src 即会触发浏览器加载，勿再调 load() 以免重复请求
-    audio.src = targetSrc;
-  }
-
-  if (audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
-    return Promise.resolve();
-  }
-
+function waitForCanPlay(audio: HTMLAudioElement): Promise<void> {
   return new Promise((resolve, reject) => {
     const onCanPlay = () => {
       cleanup();
@@ -46,4 +29,30 @@ export function prepareArticleAudioElement(audio: HTMLAudioElement, url: string)
     audio.addEventListener("canplay", onCanPlay);
     audio.addEventListener("error", onError);
   });
+}
+
+/** 首次播放前挂载 src 并等待可播放；已就绪则直接返回。 */
+export function prepareArticleAudioElement(audio: HTMLAudioElement, url: string): Promise<void> {
+  const targetSrc = resolveAudioSrc(url);
+  if (audio.src !== targetSrc) {
+    const crossOrigin = resolveAudioCrossOrigin(url);
+    if (crossOrigin) {
+      audio.crossOrigin = crossOrigin;
+    } else {
+      audio.removeAttribute("crossorigin");
+    }
+    audio.src = targetSrc;
+  }
+
+  if (audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+    return Promise.resolve();
+  }
+
+  // preload=none 时赋值 src 不会自动拉流，需显式 load；若浏览器已在加载则跳过以免重复请求
+  const networkLoading = HTMLMediaElement.NETWORK_LOADING ?? 2;
+  if (audio.networkState !== networkLoading) {
+    audio.load();
+  }
+
+  return waitForCanPlay(audio);
 }

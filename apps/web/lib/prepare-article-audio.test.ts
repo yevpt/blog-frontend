@@ -10,6 +10,7 @@ function createAudioStub(): AudioStub {
     load: vi.fn(),
     currentTime: 0,
     readyState: 0,
+    networkState: 0,
     src: "",
     crossOrigin: "",
     removeAttribute: vi.fn((name: string) => {
@@ -46,10 +47,46 @@ describe("prepareArticleAudioElement", () => {
 
     expect(audio.src).toBe("https://example.com/a.mp3");
     expect(audio.crossOrigin).toBe("anonymous");
-    expect(audio.load).not.toHaveBeenCalled();
+    expect(audio.load).toHaveBeenCalledOnce();
 
     audio.emit("canplay");
     await expect(promise).resolves.toBeUndefined();
+  });
+
+  it("src 赋值后若已在 LOADING 则不再重复 load", async () => {
+    const OriginalHTMLMediaElement = globalThis.HTMLMediaElement as
+      | typeof HTMLMediaElement
+      | undefined;
+    Object.defineProperty(globalThis, "HTMLMediaElement", {
+      value: { HAVE_FUTURE_DATA: 3, NETWORK_LOADING: 2 },
+      writable: true,
+      configurable: true,
+    });
+
+    audio.src = "https://example.com/a.mp3";
+    Object.defineProperty(audio, "networkState", { value: 2, configurable: true });
+
+    try {
+      const promise = prepareArticleAudioModule.prepareArticleAudioElement(
+        audio,
+        "https://example.com/a.mp3",
+      );
+
+      expect(audio.load).not.toHaveBeenCalled();
+
+      audio.emit("canplay");
+      await expect(promise).resolves.toBeUndefined();
+    } finally {
+      if (OriginalHTMLMediaElement) {
+        Object.defineProperty(globalThis, "HTMLMediaElement", {
+          value: OriginalHTMLMediaElement,
+          writable: true,
+          configurable: true,
+        });
+      } else {
+        delete (globalThis as unknown as Record<string, unknown>)["HTMLMediaElement"];
+      }
+    }
   });
 
   it("已具备可播放数据时不再等待事件", async () => {
