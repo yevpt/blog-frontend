@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { SvgIcon } from "@repo/icons";
 import { Button, cn } from "@repo/ui";
 import { useArticleEngagement } from "@/hooks/use-article-engagement";
 import { NavbarLogo } from "./navbar-logo";
+import { useBackNavigation } from "./use-back-navigation";
 import type { NavbarMobileVariant } from "./navbar-route-config";
 
 interface NavbarMobileHeaderProps {
@@ -118,7 +118,7 @@ export function NavbarMobileHeader({
   unreadCount = 0,
   onToggleMenu,
 }: NavbarMobileHeaderProps) {
-  const router = useRouter();
+  const goBack = useBackNavigation();
 
   if (mobileVariant === "home") {
     return (
@@ -139,8 +139,8 @@ export function NavbarMobileHeader({
       <Button
         type="button"
         variant="ghost"
-        aria-label="返回首页"
-        onPress={() => router.push("/")}
+        aria-label="返回"
+        onPress={goBack}
         className="flex h-8 w-8 items-center justify-center rounded-full p-0 text-foreground transition-colors hover:bg-foreground/5"
       >
         <SvgIcon name="arrow-back" size={21} />

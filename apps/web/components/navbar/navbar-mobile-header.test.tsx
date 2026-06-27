@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NavbarMobileHeader } from "./navbar-mobile-header";
 
-const mockPush = vi.fn();
+const mockGoBack = vi.fn();
 const mockToggleMenu = vi.fn();
 const mockToggleLike = vi.fn();
 const mockScrollIntoView = vi.fn();
@@ -18,8 +18,8 @@ const defaultArticleEngagementState = {
   toggleLike: mockToggleLike,
 };
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush }),
+vi.mock("./use-back-navigation", () => ({
+  useBackNavigation: () => mockGoBack,
 }));
 
 vi.mock("@repo/icons", () => ({
@@ -59,7 +59,7 @@ vi.mock("@repo/ui", () => ({
 
 describe("NavbarMobileHeader", () => {
   beforeEach(() => {
-    mockPush.mockReset();
+    mockGoBack.mockReset();
     mockToggleMenu.mockReset();
     mockToggleLike.mockReset();
     mockScrollIntoView.mockReset();
@@ -80,7 +80,7 @@ describe("NavbarMobileHeader", () => {
     );
 
     expect(screen.getByLabelText("打开导航菜单")).toBeInTheDocument();
-    expect(screen.queryByLabelText("返回首页")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("返回")).not.toBeInTheDocument();
   });
 
   it("unreadCount 大于 0 时菜单按钮显示红点", () => {
@@ -148,7 +148,7 @@ describe("NavbarMobileHeader", () => {
       />,
     );
 
-    expect(screen.getByLabelText("返回首页")).toBeInTheDocument();
+    expect(screen.getByLabelText("返回")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "点赞 99+" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "评论 8" })).toBeInTheDocument();
     expect(screen.getByLabelText("打开导航菜单")).toBeInTheDocument();
@@ -165,12 +165,12 @@ describe("NavbarMobileHeader", () => {
       />,
     );
 
-    expect(screen.getByLabelText("返回首页")).toBeInTheDocument();
+    expect(screen.getByLabelText("返回")).toBeInTheDocument();
     expect(screen.getByText("碎语")).toBeInTheDocument();
     expect(screen.getByLabelText("打开导航菜单")).toBeInTheDocument();
   });
 
-  it("点击返回首页调用 router.push('/')", async () => {
+  it("点击返回按钮调用 goBack", async () => {
     const user = userEvent.setup();
     render(
       <NavbarMobileHeader
@@ -182,8 +182,8 @@ describe("NavbarMobileHeader", () => {
       />,
     );
 
-    await user.click(screen.getByLabelText("返回首页"));
-    expect(mockPush).toHaveBeenCalledWith("/");
+    await user.click(screen.getByLabelText("返回"));
+    expect(mockGoBack).toHaveBeenCalledOnce();
   });
 
   it("点击菜单按钮调用 onToggleMenu", async () => {

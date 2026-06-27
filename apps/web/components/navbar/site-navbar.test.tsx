@@ -195,17 +195,18 @@ describe("SiteNavbar", () => {
   it("文章详情页移动端头部显示返回首页、点赞、评论、menu", () => {
     mockPathname.mockReturnValue("/articles/18");
     render(<SiteNavbar />);
-    expect(screen.getByLabelText("返回首页")).toBeInTheDocument();
+    expect(screen.getByLabelText("返回")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /点赞/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /评论/ })).toBeInTheDocument();
     expect(screen.getByLabelText("打开导航菜单")).toBeInTheDocument();
   });
 
-  it("碎语页移动端头部显示 Logo、menu，不显示返回按钮，不显示写碎语按钮", () => {
+  it("碎语页移动端头部显示返回按钮、标题、menu，不显示写碎语按钮", () => {
     mockPathname.mockReturnValue("/moments");
     render(<SiteNavbar />);
 
-    expect(screen.queryByLabelText("返回首页")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("返回")).toBeInTheDocument();
+    expect(screen.getAllByText("碎语").length).toBeGreaterThan(0);
     expect(screen.queryByLabelText("写碎语")).not.toBeInTheDocument();
     expect(screen.getByLabelText("打开导航菜单")).toBeInTheDocument();
   });
