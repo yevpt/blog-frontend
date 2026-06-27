@@ -9,12 +9,20 @@ vi.mock("next/image", () => ({
     alt,
     className,
     sizes,
+    fill,
   }: {
     src: string;
     alt: string;
     className?: string;
     sizes?: string;
-  }) => <img src={src} alt={alt} className={className} sizes={sizes} />,
+    fill?: boolean;
+  }) => <img src={src} alt={alt} className={className} sizes={sizes} fill={fill} />,
+}));
+
+vi.mock("@repo/hooks", () => ({
+  useDeferredMediaActivation: () => true,
+  useImageLoadPlaceholder: () => ({ isLoading: false, state: undefined, hideImage: false, renderPlaceholder: false, placeholderOpaque: false, animateImage: false }),
+  shouldDeferRemoteMediaSrc: () => false,
 }));
 
 const base: FriendLinkItemResp = {

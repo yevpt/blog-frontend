@@ -39,6 +39,8 @@ vi.mock("next/image", () => ({
     className,
     priority,
     unoptimized,
+    fill,
+    sizes,
   }: {
     src: string;
     alt: string;
@@ -55,14 +57,28 @@ vi.mock("next/image", () => ({
       loading={priority ? "eager" : "lazy"}
       data-priority={priority ?? false}
       data-unoptimized={unoptimized ?? false}
+      fill={fill}
+      sizes={sizes}
     />
   ),
+}));
+
+const deferredMediaMock = vi.hoisted(() => ({
+  useDeferredMediaActivation: vi.fn(() => true),
 }));
 
 vi.mock("@repo/hooks", () => ({
   useLocale: () => ({ t: (key: string) => key }),
   useHydrated: () => true,
+  shouldDeferRemoteMediaSrc: (src: string | undefined) => {
+    if (!src) return false;
+    return !src.startsWith("data:") && !src.startsWith("blob:");
+  },
+  useDeferredMediaActivation: deferredMediaMock.useDeferredMediaActivation,
+  useImageLoadPlaceholder: () => ({ isLoading: false, state: undefined, hideImage: false, renderPlaceholder: false, placeholderOpaque: false, animateImage: false }),
 }));
+
+const { useDeferredMediaActivation } = deferredMediaMock;
 
 vi.mock("@repo/ui", () => ({
   cn: (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" "),
@@ -192,6 +208,7 @@ function makeMoment(overrides: Partial<MomentItemResp> = {}): MomentItemResp {
 describe("MomentCard", () => {
   beforeEach(() => {
     mockSessionUserId = null;
+    vi.mocked(useDeferredMediaActivation).mockReturnValue(true);
   });
 
   it("渲染不崩溃", () => {
@@ -406,8 +423,8 @@ describe("MomentCard", () => {
 
     const img = screen.getByRole("img", { name: "motion.gif" });
     expect(img).toHaveAttribute("src", "/motion.gif");
-    expect(img).not.toHaveAttribute("loading");
-    expect(img).not.toHaveAttribute("data-priority");
+    expect(img).toHaveAttribute("loading", "lazy");
+    expect(img.tagName).toBe("IMG");
   });
 
   it("非 GIF 碎语图优先走优化器，并启用 fallbackUnoptimized", () => {
@@ -634,7 +651,8 @@ describe("MomentCard", () => {
     expect(screen.queryByText("moment.expand")).toBeNull();
   });
 
-  it("priority 为 true 时首图 eager 加载", () => {
+  it("远程图片未就绪时首屏仅显示骨架", () => {
+    vi.mocked(useDeferredMediaActivation).mockReturnValue(false);
     const moment = makeMoment({
       images: [
         {
@@ -646,27 +664,18 @@ describe("MomentCard", () => {
           size: 1,
           seq: 1,
         },
-        {
-          id: 2,
-          name: "p2",
-          file_type: "image/jpeg",
-          url: "/2.jpg",
-          access_url: "/2.jpg",
-          size: 1,
-          seq: 2,
-        },
       ],
     });
-    render(<MomentCard moment={moment} priority />);
-    const imgs = screen
-      .getAllByRole("img")
-      .filter((el) => el.tagName === "IMG" && el.getAttribute("src")?.startsWith("/"));
-    expect(imgs[0]).toHaveAttribute("loading", "eager");
-    // 多图时仅首图 eager，其余仍 lazy
-    expect(imgs[1]).toHaveAttribute("loading", "lazy");
+    render(<MomentCard moment={moment} />);
+    expect(screen.getByTestId("loading-image-skeleton")).toBeInTheDocument();
+    expect(
+      screen
+        .queryAllByRole("img")
+        .find((el) => el.tagName === "IMG" && el.getAttribute("src")?.startsWith("/")),
+    ).toBeUndefined();
   });
 
-  it("默认 priority 为 false 时图片 lazy 加载", () => {
+  it("页面就绪后碎语图片 lazy 加载", () => {
     const moment = makeMoment({
       images: [
         {
