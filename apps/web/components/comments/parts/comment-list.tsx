@@ -6,9 +6,23 @@ import type { TargetType } from "@/hooks/use-comment-like";
 import { CommentItem, type ReplyTarget } from "./comment-item";
 import { CommentListSkeleton } from "./comment-skeleton";
 
+const COMMENT_PAGE_SIZE = 10;
+
+/** 根据已知评论总数计算首屏骨架屏条数 */
+export function getCommentListSkeletonCount(expectedCommentCount?: number): number {
+  if (expectedCommentCount === undefined || expectedCommentCount <= 0) {
+    return 3;
+  }
+  return Math.min(expectedCommentCount, COMMENT_PAGE_SIZE);
+}
+
 export interface CommentListProps {
   comments: CommentItemResp[];
   isLoading: boolean;
+  /** SSR 或父级已知的评论总数，用于首屏加载占位 */
+  expectedCommentCount?: number;
+  /** 是否已完成至少一次列表请求 */
+  hasLoaded?: boolean;
   error: string | null;
   hasMore: boolean;
   pendingReplies: Record<number, CommentReplyResp | null>;
@@ -24,6 +38,8 @@ export interface CommentListProps {
 export function CommentList({
   comments,
   isLoading,
+  expectedCommentCount,
+  hasLoaded = true,
   error,
   hasMore,
   pendingReplies,
@@ -35,15 +51,18 @@ export function CommentList({
   onDeleteReply,
   onLoadMore,
 }: CommentListProps) {
-  if (isLoading && comments.length === 0) {
-    return <CommentListSkeleton />;
-  }
-
   if (error) {
     return <p className="py-4 text-center text-sm text-(--fg3)">{error}</p>;
   }
 
   if (comments.length === 0) {
+    const awaitingInitialData =
+      isLoading || (expectedCommentCount !== undefined && expectedCommentCount > 0 && !hasLoaded);
+
+    if (awaitingInitialData) {
+      return <CommentListSkeleton count={getCommentListSkeletonCount(expectedCommentCount)} />;
+    }
+
     return <p className="py-8 text-center text-sm text-(--fg3)">暂无评论，来发表第一条吧</p>;
   }
 

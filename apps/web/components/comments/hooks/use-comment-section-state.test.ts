@@ -34,6 +34,7 @@ vi.mock("@/hooks/use-comment-list", () => ({
   useCommentList: () => ({
     comments: mockComments,
     isLoading: false,
+    hasLoaded: true,
     hasMore: false,
     error: null,
     loadMore: vi.fn(),

@@ -35,6 +35,7 @@ export function useCommentSectionState({
   const {
     comments,
     isLoading,
+    hasLoaded,
     hasMore,
     error,
     loadMore,
@@ -159,6 +160,7 @@ export function useCommentSectionState({
     userId,
     comments,
     isLoading,
+    hasLoaded,
     hasMore,
     error,
     loadMore,

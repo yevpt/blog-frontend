@@ -13,10 +13,17 @@ type TargetType = "article" | "moment";
 interface InlineCommentsProps {
   targetType: TargetType;
   targetId: number;
+  /** SSR 或父级已知的评论总数，用于首屏加载占位 */
+  expectedCommentCount?: number;
   onCommentAdded?: () => void;
 }
 
-export function InlineComments({ targetType, targetId, onCommentAdded }: InlineCommentsProps) {
+export function InlineComments({
+  targetType,
+  targetId,
+  expectedCommentCount,
+  onCommentAdded,
+}: InlineCommentsProps) {
   const openLoginModal = useLoginModal((state) => state.open);
   const editorRef = useRef<HTMLDivElement>(null);
   const [focusNonce, setFocusNonce] = useState<number | null>(null);
@@ -34,6 +41,7 @@ export function InlineComments({ targetType, targetId, onCommentAdded }: InlineC
     userId,
     comments,
     isLoading,
+    hasLoaded,
     hasMore,
     error,
     loadMore,
@@ -82,6 +90,8 @@ export function InlineComments({ targetType, targetId, onCommentAdded }: InlineC
         <CommentList
           comments={comments}
           isLoading={isLoading}
+          expectedCommentCount={expectedCommentCount}
+          hasLoaded={hasLoaded}
           error={error}
           hasMore={hasMore}
           pendingReplies={pendingReplies}

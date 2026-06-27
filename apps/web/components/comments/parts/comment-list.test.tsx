@@ -2,7 +2,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { CommentItemResp, CommentReplyResp } from "@repo/api";
-import { CommentList } from "./comment-list";
+import { CommentList, getCommentListSkeletonCount } from "./comment-list";
 import type { ReplyTarget } from "./comment-item";
 
 const mockState = vi.hoisted(() => ({
@@ -24,6 +24,12 @@ vi.mock("./comment-item", () => ({
     mockState.commentItemProps.push(props);
     return <div data-testid="comment-item">{props.comment.content}</div>;
   },
+}));
+
+vi.mock("./comment-skeleton", () => ({
+  CommentListSkeleton: ({ count }: { count?: number }) => (
+    <div data-testid="comment-list-skeleton" data-count={String(count ?? 3)} />
+  ),
 }));
 
 function makeComment(id: number): CommentItemResp {
@@ -74,5 +80,62 @@ describe("CommentList", () => {
     expect(mockState.commentItemProps[0].currentUserId).toBe(7);
     expect(mockState.commentItemProps[0].onDelete).toBe(onDelete);
     expect(mockState.commentItemProps[0].onDeleteReply).toBe(onDeleteReply);
+  });
+
+  it("加载中且预期有评论时按评论数渲染骨架屏", () => {
+    render(
+      <CommentList
+        {...defaultProps}
+        comments={[]}
+        isLoading
+        expectedCommentCount={7}
+        hasLoaded={false}
+      />,
+    );
+
+    expect(screen.getByTestId("comment-list-skeleton")).toHaveAttribute("data-count", "7");
+    expect(screen.queryByText("暂无评论，来发表第一条吧")).not.toBeInTheDocument();
+  });
+
+  it("首屏未加载完成且预期评论数超过单页时骨架屏不超过单页上限", () => {
+    render(
+      <CommentList
+        {...defaultProps}
+        comments={[]}
+        isLoading={false}
+        expectedCommentCount={15}
+        hasLoaded={false}
+      />,
+    );
+
+    expect(screen.getByTestId("comment-list-skeleton")).toHaveAttribute("data-count", "10");
+  });
+
+  it("加载完成且无评论时展示空状态", () => {
+    render(
+      <CommentList
+        {...defaultProps}
+        comments={[]}
+        isLoading={false}
+        expectedCommentCount={0}
+        hasLoaded
+      />,
+    );
+
+    expect(screen.getByText("暂无评论，来发表第一条吧")).toBeInTheDocument();
+    expect(screen.queryByTestId("comment-list-skeleton")).not.toBeInTheDocument();
+  });
+});
+
+describe("getCommentListSkeletonCount", () => {
+  it("未知或为零时返回默认条数", () => {
+    expect(getCommentListSkeletonCount()).toBe(3);
+    expect(getCommentListSkeletonCount(0)).toBe(3);
+  });
+
+  it("按实际评论数返回且不超过单页上限", () => {
+    expect(getCommentListSkeletonCount(5)).toBe(5);
+    expect(getCommentListSkeletonCount(10)).toBe(10);
+    expect(getCommentListSkeletonCount(25)).toBe(10);
   });
 });
