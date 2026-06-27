@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { computeFloatDockLeft, FLOAT_DOCK_POSITION } from "@/lib/float-dock-position";
 import type { FloatDockPosition } from "./types";
 
@@ -19,7 +19,7 @@ export function useFloatDockPosition(position: FloatDockPosition) {
       ? "viewport"
       : `${position.layout.pageMaxWidth}:${position.layout.pagePaddingX}:${position.layout.contentMaxWidth}:${position.hasSidebar ?? false}`;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const onResize = () => setLeft(readFloatLeft(position));
     onResize();
     window.addEventListener("resize", onResize);

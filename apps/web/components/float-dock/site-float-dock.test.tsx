@@ -155,10 +155,11 @@ describe("SiteFloatDock", () => {
     expect(screen.getByRole("button", { name: /^点赞$/ })).toBeInTheDocument();
   });
 
-  it("移动端视口不渲染 Dock", () => {
+  it("移动端视口始终渲染 Dock 内容", () => {
     setMdViewport(false);
     renderDock(<ArticleDockHarness />);
-    expect(screen.queryByTestId("float-actions-dock")).not.toBeInTheDocument();
+    expect(screen.getByTestId("float-actions-dock")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /点赞/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /回到顶部/ })).toBeInTheDocument();
   });
 

@@ -4,8 +4,8 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -128,7 +128,7 @@ export function useFloatDockConfig(config: FloatDockConfig, registrationId?: str
   const positionKey = getPositionKey(config);
   const itemIds = config.items?.map((item) => item.id).join(",") ?? "";
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     register(id, configRef.current);
     return () => unregister(id);
   }, [id, register, unregister, enabled, positionKey, itemIds]);
