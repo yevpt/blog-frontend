@@ -45,6 +45,9 @@ export function attachMarkdownImageRetries(container: HTMLElement): () => void {
     };
 
     image.addEventListener("error", handleError);
+    if (image.complete && image.naturalWidth === 0 && image.getAttribute("src")) {
+      handleError(new Event("error"));
+    }
     cleanups.push(() => {
       image.removeEventListener("error", handleError);
       if (retryTimer) clearTimeout(retryTimer);

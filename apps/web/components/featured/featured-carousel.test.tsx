@@ -212,7 +212,11 @@ describe("FeaturedCarousel", () => {
     expect(images.every((image) => image.getAttribute("data-unoptimized") !== "true")).toBe(true);
     expect(images.every((image) => image.getAttribute("data-fill") === "true")).toBe(true);
     expect(images.every((image) => image.className.includes("object-cover"))).toBe(true);
-    expect(images.every((image) => image.getAttribute("data-sizes") !== null)).toBe(true);
+    expect(
+      images.every(
+        (image) => image.getAttribute("data-sizes") === "(max-width: 768px) 100vw, 55vw",
+      ),
+    ).toBe(true);
   });
 
   it("GIF 轮播封面跳过 Next 优化", () => {

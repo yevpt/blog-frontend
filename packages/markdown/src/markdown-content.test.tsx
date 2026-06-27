@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { MarkdownContent } from "./markdown-content";
 
@@ -131,6 +131,11 @@ describe("MarkdownContent 图片预览", () => {
 });
 
 describe("MarkdownContent 图片加载失败", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   it("comment 模式下加载失败替换为占位图标", () => {
     const html = '<p><img src="https://example.com/broken.jpg" alt="坏图"></p>';
     const { container } = render(<MarkdownContent html={html} variant="comment" />);
@@ -163,5 +168,35 @@ describe("MarkdownContent 图片加载失败", () => {
     fireEvent.error(image);
     expect(container.querySelector(".md-image-fallback")).toBeInTheDocument();
     vi.useRealTimers();
+  });
+
+  it("effect 绑定时已失败的优化图自动重试并最终回退", () => {
+    vi.useFakeTimers();
+    vi.spyOn(HTMLImageElement.prototype, "complete", "get").mockReturnValue(true);
+    vi.spyOn(HTMLImageElement.prototype, "naturalWidth", "get").mockReturnValue(0);
+    const original = "https://blog-oss.yevpt.com/original.jpg";
+    const { container } = render(
+      <MarkdownContent
+        variant="comment"
+        html={`<img src="/_next/image?url=x&w=640&q=75" data-original-src="${original}" data-md-image-optimized="true" alt="预加载失败图">`}
+      />,
+    );
+    const image = screen.getByAltText("预加载失败图") as HTMLImageElement;
+
+    act(() => vi.advanceTimersByTime(1500));
+    expect(image.src).toContain("md_retry=1");
+
+    for (let attempt = 2; attempt <= 3; attempt += 1) {
+      fireEvent.error(image);
+      act(() => vi.advanceTimersByTime(1500));
+      expect(image.src).toContain(`md_retry=${attempt}`);
+    }
+
+    fireEvent.error(image);
+    expect(image.src).toBe(original);
+    expect(container.querySelector(".md-image-fallback")).toBeNull();
+
+    fireEvent.error(image);
+    expect(container.querySelector(".md-image-fallback")).toBeInTheDocument();
   });
 });
