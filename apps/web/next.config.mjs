@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { getDevAllowedOrigins } from "./config/allowed-dev-origins.mjs";
+import optimizedImageHosts from "./config/optimized-image-hosts.json" with { type: "json" };
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -25,14 +26,7 @@ const nextConfig = {
   images: {
     // 优化结果缓存 24h，避免同一 OSS 图反复拉取+转码
     minimumCacheTTL: 86400,
-    remotePatterns: [
-      { hostname: "picsum.photos" },
-      { hostname: "i.pravatar.cc" },
-      { hostname: "blog-dev-oss.yevpt.com" },
-      { hostname: "blog-oss.yevpt.com" },
-      { hostname: "garage-s3-local-api.yevpt.com" },
-      { hostname: "api.dicebear.com" },
-    ],
+    remotePatterns: optimizedImageHosts.map((hostname) => ({ hostname })),
   },
 };
 
