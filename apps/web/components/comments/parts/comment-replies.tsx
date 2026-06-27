@@ -241,7 +241,7 @@ export const CommentReplies = memo(function CommentReplies({
 
   if (!isOpen) {
     return (
-      <div>
+      <div className="mb-3">
         <Button
           variant="text"
           onPress={handleToggle}
