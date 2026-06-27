@@ -21,4 +21,6 @@ export interface AvatarProps {
   placeholderIcon?: FC<{ className?: string }>;
   placeholder?: ReactNode;
   focusable?: boolean;
+  /** 首屏仅骨架，页面就绪后再加载远程头像 */
+  defer?: boolean;
 }

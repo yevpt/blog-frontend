@@ -1,16 +1,20 @@
 "use client";
 
-import { useState, useRef, type ChangeEvent } from "react";
+import { useMemo, useState, useRef, type ChangeEvent } from "react";
 import type { IconName } from "@repo/icons";
 import { Card, cn, Dropdown, Modal, Button } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
-import { useHydrated } from "@repo/hooks";
+import { useHydrated, usePresence } from "@repo/hooks";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { isAdminUser, isVipUser } from "@/lib/user-roles";
 import { useAdminVipRole } from "@/hooks/use-admin-vip-role";
 import { InlineFieldEditor } from "./inline-field-editor";
 import { validateDescription, validateMark } from "./profile-tab/profile-config";
-import { resolvePresenceDisplay } from "@/lib/user-presence";
+import {
+  resolvePresenceDisplay,
+  resolvePresenceFromSubscription,
+  toPresenceRecordSeed,
+} from "@/lib/user-presence";
 import { addToast } from "@/lib/toast";
 
 interface UserInfoHeaderProps {
@@ -179,12 +183,19 @@ export function UserInfoHeader({
     }
   }
 
+  const fallbackInput = useMemo(
+    () => ({
+      is_online: isOnline,
+      last_active_at: lastActiveAt,
+      last_login_at: lastLoginAt,
+    }),
+    [isOnline, lastActiveAt, lastLoginAt],
+  );
+  const seed = useMemo(() => toPresenceRecordSeed(fallbackInput), [fallbackInput]);
+  const { record } = usePresence(userId, seed);
+
   const presence = hydrated
-    ? resolvePresenceDisplay({
-        is_online: isOnline,
-        last_active_at: lastActiveAt,
-        last_login_at: lastLoginAt,
-      })
+    ? resolvePresenceDisplay(resolvePresenceFromSubscription(record, fallbackInput))
     : null;
   const online = presence?.kind === "online";
   const onlineLabel = presence?.kind === "never" ? "" : (presence?.label ?? "\u00A0");

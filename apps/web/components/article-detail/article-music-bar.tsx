@@ -3,6 +3,7 @@
 import { useLayoutEffect, useEffect, useRef, useState } from "react";
 import { SvgIcon } from "@repo/icons";
 import { cn } from "@repo/ui";
+import { useHydrated } from "@repo/hooks";
 import type { ArticleMusicSyncInput } from "@/lib/article-music";
 import { useArticleMusic, type ArticleMusicTrack } from "@/store/use-article-music";
 import { MusicSeek } from "./article-music-seek";
@@ -280,6 +281,19 @@ function MusicVisualizer({
   );
 }
 
+function MusicPlayButtonSkeleton() {
+  return (
+    <span
+      data-testid="music-play-button-skeleton"
+      aria-hidden="true"
+      className={cn(
+        "size-10 shrink-0 rounded-full loading-image-skeleton bg-muted max-sm:size-8",
+        "border border-foreground/10 dark:border-border",
+      )}
+    />
+  );
+}
+
 function MusicPlayButton({
   isPlaying,
   isLoading,
@@ -450,6 +464,7 @@ interface ArticleMusicBarProps {
 
 /** 正文前随文配乐条：上层内容行 + 贴底可拖拽进度条（对齐设计稿大图形态） */
 export function ArticleMusicBar({ preview }: ArticleMusicBarProps = {}) {
+  const hydrated = useHydrated();
   const track = useArticleMusic((state) => state.track);
   const playbackState = useArticleMusic((state) => state.playbackState);
   const progress = useArticleMusic((state) => state.progress);
@@ -534,12 +549,16 @@ export function ArticleMusicBar({ preview }: ArticleMusicBarProps = {}) {
       aria-label="文章配乐"
       className={articleMusicShellClass}
     >
-      <MusicPlayButton
-        isPlaying={isPlaying}
-        isLoading={isLoading}
-        playLabel={playLabel}
-        onPress={() => void toggle()}
-      />
+      {!hydrated ? (
+        <MusicPlayButtonSkeleton />
+      ) : (
+        <MusicPlayButton
+          isPlaying={isPlaying}
+          isLoading={isLoading}
+          playLabel={playLabel}
+          onPress={() => void toggle()}
+        />
+      )}
 
       {/* 文字行 + 进度条作为一组，在卡片内垂直居中；进度条左右对齐标签与时长 */}
       <div

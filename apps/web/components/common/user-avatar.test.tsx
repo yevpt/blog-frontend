@@ -2,6 +2,20 @@ import { beforeEach, describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { UserAvatar } from "./user-avatar";
 
+const deferredMediaMock = vi.hoisted(() => ({
+  useDeferredMediaActivation: vi.fn(() => true),
+}));
+
+vi.mock("@repo/hooks", () => ({
+  shouldDeferRemoteMediaSrc: (src: string | undefined) => {
+    if (!src) return false;
+    return !src.startsWith("data:") && !src.startsWith("blob:");
+  },
+  useDeferredMediaActivation: deferredMediaMock.useDeferredMediaActivation,
+}));
+
+const { useDeferredMediaActivation } = deferredMediaMock;
+
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
 }));
@@ -60,6 +74,14 @@ vi.mock("next/image", async () => {
 describe("UserAvatar", () => {
   beforeEach(() => {
     imageMockState.completeOnMount = false;
+    vi.mocked(useDeferredMediaActivation).mockReturnValue(true);
+  });
+
+  it("媒体未激活时远程头像仅显示骨架", () => {
+    vi.mocked(useDeferredMediaActivation).mockReturnValue(false);
+    render(<UserAvatar src="https://example.com/a.jpg" name="Alice" />);
+    expect(screen.getByTestId("user-avatar-skeleton")).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "Alice" })).not.toBeInTheDocument();
   });
 
   it("有 src 时渲染 img 元素", () => {

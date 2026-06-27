@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { prepareArticleAudioElement, resetArticleAudioElement } from "@/lib/prepare-article-audio";
 
 export type ArticleMusicPlaybackState = "idle" | "loading" | "playing" | "paused" | "error";
 
@@ -62,6 +63,7 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => ({
     }
 
     pauseAndReset(audioEl);
+    if (audioEl) resetArticleAudioElement(audioEl);
     set({
       track,
       playbackState: "idle",
@@ -74,6 +76,7 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => ({
   clear: () => {
     const { audioEl } = get();
     pauseAndReset(audioEl);
+    if (audioEl) resetArticleAudioElement(audioEl);
     set({
       track: null,
       playbackState: "idle",
@@ -110,6 +113,7 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => ({
     if (playbackState === "paused" || playbackState === "idle") {
       set({ playbackState: "loading" });
       try {
+        await prepareArticleAudioElement(audioEl, track.url);
         await audioEl.play();
         set({ playbackState: "playing", hasPlayedOnce: true });
       } catch {
@@ -130,6 +134,7 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => ({
 
     set({ playbackState: "loading" });
     try {
+      await prepareArticleAudioElement(audioEl, track.url);
       await audioEl.play();
       set({ playbackState: "playing", hasPlayedOnce: true });
     } catch {
@@ -142,8 +147,8 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => ({
     if (!audioEl || !track?.url) return;
 
     set({ playbackState: "loading", progress: 0 });
-    audioEl.load();
     try {
+      await prepareArticleAudioElement(audioEl, track.url);
       await audioEl.play();
       set({ playbackState: "playing", hasPlayedOnce: true });
     } catch {

@@ -2,10 +2,16 @@
 
 import { cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
-import { useHydrated } from "@repo/hooks";
-import { resolvePresenceDisplay } from "@/lib/user-presence";
+import { useMemo } from "react";
+import { useHydrated, usePresence } from "@repo/hooks";
+import {
+  resolvePresenceDisplay,
+  resolvePresenceFromSubscription,
+  toPresenceRecordSeed,
+} from "@/lib/user-presence";
 
 interface UserBannerProps {
+  userId: number;
   lastLoginAt: string | null;
   lastActiveAt?: string | null;
   isOnline?: boolean;
@@ -14,6 +20,7 @@ interface UserBannerProps {
 }
 
 export function UserBanner({
+  userId,
   lastLoginAt,
   lastActiveAt,
   isOnline,
@@ -21,12 +28,19 @@ export function UserBanner({
   isEditMode,
 }: UserBannerProps) {
   const hydrated = useHydrated();
+  const fallbackInput = useMemo(
+    () => ({
+      is_online: isOnline,
+      last_active_at: lastActiveAt,
+      last_login_at: lastLoginAt,
+    }),
+    [isOnline, lastActiveAt, lastLoginAt],
+  );
+  const seed = useMemo(() => toPresenceRecordSeed(fallbackInput), [fallbackInput]);
+  const { record } = usePresence(userId, seed);
+
   const presence = hydrated
-    ? resolvePresenceDisplay({
-        is_online: isOnline,
-        last_active_at: lastActiveAt,
-        last_login_at: lastLoginAt,
-      })
+    ? resolvePresenceDisplay(resolvePresenceFromSubscription(record, fallbackInput))
     : null;
   const online = presence?.kind === "online";
   const label = presence?.label ?? "\u00A0";

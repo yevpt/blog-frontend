@@ -279,23 +279,4 @@ describe("MomentsList", () => {
       expect(secondColumn).toHaveTextContent("博主碎语 4");
     });
   });
-
-  it("每列首条碎语 priority=true，其余 priority=false（避免 LCP 警告）", () => {
-    Object.defineProperty(window, "innerWidth", { configurable: true, value: 1024 });
-    render(
-      <MomentsList
-        initialPage={makePageResp({
-          total: 6,
-          list: Array.from({ length: 6 }, (_, i) => makeMoment(i + 1, `碎语 ${i + 1}`)),
-        })}
-      />,
-    );
-
-    const cards = screen.getAllByTestId("moment-card");
-    const priorityCards = cards.filter((c) => c.dataset.priority === "true");
-    const lazyCards = cards.filter((c) => c.dataset.priority === "false");
-    // 3 列布局：每列首条 priority=true（共 3 条），其余 priority=false
-    expect(priorityCards).toHaveLength(3);
-    expect(lazyCards).toHaveLength(3);
-  });
 });

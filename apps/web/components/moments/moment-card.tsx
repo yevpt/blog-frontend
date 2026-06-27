@@ -21,8 +21,6 @@ interface MomentCardProps {
   moment: MomentItemResp;
   /** standalone：碎语页独立卡片；embedded：首页区块内嵌条目（无 Card 包裹） */
   layout?: MomentCardLayout;
-  /** 首屏可见时设为 true，使首图 eager 加载，避免 LCP 警告 */
-  priority?: boolean;
   onLike?: (moment: MomentItemResp) => void;
   likeDisabled?: boolean;
   onComment?: (moment: MomentItemResp) => void;
@@ -60,7 +58,6 @@ const trashIcon = DropdownIcon({ name: "trash" });
 export function MomentCard({
   moment,
   layout = "standalone",
-  priority = false,
   onLike,
   likeDisabled = false,
   onComment,
@@ -132,11 +129,7 @@ export function MomentCard({
 
       <MomentContent content={moment.content} collapsible={false} />
 
-      <MomentImageGrid
-        images={images}
-        priority={priority}
-        onOpen={(idx) => openViewer(viewerImages, idx)}
-      />
+      <MomentImageGrid images={images} onOpen={(idx) => openViewer(viewerImages, idx)} />
 
       {edited && (
         <p className="mt-3 text-[11px] text-(--fg3)">

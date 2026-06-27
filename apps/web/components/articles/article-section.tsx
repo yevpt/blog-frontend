@@ -177,7 +177,6 @@ export function ArticleSection({
               <ArticleCard
                 key={article.id}
                 article={article}
-                priority={index === 0}
                 onLike={toggleLike}
                 likeDisabled={pendingLikeIds.has(article.id)}
                 onComment={openComment}

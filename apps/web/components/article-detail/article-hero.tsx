@@ -46,7 +46,7 @@ export function ArticleHero({ article }: ArticleHeroProps) {
             alt={article.title}
             fill
             className="object-cover object-center"
-            priority
+            fallbackUnoptimized
             sizes="(max-width: 768px) 100vw, 720px"
           />
         </button>

@@ -1,14 +1,19 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { usePresenceStore } from "@repo/hooks";
 import { UserBanner } from "./user-banner";
 
 const baseProps = {
+  userId: 1,
   lastLoginAt: null,
   isOwner: false,
   isEditMode: false,
 };
 
 describe("UserBanner", () => {
+  beforeEach(() => {
+    usePresenceStore.setState({ records: new Map() });
+  });
   it("渲染不崩溃", () => {
     const { container } = render(<UserBanner {...baseProps} />);
     expect(container.firstChild).toBeTruthy();

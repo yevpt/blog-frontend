@@ -61,11 +61,7 @@ function FeaturedCarouselDesktop({ posts }: { posts: FeaturedPost[] }) {
           role="group"
           aria-roledescription="slide"
         >
-          <FeaturedCarouselSlide
-            post={post}
-            isActive={index === currentIndex}
-            isLcpCandidate={index === 0}
-          />
+          <FeaturedCarouselSlide post={post} isActive={index === currentIndex} />
         </div>
       ))}
 
@@ -201,11 +197,7 @@ function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
         <Carousel.Content className="h-full">
           {posts.map((post, index) => (
             <Carousel.Item key={post.id} className="h-full">
-              <FeaturedCarouselSlide
-                post={post}
-                isActive={index === currentIndex}
-                isLcpCandidate={index === 0}
-              />
+              <FeaturedCarouselSlide post={post} isActive={index === currentIndex} />
             </Carousel.Item>
           ))}
         </Carousel.Content>

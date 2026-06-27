@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { usePresenceStore } from "@repo/hooks";
 import { BaseUserCard } from "./base-user-card";
 
 vi.mock("next/link", () => ({
@@ -22,6 +23,10 @@ vi.mock("@/components/common/user-avatar", () => ({
 }));
 
 describe("BaseUserCard", () => {
+  beforeEach(() => {
+    usePresenceStore.setState({ records: new Map() });
+  });
+
   const mockUser = {
     id: "user-1",
     nickname: "Test User",

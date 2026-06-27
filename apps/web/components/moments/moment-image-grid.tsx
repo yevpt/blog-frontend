@@ -2,7 +2,7 @@
 
 import type { MomentItemResp } from "@repo/api";
 import { cn } from "@repo/ui";
-import { LoadingImage } from "@/components/common/loading-image";
+import { DeferredNativeImage, LoadingImage } from "@/components/common/loading-image";
 
 type MomentImage = NonNullable<MomentItemResp["images"]>[number];
 
@@ -10,8 +10,6 @@ interface MomentImageGridProps {
   images: MomentImage[];
   /** 点击第 index 张（从 0 起）时回调，用于打开全屏画廊 */
   onOpen: (index: number) => void;
-  /** 首屏可见时设为 true，使首图 eager 加载，避免 LCP 警告 */
-  priority?: boolean;
 }
 
 /** 最多展示的格子数，超出在最后一格叠加 +N */
@@ -39,7 +37,7 @@ function isGifImage(img: MomentImage): boolean {
  * - 单图：保留原始宽高比、限制最大高度，不裁剪。
  * - 多图：等大正方形格子 + object-cover 裁剪，低宽度下也不会变形。
  */
-export function MomentImageGrid({ images, onOpen, priority = false }: MomentImageGridProps) {
+export function MomentImageGrid({ images, onOpen }: MomentImageGridProps) {
   if (images.length === 0) {
     return null;
   }
@@ -55,11 +53,11 @@ export function MomentImageGrid({ images, onOpen, priority = false }: MomentImag
       >
         {/* width/height 设 0 + sizes：next/image 的「未知尺寸」用法，按原始比例自适应 */}
         {isGifImage(img) ? (
-          <img
+          <DeferredNativeImage
             src={img.access_url}
             alt={img.name}
-            loading="lazy"
             className="block h-auto max-h-[320px] w-auto max-w-full object-contain"
+            skeletonClassName="rounded-[6px]"
           />
         ) : (
           <LoadingImage
@@ -67,7 +65,6 @@ export function MomentImageGrid({ images, onOpen, priority = false }: MomentImag
             alt={img.name}
             width={0}
             height={0}
-            priority={priority}
             fallbackUnoptimized
             sizes="(max-width: 768px) 90vw, 480px"
             className="block h-auto max-h-[320px] w-auto max-w-full object-contain"
@@ -100,18 +97,17 @@ export function MomentImageGrid({ images, onOpen, priority = false }: MomentImag
             className="relative aspect-square cursor-zoom-in overflow-hidden rounded-[6px] bg-muted"
           >
             {isGifImage(img) ? (
-              <img
+              <DeferredNativeImage
                 src={img.access_url}
                 alt={img.name}
-                loading="lazy"
                 className="h-full w-full object-cover"
+                skeletonClassName="rounded-[6px]"
               />
             ) : (
               <LoadingImage
                 src={img.access_url}
                 alt={img.name}
                 fill
-                priority={priority && idx === 0}
                 fallbackUnoptimized
                 sizes="(max-width: 768px) 33vw, 160px"
                 className="object-cover"

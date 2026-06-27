@@ -69,6 +69,15 @@ function ControlIcon({
 }) {
   const iconSize = variant === "float" ? floatDockIconSize : 18;
 
+  if (playbackState === "loading") {
+    return (
+      <span
+        className="size-3.5 animate-spin rounded-full border border-current/20 border-t-current/70"
+        aria-hidden
+      />
+    );
+  }
+
   if (playbackState === "playing") {
     return <SvgIcon name="pause" size={iconSize} className="text-current" aria-hidden />;
   }

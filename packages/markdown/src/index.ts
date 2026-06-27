@@ -8,5 +8,7 @@ export { useMarkdown } from "./use-markdown";
 // Markdown 交互组件与 SSR 图片处理函数
 export { MarkdownContentEffects } from "./markdown-content-effects";
 export type { MarkdownContentEffectsProps } from "./markdown-content-effects";
+export { MarkdownStatic } from "./markdown-static";
+export type { MarkdownStaticProps } from "./markdown-static";
 export { wrapMarkdownImagesWithSkeletonHtml } from "./image-skeleton";
 export { deferMarkdownImageSources } from "./image-deferred";

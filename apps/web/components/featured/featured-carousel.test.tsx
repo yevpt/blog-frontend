@@ -49,9 +49,17 @@ vi.mock("next/image", () => ({
   ),
 }));
 
-vi.mock("@/hooks/use-deferred-media-activation", () => ({
-  useDeferredMediaActivation: () => true,
+const deferredMediaMock = vi.hoisted(() => ({
+  useDeferredMediaActivation: vi.fn(() => true),
 }));
+
+vi.mock("@repo/hooks", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@repo/hooks")>();
+  return {
+    ...actual,
+    useDeferredMediaActivation: deferredMediaMock.useDeferredMediaActivation,
+  };
+});
 
 vi.mock("next/link", () => ({
   default: ({

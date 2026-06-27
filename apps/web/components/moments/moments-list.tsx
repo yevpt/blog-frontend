@@ -210,7 +210,6 @@ export function MomentsList({ initialPage }: MomentsListProps) {
                   >
                     <MomentCard
                       moment={moment}
-                      priority={idx === 0}
                       onLike={toggleLike}
                       likeDisabled={pendingLikeIds.has(moment.id)}
                       onComment={openComment}

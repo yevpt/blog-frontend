@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { usePresenceStore } from "@repo/hooks";
 import { UserInfoHeader } from "./user-info-header";
 
 const mockAddToast = vi.fn();
@@ -43,6 +44,7 @@ const baseProps = {
 
 describe("UserInfoHeader", () => {
   beforeEach(() => {
+    usePresenceStore.setState({ records: new Map() });
     mockAddToast.mockClear();
     mockGrantVip.mockClear();
     mockRevokeVip.mockClear();
@@ -101,13 +103,7 @@ describe("UserInfoHeader", () => {
 
   it("编辑模式下身份标签与个人简介显示铅笔入口", () => {
     render(
-      <UserInfoHeader
-        {...baseProps}
-        isOwner
-        isEditMode
-        mark="全栈工程师"
-        description="热爱编程"
-      />,
+      <UserInfoHeader {...baseProps} isOwner isEditMode mark="全栈工程师" description="热爱编程" />,
     );
     expect(screen.getByLabelText("编辑身份标签")).toBeInTheDocument();
     expect(screen.getByLabelText("编辑个人简介")).toBeInTheDocument();
@@ -124,13 +120,7 @@ describe("UserInfoHeader", () => {
     const onSaveField = vi.fn().mockResolvedValue(undefined);
     const user = userEvent.setup();
     render(
-      <UserInfoHeader
-        {...baseProps}
-        isOwner
-        isEditMode
-        mark="工程师"
-        onSaveField={onSaveField}
-      />,
+      <UserInfoHeader {...baseProps} isOwner isEditMode mark="工程师" onSaveField={onSaveField} />,
     );
 
     await user.click(screen.getByLabelText("编辑身份标签"));

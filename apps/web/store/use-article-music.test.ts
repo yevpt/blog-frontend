@@ -1,8 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/prepare-article-audio", () => ({
+  prepareArticleAudioElement: vi.fn().mockResolvedValue(undefined),
+  resetArticleAudioElement: vi.fn(),
+}));
+
+import { prepareArticleAudioElement, resetArticleAudioElement } from "@/lib/prepare-article-audio";
 import { useArticleMusic } from "./use-article-music";
 
 describe("useArticleMusic", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     useArticleMusic.getState().clear();
   });
 
@@ -31,16 +39,17 @@ describe("useArticleMusic", () => {
 
   it("clear 清空曲目与进度", () => {
     const pause = vi.fn();
+    const audioEl = { pause, currentTime: 10 } as unknown as HTMLAudioElement;
     useArticleMusic.setState({
       track: { url: "https://example.com/a.mp3", name: "雨夜" },
       playbackState: "playing",
       progress: 0.4,
-      audioEl: { pause, currentTime: 10 } as unknown as HTMLAudioElement,
+      audioEl,
     });
 
     useArticleMusic.getState().clear();
 
-    expect(pause).toHaveBeenCalled();
+    expect(resetArticleAudioElement).toHaveBeenCalledWith(audioEl);
     expect(useArticleMusic.getState().track).toBeNull();
     expect(useArticleMusic.getState().playbackState).toBe("idle");
     expect(useArticleMusic.getState().progress).toBe(0);
@@ -81,6 +90,7 @@ describe("useArticleMusic", () => {
 
     await useArticleMusic.getState().seek(0.4, true);
 
+    expect(prepareArticleAudioElement).toHaveBeenCalledWith(audioEl, "https://example.com/a.mp3");
     expect(audioEl.currentTime).toBe(80);
     expect(play).toHaveBeenCalledOnce();
     expect(useArticleMusic.getState().playbackState).toBe("playing");
@@ -127,10 +137,11 @@ describe("useArticleMusic", () => {
   it("toggle 在 playing 与 paused 间切换", async () => {
     const pause = vi.fn();
     const play = vi.fn().mockResolvedValue(undefined);
+    const audioEl = { pause, play, currentTime: 0 } as unknown as HTMLAudioElement;
     useArticleMusic.setState({
       track: { url: "https://example.com/a.mp3", name: "雨夜" },
       playbackState: "playing",
-      audioEl: { pause, play, currentTime: 0 } as unknown as HTMLAudioElement,
+      audioEl,
     });
 
     await useArticleMusic.getState().toggle();
@@ -138,21 +149,24 @@ describe("useArticleMusic", () => {
     expect(useArticleMusic.getState().playbackState).toBe("paused");
 
     await useArticleMusic.getState().toggle();
+    expect(prepareArticleAudioElement).toHaveBeenCalledWith(audioEl, "https://example.com/a.mp3");
     expect(play).toHaveBeenCalled();
     expect(useArticleMusic.getState().playbackState).toBe("playing");
   });
 
   it("toggle 首次播放成功后标记 hasPlayedOnce", async () => {
     const play = vi.fn().mockResolvedValue(undefined);
+    const audioEl = { pause: vi.fn(), play, currentTime: 0 } as unknown as HTMLAudioElement;
     useArticleMusic.setState({
       track: { url: "https://example.com/a.mp3", name: "雨夜" },
       playbackState: "idle",
       hasPlayedOnce: false,
-      audioEl: { pause: vi.fn(), play, currentTime: 0 } as unknown as HTMLAudioElement,
+      audioEl,
     });
 
     await useArticleMusic.getState().toggle();
 
+    expect(prepareArticleAudioElement).toHaveBeenCalledWith(audioEl, "https://example.com/a.mp3");
     expect(play).toHaveBeenCalledOnce();
     expect(useArticleMusic.getState().playbackState).toBe("playing");
     expect(useArticleMusic.getState().hasPlayedOnce).toBe(true);
@@ -160,11 +174,12 @@ describe("useArticleMusic", () => {
 
   it("toggle 播放失败时不标记 hasPlayedOnce", async () => {
     const play = vi.fn().mockRejectedValue(new Error("blocked"));
+    const audioEl = { pause: vi.fn(), play, currentTime: 0 } as unknown as HTMLAudioElement;
     useArticleMusic.setState({
       track: { url: "https://example.com/a.mp3", name: "雨夜" },
       playbackState: "idle",
       hasPlayedOnce: false,
-      audioEl: { pause: vi.fn(), play, currentTime: 0 } as unknown as HTMLAudioElement,
+      audioEl,
     });
 
     await useArticleMusic.getState().toggle();

@@ -69,7 +69,6 @@ export function ProfileMomentsVirtualList({
           <MomentCard
             moment={moment}
             layout="embedded"
-            priority={index === 0}
             onLike={onLike}
             likeDisabled={pendingLikeIds.has(moment.id)}
             onComment={onComment}

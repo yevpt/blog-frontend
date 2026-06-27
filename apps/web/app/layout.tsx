@@ -12,6 +12,7 @@ import { ThemeProvider } from "./providers/theme-provider";
 import { StripExtensionAttrsScript } from "./providers/strip-extension-attrs-script";
 import { LocaleProvider } from "./providers/locale-provider";
 import { SessionProvider } from "./providers/session-provider";
+import { PresenceProvider } from "./providers/presence-provider";
 import { GlobalModals } from "./providers/global-modals";
 import { BfcacheBoundary } from "./providers/bfcache-boundary";
 import { NotificationProvider } from "@/components/notifications/notification-provider";
@@ -88,23 +89,25 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <ThemeProvider>
           <LocaleProvider>
             <SessionProvider userId={session?.userId ?? null} profile={profile}>
-              <NotificationProvider>
-                <div className="flex flex-col min-h-screen">
-                  {/* SvgSprite 将雪碧图注入 DOM，必须在所有使用 SvgIcon 的组件之前渲染 */}
-                  <SvgSprite />
-                  {/* bfcache 恢复时软重挂载导航/正文/弹层，修复卡在揭示前状态的问题。
+              <PresenceProvider>
+                <NotificationProvider>
+                  <div className="flex flex-col min-h-screen">
+                    {/* SvgSprite 将雪碧图注入 DOM，必须在所有使用 SvgIcon 的组件之前渲染 */}
+                    <SvgSprite />
+                    {/* bfcache 恢复时软重挂载导航/正文/弹层，修复卡在揭示前状态的问题。
                       SvgSprite 与 SiteFooter 留在边界外：前者重注入会闪烁，后者无揭示门控。 */}
-                  <BfcacheBoundary>
-                    <FloatDockProvider>
-                      <GlobalModals />
-                      <SiteNavbar initialUnreadCount={initialUnreadCount} />
-                      <main className="flex-1 pt-0">{children}</main>
-                      <SiteFloatDock />
-                    </FloatDockProvider>
-                  </BfcacheBoundary>
-                  <SiteFooter />
-                </div>
-              </NotificationProvider>
+                    <BfcacheBoundary>
+                      <FloatDockProvider>
+                        <GlobalModals />
+                        <SiteNavbar initialUnreadCount={initialUnreadCount} />
+                        <main className="flex-1 pt-0">{children}</main>
+                        <SiteFloatDock />
+                      </FloatDockProvider>
+                    </BfcacheBoundary>
+                    <SiteFooter />
+                  </div>
+                </NotificationProvider>
+              </PresenceProvider>
             </SessionProvider>
           </LocaleProvider>
         </ThemeProvider>

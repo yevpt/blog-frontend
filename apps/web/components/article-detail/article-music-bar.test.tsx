@@ -4,6 +4,20 @@ import userEvent from "@testing-library/user-event";
 import { ArticleMusicBar } from "./article-music-bar";
 import { useArticleMusic } from "@/store/use-article-music";
 
+const hydratedMock = vi.hoisted(() => ({
+  useHydrated: vi.fn(() => true),
+}));
+
+vi.mock("@repo/hooks", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@repo/hooks")>();
+  return {
+    ...actual,
+    useHydrated: hydratedMock.useHydrated,
+  };
+});
+
+const { useHydrated } = hydratedMock;
+
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
 }));
@@ -55,6 +69,7 @@ beforeAll(() => {
 
 describe("ArticleMusicBar", () => {
   beforeEach(() => {
+    vi.mocked(useHydrated).mockReturnValue(true);
     resizeObserver = undefined;
     ioCallback = null;
     useArticleMusic.getState().clear();
@@ -98,6 +113,24 @@ describe("ArticleMusicBar", () => {
     expect(screen.getByText("00:00 / 03:42")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /播放 春夏秋冬/ })).toBeInTheDocument();
     expect(screen.getByRole("slider", { name: "播放进度" })).toBeInTheDocument();
+  });
+
+  it("未 hydration 时播放按钮显示骨架且不可点击", () => {
+    vi.mocked(useHydrated).mockReturnValue(false);
+
+    render(
+      <ArticleMusicBar
+        preview={{
+          musicUrl: "https://example.com/a.mp3",
+          musicName: "春夏秋冬",
+          musicArtist: "GILLE",
+          musicDurationSeconds: 222,
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId("music-play-button-skeleton")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /播放 春夏秋冬/ })).not.toBeInTheDocument();
   });
 
   it("桌面端：标签、曲名、总时长与频谱", () => {

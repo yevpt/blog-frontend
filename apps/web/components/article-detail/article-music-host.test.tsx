@@ -10,7 +10,7 @@ describe("ArticleMusicHost", () => {
     vi.clearAllMocks();
   });
 
-  it("跨域 audio 设置 crossOrigin 以支持 Web Audio 采样", async () => {
+  it("首屏不挂 src，preload=none，点击播放前不预拉音频", async () => {
     useArticleMusic.getState().init({
       url: "https://example.com/a.mp3",
       name: "春夏秋冬",
@@ -19,20 +19,14 @@ describe("ArticleMusicHost", () => {
     render(<ArticleMusicHost />);
 
     const audio = screen.getByTestId("article-music-audio");
-    expect(audio).toHaveAttribute("crossorigin", "anonymous");
-    expect(audio).toHaveAttribute("src", "https://example.com/a.mp3");
+    expect(audio).not.toHaveAttribute("src");
+    expect(audio).toHaveAttribute("preload", "none");
+    expect(audio).not.toHaveAttribute("crossorigin");
     await waitFor(() => expect(useArticleMusic.getState().audioEl).toBe(audio));
   });
 
-  it("同源 audio 设置 crossOrigin 以支持 Web Audio 采样", async () => {
-    useArticleMusic.getState().init({
-      url: `${window.location.origin}/music/a.mp3`,
-      name: "春夏秋冬",
-    });
-
+  it("无曲目时不渲染 audio", () => {
     render(<ArticleMusicHost />);
-
-    const audio = screen.getByTestId("article-music-audio");
-    expect(audio).toHaveAttribute("crossorigin", "anonymous");
+    expect(screen.queryByTestId("article-music-audio")).not.toBeInTheDocument();
   });
 });

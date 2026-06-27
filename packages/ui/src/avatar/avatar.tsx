@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useDeferredMediaActivation, shouldDeferRemoteMediaSrc } from "@repo/hooks";
 import { SvgIcon } from "@repo/icons";
 import { cn } from "../lib/utils";
 import { AvatarOnlineIndicator, VerifiedTick } from "./internal";
@@ -59,24 +60,38 @@ export const Avatar = ({
   rounded = true,
   className,
   contentClassName,
+  defer = true,
 }: AvatarProps) => {
   const [isFailed, setIsFailed] = useState(false);
+  const deferredReady = useDeferredMediaActivation();
 
-  // src 变化时重置失败态，避免先失败后换址仍停留在 fallback
   useEffect(() => {
     setIsFailed(false);
   }, [src]);
 
   const canShowImage = src && !isFailed;
+  const shouldDefer = defer && shouldDeferRemoteMediaSrc(src ?? undefined);
+  const mediaReady = !shouldDefer || deferredReady;
 
   const renderMain = () => {
-    if (canShowImage)
+    if (canShowImage && !mediaReady) {
+      return (
+        <span
+          data-testid="avatar-skeleton"
+          aria-hidden="true"
+          className="loading-image-skeleton absolute inset-0 size-full bg-muted"
+        />
+      );
+    }
+    if (canShowImage && mediaReady)
       return (
         <img
           data-avatar-img
           className="size-full object-cover"
           src={src}
           alt={alt}
+          loading="lazy"
+          decoding="async"
           onError={() => setIsFailed(true)}
         />
       );

@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { createServerApiClient } from "@/lib/server-api";
 import { getCanonicalUrl } from "@/lib/seo";
 import { mapArticleMusicToSyncInput } from "@/lib/article-music";
-import { markdownToHtml, extractTocFromHtml } from "@/lib/markdown";
+import { extractTocFromHtml } from "@/lib/markdown";
+import { prepareArticleMarkdownHtml } from "@/lib/article-markdown-html";
 import {
   ArticleNavbarSync,
   ArticleHero,
@@ -60,7 +61,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const contentHtml = await markdownToHtml(article.content);
+  const contentHtml = await prepareArticleMarkdownHtml(article.content);
   const tocItems = extractTocFromHtml(contentHtml);
 
   const hasToc = tocItems.length >= 2;

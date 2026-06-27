@@ -1,6 +1,20 @@
 import React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+
+const deferredMediaMock = vi.hoisted(() => ({
+  useDeferredMediaActivation: vi.fn(() => false),
+}));
+
+vi.mock("@repo/hooks", () => ({
+  shouldDeferRemoteMediaSrc: (src: string | undefined) => {
+    if (!src) return false;
+    return !src.startsWith("data:") && !src.startsWith("blob:");
+  },
+  useDeferredMediaActivation: deferredMediaMock.useDeferredMediaActivation,
+}));
+
+const { useDeferredMediaActivation } = deferredMediaMock;
 
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
@@ -15,12 +29,23 @@ vi.mock("../tooltip/tooltip", () => ({
 import { Avatar } from "./avatar";
 
 describe("Avatar", () => {
+  beforeEach(() => {
+    vi.mocked(useDeferredMediaActivation).mockReturnValue(false);
+  });
+
   it("渲染不崩溃（无 src）", () => {
     const { container } = render(<Avatar />);
     expect(container.firstChild).toBeTruthy();
   });
 
-  it("渲染图片时显示 img 元素", () => {
+  it("媒体未激活时远程头像仅显示骨架", () => {
+    render(<Avatar src="https://example.com/avatar.jpg" alt="用户头像" />);
+    expect(screen.getByTestId("avatar-skeleton")).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "用户头像" })).not.toBeInTheDocument();
+  });
+
+  it("媒体激活后渲染图片", () => {
+    vi.mocked(useDeferredMediaActivation).mockReturnValue(true);
     render(<Avatar src="https://example.com/avatar.jpg" alt="用户头像" />);
     expect(screen.getByRole("img", { name: "用户头像" })).toBeTruthy();
   });
@@ -49,6 +74,7 @@ describe("Avatar", () => {
   });
 
   it("src 变化后重新尝试加载图片", () => {
+    vi.mocked(useDeferredMediaActivation).mockReturnValue(true);
     const { rerender } = render(<Avatar src="https://bad.example/a.png" alt="头像" />);
     fireEvent.error(screen.getByRole("img", { name: "头像" }));
     expect(screen.queryByRole("img", { name: "头像" })).toBeNull();

@@ -49,9 +49,13 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-vi.mock("@/hooks/use-deferred-media-activation", () => ({
-  useDeferredMediaActivation: () => true,
-}));
+vi.mock("@repo/hooks", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@repo/hooks")>();
+  return {
+    ...actual,
+    useDeferredMediaActivation: () => true,
+  };
+});
 
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
@@ -149,15 +153,5 @@ describe("ArticleCard", () => {
   it("文章已点赞时按钮呈现激活状态", () => {
     render(<ArticleCard article={{ ...baseArticle, is_liked: true }} />);
     expect(screen.getByRole("button", { name: /喜欢/ })).toHaveAttribute("aria-pressed", "true");
-  });
-
-  it("priority 为 true 时封面图 eager 加载", () => {
-    render(<ArticleCard article={baseArticle} priority />);
-    expect(screen.getByAltText("测试文章标题")).toHaveAttribute("loading", "eager");
-  });
-
-  it("默认 priority 为 false 时封面图 lazy 加载", () => {
-    render(<ArticleCard article={baseArticle} />);
-    expect(screen.getByAltText("测试文章标题")).toHaveAttribute("loading", "lazy");
   });
 });

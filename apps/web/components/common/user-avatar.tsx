@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useDeferredMediaActivation, shouldDeferRemoteMediaSrc } from "@repo/hooks";
 import { cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import Image from "next/image";
@@ -43,6 +44,8 @@ interface UserAvatarProps {
   className?: string;
   /** 是否在头像左上角显示 VIP 皇冠 */
   isVip?: boolean;
+  /** 首屏仅骨架，页面就绪后再加载（data:/blob: 与 defer=false 立即加载） */
+  defer?: boolean;
 }
 
 function VipBadge({ size }: { size: keyof typeof SIZE }) {
@@ -57,10 +60,18 @@ function VipBadge({ size }: { size: keyof typeof SIZE }) {
   );
 }
 
-export function UserAvatar({ src, name, size = "md", className, isVip = false }: UserAvatarProps) {
+export function UserAvatar({
+  src,
+  name,
+  size = "md",
+  className,
+  isVip = false,
+  defer = true,
+}: UserAvatarProps) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const deferredReady = useDeferredMediaActivation();
   const px = SIZE_PX[size];
   const initial = name[0]?.toUpperCase() ?? "?";
   const base = cn("shrink-0 rounded-full overflow-hidden", SIZE[size], className);
@@ -72,6 +83,9 @@ export function UserAvatar({ src, name, size = "md", className, isVip = false }:
       : `/${src}`
     : undefined;
 
+  const shouldDefer = defer && shouldDeferRemoteMediaSrc(validSrc);
+  const mediaReady = !shouldDefer || deferredReady;
+
   useEffect(() => {
     setFailed(false);
     const image = imageRef.current;
@@ -79,6 +93,19 @@ export function UserAvatar({ src, name, size = "md", className, isVip = false }:
   }, [validSrc]);
 
   const vipBadge = isVip ? <VipBadge size={size} /> : null;
+
+  if (validSrc && !failed && !mediaReady) {
+    return (
+      <span className={cn("relative inline-flex", base, "bg-muted")} aria-busy="true">
+        <span
+          data-testid="user-avatar-skeleton"
+          aria-hidden="true"
+          className="loading-image-skeleton absolute inset-0 h-full w-full"
+        />
+        {vipBadge}
+      </span>
+    );
+  }
 
   if (validSrc && !failed) {
     return (
@@ -101,8 +128,9 @@ export function UserAvatar({ src, name, size = "md", className, isVip = false }:
           alt={name}
           width={px}
           height={px}
-          // 用户头像格式不可控（.php/.asp 动态脚本、.gif 动图），跳过优化器
           unoptimized
+          loading="lazy"
+          decoding="async"
           className={cn(
             "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
             loaded ? "opacity-100" : "opacity-0",

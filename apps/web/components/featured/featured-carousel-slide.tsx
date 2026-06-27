@@ -14,8 +14,6 @@ interface FeaturedCarouselSlideProps {
   post: FeaturedPost;
   /** Whether this slide is currently visible (for staggered text animation). */
   isActive: boolean;
-  /** First-slide LCP candidate: always eager-load the image. */
-  isLcpCandidate?: boolean;
 }
 
 /**
@@ -25,11 +23,7 @@ interface FeaturedCarouselSlideProps {
  *
  * Text enters with staggered opacity + translateX transitions driven by `isActive`.
  */
-export function FeaturedCarouselSlide({
-  post,
-  isActive,
-  isLcpCandidate = false,
-}: FeaturedCarouselSlideProps) {
+export function FeaturedCarouselSlide({ post, isActive }: FeaturedCarouselSlideProps) {
   const { locale } = useLocale();
   const formattedDate = formatDate(post.date, locale);
 
@@ -52,7 +46,6 @@ export function FeaturedCarouselSlide({
             transform: isActive ? "scale(1.05)" : "scale(1)",
             willChange: isActive ? "transform" : "auto",
           }}
-          loading={isLcpCandidate ? "eager" : "lazy"}
           fallbackUnoptimized
           unoptimized={isGifImageUrl(post.coverImage) || undefined}
           sizes="(max-width: 768px) 100vw, 55vw"

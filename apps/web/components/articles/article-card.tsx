@@ -10,8 +10,6 @@ import { ArticleDateCategory } from "./article-date-category";
 
 interface ArticleCardProps {
   article: ArticleListItemResp;
-  /** 首屏卡片设为 true，使封面图 eager 加载，避免 LCP 警告 */
-  priority?: boolean;
   onLike?: (article: ArticleListItemResp) => void;
   likeDisabled?: boolean;
   onComment?: (article: ArticleListItemResp) => void;
@@ -19,7 +17,6 @@ interface ArticleCardProps {
 
 export function ArticleCard({
   article,
-  priority = false,
   onLike,
   likeDisabled = false,
   onComment,
@@ -46,7 +43,6 @@ export function ArticleCard({
                   src={article.cover_img_url}
                   alt={article.title}
                   fill
-                  priority={priority}
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />

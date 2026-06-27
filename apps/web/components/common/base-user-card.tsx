@@ -2,10 +2,15 @@
 
 import Link from "next/link";
 import { cn } from "@repo/ui";
-import { useHydrated } from "@repo/hooks";
+import { useMemo } from "react";
+import { useHydrated, usePresence } from "@repo/hooks";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { isAdminUser, isVipUser } from "@/lib/user-roles";
-import { resolvePresenceDisplay } from "@/lib/user-presence";
+import {
+  resolvePresenceDisplay,
+  resolvePresenceFromSubscription,
+  toPresenceRecordSeed,
+} from "@/lib/user-presence";
 
 export interface BaseUserCardProps {
   user: {
@@ -39,12 +44,21 @@ export function BaseUserCard({
   const isAdmin = isAdminUser(user.roles);
   const isVip = isVipUser(user.roles);
 
+  const numericId = typeof user.id === "number" ? user.id : Number(user.id);
+  const presenceId = Number.isFinite(numericId) ? numericId : null;
+  const fallbackInput = useMemo(
+    () => ({
+      is_online: user.is_online,
+      last_active_at: user.last_active_at,
+      last_login_at: user.last_login_at,
+    }),
+    [user.is_online, user.last_active_at, user.last_login_at],
+  );
+  const seed = useMemo(() => toPresenceRecordSeed(fallbackInput), [fallbackInput]);
+  const { record } = usePresence(presenceId, seed);
+
   const presence = hydrated
-    ? resolvePresenceDisplay({
-        is_online: user.is_online,
-        last_active_at: user.last_active_at,
-        last_login_at: user.last_login_at,
-      })
+    ? resolvePresenceDisplay(resolvePresenceFromSubscription(record, fallbackInput))
     : null;
 
   const roleLabel = isAdmin ? "Admin" : isVip ? "VIP" : null;

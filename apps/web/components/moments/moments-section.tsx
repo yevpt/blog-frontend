@@ -129,7 +129,6 @@ export function MomentsSection({ initialMoments, loading, ownerUserId }: Moments
                   key={moment.id}
                   layout="embedded"
                   moment={moment}
-                  priority={index === 0}
                   onLike={toggleLike}
                   likeDisabled={pendingLikeIds.has(moment.id)}
                   onComment={openComment}
