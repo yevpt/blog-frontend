@@ -137,6 +137,7 @@ export type {
   UserLikesCountResp,
   UserMomentsCountResp,
   AdminUserRolesResp,
+  BatchPresenceResp,
 } from "./types/user";
 export type {
   FriendLinkItemResp,

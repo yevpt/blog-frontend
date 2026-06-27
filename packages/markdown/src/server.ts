@@ -2,3 +2,5 @@
 // 不可在浏览器环境中直接 import，应通过 Server Component 或 Server Action 调用
 export { markdownToHtml, extractTocFromHtml } from "./render";
 export type { TocItem } from "./render";
+export { wrapMarkdownImagesWithSkeletonHtml } from "./image-skeleton";
+export { deferMarkdownImageSources } from "./image-deferred";

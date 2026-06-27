@@ -231,3 +231,8 @@ export interface AdminUserRolesResp {
   user_id: number;
   roles: string[];
 }
+
+/** GET /users/presence — 在线状态批次查询响应 */
+export interface BatchPresenceResp {
+  data: Record<string, { is_online: boolean; last_active_at?: number; last_login_at?: number }>;
+}

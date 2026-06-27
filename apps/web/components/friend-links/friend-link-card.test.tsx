@@ -32,6 +32,10 @@ vi.mock("@repo/hooks", () => ({
   shouldDeferRemoteMediaSrc: () => false,
 }));
 
+vi.mock("@/hooks/use-deferred-media-activation", () => ({
+  useDeferredMediaActivation: () => true,
+}));
+
 const base: FriendLinkItemResp = {
   id: 1,
   name: "YEVPT Blog",
