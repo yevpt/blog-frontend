@@ -94,6 +94,7 @@ export function MomentCard({
         >
           <UserAvatar
             src={authorAvatar || undefined}
+            userId={moment.user?.id}
             name={authorName}
             size="lg"
             isVip={isVipUser(moment.user?.roles)}

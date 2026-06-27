@@ -244,13 +244,14 @@ describe("MomentCard", () => {
     expect(img.getAttribute("src")).toBe("https://example.com/avatar.jpg");
   });
 
-  it("没有 avatar_url 时渲染首字母 fallback", () => {
+  it("没有 avatar_url 但有 userId 时渲染 mock 肖像回退", () => {
     render(
       <MomentCard
         moment={makeMoment({ user: { id: 1, username: "testuser", nickname: "测试用户" } })}
       />,
     );
-    expect(screen.queryByRole("img")).toBeNull();
+    const img = screen.getByRole("img", { name: "测试用户" });
+    expect(img.getAttribute("src")).toMatch(/^data:image\/svg\+xml/);
     expect(screen.getByText("测")).toBeTruthy();
   });
 
