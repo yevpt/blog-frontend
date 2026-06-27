@@ -6,6 +6,7 @@ export interface NavbarRouteMatch {
 }
 
 const DEFAULT_ROUTE_TITLES: Record<string, string> = {
+  "/moments": "碎语",
   "/guestbook": "留言",
   "/friend-links": "友邻",
   "/circle": "圈子",
@@ -14,10 +15,6 @@ const DEFAULT_ROUTE_TITLES: Record<string, string> = {
 
 export function matchNavbarRoute(pathname: string): NavbarRouteMatch {
   if (pathname === "/") {
-    return { mobileVariant: "home", title: undefined };
-  }
-
-  if (pathname === "/moments") {
     return { mobileVariant: "home", title: undefined };
   }
 

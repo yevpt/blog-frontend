@@ -30,10 +30,10 @@ describe("matchNavbarRoute", () => {
     });
   });
 
-  it("moments 复用 home variant，无标题", () => {
+  it("moments 命中 default，标题为碎语", () => {
     expect(matchNavbarRoute("/moments")).toEqual({
-      mobileVariant: "home",
-      title: undefined,
+      mobileVariant: "default",
+      title: "碎语",
     });
   });
 
