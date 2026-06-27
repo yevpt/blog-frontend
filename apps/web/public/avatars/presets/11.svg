@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-hidden="true">
+  <defs>
+    <clipPath id="clip"><circle cx="32" cy="32" r="32"/></clipPath>
+    <pattern id="dots" width="8" height="8" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="white" fill-opacity="0.12"/>
+    </pattern>
+  </defs>
+  <g clip-path="url(#clip)">
+    <rect width="64" height="64" fill="#9333ea"/>
+    <rect width="64" height="64" fill="url(#dots)"/>
+    <polygon points="32,12 36,26 50,26 39,34 43,48 32,39 21,48 25,34 14,26 28,26" fill="#d8b4fe"/><circle cx="32" cy="32" r="6" fill="#f3e8ff"/>
+    
+  <g opacity="0.9">
+    <circle cx="52" cy="52" r="7" fill="white" fill-opacity="0.92"/>
+    <path d="M52 47.5 L54.5 52 L52 56.5 L49.5 52 Z" fill="#7c3aed"/>
+  </g>
+
+  </g>
+</svg>
