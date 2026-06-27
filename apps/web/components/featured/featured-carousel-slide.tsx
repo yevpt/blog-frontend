@@ -8,6 +8,7 @@ import type { FeaturedPost } from "@/app/_mock/types";
 import { LoadingImage } from "@/components/common/loading-image";
 import { formatDate } from "../../lib/format-time";
 import { getCategoryColorClass } from "@/lib/category-colors";
+import { isGifImageUrl } from "@/lib/markdown-image-optimizer";
 
 interface FeaturedCarouselSlideProps {
   post: FeaturedPost;
@@ -52,7 +53,8 @@ export function FeaturedCarouselSlide({
             willChange: isActive ? "transform" : "auto",
           }}
           loading={isLcpCandidate ? "eager" : "lazy"}
-          unoptimized
+          fallbackUnoptimized
+          unoptimized={isGifImageUrl(post.coverImage) || undefined}
           sizes="(max-width: 768px) 100vw, 55vw"
         />
         <div className="absolute inset-0 bg-black/10" />

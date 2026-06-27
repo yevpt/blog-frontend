@@ -21,9 +21,10 @@ vi.mock("next/image", () => ({
   default: ({
     src,
     alt,
-    fill: _fill,
+    fill,
     priority: _priority,
     quality,
+    sizes,
     unoptimized,
     className,
   }: {
@@ -32,6 +33,7 @@ vi.mock("next/image", () => ({
     fill?: boolean;
     priority?: boolean;
     quality?: number;
+    sizes?: string;
     unoptimized?: boolean;
     className?: string;
   }) => (
@@ -39,7 +41,9 @@ vi.mock("next/image", () => ({
       src={src}
       alt={alt}
       className={className}
+      data-fill={fill}
       data-quality={quality}
+      data-sizes={sizes}
       data-unoptimized={unoptimized}
     />
   ),
@@ -201,13 +205,26 @@ describe("FeaturedCarousel", () => {
     expect(screen.getAllByText("第三篇文章标题").length).toBeGreaterThan(0);
   });
 
-  it("轮播封面不经过 Next 图片优化压缩", () => {
+  it("普通轮播封面启用 Next 优化并保持等比裁切配置", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
     const images = screen.getAllByRole("img");
 
-    expect(images.length).toBeGreaterThan(0);
-    expect(images.every((image) => image.getAttribute("data-unoptimized") === "true")).toBe(true);
-    expect(images.every((image) => image.getAttribute("data-quality") === null)).toBe(true);
+    expect(images.every((image) => image.getAttribute("data-unoptimized") !== "true")).toBe(true);
+    expect(images.every((image) => image.getAttribute("data-fill") === "true")).toBe(true);
+    expect(images.every((image) => image.className.includes("object-cover"))).toBe(true);
+    expect(images.every((image) => image.getAttribute("data-sizes") !== null)).toBe(true);
+  });
+
+  it("GIF 轮播封面跳过 Next 优化", () => {
+    const gifPost = { ...mockPosts[0]!, coverImage: "https://blog-oss.yevpt.com/hero.GIF?v=1" };
+
+    render(<FeaturedCarousel posts={[gifPost]} />);
+
+    expect(
+      screen
+        .getAllByRole("img")
+        .every((image) => image.getAttribute("data-unoptimized") === "true"),
+    ).toBe(true);
   });
 
   it("渲染正确数量的桌面指示器按钮（仅桌面垂直轮播有 hero-progress-button）", () => {
