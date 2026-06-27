@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image, { type ImageProps } from "next/image";
 import { SvgIcon } from "@repo/icons";
 import { cn } from "@repo/ui";
+import { useDeferredMediaActivation } from "@/hooks/use-deferred-media-activation";
 
 /** /_next/image 首次拉 OSS 易超时，失败后间隔重试次数（不含首次） */
 const OPTIMIZER_MAX_RETRIES = 3;
@@ -40,6 +41,7 @@ export function LoadingImage({
   const isLoading = status === "loading";
   const isError = status === "error";
   const unoptimized = unoptimizedProp || useUnoptimizedFallback;
+  const mediaActivated = useDeferredMediaActivation();
 
   useEffect(() => {
     setRetryAttempt(0);
@@ -97,43 +99,45 @@ export function LoadingImage({
         </div>
       )}
 
-      <Image
-        {...props}
-        src={src}
-        key={unoptimized ? "unoptimized" : `optimized-${retryAttempt}`}
-        ref={imageRef}
-        priority={priority}
-        unoptimized={unoptimized}
-        className={cn(
-          className,
-          "transition-opacity duration-300",
-          isLoading || isError ? "opacity-0" : "opacity-100",
-        )}
-        // 非优先图片降低抓取优先级；priority 图片交由 Next.js 设为 "high"
-        fetchPriority={priority ? undefined : "low"}
-        onLoad={(event) => {
-          if (retryTimerRef.current) {
-            clearTimeout(retryTimerRef.current);
-            retryTimerRef.current = null;
-          }
-          setStatus("loaded");
-          onLoad?.(event);
-        }}
-        onError={(event) => {
-          if (!unoptimized && retryAttempt < OPTIMIZER_MAX_RETRIES) {
-            scheduleOptimizerRetry();
-            return;
-          }
-          if (fallbackUnoptimized && !unoptimized) {
-            setUseUnoptimizedFallback(true);
-            setRetryAttempt(0);
-            setStatus("loading");
-            return;
-          }
-          setStatus("error");
-          onError?.(event);
-        }}
-      />
+      {mediaActivated && (
+        <Image
+          {...props}
+          src={src}
+          key={unoptimized ? "unoptimized" : `optimized-${retryAttempt}`}
+          ref={imageRef}
+          priority={priority}
+          unoptimized={unoptimized}
+          className={cn(
+            className,
+            "transition-opacity duration-300",
+            isLoading || isError ? "opacity-0" : "opacity-100",
+          )}
+          // 非优先图片降低抓取优先级；priority 图片交由 Next.js 设为 "high"
+          fetchPriority={priority ? undefined : "low"}
+          onLoad={(event) => {
+            if (retryTimerRef.current) {
+              clearTimeout(retryTimerRef.current);
+              retryTimerRef.current = null;
+            }
+            setStatus("loaded");
+            onLoad?.(event);
+          }}
+          onError={(event) => {
+            if (!unoptimized && retryAttempt < OPTIMIZER_MAX_RETRIES) {
+              scheduleOptimizerRetry();
+              return;
+            }
+            if (fallbackUnoptimized && !unoptimized) {
+              setUseUnoptimizedFallback(true);
+              setRetryAttempt(0);
+              setStatus("loading");
+              return;
+            }
+            setStatus("error");
+            onError?.(event);
+          }}
+        />
+      )}
     </>
   );
 }

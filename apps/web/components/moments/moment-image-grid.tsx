@@ -58,6 +58,7 @@ export function MomentImageGrid({ images, onOpen, priority = false }: MomentImag
           <img
             src={img.access_url}
             alt={img.name}
+            loading="lazy"
             className="block h-auto max-h-[320px] w-auto max-w-full object-contain"
           />
         ) : (
@@ -99,7 +100,12 @@ export function MomentImageGrid({ images, onOpen, priority = false }: MomentImag
             className="relative aspect-square cursor-zoom-in overflow-hidden rounded-[6px] bg-muted"
           >
             {isGifImage(img) ? (
-              <img src={img.access_url} alt={img.name} className="h-full w-full object-cover" />
+              <img
+                src={img.access_url}
+                alt={img.name}
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
             ) : (
               <LoadingImage
                 src={img.access_url}

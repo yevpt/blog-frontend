@@ -32,7 +32,8 @@
     "@repo/api": "workspace:*",
     "@repo/editor": "workspace:*",
     "browser-image-compression": "^2.0.2",
-    "heic2any": "0.0.4"
+    "heic2any": "0.0.4",
+    "zustand": "^5.0.0"
   },
   "peerDependencies": {
     "react": "*"

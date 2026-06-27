@@ -57,7 +57,7 @@ vi.mock("next/image", () => ({
       loading={priority ? "eager" : "lazy"}
       data-priority={priority ?? false}
       data-unoptimized={unoptimized ?? false}
-      fill={fill}
+      data-fill={fill}
       sizes={sizes}
     />
   ),
@@ -75,7 +75,14 @@ vi.mock("@repo/hooks", () => ({
     return !src.startsWith("data:") && !src.startsWith("blob:");
   },
   useDeferredMediaActivation: deferredMediaMock.useDeferredMediaActivation,
-  useImageLoadPlaceholder: () => ({ isLoading: false, state: undefined, hideImage: false, renderPlaceholder: false, placeholderOpaque: false, animateImage: false }),
+  useImageLoadPlaceholder: () => ({
+    isLoading: false,
+    state: undefined,
+    hideImage: false,
+    renderPlaceholder: false,
+    placeholderOpaque: false,
+    animateImage: false,
+  }),
 }));
 
 const { useDeferredMediaActivation } = deferredMediaMock;

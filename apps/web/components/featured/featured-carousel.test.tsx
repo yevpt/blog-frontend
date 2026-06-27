@@ -49,6 +49,10 @@ vi.mock("next/image", () => ({
   ),
 }));
 
+vi.mock("@/hooks/use-deferred-media-activation", () => ({
+  useDeferredMediaActivation: () => true,
+}));
+
 vi.mock("next/link", () => ({
   default: ({
     href,

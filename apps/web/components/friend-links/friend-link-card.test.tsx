@@ -16,12 +16,19 @@ vi.mock("next/image", () => ({
     className?: string;
     sizes?: string;
     fill?: boolean;
-  }) => <img src={src} alt={alt} className={className} sizes={sizes} fill={fill} />,
+  }) => <img src={src} alt={alt} className={className} sizes={sizes} data-fill={fill} />,
 }));
 
 vi.mock("@repo/hooks", () => ({
   useDeferredMediaActivation: () => true,
-  useImageLoadPlaceholder: () => ({ isLoading: false, state: undefined, hideImage: false, renderPlaceholder: false, placeholderOpaque: false, animateImage: false }),
+  useImageLoadPlaceholder: () => ({
+    isLoading: false,
+    state: undefined,
+    hideImage: false,
+    renderPlaceholder: false,
+    placeholderOpaque: false,
+    animateImage: false,
+  }),
   shouldDeferRemoteMediaSrc: () => false,
 }));
 

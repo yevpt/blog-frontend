@@ -17,3 +17,15 @@ export {
 } from "./compress-avatar";
 export { useEditorImageUpload, type UseEditorImageUploadOptions } from "./use-editor-image-upload";
 export { useHydrated } from "./use-hydrated";
+export { usePresenceStore, type PresenceRecord } from "./presence-store";
+export { usePresence } from "./use-presence";
+export { subscribe, getSubscribedIds, onSubscriptionChange } from "./presence-subscriptions";
+export {
+  scheduleAfterPageReady,
+  useDeferredMediaActivation,
+  shouldDeferRemoteMediaSrc,
+} from "./use-deferred-media-activation";
+export {
+  useImageLoadPlaceholder,
+  type ImageLoadPlaceholderState,
+} from "./use-image-load-placeholder";

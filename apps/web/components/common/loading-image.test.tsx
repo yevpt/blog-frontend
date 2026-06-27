@@ -43,6 +43,10 @@ vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
 }));
 
+vi.mock("@/hooks/use-deferred-media-activation", () => ({
+  useDeferredMediaActivation: () => true,
+}));
+
 // 控制 jsdom 下 <img> 的 complete/naturalWidth（默认 false，模拟尚未加载）。
 let mockComplete = false;
 let mockNaturalWidth = 0;

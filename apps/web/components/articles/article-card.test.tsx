@@ -49,6 +49,10 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("@/hooks/use-deferred-media-activation", () => ({
+  useDeferredMediaActivation: () => true,
+}));
+
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
 }));

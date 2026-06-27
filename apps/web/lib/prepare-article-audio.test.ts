@@ -61,7 +61,11 @@ describe("prepareArticleAudioElement", () => {
     const resolvedUrl = new URL("https://example.com/a.mp3", "http://localhost/").href;
 
     // 设置 audio 状态：src 已匹配，readyState 已足够
-    audio.readyState = HAVE_FUTURE_DATA;
+    Object.defineProperty(audio, "readyState", {
+      value: HAVE_FUTURE_DATA,
+      writable: true,
+      configurable: true,
+    });
     audio.src = resolvedUrl;
 
     // 由于 resolveAudioSrc 是模块内部函数，无法直接 mock
@@ -79,7 +83,9 @@ describe("prepareArticleAudioElement", () => {
     // 导致函数进入 Promise 等待 canplay 事件的分支
 
     // 修复：mock HTMLMediaElement.HAVE_FUTURE_DATA
-    const OriginalHTMLMediaElement = globalThis.HTMLMediaElement as typeof HTMLMediaElement | undefined;
+    const OriginalHTMLMediaElement = globalThis.HTMLMediaElement as
+      | typeof HTMLMediaElement
+      | undefined;
     Object.defineProperty(globalThis, "HTMLMediaElement", {
       value: { HAVE_FUTURE_DATA: 3 },
       writable: true,
@@ -87,9 +93,7 @@ describe("prepareArticleAudioElement", () => {
     });
 
     try {
-      await expect(
-        originalPrepare(audio, "https://example.com/a.mp3"),
-      ).resolves.toBeUndefined();
+      await expect(originalPrepare(audio, "https://example.com/a.mp3")).resolves.toBeUndefined();
       expect(audio.load).not.toHaveBeenCalled();
     } finally {
       // 恢复全局
@@ -100,7 +104,7 @@ describe("prepareArticleAudioElement", () => {
           configurable: true,
         });
       } else {
-        delete (globalThis as any).HTMLMediaElement;
+        delete (globalThis as unknown as Record<string, unknown>)["HTMLMediaElement"];
       }
     }
   });

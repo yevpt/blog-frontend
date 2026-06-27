@@ -18,6 +18,10 @@ vi.mock("next/image", () => ({
   }) => <img src={src} alt={alt} className={className} sizes={sizes} />,
 }));
 
+vi.mock("@/hooks/use-deferred-media-activation", () => ({
+  useDeferredMediaActivation: () => true,
+}));
+
 beforeAll(() => {
   vi.stubGlobal(
     "ResizeObserver",
