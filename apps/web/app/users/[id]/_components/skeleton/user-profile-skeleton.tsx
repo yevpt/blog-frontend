@@ -10,28 +10,23 @@ export function UserProfileSkeleton() {
     <div className="min-h-screen bg-background">
       <div className="h-16" />
       <div className={cn("mx-auto space-y-4 px-4 py-6", PROFILE_PAGE_MAX_WIDTH_CLASS)}>
-        {/* Card 1: 用户信息头 */}
+        {/* Card 1: 用户信息头 — 间距与尺寸对齐 UserInfoHeader 实际渲染 */}
         <Card className="rounded-2xl px-6 py-8">
           <div className="flex flex-col items-center text-center">
             <Bone className="h-20 w-20 rounded-full" />
-            <Bone className="mt-3 h-6 w-32" />
-            <Bone className="mt-2 h-4 w-20" />
-            <Bone className="mt-2 h-4 w-48" />
-            <div className="mt-3 flex gap-2">
-              {[1, 2, 3].map((i) => (
-                <Bone key={i} className="h-8 w-8 rounded-lg" />
-              ))}
-            </div>
-            <Bone className="mt-4 h-9 w-28 rounded-lg" />
+            <Bone className="mt-3 h-7 w-32" />
+            <Bone className="mt-1.5 h-5 w-20" />
+            <Bone className="mt-1.5 h-5 w-48" />
+            <Bone className="mt-3 h-7 w-28 rounded" />
           </div>
         </Card>
 
-        {/* Card 2: Tabs + 内容 */}
-        <Card className="rounded-2xl">
-          {/* Tab 栏 */}
-          <div className="flex gap-1 border-b border-border px-4 pt-2">
+        {/* Card 2: Tabs + 内容 — 对齐 UserProfileTabs + ProfileReadView 实际结构 */}
+        <Card className="rounded-2xl overflow-hidden">
+          {/* Tab 栏 — flex-1 匹配实际按钮等比宽度 */}
+          <div className="flex border-b border-border">
             {[1, 2, 3].map((i) => (
-              <Bone key={i} className="mb-2 h-8 w-16 rounded-md" />
+              <Bone key={i} className="flex-1 h-11 rounded-none" />
             ))}
           </div>
           {/* 字段列表 */}

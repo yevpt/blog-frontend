@@ -201,6 +201,7 @@ export function LikedContentCard({ item }: LikedContentCardProps) {
         >
           <UserAvatar
             src={item.author?.avatar_url}
+            userId={item.author?.id}
             name={authorName}
             size="lg"
             isVip={isVipUser(item.author?.roles)}

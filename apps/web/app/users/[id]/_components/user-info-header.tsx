@@ -4,7 +4,7 @@ import { useMemo, useState, useRef, type ChangeEvent } from "react";
 import type { IconName } from "@repo/icons";
 import { Card, cn, Dropdown, Modal, Button } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
-import { useHydrated, usePresence } from "@repo/hooks";
+import { usePresence } from "@repo/hooks";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { isAdminUser, isVipUser } from "@/lib/user-roles";
 import { useAdminVipRole } from "@/hooks/use-admin-vip-role";
@@ -144,7 +144,6 @@ export function UserInfoHeader({
   onAvatarChange,
   onRolesChange,
 }: UserInfoHeaderProps) {
-  const hydrated = useHydrated();
   const [editingField, setEditingField] = useState<HeaderEditableField | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [pendingVipAction, setPendingVipAction] = useState<"grant" | "revoke" | null>(null);
@@ -194,11 +193,11 @@ export function UserInfoHeader({
   const seed = useMemo(() => toPresenceRecordSeed(fallbackInput), [fallbackInput]);
   const { record } = usePresence(userId, seed);
 
-  const presence = hydrated
-    ? resolvePresenceDisplay(resolvePresenceFromSubscription(record, fallbackInput))
-    : null;
-  const online = presence?.kind === "online";
-  const onlineLabel = presence?.kind === "never" ? "" : (presence?.label ?? "\u00A0");
+  // 始终用当前最优数据计算在线状态，避免 hydration 前后 presence=null 导致状态点前后变化造成偏移
+  const presence = resolvePresenceDisplay(resolvePresenceFromSubscription(record, fallbackInput));
+  const online = presence.kind === "online";
+  const showStatus = presence.kind !== "never";
+  const onlineLabel = presence.label;
   const isVip = isVipUser(roles);
   const isAdmin = isAdminUser(roles);
   const vipMenuLabel = isVip ? "取消星标认证" : "授予星标认证";
@@ -277,14 +276,16 @@ export function UserInfoHeader({
         </>
       )}
 
-      {/* 在线状态 — 右上角；hydration 前占位避免 #418 */}
-      {(hydrated ? onlineLabel : true) && (
-        <div
-          className="absolute right-4 top-4 flex items-center gap-1.5 text-sm text-muted-foreground"
-          suppressHydrationWarning
-        >
-          <span className={cn("h-2 w-2 rounded-full", online ? "bg-emerald-400" : "bg-zinc-400")} />
-          {onlineLabel}
+      {/* 在线状态 — 右上角 */}
+      {showStatus && (
+        <div className="absolute right-4 top-4 flex items-center gap-1.5 text-sm text-muted-foreground">
+          <span
+            className={cn(
+              "h-2 w-2 shrink-0 rounded-full",
+              online ? "bg-emerald-400" : "bg-zinc-400",
+            )}
+          />
+          <span>{onlineLabel}</span>
         </div>
       )}
 
@@ -299,6 +300,7 @@ export function UserInfoHeader({
         >
           <UserAvatar
             src={avatarUrl ?? undefined}
+            userId={userId}
             name={nickname}
             size="xl"
             isVip={!isEditMode && isVip}
@@ -424,24 +426,26 @@ export function UserInfoHeader({
           )
         )}
 
-        {/* 编辑 / 退出编辑按钮 */}
-        {isOwner && (
-          <button
-            type="button"
-            onClick={onToggleEditMode}
-            disabled={isAnyEditing}
-            className={cn(
-              "mt-3 h-7 rounded px-3 text-xs font-medium transition-colors",
-              isEditMode
-                ? isAnyEditing
-                  ? "cursor-not-allowed bg-destructive/40 text-white/60"
-                  : "bg-destructive/90 text-white hover:bg-destructive"
-                : "bg-primary text-white hover:opacity-85",
-            )}
-          >
-            {isEditMode ? "退出编辑" : "编辑个人资料"}
-          </button>
-        )}
+        {/* 编辑 / 退出编辑按钮 — 外层容器始终占位以避免按钮出现/消失时卡片高度变化 */}
+        <div className="mt-3 h-7">
+          {isOwner && (
+            <button
+              type="button"
+              onClick={onToggleEditMode}
+              disabled={isAnyEditing}
+              className={cn(
+                "h-full rounded px-3 text-xs font-medium transition-colors",
+                isEditMode
+                  ? isAnyEditing
+                    ? "cursor-not-allowed bg-destructive/40 text-white/60"
+                    : "bg-destructive/90 text-white hover:bg-destructive"
+                  : "bg-primary text-white hover:opacity-85",
+              )}
+            >
+              {isEditMode ? "退出编辑" : "编辑个人资料"}
+            </button>
+          )}
+        </div>
       </div>
     </Card>
   );

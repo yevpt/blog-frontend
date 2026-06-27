@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type * as clientFetch from "@/lib/client-fetch";
 import { PasswordSheet } from "./password-sheet";
@@ -35,6 +35,10 @@ vi.mock("@/components/auth/register-captcha", () => ({
   RegisterCaptcha: () => null,
 }));
 
+vi.mock("@/components/auth/password-recovery-form", () => ({
+  PasswordRecoveryForm: () => <button type="button">重置密码</button>,
+}));
+
 beforeEach(() => {
   apiJson.mockReset();
   apiJson.mockResolvedValue(undefined);
@@ -43,7 +47,7 @@ beforeEach(() => {
 
 describe("PasswordSheet", () => {
   it("已设密码：默认显示修改表单并可提交 PATCH password { old_password, new_password }", async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     const onSuccess = vi.fn();
     render(
       <PasswordSheet
@@ -56,14 +60,19 @@ describe("PasswordSheet", () => {
       />,
     );
 
-    await user.type(screen.getByLabelText("当前密码"), "Old12345");
-    await user.type(screen.getByLabelText(/新密码（/), "New12345");
-    await user.type(screen.getByLabelText("确认新密码"), "New12345");
-    await user.click(screen.getByRole("button", { name: "确认修改" }));
+    fireEvent.change(screen.getByLabelText("当前密码"), { target: { value: "Old12345" } });
+    fireEvent.change(screen.getByLabelText(/新密码（/), { target: { value: "New12345" } });
+    fireEvent.change(screen.getByLabelText("确认新密码"), { target: { value: "New12345" } });
 
-    expect(apiJson).toHaveBeenCalledWith("/api/users/me/password", {
-      method: "PATCH",
-      body: JSON.stringify({ old_password: "Old12345", new_password: "New12345" }),
+    const submit = screen.getByRole("button", { name: "确认修改" });
+    await waitFor(() => expect(submit).not.toBeDisabled());
+    await user.click(submit);
+
+    await waitFor(() => {
+      expect(apiJson).toHaveBeenCalledWith("/api/users/me/password", {
+        method: "PATCH",
+        body: JSON.stringify({ old_password: "Old12345", new_password: "New12345" }),
+      });
     });
     expect(onSuccess).toHaveBeenCalled();
   });

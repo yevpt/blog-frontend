@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
+import { useHydrated } from "@repo/hooks";
 import type { UserPublicProfileResp } from "@repo/api";
 import { ProfileTab } from "./profile-tab/profile-tab";
 import { SecurityTab } from "./security-tab/security-tab";
@@ -49,6 +50,7 @@ export function UserProfileTabs({
   onActiveEditingChange,
   onDisplayEmailChanged,
 }: UserProfileTabsProps) {
+  const hydrated = useHydrated();
   const searchParams = useSearchParams();
   const wantsSecurity = searchParams.get("tab") === "security";
   // 绑定回跳定位：URL 带 ?tab=security 且账号安全 Tab 当前可见（编辑态 + 本人）时初始选中它。
@@ -127,7 +129,10 @@ export function UserProfileTabs({
         <span
           aria-hidden
           data-testid="user-profile-tab-indicator"
-          className="pointer-events-none absolute -bottom-px left-0 z-10 h-[2px] bg-primary transition-transform duration-300 ease-in-out"
+          className={cn(
+            "pointer-events-none absolute -bottom-px left-0 z-10 h-[2px] bg-primary",
+            hydrated && "transition-transform duration-300 ease-in-out",
+          )}
           style={{
             width: `${100 / tabs.length}%`,
             transform: `translateX(${activeIndex * 100}%)`,
