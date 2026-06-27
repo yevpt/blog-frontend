@@ -31,13 +31,30 @@ export function scheduleAfterPageReady(callback: () => void): () => void {
   };
 }
 
-/** 首屏仅骨架占位，页面主体就绪后再允许挂载真实媒体。 */
+/**
+ * 全页仅首屏走 defer；虚拟滚动等 remount 直接读此标记，避免骨架层重播。
+ * 进程内单例，不持久化。
+ */
+let globalMediaActivated = false;
+
+/** 仅供测试隔离全局激活状态 */
+export function resetDeferredMediaActivationForTests(): void {
+  globalMediaActivated = false;
+}
+
+/** 首屏仅骨架占位，页面主体就绪后再允许挂载真实媒体；remount 时立即视为已就绪。 */
 export function useDeferredMediaActivation(): boolean {
-  const [activated, setActivated] = useState(false);
+  const [activated, setActivated] = useState(() => globalMediaActivated);
 
-  useEffect(() => scheduleAfterPageReady(() => setActivated(true)), []);
+  useEffect(() => {
+    if (globalMediaActivated) return;
+    return scheduleAfterPageReady(() => {
+      globalMediaActivated = true;
+      setActivated(true);
+    });
+  }, []);
 
-  return activated;
+  return globalMediaActivated || activated;
 }
 
 /** data:/blob: 等本地预览地址无需延迟。 */

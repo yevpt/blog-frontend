@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 import {
+  resetDeferredMediaActivationForTests,
   scheduleAfterPageReady,
   useDeferredMediaActivation,
 } from "./use-deferred-media-activation";
@@ -35,6 +36,7 @@ describe("useDeferredMediaActivation", () => {
   let idleCallback: IdleRequestCallback | null = null;
 
   beforeEach(() => {
+    resetDeferredMediaActivationForTests();
     idleCallback = null;
     vi.stubGlobal(
       "requestIdleCallback",
@@ -60,5 +62,16 @@ describe("useDeferredMediaActivation", () => {
       idleCallback?.({ didTimeout: false, timeRemaining: () => 50 } as IdleDeadline);
     });
     expect(result.current).toBe(true);
+  });
+
+  it("页面就绪后 remount 时首帧即为 true，跳过重走 defer", () => {
+    const { unmount } = renderHook(() => useDeferredMediaActivation());
+    act(() => {
+      idleCallback?.({ didTimeout: false, timeRemaining: () => 50 } as IdleDeadline);
+    });
+    unmount();
+
+    const { result: remounted } = renderHook(() => useDeferredMediaActivation());
+    expect(remounted.current).toBe(true);
   });
 });
