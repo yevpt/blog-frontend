@@ -28,7 +28,8 @@ export function useCommentList(targetType: TargetType, targetId: number) {
   const [comments, setComments] = useState<CommentItemResp[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPage = useCallback(
@@ -53,6 +54,7 @@ export function useCommentList(targetType: TargetType, targetId: number) {
       } finally {
         if (!signal?.aborted) {
           setIsLoading(false);
+          setHasLoaded(true);
         }
       }
     },
@@ -64,6 +66,8 @@ export function useCommentList(targetType: TargetType, targetId: number) {
     setComments([]);
     setPage(1);
     setHasMore(false);
+    setHasLoaded(false);
+    setIsLoading(true);
     void fetchPage(1, false, controller.signal);
     return () => controller.abort();
   }, [fetchPage]);
@@ -110,6 +114,7 @@ export function useCommentList(targetType: TargetType, targetId: number) {
   return {
     comments,
     isLoading,
+    hasLoaded,
     hasMore,
     error,
     loadMore,

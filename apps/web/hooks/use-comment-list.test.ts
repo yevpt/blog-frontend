@@ -63,9 +63,12 @@ describe("useCommentList", () => {
     );
 
     const { result } = renderHook(() => useCommentList("article", 1));
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.hasLoaded).toBe(false);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.comments).toHaveLength(2);
+    expect(result.current.hasLoaded).toBe(true);
     expect(result.current.hasMore).toBe(false);
   });
 
