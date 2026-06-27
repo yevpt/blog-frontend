@@ -177,6 +177,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             <>
               <UserAvatar
                 src={item.actor_user?.avatar_url}
+                userId={item.actor_user?.id}
                 name={actorName}
                 size="md"
                 className="mt-0.5"

@@ -121,10 +121,20 @@ export default function NotificationCard({
       <div className="flex flex-col items-center gap-3">
         {actorProfileHref ? (
           <Link href={actorProfileHref} className="shrink-0" aria-label={`查看${actorName}的主页`}>
-            <UserAvatar src={item.actor_user?.avatar_url} name={actorName} size="lg" />
+            <UserAvatar
+              src={item.actor_user?.avatar_url}
+              userId={item.actor_user?.id}
+              name={actorName}
+              size="lg"
+            />
           </Link>
         ) : (
-          <UserAvatar src={item.actor_user?.avatar_url} name={actorName} size="lg" />
+          <UserAvatar
+            src={item.actor_user?.avatar_url}
+            userId={item.actor_user?.id}
+            name={actorName}
+            size="lg"
+          />
         )}
         <div
           className={cn(
