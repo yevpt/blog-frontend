@@ -1,36 +1,46 @@
 // @vitest-environment jsdom
+import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
-import type { FriendLinkPageResp } from "@repo/api";
+import { beforeEach, describe, it, expect, vi } from "vitest";
+import type { FriendLinkItemResp, FriendLinkPageResp } from "@repo/api";
+import FriendLinksPageRoute from "./page";
+
+const linkList: FriendLinkItemResp[] = [
+  {
+    id: 1,
+    name: "YEVPT Blog",
+    site: "https://www.yevpt.com",
+    seq: 0,
+    status: 1,
+    created_at: "",
+    updated_at: "",
+  },
+];
 
 const linkResp: FriendLinkPageResp = {
   total: 1,
   pages: 1,
   page: 1,
   page_size: 50,
-  list: [
-    {
-      id: 1,
-      name: "YEVPT Blog",
-      site: "https://www.yevpt.com",
-      seq: 0,
-      status: 1,
-      created_at: "",
-      updated_at: "",
-    },
-  ],
+  list: linkList,
 };
 
+const mockListPublic = vi.hoisted(() => vi.fn());
+
 vi.mock("@/lib/server-api", () => ({
-  createServerApiClient: vi.fn().mockResolvedValue({
+  createServerApiClient: vi.fn(async () => ({
     friendLinks: {
-      listPublic: vi.fn().mockResolvedValue(linkResp),
+      listPublic: mockListPublic,
     },
-  }),
+  })),
+}));
+
+vi.mock("@/components/common/page-container", () => ({
+  PageContainer: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock("@/components/friend-links", () => ({
-  FriendLinksPage: ({ links }: { links: typeof linkResp.list }) => (
+  FriendLinksPage: ({ links }: { links: FriendLinkItemResp[] }) => (
     <main data-testid="friend-links-page">
       {links.map((l) => (
         <span key={l.id}>{l.name}</span>
@@ -40,8 +50,12 @@ vi.mock("@/components/friend-links", () => ({
 }));
 
 describe("FriendLinksPageRoute", () => {
+  beforeEach(() => {
+    mockListPublic.mockReset();
+    mockListPublic.mockResolvedValue(linkResp);
+  });
+
   it("渲染不崩溃并传入友链数据", async () => {
-    const { default: FriendLinksPageRoute } = await import("./page");
     const element = await FriendLinksPageRoute();
     render(element);
     expect(screen.getByTestId("friend-links-page")).toBeTruthy();
@@ -49,16 +63,10 @@ describe("FriendLinksPageRoute", () => {
   });
 
   it("API 失败时降级渲染空列表", async () => {
-    const { createServerApiClient } = await import("@/lib/server-api");
-    vi.mocked(createServerApiClient).mockResolvedValueOnce({
-      friendLinks: {
-        listPublic: vi.fn().mockRejectedValue(new Error("network error")),
-      },
-    } as never);
-
-    const { default: FriendLinksPageRoute } = await import("./page");
+    mockListPublic.mockRejectedValueOnce(new Error("network error"));
     const element = await FriendLinksPageRoute();
     render(element);
     expect(screen.getByTestId("friend-links-page")).toBeTruthy();
+    expect(screen.queryByText("YEVPT Blog")).toBeNull();
   });
 });
