@@ -27,6 +27,7 @@ export function ArticleComments({ articleId, commentCount: initialCount }: Artic
       <InlineComments
         targetType="article"
         targetId={articleId}
+        expectedCommentCount={commentCount}
         onCommentAdded={handleCommentAdded}
       />
     </section>

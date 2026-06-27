@@ -7,16 +7,19 @@ vi.mock("@/components/comments", () => ({
   InlineComments: ({
     targetId,
     targetType,
+    expectedCommentCount,
     onCommentAdded,
   }: {
     targetId: number;
     targetType: string;
+    expectedCommentCount?: number;
     onCommentAdded?: () => void;
   }) => (
     <div
       data-testid="inline-comments"
       data-target-id={String(targetId)}
       data-target-type={targetType}
+      data-expected-comment-count={String(expectedCommentCount ?? "")}
     >
       <button data-testid="trigger-comment-added" onClick={onCommentAdded}>
         模拟添加评论
@@ -42,6 +45,7 @@ describe("ArticleComments", () => {
     const section = screen.getByTestId("inline-comments");
     expect(section).toHaveAttribute("data-target-id", "42");
     expect(section).toHaveAttribute("data-target-type", "article");
+    expect(section).toHaveAttribute("data-expected-comment-count", "7");
   });
 
   it("onCommentAdded 触发后评论计数递增", async () => {
