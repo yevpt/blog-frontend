@@ -105,6 +105,7 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
                 >
                   <UserAvatar
                     src={profile?.avatar_url ?? undefined}
+                    userId={userId ?? profile?.id}
                     name={displayName}
                     size="md"
                     className="h-9 w-9 text-[13px]"

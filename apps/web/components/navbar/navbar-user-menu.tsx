@@ -199,7 +199,12 @@ export function NavbarUserMenu({ isGlass = false, unreadCount = 0 }: NavbarUserM
           isGlass && "hover:ring-white/30",
         )}
       >
-        <UserAvatar src={profile?.avatar_url ?? undefined} name={displayName || "?"} size="md" />
+        <UserAvatar
+          src={profile?.avatar_url ?? undefined}
+          userId={userId ?? profile?.id}
+          name={displayName || "?"}
+          size="md"
+        />
         {unreadCount > 0 && (
           <span
             data-testid="avatar-unread-dot"
