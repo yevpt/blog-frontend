@@ -29,6 +29,14 @@ export interface BaseUserCardProps {
   animateEnter?: boolean;
   className?: string;
   "data-testid"?: string;
+  /** 传递至 UserAvatar.defer，虚拟滚动场景设 false 避免重挂闪烁 */
+  deferAvatar?: boolean;
+  /** 传递至 UserAvatar.loadingEager，虚拟滚动场景设 true 提前加载 */
+  loadingEager?: boolean;
+  /** 传递至 UserAvatar.priority，首屏 LCP 头像设 true */
+  priorityAvatar?: boolean;
+  /** 仅展示 SSR/列表自带的在线字段，不订阅实时 presence（网格场景减 CLS） */
+  presenceStatic?: boolean;
 }
 
 export function BaseUserCard({
@@ -38,6 +46,10 @@ export function BaseUserCard({
   animationDelay = "0ms",
   animateEnter = false,
   className,
+  deferAvatar,
+  loadingEager,
+  priorityAvatar,
+  presenceStatic = false,
   "data-testid": testId,
 }: BaseUserCardProps) {
   const hydrated = useHydrated();
@@ -55,11 +67,12 @@ export function BaseUserCard({
     [user.is_online, user.last_active_at, user.last_login_at],
   );
   const seed = useMemo(() => toPresenceRecordSeed(fallbackInput), [fallbackInput]);
-  const { record } = usePresence(presenceId, seed);
+  const { record } = usePresence(presenceStatic ? null : presenceId, seed);
 
-  const presence = hydrated
-    ? resolvePresenceDisplay(resolvePresenceFromSubscription(record, fallbackInput))
-    : null;
+  const presenceInput = presenceStatic
+    ? fallbackInput
+    : resolvePresenceFromSubscription(record, fallbackInput);
+  const presence = hydrated ? resolvePresenceDisplay(presenceInput) : null;
 
   const roleLabel = isAdmin ? "Admin" : isVip ? "VIP" : null;
   const isCompact = variant === "compact";
@@ -71,7 +84,7 @@ export function BaseUserCard({
       onTouchStart={() => {}}
       className={cn(
         "flex h-full cursor-pointer select-none flex-col items-center gap-1.5 transition-all duration-200 hover:bg-primary/8 active:scale-95 active:bg-primary/20 active:duration-0",
-        isCompact ? "rounded-[10px] p-2" : "rounded-xl p-2.5 md:gap-2 md:p-3",
+        isCompact ? "rounded-[10px] p-2" : "rounded-xl p-2.5 gap-2",
         animateEnter && "animate-view-enter",
         className,
       )}
@@ -81,15 +94,18 @@ export function BaseUserCard({
       <div className="relative">
         <UserAvatar
           src={user.avatar_url || undefined}
+          userId={user.id}
           name={user.nickname || "U"}
           size="xl"
           isVip={isVip}
+          defer={deferAvatar}
+          priority={priorityAvatar}
+          loadingEager={loadingEager}
           className={cn(
-            !isCompact && "md:h-16 md:w-16",
             !isCompact && isAdmin
-              ? "ring-2 ring-primary/70 ring-offset-1 ring-offset-background"
+              ? "ring-2 ring-inset ring-primary/70"
               : !isCompact && isVip
-                ? "ring-2 ring-amber-400/70 ring-offset-1 ring-offset-background"
+                ? "ring-2 ring-inset ring-amber-400/70"
                 : "",
           )}
         />
@@ -103,7 +119,7 @@ export function BaseUserCard({
         <h3
           className={cn(
             "w-full truncate text-center font-semibold text-foreground",
-            isCompact ? "mt-1 text-xs" : "text-xs md:text-sm",
+            isCompact ? "mt-1 text-xs" : "text-sm",
           )}
         >
           {user.nickname || "User"}
@@ -123,17 +139,24 @@ export function BaseUserCard({
         )}
       </div>
 
-      {/* 在线状态：hydration 前占位，避免在线/离线分支切换导致 #418 */}
-      <div className="flex w-full items-center justify-center">
+      {/* 在线状态：固定行高 + 统一 DOM，避免文案长短/在线样式切换引发布局偏移 */}
+      <div className="flex h-[14px] w-full items-center justify-center overflow-hidden">
         {!hydrated || !presence ? (
-          <span className="truncate text-[10px] text-(--fg3)">&nbsp;</span>
-        ) : presence.kind === "online" ? (
-          <span className="flex items-center gap-1 truncate text-[10px] font-semibold text-emerald-500">
-            {isCompact && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>}
-            {presence.label}
+          <span
+            className="block w-[5.5rem] max-w-full truncate text-center text-[10px] leading-[14px] text-(--fg3)"
+            aria-hidden="true"
+          >
+            &nbsp;
           </span>
         ) : (
-          <span className="truncate text-[10px] text-(--fg3)">{presence.label}</span>
+          <span
+            className={cn(
+              "block w-[5.5rem] max-w-full truncate text-center text-[10px] leading-[14px]",
+              presence.kind === "online" ? "font-semibold text-emerald-500" : "text-(--fg3)",
+            )}
+          >
+            {presence.label}
+          </span>
         )}
       </div>
     </Link>

@@ -75,6 +75,25 @@ describe("BaseUserCard", () => {
     expect(screen.queryByText("Admin")).not.toBeInTheDocument();
   });
 
+  it("presenceStatic 时不订阅实时 presence", () => {
+    usePresenceStore.getState().apply({
+      1: { is_online: true, last_active_at: Math.floor(Date.now() / 1000) },
+    });
+    render(
+      <BaseUserCard
+        user={{
+          ...mockUser,
+          id: 1,
+          is_online: false,
+          last_active_at: new Date(Date.now() - 86400000).toISOString(),
+        }}
+        presenceStatic
+      />,
+    );
+    expect(screen.queryByText("在线")).not.toBeInTheDocument();
+    expect(screen.getByText(/活跃过/)).toBeInTheDocument();
+  });
+
   it("showRoleLabel=true 且无角色时保留占位高度", () => {
     const { container } = render(<BaseUserCard user={mockUser} variant="normal" showRoleLabel />);
     expect(container.querySelector('[aria-hidden="true"].h-\\[14px\\]')).toBeInTheDocument();

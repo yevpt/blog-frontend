@@ -27,12 +27,7 @@ export function PageContainer({
       <FloatDockPageAnchor layout={pageContainerFloatDockLayout(size)} />
       <div
         data-testid={testId}
-        className={cn(
-          "relative mx-auto px-5",
-          "pb-20 pt-20 md:pt-24", // 默认上下边距，会被 className 中的明确设置覆盖
-          sizeClasses[size],
-          className,
-        )}
+        className={cn("relative mx-auto px-5", "pb-20 pt-24", sizeClasses[size], className)}
       >
         {children}
       </div>

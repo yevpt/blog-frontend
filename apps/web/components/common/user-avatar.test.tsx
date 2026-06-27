@@ -1,6 +1,7 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { UserAvatar } from "./user-avatar";
+import { resolveInactiveMockAvatarUrl } from "@/lib/preset-avatar";
 
 const deferredMediaMock = vi.hoisted(() => ({
   useDeferredMediaActivation: vi.fn(() => true),
@@ -34,11 +35,24 @@ vi.mock("next/image", async () => {
         src: string;
         alt: string;
         className?: string;
+        priority?: boolean;
+        loading?: "lazy" | "eager";
         unoptimized?: boolean;
         onLoad?: () => void;
         onError?: () => void;
       }
-    >(function MockImage({ src, alt, className, unoptimized, onLoad, onError }, ref) {
+    >(function MockImage(
+      { src, alt, className, priority, loading, unoptimized, onLoad, onError },
+      ref,
+    ) {
+      const mountedRef = React.useRef(false);
+      const prevSrc = React.useRef(src);
+
+      if (prevSrc.current !== src) {
+        prevSrc.current = src;
+        mountedRef.current = false;
+      }
+
       return (
         <img
           ref={(node) => {
@@ -53,16 +67,21 @@ vi.mock("next/image", async () => {
               });
             }
 
-            if (typeof ref === "function") {
-              ref(node);
-            } else if (ref) {
-              ref.current = node;
+            if (!mountedRef.current) {
+              mountedRef.current = true;
+              if (typeof ref === "function") {
+                ref(node);
+              } else if (ref) {
+                ref.current = node;
+              }
             }
           }}
           src={src}
           alt={alt}
           className={className}
           data-unoptimized={unoptimized ?? false}
+          data-priority={priority ?? false}
+          data-loading={loading ?? "lazy"}
           onLoad={onLoad}
           onError={onError}
         />
@@ -91,9 +110,53 @@ describe("UserAvatar", () => {
     expect(img).toHaveAttribute("src", "https://example.com/a.jpg");
   });
 
-  it("头像图设为 unoptimized 跳过 Next.js 优化器", () => {
+  it("头像图为 20-64px 极小尺寸，始终 unoptimized 直连 OSS", () => {
     render(<UserAvatar src="https://example.com/a.jpg" name="Alice" />);
     expect(screen.getByRole("img", { name: "Alice" })).toHaveAttribute("data-unoptimized", "true");
+  });
+
+  it("src 后缀为 .php 时回退到自托管 mock 头像", () => {
+    render(
+      <UserAvatar src="https://blog-oss.yevpt.com/avatar/a.php?a=1&b=2" userId={7} name="Alice" />,
+    );
+    expect(screen.getByRole("img", { name: "Alice" })).toHaveAttribute(
+      "src",
+      resolveInactiveMockAvatarUrl(7),
+    );
+  });
+
+  it("无头像且有 userId 时展示自托管 mock 肖像", () => {
+    render(<UserAvatar userId={42} name="bob" />);
+    expect(screen.getByRole("img", { name: "bob" })).toHaveAttribute(
+      "src",
+      resolveInactiveMockAvatarUrl(42),
+    );
+  });
+
+  it("src 后缀为 .asp 且无 userId 时回退到首字母", () => {
+    render(<UserAvatar src="https://blog-oss.yevpt.com/avatar/a.asp?a=1&b=2" name="Alice" />);
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(screen.getByText("A")).toBeInTheDocument();
+  });
+
+  it("src 无扩展名时放行，正常渲染 img", () => {
+    render(<UserAvatar src="https://blog-oss.yevpt.com/avatar/user/abc123" name="Alice" />);
+    expect(screen.getByRole("img", { name: "Alice" })).toBeInTheDocument();
+  });
+
+  it("data: URL 不受扩展名校验影响，正常渲染 img", () => {
+    render(<UserAvatar src="data:image/png;base64,xx" name="Alice" />);
+    expect(screen.getByRole("img", { name: "Alice" })).toBeInTheDocument();
+  });
+
+  it("priority 模式下跳过骨架延迟，直接加载且 loading 为 eager", () => {
+    vi.mocked(useDeferredMediaActivation).mockReturnValue(false);
+    render(<UserAvatar src="https://example.com/a.jpg" name="Alice" priority />);
+    expect(screen.getByTestId("user-avatar-skeleton")).toHaveClass("opacity-0");
+    const img = screen.getByRole("img", { name: "Alice" });
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute("data-priority", "true");
+    expect(img).toHaveAttribute("data-loading", "eager");
   });
 
   it("有 src 时加载前显示首字母占位，加载完成后图片淡入", () => {
@@ -127,17 +190,29 @@ describe("UserAvatar", () => {
     expect(screen.getByTestId("user-avatar-placeholder")).toHaveClass("opacity-0");
   });
 
-  it("无 src 时渲染首字母大写", () => {
+  it("同一 userId 的 mock 头像保持稳定", () => {
+    const first = render(<UserAvatar userId={99} name="A" />);
+    const firstSrc = screen.getByRole("img").getAttribute("src");
+    first.unmount();
+    render(<UserAvatar userId={99} name="B" />);
+    expect(screen.getByRole("img").getAttribute("src")).toBe(firstSrc);
+  });
+
+  it("无 src 且无 userId 时渲染首字母大写", () => {
     render(<UserAvatar name="bob" />);
     expect(screen.getByText("B")).toBeInTheDocument();
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });
 
-  it("img 加载失败时回退到首字母", () => {
-    render(<UserAvatar src="https://broken.url/img.jpg" name="Charlie" />);
+  it("img 加载失败且有 userId 时回退到 mock 头像", async () => {
+    render(<UserAvatar src="https://broken.url/img.jpg" userId={5} name="Charlie" />);
     fireEvent.error(screen.getByRole("img", { name: "Charlie" }));
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
-    expect(screen.getByText("C")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole("img", { name: "Charlie" })).toHaveAttribute(
+        "src",
+        resolveInactiveMockAvatarUrl(5),
+      );
+    });
   });
 
   it("name 为空字符串时显示 ?", () => {
