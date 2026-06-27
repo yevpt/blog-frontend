@@ -102,6 +102,9 @@ import type {
   UserLikesCountResp,
   UserMomentsCountResp,
   AdminUserRolesResp,
+  NormalizeAvatarsReq,
+  NormalizeAvatarsResp,
+  ClearUserAvatarResp,
 } from "./types/user";
 import type {
   FriendLinkAdminListReq,
@@ -681,6 +684,15 @@ export function createApiClient(config: ApiClientConfig) {
         fetchAuthed<AdminUserRolesResp>(`/admin/users/${userId}/roles/vip`, {
           method: "DELETE",
         }),
+      /** 检查并重压缩不符合规范的老用户头像，需管理员登录 */
+      normalizeAvatars: (req: NormalizeAvatarsReq = {}) =>
+        fetchAuthed<NormalizeAvatarsResp>("/admin/users/avatars/normalize", {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 清除目标用户本站托管头像，需管理员登录 */
+      clearUserAvatar: (userId: number) =>
+        fetchAuthed<ClearUserAvatarResp>(`/admin/users/${userId}/avatar/clear`, { method: "POST" }),
     },
     comments: {
       /** 后台分页查询文章与碎语评论（需管理员） */

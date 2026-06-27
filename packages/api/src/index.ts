@@ -137,6 +137,10 @@ export type {
   UserLikesCountResp,
   UserMomentsCountResp,
   AdminUserRolesResp,
+  NormalizeAvatarsReq,
+  NormalizeAvatarItem,
+  NormalizeAvatarsResp,
+  ClearUserAvatarResp,
   BatchPresenceResp,
 } from "./types/user";
 export type {

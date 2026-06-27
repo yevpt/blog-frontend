@@ -1221,6 +1221,38 @@ describe("createApiClient", () => {
         }),
       );
     });
+
+    it("normalizeAvatars 使用 fetchAuthed 调用 POST /admin/users/avatars/normalize", async () => {
+      const data = {
+        scanned: 1,
+        updated: 1,
+        cleared: 0,
+        skipped: 0,
+        ok: 0,
+        failed: 0,
+        items: [{ user_id: 3, status: "updated" }],
+      };
+      vi.mocked(global.fetch).mockResolvedValue(mockResponse({ code: 0, message: "ok", data }));
+      const client = createApiClient({
+        baseUrl: "http://api",
+        getAccessToken: () => "admin-token",
+      });
+
+      const result = await client.users.normalizeAvatars({});
+
+      expect(result).toEqual(data);
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://api/admin/users/avatars/normalize",
+        expect.objectContaining({
+          method: "POST",
+          headers: expect.objectContaining({
+            Authorization: "Bearer admin-token",
+            "Content-Type": "application/json",
+          }),
+          body: JSON.stringify({}),
+        }),
+      );
+    });
   });
 
   // ── 找回密码（公开）──────────────────────────────────────────────

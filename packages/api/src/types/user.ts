@@ -232,6 +232,40 @@ export interface AdminUserRolesResp {
   roles: string[];
 }
 
+/** POST /admin/users/avatars/normalize — 归一化老用户头像请求；不传 user_id 时处理全部 */
+export interface NormalizeAvatarsReq {
+  user_id?: number;
+  clear_invalid?: boolean;
+}
+
+/** POST /admin/users/avatars/normalize — 单个用户处理结果 */
+export interface NormalizeAvatarItem {
+  user_id: number;
+  status: string;
+  old_key?: string;
+  new_key?: string;
+  message?: string;
+}
+
+/** POST /admin/users/avatars/normalize — 批量归一化老用户头像响应 */
+export interface NormalizeAvatarsResp {
+  scanned: number;
+  storage_scanned?: number;
+  updated: number;
+  cleared: number;
+  purged?: number;
+  skipped: number;
+  ok: number;
+  failed: number;
+  items: NormalizeAvatarItem[];
+}
+
+/** POST /admin/users/:id/avatar/clear — 清除用户头像响应 */
+export interface ClearUserAvatarResp {
+  user_id: number;
+  old_key?: string;
+}
+
 /** GET /users/presence — 在线状态批次查询响应 */
 export interface BatchPresenceResp {
   data: Record<string, { is_online: boolean; last_active_at?: number; last_login_at?: number }>;

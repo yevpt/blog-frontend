@@ -18,6 +18,7 @@ import { addToast } from "../../lib/toast";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
 import { UserListToolbar } from "./components/UserListToolbar";
 import { UserMobileList } from "./components/UserMobileList";
+import { AvatarNormalizeTool } from "./components/AvatarNormalizeTool";
 import { useAdminUserList } from "./hooks/use-admin-user-list";
 import type { UserRow } from "./model";
 
@@ -163,10 +164,10 @@ export function UsersPage() {
   const showSummary = !isLoading && total > 0;
 
   return (
-    <div className="grid min-h-0 min-w-0 max-w-full gap-4 overflow-hidden md:max-h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:max-h-[calc(100dvh-3.5rem)]">
+    <div className="flex min-w-0 max-w-full flex-col gap-4 md:min-h-0 md:max-h-[calc(100dvh-3rem)] md:overflow-y-auto lg:max-h-[calc(100dvh-3.5rem)]">
       <AdminPageHeader
         title="用户管理"
-        description="查看注册用户状态，并管理 VIP 权限。"
+        description="查看注册用户状态、管理 VIP 权限，并维护老用户头像规范。"
         action={
           <Button
             size="sm"
@@ -180,14 +181,19 @@ export function UsersPage() {
         }
       />
 
-      <section className="flex min-h-0 min-w-0 max-w-full flex-col" aria-label="用户列表">
+      <AvatarNormalizeTool />
+
+      <section
+        className="flex min-h-[360px] min-w-0 shrink-0 flex-col md:min-h-[min(360px,40vh)]"
+        aria-label="用户列表"
+      >
         {error ? (
           <p role="alert" className="pb-3 text-sm text-destructive">
             {error.message}
           </p>
         ) : null}
 
-        <AdminListCard className="md:min-h-[360px]">
+        <AdminListCard className="flex min-h-[360px] flex-1 flex-col">
           <UserListToolbar
             searchValue={search}
             onSearchChange={setSearch}
