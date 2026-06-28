@@ -13,8 +13,11 @@ vi.mock("./ArticleTagPicker", () => ({
 
 const baseProps = {
   coverUrl: "",
+  mobileCoverUrl: "",
   isCoverUploading: false,
+  isMobileCoverUploading: false,
   coverInputRef: { current: null },
+  mobileCoverInputRef: { current: null },
   categories: [{ id: 1, name: "前端" }],
   categoryId: 1,
   selectedTags: [],
@@ -25,7 +28,9 @@ const baseProps = {
   isRecommended: false,
   musicPickerTrigger: null,
   onCoverFileChange: vi.fn(),
+  onMobileCoverFileChange: vi.fn(),
   onRemoveCover: vi.fn(),
+  onRemoveMobileCover: vi.fn(),
   onCategoryChange: vi.fn(),
   onTagsChange: vi.fn(),
   onMusicPickerOpenChange: vi.fn(),
@@ -37,6 +42,12 @@ const baseProps = {
 };
 
 describe("ArticleEditorPublishRail", () => {
+  it("桌面端发布栏在视口内可滚动", () => {
+    render(<ArticleEditorPublishRail {...baseProps} />);
+
+    expect(screen.getByLabelText("发布配置").closest("aside")).toHaveClass("xl:overflow-y-auto");
+  });
+
   it("渲染封面、分类、推荐与评论设置", () => {
     render(<ArticleEditorPublishRail {...baseProps} />);
 
@@ -73,6 +84,33 @@ describe("ArticleEditorPublishRail", () => {
 
     expect(screen.getByRole("button", { name: "更换" })).toHaveClass("h-[26px]");
     expect(screen.getByRole("button", { name: "移除" })).toHaveClass("h-[26px]");
+  });
+
+  it("移动端封面默认折叠，已设置时展示标识", () => {
+    const { rerender } = render(<ArticleEditorPublishRail {...baseProps} />);
+
+    const details = screen.getByText("移动端封面").closest("details");
+    expect(details).toBeTruthy();
+    expect(details).not.toHaveAttribute("open");
+    expect(screen.queryByText("已设置")).not.toBeInTheDocument();
+
+    rerender(
+      <ArticleEditorPublishRail {...baseProps} mobileCoverUrl="https://example.com/m.jpg" />,
+    );
+
+    expect(screen.getByText("已设置")).toBeInTheDocument();
+    expect(details).not.toHaveAttribute("open");
+  });
+
+  it("展开移动端封面区后可上传", async () => {
+    const user = userEvent.setup();
+    render(<ArticleEditorPublishRail {...baseProps} />);
+
+    const details = screen.getByText("移动端封面").closest("details");
+    await user.click(screen.getByText("移动端封面"));
+
+    expect(details).toHaveAttribute("open");
+    expect(screen.getByLabelText("添加移动端封面")).toBeInTheDocument();
   });
 
   it("封面上传时在预览区展示加载遮罩", () => {

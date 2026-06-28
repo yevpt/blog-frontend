@@ -84,4 +84,23 @@ describe("useArticleImageUpload", () => {
     expect(onUploaded).not.toHaveBeenCalled();
     expect(addToast).toHaveBeenCalledWith("上传失败", "error");
   });
+
+  it("移动端封面上传成功后回调 URL", async () => {
+    const { result } = renderHook(() => useArticleImageUpload());
+    const onUploaded = vi.fn();
+    const file = new File(["cover"], "mobile.png", { type: "image/png" });
+    const event = {
+      target: { files: [file], value: "mobile.png" },
+    } as unknown as ChangeEvent<HTMLInputElement>;
+
+    await act(async () => {
+      await result.current.handleMobileCoverFileChange(event, onUploaded);
+    });
+
+    expect(apiClient.uploads.tempImage).toHaveBeenCalledWith(file, {
+      dir: "mobile-covers",
+      scene: "article",
+    });
+    expect(onUploaded).toHaveBeenCalledWith("https://cdn.example.com/key.png");
+  });
 });

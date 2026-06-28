@@ -21,8 +21,11 @@ interface CategoryOption {
 
 interface ArticleEditorPublishRailProps {
   coverUrl: string;
+  mobileCoverUrl: string;
   isCoverUploading: boolean;
+  isMobileCoverUploading: boolean;
   coverInputRef: RefObject<HTMLInputElement | null>;
+  mobileCoverInputRef: RefObject<HTMLInputElement | null>;
   categories: CategoryOption[];
   categoryId: number | null;
   selectedTags: ArticleTag[];
@@ -34,7 +37,9 @@ interface ArticleEditorPublishRailProps {
   isRecommended: boolean;
   musicPickerTrigger: ReactNode;
   onCoverFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onMobileCoverFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onRemoveCover: () => void;
+  onRemoveMobileCover: () => void;
   onCategoryChange: (key: string | number | null) => void;
   onTagsChange: (tags: ArticleTag[]) => void;
   onMusicPickerOpenChange: (open: boolean) => void;
@@ -44,7 +49,7 @@ interface ArticleEditorPublishRailProps {
   onIsRecommendedChange: (isRecommended: boolean) => void;
 }
 
-const panelShellClassName = cn("flex flex-col overflow-hidden");
+const panelShellClassName = cn("flex flex-col");
 const sectionPaddingClassName = "px-5";
 const fieldBlockClassName = "grid gap-2.5";
 
@@ -52,8 +57,11 @@ export const ArticleEditorPublishRail = forwardRef<HTMLElement, ArticleEditorPub
   function ArticleEditorPublishRail(
     {
       coverUrl,
+      mobileCoverUrl,
       isCoverUploading,
+      isMobileCoverUploading,
       coverInputRef,
+      mobileCoverInputRef,
       categories,
       categoryId,
       selectedTags,
@@ -65,7 +73,9 @@ export const ArticleEditorPublishRail = forwardRef<HTMLElement, ArticleEditorPub
       isRecommended,
       musicPickerTrigger,
       onCoverFileChange,
+      onMobileCoverFileChange,
       onRemoveCover,
+      onRemoveMobileCover,
       onCategoryChange,
       onTagsChange,
       onMusicPickerOpenChange,
@@ -77,7 +87,10 @@ export const ArticleEditorPublishRail = forwardRef<HTMLElement, ArticleEditorPub
     ref,
   ) {
     return (
-      <aside ref={ref} className="xl:w-[320px] xl:self-start">
+      <aside
+        ref={ref}
+        className="xl:h-full xl:min-h-0 xl:w-[320px] xl:overflow-y-auto xl:overscroll-y-contain"
+      >
         <Card className={panelShellClassName} aria-label="发布配置">
           <div className={cn(sectionPaddingClassName, "pt-5")}>
             <Label className="mb-2.5 text-xs font-medium text-muted-foreground">封面</Label>
@@ -97,6 +110,54 @@ export const ArticleEditorPublishRail = forwardRef<HTMLElement, ArticleEditorPub
               className="sr-only"
               onChange={onCoverFileChange}
             />
+
+            <details className="group mt-4">
+              <summary
+                className={cn(
+                  "flex cursor-pointer list-none items-center justify-between gap-2",
+                  "text-xs font-medium text-muted-foreground",
+                  "[&::-webkit-details-marker]:hidden",
+                )}
+              >
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <SvgIcon
+                    name="chevron-right"
+                    size={14}
+                    className="shrink-0 text-muted-foreground/80 transition-transform group-open:rotate-90"
+                  />
+                  <span>移动端封面</span>
+                  <span className="font-normal text-muted-foreground/80">可选</span>
+                </span>
+                {mobileCoverUrl ? (
+                  <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                    已设置
+                  </span>
+                ) : null}
+              </summary>
+              <div className="mt-2.5">
+                <ArticleCoverPreview
+                  coverUrl={mobileCoverUrl}
+                  isCoverUploading={isMobileCoverUploading}
+                  aspectRatio="9/16"
+                  previewAlt="移动端封面预览"
+                  addLabel="添加移动端封面"
+                  uploadingLabel="移动端封面上传中"
+                  loadingLabel="移动端封面加载中"
+                  onPickCover={() => mobileCoverInputRef.current?.click()}
+                  onRemoveCover={onRemoveMobileCover}
+                />
+                <p className="mt-2.5 text-[11px] leading-relaxed text-muted-foreground">
+                  用于移动端列表与详情展示；未设置时使用上方桌面封面
+                </p>
+                <input
+                  ref={mobileCoverInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={onMobileCoverFileChange}
+                />
+              </div>
+            </details>
           </div>
 
           <div className={cn(sectionPaddingClassName, "flex flex-col gap-6 py-6")}>

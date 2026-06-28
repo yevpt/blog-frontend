@@ -3,6 +3,8 @@ export interface FeaturedPost {
   title: string;
   excerpt: string;
   coverImage: string;
+  /** 移动端专用封面；未设置时移动端回退 coverImage。 */
+  mobileCoverImage?: string;
   category: string;
   date: string;
   href: string;

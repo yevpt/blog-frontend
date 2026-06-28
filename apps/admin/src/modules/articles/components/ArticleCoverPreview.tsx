@@ -16,6 +16,12 @@ interface ArticleCoverPreviewProps {
   isCoverUploading: boolean;
   onPickCover: () => void;
   onRemoveCover: () => void;
+  /** 预览区宽高比，默认 16:9。 */
+  aspectRatio?: "video" | "9/16";
+  previewAlt?: string;
+  addLabel?: string;
+  uploadingLabel?: string;
+  loadingLabel?: string;
 }
 
 function CoverBusyOverlay({ label }: { label: string }) {
@@ -38,6 +44,11 @@ export function ArticleCoverPreview({
   isCoverUploading,
   onPickCover,
   onRemoveCover,
+  aspectRatio = "video",
+  previewAlt = "文章封面预览",
+  addLabel = "添加封面",
+  uploadingLabel = "封面上传中",
+  loadingLabel = "封面加载中",
 }: ArticleCoverPreviewProps) {
   const imgRef = useRef<HTMLImageElement>(null);
   const [isImageLoading, setIsImageLoading] = useState(false);
@@ -66,18 +77,19 @@ export function ArticleCoverPreview({
   }, [coverUrl, markImageLoading, markImageReady]);
 
   const isCoverBusy = isCoverUploading || (!!coverUrl && isImageLoading);
-  const busyLabel = isCoverUploading ? "封面上传中" : "封面加载中";
+  const busyLabel = isCoverUploading ? uploadingLabel : loadingLabel;
+  const aspectClassName = aspectRatio === "9/16" ? "aspect-[9/16]" : "aspect-video";
 
   return (
     <div
       aria-busy={isCoverBusy}
-      className="group relative aspect-video overflow-hidden rounded-lg bg-muted shadow-card"
+      className={cn("relative overflow-hidden rounded-lg bg-muted shadow-card", aspectClassName)}
     >
       {coverUrl ? (
         <img
           ref={imgRef}
           src={coverUrl}
-          alt="文章封面预览"
+          alt={previewAlt}
           onLoad={markImageReady}
           onError={markImageReady}
           className={cn(
@@ -88,7 +100,7 @@ export function ArticleCoverPreview({
       ) : (
         <button
           type="button"
-          aria-label="添加封面"
+          aria-label={addLabel}
           disabled={isCoverUploading}
           onClick={onPickCover}
           className={cn(
@@ -97,17 +109,12 @@ export function ArticleCoverPreview({
           )}
         >
           <SvgIcon name="image" size={20} />
-          <span className="text-xs font-medium">添加封面</span>
+          <span className="text-xs font-medium">{addLabel}</span>
         </button>
       )}
 
       {coverUrl && !isCoverBusy ? (
-        <div
-          className={cn(
-            "absolute inset-x-2 bottom-2 flex justify-end gap-1",
-            "opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100",
-          )}
-        >
+        <div className="absolute inset-x-2 bottom-2 flex justify-end gap-1">
           <Button
             type="button"
             variant="text"

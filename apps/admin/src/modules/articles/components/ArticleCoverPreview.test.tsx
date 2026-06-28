@@ -49,4 +49,19 @@ describe("ArticleCoverPreview", () => {
     expect(screen.getByAltText("文章封面预览")).toHaveClass("opacity-100");
     expect(screen.getByRole("button", { name: "更换" })).toBeInTheDocument();
   });
+
+  it("aspectRatio=9/16 时使用竖版预览比例", () => {
+    const { container } = render(
+      <ArticleCoverPreview
+        coverUrl=""
+        isCoverUploading={false}
+        aspectRatio="9/16"
+        onPickCover={vi.fn()}
+        onRemoveCover={vi.fn()}
+      />,
+    );
+
+    expect(container.firstChild).toHaveClass("aspect-[9/16]");
+    expect(container.firstChild).not.toHaveClass("aspect-video");
+  });
 });

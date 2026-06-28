@@ -8,11 +8,11 @@ function clearMainInlineSize(main: HTMLElement | null) {
   main?.style.removeProperty("min-height");
 }
 
-/** 桌面双栏：主区域高度 = max(顶栏以下可用视口, 右栏自然高度)，避免正文把页面撑高。 */
+/** 桌面双栏：主区域高度锁定为顶栏以下可用视口，右栏内容在栏内滚动。 */
 export function useArticleEditorMainLayout({
   enabled,
   layoutRef,
-  railRef,
+  railRef: _railRef,
   mainRef,
 }: {
   enabled: boolean;
@@ -44,10 +44,8 @@ export function useArticleEditorMainLayout({
         0,
         Math.round(window.innerHeight - layoutTop - topHeight - MAIN_BOTTOM_GAP_PX),
       );
-      const railHeight = Math.round(railRef.current?.getBoundingClientRect().height ?? 0);
-      const mainHeight = Math.max(available, railHeight);
 
-      main.style.height = `${mainHeight}px`;
+      main.style.height = `${available}px`;
       main.style.minHeight = `${available}px`;
     };
 
@@ -57,7 +55,6 @@ export function useArticleEditorMainLayout({
     const topSection = layoutRef.current?.firstElementChild;
     if (topSection) observer.observe(topSection);
     if (layoutRef.current) observer.observe(layoutRef.current);
-    if (railRef.current) observer.observe(railRef.current);
 
     window.addEventListener("resize", update);
     void document.fonts?.ready.then(update);
@@ -67,5 +64,5 @@ export function useArticleEditorMainLayout({
       window.removeEventListener("resize", update);
       clearMainInlineSize(mainRef.current);
     };
-  }, [enabled, layoutRef, mainRef, railRef]);
+  }, [enabled, layoutRef, mainRef]);
 }

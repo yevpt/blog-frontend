@@ -218,6 +218,33 @@ describe("FeaturedCarousel", () => {
     expect(screen.getAllByText("第三篇文章标题").length).toBeGreaterThan(0);
   });
 
+  it("移动端轮播优先使用 mobileCoverImage", () => {
+    const posts: FeaturedPost[] = [
+      {
+        id: "1",
+        title: "第一篇文章标题",
+        excerpt: "摘要",
+        coverImage: "https://example.com/desktop.jpg",
+        mobileCoverImage: "https://example.com/mobile.jpg",
+        category: "编程",
+        date: "2026-01-15",
+        href: "/articles/1",
+      },
+    ];
+
+    render(<FeaturedCarousel posts={posts} />);
+
+    const mobileCarousel = screen.getByTestId("carousel-root");
+    const desktopCarousel = getDesktopCarousel();
+
+    expect(mobileCarousel.querySelector("img")?.getAttribute("src")).toBe(
+      "https://example.com/mobile.jpg",
+    );
+    expect(desktopCarousel.querySelector("img")?.getAttribute("src")).toBe(
+      "https://example.com/desktop.jpg",
+    );
+  });
+
   it("普通轮播封面启用 Next 优化并保持等比裁切配置", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
     const images = screen.getAllByRole("img");

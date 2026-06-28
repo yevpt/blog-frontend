@@ -320,6 +320,7 @@ describe("ArticleEditorPage", () => {
           description: "本机摘要",
           content: "本机正文",
           coverUrl: "",
+          mobileCoverUrl: "",
           categoryId: 1,
           selectedTags: [],
           musicId: null,
@@ -354,6 +355,7 @@ describe("ArticleEditorPage", () => {
           description: "",
           content: "",
           coverUrl: "",
+          mobileCoverUrl: "",
           categoryId: 1,
           selectedTags: [],
           musicId: null,
@@ -429,6 +431,7 @@ describe("ArticleEditorPage", () => {
           description: "",
           content: "",
           coverUrl: "",
+          mobileCoverUrl: "",
           categoryId: 1,
           category_ids: [1],
           articleStatus: 3,
@@ -544,6 +547,39 @@ describe("ArticleEditorPage", () => {
       expect(apiClient.articles.saveAdmin).toHaveBeenCalledWith(
         expect.objectContaining({
           cover_img_url: "https://cdn.example.com/temp/cover.png",
+        }),
+      );
+    });
+  });
+
+  it("移动端封面上传后保存请求包含 mobile_cover_img_url", async () => {
+    const user = userEvent.setup();
+    renderEditorPage("/articles/12/edit");
+
+    await waitFor(() => {
+      expect(screen.getByText("移动端封面")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText("移动端封面"));
+
+    const file = new File(["mobile"], "mobile.png", { type: "image/png" });
+    const inputs = document.querySelectorAll('input[type="file"][accept="image/*"]');
+    const mobileCoverInput = inputs[2] as HTMLInputElement;
+    await user.upload(mobileCoverInput, file);
+
+    await waitFor(() => {
+      expect(apiClient.uploads.tempImage).toHaveBeenCalledWith(file, {
+        dir: "mobile-covers",
+        scene: "article",
+      });
+    });
+
+    await user.click(screen.getAllByRole("button", { name: "保存" })[0]);
+
+    await waitFor(() => {
+      expect(apiClient.articles.saveAdmin).toHaveBeenCalledWith(
+        expect.objectContaining({
+          mobile_cover_img_url: "https://cdn.example.com/temp/cover.png",
         }),
       );
     });

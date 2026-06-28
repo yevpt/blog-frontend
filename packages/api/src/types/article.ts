@@ -41,6 +41,7 @@ export interface ArticleListItemResp {
   id: number;
   title: string;
   cover_img_url?: string;
+  mobile_cover_img_url?: string;
   short_content?: string;
   user_id: number;
   status: number;
@@ -92,6 +93,7 @@ export interface ArticleDetailResp {
   id: number;
   title: string;
   cover_img_url?: string;
+  mobile_cover_img_url?: string;
   content: string;
   short_content?: string;
   user_id: number;
@@ -130,6 +132,7 @@ export interface ArticleSaveReq {
   id?: number;
   title: string;
   cover_img_url?: string;
+  mobile_cover_img_url?: string;
   short_content?: string;
   content: string;
   /** 0 隐藏，1 公开，2 加密，3 草稿 */

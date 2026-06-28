@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button, Carousel } from "@repo/ui";
 import type { FeaturedPost } from "@/app/_mock/types";
+import { resolveFeaturedPostForViewport } from "@/lib/article-cover";
 import { FeaturedCarouselSlide } from "./featured-carousel-slide";
 
 // Derive CarouselApi type from Carousel.Root props to avoid a direct embla dependency.
@@ -99,6 +100,7 @@ function FeaturedCarouselDesktop({ posts }: { posts: FeaturedPost[] }) {
 // 移动端：Embla 水平轮播
 // ────────────────────────────────────────────────
 function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
+  const mobilePosts = posts.map((post) => resolveFeaturedPostForViewport(post, "mobile"));
   const [api, setApi] = useState<CarouselApi | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -195,7 +197,7 @@ function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
     >
       <div className="relative h-full w-full">
         <Carousel.Content className="h-full">
-          {posts.map((post, index) => (
+          {mobilePosts.map((post, index) => (
             <Carousel.Item key={post.id} className="h-full">
               <FeaturedCarouselSlide post={post} isActive={index === currentIndex} />
             </Carousel.Item>

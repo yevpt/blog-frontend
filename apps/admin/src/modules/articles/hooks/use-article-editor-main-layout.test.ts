@@ -82,7 +82,7 @@ describe("useArticleEditorMainLayout", () => {
     expect(main.style.minHeight).toBe("724px");
   });
 
-  it("右栏高于可用视口时，主区域跟随右栏高度以触发页面滚动", () => {
+  it("右栏高于可用视口时，主区域仍锁定在可用视口高度", () => {
     mockRect(rail, 900, 152);
 
     renderHook(() =>
@@ -94,7 +94,7 @@ describe("useArticleEditorMainLayout", () => {
       }),
     );
 
-    expect(main.style.height).toBe("900px");
+    expect(main.style.height).toBe("724px");
     expect(main.style.minHeight).toBe("724px");
   });
 

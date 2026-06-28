@@ -14,6 +14,7 @@ import { ArticleSection } from "@/components/articles";
 import { MomentsSection } from "@/components/moments";
 import { RecentVisitors, TagsCloud } from "@/components/sidebar";
 import { PageContainer } from "@/components/common/page-container";
+import { resolveArticleCoverUrl } from "@/lib/article-cover";
 
 export const metadata: Metadata = {
   title: "首页 | Yevpt's Blog",
@@ -34,13 +35,17 @@ const EMPTY_USERS: UserPageResp = { total: 0, pages: 0, page: 1, page_size: 9, l
 const EMPTY_TAGS: TagListResp = { list: [] };
 
 function toFeaturedPost(article: ArticleListItemResp): FeaturedPost | null {
-  if (!article.cover_img_url) return null;
+  const coverImage = resolveArticleCoverUrl(article, "desktop");
+  if (!coverImage) return null;
+
+  const mobileCoverImage = article.mobile_cover_img_url?.trim() || undefined;
 
   return {
     id: String(article.id),
     title: article.title,
     excerpt: article.short_content ?? "",
-    coverImage: article.cover_img_url,
+    coverImage,
+    ...(mobileCoverImage ? { mobileCoverImage } : {}),
     category: article.category?.name ?? "未分类",
     date: article.created_at,
     href: `/articles/${article.id}`,

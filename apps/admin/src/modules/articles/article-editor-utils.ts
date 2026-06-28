@@ -85,6 +85,7 @@ export function mapDetailToFormState(detail: AdminArticleDetailResp) {
     description: detail.short_content ?? "",
     content: detail.content,
     coverUrl: detail.cover_img_url ?? "",
+    mobileCoverUrl: detail.mobile_cover_img_url ?? "",
     categoryId,
     selectedTags,
     musicId,
@@ -101,6 +102,7 @@ interface BuildSaveReqInput {
   description: string;
   content: string;
   coverUrl: string;
+  mobileCoverUrl: string;
   categoryId: number | null;
   selectedTags: ArticleTag[];
   musicId: number | null;
@@ -119,6 +121,7 @@ export function buildArticleSaveReq(input: BuildSaveReqInput): ArticleSaveReq {
     ...(input.articleId !== undefined ? { id: input.articleId } : {}),
     title: input.title.trim(),
     cover_img_url: input.coverUrl.trim() || undefined,
+    mobile_cover_img_url: input.mobileCoverUrl.trim() || undefined,
     short_content: input.description.trim() || undefined,
     content: input.content,
     status: input.targetStatus,

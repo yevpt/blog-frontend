@@ -22,6 +22,7 @@ const baseState: ArticleEditorAutosaveFormState = {
   description: "",
   content: "",
   coverUrl: "",
+  mobileCoverUrl: "",
   categoryId: 1,
   selectedTags: [],
   musicId: null,

@@ -12,6 +12,7 @@ export interface ArticleEditorAutosaveFormState {
   description: string;
   content: string;
   coverUrl: string;
+  mobileCoverUrl: string;
   categoryId: number | null;
   selectedTags: ArticleTag[];
   musicId: number | null;
@@ -93,6 +94,7 @@ function parseForm(value: unknown): ArticleEditorAutosaveFormState | null {
     description: value.description,
     content: value.content,
     coverUrl: value.coverUrl,
+    mobileCoverUrl: typeof value.mobileCoverUrl === "string" ? value.mobileCoverUrl : "",
     categoryId,
     selectedTags,
     musicId,
@@ -191,6 +193,7 @@ function isMeaningfulDraft(value: ArticleEditorAutosaveFormState) {
     value.description.trim() !== "" ||
     value.content.trim() !== "" ||
     value.coverUrl.trim() !== "" ||
+    value.mobileCoverUrl.trim() !== "" ||
     value.selectedTags.length > 0 ||
     value.musicId !== null
   );
@@ -216,6 +219,7 @@ function areFormsEqual(
     left.description === right.description &&
     left.content === right.content &&
     left.coverUrl === right.coverUrl &&
+    left.mobileCoverUrl === right.mobileCoverUrl &&
     left.categoryId === right.categoryId &&
     left.musicId === right.musicId &&
     left.articleStatus === right.articleStatus &&

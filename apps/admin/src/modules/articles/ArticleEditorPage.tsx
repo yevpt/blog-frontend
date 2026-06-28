@@ -60,10 +60,13 @@ export function ArticleEditorPage() {
   } = useArticleEditorDetail(articleId);
   const {
     coverInputRef,
+    mobileCoverInputRef,
     contentImageInputRef,
     isCoverUploading,
+    isMobileCoverUploading,
     isContentImageUploading,
     handleCoverFileChange,
+    handleMobileCoverFileChange,
     handleInsertImageRequest,
     handleContentImageFileChange,
   } = useArticleImageUpload();
@@ -72,6 +75,7 @@ export function ArticleEditorPage() {
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
   const [coverUrl, setCoverUrl] = useState("");
+  const [mobileCoverUrl, setMobileCoverUrl] = useState("");
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [selectedTags, setSelectedTags] = useState<ArticleTag[]>([]);
   const [musicId, setMusicId] = useState<number | null>(null);
@@ -101,6 +105,7 @@ export function ArticleEditorPage() {
     setDescription(form.description);
     setContent(form.content);
     setCoverUrl(form.coverUrl);
+    setMobileCoverUrl(form.mobileCoverUrl);
     setCategoryId(form.categoryId);
     setSelectedTags(form.selectedTags);
     setMusicId(form.musicId);
@@ -153,6 +158,7 @@ export function ArticleEditorPage() {
       description,
       content,
       coverUrl,
+      mobileCoverUrl,
       categoryId,
       selectedTags,
       musicId,
@@ -165,6 +171,7 @@ export function ArticleEditorPage() {
       description,
       content,
       coverUrl,
+      mobileCoverUrl,
       categoryId,
       selectedTags,
       musicId,
@@ -179,6 +186,7 @@ export function ArticleEditorPage() {
     setDescription(form.description);
     setContent(form.content);
     setCoverUrl(form.coverUrl);
+    setMobileCoverUrl(form.mobileCoverUrl);
     setCategoryId(form.categoryId);
     setSelectedTags(form.selectedTags);
     setMusicId(form.musicId);
@@ -250,6 +258,7 @@ export function ArticleEditorPage() {
         description,
         content,
         coverUrl,
+        mobileCoverUrl,
         categoryId,
         selectedTags,
         musicId,
@@ -402,8 +411,11 @@ export function ArticleEditorPage() {
         <ArticleEditorPublishRail
           ref={railRef}
           coverUrl={coverUrl}
+          mobileCoverUrl={mobileCoverUrl}
           isCoverUploading={isCoverUploading}
+          isMobileCoverUploading={isMobileCoverUploading}
           coverInputRef={coverInputRef}
+          mobileCoverInputRef={mobileCoverInputRef}
           categories={categories}
           categoryId={categoryId}
           selectedTags={selectedTags}
@@ -415,7 +427,11 @@ export function ArticleEditorPage() {
           isRecommended={isRecommended}
           musicPickerTrigger={musicPickerPopover}
           onCoverFileChange={(event) => void handleCoverFileChange(event, setCoverUrl)}
+          onMobileCoverFileChange={(event) =>
+            void handleMobileCoverFileChange(event, setMobileCoverUrl)
+          }
           onRemoveCover={() => setCoverUrl("")}
+          onRemoveMobileCover={() => setMobileCoverUrl("")}
           onCategoryChange={handleCategoryChange}
           onTagsChange={setSelectedTags}
           onMusicPickerOpenChange={handleMusicPickerOpenChange}
