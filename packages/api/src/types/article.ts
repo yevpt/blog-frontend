@@ -132,8 +132,8 @@ export interface ArticleSaveReq {
   cover_img_url?: string;
   short_content?: string;
   content: string;
-  /** 0 隐藏，1 公开，2 加密 */
-  status: 0 | 1 | 2;
+  /** 0 隐藏，1 公开，2 加密，3 草稿 */
+  status: 0 | 1 | 2 | 3;
   /** 0 关闭，1 开启 */
   comment_status: 0 | 1;
   password?: string;
