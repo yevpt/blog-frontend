@@ -11,12 +11,23 @@ vi.mock("next/image", () => ({
     alt,
     className,
     sizes,
+    priority,
   }: {
     src: string;
     alt: string;
     className?: string;
     sizes?: string;
-  }) => <img src={src} alt={alt} className={className} sizes={sizes} />,
+    priority?: boolean;
+  }) => (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      sizes={sizes}
+      loading={priority ? "eager" : "lazy"}
+      data-priority={priority ?? false}
+    />
+  ),
 }));
 
 const deferredMediaMock = vi.hoisted(() => ({
@@ -86,6 +97,13 @@ describe("ArticleHero", () => {
   it("封面 fill 图片带响应式 sizes，避免 Next Image 告警", () => {
     render(<ArticleHero article={{ ...base, cover_img_url: "https://example.com/img.jpg" }} />);
     expect(screen.getByRole("img")).toHaveAttribute("sizes", "(max-width: 768px) 100vw, 720px");
+  });
+
+  it("首屏封面以 priority 立即 eager 加载，避免 LCP 告警", () => {
+    render(<ArticleHero article={{ ...base, cover_img_url: "https://example.com/img.jpg" }} />);
+    const img = screen.getByRole("img");
+    expect(img).toHaveAttribute("data-priority", "true");
+    expect(img).toHaveAttribute("loading", "eager");
   });
 
   it("显示分类标签", () => {

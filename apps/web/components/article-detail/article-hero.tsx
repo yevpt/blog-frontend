@@ -45,6 +45,8 @@ export function ArticleHero({ article }: ArticleHeroProps) {
             src={article.cover_img_url}
             alt={article.title}
             fill
+            priority
+            defer={false}
             className="object-cover object-center"
             fallbackUnoptimized
             sizes="(max-width: 768px) 100vw, 720px"
