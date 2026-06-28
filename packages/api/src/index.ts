@@ -34,6 +34,9 @@ export type {
   AdminArticleDetailResp,
   ArticleSaveReq,
   ArticleTagSaveReq,
+  AdminRecommendItemResp,
+  AdminRecommendListResp,
+  AdminRecommendOrderReq,
 } from "./types/article";
 export type {
   CategoryArticlesReq,

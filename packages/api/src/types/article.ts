@@ -152,3 +152,22 @@ export interface ArticleSaveReq {
 export interface AdminArticleDetailResp extends ArticleDetailResp {
   deleted_at?: string;
 }
+
+/** 管理端推荐文章排序项 */
+export interface AdminRecommendItemResp {
+  id: number;
+  title: string;
+  cover_img_url?: string;
+  status: number;
+  recommend_seq: number;
+}
+
+/** 管理端推荐文章列表响应 */
+export interface AdminRecommendListResp {
+  list: AdminRecommendItemResp[];
+}
+
+/** 管理端批量更新推荐排序请求 */
+export interface AdminRecommendOrderReq {
+  article_ids: number[];
+}

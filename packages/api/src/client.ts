@@ -14,6 +14,8 @@ import type {
 import type {
   AdminArticleDetailResp,
   AdminArticlePageResp,
+  AdminRecommendListResp,
+  AdminRecommendOrderReq,
   ArticleDetailResp,
   ArticleLikeResp,
   ArticleListReq,
@@ -342,6 +344,15 @@ export function createApiClient(config: ApiClientConfig) {
       saveAdmin: (req: ArticleSaveReq) =>
         fetchAuthed<ArticleDetailResp>("/admin/articles", {
           method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 查询推荐文章排序列表，需管理员登录 */
+      listRecommendedAdmin: () =>
+        fetchAuthed<AdminRecommendListResp>("/admin/articles/recommendations", { method: "GET" }),
+      /** 批量更新推荐文章排序，需管理员登录 */
+      reorderRecommendedAdmin: (req: AdminRecommendOrderReq) =>
+        fetchAuthed<null>("/admin/articles/recommendations/order", {
+          method: "PUT",
           body: JSON.stringify(req),
         }),
     },

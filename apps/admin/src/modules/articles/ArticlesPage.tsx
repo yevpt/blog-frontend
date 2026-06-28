@@ -21,6 +21,7 @@ import { ArticleDeleteButton } from "./components/ArticleDeleteButton";
 import { ArticleListToolbar } from "./components/ArticleListToolbar";
 import { ArticleMobileList } from "./components/ArticleMobileList";
 import { ArticleStatusBadge } from "./components/ArticleStatusBadge";
+import { RecommendSortDialog } from "./components/RecommendSortDialog";
 import { useAdminArticleFilterOptions } from "./hooks/use-article-filter-options";
 import { useAdminArticleList } from "./hooks/use-article-list";
 import { apiClient } from "../../lib/api";
@@ -64,6 +65,7 @@ export function ArticlesPage() {
   } = useAdminArticleFilterOptions();
   const isMdScreen = useIsMdScreen();
   const [deletingArticleId, setDeletingArticleId] = useState<string | null>(null);
+  const [recommendSortOpen, setRecommendSortOpen] = useState(false);
 
   const handleDeleteArticle = useCallback(
     async (articleId: string) => {
@@ -244,11 +246,31 @@ export function ArticlesPage() {
         title="文章管理"
         description="集中查看文章、按表头筛选排序，并从标题直接进入编辑页面。"
         action={
-          <Button href="/articles/new" size="sm" className="w-full shrink-0 sm:w-auto">
-            <SvgIcon name="plus" size={15} />
-            新建文章
-          </Button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full shrink-0 sm:w-auto"
+              onPress={() => setRecommendSortOpen(true)}
+            >
+              <SvgIcon name="arrow-up" size={15} />
+              推荐排序
+            </Button>
+            <Button href="/articles/new" size="sm" className="w-full shrink-0 sm:w-auto">
+              <SvgIcon name="plus" size={15} />
+              新建文章
+            </Button>
+          </div>
         }
+      />
+
+      <RecommendSortDialog
+        open={recommendSortOpen}
+        onClose={() => setRecommendSortOpen(false)}
+        onSaved={() => {
+          addToast("推荐排序已保存", "success");
+          void refetch();
+        }}
       />
 
       <section className="flex min-h-0 flex-col" aria-label="文章列表">
