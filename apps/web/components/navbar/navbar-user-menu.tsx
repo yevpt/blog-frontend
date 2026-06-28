@@ -204,6 +204,7 @@ export function NavbarUserMenu({ isGlass = false, unreadCount = 0 }: NavbarUserM
           userId={userId ?? profile?.id}
           name={displayName || "?"}
           size="md"
+          loadingEager
         />
         {unreadCount > 0 && (
           <span
