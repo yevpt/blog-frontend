@@ -1,6 +1,9 @@
 import optimizedImageHosts from "@/config/optimized-image-hosts.json";
+import { buildCdnImageUrl, isGifImageUrl } from "./blog-image-url";
 
 export type MarkdownImageVariant = "article" | "comment";
+
+export { isGifImageUrl };
 
 const ALLOWED_HOSTS = new Set<string>(optimizedImageHosts);
 const WIDTHS: Record<MarkdownImageVariant, readonly number[]> = {
@@ -12,14 +15,6 @@ const SIZES: Record<MarkdownImageVariant, string> = {
   comment: "(max-width: 280px) calc(100vw - 40px), 240px",
 };
 
-export function isGifImageUrl(src: string): boolean {
-  try {
-    return new URL(src, "https://local.invalid").pathname.toLowerCase().endsWith(".gif");
-  } catch {
-    return false;
-  }
-}
-
 function isOptimizableRemoteImage(src: string): boolean {
   try {
     const url = new URL(src);
@@ -29,8 +24,8 @@ function isOptimizableRemoteImage(src: string): boolean {
   }
 }
 
-function nextImageUrl(src: string, width: number): string {
-  return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=75`;
+function cdnImageUrl(src: string, width: number): string {
+  return buildCdnImageUrl(src, width, 75);
 }
 
 const HTML_ENTITY_PATTERN = /&(?:#(\d+)|#x([\da-f]+)|(amp|quot|apos|lt|gt));/gi;
@@ -76,9 +71,9 @@ export function optimizeMarkdownImages(html: string, variant: MarkdownImageVaria
 
     const widths = WIDTHS[variant];
     const sourceSet = widths
-      .map((width) => `${nextImageUrl(originalSrc, width)} ${width}w`)
+      .map((width) => `${cdnImageUrl(originalSrc, width)} ${width}w`)
       .join(", ");
-    let optimizedTag = setHtmlAttribute(tag, "src", nextImageUrl(originalSrc, widths.at(-1)!));
+    let optimizedTag = setHtmlAttribute(tag, "src", cdnImageUrl(originalSrc, widths.at(-1)!));
     optimizedTag = setHtmlAttribute(optimizedTag, "srcset", sourceSet);
     optimizedTag = setHtmlAttribute(optimizedTag, "sizes", SIZES[variant]);
     optimizedTag = setHtmlAttribute(optimizedTag, "loading", "lazy");

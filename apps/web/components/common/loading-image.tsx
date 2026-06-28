@@ -7,6 +7,7 @@ import {
   shouldDeferRemoteMediaSrc,
   useImageLoadPlaceholder,
 } from "@repo/hooks";
+import { stripTransformParams } from "@/lib/blog-image-url";
 import { SvgIcon } from "@repo/icons";
 import { cn } from "@repo/ui";
 
@@ -17,16 +18,15 @@ function resolveSrcString(src: ImageProps["src"]): string | undefined {
   return undefined;
 }
 
-/** /_next/image 首次拉 OSS 易超时，失败后间隔重试次数（不含首次） */
+/** CDN 变换图首次加载易失败，失败后间隔重试次数（不含首次） */
 const OPTIMIZER_MAX_RETRIES = 3;
-/** 重试间隔：给 OSS / 优化器留出恢复时间 */
 const OPTIMIZER_RETRY_DELAY_MS = 1500;
 
 interface LoadingImageProps extends Omit<ImageProps, "className" | "onLoad" | "onError"> {
   className?: string;
   skeletonClassName?: string;
   fallbackClassName?: string;
-  /** 优化器多次重试仍失败时回退为 unoptimized 直连原图 */
+  /** 变换 URL 多次重试仍失败时回退为无 w/q 的原图直连 */
   fallbackUnoptimized?: boolean;
   /** 首屏仅骨架，页面就绪后再挂载图片（data:/blob: 与 defer=false 立即加载） */
   defer?: boolean;
@@ -96,6 +96,9 @@ export function LoadingImage({
   const isLoading = status === "loading";
   const isError = status === "error";
   const unoptimized = unoptimizedProp || useUnoptimizedFallback;
+  const resolvedSrc = resolveSrcString(src);
+  const displaySrc =
+    useUnoptimizedFallback && resolvedSrc ? stripTransformParams(resolvedSrc) : src;
   const placeholder = useImageLoadPlaceholder(isLoading);
 
   const scheduleOptimizerRetry = useCallback(() => {
@@ -214,7 +217,7 @@ export function LoadingImage({
       <Image
         {...props}
         fill={fill}
-        src={src}
+        src={displaySrc}
         key={unoptimized ? "unoptimized" : `optimized-${retryAttempt}`}
         ref={assignImageRef}
         priority={priority}

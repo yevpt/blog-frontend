@@ -10,7 +10,7 @@ function parseImage(html: string): HTMLImageElement {
 }
 
 describe("optimizeMarkdownImages", () => {
-  it("为白名单静态图生成 Next 响应式地址并保存原图", () => {
+  it("为白名单静态图生成 CDN 响应式地址并保存原图", () => {
     const original = "https://blog-oss.yevpt.com/posts/cover.jpg?x=1&y=2";
     const image = parseImage(
       optimizeMarkdownImages(
@@ -21,7 +21,8 @@ describe("optimizeMarkdownImages", () => {
 
     expect(image.dataset.originalSrc).toBe(original);
     expect(image.dataset.mdImageOptimized).toBe("true");
-    expect(image.getAttribute("src")).toContain("/_next/image?url=");
+    expect(image.getAttribute("src")).toContain("w=1080");
+    expect(image.getAttribute("src")).not.toContain("/_next/image");
     expect(image.getAttribute("srcset")).toContain("640w");
     expect(image.getAttribute("sizes")).toContain("768px");
     expect(image.getAttribute("loading")).toBe("lazy");
