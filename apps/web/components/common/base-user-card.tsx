@@ -6,11 +6,15 @@ import { useMemo } from "react";
 import { useHydrated, usePresence } from "@repo/hooks";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { isAdminUser, isVipUser } from "@/lib/user-roles";
+import { userAvatarRoleRingClass } from "@/lib/user-avatar-role-ring";
 import {
   resolvePresenceDisplay,
   resolvePresenceFromSubscription,
   toPresenceRecordSeed,
 } from "@/lib/user-presence";
+
+/** normal 模式 xl 头像 + ring-2 ring-offset-1 的视觉占位，固定槽位避免角色切换引发布局偏移 */
+const NORMAL_AVATAR_SLOT_CLASS = "flex h-14 w-14 shrink-0 items-center justify-center";
 
 export interface BaseUserCardProps {
   user: {
@@ -23,7 +27,7 @@ export interface BaseUserCardProps {
     roles?: string[] | null;
   };
   variant?: "normal" | "compact";
-  /** 是否在昵称下显示 Admin/VIP 文字标签；网格场景建议关闭，改由头像标识 */
+  /** 是否在昵称下显示 Admin/VIP 文字标签；网格场景建议关闭，改由头像外圈标识 */
   showRoleLabel?: boolean;
   animationDelay?: string;
   animateEnter?: boolean;
@@ -90,24 +94,17 @@ export function BaseUserCard({
       )}
       style={{ animationDelay }}
     >
-      {/* 头像 + 正常模式的在线指示 */}
-      <div className="relative">
+      {/* 头像 + 正常模式的在线指示；固定槽位预留 ring-offset 空间，普通用户用透明 ring 对齐 */}
+      <div className={cn("relative", !isCompact && NORMAL_AVATAR_SLOT_CLASS)}>
         <UserAvatar
           src={user.avatar_url || undefined}
           userId={user.id}
           name={user.nickname || "U"}
           size="xl"
-          isVip={isVip}
           defer={deferAvatar}
           priority={priorityAvatar}
           loadingEager={loadingEager}
-          className={cn(
-            !isCompact && isAdmin
-              ? "ring-2 ring-inset ring-primary/70"
-              : !isCompact && isVip
-                ? "ring-2 ring-inset ring-amber-400/70"
-                : "",
-          )}
+          className={userAvatarRoleRingClass(isAdmin, isVip, !isCompact)}
         />
         {!isCompact && presence?.kind === "online" && (
           <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background bg-emerald-500" />

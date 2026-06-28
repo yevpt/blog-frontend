@@ -85,14 +85,18 @@ describe("UserInfoHeader", () => {
     expect(screen.getByText("VIP")).toBeInTheDocument();
   });
 
-  it("VIP 非编辑模式头像显示皇冠", () => {
+  it("VIP 非编辑模式头像显示琥珀色外圈", () => {
     render(<UserInfoHeader {...baseProps} roles={["ROLE_VIP"]} isEditMode={false} />);
-    expect(screen.getByTestId("icon-vip")).toBeInTheDocument();
+    const img = screen.getByRole("img", { name: "TestUser" });
+    const outer = img.parentElement?.parentElement;
+    expect(outer?.className).toContain("ring-amber-400/70");
   });
 
-  it("VIP 编辑模式头像不显示皇冠", () => {
+  it("编辑模式头像不显示角色外圈，避免与编辑描边叠加", () => {
     render(<UserInfoHeader {...baseProps} roles={["ROLE_VIP"]} isOwner isEditMode />);
-    expect(screen.queryByTestId("icon-vip")).not.toBeInTheDocument();
+    const img = screen.getByRole("img", { name: "TestUser" });
+    const outer = img.parentElement?.parentElement;
+    expect(outer?.className).not.toContain("ring-amber-400/70");
   });
 
   it("点击铅笔图标进入昵称编辑态", async () => {

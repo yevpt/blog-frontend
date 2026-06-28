@@ -6,7 +6,6 @@ import { Button, Popover, PopoverDialog, PopoverTrigger, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import { markdownToHtmlSync } from "@repo/markdown";
 import { UserAvatar } from "@/components/common/user-avatar";
-import { isVipUser } from "@/lib/user-roles";
 import { PreviewableMarkdown } from "@/components/common/previewable-markdown";
 import { formatDateTime } from "@/lib/format-time";
 
@@ -187,13 +186,7 @@ export const ThreadCommentHeader = memo(function ThreadCommentHeader({
   const time = formatDateTime(createdAt);
 
   const avatar = (
-    <UserAvatar
-      src={user?.avatar_url}
-      userId={user?.id}
-      name={displayName}
-      size="ml"
-      isVip={isVipUser(user?.roles)}
-    />
+    <UserAvatar src={user?.avatar_url} userId={user?.id} name={displayName} size="ml" />
   );
 
   return (
@@ -285,13 +278,7 @@ export const ThreadReplyItem = memo(function ThreadReplyItem({
   const time = formatDateTime(createdAt);
 
   const avatar = (
-    <UserAvatar
-      src={user?.avatar_url}
-      userId={user?.id}
-      name={displayName}
-      size="ml"
-      isVip={isVipUser(user?.roles)}
-    />
+    <UserAvatar src={user?.avatar_url} userId={user?.id} name={displayName} size="ml" />
   );
 
   return (

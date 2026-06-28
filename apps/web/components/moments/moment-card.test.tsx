@@ -269,22 +269,6 @@ describe("MomentCard", () => {
     expect(screen.queryByText("博主")).toBeNull();
   });
 
-  it("VIP 作者头像显示皇冠", () => {
-    render(
-      <MomentCard
-        moment={makeMoment({
-          user: {
-            id: 1,
-            username: "vipuser",
-            nickname: "VIP用户",
-            roles: ["vip"],
-          },
-        })}
-      />,
-    );
-    expect(screen.getByTestId("icon-vip")).toBeInTheDocument();
-  });
-
   it("标签显示在昵称下方第二行", () => {
     render(<MomentCard moment={makeMoment()} />);
     // 昵称在第一行，标签（mark）在第二行

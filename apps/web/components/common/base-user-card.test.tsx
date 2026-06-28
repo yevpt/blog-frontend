@@ -17,8 +17,8 @@ vi.mock("next/link", () => ({
 }));
 
 vi.mock("@/components/common/user-avatar", () => ({
-  UserAvatar: ({ isVip }: { isVip?: boolean }) => (
-    <div data-testid="user-avatar">{isVip ? <span data-testid="icon-vip" /> : null}</div>
+  UserAvatar: ({ className }: { className?: string }) => (
+    <div data-testid="user-avatar" data-class={className ?? ""} />
   ),
 }));
 
@@ -59,9 +59,24 @@ describe("BaseUserCard", () => {
     expect(screen.queryByText("VIP")).not.toBeInTheDocument();
   });
 
-  it("VIP 用户头像显示皇冠", () => {
-    render(<BaseUserCard user={{ ...mockUser, roles: ["ROLE_VIP"] }} variant="normal" />);
-    expect(screen.getByTestId("icon-vip")).toBeInTheDocument();
+  it("normal 模式 Admin 头像使用外圈 ring-offset 标识", () => {
+    render(
+      <BaseUserCard
+        user={{ ...mockUser, roles: ["ROLE_ADMIN"] }}
+        variant="normal"
+        showRoleLabel={false}
+      />,
+    );
+    const avatarClass = screen.getByTestId("user-avatar").getAttribute("data-class") ?? "";
+    expect(avatarClass).toContain("ring-offset-1");
+    expect(avatarClass).toContain("ring-primary/70");
+  });
+
+  it("normal 模式普通用户保留透明 ring 占位避免 CLS", () => {
+    render(<BaseUserCard user={mockUser} variant="normal" showRoleLabel={false} />);
+    const avatarClass = screen.getByTestId("user-avatar").getAttribute("data-class") ?? "";
+    expect(avatarClass).toContain("ring-offset-1");
+    expect(avatarClass).toContain("ring-transparent");
   });
 
   it("showRoleLabel=false 时不显示文字标签", () => {

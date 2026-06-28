@@ -9,7 +9,7 @@ export function CircleUserCardSkeleton() {
       data-testid="circle-user-card-skeleton"
       aria-hidden="true"
     >
-      <div className="relative">
+      <div className="relative flex h-14 w-14 shrink-0 items-center justify-center">
         <div className="h-12 w-12 shrink-0 rounded-full moment-shimmer-bar" />
       </div>
       <div className="flex w-full flex-col items-center gap-0.5">

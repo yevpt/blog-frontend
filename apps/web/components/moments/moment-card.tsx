@@ -8,7 +8,6 @@ import { SvgIcon } from "@repo/icons";
 import { Badge, Button, Card, CardContent, Dropdown, Modal } from "@repo/ui";
 import { useSession } from "@/app/providers/session-provider";
 import { UserAvatar } from "@/components/common/user-avatar";
-import { isVipUser } from "@/lib/user-roles";
 import { useImageViewer } from "@/store/use-image-viewer";
 import { MomentContent } from "./moment-content";
 import { RelativeTime } from "@/components/common/relative-time";
@@ -97,7 +96,6 @@ export function MomentCard({
             userId={moment.user?.id}
             name={authorName}
             size="lg"
-            isVip={isVipUser(moment.user?.roles)}
             className="shadow-[0_2px_8px_rgba(124,58,237,0.2)]"
           />
         </Link>

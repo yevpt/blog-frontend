@@ -1,6 +1,6 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { UserAvatar } from "./user-avatar";
+import { UserAvatar, resetLoadedAvatarSrcCacheForTests } from "./user-avatar";
 import { resolveInactiveMockAvatarUrl } from "@/lib/preset-avatar";
 
 const deferredMediaMock = vi.hoisted(() => ({
@@ -93,6 +93,7 @@ vi.mock("next/image", async () => {
 describe("UserAvatar", () => {
   beforeEach(() => {
     imageMockState.completeOnMount = false;
+    resetLoadedAvatarSrcCacheForTests();
     vi.mocked(useDeferredMediaActivation).mockReturnValue(true);
   });
 
@@ -190,6 +191,27 @@ describe("UserAvatar", () => {
     expect(screen.getByTestId("user-avatar-placeholder")).toHaveClass("opacity-0");
   });
 
+  it("同一 src remount 且图片未缓存完成时强制 eager 并在 load 后恢复", async () => {
+    const { unmount } = render(<UserAvatar src="https://example.com/sticky.jpg" name="Alice" />);
+
+    fireEvent.load(screen.getByRole("img", { name: "Alice" }));
+    expect(screen.getByRole("img", { name: "Alice" })).toHaveClass("opacity-100");
+
+    imageMockState.completeOnMount = false;
+    unmount();
+    render(<UserAvatar src="https://example.com/sticky.jpg" name="Alice" />);
+
+    const img = screen.getByRole("img", { name: "Alice" });
+    expect(img).toHaveAttribute("data-loading", "lazy");
+    expect(img).toHaveClass("opacity-0");
+
+    fireEvent.load(img);
+
+    await waitFor(() => {
+      expect(img).toHaveClass("opacity-100");
+    });
+  });
+
   it("同一 userId 的 mock 头像保持稳定", () => {
     const first = render(<UserAvatar userId={99} name="A" />);
     const firstSrc = screen.getByRole("img").getAttribute("src");
@@ -236,15 +258,5 @@ describe("UserAvatar", () => {
     const { container } = render(<UserAvatar name="D" size="ml" />);
     expect(container.firstChild).toHaveClass("h-[30px]");
     expect(container.firstChild).toHaveClass("w-[30px]");
-  });
-
-  it("isVip 时在头像左上角显示 VIP 皇冠", () => {
-    render(<UserAvatar name="VipUser" isVip />);
-    expect(screen.getByTestId("icon-vip")).toBeInTheDocument();
-  });
-
-  it("非 VIP 时不显示皇冠", () => {
-    render(<UserAvatar name="Regular" />);
-    expect(screen.queryByTestId("icon-vip")).not.toBeInTheDocument();
   });
 });

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDeferredMediaActivation, shouldDeferRemoteMediaSrc } from "@repo/hooks";
 import { cn } from "@repo/ui";
-import { SvgIcon } from "@repo/icons";
 import Image from "next/image";
 import {
   isLocalFallbackAvatarUrl,
@@ -31,17 +30,6 @@ const SIZE_PX: Record<keyof typeof SIZE, number> = {
   "2xl": 64,
 };
 
-/** VIP 皇冠尺寸与位置，约为头像 1/3，左上角倾斜 */
-const VIP_BADGE: Record<keyof typeof SIZE, { position: string; iconSize: number }> = {
-  xs: { position: "-left-0.5 -top-1", iconSize: 8 },
-  sm: { position: "-left-0.5 -top-1", iconSize: 9 },
-  md: { position: "-left-1 -top-1.5", iconSize: 10 },
-  ml: { position: "-left-1 -top-1.5", iconSize: 11 },
-  lg: { position: "-left-1 -top-2", iconSize: 13 },
-  xl: { position: "-left-1.5 -top-2.5", iconSize: 17 },
-  "2xl": { position: "-left-2 -top-3", iconSize: 22 },
-};
-
 interface UserAvatarProps {
   src?: string;
   name: string;
@@ -49,8 +37,6 @@ interface UserAvatarProps {
   userId?: string | number;
   size?: keyof typeof SIZE;
   className?: string;
-  /** 是否在头像左上角显示 VIP 皇冠 */
-  isVip?: boolean;
   /** 首屏仅骨架，页面就绪后再加载（data:/blob: 与 defer=false 立即加载） */
   defer?: boolean;
   /** 首屏 LCP 头像设 true 启用 priority + eager（跳过骨架延迟与 lazy） */
@@ -73,18 +59,6 @@ function isAvatarImageUrl(url: string): boolean {
   }
 }
 
-function VipBadge({ size }: { size: keyof typeof SIZE }) {
-  const { position, iconSize } = VIP_BADGE[size];
-  return (
-    <SvgIcon
-      name="vip"
-      size={iconSize}
-      aria-hidden
-      className={cn("pointer-events-none absolute z-10 -rotate-[35deg]", position)}
-    />
-  );
-}
-
 function normalizeAvatarSrc(src: string | undefined): string | undefined {
   if (!src) return undefined;
   if (src.startsWith("data:") || src.startsWith("blob:")) return src;
@@ -97,13 +71,28 @@ function resolveAvatarSeed(userId: string | number | undefined): string | number
   return undefined;
 }
 
+/** 进程内已成功加载过的头像 URL；remount 时避免骨架/占位重播（与 globalMediaActivated 同类策略） */
+const loadedAvatarSrcCache = new Set<string>();
+
+/** 仅供测试隔离 */
+export function resetLoadedAvatarSrcCacheForTests(): void {
+  loadedAvatarSrcCache.clear();
+}
+
+function markAvatarSrcLoaded(src: string | undefined): void {
+  if (src) loadedAvatarSrcCache.add(src);
+}
+
+function isAvatarSrcLoaded(src: string | undefined): boolean {
+  return Boolean(src && loadedAvatarSrcCache.has(src));
+}
+
 export function UserAvatar({
   src,
   name,
   userId,
   size = "md",
   className,
-  isVip = false,
   defer = true,
   priority = false,
   loadingEager = false,
@@ -114,7 +103,6 @@ export function UserAvatar({
   const deferredReady = useDeferredMediaActivation();
   const px = SIZE_PX[size];
   const initial = name[0]?.toUpperCase() ?? "?";
-  const base = cn("shrink-0 rounded-full overflow-hidden", SIZE[size], className);
   const initialsSeed = resolveAvatarSeed(userId) ?? name;
   const initialsTone = resolveInitialsTone(initialsSeed);
 
@@ -126,6 +114,13 @@ export function UserAvatar({
   const usingUserAvatar = Boolean(userSrc && !userImageFailed);
   const validSrc = usingUserAvatar ? userSrc : fallbackSrc;
   const showInitialsOnly = !usingUserAvatar && !fallbackSrc;
+
+  // 外圈承载 ring-offset；内圈 overflow-hidden 裁切图片
+  const outerClass = cn("relative inline-flex shrink-0 rounded-full", SIZE[size], className);
+  const innerClass = cn(
+    "relative h-full w-full overflow-hidden rounded-full",
+    showInitialsOnly ? initialsTone : "bg-border",
+  );
 
   const shouldDefer =
     defer &&
@@ -146,17 +141,27 @@ export function UserAvatar({
 
   // callback ref 在 DOM commit 阶段同步触发（早于 paint），
   // 对重挂的缓存图片直接标记 loaded → 零帧闪烁
-  const handleImageRef = useCallback((node: HTMLImageElement | null) => {
-    imageRef.current = node;
-    if (!node) return;
-    if (node.complete && node.naturalWidth > 0) {
-      setLoaded(true);
-    } else {
-      setLoaded(false);
-    }
-  }, []);
+  const handleImageRef = useCallback(
+    (node: HTMLImageElement | null) => {
+      imageRef.current = node;
+      if (!node || !validSrc) return;
 
-  const vipBadge = isVip ? <VipBadge size={size} /> : null;
+      if (node.complete && node.naturalWidth > 0) {
+        markAvatarSrcLoaded(validSrc);
+        setLoaded(true);
+        return;
+      }
+
+      // 同一 URL 的 img 被父级 re-render/remount 重建：禁用浏览器缓存时 lazy 可能不再触发 load
+      if (isAvatarSrcLoaded(validSrc)) {
+        node.loading = "eager";
+        return;
+      }
+
+      setLoaded(false);
+    },
+    [validSrc],
+  );
 
   // 稳定 DOM 结构：skeleton / placeholder / image 三层始终同在一个容器，
   // 仅通过 opacity 切换，避免 DOM 替换触发浏览器网格 layout 重算 → CLS
@@ -166,60 +171,60 @@ export function UserAvatar({
   const imageVisible = showImage && mediaReady && loaded;
 
   return (
-    <span
-      className={cn("relative inline-flex", base, showInitialsOnly ? initialsTone : "bg-border")}
-      aria-busy={skeletonVisible ? "true" : undefined}
-    >
-      {/* 骨架层：页面就绪前可见，就绪后透明 */}
-      {showImage && (
+    <span className={outerClass} aria-busy={skeletonVisible ? "true" : undefined}>
+      <span className={innerClass}>
+        {/* 骨架层：页面就绪前可见，就绪后透明 */}
+        {showImage && (
+          <span
+            data-testid="user-avatar-skeleton"
+            aria-hidden="true"
+            className={cn(
+              "loading-image-skeleton absolute inset-0 h-full w-full transition-opacity duration-200",
+              skeletonVisible ? "opacity-100" : "opacity-0 pointer-events-none",
+            )}
+          />
+        )}
+
+        {/* 占位层：始终存在，图片加载完成后透明 */}
         <span
-          data-testid="user-avatar-skeleton"
+          data-testid="user-avatar-placeholder"
           aria-hidden="true"
           className={cn(
-            "loading-image-skeleton absolute inset-0 h-full w-full transition-opacity duration-200",
-            skeletonVisible ? "opacity-100" : "opacity-0 pointer-events-none",
+            "flex h-full w-full items-center justify-center font-bold",
+            showInitialsOnly ? initialsTone : "bg-border text-(--fg2)",
+            "transition-opacity duration-200",
+            placeholderVisible ? "opacity-100" : "opacity-0",
           )}
-        />
-      )}
+        >
+          {initial}
+        </span>
 
-      {/* 占位层：始终存在，图片加载完成后透明 */}
-      <span
-        data-testid="user-avatar-placeholder"
-        aria-hidden="true"
-        className={cn(
-          "flex h-full w-full items-center justify-center font-bold",
-          showInitialsOnly ? initialsTone : "bg-border text-(--fg2)",
-          "transition-opacity duration-200",
-          placeholderVisible ? "opacity-100" : "opacity-0",
+        {/* 图片层：页面就绪后挂载，加载完成后淡入 */}
+        {validSrc && showImage && mediaReady && (
+          <Image
+            key={validSrc}
+            ref={handleImageRef}
+            src={validSrc}
+            alt={name}
+            width={px}
+            height={px}
+            unoptimized
+            priority={priority}
+            loading={priority || loadingEager ? "eager" : "lazy"}
+            decoding="async"
+            className={cn(
+              "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
+              imageVisible ? "opacity-100" : "opacity-0",
+            )}
+            onLoad={() => {
+              markAvatarSrcLoaded(validSrc);
+              setLoaded(true);
+            }}
+            onError={() => setUserImageFailed(true)}
+            suppressHydrationWarning
+          />
         )}
-      >
-        {initial}
       </span>
-
-      {/* 图片层：页面就绪后挂载，加载完成后淡入 */}
-      {validSrc && showImage && mediaReady && (
-        <Image
-          key={validSrc}
-          ref={handleImageRef}
-          src={validSrc}
-          alt={name}
-          width={px}
-          height={px}
-          unoptimized
-          priority={priority}
-          loading={priority || loadingEager ? "eager" : "lazy"}
-          decoding="async"
-          className={cn(
-            "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
-            imageVisible ? "opacity-100" : "opacity-0",
-          )}
-          onLoad={() => setLoaded(true)}
-          onError={() => setUserImageFailed(true)}
-          suppressHydrationWarning
-        />
-      )}
-
-      {vipBadge}
     </span>
   );
 }

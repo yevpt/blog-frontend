@@ -6,7 +6,6 @@ import type { UserLikedContentItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { RelativeTime } from "@/components/common/relative-time";
-import { isVipUser } from "@/lib/user-roles";
 import {
   formatLikedContentParentExcerpt,
   formatLikedContentParentLabel,
@@ -204,7 +203,6 @@ export function LikedContentCard({ item }: LikedContentCardProps) {
             userId={item.author?.id}
             name={authorName}
             size="lg"
-            isVip={isVipUser(item.author?.roles)}
           />
         </Link>
 

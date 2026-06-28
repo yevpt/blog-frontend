@@ -41,12 +41,7 @@ vi.mock("@repo/icons", () => ({
 }));
 
 vi.mock("@/components/common/user-avatar", () => ({
-  UserAvatar: ({ name, isVip }: { name: string; isVip?: boolean }) => (
-    <span data-testid="avatar">
-      {name}
-      {isVip ? <span data-testid="icon-vip" /> : null}
-    </span>
-  ),
+  UserAvatar: ({ name }: { name: string }) => <span data-testid="avatar">{name}</span>,
 }));
 
 vi.mock("@/lib/format-time", () => ({
@@ -93,19 +88,6 @@ describe("ThreadCommentHeader", () => {
     );
     const links = screen.getAllByRole("link", { name: "Alice" });
     expect(links.some((link) => link.getAttribute("href") === "/users/10")).toBe(true);
-  });
-
-  it("VIP 用户头像显示皇冠", () => {
-    render(
-      <ThreadCommentHeader
-        user={{ id: 1, username: "vipuser", nickname: "VIP", roles: ["vip"] }}
-        createdAt="2026-01-01T00:00:00Z"
-        likeCount={0}
-        isLiked={false}
-        onLike={vi.fn()}
-      />,
-    );
-    expect(screen.getByTestId("icon-vip")).toBeInTheDocument();
   });
 });
 

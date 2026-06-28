@@ -7,6 +7,7 @@ import { SvgIcon } from "@repo/icons";
 import { usePresence } from "@repo/hooks";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { isAdminUser, isVipUser } from "@/lib/user-roles";
+import { userAvatarRoleRingClass } from "@/lib/user-avatar-role-ring";
 import { useAdminVipRole } from "@/hooks/use-admin-vip-role";
 import { InlineFieldEditor } from "./inline-field-editor";
 import { validateDescription, validateMark } from "./profile-tab/profile-config";
@@ -303,8 +304,10 @@ export function UserInfoHeader({
             userId={userId}
             name={nickname}
             size="xl"
-            isVip={!isEditMode && isVip}
-            className="h-20 w-20"
+            className={cn(
+              "h-20 w-20",
+              !(isOwner && isEditMode) && userAvatarRoleRingClass(isAdmin, isVip),
+            )}
           />
           {isOwner && isEditMode && (
             <>
