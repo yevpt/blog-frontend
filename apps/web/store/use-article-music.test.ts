@@ -172,8 +172,12 @@ describe("useArticleMusic", () => {
     expect(useArticleMusic.getState().hasPlayedOnce).toBe(true);
   });
 
-  it("toggle 播放失败时不标记 hasPlayedOnce", async () => {
-    const play = vi.fn().mockRejectedValue(new Error("blocked"));
+  it("toggle 播放失败时保持加载态并自动重试", async () => {
+    vi.useFakeTimers();
+    const play = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("network"))
+      .mockResolvedValueOnce(undefined);
     const audioEl = { pause: vi.fn(), play, currentTime: 0 } as unknown as HTMLAudioElement;
     useArticleMusic.setState({
       track: { url: "https://example.com/a.mp3", name: "雨夜" },
@@ -182,10 +186,73 @@ describe("useArticleMusic", () => {
       audioEl,
     });
 
-    await useArticleMusic.getState().toggle();
+    const togglePromise = useArticleMusic.getState().toggle();
+    await togglePromise;
 
+    expect(useArticleMusic.getState().playbackState).toBe("loading");
+    expect(useArticleMusic.getState().hasPlayedOnce).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(1500);
+
+    expect(play).toHaveBeenCalledTimes(2);
+    expect(resetArticleAudioElement).toHaveBeenCalledWith(audioEl);
+    expect(useArticleMusic.getState().playbackState).toBe("playing");
+    expect(useArticleMusic.getState().hasPlayedOnce).toBe(true);
+
+    vi.useRealTimers();
+  });
+
+  it("toggle 多次重试仍失败后才进入 error", async () => {
+    vi.useFakeTimers();
+    const play = vi.fn().mockRejectedValue(new Error("network"));
+    const audioEl = { pause: vi.fn(), play, currentTime: 0 } as unknown as HTMLAudioElement;
+    useArticleMusic.setState({
+      track: { url: "https://example.com/a.mp3", name: "雨夜" },
+      playbackState: "idle",
+      audioEl,
+    });
+
+    const togglePromise = useArticleMusic.getState().toggle();
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await vi.advanceTimersByTimeAsync(1500);
+    }
+    await togglePromise;
+
+    expect(play).toHaveBeenCalledTimes(4);
     expect(useArticleMusic.getState().playbackState).toBe("error");
     expect(useArticleMusic.getState().hasPlayedOnce).toBe(false);
-    expect(useArticleMusic.getState().isMusicBarInView).toBe(true);
+
+    vi.useRealTimers();
+  });
+
+  it("handleAudioError 在 loading 时触发自动重试", async () => {
+    vi.useFakeTimers();
+    const play = vi.fn().mockResolvedValue(undefined);
+    const audioEl = { pause: vi.fn(), play, currentTime: 0 } as unknown as HTMLAudioElement;
+    useArticleMusic.setState({
+      track: { url: "https://example.com/a.mp3", name: "雨夜" },
+      playbackState: "loading",
+      audioEl,
+    });
+
+    useArticleMusic.getState().handleAudioError();
+
+    expect(useArticleMusic.getState().playbackState).toBe("loading");
+
+    await vi.advanceTimersByTimeAsync(1500);
+
+    expect(play).toHaveBeenCalledOnce();
+    expect(useArticleMusic.getState().playbackState).toBe("playing");
+
+    vi.useRealTimers();
+  });
+
+  it("handleAudioError 在 idle 时不触发重试", () => {
+    useArticleMusic.setState({ playbackState: "idle" });
+
+    useArticleMusic.getState().handleAudioError();
+
+    expect(useArticleMusic.getState().playbackState).toBe("idle");
   });
 });

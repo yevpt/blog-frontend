@@ -9,6 +9,8 @@ export function ArticleMusicHost() {
   const bindAudio = useArticleMusic((state) => state.bindAudio);
   const setProgress = useArticleMusic((state) => state.setProgress);
   const setPlaybackState = useArticleMusic((state) => state.setPlaybackState);
+  const handleAudioError = useArticleMusic((state) => state.handleAudioError);
+  const onPlaybackSuccess = useArticleMusic((state) => state.onPlaybackSuccess);
   const patchTrack = useArticleMusic((state) => state.patchTrack);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -37,12 +39,18 @@ export function ArticleMusicHost() {
         if (!audio?.duration) return;
         setProgress(audio.currentTime / audio.duration);
       }}
-      onPlay={() => setPlaybackState("playing")}
+      onPlay={() => {
+        onPlaybackSuccess();
+        setPlaybackState("playing");
+      }}
       onPause={() => setPlaybackState("paused")}
-      onPlaying={() => setPlaybackState("playing")}
+      onPlaying={() => {
+        onPlaybackSuccess();
+        setPlaybackState("playing");
+      }}
       onWaiting={() => setPlaybackState("loading")}
       onEnded={() => setPlaybackState("paused")}
-      onError={() => setPlaybackState("error")}
+      onError={() => handleAudioError()}
     />
   );
 }

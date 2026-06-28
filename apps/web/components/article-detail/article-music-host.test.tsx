@@ -25,6 +25,21 @@ describe("ArticleMusicHost", () => {
     await waitFor(() => expect(useArticleMusic.getState().audioEl).toBe(audio));
   });
 
+  it("audio onError 时委托 store 处理失败", () => {
+    const handleAudioError = vi.fn();
+    useArticleMusic.getState().init({
+      url: "https://example.com/a.mp3",
+      name: "春夏秋冬",
+    });
+    useArticleMusic.setState({ playbackState: "loading", handleAudioError });
+
+    render(<ArticleMusicHost />);
+
+    screen.getByTestId("article-music-audio").dispatchEvent(new Event("error"));
+
+    expect(handleAudioError).toHaveBeenCalledOnce();
+  });
+
   it("无曲目时不渲染 audio", () => {
     render(<ArticleMusicHost />);
     expect(screen.queryByTestId("article-music-audio")).not.toBeInTheDocument();

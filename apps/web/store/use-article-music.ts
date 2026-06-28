@@ -1,6 +1,28 @@
 import { create } from "zustand";
 import { prepareArticleAudioElement, resetArticleAudioElement } from "@/lib/prepare-article-audio";
 
+/** CDN 冷缓存时音频首次加载易失败，失败后间隔重试次数（不含首次播放） */
+const AUDIO_MAX_RETRIES = 3;
+const AUDIO_RETRY_DELAY_MS = 1500;
+
+let retryAttempt = 0;
+let retryTimer: ReturnType<typeof setTimeout> | null = null;
+/** 同一次播放尝试内避免 play() 拒绝与 audio onError 重复触发重试 */
+let failureHandled = false;
+
+function cancelPlaybackRetry() {
+  if (retryTimer !== null) {
+    clearTimeout(retryTimer);
+    retryTimer = null;
+  }
+}
+
+function resetPlaybackRetryState() {
+  cancelPlaybackRetry();
+  retryAttempt = 0;
+  failureHandled = false;
+}
+
 export type ArticleMusicPlaybackState = "idle" | "loading" | "playing" | "paused" | "error";
 
 export interface ArticleMusicTrack {
@@ -31,6 +53,10 @@ interface ArticleMusicStore {
   seek: (ratio: number, commit?: boolean) => Promise<void>;
   toggle: () => Promise<void>;
   retry: () => Promise<void>;
+  /** audio 元素 onError：加载/播放过程中失败时触发自动重试 */
+  handleAudioError: () => void;
+  /** audio 元素 onPlaying：成功开始播放后复位重试计数 */
+  onPlaybackSuccess: () => void;
 }
 
 function pauseAndReset(audio: HTMLAudioElement | null) {
@@ -40,119 +66,162 @@ function pauseAndReset(audio: HTMLAudioElement | null) {
   }
 }
 
-export const useArticleMusic = create<ArticleMusicStore>((set, get) => ({
-  track: null,
-  playbackState: "idle",
-  progress: 0,
-  hasPlayedOnce: false,
-  isMusicBarInView: true,
-  audioEl: null,
+export const useArticleMusic = create<ArticleMusicStore>((set, get) => {
+  const handlePlaybackFailure = () => {
+    if (failureHandled) return;
+    failureHandled = true;
 
-  bindAudio: (el) => set({ audioEl: el }),
-
-  init: (track) => {
-    const { track: current, audioEl } = get();
-    if (
-      current?.url === track.url &&
-      current.name === track.name &&
-      current.artist === track.artist &&
-      current.coverUrl === track.coverUrl &&
-      current.durationSeconds === track.durationSeconds
-    ) {
-      return;
-    }
-
-    pauseAndReset(audioEl);
-    if (audioEl) resetArticleAudioElement(audioEl);
-    set({
-      track,
-      playbackState: "idle",
-      progress: 0,
-      hasPlayedOnce: false,
-      isMusicBarInView: true,
-    });
-  },
-
-  clear: () => {
-    const { audioEl } = get();
-    pauseAndReset(audioEl);
-    if (audioEl) resetArticleAudioElement(audioEl);
-    set({
-      track: null,
-      playbackState: "idle",
-      progress: 0,
-      hasPlayedOnce: false,
-      isMusicBarInView: true,
-    });
-  },
-
-  patchTrack: (patch) => {
-    const { track } = get();
-    if (!track) return;
-    set({ track: { ...track, ...patch } });
-  },
-
-  setPlaybackState: (playbackState) => set({ playbackState }),
-
-  setProgress: (progress) => set({ progress }),
-
-  setMusicBarInView: (isMusicBarInView) => set({ isMusicBarInView }),
-
-  // 拖拽/点击进度条切歌位置：ratio 为 0..1，直接写 audio.currentTime 并同步进度
-  seek: async (ratio, commit = false) => {
-    const { audioEl, playbackState, track } = get();
-    const clamped = Math.min(1, Math.max(0, ratio));
-    if (audioEl && Number.isFinite(audioEl.duration) && audioEl.duration > 0) {
-      audioEl.currentTime = clamped * audioEl.duration;
-    }
-    set({ progress: clamped });
-
-    if (!commit || !audioEl || !track?.url) return;
-    if (playbackState === "playing" || playbackState === "loading") return;
-
-    if (playbackState === "paused" || playbackState === "idle") {
-      set({ playbackState: "loading" });
-      try {
-        prepareArticleAudioElement(audioEl, track.url);
-        await audioEl.play();
-        set({ playbackState: "playing", hasPlayedOnce: true });
-      } catch {
-        set({ playbackState: "error" });
-      }
-    }
-  },
-
-  toggle: async () => {
-    const { audioEl, playbackState, track } = get();
-    if (!audioEl || !track?.url || playbackState === "loading") return;
-
-    if (playbackState === "playing") {
-      audioEl.pause();
-      set({ playbackState: "paused" });
-      return;
-    }
-
-    set({ playbackState: "loading" });
-    try {
-      prepareArticleAudioElement(audioEl, track.url);
-      await audioEl.play();
-      set({ playbackState: "playing", hasPlayedOnce: true });
-    } catch {
+    const { audioEl, track } = get();
+    if (!audioEl || !track?.url) {
       set({ playbackState: "error" });
+      return;
     }
-  },
 
-  retry: async () => {
+    if (retryAttempt < AUDIO_MAX_RETRIES) {
+      retryAttempt += 1;
+      set({ playbackState: "loading" });
+      cancelPlaybackRetry();
+      retryTimer = setTimeout(() => {
+        retryTimer = null;
+        failureHandled = false;
+        void startPlayback(true);
+      }, AUDIO_RETRY_DELAY_MS);
+      return;
+    }
+
+    set({ playbackState: "error" });
+  };
+
+  const startPlayback = async (fromAutoRetry: boolean) => {
     const { audioEl, track } = get();
     if (!audioEl || !track?.url) return;
 
-    set({ playbackState: "loading", progress: 0 });
+    if (!fromAutoRetry) {
+      resetPlaybackRetryState();
+    }
+    failureHandled = false;
+    set({ playbackState: "loading" });
+
     try {
+      if (fromAutoRetry) {
+        resetArticleAudioElement(audioEl);
+      }
       prepareArticleAudioElement(audioEl, track.url);
       await audioEl.play();
+      resetPlaybackRetryState();
       set({ playbackState: "playing", hasPlayedOnce: true });
     } catch {
-      set({ playbackState: "error" });
+      handlePlaybackFailure();
     }
-  },
-}));
+  };
+
+  return {
+    track: null,
+    playbackState: "idle",
+    progress: 0,
+    hasPlayedOnce: false,
+    isMusicBarInView: true,
+    audioEl: null,
+
+    bindAudio: (el) => set({ audioEl: el }),
+
+    init: (track) => {
+      const { track: current, audioEl } = get();
+      if (
+        current?.url === track.url &&
+        current.name === track.name &&
+        current.artist === track.artist &&
+        current.coverUrl === track.coverUrl &&
+        current.durationSeconds === track.durationSeconds
+      ) {
+        return;
+      }
+
+      resetPlaybackRetryState();
+      pauseAndReset(audioEl);
+      if (audioEl) resetArticleAudioElement(audioEl);
+      set({
+        track,
+        playbackState: "idle",
+        progress: 0,
+        hasPlayedOnce: false,
+        isMusicBarInView: true,
+      });
+    },
+
+    clear: () => {
+      const { audioEl } = get();
+      resetPlaybackRetryState();
+      pauseAndReset(audioEl);
+      if (audioEl) resetArticleAudioElement(audioEl);
+      set({
+        track: null,
+        playbackState: "idle",
+        progress: 0,
+        hasPlayedOnce: false,
+        isMusicBarInView: true,
+      });
+    },
+
+    patchTrack: (patch) => {
+      const { track } = get();
+      if (!track) return;
+      set({ track: { ...track, ...patch } });
+    },
+
+    setPlaybackState: (playbackState) => set({ playbackState }),
+
+    setProgress: (progress) => set({ progress }),
+
+    setMusicBarInView: (isMusicBarInView) => set({ isMusicBarInView }),
+
+    // 拖拽/点击进度条切歌位置：ratio 为 0..1，直接写 audio.currentTime 并同步进度
+    seek: async (ratio, commit = false) => {
+      const { audioEl, playbackState, track } = get();
+      const clamped = Math.min(1, Math.max(0, ratio));
+      if (audioEl && Number.isFinite(audioEl.duration) && audioEl.duration > 0) {
+        audioEl.currentTime = clamped * audioEl.duration;
+      }
+      set({ progress: clamped });
+
+      if (!commit || !audioEl || !track?.url) return;
+      if (playbackState === "playing" || playbackState === "loading") return;
+
+      if (playbackState === "paused" || playbackState === "idle") {
+        await startPlayback(false);
+      }
+    },
+
+    toggle: async () => {
+      const { audioEl, playbackState, track } = get();
+      if (!audioEl || !track?.url || playbackState === "loading") return;
+
+      if (playbackState === "playing") {
+        cancelPlaybackRetry();
+        audioEl.pause();
+        set({ playbackState: "paused" });
+        return;
+      }
+
+      await startPlayback(false);
+    },
+
+    retry: async () => {
+      const { audioEl, track } = get();
+      if (!audioEl || !track?.url) return;
+
+      set({ progress: 0 });
+      await startPlayback(false);
+    },
+
+    handleAudioError: () => {
+      const { playbackState } = get();
+      if (playbackState !== "loading" && playbackState !== "playing") return;
+      handlePlaybackFailure();
+    },
+
+    onPlaybackSuccess: () => {
+      resetPlaybackRetryState();
+    },
+  };
+});
