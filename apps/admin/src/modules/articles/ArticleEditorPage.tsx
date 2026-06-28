@@ -11,6 +11,7 @@ import {
   Popover,
   PopoverDialog,
   SearchField,
+  Tooltip,
   cn,
 } from "@repo/ui";
 import { apiClient } from "../../lib/api";
@@ -77,11 +78,11 @@ export function ArticleEditorPage() {
   const [musicPickerOpen, setMusicPickerOpen] = useState(false);
   const [musicSearchQuery, setMusicSearchQuery] = useState("");
   const [statusLabel, setStatusLabel] = useState<ArticleEditorStatusLabel>("草稿");
+  const [articleStatus, setArticleStatus] = useState<0 | 1 | 2 | 3>(3);
   const [commentStatus, setCommentStatus] = useState<0 | 1>(1);
   const [isRecommended, setIsRecommended] = useState(false);
-  const [isPassworded, setIsPassworded] = useState(false);
   const [savedArticleId, setSavedArticleId] = useState<number | undefined>(undefined);
-  const [savingAction, setSavingAction] = useState<"draft" | "publish" | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [detailApplied, setDetailApplied] = useState(false);
   const layoutRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
@@ -103,10 +104,10 @@ export function ArticleEditorPage() {
     setCategoryId(form.categoryId);
     setSelectedTags(form.selectedTags);
     setMusicId(form.musicId);
+    setArticleStatus(form.articleStatus as 0 | 1 | 2 | 3);
     setStatusLabel(statusToLabel(form.articleStatus));
     setCommentStatus(form.commentStatus === 0 ? 0 : 1);
     setIsRecommended(form.isRecommended);
-    setIsPassworded(form.isPassworded);
     setSavedArticleId(form.savedArticleId);
     setDetailApplied(true);
   }, [detail, detailApplied]);
@@ -138,8 +139,13 @@ export function ArticleEditorPage() {
   const readMinutes = Math.max(1, Math.ceil(contentLength / 400));
   const isPageLoading = isOptionsLoading || (isEditing && isDetailLoading);
   const pageError = detailError;
-  const saveDisabled =
-    isPassworded || savingAction !== null || isPageLoading || categoryId === null;
+  let disabledReason: string | null = null;
+  if (isPageLoading) disabledReason = "正在加载中...";
+  else if (isSaving) disabledReason = "正在保存中...";
+  else if (articleStatus === 2)
+    disabledReason = "加密文章暂不支持直接编辑，需修改为其他状态后保存。";
+  else if (!title.trim() || !content.trim()) disabledReason = "请至少填写标题与正文";
+  else if (categoryId === null) disabledReason = "请选择文章分类";
 
   const autosaveValue = useMemo<ArticleEditorAutosaveFormState>(
     () => ({
@@ -150,6 +156,7 @@ export function ArticleEditorPage() {
       categoryId,
       selectedTags,
       musicId,
+      articleStatus,
       commentStatus,
       isRecommended,
     }),
@@ -161,6 +168,7 @@ export function ArticleEditorPage() {
       categoryId,
       selectedTags,
       musicId,
+      articleStatus,
       commentStatus,
       isRecommended,
     ],
@@ -174,6 +182,7 @@ export function ArticleEditorPage() {
     setCategoryId(form.categoryId);
     setSelectedTags(form.selectedTags);
     setMusicId(form.musicId);
+    if (form.articleStatus !== undefined) setArticleStatus(form.articleStatus as 0 | 1 | 2 | 3);
     setCommentStatus(form.commentStatus);
     setIsRecommended(form.isRecommended);
   }, []);
@@ -203,6 +212,11 @@ export function ArticleEditorPage() {
     setCommentStatus(Number(key) === 0 ? 0 : 1);
   };
 
+  const handleArticleStatusChange = (key: string | number | null) => {
+    if (key == null) return;
+    setArticleStatus(Number(key) as 0 | 1 | 2 | 3);
+  };
+
   const handleRemoveMusic = () => {
     setMusicId(null);
   };
@@ -226,10 +240,10 @@ export function ArticleEditorPage() {
     });
   };
 
-  const handleSave = async (targetStatus: 0 | 1) => {
-    if (saveDisabled) return;
+  const handleSave = async () => {
+    if (disabledReason) return;
 
-    setSavingAction(targetStatus === 0 ? "draft" : "publish");
+    setIsSaving(true);
     try {
       const req = buildArticleSaveReq({
         title,
@@ -239,16 +253,17 @@ export function ArticleEditorPage() {
         categoryId,
         selectedTags,
         musicId,
-        targetStatus,
+        targetStatus: articleStatus,
         commentStatus,
         isRecommended,
         articleId: savedArticleId,
       });
       const resp = await apiClient.articles.saveAdmin(req);
       setSavedArticleId(resp.id);
+      setArticleStatus(resp.status as 0 | 1 | 2 | 3);
       setStatusLabel(statusToLabel(resp.status));
       clearBackup();
-      addToast(targetStatus === 1 ? "文章已发布" : "草稿已保存", "success");
+      addToast(articleStatus === 1 ? "文章已发布" : "已保存", "success");
 
       if (isNew) {
         navigate(`/articles/${resp.id}/edit`, { replace: true });
@@ -257,7 +272,7 @@ export function ArticleEditorPage() {
       const message = err instanceof ApiError ? err.message : "保存失败，请重试";
       addToast(message, "error");
     } finally {
-      setSavingAction(null);
+      setIsSaving(false);
     }
   };
 
@@ -351,18 +366,11 @@ export function ArticleEditorPage() {
         <ArticleEditorTopBar
           isEditing={isEditing}
           statusLabel={statusLabel}
-          savingAction={savingAction}
-          saveDisabled={saveDisabled}
+          isSaving={isSaving}
+          disabledReason={disabledReason}
           onBack={handleBack}
-          onSaveDraft={() => void handleSave(0)}
-          onPublish={() => void handleSave(1)}
+          onSave={handleSave}
         />
-
-        {isPassworded ? (
-          <p className="text-sm text-muted-foreground">
-            当前为加密文章，暂不支持在此页修改或保存；请通过其他方式更新阅读密码后再编辑。
-          </p>
-        ) : null}
       </div>
 
       <div
@@ -402,6 +410,7 @@ export function ArticleEditorPage() {
           tagCandidates={tagCandidates}
           selectedMusic={selectedMusic}
           musicPickerOpen={musicPickerOpen}
+          articleStatus={articleStatus}
           commentStatus={commentStatus}
           isRecommended={isRecommended}
           musicPickerTrigger={musicPickerPopover}
@@ -411,9 +420,33 @@ export function ArticleEditorPage() {
           onTagsChange={setSelectedTags}
           onMusicPickerOpenChange={handleMusicPickerOpenChange}
           onRemoveMusic={handleRemoveMusic}
+          onArticleStatusChange={handleArticleStatusChange}
           onCommentStatusChange={handleCommentStatusChange}
           onIsRecommendedChange={setIsRecommended}
         />
+
+        {/* 移动端底部保存按钮 */}
+        <div className="lg:hidden pb-10">
+          <Tooltip title={disabledReason ?? ""} isDisabled={!disabledReason} delay={0}>
+            <Button
+              type="button"
+              variant="ghost"
+              isDisabled={false}
+              isLoading={isSaving}
+              aria-disabled={!!disabledReason}
+              onPress={disabledReason ? undefined : handleSave}
+              className={cn(
+                "bg-foreground text-background shadow-none",
+                "hover:!bg-foreground hover:!text-background hover:opacity-90",
+                "h-11 w-full font-semibold",
+                !!disabledReason && "opacity-50 cursor-not-allowed",
+              )}
+              data-disabled={!!disabledReason || undefined}
+            >
+              保存
+            </Button>
+          </Tooltip>
+        </div>
       </div>
     </div>
   );

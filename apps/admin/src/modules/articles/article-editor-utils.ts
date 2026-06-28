@@ -1,7 +1,7 @@
 import type { AdminArticleDetailResp, ArticleSaveReq, MusicItemResp } from "@repo/api";
 import type { ArticleTag } from "./editor-options";
 
-export type ArticleEditorStatusLabel = "草稿" | "已发布" | "加密";
+export type ArticleEditorStatusLabel = "隐藏" | "已发布" | "加密" | "草稿";
 
 export interface ArticleEditorMusicOption {
   id: number;
@@ -19,6 +19,7 @@ export function formatMusicDuration(seconds: number): string {
 }
 
 export function statusToLabel(status: number): ArticleEditorStatusLabel {
+  if (status === 0) return "隐藏";
   if (status === 1) return "已发布";
   if (status === 2) return "加密";
   return "草稿";
@@ -103,7 +104,7 @@ interface BuildSaveReqInput {
   categoryId: number | null;
   selectedTags: ArticleTag[];
   musicId: number | null;
-  targetStatus: 0 | 1;
+  targetStatus: 0 | 1 | 2 | 3;
   commentStatus: 0 | 1;
   isRecommended: boolean;
   articleId?: number;

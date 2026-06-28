@@ -29,6 +29,7 @@ interface ArticleEditorPublishRailProps {
   tagCandidates: ArticleTag[];
   selectedMusic: MusicOption | null;
   musicPickerOpen: boolean;
+  articleStatus: 0 | 1 | 2 | 3;
   commentStatus: 0 | 1;
   isRecommended: boolean;
   musicPickerTrigger: ReactNode;
@@ -38,6 +39,7 @@ interface ArticleEditorPublishRailProps {
   onTagsChange: (tags: ArticleTag[]) => void;
   onMusicPickerOpenChange: (open: boolean) => void;
   onRemoveMusic: () => void;
+  onArticleStatusChange: (key: string | number | null) => void;
   onCommentStatusChange: (key: string | number | null) => void;
   onIsRecommendedChange: (isRecommended: boolean) => void;
 }
@@ -58,6 +60,7 @@ export const ArticleEditorPublishRail = forwardRef<HTMLElement, ArticleEditorPub
       tagCandidates,
       selectedMusic,
       musicPickerOpen,
+      articleStatus,
       commentStatus,
       isRecommended,
       musicPickerTrigger,
@@ -67,6 +70,7 @@ export const ArticleEditorPublishRail = forwardRef<HTMLElement, ArticleEditorPub
       onTagsChange,
       onMusicPickerOpenChange,
       onRemoveMusic,
+      onArticleStatusChange,
       onCommentStatusChange,
       onIsRecommendedChange,
     },
@@ -207,6 +211,29 @@ export const ArticleEditorPublishRail = forwardRef<HTMLElement, ArticleEditorPub
                 onChange={onIsRecommendedChange}
                 slim
               />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <Label
+                htmlFor="article-status"
+                className="text-xs font-medium text-muted-foreground shrink-0"
+              >
+                状态
+              </Label>
+              <div className="flex items-center gap-2">
+                <Select
+                  id="article-status"
+                  aria-label="文章状态设置"
+                  size="sm"
+                  selectedKey={String(articleStatus)}
+                  onSelectionChange={onArticleStatusChange}
+                  className="w-auto min-w-[7.5rem]"
+                >
+                  <Select.Item id="3" label="草稿" />
+                  <Select.Item id="1" label="公开" />
+                  <Select.Item id="0" label="隐藏" />
+                  <Select.Item id="2" label="加密" />
+                </Select>
+              </div>
             </div>
             <div className="flex items-center justify-between gap-4">
               <Label

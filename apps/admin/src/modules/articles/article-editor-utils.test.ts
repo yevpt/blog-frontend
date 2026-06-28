@@ -16,9 +16,10 @@ describe("article-editor-utils", () => {
   });
 
   it("statusToLabel 映射文章状态", () => {
-    expect(statusToLabel(0)).toBe("草稿");
+    expect(statusToLabel(0)).toBe("隐藏");
     expect(statusToLabel(1)).toBe("已发布");
     expect(statusToLabel(2)).toBe("加密");
+    expect(statusToLabel(3)).toBe("草稿");
   });
 
   it("mapDetailToFormState 回填详情字段", () => {

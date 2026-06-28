@@ -25,6 +25,7 @@ const baseState: ArticleEditorAutosaveFormState = {
   categoryId: 1,
   selectedTags: [],
   musicId: null,
+  articleStatus: 3,
   commentStatus: 1,
   isRecommended: false,
 };

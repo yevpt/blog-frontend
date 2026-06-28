@@ -1,17 +1,17 @@
-import { Button, cn } from "@repo/ui";
+import { useState } from "react";
+import { Button, Tooltip, TooltipTrigger, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import type { ArticleEditorStatusLabel } from "../article-editor-utils";
 
-export type ArticleEditorSavingAction = "draft" | "publish" | null;
+export type ArticleEditorSavingAction = "draft" | "publish" | "save" | null;
 
 interface ArticleEditorTopBarProps {
   isEditing: boolean;
   statusLabel: ArticleEditorStatusLabel;
-  savingAction: ArticleEditorSavingAction;
-  saveDisabled: boolean;
+  isSaving: boolean;
+  disabledReason?: string | null;
   onBack: () => void;
-  onSaveDraft: () => void;
-  onPublish: () => void;
+  onSave: () => void;
 }
 
 const topBarShellClassName = cn(
@@ -29,12 +29,6 @@ const actionBtnBaseClassName = cn(
   "transition-[opacity,transform] duration-150",
 );
 
-const secondaryBtnClassName = cn(
-  actionBtnBaseClassName,
-  "bg-card text-foreground shadow-card",
-  "hover:!bg-card hover:!text-foreground hover:opacity-90",
-);
-
 const primaryBtnClassName = cn(
   actionBtnBaseClassName,
   "bg-foreground text-background shadow-none",
@@ -44,22 +38,23 @@ const primaryBtnClassName = cn(
 export function ArticleEditorTopBar({
   isEditing,
   statusLabel,
-  savingAction,
-  saveDisabled,
+  isSaving,
+  disabledReason,
   onBack,
-  onSaveDraft,
-  onPublish,
+  onSave,
 }: ArticleEditorTopBarProps) {
-  const isSaving = savingAction !== null;
+  const [isEncryptedTooltipOpen, setIsEncryptedTooltipOpen] = useState(false);
 
   const statusText =
     statusLabel === "已发布"
       ? "已发布"
       : statusLabel === "加密"
         ? "加密"
-        : isSaving
-          ? "草稿 · 保存中…"
-          : "草稿 · 尚未保存";
+        : statusLabel === "隐藏"
+          ? "隐藏"
+          : isSaving
+            ? "草稿 · 保存中…"
+            : "草稿 · 尚未保存";
 
   return (
     <header className={topBarShellClassName}>
@@ -86,30 +81,42 @@ export function ArticleEditorTopBar({
               aria-hidden
             />
             <span>{statusText}</span>
+            {statusLabel === "加密" && (
+              <Tooltip
+                title="当前为加密文章，暂不支持在此页修改或保存；需修改为其他状态后保存。"
+                placement="bottom"
+                isOpen={isEncryptedTooltipOpen}
+                onOpenChange={setIsEncryptedTooltipOpen}
+              >
+                <TooltipTrigger
+                  aria-label="加密状态说明"
+                  className="flex cursor-default items-center text-yellow-500 hover:text-yellow-600 transition-colors focus:outline-none"
+                  onPress={() => setIsEncryptedTooltipOpen((prev) => !prev)}
+                >
+                  <SvgIcon name="info-circle" size={14} />
+                </TooltipTrigger>
+              </Tooltip>
+            )}
           </div>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2 max-sm:grid max-sm:w-full max-sm:grid-cols-2">
-        <Button
-          type="button"
-          variant="ghost"
-          isDisabled={saveDisabled}
-          isLoading={savingAction === "draft"}
-          onPress={onSaveDraft}
-          className={secondaryBtnClassName}
-        >
-          存草稿
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          isDisabled={saveDisabled}
-          isLoading={savingAction === "publish"}
-          onPress={onPublish}
-          className={primaryBtnClassName}
-        >
-          发布
-        </Button>
+      <div className="flex shrink-0 items-center gap-2 max-lg:hidden">
+        <Tooltip title={disabledReason ?? ""} isDisabled={!disabledReason} delay={0}>
+          <Button
+            type="button"
+            variant="ghost"
+            // 取消原生禁用，改用 aria-disabled 保证能正常触发 hover 显示 tooltip
+            isDisabled={false}
+            isLoading={isSaving}
+            aria-disabled={!!disabledReason}
+            onPress={disabledReason ? undefined : onSave}
+            className={cn(primaryBtnClassName, !!disabledReason && "opacity-50 cursor-not-allowed")}
+            // 手动传入 data-disabled 触发 Tailwind 的 data-[disabled] 样式
+            data-disabled={!!disabledReason || undefined}
+          >
+            保存
+          </Button>
+        </Tooltip>
       </div>
     </header>
   );

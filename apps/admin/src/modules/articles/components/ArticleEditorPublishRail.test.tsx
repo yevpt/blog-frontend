@@ -32,6 +32,8 @@ const baseProps = {
   onRemoveMusic: vi.fn(),
   onCommentStatusChange: vi.fn(),
   onIsRecommendedChange: vi.fn(),
+  articleStatus: 3 as const,
+  onArticleStatusChange: vi.fn(),
 };
 
 describe("ArticleEditorPublishRail", () => {

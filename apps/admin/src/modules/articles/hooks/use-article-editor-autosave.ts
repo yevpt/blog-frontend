@@ -15,6 +15,7 @@ export interface ArticleEditorAutosaveFormState {
   categoryId: number | null;
   selectedTags: ArticleTag[];
   musicId: number | null;
+  articleStatus: 0 | 1 | 2 | 3;
   commentStatus: 0 | 1;
   isRecommended: boolean;
 }
@@ -61,6 +62,10 @@ function isCommentStatus(value: unknown): value is 0 | 1 {
   return value === 0 || value === 1;
 }
 
+function isArticleStatus(value: unknown): value is 0 | 1 | 2 | 3 {
+  return value === 0 || value === 1 || value === 2 || value === 3;
+}
+
 function parseForm(value: unknown): ArticleEditorAutosaveFormState | null {
   if (!isRecord(value)) return null;
   if (
@@ -69,6 +74,7 @@ function parseForm(value: unknown): ArticleEditorAutosaveFormState | null {
     typeof value.content !== "string" ||
     typeof value.coverUrl !== "string" ||
     !Array.isArray(value.selectedTags) ||
+    !isArticleStatus(value.articleStatus) ||
     !isCommentStatus(value.commentStatus)
   ) {
     return null;
@@ -90,6 +96,7 @@ function parseForm(value: unknown): ArticleEditorAutosaveFormState | null {
     categoryId,
     selectedTags,
     musicId,
+    articleStatus: value.articleStatus,
     commentStatus: value.commentStatus,
     isRecommended: typeof value.isRecommended === "boolean" ? value.isRecommended : false,
   };
@@ -211,6 +218,7 @@ function areFormsEqual(
     left.coverUrl === right.coverUrl &&
     left.categoryId === right.categoryId &&
     left.musicId === right.musicId &&
+    left.articleStatus === right.articleStatus &&
     left.commentStatus === right.commentStatus &&
     left.isRecommended === right.isRecommended &&
     areTagsEqual(left.selectedTags, right.selectedTags)

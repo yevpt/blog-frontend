@@ -266,11 +266,11 @@ describe("ArticleEditorPage", () => {
     renderEditorPage("/articles/12/edit");
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "存草稿" })).toBeEnabled();
+      expect(screen.getAllByRole("button", { name: "保存" })[0]).toBeEnabled();
     });
 
     await user.click(screen.getByLabelText("推荐到首页"));
-    await user.click(screen.getByRole("button", { name: "存草稿" }));
+    await user.click(screen.getAllByRole("button", { name: "保存" })[0]);
 
     await waitFor(() => {
       expect(apiClient.articles.saveAdmin).toHaveBeenCalledWith(
@@ -323,6 +323,7 @@ describe("ArticleEditorPage", () => {
           categoryId: 1,
           selectedTags: [],
           musicId: null,
+          articleStatus: 3,
           commentStatus: 1,
           isRecommended: false,
         },
@@ -356,6 +357,7 @@ describe("ArticleEditorPage", () => {
           categoryId: 1,
           selectedTags: [],
           musicId: null,
+          articleStatus: 3,
           commentStatus: 1,
           isRecommended: false,
         },
@@ -383,24 +385,25 @@ describe("ArticleEditorPage", () => {
     });
   });
 
-  it("存草稿调用 saveAdmin 并跳转编辑页", async () => {
+  it("保存调用 saveAdmin 并跳转编辑页", async () => {
     const user = userEvent.setup();
     renderEditorPage();
 
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: "存草稿" })).toBeEnabled();
-    });
-
-    await user.type(screen.getByRole("textbox", { name: "文章标题" }), "新文章");
+    await user.type(await screen.findByRole("textbox", { name: "文章标题" }), "新文章");
     await user.type(screen.getByRole("textbox", { name: "文章描述" }), "摘要");
     await user.type(screen.getByRole("textbox", { name: "文章内容编辑器" }), "正文");
-    await user.click(screen.getByRole("button", { name: "存草稿" }));
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("button", { name: "保存" })[0]).toBeEnabled();
+    });
+
+    await user.click(screen.getAllByRole("button", { name: "保存" })[0]);
 
     await waitFor(() => {
       expect(apiClient.articles.saveAdmin).toHaveBeenCalledWith(
         expect.objectContaining({
           title: "新文章",
-          status: 0,
+          status: 3,
           category_ids: [1],
           cover_img_url: undefined,
           recommend: false,
@@ -409,7 +412,7 @@ describe("ArticleEditorPage", () => {
     });
 
     expect(mockNavigate).toHaveBeenCalledWith("/articles/99/edit", { replace: true });
-    expect(screen.getByText("草稿已保存")).toBeInTheDocument();
+    expect(screen.getByText("已保存")).toBeInTheDocument();
     expect(localStorage.getItem(getArticleEditorAutosaveKey(undefined))).toBeNull();
   });
 
@@ -427,8 +430,8 @@ describe("ArticleEditorPage", () => {
           content: "",
           coverUrl: "",
           categoryId: 1,
-          selectedTags: [],
-          musicId: null,
+          category_ids: [1],
+          articleStatus: 3,
           commentStatus: 1,
           isRecommended: false,
         },
@@ -465,27 +468,27 @@ describe("ArticleEditorPage", () => {
     });
   });
 
-  it("发布使用 status 1", async () => {
+  it("保存使用选择的状态", async () => {
     const user = userEvent.setup();
     vi.mocked(apiClient.articles.saveAdmin).mockResolvedValue({
       ...mockDetail,
       id: 12,
-      status: 1,
+      status: 0,
     });
 
     renderEditorPage("/articles/12/edit");
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "发布" })).toBeEnabled();
+      expect(screen.getAllByRole("button", { name: "保存" })[0]).toBeEnabled();
     });
 
-    await user.click(screen.getByRole("button", { name: "发布" }));
+    await user.click(screen.getAllByRole("button", { name: "保存" })[0]);
 
     await waitFor(() => {
       expect(apiClient.articles.saveAdmin).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 12,
-          status: 1,
+          status: 0,
         }),
       );
     });
@@ -498,10 +501,10 @@ describe("ArticleEditorPage", () => {
     renderEditorPage("/articles/12/edit");
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "存草稿" })).toBeEnabled();
+      expect(screen.getAllByRole("button", { name: "保存" })[0]).toBeEnabled();
     });
 
-    await user.click(screen.getByRole("button", { name: "存草稿" }));
+    await user.click(screen.getAllByRole("button", { name: "保存" })[0]);
 
     await waitFor(() => {
       expect(screen.getByText("标题不能为空")).toBeInTheDocument();
@@ -535,7 +538,7 @@ describe("ArticleEditorPage", () => {
       });
     });
 
-    await user.click(screen.getByRole("button", { name: "存草稿" }));
+    await user.click(screen.getAllByRole("button", { name: "保存" })[0]);
 
     await waitFor(() => {
       expect(apiClient.articles.saveAdmin).toHaveBeenCalledWith(
@@ -570,6 +573,7 @@ describe("ArticleEditorPage", () => {
   });
 
   it("加密文章禁用保存并展示说明", async () => {
+    const user = userEvent.setup();
     vi.mocked(apiClient.articles.getAdminDetail).mockResolvedValue({
       ...mockDetail,
       status: 2,
@@ -579,12 +583,18 @@ describe("ArticleEditorPage", () => {
     renderEditorPage("/articles/12/edit");
 
     await waitFor(() => {
-      expect(screen.getByText("加密")).toBeInTheDocument();
+      expect(screen.getAllByText("加密").length).toBeGreaterThan(0);
     });
 
-    expect(screen.getByRole("button", { name: "存草稿" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "发布" })).toBeDisabled();
-    expect(screen.getByText(/当前为加密文章/)).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "保存" })[0]).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+
+    await user.hover(screen.getByRole("button", { name: "加密状态说明" }));
+    await waitFor(() => {
+      expect(screen.getByText(/当前为加密文章/)).toBeInTheDocument();
+    });
   });
 
   it("背景音乐卡片支持移除与替换", async () => {

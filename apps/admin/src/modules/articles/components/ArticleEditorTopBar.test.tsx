@@ -12,36 +12,34 @@ describe("ArticleEditorTopBar", () => {
       <ArticleEditorTopBar
         isEditing={false}
         statusLabel="草稿"
-        savingAction={null}
-        saveDisabled={false}
+        isSaving={false}
+        disabledReason={null}
         onBack={vi.fn()}
-        onSaveDraft={vi.fn()}
-        onPublish={vi.fn()}
+        onSave={vi.fn()}
       />,
     );
 
     expect(screen.getByRole("heading", { name: "新建文章" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "返回文章列表" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "存草稿" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "保存" })).toBeEnabled();
     const header = container.querySelector("header");
     expect(header).toHaveClass("grid", "gap-3", "sm:grid-cols-[minmax(0,1fr)_auto]");
     expect(header).not.toHaveClass("-mx-3");
   });
 
-  it("发布加载时保持按钮文案与宽度占位", () => {
+  it("保存加载时保持按钮文案与宽度占位", () => {
     render(
       <ArticleEditorTopBar
-        isEditing
+        isEditing={true}
         statusLabel="草稿"
-        savingAction="publish"
-        saveDisabled
+        isSaving={true}
+        disabledReason="正在保存中..."
         onBack={vi.fn()}
-        onSaveDraft={vi.fn()}
-        onPublish={vi.fn()}
+        onSave={vi.fn()}
       />,
     );
 
-    expect(screen.getByRole("button", { name: "发布" })).toHaveAttribute("data-pending", "true");
-    expect(screen.queryByRole("button", { name: "发布中…" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "保存" })).toHaveAttribute("data-pending", "true");
+    expect(screen.queryByRole("button", { name: "保存中…" })).not.toBeInTheDocument();
   });
 });
