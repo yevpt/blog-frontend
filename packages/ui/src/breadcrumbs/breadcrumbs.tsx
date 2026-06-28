@@ -31,13 +31,24 @@ export function Breadcrumbs({
 }
 
 export function BreadcrumbItem({ children, className, href, ...linkProps }: BreadcrumbItemProps) {
+  const hasHref = href != null && href !== "";
+
   return (
     <AriaBreadcrumb className={cn("flex items-center gap-1", className)}>
       {({ isCurrent }) => (
         <>
-          <AriaLink href={href} className={breadcrumbLinkClassName} {...linkProps}>
-            {children}
-          </AriaLink>
+          {hasHref && !isCurrent ? (
+            <AriaLink href={href} className={breadcrumbLinkClassName} {...linkProps}>
+              {children}
+            </AriaLink>
+          ) : (
+            <span
+              aria-current={isCurrent ? "page" : undefined}
+              className={cn(breadcrumbLinkClassName, isCurrent && "font-medium text-foreground")}
+            >
+              {children}
+            </span>
+          )}
           {!isCurrent ? (
             <SvgIcon name="chevron-right" size={14} className="shrink-0 text-muted-foreground" />
           ) : null}

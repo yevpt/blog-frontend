@@ -20,6 +20,7 @@ describe("Breadcrumbs", () => {
     expect(screen.getByRole("navigation", { name: "文章编辑导航" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "文章管理" })).toHaveAttribute("href", "/articles");
     expect(screen.getByText("新建文章")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "新建文章" })).not.toBeInTheDocument();
     expect(screen.getByTestId("icon-chevron-right")).toBeInTheDocument();
   });
 
@@ -32,6 +33,7 @@ describe("Breadcrumbs", () => {
     );
 
     expect(screen.getAllByTestId("icon-chevron-right")).toHaveLength(1);
+    expect(screen.getByText("编辑文章")).toHaveAttribute("aria-current", "page");
   });
 
   it("className 透传到 nav", () => {
