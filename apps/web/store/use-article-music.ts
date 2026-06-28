@@ -113,7 +113,7 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => ({
     if (playbackState === "paused" || playbackState === "idle") {
       set({ playbackState: "loading" });
       try {
-        await prepareArticleAudioElement(audioEl, track.url);
+        prepareArticleAudioElement(audioEl, track.url);
         await audioEl.play();
         set({ playbackState: "playing", hasPlayedOnce: true });
       } catch {
@@ -134,7 +134,7 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => ({
 
     set({ playbackState: "loading" });
     try {
-      await prepareArticleAudioElement(audioEl, track.url);
+      prepareArticleAudioElement(audioEl, track.url);
       await audioEl.play();
       set({ playbackState: "playing", hasPlayedOnce: true });
     } catch {
@@ -148,7 +148,7 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => ({
 
     set({ playbackState: "loading", progress: 0 });
     try {
-      await prepareArticleAudioElement(audioEl, track.url);
+      prepareArticleAudioElement(audioEl, track.url);
       await audioEl.play();
       set({ playbackState: "playing", hasPlayedOnce: true });
     } catch {

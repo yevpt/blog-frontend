@@ -37,6 +37,10 @@ export function ArticleMusicHost() {
         if (!audio?.duration) return;
         setProgress(audio.currentTime / audio.duration);
       }}
+      onPlay={() => setPlaybackState("playing")}
+      onPause={() => setPlaybackState("paused")}
+      onPlaying={() => setPlaybackState("playing")}
+      onWaiting={() => setPlaybackState("loading")}
       onEnded={() => setPlaybackState("paused")}
       onError={() => setPlaybackState("error")}
     />

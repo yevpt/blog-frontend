@@ -12,27 +12,8 @@ function resolveAudioSrc(url: string): string {
   return new URL(url, window.location.href).href;
 }
 
-function waitForCanPlay(audio: HTMLAudioElement): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const onCanPlay = () => {
-      cleanup();
-      resolve();
-    };
-    const onError = () => {
-      cleanup();
-      reject(new Error("audio load failed"));
-    };
-    const cleanup = () => {
-      audio.removeEventListener("canplay", onCanPlay);
-      audio.removeEventListener("error", onError);
-    };
-    audio.addEventListener("canplay", onCanPlay);
-    audio.addEventListener("error", onError);
-  });
-}
-
-/** 首次播放前挂载 src 并等待可播放；已就绪则直接返回。 */
-export function prepareArticleAudioElement(audio: HTMLAudioElement, url: string): Promise<void> {
+/** 首次播放前挂载 src。注意：不要在这里等待 canplay，否则会丢失用户手势，导致部分浏览器静音。 */
+export function prepareArticleAudioElement(audio: HTMLAudioElement, url: string): void {
   const targetSrc = resolveAudioSrc(url);
   if (audio.src !== targetSrc) {
     const crossOrigin = resolveAudioCrossOrigin(url);
@@ -42,17 +23,7 @@ export function prepareArticleAudioElement(audio: HTMLAudioElement, url: string)
       audio.removeAttribute("crossorigin");
     }
     audio.src = targetSrc;
-  }
-
-  if (audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
-    return Promise.resolve();
-  }
-
-  // preload=none 时赋值 src 不会自动拉流，需显式 load；若浏览器已在加载则跳过以免重复请求
-  const networkLoading = HTMLMediaElement.NETWORK_LOADING ?? 2;
-  if (audio.networkState !== networkLoading) {
+    // 设置 src 后隐式开始加载，为了兼容性显式 load 一下
     audio.load();
   }
-
-  return waitForCanPlay(audio);
 }
