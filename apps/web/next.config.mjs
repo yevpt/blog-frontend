@@ -4,6 +4,7 @@ import { getDevAllowedOrigins } from "./config/allowed-dev-origins.mjs";
 import optimizedImageHosts from "./config/optimized-image-hosts.json" with { type: "json" };
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const IMAGE_CACHE_TTL_SECONDS = 60 * 60 * 24 * 6;
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
@@ -24,8 +25,8 @@ const nextConfig = {
     imgOptTimeoutInSeconds: 30,
   },
   images: {
-    // 优化结果缓存 24h，避免同一 OSS 图反复拉取+转码
-    minimumCacheTTL: 86400,
+    // 优化结果缓存 6 天；原图 URL 已带版本参数时适合长缓存
+    minimumCacheTTL: IMAGE_CACHE_TTL_SECONDS,
     remotePatterns: optimizedImageHosts.map((hostname) => ({ hostname })),
   },
 };
