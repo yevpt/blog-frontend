@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image, { type ImageProps } from "next/image";
 import {
   useDeferredMediaActivation,
@@ -91,28 +91,64 @@ export function LoadingImage({
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
   const imageRef = useRef<HTMLImageElement | null>(null);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** 同一次挂载/重试内避免 onError 与 complete 检测重复触发失败逻辑 */
+  const failureHandledRef = useRef(false);
   const isLoading = status === "loading";
   const isError = status === "error";
   const unoptimized = unoptimizedProp || useUnoptimizedFallback;
   const placeholder = useImageLoadPlaceholder(isLoading);
 
+  const scheduleOptimizerRetry = useCallback(() => {
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    retryTimerRef.current = setTimeout(() => {
+      retryTimerRef.current = null;
+      failureHandledRef.current = false;
+      setRetryAttempt((attempt) => attempt + 1);
+    }, OPTIMIZER_RETRY_DELAY_MS);
+  }, []);
+
+  const handleImageFailure = useCallback((): boolean => {
+    if (failureHandledRef.current) return false;
+    failureHandledRef.current = true;
+
+    if (!unoptimized && retryAttempt < OPTIMIZER_MAX_RETRIES) {
+      setStatus("loading");
+      scheduleOptimizerRetry();
+      return false;
+    }
+    if (fallbackUnoptimized && !unoptimizedProp && !useUnoptimizedFallback) {
+      failureHandledRef.current = false;
+      setUseUnoptimizedFallback(true);
+      setRetryAttempt(0);
+      setStatus("loading");
+      return false;
+    }
+    setStatus("error");
+    return true;
+  }, [
+    fallbackUnoptimized,
+    retryAttempt,
+    scheduleOptimizerRetry,
+    unoptimized,
+    unoptimizedProp,
+    useUnoptimizedFallback,
+  ]);
+
   useEffect(() => {
+    failureHandledRef.current = false;
     setRetryAttempt(0);
     setUseUnoptimizedFallback(false);
     const image = imageRef.current;
-    if (image?.complete) {
-      setStatus(image.naturalWidth > 0 ? "loaded" : "error");
+    if (image?.complete && image.naturalWidth > 0) {
+      setStatus("loaded");
       return;
     }
     setStatus("loading");
   }, [src]);
 
   useEffect(() => {
-    const image = imageRef.current;
-    if (image?.complete) {
-      setStatus(image.naturalWidth > 0 ? "loaded" : "error");
-    }
-  }, [unoptimized, retryAttempt]);
+    failureHandledRef.current = false;
+  }, [retryAttempt, unoptimized]);
 
   useEffect(() => {
     return () => {
@@ -122,17 +158,13 @@ export function LoadingImage({
 
   function assignImageRef(node: HTMLImageElement | null) {
     imageRef.current = node;
-    if (node?.complete) {
-      setStatus(node.naturalWidth > 0 ? "loaded" : "error");
+    if (node?.complete && node.naturalWidth > 0) {
+      setStatus("loaded");
+      return;
     }
-  }
-
-  function scheduleOptimizerRetry() {
-    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
-    retryTimerRef.current = setTimeout(() => {
-      retryTimerRef.current = null;
-      setRetryAttempt((attempt) => attempt + 1);
-    }, OPTIMIZER_RETRY_DELAY_MS);
+    if (node?.complete && node.naturalWidth === 0) {
+      handleImageFailure();
+    }
   }
 
   if (!mediaReady) {
@@ -202,18 +234,9 @@ export function LoadingImage({
           onLoad?.(event);
         }}
         onError={(event) => {
-          if (!unoptimized && retryAttempt < OPTIMIZER_MAX_RETRIES) {
-            scheduleOptimizerRetry();
-            return;
+          if (handleImageFailure()) {
+            onError?.(event);
           }
-          if (fallbackUnoptimized && !unoptimized) {
-            setUseUnoptimizedFallback(true);
-            setRetryAttempt(0);
-            setStatus("loading");
-            return;
-          }
-          setStatus("error");
-          onError?.(event);
         }}
       />
     </>

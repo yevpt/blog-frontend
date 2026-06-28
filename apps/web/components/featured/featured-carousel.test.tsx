@@ -23,7 +23,7 @@ vi.mock("next/image", () => ({
     src,
     alt,
     fill,
-    priority: _priority,
+    priority,
     quality,
     sizes,
     unoptimized,
@@ -43,6 +43,7 @@ vi.mock("next/image", () => ({
       alt={alt}
       className={className}
       data-fill={fill}
+      data-priority={priority ?? false}
       data-quality={quality}
       data-sizes={sizes}
       data-unoptimized={unoptimized}
@@ -202,6 +203,7 @@ function getDesktopCarousel() {
 afterEach(() => {
   vi.useRealTimers();
   vi.clearAllMocks();
+  deferredMediaMock.useDeferredMediaActivation.mockReturnValue(true);
   carouselMockState.watchDrag = undefined;
 });
 
@@ -257,6 +259,21 @@ describe("FeaturedCarousel", () => {
         (image) => image.getAttribute("data-sizes") === "(max-width: 768px) 100vw, 55vw",
       ),
     ).toBe(true);
+  });
+
+  it("当前幻灯片封面优先加载且不等页面 idle", () => {
+    vi.mocked(deferredMediaMock.useDeferredMediaActivation).mockReturnValue(false);
+
+    render(<FeaturedCarousel posts={mockPosts} />);
+
+    const firstTitleImages = screen.getAllByRole("img", { name: "第一篇文章标题" });
+    expect(firstTitleImages).toHaveLength(2);
+    expect(firstTitleImages.every((img) => img.getAttribute("data-priority") === "true")).toBe(
+      true,
+    );
+
+    expect(screen.queryByRole("img", { name: "第二篇文章标题" })).not.toBeInTheDocument();
+    expect(screen.getAllByTestId("loading-image-skeleton").length).toBeGreaterThan(0);
   });
 
   it("GIF 轮播封面跳过 Next 优化", () => {

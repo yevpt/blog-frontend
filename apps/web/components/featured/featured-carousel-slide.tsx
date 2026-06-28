@@ -38,6 +38,8 @@ export function FeaturedCarouselSlide({ post, isActive }: FeaturedCarouselSlideP
           src={post.coverImage}
           alt={post.title}
           fill
+          priority={isActive}
+          defer={!isActive}
           className={cn(
             "object-cover",
             isActive && "transition-transform duration-[6000ms] ease-out",

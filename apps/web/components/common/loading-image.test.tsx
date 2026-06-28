@@ -171,14 +171,50 @@ describe("LoadingImage", () => {
     expect(screen.getByRole("img", { name: "封面" })).toHaveClass("opacity-100");
   });
 
-  it("挂载时已 complete 但 naturalWidth 为 0（加载失败）则显示占位", () => {
+  it("挂载时已 complete 但 naturalWidth 为 0 时先走重试并显示骨架屏", async () => {
+    vi.useFakeTimers();
     mockComplete = true;
     mockNaturalWidth = 0;
 
     render(<LoadingImage src="https://example.com/broken.jpg" alt="封面" fill />);
 
-    expect(screen.queryByTestId("loading-image-skeleton")).not.toBeInTheDocument();
-    expect(screen.getByTestId("loading-image-fallback")).toBeInTheDocument();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(IMAGE_PLACEHOLDER_DELAY_MS);
+    });
+
+    expect(screen.getByTestId("loading-image-skeleton")).toBeInTheDocument();
+    expect(screen.queryByTestId("loading-image-fallback")).not.toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it("回退 unoptimized 期间保持骨架屏，不提前显示无图占位", async () => {
+    vi.useFakeTimers();
+    mockComplete = false;
+    mockNaturalWidth = 0;
+
+    render(
+      <LoadingImage src="https://example.com/cover.jpg" alt="封面" fill fallbackUnoptimized />,
+    );
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(IMAGE_PLACEHOLDER_DELAY_MS);
+    });
+
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      await act(async () => {
+        fireEvent.error(screen.getByRole("img", { name: "封面" }));
+      });
+      if (attempt < 3) {
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(1500);
+        });
+      }
+    }
+
+    expect(screen.getByRole("img", { name: "封面" })).toHaveAttribute("data-unoptimized", "true");
+    expect(screen.getByTestId("loading-image-skeleton")).toBeInTheDocument();
+    expect(screen.queryByTestId("loading-image-fallback")).not.toBeInTheDocument();
+    vi.useRealTimers();
   });
 
   it("透传 className 到图片元素", () => {
