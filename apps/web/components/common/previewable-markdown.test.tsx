@@ -12,7 +12,9 @@ describe("PreviewableMarkdown", () => {
     const original = "https://blog-oss.yevpt.com/posts/a.jpg";
     render(<PreviewableMarkdown html={`<p><img src="${original}" alt="封图"></p>`} />);
     const image = screen.getByAltText("封图") as HTMLImageElement;
-    expect(image.src).toContain("/_next/image?url=");
+    expect(image.src).toContain("w=1080");
+    expect(image.src).toContain("q=75");
+    expect(image.src).not.toContain("/_next/image");
     fireEvent.click(image);
     expect(useImageViewer.getState().images[0]).toEqual({ src: original, alt: "封图" });
   });
