@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
-import { useTheme } from "../../app/providers/theme-provider";
 import { useLocale } from "@repo/hooks";
 import { useLoginModal } from "@/store/use-login-modal";
 import { useSession } from "@/app/providers/session-provider";
@@ -12,6 +11,7 @@ import { isAdminUser } from "@/lib/user-roles";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { NAV_ITEMS } from "./nav-items";
 import { openAdminPanel } from "./admin-panel";
+import { NavbarMobileThemeToggle } from "./navbar-theme-toggle";
 
 interface NavbarMobileMenuProps {
   isOpen: boolean;
@@ -20,12 +20,10 @@ interface NavbarMobileMenuProps {
 }
 
 export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileMenuProps) {
-  const { resolvedTheme, setTheme } = useTheme();
   const { t } = useLocale();
   const { open: openLoginModal } = useLoginModal();
   const { userId, profile } = useSession();
   const router = useRouter();
-  const nextTheme = resolvedTheme === "dark" ? "light" : "dark";
   const displayName = profile?.nickname ?? profile?.username ?? "我的账号";
   const isAdmin = isAdminUser(profile?.roles);
 
@@ -46,43 +44,6 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
 
   const listRowClass =
     "flex w-full cursor-pointer items-center gap-2.5 rounded-[10px] px-2.5 py-[9px] transition-colors hover:bg-foreground/[0.04]";
-
-  // 登录态和未登录态共用同一主题切换行；使用原生 button，避免 Button 的按压缩放带动整行抖动
-  const themeRow = (
-    <button
-      type="button"
-      onClick={() => setTheme(nextTheme)}
-      className={cn(
-        listRowClass,
-        "border-0 bg-transparent font-inherit outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-      )}
-      aria-label={`当前生效主题：${resolvedTheme}，点击切换到 ${nextTheme}`}
-    >
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/[0.10]">
-        <SvgIcon
-          name={resolvedTheme === "dark" ? "moon" : "sun"}
-          size={14}
-          className="text-amber-500"
-        />
-      </div>
-      <span className="flex-1 text-left text-[13px] font-medium text-foreground">
-        {resolvedTheme === "dark" ? "深色模式" : "浅色模式"}
-      </span>
-      <div
-        className={cn(
-          "relative flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200",
-          resolvedTheme === "dark" ? "bg-primary/80" : "bg-foreground/20",
-        )}
-      >
-        <div
-          className={cn(
-            "absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200",
-            resolvedTheme === "dark" ? "translate-x-4" : "translate-x-0.5",
-          )}
-        />
-      </div>
-    </button>
-  );
 
   return (
     <div
@@ -108,6 +69,7 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
                     userId={userId ?? profile?.id}
                     name={displayName}
                     size="md"
+                    loadingEager
                     className="h-9 w-9 text-[13px]"
                   />
                   <span className="min-w-0">
@@ -212,7 +174,12 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
                   <SvgIcon name="arrow-up-right" size={13} className="shrink-0 text-(--fg3)" />
                 </button>
               )}
-              {themeRow}
+              <NavbarMobileThemeToggle
+                className={cn(
+                  listRowClass,
+                  "border-0 bg-transparent font-inherit outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                )}
+              />
             </div>
           </div>
         </div>

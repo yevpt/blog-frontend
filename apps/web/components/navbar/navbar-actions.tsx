@@ -1,23 +1,11 @@
 "use client";
 
-import { SvgIcon } from "@repo/icons";
 import { Button, cn } from "@repo/ui";
-import { useTheme } from "../../app/providers/theme-provider";
 import { useLocale } from "@repo/hooks";
 import { useLoginModal } from "@/store/use-login-modal";
 import { useSession } from "@/app/providers/session-provider";
 import { NavbarUserMenu } from "./navbar-user-menu";
-
-type ResolvedTheme = "light" | "dark";
-
-const THEME_ICONS: Record<ResolvedTheme, "sun" | "moon"> = {
-  light: "sun",
-  dark: "moon",
-};
-
-function getOppositeTheme(theme: ResolvedTheme): ResolvedTheme {
-  return theme === "dark" ? "light" : "dark";
-}
+import { NavbarThemeToggle } from "./navbar-theme-toggle";
 
 interface NavbarActionsProps {
   isGlass?: boolean;
@@ -25,23 +13,13 @@ interface NavbarActionsProps {
 }
 
 export function NavbarActions({ isGlass = false, unreadCount = 0 }: NavbarActionsProps) {
-  const { resolvedTheme, setTheme } = useTheme();
   const { t } = useLocale();
   const { open: openLoginModal } = useLoginModal();
   const { userId } = useSession();
-  const nextTheme = getOppositeTheme(resolvedTheme);
 
   return (
     <div data-testid="navbar-actions" className="flex items-center gap-3">
-      <Button
-        variant="ghost"
-        onPress={() => setTheme(nextTheme)}
-        className="h-8 w-8 rounded-lg p-0 text-(--fg2) hover:bg-foreground/5 hover:text-foreground data-[glass=true]:text-(--fg2) data-[glass=true]:hover:bg-primary/10 data-[glass=true]:hover:text-primary"
-        aria-label={`当前生效主题：${resolvedTheme}，点击切换到 ${nextTheme}`}
-        data-glass={isGlass}
-      >
-        <SvgIcon name={THEME_ICONS[resolvedTheme]} size={18} />
-      </Button>
+      <NavbarThemeToggle isGlass={isGlass} />
 
       <div className="hidden items-center gap-3 md:flex">
         {userId != null ? (
