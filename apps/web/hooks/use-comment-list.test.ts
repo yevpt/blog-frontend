@@ -132,6 +132,42 @@ describe("useCommentList", () => {
     expect(result.current.comments[0].like_count).toBe(5);
   });
 
+  it("updateComment 按 id 原位替换列表项且不改变位置", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      jsonResponse(mockPage([makeComment(1), makeComment(2), makeComment(3)])),
+    );
+
+    const { result } = renderHook(() => useCommentList("article", 1));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    const updated: CommentItemResp = {
+      ...makeComment(2),
+      content: "编辑后的内容",
+      moderation: {
+        public_state: "visible",
+        display_version: "last_approved",
+        has_pending_revision: true,
+        pending_risk_level: "low",
+        can_interact: true,
+      },
+    };
+    act(() => result.current.updateComment(updated));
+
+    expect(result.current.comments.map((c) => c.id)).toEqual([1, 2, 3]);
+    expect(result.current.comments[1].content).toBe("编辑后的内容");
+    expect(result.current.comments[1].moderation?.has_pending_revision).toBe(true);
+  });
+
+  it("updateComment 替换不增加或减少列表长度", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeComment(1)])));
+
+    const { result } = renderHook(() => useCommentList("article", 1));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => result.current.updateComment({ ...makeComment(1), content: "new" }));
+    expect(result.current.comments).toHaveLength(1);
+  });
+
   it("removeComment 从列表中移除指定评论", async () => {
     vi.mocked(global.fetch).mockResolvedValue(
       jsonResponse(mockPage([makeComment(1), makeComment(2)])),

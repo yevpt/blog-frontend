@@ -46,11 +46,16 @@ export function InlineComments({
     error,
     loadMore,
     replyTarget,
+    editTarget,
     content,
     pendingReplies,
+    editedReplies,
     isSubmitting,
     handleReply,
     handleCancelReply,
+    handleCancelEdit,
+    handleEditComment,
+    handleEditReply,
     handleSubmit,
     handleCommentLike,
     handleCommentDelete,
@@ -63,10 +68,21 @@ export function InlineComments({
     onScrollToEditor: scrollToEditor,
   });
 
-  const placeholder = replyTarget ? `回复 @${replyTarget.toUsername}…` : "写下你的评论...";
+  const placeholder = replyTarget
+    ? `回复 @${replyTarget.toUsername}…`
+    : editTarget
+      ? "编辑内容..."
+      : "写下你的评论...";
 
   const replyHeader = replyTarget ? (
     <ReplyBanner toUsername={replyTarget.toUsername} onCancel={handleCancelReply} />
+  ) : editTarget ? (
+    <ReplyBanner
+      toUsername="编辑中"
+      onCancel={handleCancelEdit}
+      editing
+      pendingReview={editTarget.pendingReview}
+    />
   ) : undefined;
 
   return (
@@ -95,12 +111,15 @@ export function InlineComments({
           error={error}
           hasMore={hasMore}
           pendingReplies={pendingReplies}
+          editedReplies={editedReplies}
           targetType={targetType}
           onReply={handleReply}
           onLike={handleCommentLike}
           currentUserId={userId}
           onDelete={handleCommentDelete}
           onDeleteReply={handleReplyDelete}
+          onEditComment={handleEditComment}
+          onEditReply={handleEditReply}
           onLoadMore={loadMore}
         />
       </div>

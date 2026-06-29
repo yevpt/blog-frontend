@@ -104,6 +104,25 @@ describe("PillCommentInput（已登录）", () => {
     expect(screen.getByPlaceholderText("写下你的回复...")).toBeTruthy();
   });
 
+  it("编辑待审版本时显示审核提示并可取消", async () => {
+    const onCancelEdit = vi.fn();
+    render(
+      <PillCommentInput
+        value="待审正文"
+        onChange={vi.fn()}
+        onSubmit={vi.fn()}
+        editing
+        pendingReview
+        onCancelEdit={onCancelEdit}
+      />,
+    );
+
+    expect(screen.getByText("编辑中 · 内容正在审核")).toBeTruthy();
+    expect(screen.getByPlaceholderText("编辑内容...")).toBeTruthy();
+    await userEvent.click(screen.getByLabelText("取消编辑"));
+    expect(onCancelEdit).toHaveBeenCalledOnce();
+  });
+
   it("textarea 设置 maxLength 为 2000，提交前拦截超长内容", () => {
     render(<PillCommentInput value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
     const field = screen.getByPlaceholderText("写下你的评论...");

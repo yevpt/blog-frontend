@@ -44,6 +44,16 @@ vi.mock("@/store/use-login-modal", () => ({
   },
 }));
 
+vi.mock("@/components/moderation", () => ({
+  ModerationStatusBadge: ({ moderation }: { moderation?: { public_state: string } | null }) =>
+    moderation && moderation.public_state !== "visible" ? (
+      <span data-testid="moderation-badge">{moderation.public_state}</span>
+    ) : null,
+  ModerationContentPlaceholder: () => <div data-testid="moderation-placeholder">等待人工审核</div>,
+  normalizeModerationView: (m: unknown) =>
+    m ?? { public_state: "visible", display_version: "last_approved", can_interact: true },
+}));
+
 vi.mock("@/hooks/use-comment-like", () => ({
   useCommentLike: () => ({
     toggleReplyLike: vi.fn(() => Promise.resolve({ is_liked: true, like_count: 1 })),
@@ -601,6 +611,288 @@ describe("CommentReplies", () => {
     await waitFor(() => {
       const links = screen.getAllByRole("link", { name: "Alice" });
       expect(links.every((l) => l.getAttribute("href") === "/users/1")).toBe(true);
+    });
+  });
+
+  describe("审核展示", () => {
+    it("placeholder 回复渲染安全占位而非 markdown", async () => {
+      const user = userEvent.setup();
+      vi.mocked(global.fetch).mockResolvedValue(
+        jsonResponse(
+          mockPage([
+            makeReply(1, {
+              content: "敏感内容",
+              moderation: {
+                public_state: "placeholder",
+                display_version: "none",
+                has_pending_revision: true,
+                pending_risk_level: "medium",
+                can_interact: false,
+              },
+            }),
+          ]),
+        ),
+      );
+
+      render(
+        <CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />,
+      );
+      await user.click(screen.getByText(/展开 1 条回复/));
+      await waitFor(() => expect(screen.getByTestId("moderation-placeholder")).toBeTruthy());
+      expect(screen.queryByText("敏感内容")).toBeNull();
+    });
+
+    it("visible + pending_revision 回复显示正文与审核 Badge", async () => {
+      const user = userEvent.setup();
+      vi.mocked(global.fetch).mockResolvedValue(
+        jsonResponse(
+          mockPage([
+            makeReply(1, {
+              content: "正文",
+              moderation: {
+                public_state: "visible",
+                display_version: "last_approved",
+                has_pending_revision: true,
+                pending_risk_level: "low",
+                can_interact: true,
+              },
+            }),
+          ]),
+        ),
+      );
+
+      render(
+        <CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />,
+      );
+      await user.click(screen.getByText(/展开 1 条回复/));
+      await waitFor(() => expect(screen.getByText("正文")).toBeTruthy());
+      expect(screen.queryByTestId("moderation-placeholder")).toBeNull();
+    });
+
+    it("targetType=guestbook 的 placeholder 回复也由共享组件渲染占位", async () => {
+      const user = userEvent.setup();
+      vi.mocked(global.fetch).mockResolvedValue(
+        jsonResponse(
+          mockPage([
+            makeReply(1, {
+              content: "敏感",
+              moderation: {
+                public_state: "placeholder",
+                display_version: "none",
+                has_pending_revision: true,
+                pending_risk_level: "medium",
+                can_interact: false,
+              },
+            }),
+          ]),
+        ),
+      );
+
+      render(
+        <CommentReplies commentId={1} targetType="guestbook" replyCount={1} onReply={vi.fn()} />,
+      );
+      await user.click(screen.getByText(/展开 1 条回复/));
+      await waitFor(() => expect(screen.getByTestId("moderation-placeholder")).toBeTruthy());
+    });
+
+    it("targetType=moment 的 placeholder 回复也由共享组件渲染占位", async () => {
+      const user = userEvent.setup();
+      vi.mocked(global.fetch).mockResolvedValue(
+        jsonResponse(
+          mockPage([
+            makeReply(1, {
+              content: "敏感",
+              moderation: {
+                public_state: "placeholder",
+                display_version: "none",
+                has_pending_revision: true,
+                pending_risk_level: "medium",
+                can_interact: false,
+              },
+            }),
+          ]),
+        ),
+      );
+
+      render(<CommentReplies commentId={1} targetType="moment" replyCount={1} onReply={vi.fn()} />);
+      await user.click(screen.getByText(/展开 1 条回复/));
+      await waitFor(() => expect(screen.getByTestId("moderation-placeholder")).toBeTruthy());
+    });
+  });
+
+  describe("can_interact=false 限制", () => {
+    it("can_interact=false 时隐藏回复的点赞和回复按钮", async () => {
+      const user = userEvent.setup();
+      vi.mocked(global.fetch).mockResolvedValue(
+        jsonResponse(
+          mockPage([
+            makeReply(1, {
+              moderation: {
+                public_state: "visible",
+                display_version: "last_approved",
+                has_pending_revision: false,
+                can_interact: false,
+              },
+            }),
+          ]),
+        ),
+      );
+
+      render(
+        <CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />,
+      );
+      await user.click(screen.getByText(/展开 1 条回复/));
+      await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+
+      expect(screen.queryByLabelText(/点赞/)).toBeNull();
+      expect(screen.queryByRole("button", { name: "回复" })).toBeNull();
+    });
+
+    it("can_interact=false 但作者删除按钮仍可见", async () => {
+      const user = userEvent.setup();
+      vi.mocked(global.fetch).mockResolvedValue(
+        jsonResponse(
+          mockPage([
+            makeReply(1, {
+              moderation: {
+                public_state: "visible",
+                display_version: "last_approved",
+                has_pending_revision: false,
+                can_interact: false,
+              },
+            }),
+          ]),
+        ),
+      );
+
+      render(
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          currentUserId={1}
+          onReply={vi.fn()}
+          onDeleteReply={vi.fn().mockResolvedValue(true)}
+        />,
+      );
+      await user.click(screen.getByText(/展开 1 条回复/));
+      await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+
+      expect(screen.getByRole("button", { name: "删除回复" })).toBeTruthy();
+    });
+  });
+
+  describe("作者编辑入口", () => {
+    it("作者点击编辑按钮触发 onEditReply", async () => {
+      const user = userEvent.setup();
+      vi.mocked(global.fetch).mockResolvedValue(
+        jsonResponse(mockPage([makeReply(1, { from_user_id: 1, parent_reply_id: 0 })])),
+      );
+      const onEditReply = vi.fn();
+
+      render(
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          currentUserId={1}
+          onReply={vi.fn()}
+          onEditReply={onEditReply}
+        />,
+      );
+      await user.click(screen.getByText(/展开 1 条回复/));
+      await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+
+      await user.click(screen.getByRole("button", { name: "编辑回复" }));
+      expect(onEditReply).toHaveBeenCalledWith({
+        type: "reply",
+        id: 1,
+        commentId: 1,
+        parentReplyId: 0,
+        initialContent: "回复 1",
+        pendingReview: false,
+      });
+    });
+
+    it("编辑 pending_content 时初始内容为待审版本", async () => {
+      const user = userEvent.setup();
+      vi.mocked(global.fetch).mockResolvedValue(
+        jsonResponse(
+          mockPage([
+            makeReply(1, {
+              content: "旧公开版本",
+              moderation: {
+                public_state: "visible",
+                display_version: "last_approved",
+                has_pending_revision: true,
+                pending_risk_level: "medium",
+                can_interact: true,
+                pending_content: "新待审版本",
+              },
+            }),
+          ]),
+        ),
+      );
+      const onEditReply = vi.fn();
+
+      render(
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          currentUserId={1}
+          onReply={vi.fn()}
+          onEditReply={onEditReply}
+        />,
+      );
+      await user.click(screen.getByText(/展开 1 条回复/));
+      await waitFor(() => expect(screen.getByText("旧公开版本")).toBeTruthy());
+
+      await user.click(screen.getByRole("button", { name: "编辑回复" }));
+      expect(onEditReply).toHaveBeenCalledWith(
+        expect.objectContaining({ initialContent: "新待审版本" }),
+      );
+    });
+
+    it("非作者不显示编辑按钮", async () => {
+      const user = userEvent.setup();
+      vi.mocked(global.fetch).mockResolvedValue(
+        jsonResponse(mockPage([makeReply(1, { from_user_id: 2 })])),
+      );
+
+      render(
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          currentUserId={1}
+          onReply={vi.fn()}
+          onEditReply={vi.fn()}
+        />,
+      );
+      await user.click(screen.getByText(/展开 1 条回复/));
+      await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+
+      expect(screen.queryByRole("button", { name: "编辑回复" })).toBeNull();
+    });
+
+    it("未提供 onEditReply 时不显示编辑按钮", async () => {
+      const user = userEvent.setup();
+      vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
+
+      render(
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          currentUserId={1}
+          onReply={vi.fn()}
+        />,
+      );
+      await user.click(screen.getByText(/展开 1 条回复/));
+      await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+
+      expect(screen.queryByRole("button", { name: "编辑回复" })).toBeNull();
     });
   });
 });

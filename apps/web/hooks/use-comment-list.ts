@@ -111,6 +111,11 @@ export function useCommentList(targetType: TargetType, targetId: number) {
     [],
   );
 
+  /** 按 ID 原位替换评论列表项，保持位置与计数不变，用于编辑/审核再审等场景。 */
+  const updateComment = useCallback((comment: CommentItemResp) => {
+    setComments((prev) => prev.map((c) => (c.id === comment.id ? comment : c)));
+  }, []);
+
   return {
     comments,
     isLoading,
@@ -123,5 +128,6 @@ export function useCommentList(targetType: TargetType, targetId: number) {
     decrementReplyCount,
     removeComment,
     updateCommentLike,
+    updateComment,
   };
 }

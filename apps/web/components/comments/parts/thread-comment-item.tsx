@@ -5,6 +5,12 @@ import Link from "next/link";
 import { Button, Popover, PopoverDialog, PopoverTrigger, cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
 import { markdownToHtmlSync } from "@repo/markdown";
+import type { ModerationView } from "@repo/api";
+import {
+  ModerationContentPlaceholder,
+  ModerationStatusBadge,
+  normalizeModerationView,
+} from "@/components/moderation";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { PreviewableMarkdown } from "@/components/common/previewable-markdown";
 import { formatDateTime } from "@/lib/format-time";
@@ -164,9 +170,12 @@ export interface ThreadCommentHeaderProps {
   onLike: () => void;
   onReply?: () => void;
   onDelete?: () => DeleteResult;
+  onEdit?: () => void;
+  editLabel?: string;
   deleteLabel?: string;
   deleteConfirmMessage?: string;
   linkProfile?: boolean;
+  moderation?: ModerationView | null;
 }
 
 /** 留言板风格头部：头像 + 用户名/回复/时间 + 右侧点赞 */
@@ -178,10 +187,15 @@ export const ThreadCommentHeader = memo(function ThreadCommentHeader({
   onLike,
   onReply,
   onDelete,
+  onEdit,
+  editLabel = "编辑评论",
   deleteLabel = "删除评论",
   deleteConfirmMessage = "确定删除这条评论吗？",
   linkProfile = false,
+  moderation,
 }: ThreadCommentHeaderProps) {
+  const view = normalizeModerationView(moderation);
+  const interactive = view.can_interact;
   const displayName = getThreadDisplayName(user);
   const time = formatDateTime(createdAt);
 
@@ -203,7 +217,18 @@ export const ThreadCommentHeader = memo(function ThreadCommentHeader({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <ThreadUserName name={displayName} userId={user?.id} linkProfile={linkProfile} />
-              {onReply && (
+              <ModerationStatusBadge moderation={view} />
+              {onEdit && (
+                <Button
+                  variant="text"
+                  onPress={onEdit}
+                  aria-label={editLabel}
+                  className="h-auto min-h-0 shrink-0 p-0 text-xs leading-none font-medium text-(--fg3) transition-colors hover:text-foreground"
+                >
+                  编辑
+                </Button>
+              )}
+              {onReply && interactive && (
                 <Button
                   variant="text"
                   onPress={onReply}
@@ -222,7 +247,9 @@ export const ThreadCommentHeader = memo(function ThreadCommentHeader({
             </div>
             <span className="mt-1.5 block text-[12px] text-(--fg1)">{time}</span>
           </div>
-          <ThreadLikeButton isLiked={isLiked} likeCount={likeCount} onPress={onLike} />
+          {interactive && (
+            <ThreadLikeButton isLiked={isLiked} likeCount={likeCount} onPress={onLike} />
+          )}
         </div>
       </div>
     </div>
@@ -232,10 +259,25 @@ export const ThreadCommentHeader = memo(function ThreadCommentHeader({
 export interface ThreadCommentContentProps {
   content: string;
   className?: string;
+  moderation?: ModerationView | null;
 }
 
-/** 主评论正文，占满卡片宽度 */
-export function ThreadCommentContent({ content, className }: ThreadCommentContentProps) {
+/** 主评论正文，占满卡片宽度；public_state=placeholder 时仅渲染审核占位，不传 content 到 markdown */
+export function ThreadCommentContent({
+  content,
+  className,
+  moderation,
+}: ThreadCommentContentProps) {
+  const view = normalizeModerationView(moderation);
+
+  if (view.public_state === "placeholder") {
+    return (
+      <div className={cn("text-[12px] leading-relaxed text-(--fg1)", className)}>
+        <ModerationContentPlaceholder moderation={view} />
+      </div>
+    );
+  }
+
   return (
     <div className={cn("text-[12px] leading-relaxed text-(--fg1)", className)}>
       <ThreadMarkdownBody content={content} />
@@ -253,9 +295,12 @@ export interface ThreadReplyItemProps {
   onLike: () => void;
   onReply?: () => void;
   onDelete?: () => DeleteResult;
+  onEdit?: () => void;
+  editLabel?: string;
   deleteLabel?: string;
   deleteConfirmMessage?: string;
   linkProfile?: boolean;
+  moderation?: ModerationView | null;
 }
 
 /** 留言板风格回复项：头像列 + 头部 + @提及 + 正文 */
@@ -269,10 +314,15 @@ export const ThreadReplyItem = memo(function ThreadReplyItem({
   onLike,
   onReply,
   onDelete,
+  onEdit,
+  editLabel = "编辑回复",
   deleteLabel = "删除回复",
   deleteConfirmMessage = "确定删除这条回复吗？",
   linkProfile = false,
+  moderation,
 }: ThreadReplyItemProps) {
+  const view = normalizeModerationView(moderation);
+  const interactive = view.can_interact;
   const displayName = getThreadDisplayName(user);
   const mentionName = mentionUser ? getThreadDisplayName(mentionUser) : null;
   const time = formatDateTime(createdAt);
@@ -295,7 +345,18 @@ export const ThreadReplyItem = memo(function ThreadReplyItem({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <ThreadUserName name={displayName} userId={user?.id} linkProfile={linkProfile} />
-              {onReply && (
+              <ModerationStatusBadge moderation={view} />
+              {onEdit && (
+                <Button
+                  variant="text"
+                  onPress={onEdit}
+                  aria-label={editLabel}
+                  className="h-auto min-h-0 shrink-0 p-0 text-xs leading-none font-medium text-(--fg3) transition-colors hover:text-foreground"
+                >
+                  编辑
+                </Button>
+              )}
+              {onReply && interactive && (
                 <Button
                   variant="text"
                   onPress={onReply}
@@ -314,13 +375,19 @@ export const ThreadReplyItem = memo(function ThreadReplyItem({
             </div>
             <span className="mt-1.5 block text-[12px] text-(--fg1)">{time}</span>
           </div>
-          <ThreadLikeButton isLiked={isLiked} likeCount={likeCount} onPress={onLike} />
+          {interactive && (
+            <ThreadLikeButton isLiked={isLiked} likeCount={likeCount} onPress={onLike} />
+          )}
         </div>
         <div className="text-[12px] leading-relaxed text-(--fg1)">
           {mentionName && (
             <ThreadMention name={mentionName} userId={mentionUser?.id} linkProfile={linkProfile} />
           )}
-          <ThreadMarkdownBody content={content} />
+          {view.public_state === "placeholder" ? (
+            <ModerationContentPlaceholder moderation={view} />
+          ) : (
+            <ThreadMarkdownBody content={content} />
+          )}
         </div>
       </div>
     </div>

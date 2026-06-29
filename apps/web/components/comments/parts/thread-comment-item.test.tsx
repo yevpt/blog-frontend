@@ -4,12 +4,44 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { markdownToHtmlSync } from "@repo/markdown";
+import type { ModerationView } from "@repo/api";
 import {
   ThreadCommentContent,
   ThreadCommentHeader,
   ThreadReplyItem,
   getThreadDisplayName,
 } from "./thread-comment-item";
+
+const placeholderModeration: ModerationView = {
+  public_state: "placeholder",
+  display_version: "none",
+  has_pending_revision: true,
+  pending_risk_level: "medium",
+  can_interact: false,
+};
+
+const visibleLowPendingModeration: ModerationView = {
+  public_state: "visible",
+  display_version: "last_approved",
+  has_pending_revision: true,
+  pending_risk_level: "low",
+  can_interact: true,
+};
+
+const visibleMediumPendingModeration: ModerationView = {
+  public_state: "visible",
+  display_version: "last_approved",
+  has_pending_revision: true,
+  pending_risk_level: "medium",
+  can_interact: true,
+};
+
+const forbiddenVisibleModeration: ModerationView = {
+  public_state: "visible",
+  display_version: "last_approved",
+  has_pending_revision: false,
+  can_interact: false,
+};
 
 vi.mock("next/link", () => ({
   default: ({
@@ -146,5 +178,186 @@ describe("ThreadReplyItem", () => {
     );
     await userEvent.click(screen.getByRole("button", { name: "回复" }));
     expect(onReply).toHaveBeenCalled();
+  });
+
+  describe("审核展示", () => {
+    it("ThreadCommentContent 在 public_state=placeholder 时渲染安全占位而非 markdown", () => {
+      const { container } = render(
+        <ThreadCommentContent content="敏感内容" moderation={placeholderModeration} />,
+      );
+      expect(screen.getByText("等待人工审核")).toBeTruthy();
+      // 不把 content 渲染到 markdown 容器
+      const markdown = container.querySelector('[data-testid="markdown-body"]');
+      expect(markdown).toBeNull();
+    });
+
+    it("ThreadCommentContent 在 visible + has_pending_revision 时仍渲染 markdown（Badge 由 Header 渲染）", () => {
+      const { container } = render(
+        <ThreadCommentContent content="旧内容" moderation={visibleLowPendingModeration} />,
+      );
+      expect(screen.getByText("旧内容")).toBeTruthy();
+      const markdown = container.querySelector('[data-testid="markdown-body"]');
+      expect(markdown).toBeTruthy();
+    });
+
+    it("ThreadCommentHeader 在低风险待审核时渲染「待审核」Badge", () => {
+      render(
+        <ThreadCommentHeader
+          user={{ id: 1, username: "alice", nickname: "Alice" }}
+          createdAt="2026-01-01T00:00:00Z"
+          likeCount={0}
+          isLiked={false}
+          onLike={vi.fn()}
+          moderation={visibleLowPendingModeration}
+        />,
+      );
+      expect(screen.getByText("待审核")).toBeTruthy();
+    });
+
+    it("ThreadCommentHeader 在中风险待审时渲染「等待人工审核」Badge", () => {
+      render(
+        <ThreadCommentHeader
+          user={{ id: 1, username: "alice", nickname: "Alice" }}
+          createdAt="2026-01-01T00:00:00Z"
+          likeCount={0}
+          isLiked={false}
+          onLike={vi.fn()}
+          moderation={visibleMediumPendingModeration}
+        />,
+      );
+      expect(screen.getByText("等待人工审核")).toBeTruthy();
+    });
+
+    it("ThreadReplyItem 在 placeholder 时显示占位而非 markdown 内容", () => {
+      const { container } = render(
+        <ThreadReplyItem
+          user={{ id: 1, username: "bob" }}
+          createdAt="2026-01-01T00:00:00Z"
+          content="敏感内容"
+          likeCount={0}
+          isLiked={false}
+          onLike={vi.fn()}
+          moderation={placeholderModeration}
+        />,
+      );
+      // 头部 badge 与占位正文都会出现「等待人工审核」
+      expect(screen.getAllByText("等待人工审核").length).toBeGreaterThan(0);
+      const markdown = container.querySelector('[data-testid="markdown-body"]');
+      expect(markdown).toBeNull();
+    });
+
+    it("ThreadReplyItem 在 visible + pending 时显示 badge 与 markdown content", () => {
+      render(
+        <ThreadReplyItem
+          user={{ id: 1, username: "bob" }}
+          createdAt="2026-01-01T00:00:00Z"
+          content="正文"
+          likeCount={0}
+          isLiked={false}
+          onLike={vi.fn()}
+          moderation={visibleLowPendingModeration}
+        />,
+      );
+      expect(screen.getByText("正文")).toBeTruthy();
+      expect(screen.getByText("待审核")).toBeTruthy();
+    });
+  });
+
+  describe("can_interact=false 禁用互动", () => {
+    it("ThreadCommentHeader can_interact=false 时隐藏点赞与回复按钮", () => {
+      render(
+        <ThreadCommentHeader
+          user={{ id: 1, username: "alice", nickname: "Alice" }}
+          createdAt="2026-01-01T00:00:00Z"
+          likeCount={0}
+          isLiked={false}
+          onLike={vi.fn()}
+          onReply={vi.fn()}
+          moderation={forbiddenVisibleModeration}
+        />,
+      );
+      expect(screen.queryByRole("button", { name: /点赞/ })).toBeNull();
+      expect(screen.queryByRole("button", { name: "回复" })).toBeNull();
+    });
+
+    it("ThreadReplyItem can_interact=false 时隐藏点赞与回复按钮", () => {
+      render(
+        <ThreadReplyItem
+          user={{ id: 1, username: "bob" }}
+          createdAt="2026-01-01T00:00:00Z"
+          content="内容"
+          likeCount={0}
+          isLiked={false}
+          onLike={vi.fn()}
+          onReply={vi.fn()}
+          moderation={forbiddenVisibleModeration}
+        />,
+      );
+      expect(screen.queryByRole("button", { name: /点赞/ })).toBeNull();
+      expect(screen.queryByRole("button", { name: "回复" })).toBeNull();
+    });
+
+    it("ThreadReplyItem can_interact=false 但作者删除按钮仍可见", () => {
+      render(
+        <ThreadReplyItem
+          user={{ id: 1, username: "bob" }}
+          createdAt="2026-01-01T00:00:00Z"
+          content="内容"
+          likeCount={0}
+          isLiked={false}
+          onLike={vi.fn()}
+          onDelete={vi.fn()}
+          moderation={forbiddenVisibleModeration}
+        />,
+      );
+      expect(screen.getByRole("button", { name: "删除回复" })).toBeTruthy();
+    });
+  });
+
+  describe("作者编辑入口", () => {
+    it("ThreadCommentHeader 提供 onEdit 时渲染「编辑」按钮", () => {
+      render(
+        <ThreadCommentHeader
+          user={{ id: 1, username: "alice", nickname: "Alice" }}
+          createdAt="2026-01-01T00:00:00Z"
+          likeCount={0}
+          isLiked={false}
+          onLike={vi.fn()}
+          onEdit={vi.fn()}
+        />,
+      );
+      expect(screen.getByRole("button", { name: "编辑评论" })).toBeTruthy();
+    });
+
+    it("ThreadReplyItem 提供 onEdit 时渲染「编辑回复」按钮", () => {
+      render(
+        <ThreadReplyItem
+          user={{ id: 1, username: "bob" }}
+          createdAt="2026-01-01T00:00:00Z"
+          content="内容"
+          likeCount={0}
+          isLiked={false}
+          onLike={vi.fn()}
+          onEdit={vi.fn()}
+        />,
+      );
+      expect(screen.getByRole("button", { name: "编辑回复" })).toBeTruthy();
+    });
+
+    it("点击 ThreadCommentHeader 的编辑按钮触发 onEdit", async () => {
+      const onEdit = vi.fn();
+      render(
+        <ThreadCommentHeader
+          user={{ id: 1, username: "alice" }}
+          createdAt="2026-01-01T00:00:00Z"
+          likeCount={0}
+          isLiked={false}
+          onLike={vi.fn()}
+          onEdit={onEdit}
+        />,
+      );
+      await userEvent.click(screen.getByRole("button", { name: "编辑评论" }));
+      expect(onEdit).toHaveBeenCalled();
+    });
   });
 });

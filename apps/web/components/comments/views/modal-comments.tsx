@@ -37,12 +37,17 @@ export function ModalComments({
     error,
     loadMore,
     replyTarget,
+    editTarget,
     content,
     setContent,
     pendingReplies,
+    editedReplies,
     isSubmitting,
     handleReply,
     handleCancelReply,
+    handleEditComment,
+    handleEditReply,
+    handleCancelEdit,
     handleSubmit,
     handleCommentLike,
     handleCommentDelete,
@@ -73,12 +78,15 @@ export function ModalComments({
             error={error}
             hasMore={hasMore}
             pendingReplies={pendingReplies}
+            editedReplies={editedReplies}
             targetType={targetType}
             onReply={handleReply}
             onLike={handleCommentLike}
             currentUserId={userId}
             onDelete={handleCommentDelete}
             onDeleteReply={handleReplyDelete}
+            onEditComment={handleEditComment}
+            onEditReply={handleEditReply}
             onLoadMore={loadMore}
           />
         </div>
@@ -89,6 +97,9 @@ export function ModalComments({
         onSubmit={handleSubmit}
         replyTarget={replyTarget}
         onCancelReply={handleCancelReply}
+        editing={Boolean(editTarget)}
+        pendingReview={editTarget?.pendingReview}
+        onCancelEdit={handleCancelEdit}
         isSubmitting={isSubmitting}
       />
     </div>

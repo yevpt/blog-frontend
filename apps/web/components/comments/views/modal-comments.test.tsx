@@ -2,6 +2,7 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { CommentItemResp, CommentPageResp } from "@repo/api";
 import { ModalComments } from "./modal-comments";
 
@@ -62,9 +63,35 @@ vi.mock("../parts/comment-replies", () => ({
   CommentReplies: () => null,
 }));
 vi.mock("../parts/comment-item", () => ({
-  CommentItem: ({ comment }: { comment: CommentItemResp }) => (
+  CommentItem: ({
+    comment,
+    onEditComment,
+  }: {
+    comment: CommentItemResp;
+    onEditComment?: (target: {
+      type: "comment";
+      id: number;
+      initialContent: string;
+      pendingReview: boolean;
+    }) => void;
+  }) => (
     <div data-testid="comment-item" data-comment-id={comment.id}>
       {comment.content}
+      {onEditComment ? (
+        <button
+          type="button"
+          onClick={() =>
+            onEditComment({
+              type: "comment",
+              id: comment.id,
+              initialContent: comment.moderation?.pending_content ?? comment.content,
+              pendingReview: Boolean(comment.moderation?.has_pending_revision),
+            })
+          }
+        >
+          编辑评论
+        </button>
+      ) : null}
     </div>
   ),
 }));
@@ -136,6 +163,33 @@ describe("ModalComments", () => {
 
     render(<ModalComments targetType="article" targetId={1} />);
     await waitFor(() => expect(screen.getByText("查看更多评论")).toBeTruthy());
+  });
+
+  it("弹窗评论支持编辑待审版本并显示审核提示", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch).mockResolvedValue(
+      jsonResponse(
+        mockPage([
+          makeComment(1, {
+            content: "公开旧正文",
+            moderation: {
+              public_state: "visible",
+              display_version: "last_approved",
+              has_pending_revision: true,
+              pending_risk_level: "medium",
+              pending_content: "待审新正文",
+              can_interact: true,
+            },
+          }),
+        ]),
+      ),
+    );
+
+    render(<ModalComments targetType="article" targetId={1} />);
+    await user.click(await screen.findByRole("button", { name: "编辑评论" }));
+
+    expect(screen.getByDisplayValue("待审新正文")).toBeTruthy();
+    expect(screen.getByText("编辑中 · 内容正在审核")).toBeTruthy();
   });
 
   it("无更多时不显示「查看更多评论」", async () => {

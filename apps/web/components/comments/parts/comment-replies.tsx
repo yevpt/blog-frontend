@@ -10,7 +10,7 @@ import { useCommentLike } from "@/hooks/use-comment-like";
 import { apiJson, getApiErrorMessage } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
 import { ThreadReplyItem } from "./thread-comment-item";
-import type { ReplyTarget } from "./comment-item";
+import type { ReplyEditTarget, ReplyTarget } from "./comment-item";
 
 export type { ReplyTarget };
 
@@ -81,6 +81,7 @@ interface ReplyItemProps {
   onLikeResult?: (replyId: number, isLiked: boolean, likeCount: number) => void;
   currentUserId?: number | null;
   onDeleteReply?: (replyId: number) => Promise<boolean>;
+  onEditReply?: (target: ReplyEditTarget) => void;
   linkProfile?: boolean;
 }
 
@@ -92,6 +93,7 @@ const ReplyItem = memo(function ReplyItem({
   onLikeResult,
   currentUserId,
   onDeleteReply,
+  onEditReply,
   linkProfile = false,
 }: ReplyItemProps) {
   const { userId } = useSession();
@@ -119,6 +121,23 @@ const ReplyItem = memo(function ReplyItem({
     return onDeleteReply?.(reply.id) ?? false;
   }, [onDeleteReply, reply.id]);
 
+  const handleEdit = useCallback(() => {
+    if (!isOwnReply || !onEditReply) return;
+    // 编辑时优先使用 pending_content，让作者编辑待审版本而非公开旧版本
+    const pendingContent =
+      reply.moderation?.pending_content?.trim() && reply.moderation!.pending_content!.length > 0
+        ? reply.moderation!.pending_content!
+        : reply.content;
+    onEditReply({
+      type: "reply",
+      id: reply.id,
+      commentId,
+      parentReplyId: reply.parent_reply_id,
+      initialContent: pendingContent,
+      pendingReview: Boolean(reply.moderation?.has_pending_revision),
+    });
+  }, [isOwnReply, onEditReply, reply, commentId]);
+
   return (
     <ThreadReplyItem
       user={reply.from_user}
@@ -130,9 +149,11 @@ const ReplyItem = memo(function ReplyItem({
       onLike={() => void handleLike()}
       onReply={onReply ? handleReply : undefined}
       onDelete={isOwnReply && onDeleteReply ? handleDelete : undefined}
+      onEdit={isOwnReply && onEditReply ? handleEdit : undefined}
       deleteLabel="删除回复"
       deleteConfirmMessage="确定删除这条回复吗？"
       linkProfile={linkProfile}
+      moderation={reply.moderation}
     />
   );
 });
@@ -142,10 +163,13 @@ export interface CommentRepliesProps {
   targetType: TargetType;
   replyCount: number;
   pendingReply?: CommentReplyResp | null;
+  /** 编辑成功后由父组件传入的最新回复，触发一次按 ID 原位替换；传入同一引用只替换一次。 */
+  editedReply?: CommentReplyResp | null;
   onReply: (target: ReplyTarget) => void;
   currentUserId?: number | null;
   onDeleteReply?: (replyId: number) => Promise<boolean>;
   onReplyDeleted?: (replyId: number) => void;
+  onEditReply?: (target: ReplyEditTarget) => void;
   onOpenChange?: (open: boolean) => void;
   linkProfile?: boolean;
 }
@@ -155,10 +179,12 @@ export const CommentReplies = memo(function CommentReplies({
   targetType,
   replyCount,
   pendingReply,
+  editedReply,
   onReply,
   currentUserId,
   onDeleteReply,
   onReplyDeleted,
+  onEditReply,
   onOpenChange,
   linkProfile = true,
 }: CommentRepliesProps) {
@@ -212,6 +238,13 @@ export const CommentReplies = memo(function CommentReplies({
     );
   }, []);
 
+  /** 编辑成功后按 ID 原位替换回复项，不改变回复计数。 */
+  const updateReply = useCallback((updated: CommentReplyResp) => {
+    setReplies((prev) =>
+      prev.map((r) => (r.id === updated.id ? hydrateReplyAvatars([updated])[0] : r)),
+    );
+  }, []);
+
   const handleDeleteReply = useCallback(
     async (replyId: number) => {
       if (!onDeleteReply) return false;
@@ -228,6 +261,11 @@ export const CommentReplies = memo(function CommentReplies({
     },
     [onDeleteReply, onReplyDeleted],
   );
+
+  // 编辑成功后由父组件通过 editedReply prop 触发一次原位替换，避免与新增回复的 pendingReply 通道冲突。
+  useEffect(() => {
+    if (editedReply) updateReply(editedReply);
+  }, [editedReply, updateReply]);
 
   if (replyCount <= 0) return null;
 
@@ -276,6 +314,7 @@ export const CommentReplies = memo(function CommentReplies({
             onLikeResult={updateReplyLike}
             currentUserId={currentUserId}
             onDeleteReply={onDeleteReply ? handleDeleteReply : undefined}
+            onEditReply={onEditReply}
             linkProfile={linkProfile}
           />
         ))}

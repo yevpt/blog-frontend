@@ -3,7 +3,12 @@
 import { Button } from "@repo/ui";
 import type { CommentItemResp, CommentReplyResp } from "@repo/api";
 import type { TargetType } from "@/hooks/use-comment-like";
-import { CommentItem, type ReplyTarget } from "./comment-item";
+import {
+  CommentItem,
+  type EditTarget,
+  type ReplyEditTarget,
+  type ReplyTarget,
+} from "./comment-item";
 import { CommentListSkeleton } from "./comment-skeleton";
 
 const COMMENT_PAGE_SIZE = 10;
@@ -26,12 +31,16 @@ export interface CommentListProps {
   error: string | null;
   hasMore: boolean;
   pendingReplies: Record<number, CommentReplyResp | null>;
+  /** 编辑成功后按 commentId 索引的最新回复，触发对应评论回复列表原位替换 */
+  editedReplies?: Record<number, CommentReplyResp | null>;
   targetType: TargetType;
   onReply: (target: ReplyTarget) => void;
   onLike: (commentId: number) => void;
   currentUserId?: number | null;
   onDelete?: (commentId: number) => Promise<boolean>;
   onDeleteReply?: (commentId: number, replyId: number) => Promise<boolean>;
+  onEditComment?: (target: EditTarget) => void;
+  onEditReply?: (target: ReplyEditTarget) => void;
   onLoadMore: () => void;
 }
 
@@ -43,12 +52,15 @@ export function CommentList({
   error,
   hasMore,
   pendingReplies,
+  editedReplies,
   targetType,
   onReply,
   onLike,
   currentUserId,
   onDelete,
   onDeleteReply,
+  onEditComment,
+  onEditReply,
   onLoadMore,
 }: CommentListProps) {
   if (error) {
@@ -79,7 +91,10 @@ export function CommentList({
             currentUserId={currentUserId}
             onDelete={onDelete}
             onDeleteReply={onDeleteReply}
+            onEditComment={onEditComment}
+            onEditReply={onEditReply}
             pendingReply={pendingReplies[comment.id] ?? null}
+            editedReply={editedReplies?.[comment.id] ?? null}
           />
         ))}
       </div>

@@ -33,6 +33,9 @@ interface PillCommentInputProps {
   onSubmit: () => void;
   replyTarget?: ReplyTarget | null;
   onCancelReply?: () => void;
+  editing?: boolean;
+  pendingReview?: boolean;
+  onCancelEdit?: () => void;
   isSubmitting?: boolean;
 }
 
@@ -42,6 +45,9 @@ export function PillCommentInput({
   onSubmit,
   replyTarget,
   onCancelReply,
+  editing = false,
+  pendingReview = false,
+  onCancelEdit,
   isSubmitting = false,
 }: PillCommentInputProps) {
   const { userId } = useSession();
@@ -62,10 +68,10 @@ export function PillCommentInput({
   }, [value, syncTextareaHeight]);
 
   useEffect(() => {
-    if (replyTarget) {
+    if (replyTarget || editing) {
       textareaRef.current?.focus();
     }
-  }, [replyTarget]);
+  }, [editing, replyTarget]);
 
   // 未登录：显示登录提示 pill
   if (userId == null) {
@@ -86,6 +92,14 @@ export function PillCommentInput({
   return (
     <div className="flex shrink-0 flex-col gap-2 border-t border-border px-[18px] py-3 pb-4">
       {replyTarget && <ReplyBanner toUsername={replyTarget.toUsername} onCancel={onCancelReply} />}
+      {!replyTarget && editing && (
+        <ReplyBanner
+          toUsername="编辑中"
+          onCancel={onCancelEdit}
+          editing
+          pendingReview={pendingReview}
+        />
+      )}
       <div
         className={`relative w-full overflow-hidden rounded-[20px] border border-input bg-background transition-colors focus-within:border-primary ${isSubmitting ? "opacity-60" : ""}`}
       >
@@ -94,7 +108,9 @@ export function PillCommentInput({
           rows={1}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={replyTarget ? "写下你的回复..." : "写下你的评论..."}
+          placeholder={
+            replyTarget ? "写下你的回复..." : editing ? "编辑内容..." : "写下你的评论..."
+          }
           maxLength={COMMENT_CONTENT_MAX_LENGTH}
           disabled={isSubmitting}
           className={cn(

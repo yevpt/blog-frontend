@@ -11,8 +11,11 @@ const mockIncrementReplyCount = vi.fn();
 const mockDecrementReplyCount = vi.fn();
 const mockUpdateCommentLike = vi.fn();
 const mockRemoveComment = vi.fn();
+const mockUpdateComment = vi.fn();
 const mockSubmitComment = vi.fn();
 const mockSubmitReply = vi.fn();
+const mockEditComment = vi.fn();
+const mockEditReply = vi.fn();
 const mockToggleCommentLike = vi.fn();
 const mockDeleteComment = vi.fn();
 const mockDeleteReply = vi.fn();
@@ -43,6 +46,7 @@ vi.mock("@/hooks/use-comment-list", () => ({
     decrementReplyCount: mockDecrementReplyCount,
     updateCommentLike: mockUpdateCommentLike,
     removeComment: mockRemoveComment,
+    updateComment: mockUpdateComment,
   }),
 }));
 
@@ -53,6 +57,13 @@ vi.mock("@/hooks/use-comment-submit", () => ({
     clearError: mockClearError,
     submitComment: mockSubmitComment,
     submitReply: mockSubmitReply,
+  }),
+}));
+
+vi.mock("@/hooks/use-comment-edit", () => ({
+  useCommentEdit: () => ({
+    editComment: mockEditComment,
+    editReply: mockEditReply,
   }),
 }));
 
@@ -108,6 +119,8 @@ describe("useCommentSectionState", () => {
     mockComments = [makeComment(1)];
     mockSubmitComment.mockResolvedValue(makeComment(99));
     mockSubmitReply.mockResolvedValue(makeReply(10));
+    mockEditComment.mockResolvedValue(makeComment(1));
+    mockEditReply.mockResolvedValue(makeReply(10));
     mockToggleCommentLike.mockResolvedValue({ is_liked: true, like_count: 3 });
     mockDeleteComment.mockResolvedValue(true);
     mockDeleteReply.mockResolvedValue(true);
@@ -262,5 +275,131 @@ describe("useCommentSectionState", () => {
     expect(ok).toBe(true);
     expect(mockDeleteReply).toHaveBeenCalledWith(10);
     expect(mockDecrementReplyCount).toHaveBeenCalledWith(1);
+  });
+
+  describe("编辑", () => {
+    it("handleEditComment 设置 editTarget 为 comment 并将 content 设为 initialContent", () => {
+      const { result } = renderHook(() =>
+        useCommentSectionState({ targetType: "article", targetId: 1 }),
+      );
+
+      act(() => {
+        result.current.handleEditComment({ type: "comment", id: 1, initialContent: "旧版本" });
+      });
+
+      expect(result.current.editTarget).toEqual({
+        type: "comment",
+        id: 1,
+        initialContent: "旧版本",
+      });
+      expect(result.current.content).toBe("旧版本");
+    });
+
+    it("handleEditReply 设置 editTarget 为 reply 并将 content 设为 initialContent", () => {
+      const { result } = renderHook(() =>
+        useCommentSectionState({ targetType: "article", targetId: 1 }),
+      );
+
+      act(() => {
+        result.current.handleEditReply({
+          type: "reply",
+          id: 10,
+          commentId: 1,
+          parentReplyId: 0,
+          initialContent: "回复旧版本",
+        });
+      });
+
+      expect(result.current.editTarget).toEqual({
+        type: "reply",
+        id: 10,
+        commentId: 1,
+        parentReplyId: 0,
+        initialContent: "回复旧版本",
+      });
+      expect(result.current.content).toBe("回复旧版本");
+    });
+
+    it("编辑评论成功后调用 updateComment 原位替换，不改变计数", async () => {
+      const updated = { ...makeComment(1), content: "编辑后内容" };
+      mockEditComment.mockResolvedValueOnce(updated);
+
+      const { result } = renderHook(() =>
+        useCommentSectionState({ targetType: "article", targetId: 1 }),
+      );
+
+      act(() => {
+        result.current.handleEditComment({ type: "comment", id: 1, initialContent: "旧版本" });
+      });
+      // 把 setContent 单独放在 act 中触发渲染以更新 contentRef.current
+      act(() => result.current.setContent("编辑后内容"));
+      await act(async () => {
+        await result.current.handleSubmit();
+      });
+
+      expect(mockEditComment).toHaveBeenCalledWith(1, "编辑后内容");
+      expect(mockUpdateComment).toHaveBeenCalledWith(updated);
+      expect(mockIncrementReplyCount).not.toHaveBeenCalled();
+    });
+
+    it("编辑回复成功后存储到 pendingReplies 按 ID 替换，不改变计数", async () => {
+      const updatedReply = { ...makeReply(10), content: "编辑后回复" };
+      mockEditReply.mockResolvedValueOnce(updatedReply);
+
+      const onScrollToComment = vi.fn();
+      const { result } = renderHook(() =>
+        useCommentSectionState({ targetType: "article", targetId: 1, onScrollToComment }),
+      );
+
+      act(() => {
+        result.current.handleEditReply({
+          type: "reply",
+          id: 10,
+          commentId: 1,
+          parentReplyId: 0,
+          initialContent: "回复旧版本",
+        });
+      });
+      // 把 setContent 单独放在 act 中触发渲染以更新 contentRef.current
+      act(() => result.current.setContent("编辑后回复"));
+      await act(async () => {
+        await result.current.handleSubmit();
+      });
+
+      expect(mockEditReply).toHaveBeenCalledWith(10, 0, "编辑后回复");
+      expect(result.current.editedReplies[1]).toEqual(updatedReply);
+      expect(mockIncrementReplyCount).not.toHaveBeenCalled();
+      expect(mockDecrementReplyCount).not.toHaveBeenCalled();
+    });
+
+    it("编辑器内容为空时不触发编辑请求", async () => {
+      const { result } = renderHook(() =>
+        useCommentSectionState({ targetType: "article", targetId: 1 }),
+      );
+
+      act(() => {
+        result.current.handleEditComment({ type: "comment", id: 1, initialContent: "" });
+      });
+      await act(async () => {
+        result.current.setContent("   ");
+        await result.current.handleSubmit();
+      });
+
+      expect(mockEditComment).not.toHaveBeenCalled();
+    });
+
+    it("handleCancelEdit 清除 editTarget 和 content", () => {
+      const { result } = renderHook(() =>
+        useCommentSectionState({ targetType: "article", targetId: 1 }),
+      );
+
+      act(() => {
+        result.current.handleEditComment({ type: "comment", id: 1, initialContent: "旧版本" });
+      });
+      act(() => result.current.handleCancelEdit());
+
+      expect(result.current.editTarget).toBeNull();
+      expect(result.current.content).toBe("");
+    });
   });
 });
