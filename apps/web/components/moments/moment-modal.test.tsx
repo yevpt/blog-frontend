@@ -443,4 +443,49 @@ describe("MomentModal", () => {
     expect(screen.getByLabelText("编辑器")).toHaveValue("正在审核的新正文");
     expect(screen.getByText("编辑内容正在审核")).toBeInTheDocument();
   });
+
+  it("中风险首次发布编辑回显 pending_content 与待审图片", async () => {
+    useMomentModal.setState({
+      isOpen: true,
+      editingMoment: makeMoment({
+        content: "待审碎语正文",
+        images: [
+          {
+            id: 11,
+            name: "new.jpg",
+            file_type: "jpg",
+            url: "moments/new.jpg",
+            access_url: "https://cdn.example.com/moderation/previews/new.jpg",
+            display_mode: "blurred",
+            size: 1024,
+            seq: 1,
+          },
+        ],
+        moderation: {
+          public_state: "placeholder",
+          display_version: "none",
+          has_pending_revision: true,
+          pending_risk_level: "medium",
+          pending_content: "待审碎语正文",
+          pending_images: [
+            {
+              id: 11,
+              name: "new.jpg",
+              file_type: "jpg",
+              url: "moments/new.jpg",
+              access_url: "https://cdn.example.com/moments/new.jpg",
+              display_mode: "original",
+              seq: 1,
+            },
+          ],
+          can_interact: false,
+        },
+      }),
+      submitEdit: vi.fn(),
+    });
+    render(<MomentModal />);
+    await screen.findByRole("dialog", { name: "编辑碎语" });
+    expect(screen.getByLabelText("编辑器")).toHaveValue("待审碎语正文");
+    expect(screen.getByTestId("moment-image-count")).toHaveTextContent("1");
+  });
 });

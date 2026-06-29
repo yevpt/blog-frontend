@@ -12,7 +12,9 @@ import { useImageViewer } from "@/store/use-image-viewer";
 import {
   ModerationContentPlaceholder,
   ModerationStatusBadge,
+  getAuthorMomentDisplayContent,
   normalizeModerationView,
+  shouldShowModerationContentPlaceholder,
 } from "@/components/moderation";
 import { MomentContent } from "./moment-content";
 import { RelativeTime } from "@/components/common/relative-time";
@@ -90,8 +92,12 @@ export function MomentCard({
   // 审核状态：缺失或零值回退为可见且可交互，避免生产审核关闭期间禁用全部互动
   const moderationView = normalizeModerationView(moment.moderation);
   const canInteract = moderationView.can_interact;
-  // 中风险首次发布：渲染审核占位而非正文
-  const showModerationPlaceholder = moderationView.public_state === "placeholder";
+  const displayContent = isOwner ? getAuthorMomentDisplayContent(moment) : moment.content;
+  // 中风险首次发布：仅对非作者渲染审核占位
+  const showModerationPlaceholder = shouldShowModerationContentPlaceholder(
+    moment.moderation,
+    isOwner,
+  );
 
   const body = (
     <>
@@ -142,8 +148,8 @@ export function MomentCard({
         <ModerationContentPlaceholder moderation={moment.moderation} className="mt-0.5" />
       ) : (
         <>
-          <MomentContent content={moment.content} collapsible={false} />
-          <ModerationStatusBadge moderation={moment.moderation} className="mt-1.5" />
+          <ModerationStatusBadge moderation={moment.moderation} className="mb-1.5" />
+          <MomentContent content={displayContent} collapsible={false} />
         </>
       )}
 

@@ -735,6 +735,25 @@ describe("MomentCard", () => {
     expect(screen.queryByText("不该显示的正文")).toBeNull();
   });
 
+  it("中风险首次发布作者可见待审正文与等待人工审核徽标", () => {
+    mockSessionUserId = 1;
+    const moment = makeMoment({
+      content: "",
+      moderation: {
+        public_state: "placeholder",
+        display_version: "none",
+        has_pending_revision: true,
+        pending_risk_level: "medium",
+        pending_content: "作者待审碎语",
+        can_interact: false,
+      },
+    });
+    render(<MomentCard moment={moment} />);
+    expect(screen.getByText("作者待审碎语")).toBeInTheDocument();
+    expect(screen.getByText("等待人工审核")).toBeInTheDocument();
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
   it("中风险编辑展示最后通过正文与等待人工审核徽标", () => {
     const moment = makeMoment({
       content: "最后通过正文",

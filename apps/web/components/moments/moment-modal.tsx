@@ -7,13 +7,33 @@ import { addToast } from "@/lib/toast";
 import { apiForm, ApiClientError, getApiErrorMessage } from "@/lib/client-fetch";
 import { useIdempotencyKey } from "@/hooks/use-idempotency-key";
 import { ResponsiveModalShell } from "@/components/modal-shell/responsive-modal";
-import type { MomentItemResp } from "@repo/api";
+import type { MomentItemResp, ModerationPendingImage } from "@repo/api";
 import { MomentTextInput } from "./moment-text-input";
 import { MomentImageUploader } from "./moment-image-uploader";
 import { momentPublishFingerprint } from "./moment-submit-fingerprint";
 import type { MomentImageItem } from "./types";
 
 const MAX_CONTENT = 800;
+
+function toMomentImageItems(
+  images: Array<MomentItemResp["images"][number] | ModerationPendingImage>,
+) {
+  return images.map((image) => ({
+    id: `remote-${image.id}`,
+    remoteUrl: image.access_url || image.url,
+    previewUrl: image.access_url || image.url,
+  }));
+}
+
+function resolveMomentEditImages(
+  moment: MomentItemResp,
+): Array<MomentItemResp["images"][number] | ModerationPendingImage> {
+  const pending = moment.moderation?.pending_images;
+  if (moment.moderation?.has_pending_revision && pending && pending.length > 0) {
+    return pending;
+  }
+  return moment.images ?? [];
+}
 
 export function MomentModal() {
   const { isOpen, editingMoment, submitEdit, close, markPublished } = useMomentModal();
@@ -36,14 +56,13 @@ export function MomentModal() {
       return;
     }
     // 优先回显待审正文，便于作者继续编辑未通过版本；无待审则回退到公开正文
-    setContent(editingMoment?.moderation?.pending_content ?? editingMoment?.content ?? "");
-    setImages(
-      editingMoment?.images.map((image) => ({
-        id: `remote-${image.id}`,
-        remoteUrl: image.access_url || image.url,
-        previewUrl: image.access_url || image.url,
-      })) ?? [],
-    );
+    if (!editingMoment) {
+      setContent("");
+      setImages([]);
+      return;
+    }
+    setContent(editingMoment.moderation?.pending_content ?? editingMoment.content ?? "");
+    setImages(toMomentImageItems(resolveMomentEditImages(editingMoment)));
   }, [editingMoment, isOpen]);
 
   function reset() {
