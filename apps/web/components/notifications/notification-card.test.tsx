@@ -464,6 +464,7 @@ describe("NotificationCard", () => {
   function moderationItem(
     decision: "approved" | "corrected" | "rejected",
     over: Partial<NotificationItemResp> = {},
+    metadataExtra: Record<string, unknown> = {},
   ): NotificationItemResp {
     return item({
       type: "system_notice",
@@ -472,15 +473,28 @@ describe("NotificationCard", () => {
       actor_user: undefined,
       metadata: JSON.stringify({
         moderation: { item_id: 10, revision_id: 20, decision },
+        ...metadataExtra,
       }),
       ...over,
     });
   }
 
-  it("审核通过展示动作文案且无正文块", () => {
+  it("审核通过展示类型动作文案、正文与引用", () => {
     render(
       <NotificationCard
-        item={moderationItem("approved")}
+        item={moderationItem(
+          "approved",
+          { content_excerpt: "写得真好，期待更新" },
+          {
+            moderation: {
+              item_id: 10,
+              revision_id: 20,
+              decision: "approved",
+              content_type: "article_comment",
+            },
+            root_snapshot: { type: "article", id: 3, title: "测试文章", excerpt: "文章摘要" },
+          },
+        )}
         selecting={false}
         selected={false}
         onOpen={vi.fn()}
@@ -489,10 +503,26 @@ describe("NotificationCard", () => {
       />,
     );
     expect(screen.getAllByText("系统通知").length).toBeGreaterThan(0);
-    expect(screen.getByText("你的内容已通过审核")).toBeTruthy();
-    expect(screen.queryByTestId("notification-body")).toBeNull();
+    expect(screen.getByText("你给文章《测试文章》发表的评论已通过审核")).toBeTruthy();
+    expect(screen.getByTestId("notification-body")).toHaveTextContent("写得真好，期待更新");
+    expect(screen.getByText("文章摘要")).toBeTruthy();
     expect(screen.queryByText("点赞")).toBeNull();
     expect(screen.queryByText("回复")).toBeNull();
+  });
+
+  it("审核通过无 excerpt 时不渲染空正文块", () => {
+    render(
+      <NotificationCard
+        item={moderationItem("approved", { content_excerpt: "" })}
+        selecting={false}
+        selected={false}
+        onOpen={vi.fn()}
+        onRead={vi.fn()}
+        onToggleSelect={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("你的内容已通过审核")).toBeTruthy();
+    expect(screen.queryByTestId("notification-body")).toBeNull();
   });
 
   it("修正后发布展示理由且无内联操作", () => {

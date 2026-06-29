@@ -36,7 +36,33 @@ interface ModerationMetadata {
   item_id?: number;
   revision_id?: number;
   decision?: string;
+  content_type?: string;
 }
+
+export type ModerationContentType =
+  | "moment"
+  | "article_comment"
+  | "moment_comment"
+  | "guestbook"
+  | "article_comment_reply"
+  | "moment_comment_reply"
+  | "guestbook_reply";
+
+const MODERATION_CONTENT_TYPES = new Set<ModerationContentType>([
+  "moment",
+  "article_comment",
+  "moment_comment",
+  "guestbook",
+  "article_comment_reply",
+  "moment_comment_reply",
+  "guestbook_reply",
+]);
+
+const MODERATION_REPLY_CONTENT_TYPES = new Set<ModerationContentType>([
+  "article_comment_reply",
+  "moment_comment_reply",
+  "guestbook_reply",
+]);
 
 export type ModerationNotificationDecision = "approved" | "corrected" | "rejected";
 
@@ -79,9 +105,9 @@ export function getNotificationActorProfileHref(item: NotificationItemResp): str
 /** 按事件类型生成动作文案（不含操作人昵称）。 */
 export function getNotificationActionText(item: NotificationItemResp): string {
   const moderationDecision = getModerationNotificationDecision(item);
-  if (moderationDecision === "approved") return "你的内容已通过审核";
-  if (moderationDecision === "corrected") return "你的内容经管理员修正后已发布";
-  if (moderationDecision === "rejected") return "你的内容审核未通过";
+  if (moderationDecision != null) {
+    return getModerationNotificationActionText(item, moderationDecision);
+  }
 
   switch (item.type) {
     case "article_liked":
@@ -143,12 +169,105 @@ export function getModerationNotificationDecision(
   return isModerationDecision(decision) ? decision : null;
 }
 
-/** 审核修正/驳回理由；approved 或无 excerpt 时返回 null。 */
+function isModerationContentType(value: unknown): value is ModerationContentType {
+  return typeof value === "string" && MODERATION_CONTENT_TYPES.has(value as ModerationContentType);
+}
+
+/** 解析审核通知内容类型；缺失或非法时返回 null。 */
+export function getModerationContentType(item: NotificationItemResp): ModerationContentType | null {
+  if (getModerationNotificationDecision(item) == null) return null;
+  const contentType = parseNotificationMetadata(item.metadata).moderation?.content_type;
+  return isModerationContentType(contentType) ? contentType : null;
+}
+
+function moderationDecisionVerb(decision: ModerationNotificationDecision): string {
+  if (decision === "approved") return "已通过审核";
+  if (decision === "corrected") return "经管理员修正后已发布";
+  return "审核未通过";
+}
+
+function moderationArticleTitle(item: NotificationItemResp): string | undefined {
+  const title = snapshotTitle(parseNotificationMetadata(item.metadata).root_snapshot);
+  return title || undefined;
+}
+
+/** 审核通知动作文案：按内容类型与审核结果生成可读描述。 */
+export function getModerationNotificationActionText(
+  item: NotificationItemResp,
+  decision: ModerationNotificationDecision,
+): string {
+  const verb = moderationDecisionVerb(decision);
+  const contentType = getModerationContentType(item);
+  const articleTitle = moderationArticleTitle(item);
+
+  switch (contentType) {
+    case "moment":
+      return `你的碎语${verb}`;
+    case "guestbook":
+      return `你的留言${verb}`;
+    case "article_comment":
+      return articleTitle
+        ? `你给文章《${articleTitle}》发表的评论${verb}`
+        : `你给文章发表的评论${verb}`;
+    case "moment_comment":
+      return `你给碎语发表的评论${verb}`;
+    case "article_comment_reply":
+      return articleTitle
+        ? `你对文章《${articleTitle}》下评论的回复${verb}`
+        : `你对文章下评论的回复${verb}`;
+    case "moment_comment_reply":
+      return `你对碎语下评论的回复${verb}`;
+    case "guestbook_reply":
+      return `你对留言下评论的回复${verb}`;
+    default:
+      if (decision === "approved") return "你的内容已通过审核";
+      if (decision === "corrected") return "你的内容经管理员修正后已发布";
+      return "你的内容审核未通过";
+  }
+}
+
+/** 审核通知正文：approved 展示通过内容摘要，corrected/rejected 展示理由；无 excerpt 时返回 null。 */
 export function getModerationNotificationReasonText(item: NotificationItemResp): string | null {
   const decision = getModerationNotificationDecision(item);
-  if (decision !== "corrected" && decision !== "rejected") return null;
+  if (!decision) return null;
   const excerpt = item.content_excerpt?.trim();
   return excerpt || null;
+}
+
+/** 审核通知引用块：回复展示被回复评论/回复，评论类展示所属文章或碎语摘录。 */
+export function getModerationNotificationQuote(
+  item: NotificationItemResp,
+): NotificationQuote | null {
+  if (getModerationNotificationDecision(item) == null) return null;
+
+  const metadata = parseNotificationMetadata(item.metadata);
+  const contentType = getModerationContentType(item);
+  const body = getModerationNotificationReasonText(item);
+
+  if (contentType && MODERATION_REPLY_CONTENT_TYPES.has(contentType)) {
+    const quoteText = snapshotText(metadata.quote_snapshot);
+    if (quoteText && quoteText !== body) {
+      return nonEmptyQuote(undefined, quoteText);
+    }
+    return null;
+  }
+
+  if (contentType === "article_comment" || contentType === "moment_comment") {
+    const rootSnapshot = metadata.root_snapshot;
+    const title =
+      contentType === "article_comment"
+        ? (() => {
+            const articleTitle = snapshotTitle(rootSnapshot);
+            return articleTitle ? `《${articleTitle}》` : "文章";
+          })()
+        : undefined;
+    const quoteText = snapshotText(rootSnapshot);
+    if (quoteText && quoteText !== body) {
+      return nonEmptyQuote(title, quoteText);
+    }
+  }
+
+  return null;
 }
 
 function snapshotText(snapshot?: NotificationSnapshot): string {
@@ -235,6 +354,9 @@ function isGuestbookPostNotification(item: NotificationItemResp): boolean {
 
 /** 轻量引用块：点赞类展示对象标题/摘录；评论类展示根对象上下文。 */
 export function getNotificationQuote(item: NotificationItemResp): NotificationQuote | null {
+  const moderationQuote = getModerationNotificationQuote(item);
+  if (moderationQuote) return moderationQuote;
+
   const metadata = parseNotificationMetadata(item.metadata);
   const rootSnapshot = metadata.root_snapshot;
   if (item.type === "article_liked") {

@@ -14,6 +14,7 @@ import {
   getNotificationActorName,
   getNotificationActorProfileHref,
   getNotificationBodyText,
+  getModerationNotificationDecision,
   getModerationNotificationReasonText,
   getNotificationInlineActions,
   getNotificationQuote,
@@ -60,8 +61,11 @@ export default function NotificationCard({
   const actorProfileHref = getNotificationActorProfileHref(item);
   const actionText = getNotificationActionText(item);
   const bodyText = getNotificationBodyText(item);
-  const moderationReason = getModerationNotificationReasonText(item);
-  const displayBodyText = moderationReason ?? bodyText;
+  const moderationDecision = getModerationNotificationDecision(item);
+  const moderationExcerpt = getModerationNotificationReasonText(item);
+  const displayBodyText = moderationExcerpt ?? bodyText;
+  const moderationReasonFullDisplay =
+    moderationDecision === "corrected" || moderationDecision === "rejected";
   const quote = getNotificationQuote(item);
   const inlineActions = getNotificationInlineActions(item);
 
@@ -190,7 +194,7 @@ export default function NotificationCard({
           {displayBodyText && (
             <NotificationExcerptContent
               content={displayBodyText}
-              className={cn("mt-2", !moderationReason && "line-clamp-2")}
+              className={cn("mt-2", !moderationReasonFullDisplay && "line-clamp-2")}
             />
           )}
           {quote && (

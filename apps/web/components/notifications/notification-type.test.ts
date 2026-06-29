@@ -74,6 +74,7 @@ describe("getNotificationActorProfileHref", () => {
 function moderationItem(
   decision: "approved" | "corrected" | "rejected",
   over: Partial<NotificationItemResp> = {},
+  metadataExtra: Record<string, unknown> = {},
 ): NotificationItemResp {
   return item({
     type: "system_notice",
@@ -82,6 +83,7 @@ function moderationItem(
     title: "审核通知",
     metadata: JSON.stringify({
       moderation: { item_id: 10, revision_id: 20, decision },
+      ...metadataExtra,
     }),
     ...over,
   });
@@ -126,7 +128,7 @@ describe("getModerationNotificationDecision", () => {
 });
 
 describe("getModerationNotificationReasonText", () => {
-  it("corrected/rejected 返回 content_excerpt 理由", () => {
+  it("corrected/rejected/approved 返回 content_excerpt", () => {
     expect(
       getModerationNotificationReasonText(
         moderationItem("corrected", { content_excerpt: "移除不当表述" }),
@@ -137,9 +139,14 @@ describe("getModerationNotificationReasonText", () => {
         moderationItem("rejected", { content_excerpt: "含违规内容" }),
       ),
     ).toBe("含违规内容");
+    expect(
+      getModerationNotificationReasonText(
+        moderationItem("approved", { content_excerpt: "这条评论已通过审核" }),
+      ),
+    ).toBe("这条评论已通过审核");
   });
 
-  it("approved 或空 excerpt 不返回理由", () => {
+  it("空 excerpt 不返回正文", () => {
     expect(getModerationNotificationReasonText(moderationItem("approved"))).toBeNull();
     expect(
       getModerationNotificationReasonText(moderationItem("corrected", { content_excerpt: "  " })),
@@ -189,12 +196,57 @@ describe("getNotificationActionText", () => {
     );
   });
 
-  it("审核通知展示专用动作文案", () => {
+  it("审核通知按内容类型展示专用动作文案", () => {
     expect(getNotificationActionText(moderationItem("approved"))).toBe("你的内容已通过审核");
-    expect(getNotificationActionText(moderationItem("corrected"))).toBe(
-      "你的内容经管理员修正后已发布",
-    );
-    expect(getNotificationActionText(moderationItem("rejected"))).toBe("你的内容审核未通过");
+    expect(
+      getNotificationActionText(
+        moderationItem(
+          "approved",
+          {},
+          {
+            moderation: {
+              item_id: 10,
+              revision_id: 20,
+              decision: "approved",
+              content_type: "moment",
+            },
+          },
+        ),
+      ),
+    ).toBe("你的碎语已通过审核");
+    expect(
+      getNotificationActionText(
+        moderationItem(
+          "approved",
+          {},
+          {
+            moderation: {
+              item_id: 10,
+              revision_id: 20,
+              decision: "approved",
+              content_type: "article_comment",
+            },
+            root_snapshot: { type: "article", id: 3, title: "测试文章" },
+          },
+        ),
+      ),
+    ).toBe("你给文章《测试文章》发表的评论已通过审核");
+    expect(
+      getNotificationActionText(
+        moderationItem(
+          "rejected",
+          {},
+          {
+            moderation: {
+              item_id: 10,
+              revision_id: 20,
+              decision: "rejected",
+              content_type: "guestbook_reply",
+            },
+          },
+        ),
+      ),
+    ).toBe("你对留言下评论的回复审核未通过");
   });
 
   it("普通 system_notice 保持通用文案", () => {
@@ -360,6 +412,46 @@ describe("getNotificationQuote", () => {
         }),
       ),
     ).toBeNull();
+  });
+
+  it("审核回复通知展示被回复评论摘录", () => {
+    expect(
+      getNotificationQuote(
+        moderationItem(
+          "approved",
+          { content_excerpt: "我的回复" },
+          {
+            moderation: {
+              item_id: 10,
+              revision_id: 20,
+              decision: "approved",
+              content_type: "article_comment_reply",
+            },
+            quote_snapshot: { type: "comment", id: 8, excerpt: "原评论内容" },
+          },
+        ),
+      ),
+    ).toEqual({ title: undefined, text: "原评论内容" });
+  });
+
+  it("审核文章评论通知展示文章摘录引用", () => {
+    expect(
+      getNotificationQuote(
+        moderationItem(
+          "approved",
+          { content_excerpt: "评论正文" },
+          {
+            moderation: {
+              item_id: 10,
+              revision_id: 20,
+              decision: "approved",
+              content_type: "article_comment",
+            },
+            root_snapshot: { type: "article", id: 3, title: "测试文章", excerpt: "文章摘要" },
+          },
+        ),
+      ),
+    ).toEqual({ title: "《测试文章》", text: "文章摘要" });
   });
 });
 

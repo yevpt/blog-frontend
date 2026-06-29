@@ -18,6 +18,7 @@ import {
   getNotificationActionText,
   getNotificationActorName,
   getNotificationQuote,
+  getModerationNotificationReasonText,
 } from "./notification-type";
 
 const LATEST_UNREAD_PATH = "/api/notifications?unread_only=true&page=1&page_size=5";
@@ -173,6 +174,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           const actorName = getNotificationActorName(item);
           const actionText = getNotificationActionText(item);
           const quote = getNotificationQuote(item);
+          const moderationBody = getModerationNotificationReasonText(item);
           return (
             <>
               <UserAvatar
@@ -195,6 +197,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
                     <span className="font-semibold">{actorName}</span>{" "}
                     <span className="text-muted-foreground">{actionText}</span>
                   </p>
+                  {moderationBody ? (
+                    <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
+                      {moderationBody}
+                    </p>
+                  ) : null}
                   {quote?.text ? (
                     <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
                       {quote.title ? `${quote.title} ` : ""}
