@@ -188,7 +188,10 @@ export default function NotificationCard({
             {created && <RelativeTime dateTime={created} />}
           </span>
           {displayBodyText && (
-            <NotificationExcerptContent content={displayBodyText} className="mt-2 line-clamp-2" />
+            <NotificationExcerptContent
+              content={displayBodyText}
+              className={cn("mt-2", !moderationReason && "line-clamp-2")}
+            />
           )}
           {quote && (
             <span className="mt-2 grid grid-cols-[0.875rem_minmax(0,1fr)] gap-2 text-[12.5px] leading-relaxed text-muted-foreground">

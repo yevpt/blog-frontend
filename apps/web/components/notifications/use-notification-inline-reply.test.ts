@@ -9,8 +9,8 @@ vi.mock("@/lib/client-fetch", () => ({
   apiJson: (...args: unknown[]) => apiJson(...args),
   ApiClientError: class ApiClientError extends Error {
     status: number;
-    constructor(status: number) {
-      super("api error");
+    constructor(message: string, status: number) {
+      super(message);
       this.status = status;
     }
   },
@@ -61,7 +61,10 @@ describe("useNotificationInlineReply", () => {
     expect(markRead).toHaveBeenCalledWith(1);
     expect(apiJson).toHaveBeenCalledWith("/api/articles/comments/42/replies", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Idempotency-Key": expect.stringMatching(/^reply:/),
+      },
       body: JSON.stringify({ parent_reply_id: 0, content: "好的" }),
     });
     expect(onReplySuccess).toHaveBeenCalledWith(1, 3);
@@ -92,5 +95,30 @@ describe("useNotificationInlineReply", () => {
 
     expect(ok).toBe(false);
     expect(apiJson).not.toHaveBeenCalled();
+  });
+
+  it("5xx 后同载荷重试复用幂等键，成功提示优先使用审核 notice", async () => {
+    const { ApiClientError } = await import("@/lib/client-fetch");
+    apiJson.mockRejectedValueOnce(new ApiClientError("bad gateway", 502)).mockResolvedValueOnce({
+      id: 99,
+      moderation: {
+        public_state: "visible",
+        display_version: "pending",
+        has_pending_revision: true,
+        can_interact: true,
+        notice: "回复已提交，内容会被审核",
+      },
+    });
+    const { result } = renderHook(() => useNotificationInlineReply({ markRead, onReplySuccess }));
+
+    await act(async () => {
+      await result.current.submitReply(listItem({ is_read: true }), "好的");
+      await result.current.submitReply(listItem({ is_read: true }), "好的");
+    });
+
+    const firstHeaders = apiJson.mock.calls[0]?.[1]?.headers as Record<string, string>;
+    const secondHeaders = apiJson.mock.calls[1]?.[1]?.headers as Record<string, string>;
+    expect(firstHeaders["Idempotency-Key"]).toBe(secondHeaders["Idempotency-Key"]);
+    expect(addToast).toHaveBeenLastCalledWith("回复已提交，内容会被审核", "success");
   });
 });

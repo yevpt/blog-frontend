@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import type { CommentReplyResp, NotificationItemResp } from "@repo/api";
 import { apiJson, ApiClientError, getApiErrorMessage } from "@/lib/client-fetch";
 import { addToast } from "@/lib/toast";
+import { useIdempotencyKey } from "@/hooks/use-idempotency-key";
 import { getNotificationReplyTarget } from "./notification-type";
 
 function notifySubmitError(err: unknown, fallback: string): void {
@@ -24,6 +25,7 @@ export function useNotificationInlineReply({
 }: UseNotificationInlineReplyOptions) {
   const [submittingId, setSubmittingId] = useState<number | null>(null);
   const submittingRef = useRef(false);
+  const { getIdempotencyKey, resetIdempotencyKey } = useIdempotencyKey("reply");
 
   const submitReply = useCallback(
     async (item: NotificationItemResp, content: string): Promise<boolean> => {
@@ -39,18 +41,28 @@ export function useNotificationInlineReply({
 
       try {
         if (!item.is_read) await markRead(item.id);
-        await apiJson<CommentReplyResp>(target.url, {
+        const fingerprint = JSON.stringify({
+          url: target.url,
+          parentReplyId: target.parent_reply_id,
+          content: trimmed,
+        });
+        const reply = await apiJson<CommentReplyResp>(target.url, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Idempotency-Key": getIdempotencyKey(fingerprint),
+          },
           body: JSON.stringify({
             parent_reply_id: target.parent_reply_id,
             content: trimmed,
           }),
         });
+        resetIdempotencyKey();
         onReplySuccess(item.id, (item.reply_count ?? 0) + 1);
-        addToast("回复成功", "success");
+        addToast(reply.moderation?.notice?.trim() || "回复成功", "success");
         return true;
       } catch (err) {
+        if (err instanceof ApiClientError && err.status < 500) resetIdempotencyKey();
         notifySubmitError(err, "回复失败，请稍后重试");
         return false;
       } finally {
@@ -58,7 +70,7 @@ export function useNotificationInlineReply({
         setSubmittingId(null);
       }
     },
-    [markRead, onReplySuccess],
+    [getIdempotencyKey, markRead, onReplySuccess, resetIdempotencyKey],
   );
 
   return { submitReply, submittingId };

@@ -202,7 +202,10 @@ describe("NotificationsPage", () => {
     await vi.waitFor(() =>
       expect(apiJson).toHaveBeenCalledWith("/api/articles/comments/42/replies", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": expect.stringMatching(/^reply:/),
+        },
         body: JSON.stringify({ parent_reply_id: 0, content: "测试回复" }),
       }),
     );

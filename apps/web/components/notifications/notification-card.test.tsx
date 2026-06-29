@@ -526,6 +526,22 @@ describe("NotificationCard", () => {
     expect(screen.getByTestId("notification-body")).toHaveTextContent("含违规内容");
   });
 
+  it("修正与驳回理由不使用两行截断", () => {
+    const reason = "这是一段需要完整展示给发布者的较长修正理由".repeat(5);
+    render(
+      <NotificationCard
+        item={moderationItem("corrected", { content_excerpt: reason })}
+        selecting={false}
+        selected={false}
+        onOpen={vi.fn()}
+        onRead={vi.fn()}
+        onToggleSelect={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(reason).className).not.toContain("line-clamp-2");
+  });
+
   it("普通 system_notice 保持通用文案", () => {
     render(
       <NotificationCard
