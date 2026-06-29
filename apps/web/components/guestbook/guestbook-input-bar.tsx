@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { RichCommentInput, type ReplyTarget } from "@/components/comments";
+import { useState, useCallback, useEffect } from "react";
+import { RichCommentInput, type ReplyEditTarget, type ReplyTarget } from "@/components/comments";
 import { ReplyBanner } from "@/components/comments/inputs/reply-banner";
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
@@ -11,6 +11,8 @@ interface GuestbookInputBarProps {
   isSubmitting?: boolean;
   replyTarget?: ReplyTarget | null;
   onCancelReply?: () => void;
+  editTarget?: ReplyEditTarget | null;
+  onCancelEdit?: () => void;
   /** 滚动定位完成后递增，触发编辑器聚焦 */
   focusTrigger?: number | null;
 }
@@ -20,11 +22,17 @@ export function GuestbookInputBar({
   isSubmitting,
   replyTarget,
   onCancelReply,
+  editTarget,
+  onCancelEdit,
   focusTrigger,
 }: GuestbookInputBarProps) {
   const [content, setContent] = useState("");
   const { userId } = useSession();
   const { open: openLoginModal } = useLoginModal();
+
+  useEffect(() => {
+    if (editTarget) setContent(editTarget.initialContent);
+  }, [editTarget]);
 
   const handleSubmit = useCallback(async () => {
     if (!content.trim() || isSubmitting) return;
@@ -34,10 +42,24 @@ export function GuestbookInputBar({
     }
   }, [content, isSubmitting, onSubmit]);
 
-  const placeholder = replyTarget ? `回复 @${replyTarget.toUsername}…` : "说点什么，支持 Markdown…";
+  const placeholder = replyTarget
+    ? `回复 @${replyTarget.toUsername}…`
+    : editTarget
+      ? "编辑回复…"
+      : "说点什么，支持 Markdown…";
 
   const replyBanner = replyTarget ? (
     <ReplyBanner toUsername={replyTarget.toUsername} onCancel={onCancelReply} />
+  ) : editTarget ? (
+    <ReplyBanner
+      toUsername="编辑中"
+      onCancel={() => {
+        setContent("");
+        onCancelEdit?.();
+      }}
+      editing
+      pendingReview={editTarget.pendingReview}
+    />
   ) : undefined;
 
   return (

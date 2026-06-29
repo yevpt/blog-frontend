@@ -37,6 +37,18 @@ vi.mock("@/lib/format-time", () => ({
   formatDateTime: () => "2020-04-17 15:54",
 }));
 
+// 编辑器在留言项内联渲染；测试只关心初始值与提交回调，mock 掉富文本实现
+vi.mock("@/components/comments/inputs/rich-comment-input", () => ({
+  RichCommentInput: ({ value, onSubmit }: { value: string; onSubmit: () => void }) => (
+    <div data-testid="inline-editor">
+      <textarea data-testid="inline-editor-value" readOnly value={value} />
+      <button type="button" onClick={onSubmit}>
+        保存
+      </button>
+    </div>
+  ),
+}));
+
 const mockItem: GuestbookItemResp = {
   id: 1,
   owner_user_id: 0,
@@ -155,5 +167,133 @@ describe("GuestbookItem", () => {
     expect(container.firstElementChild?.className).toContain("pt-4");
     expect(container.firstElementChild?.className).toContain("pb-5");
     expect(container.firstElementChild?.className).not.toContain("pb-2");
+  });
+
+  describe("审核展示", () => {
+    it("低风险留言渲染正文并展示「待审核」徽标", () => {
+      render(
+        <GuestbookItem
+          item={{
+            ...mockItem,
+            content: "新版本正文",
+            moderation: {
+              public_state: "visible",
+              display_version: "pending",
+              has_pending_revision: true,
+              pending_risk_level: "low",
+              can_interact: true,
+            },
+          }}
+        />,
+      );
+      expect(screen.getByText("新版本正文")).toBeTruthy();
+      expect(screen.getByText("待审核")).toBeTruthy();
+    });
+
+    it("public_state=placeholder 时渲染安全占位，不泄露提交正文或 pending_content", () => {
+      render(
+        <GuestbookItem
+          item={{
+            ...mockItem,
+            content: "提交正文",
+            moderation: {
+              public_state: "placeholder",
+              display_version: "none",
+              has_pending_revision: true,
+              pending_risk_level: "medium",
+              pending_content: "待审正文不该出现",
+              can_interact: false,
+            },
+          }}
+        />,
+      );
+      expect(screen.getByText("内容存在风险，正在等待人工审核。")).toBeTruthy();
+      expect(screen.queryByText("提交正文")).toBeNull();
+      expect(screen.queryByText("待审正文不该出现")).toBeNull();
+    });
+
+    it("can_interact=false 时点击点赞不调用 onLike，且不渲染回复按钮", async () => {
+      const onLike = vi.fn();
+      const onReply = vi.fn();
+      render(
+        <GuestbookItem
+          item={{
+            ...mockItem,
+            moderation: {
+              public_state: "hidden",
+              display_version: "none",
+              has_pending_revision: false,
+              can_interact: false,
+            },
+          }}
+          onLike={onLike}
+          onReply={onReply}
+        />,
+      );
+      // 回复按钮不应出现
+      expect(screen.queryByRole("button", { name: "回复" })).toBeNull();
+      // 点赞与回复入口都不应提供
+      expect(screen.queryByRole("button", { name: /点赞/ })).toBeNull();
+      expect(onLike).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("作者编辑", () => {
+    it("作者是当前用户且提供 onEdit 时展示「编辑」入口", () => {
+      const onEdit = vi.fn().mockResolvedValue(true);
+      render(<GuestbookItem item={mockItem} currentUserId={1} onEdit={onEdit} />);
+      expect(screen.getByRole("button", { name: "编辑留言" })).toBeTruthy();
+    });
+
+    it("非作者不展示编辑入口", () => {
+      const onEdit = vi.fn();
+      render(<GuestbookItem item={mockItem} currentUserId={99} onEdit={onEdit} />);
+      expect(screen.queryByRole("button", { name: "编辑留言" })).toBeNull();
+    });
+
+    it("中风险留言：公开显示旧正文，编辑器初始正文为 pending_content", async () => {
+      const onEdit = vi.fn().mockResolvedValue(true);
+      render(
+        <GuestbookItem
+          item={{
+            ...mockItem,
+            content: "旧版本正文",
+            moderation: {
+              public_state: "visible",
+              display_version: "last_approved",
+              has_pending_revision: true,
+              pending_risk_level: "medium",
+              pending_content: "待审新版本",
+              can_interact: true,
+            },
+          }}
+          currentUserId={1}
+          onEdit={onEdit}
+        />,
+      );
+      // 公开仍显示最后通过版本
+      expect(screen.getByText("旧版本正文")).toBeTruthy();
+
+      await userEvent.click(screen.getByRole("button", { name: "编辑留言" }));
+      // 编辑器初始正文使用 pending_content
+      expect(screen.getByTestId("inline-editor-value")).toHaveValue("待审新版本");
+
+      await userEvent.click(screen.getByRole("button", { name: "保存" }));
+      await Promise.resolve();
+      expect(onEdit).toHaveBeenCalledWith(1, "待审新版本");
+    });
+
+    it("无 pending_content 时编辑器初始正文回退到正文", async () => {
+      const onEdit = vi.fn().mockResolvedValue(true);
+      render(
+        <GuestbookItem
+          item={{ ...mockItem, content: "普通正文", moderation: undefined }}
+          currentUserId={1}
+          onEdit={onEdit}
+        />,
+      );
+      await userEvent.click(screen.getByRole("button", { name: "编辑留言" }));
+      expect(screen.getByTestId("inline-editor-value")).toHaveValue("普通正文");
+    });
   });
 });

@@ -8,9 +8,10 @@ import { useGuestbookList } from "@/hooks/use-guestbook-list";
 import { useGuestbookSubmit } from "@/hooks/use-guestbook-submit";
 import { useGuestbookLike } from "@/hooks/use-guestbook-like";
 import { useGuestbookDelete } from "@/hooks/use-guestbook-delete";
+import { useCommentEdit } from "@/hooks/use-comment-edit";
 import { GuestbookList } from "./guestbook-list";
 import { GuestbookInputBar } from "./guestbook-input-bar";
-import type { ReplyTarget } from "@/components/comments";
+import type { ReplyEditTarget, ReplyTarget } from "@/components/comments";
 import { PageContainer } from "@/components/common/page-container";
 import { runAfterSmoothScroll, scrollIntoViewBelowFixedHeader } from "@/lib/scroll-into-view";
 
@@ -35,9 +36,11 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
     decrementReplyCount,
     removeItem,
     updateLike,
+    replaceItem,
   } = useGuestbookList(initialPage);
 
-  const { isSubmitting, submitEntry, submitReply } = useGuestbookSubmit();
+  const { isSubmitting, submitEntry, submitReply, editEntry } = useGuestbookSubmit();
+  const { isEditing: isReplyEditing, editReply } = useCommentEdit("guestbook");
 
   const { toggleEntryLike } = useGuestbookLike();
   const { deleteItem, deleteReply } = useGuestbookDelete();
@@ -47,8 +50,10 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
   const pendingPaginationScrollRef = useRef(false);
   const wasLoadingRef = useRef(false);
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
+  const [replyEditTarget, setReplyEditTarget] = useState<ReplyEditTarget | null>(null);
   const [focusNonce, setFocusNonce] = useState<number | null>(null);
   const [pendingReplies, setPendingReplies] = useState<Record<number, CommentReplyResp | null>>({});
+  const [editedReplies, setEditedReplies] = useState<Record<number, CommentReplyResp | null>>({});
 
   const scrollToEditor = useCallback(() => {
     requestAnimationFrame(() => {
@@ -61,6 +66,16 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
 
   const handleSubmit = useCallback(
     async (content: string): Promise<boolean> => {
+      if (replyEditTarget) {
+        const reply = await editReply(replyEditTarget.id, replyEditTarget.parentReplyId, content);
+        if (!reply) return false;
+        setEditedReplies((current) => ({
+          ...current,
+          [replyEditTarget.commentId]: reply,
+        }));
+        setReplyEditTarget(null);
+        return true;
+      }
       if (replyTarget) {
         const reply = await submitReply(replyTarget.commentId, content, replyTarget.parentReplyId);
         if (reply) {
@@ -78,7 +93,15 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
       }
       return false;
     },
-    [replyTarget, submitReply, submitEntry, incrementReplyCount, addItem],
+    [
+      addItem,
+      editReply,
+      incrementReplyCount,
+      replyEditTarget,
+      replyTarget,
+      submitEntry,
+      submitReply,
+    ],
   );
 
   const handleLike = useCallback(
@@ -100,6 +123,7 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
         return;
       }
       setReplyTarget(target);
+      setReplyEditTarget(null);
       scrollToEditor();
     },
     [scrollToEditor, userId, openLoginModal],
@@ -116,6 +140,18 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
     [deleteItem, removeItem],
   );
 
+  const handleEdit = useCallback(
+    async (id: number, content: string): Promise<boolean> => {
+      const item = await editEntry(id, content);
+      if (item) {
+        replaceItem(item);
+        return true;
+      }
+      return false;
+    },
+    [editEntry, replaceItem],
+  );
+
   const handleReplyDelete = useCallback(
     async (itemId: number, replyId: number) => {
       const ok = await deleteReply(replyId);
@@ -129,6 +165,19 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
 
   const handleCancelReply = useCallback(() => {
     setReplyTarget(null);
+  }, []);
+
+  const handleEditReply = useCallback(
+    (target: ReplyEditTarget) => {
+      setReplyTarget(null);
+      setReplyEditTarget(target);
+      scrollToEditor();
+    },
+    [scrollToEditor],
+  );
+
+  const handleCancelEdit = useCallback(() => {
+    setReplyEditTarget(null);
   }, []);
 
   const handlePageChange = useCallback(
@@ -156,9 +205,11 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
       <div ref={editorRef} className="mb-6">
         <GuestbookInputBar
           onSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
+          isSubmitting={isSubmitting || isReplyEditing}
           replyTarget={replyTarget}
           onCancelReply={handleCancelReply}
+          editTarget={replyEditTarget}
+          onCancelEdit={handleCancelEdit}
           focusTrigger={focusNonce}
         />
       </div>
@@ -175,8 +226,11 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
         onLike={handleLike}
         currentUserId={userId}
         onDelete={handleDelete}
+        onEdit={handleEdit}
         onDeleteReply={handleReplyDelete}
+        onEditReply={handleEditReply}
         pendingReplies={pendingReplies}
+        editedReplies={editedReplies}
       />
     </PageContainer>
   );

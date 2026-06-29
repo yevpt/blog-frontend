@@ -19,16 +19,19 @@ vi.mock("@/store/use-login-modal", () => ({
 
 vi.mock("@/components/comments", () => ({
   RichCommentInput: ({
+    value,
     onSubmit,
     placeholder,
     header,
   }: {
+    value: string;
     onSubmit: () => void;
     placeholder?: string;
     header?: React.ReactNode;
   }) => (
     <div data-testid="rich-input">
       {header && <div data-testid="reply-banner">{header}</div>}
+      <span data-testid="input-value">{value}</span>
       <span data-testid="placeholder">{placeholder}</span>
       <button onClick={onSubmit}>发布</button>
     </div>
@@ -72,5 +75,28 @@ describe("GuestbookInputBar", () => {
     );
     await userEvent.click(screen.getByText("×"));
     expect(onCancelReply).toHaveBeenCalled();
+  });
+
+  it("编辑回复时回显待审正文并显示审核提示", async () => {
+    const onCancelEdit = vi.fn();
+    render(
+      <GuestbookInputBar
+        onSubmit={vi.fn()}
+        editTarget={{
+          type: "reply",
+          id: 9,
+          commentId: 1,
+          parentReplyId: 0,
+          initialContent: "待审回复",
+          pendingReview: true,
+        }}
+        onCancelEdit={onCancelEdit}
+      />,
+    );
+
+    expect(screen.getByTestId("input-value")).toHaveTextContent("待审回复");
+    expect(screen.getByText("编辑中 · 内容正在审核")).toBeTruthy();
+    await userEvent.click(screen.getByLabelText("取消编辑"));
+    expect(onCancelEdit).toHaveBeenCalledOnce();
   });
 });

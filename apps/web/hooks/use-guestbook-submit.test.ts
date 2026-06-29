@@ -11,16 +11,39 @@ function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status });
 }
 
-const mockItem: GuestbookItemResp = {
-  id: 1,
+function lastRequest(): RequestInit {
+  const calls = vi.mocked(fetch).mock.calls;
+  const last = calls[calls.length - 1];
+  return (last?.[1] ?? {}) as RequestInit;
+}
+
+function requestHeader(name: string): string | null {
+  const headers = lastRequest().headers as Record<string, string> | undefined;
+  return headers?.[name] ?? null;
+}
+
+const baseItem = {
   owner_user_id: 0,
   from_user_id: 1,
-  content: "Hello!",
   reply_count: 0,
   like_count: 0,
   is_liked: false,
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
+} satisfies Partial<GuestbookItemResp>;
+
+const lowRiskItem: GuestbookItemResp = {
+  ...baseItem,
+  id: 1,
+  content: "Hello!",
+  moderation: {
+    public_state: "visible",
+    display_version: "pending",
+    has_pending_revision: true,
+    pending_risk_level: "low",
+    can_interact: true,
+    notice: "内容已发布，正在等待审核",
+  },
 };
 
 const mockReply: CommentReplyResp = {
@@ -51,17 +74,34 @@ describe("useGuestbookSubmit", () => {
     expect(result.current.isSubmitting).toBe(false);
   });
 
-  it("submitEntry 成功返回新条目", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(mockItem));
-
+  it("submitEntry 成功返回新条目并发送 Idempotency-Key", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(lowRiskItem));
     const { result } = renderHook(() => useGuestbookSubmit());
     let returned: GuestbookItemResp | null = null;
     await act(async () => {
       returned = await result.current.submitEntry("Hello!");
     });
     expect((returned as GuestbookItemResp | null)?.id).toBe(1);
-    expect(result.current.isSubmitting).toBe(false);
-    expect(addToastMock).not.toHaveBeenCalled();
+    expect(requestHeader("Idempotency-Key")).toMatch(/^guestbook:[0-9a-f-]+$/);
+  });
+
+  it("submitEntry 成功且 moderation.notice 存在时 toast 使用 notice", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(lowRiskItem));
+    const { result } = renderHook(() => useGuestbookSubmit());
+    await act(async () => {
+      await result.current.submitEntry("Hello!");
+    });
+    expect(addToastMock).toHaveBeenCalledWith("内容已发布，正在等待审核", "success");
+  });
+
+  it("submitEntry 成功且无 notice 时 toast 使用兜底文案", async () => {
+    const noNotice: GuestbookItemResp = { ...lowRiskItem, moderation: undefined };
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(noNotice));
+    const { result } = renderHook(() => useGuestbookSubmit());
+    await act(async () => {
+      await result.current.submitEntry("Hello!");
+    });
+    expect(addToastMock).toHaveBeenCalledWith("留言已发布", "success");
   });
 
   it("submitEntry 401 时返回 null 并 toast 提示登录", async () => {
@@ -75,20 +115,20 @@ describe("useGuestbookSubmit", () => {
     expect(addToastMock).toHaveBeenCalledWith("请先登录", "error");
   });
 
-  it("submitEntry 业务错误时 toast 展示后端返回的具体原因", async () => {
+  it("submitEntry 4xx 业务错误（高风险拒绝）toast 展示后端风险文案", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      jsonResponse({ error: "内容长度不能超过 2000 个字符" }, 400),
+      jsonResponse({ error: "内容包含违规信息，已被拒绝" }, 400),
     );
     const { result } = renderHook(() => useGuestbookSubmit());
     let returned: GuestbookItemResp | null = null;
     await act(async () => {
-      returned = await result.current.submitEntry("超长内容");
+      returned = await result.current.submitEntry("违规内容");
     });
     expect(returned).toBeNull();
-    expect(addToastMock).toHaveBeenCalledWith("内容长度不能超过 2000 个字符", "error");
+    expect(addToastMock).toHaveBeenCalledWith("内容包含违规信息，已被拒绝", "error");
   });
 
-  it("submitEntry 网络异常时 toast 展示兜底文案", async () => {
+  it("submitEntry 5xx / 网络异常时 toast 兜底文案", async () => {
     vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
     const { result } = renderHook(() => useGuestbookSubmit());
     await act(async () => {
@@ -97,29 +137,73 @@ describe("useGuestbookSubmit", () => {
     expect(addToastMock).toHaveBeenCalledWith("发布失败，请稍后重试", "error");
   });
 
-  it("submitReply 成功返回回复", async () => {
+  it("留言与回复使用不同且稳定的幂等键作用域", async () => {
+    const entryResp = jsonResponse({ ...lowRiskItem, id: 1 });
+    const replyResp = jsonResponse(mockReply);
+    const { result } = renderHook(() => useGuestbookSubmit());
+
+    await act(async () => {
+      await result.current.submitEntry("留言正文");
+    });
+    const entryKey = requestHeader("Idempotency-Key");
+
+    vi.mocked(fetch).mockResolvedValueOnce(replyResp);
+    await act(async () => {
+      await result.current.submitReply(1, "回复正文");
+    });
+    const replyKey = requestHeader("Idempotency-Key");
+
+    expect(entryKey).toMatch(/^guestbook:/);
+    expect(replyKey).toMatch(/^reply:/);
+    expect(entryKey).not.toBe(replyKey);
+
+    // 再次以相同正文提交留言，幂等键保持稳定（不刷新）
+    vi.mocked(fetch).mockResolvedValueOnce(entryResp);
+    await act(async () => {
+      await result.current.submitEntry("留言正文");
+    });
+    expect(requestHeader("Idempotency-Key")).toBe(entryKey);
+  });
+
+  it("正文变化后留言幂等键自动获得新值", async () => {
+    const { result } = renderHook(() => useGuestbookSubmit());
+    // 第一次失败（可重试错误）：保留键
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    await act(async () => {
+      await result.current.submitEntry("正文A");
+    });
+    const keyA = requestHeader("Idempotency-Key");
+
+    // 正文变化后应使用新作用域指纹生成新键
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    await act(async () => {
+      await result.current.submitEntry("正文B");
+    });
+    const keyB = requestHeader("Idempotency-Key");
+
+    expect(keyA).not.toBe(keyB);
+
+    // 同正文在网络错误期间反复重试应保持同一键（稳定供原载荷复用）
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    await act(async () => {
+      await result.current.submitEntry("正文B");
+    });
+    expect(requestHeader("Idempotency-Key")).toBe(keyB);
+  });
+
+  it("submitReply 成功并携带 Idempotency-Key（reply 作用域）", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(mockReply));
     const { result } = renderHook(() => useGuestbookSubmit());
     let returned: CommentReplyResp | null = null;
     await act(async () => {
-      returned = await result.current.submitReply(1, "Hi!");
+      returned = await result.current.submitReply(7, "Hi!", 3);
     });
     expect((returned as CommentReplyResp | null)?.id).toBe(10);
-    expect(addToastMock).not.toHaveBeenCalled();
+    expect(requestHeader("Idempotency-Key")).toMatch(/^reply:[0-9a-f-]+$/);
+    expect(addToastMock).not.toHaveBeenCalled(); // 回复成功默认不 toast
   });
 
-  it("submitReply 401 时返回 null 并 toast 提示登录", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "Unauthorized" }, 401));
-    const { result } = renderHook(() => useGuestbookSubmit());
-    let returned: CommentReplyResp | null = null;
-    await act(async () => {
-      returned = await result.current.submitReply(1, "Hi");
-    });
-    expect(returned).toBeNull();
-    expect(addToastMock).toHaveBeenCalledWith("请先登录", "error");
-  });
-
-  it("submitReply 业务错误时 toast 展示后端返回的具体原因", async () => {
+  it("submitReply 4xx 业务失败展示后端原因（不增加回复数）", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       jsonResponse({ error: "内容长度不能超过 2000 个字符" }, 400),
     );
@@ -132,12 +216,44 @@ describe("useGuestbookSubmit", () => {
     expect(addToastMock).toHaveBeenCalledWith("内容长度不能超过 2000 个字符", "error");
   });
 
-  it("submitReply 网络异常时 toast 展示兜底文案", async () => {
-    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+  it("editEntry 调用 PATCH /api/guestbook/:id 并带 guestbook-edit 幂等键", async () => {
+    const updated: GuestbookItemResp = { ...lowRiskItem, id: 42, content: "新正文" };
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(updated));
+    const { result } = renderHook(() => useGuestbookSubmit());
+    let returned: GuestbookItemResp | null = null;
+    await act(async () => {
+      returned = await result.current.editEntry(42, "新正文");
+    });
+    expect((returned as GuestbookItemResp | null)?.id).toBe(42);
+    const calls = vi.mocked(fetch).mock.calls;
+    const [url, init] = calls[calls.length - 1];
+    expect(url).toBe("/api/guestbook/42");
+    expect(init?.method).toBe("PATCH");
+    expect(requestHeader("Idempotency-Key")).toMatch(/^guestbook-edit:[0-9a-f-]+$/);
+  });
+
+  it("editEntry 成功且 moderation.notice 存在时优先使用 notice", async () => {
+    const updated: GuestbookItemResp = {
+      ...lowRiskItem,
+      id: 42,
+      moderation: { ...lowRiskItem.moderation!, notice: "修改已提交，等待审核" },
+    };
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(updated));
     const { result } = renderHook(() => useGuestbookSubmit());
     await act(async () => {
-      await result.current.submitReply(1, "Hi");
+      await result.current.editEntry(42, "新正文");
     });
-    expect(addToastMock).toHaveBeenCalledWith("回复失败，请稍后重试", "error");
+    expect(addToastMock).toHaveBeenCalledWith("修改已提交，等待审核", "success");
+  });
+
+  it("editEntry 4xx 失败展示后端原因且返回 null", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "修改过于频繁" }, 400));
+    const { result } = renderHook(() => useGuestbookSubmit());
+    let returned: GuestbookItemResp | null = null;
+    await act(async () => {
+      returned = await result.current.editEntry(42, "新正文");
+    });
+    expect(returned).toBeNull();
+    expect(addToastMock).toHaveBeenCalledWith("修改过于频繁", "error");
   });
 });

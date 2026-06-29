@@ -31,13 +31,24 @@ vi.mock("./guestbook-list", () => ({
   GuestbookList: ({
     total,
     onReply,
+    onEditReply,
     onPageChange,
     listRef,
+    editedReplies,
   }: {
     total: number;
     onReply: (target: { commentId: number; toUsername: string }) => void;
+    onEditReply?: (target: {
+      type: "reply";
+      id: number;
+      commentId: number;
+      parentReplyId: number;
+      initialContent: string;
+      pendingReview?: boolean;
+    }) => void;
     onPageChange: (page: number) => void;
     listRef?: RefObject<HTMLDivElement | null>;
+    editedReplies?: Record<number, { content: string } | null>;
   }) => (
     <div ref={listRef} data-testid="guestbook-list">
       {total} 条留言
@@ -47,12 +58,41 @@ vi.mock("./guestbook-list", () => ({
       <button type="button" onClick={() => onPageChange(2)}>
         下一页
       </button>
+      <button
+        type="button"
+        onClick={() =>
+          onEditReply?.({
+            type: "reply",
+            id: 9,
+            commentId: 1,
+            parentReplyId: 0,
+            initialContent: "待审回复",
+            pendingReview: true,
+          })
+        }
+      >
+        编辑回复
+      </button>
+      <span data-testid="edited-reply">{editedReplies?.[1]?.content}</span>
     </div>
   ),
 }));
 
 vi.mock("./guestbook-input-bar", () => ({
-  GuestbookInputBar: () => <div data-testid="input-bar" />,
+  GuestbookInputBar: ({
+    onSubmit,
+    editTarget,
+  }: {
+    onSubmit: (content: string) => Promise<boolean>;
+    editTarget?: { initialContent: string } | null;
+  }) => (
+    <div data-testid="input-bar">
+      <span data-testid="edit-value">{editTarget?.initialContent}</span>
+      <button type="button" onClick={() => void onSubmit("修正后的回复")}>
+        保存回复
+      </button>
+    </div>
+  ),
 }));
 
 vi.mock("@/hooks/use-guestbook-list", () => ({
@@ -79,16 +119,25 @@ vi.mock("@/hooks/use-guestbook-list", () => ({
       decrementReplyCount: vi.fn(),
       removeItem: vi.fn(),
       updateLike: vi.fn(),
+      replaceItem: vi.fn(),
     };
   },
 }));
+
+const mockEditEntry = vi.fn().mockResolvedValue(null);
+const mockEditReply = vi.fn().mockResolvedValue({ id: 9, content: "修正后的回复" });
 
 vi.mock("@/hooks/use-guestbook-submit", () => ({
   useGuestbookSubmit: () => ({
     isSubmitting: false,
     submitEntry: vi.fn().mockResolvedValue(null),
     submitReply: vi.fn().mockResolvedValue(null),
+    editEntry: mockEditEntry,
   }),
+}));
+
+vi.mock("@/hooks/use-comment-edit", () => ({
+  useCommentEdit: () => ({ editReply: mockEditReply }),
 }));
 
 vi.mock("@/hooks/use-guestbook-like", () => ({
@@ -146,6 +195,20 @@ describe("GuestbookPage", () => {
       expect(mockScrollIntoViewBelowFixedHeader).toHaveBeenCalledWith(
         screen.getByTestId("guestbook-list"),
       );
+    });
+  });
+
+  it("留言回复编辑成功后按所属留言原位替换", async () => {
+    const user = userEvent.setup();
+    render(<GuestbookPage initialPage={filledPage} />);
+
+    await user.click(screen.getByRole("button", { name: "编辑回复" }));
+    expect(screen.getByTestId("edit-value")).toHaveTextContent("待审回复");
+    await user.click(screen.getByRole("button", { name: "保存回复" }));
+
+    await waitFor(() => {
+      expect(mockEditReply).toHaveBeenCalledWith(9, 0, "修正后的回复");
+      expect(screen.getByTestId("edited-reply")).toHaveTextContent("修正后的回复");
     });
   });
 });

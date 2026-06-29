@@ -83,6 +83,11 @@ export function useGuestbookList(initialPage: GuestbookPageResp) {
     );
   }, []);
 
+  /** 编辑成功后按 ID 原位替换条目，保持总数/页数/回复数不变。 */
+  const replaceItem = useCallback((item: GuestbookItemResp) => {
+    setItems((prev) => prev.map((i) => (i.id === item.id ? item : i)));
+  }, []);
+
   return {
     items,
     page,
@@ -96,5 +101,6 @@ export function useGuestbookList(initialPage: GuestbookPageResp) {
     decrementReplyCount,
     removeItem,
     updateLike,
+    replaceItem,
   };
 }

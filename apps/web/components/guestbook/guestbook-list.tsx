@@ -1,6 +1,7 @@
 "use client";
 
 import type { CommentReplyResp, GuestbookItemResp } from "@repo/api";
+import type { ReplyEditTarget } from "@/components/comments";
 import { Card, Pagination } from "@repo/ui";
 import type { RefObject } from "react";
 import { CommentItemSkeleton, type ReplyTarget } from "@/components/comments";
@@ -34,7 +35,10 @@ interface GuestbookListProps {
   currentUserId?: number | null;
   onDelete?: (id: number) => Promise<boolean>;
   onDeleteReply?: (itemId: number, replyId: number) => Promise<boolean>;
+  onEdit?: (id: number, content: string) => Promise<boolean>;
+  onEditReply?: (target: ReplyEditTarget) => void;
   pendingReplies: Record<number, CommentReplyResp | null>;
+  editedReplies?: Record<number, CommentReplyResp | null>;
   listRef?: RefObject<HTMLDivElement | null>;
 }
 
@@ -51,7 +55,10 @@ export function GuestbookList({
   currentUserId,
   onDelete,
   onDeleteReply,
+  onEdit,
+  onEditReply,
   pendingReplies,
+  editedReplies,
   listRef,
 }: GuestbookListProps) {
   return (
@@ -78,7 +85,10 @@ export function GuestbookList({
                 currentUserId={currentUserId}
                 onDelete={onDelete}
                 onDeleteReply={onDeleteReply}
+                onEdit={onEdit}
+                onEditReply={onEditReply}
                 pendingReply={pendingReplies[item.id] ?? null}
+                editedReply={editedReplies?.[item.id] ?? null}
               />
             ))}
           </div>

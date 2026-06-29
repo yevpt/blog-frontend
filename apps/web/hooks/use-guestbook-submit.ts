@@ -1,10 +1,28 @@
-import { useState, useCallback } from "react";
-import type { GuestbookItemResp, CommentReplyResp, CommentReplyCreateReq } from "@repo/api";
+import { useState, useCallback, useRef } from "react";
+import type {
+  CommentReplyResp,
+  CommentReplyCreateReq,
+  GuestbookItemResp,
+  ModerationView,
+} from "@repo/api";
 import { apiJson, ApiClientError, getApiErrorMessage } from "@/lib/client-fetch";
 import { addToast } from "@/lib/toast";
+import { useIdempotencyKey } from "@/hooks/use-idempotency-key";
+
+/** 审核开关/后端未注入时，成功写入的兜底提示。 */
+const ENTRY_SUCCESS_FALLBACK = "留言已发布";
+const EDIT_SUCCESS_FALLBACK = "修改已提交";
+
+/** 仅 5xx 与网络异常被视为可重试，应当保留幂等键供原载荷复用。 */
+function isRetriableError(err: unknown): boolean {
+  if (err instanceof ApiClientError) {
+    return err.status >= 500;
+  }
+  return true;
+}
 
 /**
- * 统一处理留言提交类请求的失败：401 提示登录，其余业务/网络错误一律走右下角 toast，
+ * 统一处理提交类请求的失败：401 提示登录，其余业务/网络错误一律走右下角 toast，
  * 并优先展示后端返回的具体原因（如「内容长度不能超过 2000 个字符」）。
  */
 function notifySubmitError(err: unknown, fallback: string): void {
@@ -15,29 +33,54 @@ function notifySubmitError(err: unknown, fallback: string): void {
   addToast(getApiErrorMessage(err, fallback), "error");
 }
 
+/** 成功时优先使用后端审核 notice，缺失再退回兜底文案；无 notice 且传 null 表示静默成功。 */
+function notifySuccess(moderation: ModerationView | undefined, fallback: string): void {
+  const notice = moderation?.notice;
+  if (notice) {
+    addToast(notice, "success");
+    return;
+  }
+  if (fallback) {
+    addToast(fallback, "success");
+  }
+}
+
 export function useGuestbookSubmit() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
+  const entryKey = useIdempotencyKey("guestbook");
+  const replyKey = useIdempotencyKey("reply");
+  const editKey = useIdempotencyKey("guestbook-edit");
 
   const submitEntry = useCallback(
-    async (content: string): Promise<GuestbookItemResp | null> => {
-      if (isSubmitting) {
-        return null;
-      }
+    async (content: string, ownerUserId?: number): Promise<GuestbookItemResp | null> => {
+      if (isSubmittingRef.current) return null;
+      isSubmittingRef.current = true;
       setIsSubmitting(true);
+      const fingerprint = `${ownerUserId ?? 0}:${content}`;
+      const idempotencyKey = entryKey.getIdempotencyKey(fingerprint);
       try {
-        return await apiJson<GuestbookItemResp>("/api/guestbook", {
+        const item = await apiJson<GuestbookItemResp>("/api/guestbook", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content }),
+          headers: {
+            "Content-Type": "application/json",
+            "Idempotency-Key": idempotencyKey,
+          },
+          body: JSON.stringify({ owner_user_id: ownerUserId, content }),
         });
+        entryKey.resetIdempotencyKey();
+        notifySuccess(item.moderation, ENTRY_SUCCESS_FALLBACK);
+        return item;
       } catch (err) {
+        if (!isRetriableError(err)) entryKey.resetIdempotencyKey();
         notifySubmitError(err, "发布失败，请稍后重试");
         return null;
       } finally {
+        isSubmittingRef.current = false;
         setIsSubmitting(false);
       }
     },
-    [isSubmitting],
+    [entryKey],
   );
 
   const submitReply = useCallback(
@@ -46,26 +89,70 @@ export function useGuestbookSubmit() {
       content: string,
       parentReplyId = 0,
     ): Promise<CommentReplyResp | null> => {
-      if (isSubmitting) {
-        return null;
-      }
+      if (isSubmittingRef.current) return null;
+      isSubmittingRef.current = true;
       setIsSubmitting(true);
+      const fingerprint = `${guestbookId}:${parentReplyId}:${content}`;
+      const idempotencyKey = replyKey.getIdempotencyKey(fingerprint);
       try {
         const body: CommentReplyCreateReq = { parent_reply_id: parentReplyId, content };
-        return await apiJson<CommentReplyResp>(`/api/guestbook/comments/${guestbookId}/replies`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
+        const reply = await apiJson<CommentReplyResp>(
+          `/api/guestbook/comments/${guestbookId}/replies`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Idempotency-Key": idempotencyKey,
+            },
+            body: JSON.stringify(body),
+          },
+        );
+        replyKey.resetIdempotencyKey();
+        // 回复成功默认静默；后端注入 notice 时才提示（保留原有交互习惯）。
+        notifySuccess(reply.moderation, "");
+        return reply;
       } catch (err) {
+        if (!isRetriableError(err)) replyKey.resetIdempotencyKey();
         notifySubmitError(err, "回复失败，请稍后重试");
         return null;
       } finally {
+        isSubmittingRef.current = false;
         setIsSubmitting(false);
       }
     },
-    [isSubmitting],
+    [replyKey],
   );
 
-  return { isSubmitting, submitEntry, submitReply };
+  const editEntry = useCallback(
+    async (id: number, content: string): Promise<GuestbookItemResp | null> => {
+      if (isSubmittingRef.current) return null;
+      isSubmittingRef.current = true;
+      setIsSubmitting(true);
+      const fingerprint = `${id}:${content}`;
+      const idempotencyKey = editKey.getIdempotencyKey(fingerprint);
+      try {
+        const item = await apiJson<GuestbookItemResp>(`/api/guestbook/${id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Idempotency-Key": idempotencyKey,
+          },
+          body: JSON.stringify({ content }),
+        });
+        editKey.resetIdempotencyKey();
+        notifySuccess(item.moderation, EDIT_SUCCESS_FALLBACK);
+        return item;
+      } catch (err) {
+        if (!isRetriableError(err)) editKey.resetIdempotencyKey();
+        notifySubmitError(err, "修改失败，请稍后重试");
+        return null;
+      } finally {
+        isSubmittingRef.current = false;
+        setIsSubmitting(false);
+      }
+    },
+    [editKey],
+  );
+
+  return { isSubmitting, submitEntry, submitReply, editEntry };
 }

@@ -177,4 +177,32 @@ describe("useGuestbookList", () => {
     expect(result.current.items).toHaveLength(0);
     expect(result.current.total).toBe(0);
   });
+
+  it("replaceItem 按 ID 原位替换且不影响 total / reply_count", () => {
+    const multi: GuestbookPageResp = {
+      ...initialPage,
+      total: 2,
+      list: [mockItem, { ...mockItem, id: 2, content: "第二条", reply_count: 3 }],
+    };
+    const { result } = renderHook(() => useGuestbookList(multi));
+    act(() => {
+      result.current.replaceItem({
+        ...mockItem,
+        id: 1,
+        content: "已编辑正文",
+        moderation: {
+          public_state: "visible",
+          display_version: "last_approved",
+          has_pending_revision: true,
+          pending_risk_level: "medium",
+          can_interact: true,
+        },
+      });
+    });
+    expect(result.current.items[0].content).toBe("已编辑正文");
+    // 其他条目、总数与回复数保持不变
+    expect(result.current.items[1].content).toBe("第二条");
+    expect(result.current.items[1].reply_count).toBe(3);
+    expect(result.current.total).toBe(2);
+  });
 });

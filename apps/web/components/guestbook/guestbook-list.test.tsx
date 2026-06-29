@@ -10,6 +10,7 @@ const mockState = vi.hoisted(() => ({
     item: GuestbookItemResp;
     currentUserId?: number | null;
     onDelete?: (id: number) => Promise<boolean>;
+    onEdit?: (id: number, content: string) => Promise<boolean>;
   }>,
 }));
 
@@ -38,6 +39,7 @@ vi.mock("@/components/guestbook/guestbook-item", () => ({
     item: GuestbookItemResp;
     currentUserId?: number | null;
     onDelete?: (id: number) => Promise<boolean>;
+    onEdit?: (id: number, content: string) => Promise<boolean>;
   }) => {
     mockState.guestbookItemProps.push(props);
     return <div data-testid="guestbook-item">{props.item.content}</div>;
@@ -128,5 +130,11 @@ describe("GuestbookList", () => {
     render(<GuestbookList {...defaultProps} currentUserId={7} onDelete={onDelete} />);
     expect(mockState.guestbookItemProps[0].currentUserId).toBe(7);
     expect(mockState.guestbookItemProps[0].onDelete).toBe(onDelete);
+  });
+
+  it("向留言项透传编辑回调", () => {
+    const onEdit = vi.fn();
+    render(<GuestbookList {...defaultProps} onEdit={onEdit} />);
+    expect(mockState.guestbookItemProps[0].onEdit).toBe(onEdit);
   });
 });
