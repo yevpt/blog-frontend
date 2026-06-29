@@ -21,6 +21,12 @@ function authHeader(t: string | undefined): Record<string, string> {
   return t ? { Authorization: `Bearer ${t}` } : {};
 }
 
+/** 审核写请求只透传调用方生成的非空幂等键，不在代理层擅自生成。 */
+function idempotencyHeader(req: NextRequest): Record<string, string> {
+  const key = req.headers.get("Idempotency-Key")?.trim();
+  return key ? { "Idempotency-Key": key } : {};
+}
+
 /** 将浏览器请求中的 Cookie 转发到后端，确保 visitor_id 等字段不丢失 */
 function cookieHeader(req: NextRequest, tokens?: AuthTokens | null): Record<string, string> {
   if (tokens) return { Cookie: authCookieHeader(req, tokens) };
@@ -140,6 +146,7 @@ export async function proxyPost(
           "Content-Type": "application/json",
           ...authHeader(accessToken),
           ...cookieHeader(req, tokens),
+          ...idempotencyHeader(req),
         },
         body,
       }),
@@ -160,6 +167,7 @@ export async function proxyPatch(req: NextRequest, path: string): Promise<NextRe
           "Content-Type": "application/json",
           ...authHeader(accessToken),
           ...cookieHeader(req, tokens),
+          ...idempotencyHeader(req),
         },
         body,
       }),
@@ -176,7 +184,11 @@ export async function proxyPostForm(req: NextRequest, path: string): Promise<Nex
     return await proxyWithRefresh(req, { requireAuth: true }, (accessToken, tokens) =>
       fetch(`${apiBaseUrl()}${path}`, {
         method: "POST",
-        headers: { ...authHeader(accessToken), ...cookieHeader(req, tokens) },
+        headers: {
+          ...authHeader(accessToken),
+          ...cookieHeader(req, tokens),
+          ...idempotencyHeader(req),
+        },
         body: formData,
       }),
     );

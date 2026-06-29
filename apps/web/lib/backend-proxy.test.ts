@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { proxyGet, proxyPost, proxyDelete } from "./backend-proxy";
+import { proxyGet, proxyPost, proxyPatch, proxyPostForm, proxyDelete } from "./backend-proxy";
 
 vi.stubEnv("API_BASE_URL", "http://mock-backend");
 
@@ -181,5 +181,71 @@ describe("backend-proxy parseBackendJson", () => {
       }),
     );
     expect(res.headers.getSetCookie().join("\n")).toContain("refresh_token=new-ref");
+  });
+
+  it.each([
+    ["POST", proxyPost],
+    ["PATCH", proxyPatch],
+  ] as const)("proxy%s 向后端透传 Idempotency-Key", async (method, proxy) => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({ code: 0, message: "ok", data: { saved: true } }),
+    );
+    const req = new NextRequest("http://localhost/api/test", {
+      method,
+      headers: {
+        Cookie: "access_token=test-token",
+        "Content-Type": "application/json",
+        "Idempotency-Key": "comment:stable-key",
+      },
+      body: JSON.stringify({ content: "测试" }),
+    });
+
+    await proxy(req, "/test");
+
+    expect(fetch).toHaveBeenCalledWith(
+      "http://mock-backend/test",
+      expect.objectContaining({
+        headers: expect.objectContaining({ "Idempotency-Key": "comment:stable-key" }),
+      }),
+    );
+  });
+
+  it("proxyPostForm 向后端透传 Idempotency-Key", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({ code: 0, message: "ok", data: { saved: true } }),
+    );
+    const form = new FormData();
+    form.append("content", "碎语");
+    const req = new NextRequest("http://localhost/api/moments", {
+      method: "POST",
+      headers: {
+        Cookie: "access_token=test-token",
+        "Idempotency-Key": "moment:stable-key",
+      },
+      body: form,
+    });
+
+    await proxyPostForm(req, "/moments");
+
+    expect(fetch).toHaveBeenCalledWith(
+      "http://mock-backend/moments",
+      expect.objectContaining({
+        headers: expect.objectContaining({ "Idempotency-Key": "moment:stable-key" }),
+      }),
+    );
+  });
+
+  it("浏览器未提供幂等键时不向后端写入空请求头", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({ code: 0, message: "ok", data: { saved: true } }),
+    );
+
+    await proxyPost(makeReq("http://localhost/api/test", "POST", true), "/test", {
+      hasBody: false,
+    });
+
+    const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    const headers = init?.headers as Record<string, string>;
+    expect(headers["Idempotency-Key"]).toBeUndefined();
   });
 });
