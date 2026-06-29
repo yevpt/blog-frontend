@@ -32,6 +32,22 @@ describe("ModerationStatusBadge", () => {
     expect(screen.getByText("等待人工审核")).toBeInTheDocument();
   });
 
+  it("审核驳回仅作者可见时显示审核未通过", () => {
+    render(
+      <ModerationStatusBadge
+        moderation={moderation({
+          public_state: "hidden",
+          display_version: "none",
+          has_pending_revision: false,
+          review_status: "rejected",
+          can_interact: false,
+        })}
+      />,
+    );
+
+    expect(screen.getByText("审核未通过")).toBeInTheDocument();
+  });
+
   it("没有待审版本的可见内容不渲染状态", () => {
     const { container } = render(
       <ModerationStatusBadge
