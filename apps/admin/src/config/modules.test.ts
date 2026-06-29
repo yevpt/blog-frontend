@@ -15,6 +15,7 @@ describe("admin 模块注册表", () => {
       "/music",
       "/links",
       "/analytics",
+      "/moderation",
     ]);
   });
 
@@ -35,6 +36,7 @@ describe("admin 模块注册表", () => {
       "/music",
       "/links",
       "/analytics",
+      "/moderation",
     ]);
   });
 
@@ -60,6 +62,8 @@ describe("admin 模块注册表", () => {
     expect(byLabel["评论"]).toBe("message-circle");
     expect(byLabel["留言"]).toBe("quote");
     expect(byLabel["碎语"]).toBe("feather");
+    // 审核模块使用 shield 图标
+    expect(byLabel["内容审核"]).toBe("shield");
   });
 
   it("路由唯一：无重复 path 且至多一个 index 路由（兜住 React key 策略）", () => {

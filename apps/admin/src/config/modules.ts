@@ -10,6 +10,7 @@ import { tagsModule } from "../modules/tags/module";
 import { musicModule } from "../modules/music/module";
 import { linksModule } from "../modules/links/module";
 import { analyticsModule } from "../modules/analytics/module";
+import { moderationModule } from "../modules/moderation/module";
 
 /** 所有后台模块的唯一注册表；新增模块在此追加一项 */
 export const adminModules: AdminModule[] = [
@@ -24,6 +25,7 @@ export const adminModules: AdminModule[] = [
   musicModule,
   linksModule,
   analyticsModule,
+  moderationModule,
 ];
 
 /** 侧边栏导航项：从模块注册表派生（单一事实来源） */
