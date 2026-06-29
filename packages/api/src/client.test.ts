@@ -129,6 +129,12 @@ describe("createApiClient", () => {
     });
   });
 
+  it("保留后端字符串业务错误码供审核冲突分支判断", () => {
+    const error = new ApiError("MODERATION_REVIEW_CONFLICT", "审核状态已经变化，请刷新后重试。");
+
+    expect(error.code).toBe("MODERATION_REVIEW_CONFLICT");
+  });
+
   it("非 JSON 响应时抛出包含 HTTP 状态的 ApiError", async () => {
     vi.mocked(global.fetch).mockResolvedValue(mockResponse("404 page not found", 404));
     const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
@@ -907,14 +913,17 @@ describe("createApiClient", () => {
     );
     const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token" });
 
-    await client.moments.save({
-      id: 7,
-      content: "更新",
-      status: 1,
-      comment_status: 1,
-      image_urls: ["moments/a.jpg"],
-      image_order: ["url:0"],
-    });
+    await client.moments.save(
+      {
+        id: 7,
+        content: "更新",
+        status: 1,
+        comment_status: 1,
+        image_urls: ["moments/a.jpg"],
+        image_order: ["url:0"],
+      },
+      "moment:save-key",
+    );
 
     expect(global.fetch).toHaveBeenCalledWith(
       "http://api/moments",
@@ -1459,7 +1468,7 @@ describe("createApiClient", () => {
         getAccessToken: () => "token123",
       });
 
-      await client.comments.createArticle(5, { content: "hi" });
+      await client.comments.createArticle(5, { content: "hi" }, "comment:create-key");
 
       expect(global.fetch).toHaveBeenCalledWith(
         "http://api/articles/5/comments",
@@ -1496,7 +1505,7 @@ describe("createApiClient", () => {
         getAccessToken: () => "token123",
       });
 
-      await client.comments.replyArticle(1, { content: "ok" });
+      await client.comments.replyArticle(1, { content: "ok" }, "reply:create-key");
 
       expect(global.fetch).toHaveBeenCalledWith(
         "http://api/articles/comments/1/replies",
@@ -1902,6 +1911,111 @@ describe("createApiClient", () => {
         method: "POST",
         headers: expect.objectContaining({ Authorization: "Bearer admin-token" }),
       }),
+    );
+  });
+
+  it("评论发布携带调用方提供的 Idempotency-Key", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: { id: 9, content: "评论" } }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "user-token",
+    });
+
+    await client.comments.createArticle(7, { content: "评论" }, "comment:stable-key");
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/articles/7/comments",
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({ "Idempotency-Key": "comment:stable-key" }),
+      }),
+    );
+  });
+
+  it("审核列表只拼接已提供的筛选参数", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { total: 0, page: 2, page_size: 20, list: [] },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    await client.moderation.listItems({
+      page: 2,
+      content_type: "moment",
+      review_status: "pending",
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/moderation/items?page=2&content_type=moment&review_status=pending",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("审核修正使用版本和乐观锁参数", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: { item_id: 10 } }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+    const req = {
+      revision_id: 20,
+      lock_version: 3,
+      content: "修正后正文",
+      reason: "移除不当表述",
+    };
+
+    await client.moderation.correctItem(10, req);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/moderation/items/10/correct",
+      expect.objectContaining({ method: "POST", body: JSON.stringify(req) }),
+    );
+  });
+
+  it("审核治理接口使用准确的 method 和请求体", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(mockResponse({ code: 0, message: "ok", data: null }));
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+    const control = {
+      registration_mode: "open" as const,
+      publishing_mode: "pre_review_all" as const,
+      reason: "临时防护",
+      lock_version: 4,
+    };
+
+    await client.moderation.updateControl(control);
+    await client.moderation.muteUser(42, { until: "2026-07-01T00:00:00Z", reason: "频繁广告" });
+    await client.moderation.hideItem(10, { reason: "紧急下架" });
+
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      1,
+      "http://api/admin/moderation/control",
+      expect.objectContaining({ method: "PATCH", body: JSON.stringify(control) }),
+    );
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      2,
+      "http://api/admin/moderation/users/42/mute",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ until: "2026-07-01T00:00:00Z", reason: "频繁广告" }),
+      }),
+    );
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      3,
+      "http://api/admin/moderation/items/10/hide",
+      expect.objectContaining({ method: "POST", body: JSON.stringify({ reason: "紧急下架" }) }),
     );
   });
 });

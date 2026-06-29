@@ -1,3 +1,5 @@
+import type { ModerationImageDisplayMode, ModerationView } from "./moderation";
+
 export interface MomentListReq {
   user_id?: number;
   role_id?: number;
@@ -58,6 +60,8 @@ export interface MomentMediaResp {
   url: string;
   /** 可直接访问的图片地址 */
   access_url: string;
+  /** 后端决定的安全图片展示模式。 */
+  display_mode: ModerationImageDisplayMode;
   size: number;
   seq: number;
 }
@@ -77,6 +81,7 @@ export interface MomentItemResp {
   is_liked: boolean;
   user?: MomentUserResp;
   images: MomentMediaResp[];
+  moderation?: ModerationView;
   created_at: string;
   updated_at: string;
 }

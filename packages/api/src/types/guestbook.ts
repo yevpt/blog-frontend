@@ -1,4 +1,6 @@
 // packages/api/src/types/guestbook.ts
+import type { ModerationView } from "./moderation";
+
 export interface GuestbookUserResp {
   id: number;
   username: string;
@@ -18,6 +20,7 @@ export interface GuestbookItemResp {
   reply_count: number;
   like_count: number;
   is_liked: boolean;
+  moderation?: ModerationView;
   created_at: string;
   updated_at: string;
 }

@@ -138,6 +138,22 @@ import type {
   AnalyticsBackfillResp,
   AdminOverviewSummaryResp,
 } from "./types/analytics";
+import type {
+  AdminModerationListReq,
+  AdminModerationReviewReq,
+  AdminModerationCorrectReq,
+  AdminModerationItemResp,
+  AdminModerationPageResp,
+  AdminModerationControlReq,
+  AdminModerationControlResp,
+  AdminModerationProfileReq,
+  AdminModerationSanctionReq,
+  AdminModerationProfileResp,
+  AdminModerationEmergencyReq,
+  AdminModerationEmergencyBatchReq,
+  AdminModerationEmergencyItemResp,
+  AdminModerationEmergencyBatchResp,
+} from "./types/moderation";
 
 /** createApiClient 的注入配置接口 */
 export interface ApiClientConfig {
@@ -154,9 +170,15 @@ export interface ApiClientConfig {
 
 /** 后端统一响应包装结构 */
 interface BackendResponse<T> {
-  code: number;
+  code: number | string;
   message: string;
   data?: T;
+}
+
+/** 审核写接口的幂等键由调用方控制，网络重试时必须保持不变。 */
+function idempotencyHeaders(idempotencyKey?: string): Record<string, string> {
+  const key = idempotencyKey?.trim();
+  return key ? { "Idempotency-Key": key } : {};
 }
 
 /**
@@ -566,9 +588,10 @@ export function createApiClient(config: ApiClientConfig) {
           method: "POST",
         }),
       /** 新增或更新碎语，需登录；图片 multipart 上传由 web route handler 单独转发 */
-      save: (req: MomentSaveReq) =>
+      save: (req: MomentSaveReq, idempotencyKey?: string) =>
         fetchAuthed<MomentItemResp>("/moments", {
           method: "POST",
+          headers: idempotencyHeaders(idempotencyKey),
           body: JSON.stringify(req),
         }),
       /** 删除自己的碎语，需登录；管理员也可删除 */
@@ -741,15 +764,31 @@ export function createApiClient(config: ApiClientConfig) {
         );
       },
       /** 新增文章评论（需登录） */
-      createArticle: (articleId: number, req: CommentCreateReq) =>
+      createArticle: (articleId: number, req: CommentCreateReq, idempotencyKey?: string) =>
         fetchAuthed<CommentItemResp>(`/articles/${articleId}/comments`, {
           method: "POST",
+          headers: idempotencyHeaders(idempotencyKey),
           body: JSON.stringify(req),
         }),
       /** 新增碎语评论（需登录） */
-      createMoment: (momentId: number, req: CommentCreateReq) =>
+      createMoment: (momentId: number, req: CommentCreateReq, idempotencyKey?: string) =>
         fetchAuthed<CommentItemResp>(`/moments/${momentId}/comments`, {
           method: "POST",
+          headers: idempotencyHeaders(idempotencyKey),
+          body: JSON.stringify(req),
+        }),
+      /** 编辑文章评论（需登录且只能编辑自己的内容） */
+      editArticle: (commentId: number, req: CommentCreateReq, idempotencyKey?: string) =>
+        fetchAuthed<CommentItemResp>(`/articles/comments/${commentId}`, {
+          method: "PATCH",
+          headers: idempotencyHeaders(idempotencyKey),
+          body: JSON.stringify(req),
+        }),
+      /** 编辑碎语评论（需登录且只能编辑自己的内容） */
+      editMoment: (commentId: number, req: CommentCreateReq, idempotencyKey?: string) =>
+        fetchAuthed<CommentItemResp>(`/moments/comments/${commentId}`, {
+          method: "PATCH",
+          headers: idempotencyHeaders(idempotencyKey),
           body: JSON.stringify(req),
         }),
       /** 分页查询文章评论回复（可选登录） */
@@ -775,15 +814,31 @@ export function createApiClient(config: ApiClientConfig) {
         );
       },
       /** 回复文章评论（需登录） */
-      replyArticle: (commentId: number, req: CommentReplyCreateReq) =>
+      replyArticle: (commentId: number, req: CommentReplyCreateReq, idempotencyKey?: string) =>
         fetchAuthed<CommentReplyResp>(`/articles/comments/${commentId}/replies`, {
           method: "POST",
+          headers: idempotencyHeaders(idempotencyKey),
           body: JSON.stringify(req),
         }),
       /** 回复碎语评论（需登录） */
-      replyMoment: (commentId: number, req: CommentReplyCreateReq) =>
+      replyMoment: (commentId: number, req: CommentReplyCreateReq, idempotencyKey?: string) =>
         fetchAuthed<CommentReplyResp>(`/moments/comments/${commentId}/replies`, {
           method: "POST",
+          headers: idempotencyHeaders(idempotencyKey),
+          body: JSON.stringify(req),
+        }),
+      /** 编辑文章评论回复（需登录且只能编辑自己的内容） */
+      editArticleReply: (replyId: number, req: CommentReplyCreateReq, idempotencyKey?: string) =>
+        fetchAuthed<CommentReplyResp>(`/articles/comment-replies/${replyId}`, {
+          method: "PATCH",
+          headers: idempotencyHeaders(idempotencyKey),
+          body: JSON.stringify(req),
+        }),
+      /** 编辑碎语评论回复（需登录且只能编辑自己的内容） */
+      editMomentReply: (replyId: number, req: CommentReplyCreateReq, idempotencyKey?: string) =>
+        fetchAuthed<CommentReplyResp>(`/moments/comment-replies/${replyId}`, {
+          method: "PATCH",
+          headers: idempotencyHeaders(idempotencyKey),
           body: JSON.stringify(req),
         }),
       /** 切换文章评论点赞（需登录） */
@@ -847,9 +902,17 @@ export function createApiClient(config: ApiClientConfig) {
         });
       },
       /** 发表留言（需登录） */
-      create: (req: GuestbookCreateReq) =>
+      create: (req: GuestbookCreateReq, idempotencyKey?: string) =>
         fetchAuthed<GuestbookItemResp>("/guestbook", {
           method: "POST",
+          headers: idempotencyHeaders(idempotencyKey),
+          body: JSON.stringify(req),
+        }),
+      /** 编辑自己的留言 */
+      edit: (id: number, req: GuestbookCreateReq, idempotencyKey?: string) =>
+        fetchAuthed<GuestbookItemResp>(`/guestbook/${id}`, {
+          method: "PATCH",
+          headers: idempotencyHeaders(idempotencyKey),
           body: JSON.stringify(req),
         }),
       /** 切换留言点赞（需登录） */
@@ -867,9 +930,17 @@ export function createApiClient(config: ApiClientConfig) {
         );
       },
       /** 回复留言（需登录） */
-      reply: (guestbookId: number, req: CommentReplyCreateReq) =>
+      reply: (guestbookId: number, req: CommentReplyCreateReq, idempotencyKey?: string) =>
         fetchAuthed<CommentReplyResp>(`/guestbook/comments/${guestbookId}/replies`, {
           method: "POST",
+          headers: idempotencyHeaders(idempotencyKey),
+          body: JSON.stringify(req),
+        }),
+      /** 编辑自己的留言回复 */
+      editReply: (replyId: number, req: CommentReplyCreateReq, idempotencyKey?: string) =>
+        fetchAuthed<CommentReplyResp>(`/guestbook/comment-replies/${replyId}`, {
+          method: "PATCH",
+          headers: idempotencyHeaders(idempotencyKey),
           body: JSON.stringify(req),
         }),
       /** 切换留言回复点赞（需登录） */
@@ -885,6 +956,103 @@ export function createApiClient(config: ApiClientConfig) {
         fetchAuthed<CommentDeleteResp>(`/guestbook/comment-replies/${replyId}`, {
           method: "DELETE",
         }),
+    },
+    moderation: {
+      /** 分页查询人工审核版本（需管理员）。 */
+      listItems: (req: AdminModerationListReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        if (req.content_type !== undefined) p.set("content_type", req.content_type);
+        if (req.risk_level !== undefined) p.set("risk_level", req.risk_level);
+        if (req.review_status !== undefined) p.set("review_status", req.review_status);
+        const qs = p.toString();
+        return fetchAuthed<AdminModerationPageResp>(
+          `/admin/moderation/items${qs ? `?${qs}` : ""}`,
+          { method: "GET" },
+        );
+      },
+      /** 查询一个明确审核版本（需管理员）。 */
+      getItem: (itemId: number) =>
+        fetchAuthed<AdminModerationItemResp>(`/admin/moderation/items/${itemId}`, {
+          method: "GET",
+        }),
+      /** 通过待审版本（需管理员）。 */
+      approveItem: (itemId: number, req: AdminModerationReviewReq) =>
+        fetchAuthed<AdminModerationItemResp>(`/admin/moderation/items/${itemId}/approve`, {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 修正正文后通过待审版本（需管理员）。 */
+      correctItem: (itemId: number, req: AdminModerationCorrectReq) =>
+        fetchAuthed<AdminModerationItemResp>(`/admin/moderation/items/${itemId}/correct`, {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 驳回待审版本（需管理员）。 */
+      rejectItem: (itemId: number, req: AdminModerationReviewReq) =>
+        fetchAuthed<AdminModerationItemResp>(`/admin/moderation/items/${itemId}/reject`, {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 查询全站注册和发布控制（需管理员）。 */
+      getControl: () =>
+        fetchAuthed<AdminModerationControlResp>("/admin/moderation/control", { method: "GET" }),
+      /** 更新全站注册和发布控制（需管理员）。 */
+      updateControl: (req: AdminModerationControlReq) =>
+        fetchAuthed<AdminModerationControlResp>("/admin/moderation/control", {
+          method: "PATCH",
+          body: JSON.stringify(req),
+        }),
+      /** 查询用户审核画像（需管理员）。 */
+      getUserProfile: (userId: number) =>
+        fetchAuthed<AdminModerationProfileResp>(`/admin/moderation/users/${userId}`, {
+          method: "GET",
+        }),
+      /** 手工校正用户信任等级（需管理员）。 */
+      updateUserProfile: (userId: number, req: AdminModerationProfileReq) =>
+        fetchAuthed<void>(`/admin/moderation/users/${userId}/profile`, {
+          method: "PATCH",
+          body: JSON.stringify(req),
+        }),
+      /** 禁言用户（需管理员）。 */
+      muteUser: (userId: number, req: AdminModerationSanctionReq) =>
+        fetchAuthed<void>(`/admin/moderation/users/${userId}/mute`, {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 封禁用户发布能力（需管理员）。 */
+      banUser: (userId: number, req: AdminModerationSanctionReq) =>
+        fetchAuthed<void>(`/admin/moderation/users/${userId}/ban`, {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 解除用户审核处罚（需管理员）。 */
+      releaseUser: (userId: number) =>
+        fetchAuthed<void>(`/admin/moderation/users/${userId}/release`, { method: "POST" }),
+      /** 紧急隐藏单条内容（需管理员）。 */
+      hideItem: (itemId: number, req: AdminModerationEmergencyReq) =>
+        fetchAuthed<AdminModerationEmergencyItemResp>(`/admin/moderation/items/${itemId}/hide`, {
+          method: "POST",
+          body: JSON.stringify(req),
+        }),
+      /** 恢复单条紧急隐藏内容（需管理员）。 */
+      restoreItem: (itemId: number) =>
+        fetchAuthed<AdminModerationEmergencyItemResp>(`/admin/moderation/items/${itemId}/restore`, {
+          method: "POST",
+        }),
+      /** 按游标分批隐藏用户公开内容（需管理员）。 */
+      hideUserContent: (userId: number, req: AdminModerationEmergencyBatchReq) =>
+        fetchAuthed<AdminModerationEmergencyBatchResp>(
+          `/admin/moderation/users/${userId}/hide-content`,
+          { method: "POST", body: JSON.stringify(req) },
+        ),
+      /** 按游标分批恢复用户紧急隐藏内容（需管理员）。 */
+      restoreUserContent: (userId: number, req: AdminModerationEmergencyBatchReq) =>
+        fetchAuthed<AdminModerationEmergencyBatchResp>(
+          `/admin/moderation/users/${userId}/restore-content`,
+          { method: "POST", body: JSON.stringify(req) },
+        ),
     },
     friendLinks: {
       /** 查询公开友情链接（含显示和失联状态） */

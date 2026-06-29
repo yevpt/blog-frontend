@@ -1,4 +1,6 @@
 // packages/api/src/types/comment.ts
+import type { ModerationView } from "./moderation";
+
 export interface CommentUserResp {
   id: number;
   username: string;
@@ -21,6 +23,7 @@ export interface CommentReplyResp {
   to_user?: CommentUserResp;
   like_count: number;
   is_liked: boolean;
+  moderation?: ModerationView;
   created_at: string;
   updated_at: string;
 }
@@ -35,6 +38,7 @@ export interface CommentItemResp {
   reply_count: number;
   like_count: number;
   is_liked: boolean;
+  moderation?: ModerationView;
   created_at: string;
   updated_at: string;
 }
