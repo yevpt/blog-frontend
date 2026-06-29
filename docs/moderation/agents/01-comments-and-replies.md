@@ -83,6 +83,7 @@ const moderation = normalizeModerationView(item.moderation);
 - 评论编辑请求 body 为 `{ content }`；回复编辑请求保留 `parent_reply_id` 和 `content`。
 - 编辑成功后按 ID 原位替换列表项，不改变评论/回复计数。
 - 编辑器必须显示“内容正在审核”状态；若存在 `pending_content`，编辑的是待审版本而非公开旧版本。
+- 文章内联评论区和碎语评论弹窗是两套组合视图，两处都必须透传编辑状态、原位替换回调和待审提示；不能只适配 `InlineComments`。
 
 ## TDD 验收用例
 

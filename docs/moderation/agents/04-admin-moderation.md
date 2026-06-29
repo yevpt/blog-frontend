@@ -84,6 +84,9 @@ apps/admin/src/modules/moderation/
 - 支持 `updateUserProfile`、`muteUser`、`banUser`、`releaseUser`。
 - 禁言/封禁必须填写理由；期限可为空表示由后端策略处理。
 - 按用户隐藏/恢复内容使用 cursor 分批接口；每次显示 processed、next_cursor、has_more，由管理员点击继续下一批，不在浏览器自动无限循环。
+- 批次状态必须记录本次操作是 `hide` 还是 `restore`；“继续下一批”沿用同一操作，切换操作时 cursor 从 0 开始，不能把恢复的 cursor 误用于隐藏。
+- 画像、禁言、封禁和释放成功后重新读取服务端画像，避免前端猜测后端默认期限；`restricted_until=null` 必须能真实清空。
+- 只有 `review_status=pending` 的 revision 可执行通过/驳回/修正；已通过、已驳回、已过期内容只保留合法的紧急处置。
 
 ### 6. 明确排除
 

@@ -51,6 +51,7 @@
 - corrected：动作文案“你的内容经管理员修正后已发布”。
 - rejected：动作文案“你的内容审核未通过”。
 - corrected/rejected 的 `content_excerpt` 作为理由完整可读展示，不能只放在 title tooltip。
+- 理由正文不得复用通知摘要的 `line-clamp` 截断样式。
 - approved 没有理由时不渲染空正文块。
 - 其他 `system_notice` 保持现有通用文案，不因审核解析影响。
 
@@ -60,6 +61,7 @@
 - 不提供恢复原文、申诉、举报或重新编辑按钮。
 - 当前 metadata 没有 content type/content ID，不能安全跳转原内容；卡片点击保持在通知页，不根据 item_id 猜业务 URL。
 - 系统通知不显示为某个普通用户发布，继续使用“系统通知”身份。
+- 消息页原有的内联回复也是内容发布入口，仍需发送稳定 `Idempotency-Key`、遵循 4xx/5xx 重置规则，并优先展示 `moderation.notice`。
 
 ### 4. 可访问性与兼容
 

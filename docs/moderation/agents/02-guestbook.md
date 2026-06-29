@@ -38,6 +38,7 @@
 - `apps/web/app/api/guestbook/[id]/route.ts` 在现有 DELETE 旁增加 PATCH，代理到 `/guestbook/:id`。
 - `apps/web/app/api/guestbook/comment-replies/[id]/route.ts` 增加 PATCH，代理到 `/guestbook/comment-replies/:id`；实际回复编辑 UI 由共享回复任务消费。
 - 新增留言编辑 Hook 或在现有提交 Hook 中加入明确的 `editEntry(id, content)`，使用 `guestbook-edit` 作用域。
+- 留言回复编辑仍由共享回复卡片发起，但留言页必须承接 `ReplyEditTarget`、调用 `reply-edit` PATCH，并把更新后的回复按留言 ID 原位传回共享列表。
 - 编辑成功按 ID 原位替换，不改变总数、页数和回复数。
 - 作者编辑器初始正文使用 `moderation.pending_content ?? content`。
 
@@ -55,6 +56,7 @@
 - 本任务只把后端 `CommentReplyResp` 原样保存为 pending reply，不自行复制回复卡片。
 - 不修改 `CommentReplies`、`ThreadReplyItem` 或评论 Hook。
 - 若并行期间共享回复组件尚未显示审核状态，聚焦测试可以 mock 它；合并后由评论任务提供最终行为。
+- `can_interact=false` 应把 `moderation` 直接传给共享头部隐藏互动入口；不要只把点赞回调改成 no-op，否则仍会向用户展示可点击按钮。
 
 ## TDD 验收用例
 
