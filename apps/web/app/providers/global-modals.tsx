@@ -15,7 +15,7 @@ export function GlobalModals() {
       <LoginModal />
       <MomentModal />
       <ImageViewerHost />
-      <ToastRegion queue={toastQueue} />
+      <ToastRegion queue={toastQueue} position="top-right" className="top-20" />
     </>
   );
 }
