@@ -136,4 +136,18 @@ describe("MomentImageGrid display_mode", () => {
     await user.click(screen.getByRole("button", { name: "查看图片 ok" }));
     expect(onOpen).toHaveBeenCalledWith(0);
   });
+
+  it("id 均为 0 时多图仍使用唯一 key 渲染", () => {
+    render(
+      <MomentImageGrid
+        images={[
+          makeImage({ id: 0, name: "a", access_url: "/a.jpg", seq: 1 }),
+          makeImage({ id: 0, name: "b", access_url: "/b.jpg", seq: 2 }),
+        ]}
+        onOpen={vi.fn()}
+      />,
+    );
+
+    expect(screen.getAllByRole("button")).toHaveLength(2);
+  });
 });

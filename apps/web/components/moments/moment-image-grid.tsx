@@ -47,6 +47,14 @@ function shouldDeferGif(img: MomentImage): boolean {
   return img.display_mode !== "gif_placeholder" && isGifImage(img);
 }
 
+/** 审核投影图可能缺稳定 id，用 seq + url 兜底避免 React key 冲突 */
+function momentImageKey(img: MomentImage, index: number): string {
+  if (img.id > 0) {
+    return String(img.id);
+  }
+  return `${img.seq}-${img.url || img.access_url}-${index}`;
+}
+
 /**
  * 碎语图片九宫格。
  * - 单图：保留原始宽高比、限制最大高度，不裁剪。
@@ -134,7 +142,7 @@ export function MomentImageGrid({ images, onOpen }: MomentImageGridProps) {
 
         if (!isViewable(img)) {
           return (
-            <div key={img.id} className={cellClassName}>
+            <div key={momentImageKey(img, idx)} className={cellClassName}>
               {imageNode}
               {showOverflow && (
                 <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-sm font-medium text-white">
@@ -147,7 +155,7 @@ export function MomentImageGrid({ images, onOpen }: MomentImageGridProps) {
 
         return (
           <button
-            key={img.id}
+            key={momentImageKey(img, idx)}
             type="button"
             aria-label={showOverflow ? "查看更多图片" : `查看图片 ${img.name}`}
             onClick={() => onOpen(getViewerIndex(images, idx))}
