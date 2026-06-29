@@ -11,7 +11,12 @@ import {
 import { AdminListCard } from "../../../components/AdminListCard";
 import { AdminListSummary } from "../../../components/AdminListSummary";
 import { adminFlushDataTableClassNames } from "../../../lib/data-table-flush";
-import { riskLevelVariant, reviewStatusVariant, type ModerationRow } from "../model";
+import {
+  riskLevelVariant,
+  reviewStatusVariant,
+  publicStateVariant,
+  type ModerationRow,
+} from "../model";
 import type { UseModerationListResult } from "../hooks/use-moderation-list";
 import { ModerationListToolbar } from "./ModerationListToolbar";
 
@@ -49,9 +54,11 @@ export function ModerationQueuePanel({ list, desktop, onReview }: ModerationQueu
           contentType={list.filters.contentType}
           riskLevel={list.filters.riskLevel}
           reviewStatus={list.filters.reviewStatus}
+          publicState={list.filters.publicState}
           onContentTypeChange={list.setContentType}
           onRiskLevelChange={list.setRiskLevel}
           onReviewStatusChange={list.setReviewStatus}
+          onPublicStateChange={list.setPublicState}
           canClear={list.hasActiveListQuery}
           onClear={list.resetListQuery}
         />
@@ -130,6 +137,14 @@ function useQueueColumns(onReview: (row: ModerationRow) => void) {
         ),
       },
       {
+        id: "publicState",
+        header: "公开状态",
+        minWidth: 88,
+        cell: (row) => (
+          <Badge variant={publicStateVariant(row.publicState)}>{row.publicStateLabel}</Badge>
+        ),
+      },
+      {
         id: "createdAt",
         header: "创建时间",
         minWidth: 120,
@@ -186,6 +201,7 @@ function ModerationMobileList({
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant={riskLevelVariant(row.riskLevel)}>{row.riskLabel}</Badge>
             <Badge variant={reviewStatusVariant(row.reviewStatus)}>{row.reviewLabel}</Badge>
+            <Badge variant={publicStateVariant(row.publicState)}>{row.publicStateLabel}</Badge>
             <span className="text-sm font-medium">
               {row.contentTypeLabel} · #{row.authorId}
             </span>

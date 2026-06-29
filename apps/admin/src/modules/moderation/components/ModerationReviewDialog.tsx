@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Modal } from "@repo/ui";
+import { SvgIcon } from "@repo/icons";
+import { ButtonUtility, Modal } from "@repo/ui";
 import type { ModerationRow } from "../model";
 import { ModerationReviewActions, type ReviewMode } from "./ModerationReviewActions";
 import { ModerationReviewDetails } from "./ModerationReviewDetails";
@@ -65,18 +66,30 @@ export function ModerationReviewDialog(props: ModerationReviewDialogProps) {
       }}
       isDismissable={!props.isSaving}
       placement="fullscreen-mobile"
-      size="lg"
+      size="full"
       aria-label={`审核内容 #${item.itemId}`}
+      modalClassName="max-md:top-0 max-md:h-dvh max-md:max-h-dvh md:max-w-[min(calc(100vw-2rem),64rem)] md:w-full"
       dialogClassName="min-h-0 min-w-0 flex-1 overflow-x-hidden"
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden">
         <header className="shrink-0 border-b border-border/70 px-4 py-4 sm:px-5 max-md:pt-[max(1rem,env(safe-area-inset-top))]">
-          <h2 className="text-lg font-semibold text-foreground">
-            审核 #{item.itemId} · {item.contentTypeLabel}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            作者 ID：{item.authorId} · 提交版本 v{item.revisionVersion} · 创建 {item.createdAt}
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-semibold text-foreground">
+                审核 #{item.itemId} · {item.contentTypeLabel}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                作者 ID：{item.authorId} · 提交版本 v{item.revisionVersion} · 创建 {item.createdAt}
+              </p>
+            </div>
+            <ButtonUtility
+              tooltip="关闭"
+              icon={<SvgIcon name="close" size={16} />}
+              isDisabled={props.isSaving}
+              onClick={props.onClose}
+              className="shrink-0 md:hidden"
+            />
+          </div>
         </header>
         <ModerationReviewDetails item={item} />
         {deleted ? null : (

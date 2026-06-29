@@ -71,6 +71,7 @@ const mockSetPage = vi.fn();
 const mockSetContentType = vi.fn();
 const mockSetRiskLevel = vi.fn();
 const mockSetReviewStatus = vi.fn();
+const mockSetPublicState = vi.fn();
 const mockResetListQuery = vi.fn();
 
 vi.mock("./hooks/use-moderation-list", () => ({
@@ -110,10 +111,11 @@ function setupListHook(overrides: Partial<ReturnType<typeof useModerationList>> 
     error: null,
     page: 1,
     setPage: mockSetPage,
-    filters: { contentType: "all", riskLevel: "all", reviewStatus: "pending" },
+    filters: { contentType: "all", riskLevel: "all", reviewStatus: "pending", publicState: "all" },
     setContentType: mockSetContentType,
     setRiskLevel: mockSetRiskLevel,
     setReviewStatus: mockSetReviewStatus,
+    setPublicState: mockSetPublicState,
     resetListQuery: mockResetListQuery,
     hasActiveListQuery: false,
     refetch: mockRefetch,
@@ -504,6 +506,7 @@ describe("ModerationPage", () => {
     expect(screen.getByRole("button", { name: /筛选内容类型/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /筛选风险等级/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /筛选审核状态/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /筛选公开状态/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /清除筛选/ })).toBeInTheDocument();
   });
 

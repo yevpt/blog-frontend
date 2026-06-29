@@ -42,19 +42,22 @@ export function ModerationReviewActions(props: ModerationReviewActionsProps) {
   return (
     <div className="shrink-0 border-t border-border/70 bg-card px-4 py-4 sm:px-5 max-md:pb-[max(1rem,env(safe-area-inset-bottom))]">
       {modes.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="审核操作">
-          {modes.map((item) => (
-            <Button
-              key={item.id}
-              size="sm"
-              variant={activeMode === item.id ? "default" : "outline"}
-              aria-pressed={activeMode === item.id}
-              isDisabled={props.isSaving}
-              onPress={() => props.onModeChange(item.id)}
-            >
-              {item.label}
-            </Button>
-          ))}
+        <div className="grid gap-1.5">
+          <span className="text-xs font-medium text-muted-foreground">选择操作</span>
+          <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="审核操作">
+            {modes.map((item) => (
+              <Button
+                key={item.id}
+                size="sm"
+                variant={activeMode === item.id ? "default" : "outline"}
+                aria-pressed={activeMode === item.id}
+                isDisabled={props.isSaving}
+                onPress={() => props.onModeChange(item.id)}
+              >
+                {item.label}
+              </Button>
+            ))}
+          </div>
         </div>
       ) : null}
 
@@ -96,12 +99,22 @@ export function ModerationReviewActions(props: ModerationReviewActionsProps) {
         </div>
       ) : null}
 
-      <div className="mt-3 flex items-center justify-end gap-2">
-        <Button variant="outline" onPress={props.onClose} isDisabled={props.isSaving}>
+      <div className="mt-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-end">
+        <Button
+          variant="outline"
+          onPress={props.onClose}
+          isDisabled={props.isSaving}
+          className="hidden md:inline-flex"
+        >
           关闭
         </Button>
         {activeMode ? (
-          <Button onPress={props.onSubmit} isLoading={props.isSaving} loadingText="提交中…">
+          <Button
+            onPress={props.onSubmit}
+            isLoading={props.isSaving}
+            loadingText="提交中…"
+            className="w-full md:w-auto"
+          >
             {actionLabel(activeMode)}
           </Button>
         ) : null}

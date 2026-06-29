@@ -1,5 +1,10 @@
 import { Badge, cn } from "@repo/ui";
-import { reviewStatusVariant, riskLevelVariant, type ModerationRow } from "../model";
+import {
+  reviewStatusVariant,
+  riskLevelVariant,
+  publicStateVariant,
+  type ModerationRow,
+} from "../model";
 
 export function ModerationReviewDetails({ item }: { item: ModerationRow }) {
   const deleted = item.lifecycleState === "deleted";
@@ -10,7 +15,7 @@ export function ModerationReviewDetails({ item }: { item: ModerationRow }) {
           <Badge variant={riskLevelVariant(item.riskLevel)}>{item.riskLabel}</Badge>
           <Badge variant={reviewStatusVariant(item.reviewStatus)}>{item.reviewLabel}</Badge>
           <Badge variant="secondary">{item.policyLabel}</Badge>
-          <Badge variant="outline">{item.publicStateLabel}</Badge>
+          <Badge variant={publicStateVariant(item.publicState)}>{item.publicStateLabel}</Badge>
         </div>
         <section className="grid min-w-0 gap-4 md:grid-cols-2">
           <ContentVersion title="原始提交" content={item.submittedContent || "（空）"} />
@@ -32,6 +37,15 @@ export function ModerationReviewDetails({ item }: { item: ModerationRow }) {
             {item.decisionReason ? ` · ${item.decisionReason}` : ""}
             {item.reviewedAt ? ` · ${item.reviewedAt}` : ""}
           </p>
+        ) : null}
+        {item.emergencyHideReason ? (
+          <section className="grid min-w-0 gap-1 rounded-lg border border-destructive/40 bg-destructive/5 p-3">
+            <p className="text-sm font-medium text-destructive">紧急隐藏</p>
+            <p className="text-sm leading-6 text-foreground">{item.emergencyHideReason}</p>
+            {item.emergencyHiddenAt ? (
+              <p className="text-xs text-muted-foreground">隐藏时间：{item.emergencyHiddenAt}</p>
+            ) : null}
+          </section>
         ) : null}
         {deleted ? (
           <p className="text-sm text-destructive">该内容已被删除，无法审核或恢复。</p>

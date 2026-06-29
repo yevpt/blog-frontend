@@ -24,6 +24,7 @@ export interface UseModerationListResult {
   setContentType: (value: FilterValue) => void;
   setRiskLevel: (value: FilterValue) => void;
   setReviewStatus: (value: FilterValue) => void;
+  setPublicState: (value: FilterValue) => void;
   resetListQuery: () => void;
   hasActiveListQuery: boolean;
   refetch: () => Promise<void>;
@@ -104,6 +105,11 @@ export function useModerationList(): UseModerationListResult {
     [setFilter],
   );
 
+  const setPublicState = useCallback(
+    (value: FilterValue) => setFilter("publicState", value),
+    [setFilter],
+  );
+
   const rows = useMemo(() => pageData?.list.map(mapItemToRow) ?? [], [pageData]);
 
   return {
@@ -117,6 +123,7 @@ export function useModerationList(): UseModerationListResult {
     setContentType,
     setRiskLevel,
     setReviewStatus,
+    setPublicState,
     resetListQuery,
     hasActiveListQuery,
     refetch,

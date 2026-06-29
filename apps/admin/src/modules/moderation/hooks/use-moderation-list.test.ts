@@ -77,6 +77,7 @@ describe("useModerationList", () => {
       contentType: "guestbook",
       riskLevel: "high",
       reviewStatus: "approved",
+      publicState: "all",
     });
 
     expect(apiClient.moderation.listItems).toHaveBeenLastCalledWith({
@@ -131,7 +132,7 @@ describe("useModerationList", () => {
     });
   });
 
-  it("setReviewStatus=all 时不传 review_status", async () => {
+  it("setReviewStatus=all 时传 review_status=all", async () => {
     const { result } = renderHookWithAdminRouter(() => useModerationList());
 
     await waitFor(() => {
@@ -146,6 +147,7 @@ describe("useModerationList", () => {
       expect(apiClient.moderation.listItems).toHaveBeenLastCalledWith({
         page: 1,
         page_size: 10,
+        review_status: "all",
       });
     });
   });
@@ -189,6 +191,7 @@ describe("useModerationList", () => {
         contentType: "all",
         riskLevel: "all",
         reviewStatus: "pending",
+        publicState: "all",
       });
     });
   });

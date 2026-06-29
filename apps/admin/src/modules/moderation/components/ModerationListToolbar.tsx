@@ -4,6 +4,7 @@ import {
   CONTENT_TYPE_OPTIONS,
   RISK_LEVEL_OPTIONS,
   REVIEW_STATUS_OPTIONS,
+  PUBLIC_STATE_OPTIONS,
   type FilterValue,
 } from "../model";
 
@@ -11,21 +12,25 @@ interface ModerationListToolbarProps {
   contentType: FilterValue;
   riskLevel: FilterValue;
   reviewStatus: FilterValue;
+  publicState: FilterValue;
   onContentTypeChange: (value: FilterValue) => void;
   onRiskLevelChange: (value: FilterValue) => void;
   onReviewStatusChange: (value: FilterValue) => void;
+  onPublicStateChange: (value: FilterValue) => void;
   canClear?: boolean;
   onClear?: () => void;
 }
 
-/** 审核队列筛选工具栏：内容类型 / 风险 / 审核状态三选 + 清除筛选 */
+/** 审核队列筛选工具栏：内容类型 / 风险 / 审核状态 / 公开状态四选 + 清除筛选 */
 export function ModerationListToolbar({
   contentType,
   riskLevel,
   reviewStatus,
+  publicState,
   onContentTypeChange,
   onRiskLevelChange,
   onReviewStatusChange,
+  onPublicStateChange,
   canClear = false,
   onClear,
 }: ModerationListToolbarProps) {
@@ -64,6 +69,17 @@ export function ModerationListToolbar({
         className="w-full sm:w-32"
       >
         {REVIEW_STATUS_OPTIONS.map((option) => (
+          <Select.Item key={option.value} id={option.value} label={option.label} />
+        ))}
+      </Select>
+
+      <Select
+        aria-label="筛选公开状态"
+        selectedKey={publicState}
+        onSelectionChange={(key) => onPublicStateChange(String(key) as FilterValue)}
+        className="w-full sm:w-32"
+      >
+        {PUBLIC_STATE_OPTIONS.map((option) => (
           <Select.Item key={option.value} id={option.value} label={option.label} />
         ))}
       </Select>

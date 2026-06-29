@@ -23,7 +23,8 @@ export type FilterValue =
   | "all"
   | ModerationContentType
   | ModerationRiskLevel
-  | ModerationReviewStatus;
+  | ModerationReviewStatus
+  | ModerationPublicState;
 
 export interface FilterOption<T extends string = string> {
   value: T;
@@ -34,6 +35,7 @@ export interface AdminModerationListFilters {
   contentType: FilterValue;
   riskLevel: FilterValue;
   reviewStatus: FilterValue;
+  publicState: FilterValue;
   [key: string]: string | undefined;
 }
 
@@ -66,6 +68,10 @@ export interface ModerationRow {
   momentOptions?: { status: 0 | 1; comment_status: 0 | 1 };
   decisionType?: "approved" | "corrected" | "rejected";
   decisionReason?: string;
+  /** 紧急隐藏原因，仅紧急隐藏态有值。 */
+  emergencyHideReason?: string;
+  /** 紧急隐藏时间，仅紧急隐藏态有值。 */
+  emergencyHiddenAt?: string;
   reviewerId?: number;
   reviewedAt?: string;
 }
@@ -75,6 +81,7 @@ const DEFAULT_FILTERS: AdminModerationListFilters = {
   riskLevel: "all",
   /** 文档要求：默认筛选 review_status=pending */
   reviewStatus: "pending",
+  publicState: "all",
 };
 
 export const DEFAULT_MODERATION_LIST_QUERY_STATE: ModerationListQueryState = {
@@ -98,6 +105,13 @@ const VALID_REVIEW_STATUSES: ModerationReviewStatus[] = [
   "approved",
   "rejected",
   "superseded",
+];
+
+const VALID_PUBLIC_STATES: ModerationPublicState[] = [
+  "visible",
+  "placeholder",
+  "hidden",
+  "emergency_hidden",
 ];
 
 const ALL_OPTION: FilterOption<FilterValue> = { value: "all", label: "全部" };
@@ -126,6 +140,14 @@ export const REVIEW_STATUS_OPTIONS: FilterOption<FilterValue>[] = [
   { value: "approved", label: "已通过" },
   { value: "rejected", label: "已驳回" },
   { value: "superseded", label: "已过期" },
+];
+
+export const PUBLIC_STATE_OPTIONS: FilterOption<FilterValue>[] = [
+  ALL_OPTION,
+  { value: "visible", label: "公开" },
+  { value: "placeholder", label: "占位" },
+  { value: "hidden", label: "隐藏" },
+  { value: "emergency_hidden", label: "紧急隐藏" },
 ];
 
 const CONTENT_TYPE_LABEL: Record<ModerationContentType, string> = {
@@ -209,6 +231,20 @@ export function reviewStatusVariant(status: ModerationReviewStatus): BadgeProps[
   }
 }
 
+/** 紧急隐藏态用 error 徽章醒目提示；占位态用 secondary；其它用 outline。 */
+export function publicStateVariant(state: ModerationPublicState): BadgeProps["variant"] {
+  switch (state) {
+    case "emergency_hidden":
+      return "error";
+    case "placeholder":
+      return "secondary";
+    case "hidden":
+      return "outline";
+    case "visible":
+      return "success";
+  }
+}
+
 /** 超长正文截断为列表摘要，避免单元格被长文本撑爆 */
 export function truncateContent(text: string, max = 60): string {
   if (text.length <= max) return text;
@@ -251,6 +287,10 @@ export function mapItemToRow(item: AdminModerationItemResp): ModerationRow {
     momentOptions: item.subject.type === "moment" ? item.moment_options : undefined,
     decisionType: item.decision_type,
     decisionReason: item.decision_reason,
+    emergencyHideReason: item.emergency_hide_reason,
+    emergencyHiddenAt: item.emergency_hidden_at
+      ? formatModerationDate(item.emergency_hidden_at)
+      : undefined,
     reviewerId: item.reviewer_id,
     reviewedAt: item.reviewed_at ? formatModerationDate(item.reviewed_at) : undefined,
   };
@@ -282,6 +322,14 @@ function toApiFilter<T extends string>(value: FilterValue): T | undefined {
   return value === "all" ? undefined : (value as T);
 }
 
+/** 审核状态筛选：all 显式请求全部状态，其余原样传给后端。 */
+function toReviewStatusApiFilter(
+  value: FilterValue,
+): AdminModerationListReq["review_status"] | undefined {
+  if (value === "all") return "all";
+  return toApiFilter<ModerationReviewStatus>(value);
+}
+
 /** 把列表查询状态转为后端 AdminModerationListReq */
 export function toListReq(state: ModerationListQueryState): AdminModerationListReq {
   return {
@@ -289,7 +337,8 @@ export function toListReq(state: ModerationListQueryState): AdminModerationListR
     page_size: 10,
     content_type: toApiFilter(state.filters.contentType),
     risk_level: toApiFilter(state.filters.riskLevel),
-    review_status: toApiFilter(state.filters.reviewStatus),
+    review_status: toReviewStatusApiFilter(state.filters.reviewStatus),
+    public_state: toApiFilter(state.filters.publicState),
   };
 }
 
@@ -300,6 +349,7 @@ export function hasActiveModerationListQuery(state: ModerationListQueryState): b
       contentType: DEFAULT_FILTERS.contentType,
       riskLevel: DEFAULT_FILTERS.riskLevel,
       reviewStatus: DEFAULT_FILTERS.reviewStatus,
+      publicState: DEFAULT_FILTERS.publicState,
     })
   );
 }
@@ -339,6 +389,12 @@ export const moderationListQueryCodec: AdminListQueryCodec<ModerationListQuerySt
           VALID_REVIEW_STATUSES,
           DEFAULT_FILTERS.reviewStatus,
         ),
+        publicState: parseEnumFilter(
+          params,
+          "public_state",
+          VALID_PUBLIC_STATES,
+          DEFAULT_FILTERS.publicState,
+        ),
       },
     };
   },
@@ -357,6 +413,12 @@ export const moderationListQueryCodec: AdminListQueryCodec<ModerationListQuerySt
       "review_status",
       state.filters.reviewStatus,
       DEFAULT_FILTERS.reviewStatus,
+    );
+    writeStringFilter(
+      params,
+      "public_state",
+      state.filters.publicState,
+      DEFAULT_FILTERS.publicState,
     );
     return params;
   },

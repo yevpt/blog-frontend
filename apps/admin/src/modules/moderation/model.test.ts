@@ -5,6 +5,7 @@ import {
   CONTENT_TYPE_OPTIONS,
   RISK_LEVEL_OPTIONS,
   REVIEW_STATUS_OPTIONS,
+  PUBLIC_STATE_OPTIONS,
   canReview,
   canHide,
   canRestore,
@@ -16,10 +17,12 @@ import {
   moderationListQueryCodec,
   policyActionLabel,
   publicStateLabel,
+  publicStateVariant,
   reviewStatusLabel,
   riskLevelLabel,
   riskLevelVariant,
   reviewStatusVariant,
+  toListReq,
   truncateContent,
   type AdminModerationListFilters,
   type ModerationListQueryState,
@@ -66,6 +69,13 @@ describe("moderation model 标签与选项", () => {
       "rejected",
       "superseded",
     ]);
+    expect(PUBLIC_STATE_OPTIONS.map((o) => o.value)).toEqual([
+      "all",
+      "visible",
+      "placeholder",
+      "hidden",
+      "emergency_hidden",
+    ]);
   });
 
   it("标签字典覆盖完整", () => {
@@ -86,6 +96,10 @@ describe("moderation model 标签与选项", () => {
     expect(reviewStatusVariant("rejected")).toBe("error");
     expect(reviewStatusVariant("pending")).toBe("warning");
     expect(reviewStatusVariant("superseded")).toBe("secondary");
+    expect(publicStateVariant("visible")).toBe("success");
+    expect(publicStateVariant("placeholder")).toBe("secondary");
+    expect(publicStateVariant("hidden")).toBe("outline");
+    expect(publicStateVariant("emergency_hidden")).toBe("error");
   });
 });
 
@@ -122,6 +136,26 @@ describe("mapItemToRow", () => {
     const row = mapItemToRow(createItem({ subject: { type: "guestbook", id: 5 } }));
 
     expect(row.momentOptions).toBeUndefined();
+  });
+
+  it("映射紧急隐藏原因与时间并格式化时间", () => {
+    const row = mapItemToRow(
+      createItem({
+        public_state: "emergency_hidden",
+        emergency_hide_reason: "紧急下架违规内容",
+        emergency_hidden_at: "2026-06-29T08:00:00Z",
+      }),
+    );
+
+    expect(row.emergencyHideReason).toBe("紧急下架违规内容");
+    expect(row.emergencyHiddenAt).toMatch(/2026/);
+  });
+
+  it("非紧急隐藏项不设置紧急隐藏字段", () => {
+    const row = mapItemToRow(createItem({ public_state: "visible" }));
+
+    expect(row.emergencyHideReason).toBeUndefined();
+    expect(row.emergencyHiddenAt).toBeUndefined();
   });
 });
 
@@ -190,6 +224,7 @@ describe("moderationListQueryCodec", () => {
     contentType: "all",
     riskLevel: "all",
     reviewStatus: "pending",
+    publicState: "all",
   };
 
   it("默认状态 review_status=pending", () => {
@@ -203,15 +238,16 @@ describe("moderationListQueryCodec", () => {
     const state: ModerationListQueryState = {
       page: 2,
       filters: {
-        contentType: "moment",
+        contentType: "guestbook",
         riskLevel: "high",
         reviewStatus: "approved",
+        publicState: "all",
       },
     };
 
     const params = moderationListQueryCodec.write(state);
     expect(params.get("page")).toBe("2");
-    expect(params.get("content_type")).toBe("moment");
+    expect(params.get("content_type")).toBe("guestbook");
     expect(params.get("risk_level")).toBe("high");
     expect(params.get("review_status")).toBe("approved");
 
@@ -224,12 +260,46 @@ describe("moderationListQueryCodec", () => {
     );
   });
 
+  it("toListReq 在 reviewStatus=all 时传 review_status=all", () => {
+    expect(
+      toListReq({
+        page: 1,
+        filters: { ...defaultFilters, reviewStatus: "all" },
+      }),
+    ).toEqual({
+      page: 1,
+      page_size: 10,
+      review_status: "all",
+      public_state: undefined,
+    });
+  });
+
+  it("toListReq 透传 public_state 非默认值", () => {
+    expect(
+      toListReq({
+        page: 1,
+        filters: { ...defaultFilters, publicState: "emergency_hidden" },
+      }),
+    ).toEqual({
+      page: 1,
+      page_size: 10,
+      review_status: "pending",
+      public_state: "emergency_hidden",
+    });
+  });
+
   it("hasActiveModerationListQuery 识别非默认状态", () => {
     expect(hasActiveModerationListQuery({ page: 1, filters: defaultFilters })).toBe(false);
     expect(
       hasActiveModerationListQuery({
         page: 1,
         filters: { ...defaultFilters, contentType: "moment" },
+      }),
+    ).toBe(true);
+    expect(
+      hasActiveModerationListQuery({
+        page: 1,
+        filters: { ...defaultFilters, publicState: "emergency_hidden" },
       }),
     ).toBe(true);
     expect(

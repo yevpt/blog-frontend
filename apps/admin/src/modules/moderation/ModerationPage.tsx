@@ -24,7 +24,7 @@ export function ModerationPage() {
         description="审核队列、全站控制与用户治理：通过、驳回、修正提交，紧急隐藏/恢复，调整站点注册与发布模式。"
       />
       <Tabs defaultSelectedKey="queue" className="min-h-0 flex-1">
-        <TabsList>
+        <TabsList className="mb-4">
           <TabsItem id="queue">审核队列</TabsItem>
           <TabsItem id="control">全站控制</TabsItem>
           <TabsItem id="user">用户治理</TabsItem>
