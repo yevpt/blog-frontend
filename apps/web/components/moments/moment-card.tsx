@@ -9,6 +9,11 @@ import { Badge, Button, Card, CardContent, Dropdown, Modal } from "@repo/ui";
 import { useSession } from "@/app/providers/session-provider";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { useImageViewer } from "@/store/use-image-viewer";
+import {
+  ModerationContentPlaceholder,
+  ModerationStatusBadge,
+  normalizeModerationView,
+} from "@/components/moderation";
 import { MomentContent } from "./moment-content";
 import { RelativeTime } from "@/components/common/relative-time";
 import { MomentImageGrid } from "./moment-image-grid";
@@ -75,11 +80,18 @@ export function MomentCard({
   const openViewer = useImageViewer((s) => s.open);
 
   const images = moment.images ?? [];
-  // 预览画廊包含该碎语全部图片（含九宫格中被折叠的），点击任意图从对应索引打开
-  const viewerImages = images.map((img) => ({ src: img.access_url, alt: img.name }));
+  // 预览画廊只包含可查看原图的图片；blurred/gif_placeholder 不进入查看器
+  const viewerImages = images
+    .filter((img) => img.display_mode === "original")
+    .map((img) => ({ src: img.access_url, alt: img.name }));
   const isOwner = userId !== null && userId === (moment.user?.id ?? moment.user_id);
   const topLabel = moment.is_top ? "取消置顶" : "置顶";
   const edited = shouldShowMomentEditedAt(moment.created_at, moment.updated_at);
+  // 审核状态：缺失或零值回退为可见且可交互，避免生产审核关闭期间禁用全部互动
+  const moderationView = normalizeModerationView(moment.moderation);
+  const canInteract = moderationView.can_interact;
+  // 中风险首次发布：渲染审核占位而非正文
+  const showModerationPlaceholder = moderationView.public_state === "placeholder";
 
   const body = (
     <>
@@ -126,7 +138,14 @@ export function MomentCard({
         </div>
       </div>
 
-      <MomentContent content={moment.content} collapsible={false} />
+      {showModerationPlaceholder ? (
+        <ModerationContentPlaceholder moderation={moment.moderation} className="mt-0.5" />
+      ) : (
+        <>
+          <MomentContent content={moment.content} collapsible={false} />
+          <ModerationStatusBadge moderation={moment.moderation} className="mt-1.5" />
+        </>
+      )}
 
       <MomentImageGrid images={images} onOpen={(idx) => openViewer(viewerImages, idx)} />
 
@@ -221,7 +240,7 @@ export function MomentCard({
             size="sm"
             aria-label="喜欢"
             aria-pressed={moment.is_liked}
-            isDisabled={likeDisabled}
+            isDisabled={likeDisabled || !canInteract}
             onPress={() => {
               onLike?.(moment);
             }}
@@ -242,6 +261,7 @@ export function MomentCard({
             variant="ghost"
             size="sm"
             aria-label="评论"
+            isDisabled={!canInteract}
             onPress={() => {
               onComment?.(moment);
             }}

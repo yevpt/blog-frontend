@@ -93,14 +93,16 @@ vi.mock("@repo/ui", () => ({
     children,
     variant,
     onPress,
+    isDisabled,
     ...props
   }: {
     children: ReactNode;
     variant?: string;
     onPress?: () => void;
+    isDisabled?: boolean;
     [key: string]: unknown;
   }) => (
-    <button data-variant={variant} onClick={onPress} {...props}>
+    <button data-variant={variant} onClick={onPress} disabled={isDisabled} {...props}>
       {children}
     </button>
   ),
@@ -697,5 +699,79 @@ describe("MomentCard", () => {
       .getAllByRole("img")
       .find((el) => el.tagName === "IMG" && el.getAttribute("src")?.startsWith("/"));
     expect(img).toHaveAttribute("loading", "lazy");
+  });
+
+  // ── moderation 展示与互动限制 ──
+
+  it("低风险编辑展示新正文与待审核徽标", () => {
+    const moment = makeMoment({
+      content: "新正文",
+      moderation: {
+        public_state: "visible",
+        display_version: "pending",
+        has_pending_revision: true,
+        pending_risk_level: "low",
+        can_interact: true,
+      },
+    });
+    render(<MomentCard moment={moment} />);
+    expect(screen.getByText("新正文")).toBeInTheDocument();
+    expect(screen.getByText("待审核")).toBeInTheDocument();
+  });
+
+  it("中风险首次发布渲染审核占位且不渲染正文", () => {
+    const moment = makeMoment({
+      content: "不该显示的正文",
+      moderation: {
+        public_state: "placeholder",
+        display_version: "none",
+        has_pending_revision: true,
+        pending_risk_level: "medium",
+        can_interact: false,
+      },
+    });
+    render(<MomentCard moment={moment} />);
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(screen.queryByText("不该显示的正文")).toBeNull();
+  });
+
+  it("中风险编辑展示最后通过正文与等待人工审核徽标", () => {
+    const moment = makeMoment({
+      content: "最后通过正文",
+      moderation: {
+        public_state: "visible",
+        display_version: "last_approved",
+        has_pending_revision: true,
+        pending_risk_level: "medium",
+        pending_content: "正在审核的新正文",
+        can_interact: true,
+      },
+    });
+    render(<MomentCard moment={moment} />);
+    expect(screen.getByText("最后通过正文")).toBeInTheDocument();
+    expect(screen.queryByText("正在审核的新正文")).toBeNull();
+    expect(screen.getByText("等待人工审核")).toBeInTheDocument();
+  });
+
+  it("can_interact=false 时点赞与评论入口不可操作", async () => {
+    const user = userEvent.setup();
+    const onLike = vi.fn();
+    const onComment = vi.fn();
+    const moment = makeMoment({
+      moderation: {
+        public_state: "visible",
+        display_version: "last_approved",
+        has_pending_revision: false,
+        can_interact: false,
+      },
+    });
+    render(<MomentCard moment={moment} onLike={onLike} onComment={onComment} />);
+    expect(screen.getByRole("button", { name: "喜欢" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "评论" })).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: "喜欢" }));
+    await user.click(screen.getByRole("button", { name: "评论" }));
+    expect(onLike).not.toHaveBeenCalled();
+    expect(onComment).not.toHaveBeenCalled();
   });
 });

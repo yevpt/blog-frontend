@@ -32,6 +32,21 @@ function isGifImage(img: MomentImage): boolean {
   );
 }
 
+/** 仅 original 可进入图片查看器 */
+function isViewable(img: MomentImage): boolean {
+  return img.display_mode === "original";
+}
+
+/** 在全部图片中的下标 → 仅对 original 计数的查看器索引 */
+function getViewerIndex(images: MomentImage[], imageIndex: number): number {
+  return images.slice(0, imageIndex).filter(isViewable).length;
+}
+
+/** gif_placeholder 不走 DeferredNativeImage，即使文件类型为 GIF */
+function shouldDeferGif(img: MomentImage): boolean {
+  return img.display_mode !== "gif_placeholder" && isGifImage(img);
+}
+
 /**
  * 碎语图片九宫格。
  * - 单图：保留原始宽高比、限制最大高度，不裁剪。
@@ -44,33 +59,42 @@ export function MomentImageGrid({ images, onOpen }: MomentImageGridProps) {
 
   if (images.length === 1) {
     const img = images[0]!;
+    const imageNode = shouldDeferGif(img) ? (
+      <DeferredNativeImage
+        src={img.access_url}
+        alt={img.name}
+        className="block h-auto max-h-[320px] w-auto max-w-full object-contain"
+        skeletonClassName="rounded-[6px]"
+      />
+    ) : (
+      <LoadingImage
+        src={img.access_url}
+        alt={img.name}
+        width={0}
+        height={0}
+        fallbackUnoptimized
+        sizes="(max-width: 768px) 90vw, 480px"
+        className="block h-auto max-h-[320px] w-auto max-w-full object-contain"
+        skeletonClassName="rounded-[6px]"
+      />
+    );
+
+    if (!isViewable(img)) {
+      return (
+        <div className="relative mt-3 flex max-w-full overflow-hidden rounded-[6px]">
+          {imageNode}
+        </div>
+      );
+    }
+
     return (
       <button
         type="button"
         aria-label={`查看图片 ${img.name}`}
-        onClick={() => onOpen(0)}
+        onClick={() => onOpen(getViewerIndex(images, 0))}
         className="relative mt-3 flex max-w-full cursor-zoom-in overflow-hidden rounded-[6px]"
       >
-        {/* width/height 设 0 + sizes：next/image 的「未知尺寸」用法，按原始比例自适应 */}
-        {isGifImage(img) ? (
-          <DeferredNativeImage
-            src={img.access_url}
-            alt={img.name}
-            className="block h-auto max-h-[320px] w-auto max-w-full object-contain"
-            skeletonClassName="rounded-[6px]"
-          />
-        ) : (
-          <LoadingImage
-            src={img.access_url}
-            alt={img.name}
-            width={0}
-            height={0}
-            fallbackUnoptimized
-            sizes="(max-width: 768px) 90vw, 480px"
-            className="block h-auto max-h-[320px] w-auto max-w-full object-contain"
-            skeletonClassName="rounded-[6px]"
-          />
-        )}
+        {imageNode}
       </button>
     );
   }
@@ -88,32 +112,48 @@ export function MomentImageGrid({ images, onOpen }: MomentImageGridProps) {
     >
       {visible.map((img, idx) => {
         const showOverflow = overflow > 0 && idx === visible.length - 1;
+        const imageNode = shouldDeferGif(img) ? (
+          <DeferredNativeImage
+            src={img.access_url}
+            alt={img.name}
+            className="h-full w-full object-cover"
+            skeletonClassName="rounded-[6px]"
+          />
+        ) : (
+          <LoadingImage
+            src={img.access_url}
+            alt={img.name}
+            fill
+            fallbackUnoptimized
+            sizes="(max-width: 768px) 33vw, 160px"
+            className="object-cover"
+            skeletonClassName="rounded-[6px]"
+          />
+        );
+        const cellClassName = "relative aspect-square overflow-hidden rounded-[6px] bg-muted";
+
+        if (!isViewable(img)) {
+          return (
+            <div key={img.id} className={cellClassName}>
+              {imageNode}
+              {showOverflow && (
+                <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-sm font-medium text-white">
+                  +{overflow}
+                </span>
+              )}
+            </div>
+          );
+        }
+
         return (
           <button
             key={img.id}
             type="button"
             aria-label={showOverflow ? "查看更多图片" : `查看图片 ${img.name}`}
-            onClick={() => onOpen(idx)}
-            className="relative aspect-square cursor-zoom-in overflow-hidden rounded-[6px] bg-muted"
+            onClick={() => onOpen(getViewerIndex(images, idx))}
+            className={cn(cellClassName, "cursor-zoom-in")}
           >
-            {isGifImage(img) ? (
-              <DeferredNativeImage
-                src={img.access_url}
-                alt={img.name}
-                className="h-full w-full object-cover"
-                skeletonClassName="rounded-[6px]"
-              />
-            ) : (
-              <LoadingImage
-                src={img.access_url}
-                alt={img.name}
-                fill
-                fallbackUnoptimized
-                sizes="(max-width: 768px) 33vw, 160px"
-                className="object-cover"
-                skeletonClassName="rounded-[6px]"
-              />
-            )}
+            {imageNode}
             {showOverflow && (
               <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-sm font-medium text-white">
                 +{overflow}

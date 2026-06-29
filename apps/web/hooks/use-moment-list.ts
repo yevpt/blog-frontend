@@ -14,6 +14,9 @@ import { useLoginModal } from "@/store/use-login-modal";
 import { useMomentModal } from "@/store/use-moment-modal";
 import { addToast } from "@/lib/toast";
 import { apiForm, apiJson, ApiClientError, getApiErrorMessage } from "@/lib/client-fetch";
+import { useIdempotencyKey } from "@/hooks/use-idempotency-key";
+import { normalizeModerationView } from "@/components/moderation";
+import { momentEditFingerprint } from "@/components/moments/moment-submit-fingerprint";
 import { buildQuery } from "@/lib/query";
 import type { MomentImageItem } from "@/components/moments/types";
 
@@ -103,6 +106,8 @@ export function useMomentList({
 }: UseMomentListOptions) {
   const { userId: sessionUserId } = useSession();
   const { open: openLoginModal } = useLoginModal();
+  // 编辑碎语复用 moment-edit 幂等键：同载荷重试保留，成功或明确 4xx 后 reset
+  const { getIdempotencyKey, resetIdempotencyKey } = useIdempotencyKey("moment-edit");
   const publishCount = useMomentModal((s) => s.publishCount);
   const lastPublishedUserId = useMomentModal((s) => s.lastPublishedUserId);
 
@@ -329,6 +334,10 @@ export function useMomentList({
         openLoginModal();
         return;
       }
+      // 审核中或不可交互的内容禁止点赞，避免后端拒绝与前端状态错位
+      if (!normalizeModerationView(moment.moderation).can_interact) {
+        return;
+      }
       if (pendingLikeIdsRef.current.has(moment.id)) {
         return;
       }
@@ -392,13 +401,24 @@ export function useMomentList({
           }
         });
 
-        const updated = await apiForm<MomentItemResp>("/api/moments", form, { method: "POST" });
+        const key = getIdempotencyKey(
+          momentEditFingerprint(moment.id, content, moment.status, moment.comment_status, images),
+        );
+        const updated = await apiForm<MomentItemResp>("/api/moments", form, {
+          method: "POST",
+          headers: { "Idempotency-Key": key },
+        });
+        resetIdempotencyKey();
         setMoments((current) =>
           current.map((item) => (item.id === moment.id ? { ...item, ...updated } : item)),
         );
-        addToast("碎语已更新", "success");
+        addToast(updated.moderation?.notice ?? "碎语已更新", "success");
         return updated;
       } catch (err) {
+        // 明确 4xx（含高风险拦截、401）后 reset；5xx 与网络错误保留同载荷键以便幂等重试
+        if (err instanceof ApiClientError && err.status >= 400 && err.status < 500) {
+          resetIdempotencyKey();
+        }
         if (err instanceof ApiClientError && err.status === 401) {
           openLoginModal();
         } else {
@@ -413,7 +433,7 @@ export function useMomentList({
         });
       }
     },
-    [openLoginModal],
+    [getIdempotencyKey, openLoginModal, resetIdempotencyKey],
   );
 
   const toggleTop = useCallback(

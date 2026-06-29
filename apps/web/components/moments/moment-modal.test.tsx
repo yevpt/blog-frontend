@@ -299,4 +299,148 @@ describe("MomentModal", () => {
     expect(body.getAll("images").length).toBe(2);
     expect(body.getAll("image_order")).toEqual(["file:0", "file:1"]);
   });
+
+  // ── 发布幂等键与 moderation ──
+
+  function lastPublishKey(fetchMock: ReturnType<typeof vi.fn>): string | undefined {
+    const init = fetchMock.mock.calls.at(-1)?.[1] as
+      | { headers?: Record<string, string> }
+      | undefined;
+    return init?.headers?.["Idempotency-Key"];
+  }
+
+  it("发布携带 moment 幂等键", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify({ id: 1 }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<MomentModal />);
+    await user.type(screen.getByLabelText("编辑器"), "你好");
+    await user.click(screen.getByRole("button", { name: "发布" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(lastPublishKey(fetchMock)).toMatch(/^moment:/);
+  });
+
+  it("发布 5xx 重试保留同一幂等键", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ error: "后端异常" }), { status: 500 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ error: "后端异常" }), { status: 500 }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<MomentModal />);
+    await user.type(screen.getByLabelText("编辑器"), "你好");
+    await user.click(screen.getByRole("button", { name: "发布" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const key1 = lastPublishKey(fetchMock);
+    expect(key1).toMatch(/^moment:/);
+
+    await user.click(screen.getByRole("button", { name: "发布" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(lastPublishKey(fetchMock)).toBe(key1);
+  });
+
+  it("发布 4xx 后重试换新幂等键", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ error: "违规" }), { status: 400 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 1 }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<MomentModal />);
+    await user.type(screen.getByLabelText("编辑器"), "你好");
+    await user.click(screen.getByRole("button", { name: "发布" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const key1 = lastPublishKey(fetchMock);
+
+    await user.click(screen.getByRole("button", { name: "发布" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(lastPublishKey(fetchMock)).not.toBe(key1);
+  });
+
+  it("发布正文变化后换新幂等键", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ error: "后端异常" }), { status: 500 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ error: "后端异常" }), { status: 500 }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<MomentModal />);
+    await user.type(screen.getByLabelText("编辑器"), "A");
+    await user.click(screen.getByRole("button", { name: "发布" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const key1 = lastPublishKey(fetchMock);
+
+    await user.clear(screen.getByLabelText("编辑器"));
+    await user.type(screen.getByLabelText("编辑器"), "B");
+    await user.click(screen.getByRole("button", { name: "发布" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(lastPublishKey(fetchMock)).not.toBe(key1);
+  });
+
+  it("发布成功 toast 优先 moderation.notice", async () => {
+    const user = userEvent.setup();
+    const { addToast } = await import("@/lib/toast");
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          id: 1,
+          moderation: {
+            public_state: "visible",
+            display_version: "pending",
+            has_pending_revision: true,
+            can_interact: true,
+            notice: "碎语已发布，待审中",
+          },
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<MomentModal />);
+    await user.type(screen.getByLabelText("编辑器"), "你好");
+    await user.click(screen.getByRole("button", { name: "发布" }));
+    await waitFor(() => expect(addToast).toHaveBeenCalledWith("碎语已发布，待审中", "success"));
+  });
+
+  it("高风险发布错误不增加发布计数且保留编辑器内容", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ error: "内容含严重违规，已拦截" }), { status: 400 }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<MomentModal />);
+    await user.type(screen.getByLabelText("编辑器"), "违规");
+    await user.click(screen.getByRole("button", { name: "发布" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(useMomentModal.getState().publishCount).toBe(0);
+    expect(useMomentModal.getState().isOpen).toBe(true);
+    expect((screen.getByLabelText("编辑器") as HTMLTextAreaElement).value).toBe("违规");
+  });
+
+  it("中风险编辑回显 pending_content 并提示编辑内容正在审核", async () => {
+    const submitEdit = vi.fn().mockResolvedValue(makeMoment());
+    useMomentModal.setState({
+      isOpen: true,
+      editingMoment: makeMoment({
+        content: "旧正文",
+        moderation: {
+          public_state: "visible",
+          display_version: "last_approved",
+          has_pending_revision: true,
+          pending_risk_level: "medium",
+          pending_content: "正在审核的新正文",
+          can_interact: true,
+        },
+      }),
+      submitEdit,
+    });
+    render(<MomentModal />);
+    await screen.findByRole("dialog", { name: "编辑碎语" });
+    expect(screen.getByLabelText("编辑器")).toHaveValue("正在审核的新正文");
+    expect(screen.getByText("编辑内容正在审核")).toBeInTheDocument();
+  });
 });

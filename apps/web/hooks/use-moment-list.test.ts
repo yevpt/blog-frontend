@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import type { MomentItemResp, MomentPageResp } from "@repo/api";
+import type { MomentImageItem } from "@/components/moments/types";
 import { useMomentList } from "./use-moment-list";
 import { useMomentModal } from "@/store/use-moment-modal";
 
@@ -60,6 +61,13 @@ function jsonResponse(body: unknown, status = 200): Response {
 function getLastFetchUrl(): string {
   const call = vi.mocked(fetch).mock.calls.at(-1);
   return String(call?.[0] ?? "");
+}
+
+/** 取最近一次 fetch 调用携带的 Idempotency-Key 请求头 */
+function lastIdempotencyKey(): string | undefined {
+  const call = vi.mocked(fetch).mock.calls.at(-1);
+  const init = call?.[1] as { headers?: Record<string, string> } | undefined;
+  return init?.headers?.["Idempotency-Key"];
 }
 
 describe("useMomentList", () => {
@@ -562,5 +570,237 @@ describe("useMomentList", () => {
     });
 
     expect(mockAddToast).toHaveBeenCalledWith("删除失败，请稍后重试", "error");
+  });
+
+  // ── 发布/编辑幂等键与 moderation 合并 ──
+
+  it("updateMoment 携带 moment-edit 幂等键", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(makeMoment(1, { content: "x" })));
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [makeMoment(1)] }) }),
+    );
+
+    await act(async () => {
+      await result.current.updateMoment(makeMoment(1), "x", []);
+    });
+
+    expect(lastIdempotencyKey()).toMatch(/^moment-edit:/);
+  });
+
+  it("updateMoment 5xx 重试时保留同一幂等键", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(jsonResponse({ error: "后端异常" }, 500))
+      .mockResolvedValueOnce(jsonResponse({ error: "后端异常" }, 500));
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [makeMoment(1)] }) }),
+    );
+
+    await act(async () => {
+      await expect(result.current.updateMoment(makeMoment(1), "x", [])).rejects.toThrow();
+    });
+    const key1 = lastIdempotencyKey();
+
+    await act(async () => {
+      await expect(result.current.updateMoment(makeMoment(1), "x", [])).rejects.toThrow();
+    });
+    const key2 = lastIdempotencyKey();
+
+    expect(key2).toBe(key1);
+  });
+
+  it("updateMoment 4xx 后重试换新幂等键", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(jsonResponse({ error: "内容违规" }, 400))
+      .mockResolvedValueOnce(jsonResponse(makeMoment(1, { content: "x" })));
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [makeMoment(1)] }) }),
+    );
+
+    await act(async () => {
+      await expect(result.current.updateMoment(makeMoment(1), "x", [])).rejects.toThrow();
+    });
+    const key1 = lastIdempotencyKey();
+
+    await act(async () => {
+      await result.current.updateMoment(makeMoment(1), "x", []);
+    });
+    const key2 = lastIdempotencyKey();
+
+    expect(key2).not.toBe(key1);
+  });
+
+  it("updateMoment 正文变化后换新幂等键", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(jsonResponse({ error: "后端异常" }, 500))
+      .mockResolvedValueOnce(jsonResponse({ error: "后端异常" }, 500));
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [makeMoment(1)] }) }),
+    );
+
+    await act(async () => {
+      await expect(result.current.updateMoment(makeMoment(1), "x", [])).rejects.toThrow();
+    });
+    const key1 = lastIdempotencyKey();
+
+    await act(async () => {
+      await expect(result.current.updateMoment(makeMoment(1), "y", [])).rejects.toThrow();
+    });
+    const key2 = lastIdempotencyKey();
+
+    expect(key2).not.toBe(key1);
+  });
+
+  it("updateMoment 图片顺序变化后换新幂等键", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(jsonResponse({ error: "后端异常" }, 500))
+      .mockResolvedValueOnce(jsonResponse({ error: "后端异常" }, 500));
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [makeMoment(1)] }) }),
+    );
+
+    const a: MomentImageItem = {
+      id: "a",
+      remoteUrl: "https://cdn/a.png",
+      previewUrl: "https://cdn/a.png",
+    };
+    const b: MomentImageItem = {
+      id: "b",
+      remoteUrl: "https://cdn/b.png",
+      previewUrl: "https://cdn/b.png",
+    };
+
+    await act(async () => {
+      await expect(result.current.updateMoment(makeMoment(1), "x", [a, b])).rejects.toThrow();
+    });
+    const key1 = lastIdempotencyKey();
+
+    await act(async () => {
+      await expect(result.current.updateMoment(makeMoment(1), "x", [b, a])).rejects.toThrow();
+    });
+    const key2 = lastIdempotencyKey();
+
+    expect(key2).not.toBe(key1);
+  });
+
+  it("低风险编辑合并新正文与待审 moderation", async () => {
+    const updated = makeMoment(1, {
+      content: "新正文",
+      moderation: {
+        public_state: "visible",
+        display_version: "pending",
+        has_pending_revision: true,
+        pending_risk_level: "low",
+        can_interact: true,
+      },
+    });
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(updated));
+
+    const { result } = renderHook(() =>
+      useMomentList({
+        initialPage: makePageResp({ list: [makeMoment(1, { content: "旧正文" })] }),
+      }),
+    );
+
+    await act(async () => {
+      await result.current.updateMoment(makeMoment(1, { content: "旧正文" }), "新正文", []);
+    });
+
+    expect(result.current.moments[0]?.content).toBe("新正文");
+    expect(result.current.moments[0]?.moderation?.has_pending_revision).toBe(true);
+    expect(result.current.moments[0]?.moderation?.pending_risk_level).toBe("low");
+  });
+
+  it("中风险编辑合并最后通过正文并保留 pending_content", async () => {
+    const updated = makeMoment(1, {
+      content: "旧正文",
+      moderation: {
+        public_state: "visible",
+        display_version: "last_approved",
+        has_pending_revision: true,
+        pending_risk_level: "medium",
+        pending_content: "新正文",
+        can_interact: true,
+      },
+    });
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(updated));
+
+    const { result } = renderHook(() =>
+      useMomentList({
+        initialPage: makePageResp({ list: [makeMoment(1, { content: "旧正文" })] }),
+      }),
+    );
+
+    await act(async () => {
+      await result.current.updateMoment(makeMoment(1, { content: "旧正文" }), "新正文", []);
+    });
+
+    expect(result.current.moments[0]?.content).toBe("旧正文");
+    expect(result.current.moments[0]?.moderation?.pending_content).toBe("新正文");
+  });
+
+  it("高风险错误不刷新列表并展示后端风险文案", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: "内容含严重违规，已拦截" }, 400));
+
+    const initial = makeMoment(1, { content: "旧正文" });
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [initial] }) }),
+    );
+
+    await act(async () => {
+      await expect(result.current.updateMoment(initial, "违规内容", [])).rejects.toThrow();
+    });
+
+    expect(result.current.moments[0]?.content).toBe("旧正文");
+    expect(mockAddToast).toHaveBeenCalledWith("内容含严重违规，已拦截", "error");
+  });
+
+  it("updateMoment 成功 toast 优先 moderation.notice", async () => {
+    const updated = makeMoment(1, {
+      content: "x",
+      moderation: {
+        public_state: "visible",
+        display_version: "pending",
+        has_pending_revision: true,
+        can_interact: true,
+        notice: "碎语已提交，待审中",
+      },
+    });
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(updated));
+
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [makeMoment(1)] }) }),
+    );
+
+    await act(async () => {
+      await result.current.updateMoment(makeMoment(1), "x", []);
+    });
+
+    expect(mockAddToast).toHaveBeenCalledWith("碎语已提交，待审中", "success");
+  });
+
+  it("can_interact=false 时 toggleLike 不发起请求也不弹登录", async () => {
+    const moment = makeMoment(1, {
+      moderation: {
+        public_state: "visible",
+        display_version: "last_approved",
+        has_pending_revision: false,
+        can_interact: false,
+      },
+    });
+    const { result } = renderHook(() =>
+      useMomentList({ initialPage: makePageResp({ list: [moment] }) }),
+    );
+
+    await act(async () => {
+      await result.current.toggleLike(moment);
+    });
+
+    expect(fetch).not.toHaveBeenCalled();
+    expect(mockOpenLoginModal).not.toHaveBeenCalled();
   });
 });

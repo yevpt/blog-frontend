@@ -4,10 +4,13 @@ import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 
 import { useSession } from "@/app/providers/session-provider";
 import { useMomentModal } from "@/store/use-moment-modal";
 import { addToast } from "@/lib/toast";
-import { ApiClientError, getApiErrorMessage } from "@/lib/client-fetch";
+import { apiForm, ApiClientError, getApiErrorMessage } from "@/lib/client-fetch";
+import { useIdempotencyKey } from "@/hooks/use-idempotency-key";
 import { ResponsiveModalShell } from "@/components/modal-shell/responsive-modal";
+import type { MomentItemResp } from "@repo/api";
 import { MomentTextInput } from "./moment-text-input";
 import { MomentImageUploader } from "./moment-image-uploader";
+import { momentPublishFingerprint } from "./moment-submit-fingerprint";
 import type { MomentImageItem } from "./types";
 
 const MAX_CONTENT = 800;
@@ -15,6 +18,8 @@ const MAX_CONTENT = 800;
 export function MomentModal() {
   const { isOpen, editingMoment, submitEdit, close, markPublished } = useMomentModal();
   const { userId } = useSession();
+  // 发布碎语复用 moment 幂等键：同载荷重试保留，成功或明确 4xx 后 reset
+  const { getIdempotencyKey, resetIdempotencyKey } = useIdempotencyKey("moment");
   const [content, setContent] = useState("");
   const [images, setImages] = useState<MomentImageItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -23,12 +28,15 @@ export function MomentModal() {
   const isEditing = editingMoment !== null;
   const overLimit = content.length > MAX_CONTENT;
   const canSubmit = content.trim().length > 0 && !overLimit && !submitting;
+  // 中风险编辑：编辑器回显待审正文，并提示当前编辑内容仍在审核
+  const hasPendingRevision = Boolean(isEditing && editingMoment?.moderation?.has_pending_revision);
 
   useEffect(() => {
     if (!isOpen) {
       return;
     }
-    setContent(editingMoment?.content ?? "");
+    // 优先回显待审正文，便于作者继续编辑未通过版本；无待审则回退到公开正文
+    setContent(editingMoment?.moderation?.pending_content ?? editingMoment?.content ?? "");
     setImages(
       editingMoment?.images.map((image) => ({
         id: `remote-${image.id}`,
@@ -79,17 +87,22 @@ export function MomentModal() {
         form.append("images", it.file, it.file.name);
         form.append("image_order", `file:${i}`);
       });
-      const res = await fetch("/api/moments", { method: "POST", body: form });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new ApiClientError(data.error ?? "发布失败", res.status);
-      }
-      addToast("发布成功", "success");
+      const key = getIdempotencyKey(momentPublishFingerprint(content, "1", "1", images));
+      const res = await apiForm<MomentItemResp>("/api/moments", form, {
+        method: "POST",
+        headers: { "Idempotency-Key": key },
+      });
+      resetIdempotencyKey();
+      addToast(res.moderation?.notice ?? "发布成功", "success");
       markPublished(userId);
       reset();
       close();
     } catch (err) {
       if (!isEditing) {
+        // 明确 4xx（含高风险拦截、401）后 reset；5xx 与网络错误保留同载荷键以便幂等重试
+        if (err instanceof ApiClientError && err.status >= 400 && err.status < 500) {
+          resetIdempotencyKey();
+        }
         addToast(getApiErrorMessage(err, "发布失败"), "error");
       } else if (!submitEdit) {
         addToast(getApiErrorMessage(err, "编辑失败"), "error");
@@ -120,15 +133,22 @@ export function MomentModal() {
       }
     >
       {({ onContentResize }) => (
-        <ModalBody
-          content={content}
-          images={images}
-          submitting={submitting}
-          isEditing={isEditing}
-          onContentResize={onContentResize}
-          onChangeContent={setContent}
-          onChangeImages={setImages}
-        />
+        <>
+          {hasPendingRevision && (
+            <p className="px-[18px] pt-3 text-xs text-muted-foreground" role="status">
+              编辑内容正在审核
+            </p>
+          )}
+          <ModalBody
+            content={content}
+            images={images}
+            submitting={submitting}
+            isEditing={isEditing}
+            onContentResize={onContentResize}
+            onChangeContent={setContent}
+            onChangeImages={setImages}
+          />
+        </>
       )}
     </ResponsiveModalShell>
   );
