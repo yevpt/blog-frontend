@@ -35,6 +35,7 @@ export type {
   ModerationRegistrationMode,
   ModerationPublishingMode,
   ModerationView,
+  ModerationPendingImage,
   AdminModerationListReq,
   AdminModerationReviewReq,
   AdminModerationCorrectReq,

@@ -29,7 +29,20 @@ export interface ModerationView {
   pending_risk_level?: ModerationRiskLevel;
   review_status?: ModerationReviewStatus;
   pending_content?: string;
+  /** 仅作者/管理员可见：待审版本图片，供编辑器回显原图。 */
+  pending_images?: ModerationPendingImage[];
   can_interact: boolean;
+}
+
+/** 待审版本图片投影，字段与业务媒体 DTO 对齐。 */
+export interface ModerationPendingImage {
+  id: number;
+  name: string;
+  file_type: string;
+  url: string;
+  access_url: string;
+  display_mode: ModerationImageDisplayMode;
+  seq: number;
 }
 
 export interface AdminModerationListReq {
@@ -37,7 +50,9 @@ export interface AdminModerationListReq {
   page_size?: number;
   content_type?: ModerationContentType;
   risk_level?: ModerationRiskLevel;
-  review_status?: ModerationReviewStatus;
+  /** `all` 表示不按审核状态过滤；省略时后端默认 pending。 */
+  review_status?: ModerationReviewStatus | "all";
+  public_state?: ModerationPublicState;
 }
 
 export interface AdminModerationReviewReq {
@@ -81,6 +96,10 @@ export interface AdminModerationItemResp {
   decision_reason?: string;
   reviewer_id?: number;
   reviewed_at?: string;
+  /** 紧急隐藏原因，仅 public_state=emergency_hidden 时返回。 */
+  emergency_hide_reason?: string;
+  /** 紧急隐藏发生时间，仅 public_state=emergency_hidden 时返回。 */
+  emergency_hidden_at?: string;
   created_at: string;
   can_interact: boolean;
 }

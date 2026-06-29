@@ -1959,6 +1959,27 @@ describe("createApiClient", () => {
     );
   });
 
+  it("审核列表 review_status=all 时拼接 all", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { total: 0, page: 1, page_size: 20, list: [] },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    await client.moderation.listItems({ review_status: "all" });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/moderation/items?review_status=all",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
   it("审核修正使用版本和乐观锁参数", async () => {
     vi.mocked(global.fetch).mockResolvedValue(
       mockResponse({ code: 0, message: "ok", data: { item_id: 10 } }),

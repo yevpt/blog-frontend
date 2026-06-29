@@ -966,6 +966,7 @@ export function createApiClient(config: ApiClientConfig) {
         if (req.content_type !== undefined) p.set("content_type", req.content_type);
         if (req.risk_level !== undefined) p.set("risk_level", req.risk_level);
         if (req.review_status !== undefined) p.set("review_status", req.review_status);
+        if (req.public_state !== undefined) p.set("public_state", req.public_state);
         const qs = p.toString();
         return fetchAuthed<AdminModerationPageResp>(
           `/admin/moderation/items${qs ? `?${qs}` : ""}`,
