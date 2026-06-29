@@ -460,4 +460,83 @@ describe("NotificationCard", () => {
 
     expect(onToggleSelect).not.toHaveBeenCalled();
   });
+
+  function moderationItem(
+    decision: "approved" | "corrected" | "rejected",
+    over: Partial<NotificationItemResp> = {},
+  ): NotificationItemResp {
+    return item({
+      type: "system_notice",
+      source_type: "system",
+      root_type: "system",
+      actor_user: undefined,
+      metadata: JSON.stringify({
+        moderation: { item_id: 10, revision_id: 20, decision },
+      }),
+      ...over,
+    });
+  }
+
+  it("审核通过展示动作文案且无正文块", () => {
+    render(
+      <NotificationCard
+        item={moderationItem("approved")}
+        selecting={false}
+        selected={false}
+        onOpen={vi.fn()}
+        onRead={vi.fn()}
+        onToggleSelect={vi.fn()}
+      />,
+    );
+    expect(screen.getAllByText("系统通知").length).toBeGreaterThan(0);
+    expect(screen.getByText("你的内容已通过审核")).toBeTruthy();
+    expect(screen.queryByTestId("notification-body")).toBeNull();
+    expect(screen.queryByText("点赞")).toBeNull();
+    expect(screen.queryByText("回复")).toBeNull();
+  });
+
+  it("修正后发布展示理由且无内联操作", () => {
+    render(
+      <NotificationCard
+        item={moderationItem("corrected", { content_excerpt: "移除不当表述" })}
+        selecting={false}
+        selected={false}
+        onOpen={vi.fn()}
+        onRead={vi.fn()}
+        onToggleSelect={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("你的内容经管理员修正后已发布")).toBeTruthy();
+    expect(screen.getByTestId("notification-body")).toHaveTextContent("移除不当表述");
+    expect(screen.queryByText("点赞")).toBeNull();
+  });
+
+  it("审核驳回展示驳回理由", () => {
+    render(
+      <NotificationCard
+        item={moderationItem("rejected", { content_excerpt: "含违规内容" })}
+        selecting={false}
+        selected={false}
+        onOpen={vi.fn()}
+        onRead={vi.fn()}
+        onToggleSelect={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("你的内容审核未通过")).toBeTruthy();
+    expect(screen.getByTestId("notification-body")).toHaveTextContent("含违规内容");
+  });
+
+  it("普通 system_notice 保持通用文案", () => {
+    render(
+      <NotificationCard
+        item={item({ type: "system_notice", actor_user: undefined })}
+        selecting={false}
+        selected={false}
+        onOpen={vi.fn()}
+        onRead={vi.fn()}
+        onToggleSelect={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("发布了系统通知")).toBeTruthy();
+  });
 });

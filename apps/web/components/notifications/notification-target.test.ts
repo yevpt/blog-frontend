@@ -43,4 +43,17 @@ describe("getNotificationHref", () => {
       getNotificationHref(item({ root_type: "article", root_id: 42, root_deleted: true })),
     ).toBe("/notifications");
   });
+
+  it("审核 system_notice 停留在消息页", () => {
+    expect(
+      getNotificationHref(
+        item({
+          type: "system_notice",
+          source_type: "system",
+          root_type: "system",
+          metadata: '{"moderation":{"item_id":10,"decision":"approved"}}',
+        }),
+      ),
+    ).toBe("/notifications");
+  });
 });

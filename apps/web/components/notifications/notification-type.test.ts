@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import type { NotificationItemResp } from "@repo/api";
 import {
   extractCommentIdFromMetadata,
+  getModerationNotificationDecision,
+  getModerationNotificationReasonText,
   getNotificationActionText,
   getNotificationActorName,
   getNotificationActorProfileHref,
@@ -69,6 +71,90 @@ describe("getNotificationActorProfileHref", () => {
   });
 });
 
+function moderationItem(
+  decision: "approved" | "corrected" | "rejected",
+  over: Partial<NotificationItemResp> = {},
+): NotificationItemResp {
+  return item({
+    type: "system_notice",
+    source_type: "system",
+    root_type: "system",
+    title: "审核通知",
+    metadata: JSON.stringify({
+      moderation: { item_id: 10, revision_id: 20, decision },
+    }),
+    ...over,
+  });
+}
+
+describe("getModerationNotificationDecision", () => {
+  it("解析 approved/corrected/rejected", () => {
+    expect(getModerationNotificationDecision(moderationItem("approved"))).toBe("approved");
+    expect(getModerationNotificationDecision(moderationItem("corrected"))).toBe("corrected");
+    expect(getModerationNotificationDecision(moderationItem("rejected"))).toBe("rejected");
+  });
+
+  it("非 system_notice 返回 null", () => {
+    expect(
+      getModerationNotificationDecision(
+        item({
+          type: "comment_created",
+          metadata: '{"moderation":{"decision":"approved"}}',
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it("非法 JSON、空 metadata、未知 decision 安全回退", () => {
+    expect(
+      getModerationNotificationDecision(moderationItem("approved", { metadata: undefined })),
+    ).toBeNull();
+    expect(
+      getModerationNotificationDecision(moderationItem("approved", { metadata: "not-json" })),
+    ).toBeNull();
+    expect(
+      getModerationNotificationDecision(
+        moderationItem("approved", { metadata: '{"moderation":{"decision":"pending"}}' }),
+      ),
+    ).toBeNull();
+    expect(
+      getModerationNotificationDecision(
+        item({ type: "system_notice", metadata: '{"other":"value"}' }),
+      ),
+    ).toBeNull();
+  });
+});
+
+describe("getModerationNotificationReasonText", () => {
+  it("corrected/rejected 返回 content_excerpt 理由", () => {
+    expect(
+      getModerationNotificationReasonText(
+        moderationItem("corrected", { content_excerpt: "移除不当表述" }),
+      ),
+    ).toBe("移除不当表述");
+    expect(
+      getModerationNotificationReasonText(
+        moderationItem("rejected", { content_excerpt: "含违规内容" }),
+      ),
+    ).toBe("含违规内容");
+  });
+
+  it("approved 或空 excerpt 不返回理由", () => {
+    expect(getModerationNotificationReasonText(moderationItem("approved"))).toBeNull();
+    expect(
+      getModerationNotificationReasonText(moderationItem("corrected", { content_excerpt: "  " })),
+    ).toBeNull();
+  });
+
+  it("非审核通知返回 null", () => {
+    expect(
+      getModerationNotificationReasonText(
+        item({ type: "system_notice", content_excerpt: "普通通知" }),
+      ),
+    ).toBeNull();
+  });
+});
+
 describe("getNotificationActionText", () => {
   it("article_liked", () => {
     expect(getNotificationActionText(item({ type: "article_liked" }))).toBe("赞了你的文章");
@@ -100,6 +186,20 @@ describe("getNotificationActionText", () => {
   it("未知类型回退 title", () => {
     expect(getNotificationActionText(item({ type: "weird", title: "自定义标题" }))).toBe(
       "自定义标题",
+    );
+  });
+
+  it("审核通知展示专用动作文案", () => {
+    expect(getNotificationActionText(moderationItem("approved"))).toBe("你的内容已通过审核");
+    expect(getNotificationActionText(moderationItem("corrected"))).toBe(
+      "你的内容经管理员修正后已发布",
+    );
+    expect(getNotificationActionText(moderationItem("rejected"))).toBe("你的内容审核未通过");
+  });
+
+  it("普通 system_notice 保持通用文案", () => {
+    expect(getNotificationActionText(item({ type: "system_notice", title: "维护公告" }))).toBe(
+      "发布了系统通知",
     );
   });
 });
@@ -305,6 +405,21 @@ describe("getNotificationBodyText", () => {
 });
 
 describe("getNotificationInlineActions", () => {
+  it("审核通知不展示内联操作", () => {
+    expect(getNotificationInlineActions(moderationItem("approved"))).toEqual({
+      canLike: false,
+      canReply: false,
+    });
+    expect(getNotificationInlineActions(moderationItem("corrected"))).toEqual({
+      canLike: false,
+      canReply: false,
+    });
+    expect(getNotificationInlineActions(moderationItem("rejected"))).toEqual({
+      canLike: false,
+      canReply: false,
+    });
+  });
+
   it("文章/碎语点赞不展示内联操作", () => {
     expect(getNotificationInlineActions(item({ type: "article_liked" }))).toEqual({
       canLike: false,

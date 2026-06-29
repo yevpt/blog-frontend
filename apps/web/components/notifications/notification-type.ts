@@ -29,7 +29,22 @@ interface NotificationMetadata {
   source_snapshot?: NotificationSnapshot;
   root_snapshot?: NotificationSnapshot;
   quote_snapshot?: NotificationSnapshot;
+  moderation?: ModerationMetadata;
 }
+
+interface ModerationMetadata {
+  item_id?: number;
+  revision_id?: number;
+  decision?: string;
+}
+
+export type ModerationNotificationDecision = "approved" | "corrected" | "rejected";
+
+const MODERATION_DECISIONS = new Set<ModerationNotificationDecision>([
+  "approved",
+  "corrected",
+  "rejected",
+]);
 
 const INLINE_ACTION_TYPES = new Set(["comment_created", "reply_created", "guestbook_created"]);
 
@@ -63,6 +78,11 @@ export function getNotificationActorProfileHref(item: NotificationItemResp): str
 
 /** 按事件类型生成动作文案（不含操作人昵称）。 */
 export function getNotificationActionText(item: NotificationItemResp): string {
+  const moderationDecision = getModerationNotificationDecision(item);
+  if (moderationDecision === "approved") return "你的内容已通过审核";
+  if (moderationDecision === "corrected") return "你的内容经管理员修正后已发布";
+  if (moderationDecision === "rejected") return "你的内容审核未通过";
+
   switch (item.type) {
     case "article_liked":
       return "赞了你的文章";
@@ -106,6 +126,29 @@ function parseNotificationMetadata(metadata?: string): NotificationMetadata {
   } catch {
     return {};
   }
+}
+
+function isModerationDecision(value: unknown): value is ModerationNotificationDecision {
+  return (
+    typeof value === "string" && MODERATION_DECISIONS.has(value as ModerationNotificationDecision)
+  );
+}
+
+/** 解析审核通知 decision；仅 system_notice 且 decision 合法时返回，否则 null。 */
+export function getModerationNotificationDecision(
+  item: NotificationItemResp,
+): ModerationNotificationDecision | null {
+  if (item.type !== "system_notice") return null;
+  const decision = parseNotificationMetadata(item.metadata).moderation?.decision;
+  return isModerationDecision(decision) ? decision : null;
+}
+
+/** 审核修正/驳回理由；approved 或无 excerpt 时返回 null。 */
+export function getModerationNotificationReasonText(item: NotificationItemResp): string | null {
+  const decision = getModerationNotificationDecision(item);
+  if (decision !== "corrected" && decision !== "rejected") return null;
+  const excerpt = item.content_excerpt?.trim();
+  return excerpt || null;
 }
 
 function snapshotText(snapshot?: NotificationSnapshot): string {
@@ -329,6 +372,9 @@ export function getNotificationReplyTarget(
 export function getNotificationInlineActions(
   item: NotificationItemResp,
 ): NotificationInlineActions {
+  if (getModerationNotificationDecision(item) != null) {
+    return { canLike: false, canReply: false };
+  }
   if (item.source_deleted || item.root_deleted) {
     return { canLike: false, canReply: false };
   }

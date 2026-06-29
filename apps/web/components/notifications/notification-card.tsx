@@ -14,6 +14,7 @@ import {
   getNotificationActorName,
   getNotificationActorProfileHref,
   getNotificationBodyText,
+  getModerationNotificationReasonText,
   getNotificationInlineActions,
   getNotificationQuote,
 } from "./notification-type";
@@ -59,6 +60,8 @@ export default function NotificationCard({
   const actorProfileHref = getNotificationActorProfileHref(item);
   const actionText = getNotificationActionText(item);
   const bodyText = getNotificationBodyText(item);
+  const moderationReason = getModerationNotificationReasonText(item);
+  const displayBodyText = moderationReason ?? bodyText;
   const quote = getNotificationQuote(item);
   const inlineActions = getNotificationInlineActions(item);
 
@@ -184,8 +187,8 @@ export default function NotificationCard({
             <span className="font-medium text-foreground/75">{actionText}</span>
             {created && <RelativeTime dateTime={created} />}
           </span>
-          {bodyText && (
-            <NotificationExcerptContent content={bodyText} className="mt-2 line-clamp-2" />
+          {displayBodyText && (
+            <NotificationExcerptContent content={displayBodyText} className="mt-2 line-clamp-2" />
           )}
           {quote && (
             <span className="mt-2 grid grid-cols-[0.875rem_minmax(0,1fr)] gap-2 text-[12.5px] leading-relaxed text-muted-foreground">
