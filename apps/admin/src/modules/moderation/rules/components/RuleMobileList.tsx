@@ -1,5 +1,6 @@
 import { SvgIcon } from "@repo/icons";
 import { Badge, Button } from "@repo/ui";
+import { riskLevelVariant } from "../../model";
 import type { RuleRow } from "../model";
 import { RuleToggleActiveButton } from "./RuleToggleActiveButton";
 
@@ -46,7 +47,7 @@ export function RuleMobileList({
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-sm font-medium">#{row.id}</span>
                 <Badge variant={row.active ? "default" : "secondary"}>{row.activeLabel}</Badge>
-                <Badge variant="secondary">{row.riskLabel}</Badge>
+                <Badge variant={riskLevelVariant(row.riskLevel)}>{row.riskLabel}</Badge>
               </div>
               {row.name ? <p className="mt-1 text-xs text-muted-foreground">{row.name}</p> : null}
               <p className="mt-2 break-all text-sm leading-6">{row.pattern}</p>

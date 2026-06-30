@@ -7,7 +7,6 @@ export const moderationModule: AdminModule = {
     label: "内容审核",
     icon: "shield",
     path: "/moderation",
-    group: "审核",
     description: "审核队列、全站控制、用户治理与规则管理",
   },
   routes: [{ path: "/moderation", element: <ModerationPage /> }],

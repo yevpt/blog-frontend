@@ -1,6 +1,7 @@
 import { Badge, Button, DataTable, type DataTableColumn } from "@repo/ui";
 import { useMemo } from "react";
 import { adminFlushDataTableClassNames } from "../../../../lib/data-table-flush";
+import { riskLevelVariant } from "../../model";
 import type { RuleRow } from "../model";
 import { RuleToggleActiveButton } from "./RuleToggleActiveButton";
 
@@ -91,7 +92,7 @@ export function RuleTable({
         id: "risk",
         header: "风险",
         minWidth: 80,
-        cell: (row) => <Badge variant="secondary">{row.riskLabel}</Badge>,
+        cell: (row) => <Badge variant={riskLevelVariant(row.riskLevel)}>{row.riskLabel}</Badge>,
       },
       {
         id: "priority",

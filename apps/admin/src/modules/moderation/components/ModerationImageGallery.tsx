@@ -6,7 +6,7 @@ interface ModerationImageGalleryProps {
 
 /** 审计历史图片网格：只使用后端返回的 access_url，不做任何遮罩推断。 */
 export function ModerationImageGallery({ images }: ModerationImageGalleryProps) {
-  if (images.length === 0) return null;
+  if (!images || images.length === 0) return null;
 
   return (
     <div className="flex flex-wrap gap-2">

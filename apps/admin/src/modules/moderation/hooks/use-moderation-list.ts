@@ -75,11 +75,12 @@ export function useModerationList(): UseModerationListResult {
       } finally {
         if (!cancelled) {
           setIsLoading(false);
-          // 通知等待本次请求的 refetch 调用
-          const resolver = resolverRef.current.get(currentSeq);
-          if (resolver) {
-            resolverRef.current.delete(currentSeq);
-            resolver();
+          // 通知所有等待本次或之前请求的 refetch 调用
+          for (const [seq, resolver] of resolverRef.current.entries()) {
+            if (seq <= currentSeq) {
+              resolverRef.current.delete(seq);
+              resolver();
+            }
           }
         }
       }
@@ -130,7 +131,7 @@ export function useModerationList(): UseModerationListResult {
     [setFilter],
   );
 
-  const rows = useMemo(() => pageData?.list.map(mapItemToRow) ?? [], [pageData]);
+  const rows = useMemo(() => pageData?.list?.map(mapItemToRow) ?? [], [pageData]);
 
   return {
     rows,
