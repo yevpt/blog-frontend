@@ -9,7 +9,6 @@ import { apiClient } from "../../lib/api";
 import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
 import { addToast } from "../../lib/toast";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
-import { MomentDeleteDialog } from "./components/MomentDeleteDialog";
 import { MomentFormDialog } from "./components/MomentFormDialog";
 import { MomentListToolbar } from "./components/MomentListToolbar";
 import { MomentMobileList } from "./components/MomentMobileList";
@@ -33,11 +32,10 @@ export function MomentsPage() {
     refetch,
   } = useAdminMomentList();
   const isMdScreen = useIsMdScreen();
-  const [deletingMoment, setDeletingMoment] = useState<MomentRow | null>(null);
+  const [deletingMomentId, setDeletingMomentId] = useState<string | null>(null);
   const [editingMoment, setEditingMoment] = useState<MomentRow | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [togglingTopId, setTogglingTopId] = useState<string | null>(null);
 
@@ -80,17 +78,16 @@ export function MomentsPage() {
 
   const handleDeleteMoment = useCallback(
     async (moment: MomentRow) => {
-      setIsDeleting(true);
+      setDeletingMomentId(moment.id);
       try {
         await apiClient.moments.delete(Number(moment.id));
         addToast("碎语已删除", "success");
-        setDeletingMoment(null);
         await refetch();
       } catch (err) {
         addToast(err instanceof ApiError ? err.message : "删除失败，请稍后重试", "error");
         throw err;
       } finally {
-        setIsDeleting(false);
+        setDeletingMomentId(null);
       }
     },
     [refetch],
@@ -122,11 +119,12 @@ export function MomentsPage() {
     () =>
       createMomentColumns({
         togglingTopId,
+        deletingMomentId,
         onToggleTop: (moment) => void handleToggleTop(moment).catch(() => undefined),
         onEdit: openEditDialog,
-        onDelete: setDeletingMoment,
+        onConfirmDelete: handleDeleteMoment,
       }),
-    [handleToggleTop, openEditDialog, togglingTopId],
+    [deletingMomentId, handleDeleteMoment, handleToggleTop, openEditDialog, togglingTopId],
   );
 
   const hasActiveFilter = filters.status !== "all" || filters.search.trim().length > 0;
@@ -211,7 +209,8 @@ export function MomentsPage() {
                   emptyState={emptyState}
                   onToggleTop={(moment) => void handleToggleTop(moment).catch(() => undefined)}
                   onEdit={openEditDialog}
-                  onDelete={setDeletingMoment}
+                  deletingMomentId={deletingMomentId}
+                  onConfirmDelete={handleDeleteMoment}
                 />
               </div>
             )}
@@ -239,12 +238,6 @@ export function MomentsPage() {
         </AdminListCard>
       </section>
 
-      <MomentDeleteDialog
-        moment={deletingMoment}
-        isDeleting={isDeleting}
-        onClose={() => setDeletingMoment(null)}
-        onConfirm={handleDeleteMoment}
-      />
       <MomentFormDialog
         mode={formMode}
         open={isFormOpen}

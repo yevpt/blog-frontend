@@ -117,7 +117,7 @@ describe("LinksPage", () => {
 
     await user.click(screen.getAllByRole("button", { name: "删除" })[0]!);
 
-    expect(await screen.findByRole("dialog", { name: /删除友链 VPT/i })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: /确认删除「VPT」/ })).toBeInTheDocument();
   });
 
   it("加载失败时显示错误信息", () => {

@@ -7,6 +7,7 @@ import {
   Pagination,
   type DataTableColumn,
   type DataTableEmptyState,
+  Avatar,
 } from "@repo/ui";
 import { AdminListCard } from "../../../components/AdminListCard";
 import { AdminListSummary } from "../../../components/AdminListSummary";
@@ -112,7 +113,26 @@ function useQueueColumns(onReview: (row: ModerationRow) => void) {
   return useMemo<Array<DataTableColumn<ModerationRow>>>(
     () => [
       { id: "contentType", header: "类型", minWidth: 96, cell: (row) => row.contentTypeLabel },
-      { id: "author", header: "作者", minWidth: 80, cell: (row) => `#${row.authorId}` },
+      {
+        id: "author",
+        header: "作者",
+        minWidth: 140,
+        cell: (row) => (
+          <div className="flex items-center gap-2">
+            <Avatar
+              src={row.authorAvatar}
+              alt={row.authorName || `用户 ${row.authorId}`}
+              size="sm"
+            />
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate text-sm text-foreground">
+                {row.authorName || "未知用户"}
+              </span>
+              <span className="text-xs text-muted-foreground">#{row.authorId}</span>
+            </div>
+          </div>
+        ),
+      },
       {
         id: "summary",
         header: "提交正文",
@@ -199,11 +219,16 @@ function ModerationMobileList({
       {items.map((row) => (
         <article key={row.itemId} className="rounded-md border border-border/70 bg-background p-3">
           <div className="flex flex-wrap items-center gap-1.5">
+            <Avatar
+              src={row.authorAvatar}
+              alt={row.authorName || `用户 ${row.authorId}`}
+              size="xs"
+            />
             <Badge variant={riskLevelVariant(row.riskLevel)}>{row.riskLabel}</Badge>
             <Badge variant={reviewStatusVariant(row.reviewStatus)}>{row.reviewLabel}</Badge>
             <Badge variant={publicStateVariant(row.publicState)}>{row.publicStateLabel}</Badge>
             <span className="text-sm font-medium">
-              {row.contentTypeLabel} · #{row.authorId}
+              {row.contentTypeLabel} · {row.authorName || "未知用户"} (#{row.authorId})
             </span>
           </div>
           <p className="mt-2 line-clamp-3 text-sm leading-6">{row.summary}</p>

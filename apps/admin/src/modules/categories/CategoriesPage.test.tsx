@@ -128,14 +128,15 @@ describe("CategoriesPage", () => {
     expect(await screen.findByRole("dialog", { name: "编辑分类" })).toBeInTheDocument();
   });
 
-  it("点击删除打开确认弹窗", async () => {
+  it("点击删除打开确认浮层", async () => {
     const user = userEvent.setup();
     renderCategoriesPage();
 
     await user.click(screen.getAllByRole("button", { name: "删除" })[0]!);
 
     await waitFor(() => {
-      expect(screen.getByText(/删除「编程」/)).toBeInTheDocument();
+      expect(screen.getByRole("dialog", { name: /确认删除「编程」/ })).toBeInTheDocument();
+      expect(screen.getByText(/确定删除分类「编程」/)).toBeInTheDocument();
     });
   });
 

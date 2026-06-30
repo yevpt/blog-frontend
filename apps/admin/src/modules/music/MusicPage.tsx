@@ -6,7 +6,7 @@ import { apiClient } from "../../lib/api";
 import { addToast } from "../../lib/toast";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
 import { MusicCatalogMiniList } from "./components/MusicCatalogMiniList";
-import { MusicPageDialogs, type MusicDeleteTarget } from "./components/MusicPageDialogs";
+import { MusicPageDialogs } from "./components/MusicPageDialogs";
 import { MusicPageHeader } from "./components/MusicPageHeader";
 import { MusicSongsPanel } from "./components/MusicSongsPanel";
 import { useMusicCatalog } from "./hooks/use-music-catalog";
@@ -42,9 +42,8 @@ export function MusicPage() {
   const [editingSong, setEditingSong] = useState<MusicRow | null>(null);
   const [editingArtist, setEditingArtist] = useState<MusicArtistResp | null>(null);
   const [editingAlbum, setEditingAlbum] = useState<MusicAlbumResp | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<MusicDeleteTarget | null>(null);
+  const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const {
     tableState,
     handleSearchChange,
@@ -173,24 +172,56 @@ export function MusicPage() {
     [refetch],
   );
 
-  const handleDelete = useCallback(async () => {
-    if (!deleteTarget) return;
-    setIsDeleting(true);
-    try {
-      if (deleteTarget.kind === "song") await apiClient.music.delete(Number(deleteTarget.row.id));
-      if (deleteTarget.kind === "artist")
-        await apiClient.music.deleteArtist(deleteTarget.artist.id);
-      if (deleteTarget.kind === "album") await apiClient.music.deleteAlbum(deleteTarget.album.id);
-      addToast("已删除", "success");
-      setDeleteTarget(null);
-      await refetch();
-    } catch (err) {
-      addToast(err instanceof ApiError ? err.message : "删除失败，请稍后重试", "error");
-      throw err;
-    } finally {
-      setIsDeleting(false);
-    }
-  }, [deleteTarget, refetch]);
+  const handleDeleteSong = useCallback(
+    async (row: MusicRow) => {
+      setDeletingKey(`song-${row.id}`);
+      try {
+        await apiClient.music.delete(Number(row.id));
+        addToast("已删除", "success");
+        await refetch();
+      } catch (err) {
+        addToast(err instanceof ApiError ? err.message : "删除失败，请稍后重试", "error");
+        throw err;
+      } finally {
+        setDeletingKey(null);
+      }
+    },
+    [refetch],
+  );
+
+  const handleDeleteArtist = useCallback(
+    async (artist: MusicArtistResp) => {
+      setDeletingKey(`artist-${artist.id}`);
+      try {
+        await apiClient.music.deleteArtist(artist.id);
+        addToast("已删除", "success");
+        await refetch();
+      } catch (err) {
+        addToast(err instanceof ApiError ? err.message : "删除失败，请稍后重试", "error");
+        throw err;
+      } finally {
+        setDeletingKey(null);
+      }
+    },
+    [refetch],
+  );
+
+  const handleDeleteAlbum = useCallback(
+    async (album: MusicAlbumResp) => {
+      setDeletingKey(`album-${album.id}`);
+      try {
+        await apiClient.music.deleteAlbum(album.id);
+        addToast("已删除", "success");
+        await refetch();
+      } catch (err) {
+        addToast(err instanceof ApiError ? err.message : "删除失败，请稍后重试", "error");
+        throw err;
+      } finally {
+        setDeletingKey(null);
+      }
+    },
+    [refetch],
+  );
 
   const uploadAudio = useCallback(async (file: File): Promise<MusicUploadValue> => {
     return uploadRespToValue(await apiClient.music.uploadAudio({ file }));
@@ -235,7 +266,8 @@ export function MusicPage() {
             onClear={resetListQuery}
             onCreate={openCreateSong}
             onEdit={openEditSong}
-            onDelete={(row) => setDeleteTarget({ kind: "song", row })}
+            deletingKey={deletingKey}
+            onConfirmDeleteSong={handleDeleteSong}
           />
         ) : (
           <AdminListCard className="md:min-h-[320px]">
@@ -247,8 +279,9 @@ export function MusicPage() {
               isLoading={isLoading}
               onEditArtist={openEditArtist}
               onEditAlbum={openEditAlbum}
-              onDeleteArtist={(artist) => setDeleteTarget({ kind: "artist", artist })}
-              onDeleteAlbum={(album) => setDeleteTarget({ kind: "album", album })}
+              deletingKey={deletingKey}
+              onConfirmDeleteArtist={handleDeleteArtist}
+              onConfirmDeleteAlbum={handleDeleteAlbum}
             />
           </AdminListCard>
         )}
@@ -264,23 +297,19 @@ export function MusicPage() {
         editingSong={editingSong}
         editingArtist={editingArtist}
         editingAlbum={editingAlbum}
-        deleteTarget={deleteTarget}
         artists={artists}
         albums={albums}
         nextSeq={nextSeq}
         isSubmitting={isSubmitting}
-        isDeleting={isDeleting}
         onCloseSong={() => setSongOpen(false)}
         onCloseArtist={() => setArtistOpen(false)}
         onCloseAlbum={() => setAlbumOpen(false)}
-        onCloseDelete={() => setDeleteTarget(null)}
         onUploadAudio={uploadAudio}
         onUploadArtistAvatar={uploadArtistAvatar}
         onUploadAlbumCover={uploadAlbumCover}
         onSubmitSong={handleSongSubmit}
         onSubmitArtist={handleArtistSubmit}
         onSubmitAlbum={handleAlbumSubmit}
-        onConfirmDelete={handleDelete}
       />
     </div>
   );

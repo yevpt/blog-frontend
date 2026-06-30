@@ -48,6 +48,8 @@ export interface ModerationListQueryState {
 export interface ModerationRow {
   itemId: number;
   authorId: number;
+  authorName?: string;
+  authorAvatar?: string;
   lockVersion: number;
   revisionId: number;
   revisionVersion: number;
@@ -267,6 +269,8 @@ export function mapItemToRow(item: AdminModerationItemResp): ModerationRow {
   return {
     itemId: item.item_id,
     authorId: item.author_id,
+    authorName: item.author?.nickname,
+    authorAvatar: item.author?.avatar_url,
     lockVersion: item.lock_version,
     revisionId: item.revision_id,
     revisionVersion: item.revision_version,

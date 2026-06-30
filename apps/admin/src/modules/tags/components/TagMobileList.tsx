@@ -1,6 +1,7 @@
 import { SvgIcon } from "@repo/icons";
 import { Button, cn, type DataTableEmptyState } from "@repo/ui";
 import { TagNameCell } from "./TagNameCell";
+import { TagDeleteButton } from "./TagDeleteButton";
 import type { TagRow } from "../model";
 
 interface TagMobileListProps {
@@ -8,7 +9,8 @@ interface TagMobileListProps {
   isLoading?: boolean;
   emptyState?: DataTableEmptyState;
   onEdit: (tag: TagRow) => void;
-  onDelete: (tag: TagRow) => void;
+  deletingTagId: string | null;
+  onConfirmDelete: (tagId: string) => Promise<void>;
 }
 
 function TagMobileListSkeleton() {
@@ -52,7 +54,8 @@ export function TagMobileList({
   isLoading = false,
   emptyState,
   onEdit,
-  onDelete,
+  deletingTagId,
+  onConfirmDelete,
 }: TagMobileListProps) {
   if (isLoading) {
     return <TagMobileListSkeleton />;
@@ -92,15 +95,12 @@ export function TagMobileList({
             >
               编辑
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
+            <TagDeleteButton
+              tag={tag}
+              isDeleting={deletingTagId === tag.id}
+              onConfirm={onConfirmDelete}
               className="h-8 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onPress={() => onDelete(tag)}
-            >
-              删除
-            </Button>
+            />
           </div>
         </li>
       ))}

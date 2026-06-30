@@ -7,7 +7,20 @@ export {
   type Locale,
   type LocaleContextValue,
 } from "./locale/use-locale";
-export { compressImage, MAX_IMAGE_BYTES, USER_FACING_IMAGE_ERROR_PREFIXES } from "./compress-image";
+export {
+  compressImage,
+  prepareImageForUpload,
+  MAX_IMAGE_BYTES,
+  USER_FACING_IMAGE_ERROR_PREFIXES,
+  ARTICLE_UPLOAD_MAX_BYTES,
+  AVATAR_COMPRESS_TRIGGER_BYTES,
+  AVATAR_UPLOAD_MAX_BYTES,
+  GIF_MAX_BYTES,
+  INTERACTIVE_IMAGE_COMPRESS_TARGET_BYTES,
+  INTERACTIVE_IMAGE_COMPRESS_TRIGGER_BYTES,
+  INTERACTIVE_IMAGE_UPLOAD_MAX_BYTES,
+  type ImageUploadScene,
+} from "./compress-image";
 export {
   compressAvatarImage,
   getAvatarProcessingErrorMessage,

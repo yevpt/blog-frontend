@@ -7,10 +7,10 @@ const dndState = vi.hoisted(() => ({
   lastDndContextProps: null as { autoScroll?: boolean } | null,
 }));
 
-const compressImage = vi.fn();
+const prepareImageForUpload = vi.fn();
 vi.mock("@/lib/compress-image", () => ({
-  compressImage: (f: File) => compressImage(f),
-  MAX_IMAGE_BYTES: 1048576,
+  prepareImageForUpload: (f: File, scene: string) => prepareImageForUpload(f, scene),
+  MAX_IMAGE_BYTES: 3 * 1024 * 1024,
   USER_FACING_IMAGE_ERROR_PREFIXES: [
     "只能上传图片文件",
     "不支持",
@@ -65,7 +65,7 @@ function Harness({ initial = [] as MomentImageItem[] }) {
 }
 
 beforeEach(() => {
-  compressImage.mockReset();
+  prepareImageForUpload.mockReset();
   addToast.mockReset();
   dndState.lastDndContextProps = null;
   let n = 0;
@@ -88,7 +88,7 @@ beforeEach(() => {
 describe("MomentImageUploader", () => {
   it("选图后压缩并新增一个缩略图（带删除键）", async () => {
     const user = userEvent.setup();
-    compressImage.mockImplementation(async (f: File) => f);
+    prepareImageForUpload.mockImplementation(async (f: File) => f);
     render(<Harness />);
     const input = screen.getByTestId("moment-image-input") as HTMLInputElement;
     await user.upload(input, img());
@@ -98,7 +98,7 @@ describe("MomentImageUploader", () => {
   it("选图后立即显示加载占位，压缩完成后替换为缩略图", async () => {
     const user = userEvent.setup();
     let resolveCompress!: () => void;
-    compressImage.mockImplementation(
+    prepareImageForUpload.mockImplementation(
       (f: File) =>
         new Promise<File>((r) => {
           resolveCompress = () => r(f);
@@ -117,7 +117,7 @@ describe("MomentImageUploader", () => {
 
   it("连续两次选图各一张应累计 2 张缩略图（不因过期闭包丢图）", async () => {
     const user = userEvent.setup();
-    compressImage.mockImplementation(async (f: File) => f);
+    prepareImageForUpload.mockImplementation(async (f: File) => f);
     render(<Harness />);
     const input = screen.getByTestId("moment-image-input") as HTMLInputElement;
     await user.upload(input, img("1.png"));
@@ -129,7 +129,7 @@ describe("MomentImageUploader", () => {
 
   it("一次选 10 张时最多保留 9 张", async () => {
     const user = userEvent.setup();
-    compressImage.mockImplementation(async (f: File) => f);
+    prepareImageForUpload.mockImplementation(async (f: File) => f);
     render(<Harness />);
     const input = screen.getByTestId("moment-image-input") as HTMLInputElement;
     const files = Array.from({ length: 10 }, (_, i) => img(`${i}.png`));
@@ -141,7 +141,7 @@ describe("MomentImageUploader", () => {
 
   it("重复选择同名文件不会重复添加", async () => {
     const user = userEvent.setup();
-    compressImage.mockImplementation(async (f: File) => f);
+    prepareImageForUpload.mockImplementation(async (f: File) => f);
     render(<Harness />);
     const input = screen.getByTestId("moment-image-input") as HTMLInputElement;
     await user.upload(input, img("dup.png"));
@@ -185,7 +185,7 @@ describe("MomentImageUploader", () => {
 
   it("压缩失败时 toast 报错且不新增", async () => {
     const user = userEvent.setup();
-    compressImage.mockRejectedValue(
+    prepareImageForUpload.mockRejectedValue(
       new Error("只能上传图片文件，请选择 JPG、PNG、WebP 或 HEIC/HEIF 图片"),
     );
     render(<Harness />);
@@ -205,7 +205,7 @@ describe("MomentImageUploader", () => {
       configurable: true,
       value: { getRandomValues: vi.fn((array: Uint8Array) => array.fill(1)) },
     });
-    compressImage.mockImplementation(async (f: File) => f);
+    prepareImageForUpload.mockImplementation(async (f: File) => f);
 
     render(<Harness />);
     await user.upload(screen.getByTestId("moment-image-input") as HTMLInputElement, img());
@@ -216,7 +216,7 @@ describe("MomentImageUploader", () => {
 
   it("内部异常不向用户透出原始错误", async () => {
     const user = userEvent.setup();
-    compressImage.mockRejectedValue(new TypeError("crypto.randomUUID is not a function"));
+    prepareImageForUpload.mockRejectedValue(new TypeError("crypto.randomUUID is not a function"));
 
     render(<Harness />);
     await user.upload(screen.getByTestId("moment-image-input") as HTMLInputElement, img());
@@ -226,7 +226,9 @@ describe("MomentImageUploader", () => {
 
   it("HEIC 转换失败时展示可操作提示", async () => {
     const user = userEvent.setup();
-    compressImage.mockRejectedValue(new Error("HEIC 图片转换失败，请换一张或转为 JPG 后上传"));
+    prepareImageForUpload.mockRejectedValue(
+      new Error("HEIC 图片转换失败，请换一张或转为 JPG 后上传"),
+    );
 
     render(<Harness />);
     await user.upload(
@@ -244,7 +246,7 @@ describe("MomentImageUploader", () => {
 
   it("图片格式和文件内容错误直接展示具体原因", async () => {
     const user = userEvent.setup();
-    compressImage.mockRejectedValue(
+    prepareImageForUpload.mockRejectedValue(
       new Error("不支持 SVG 格式，请上传 JPG、PNG、WebP 或 HEIC/HEIF 图片"),
     );
 
@@ -264,7 +266,7 @@ describe("MomentImageUploader", () => {
 
   it("图片无法读取时展示具体原因", async () => {
     const user = userEvent.setup();
-    compressImage.mockRejectedValue(
+    prepareImageForUpload.mockRejectedValue(
       new Error("图片无法读取，请确认文件未损坏，并尝试换一张 JPG、PNG、WebP 或 HEIC/HEIF 图片"),
     );
 

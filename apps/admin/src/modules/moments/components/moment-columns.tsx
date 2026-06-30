@@ -1,18 +1,21 @@
 import { Badge, Button, type DataTableColumn } from "@repo/ui";
+import { MomentDeleteButton } from "./MomentDeleteButton";
 import type { MomentRow } from "../model";
 
 interface MomentColumnsOptions {
   togglingTopId: string | null;
+  deletingMomentId: string | null;
   onToggleTop: (moment: MomentRow) => void;
   onEdit: (moment: MomentRow) => void;
-  onDelete: (moment: MomentRow) => void;
+  onConfirmDelete: (moment: MomentRow) => Promise<void>;
 }
 
 export function createMomentColumns({
   togglingTopId,
+  deletingMomentId,
   onToggleTop,
   onEdit,
-  onDelete,
+  onConfirmDelete,
 }: MomentColumnsOptions): Array<DataTableColumn<MomentRow>> {
   return [
     {
@@ -100,15 +103,11 @@ export function createMomentColumns({
           >
             {moment.isTop ? "取消置顶" : "置顶"}
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onPress={() => onDelete(moment)}
-          >
-            删除
-          </Button>
+          <MomentDeleteButton
+            moment={moment}
+            isDeleting={deletingMomentId === moment.id}
+            onConfirm={onConfirmDelete}
+          />
         </div>
       ),
     },

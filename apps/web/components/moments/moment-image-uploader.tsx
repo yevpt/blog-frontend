@@ -20,7 +20,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { SvgIcon } from "@repo/icons";
 import { ImageViewer } from "@repo/ui";
-import { compressImage, USER_FACING_IMAGE_ERROR_PREFIXES } from "@/lib/compress-image";
+import { prepareImageForUpload, USER_FACING_IMAGE_ERROR_PREFIXES } from "@/lib/compress-image";
 import { addToast } from "@/lib/toast";
 import { moveItem } from "./move-item";
 import type { MomentImageItem } from "./types";
@@ -69,7 +69,7 @@ export function MomentImageUploader({ items, onChange, disabled, readOnly = fals
     setPendingCount((c) => c + picked.length);
     for (const file of picked) {
       try {
-        const compressed = await compressImage(file);
+        const compressed = await prepareImageForUpload(file, "moment");
         const item: MomentImageItem = {
           id: createImageId(),
           file: compressed,

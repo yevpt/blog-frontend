@@ -1,6 +1,7 @@
 import { SvgIcon } from "@repo/icons";
 import { Button, cn, type DataTableEmptyState } from "@repo/ui";
 import { CategoryNameCell } from "./CategoryNameCell";
+import { CategoryDeleteButton } from "./CategoryDeleteButton";
 import type { CategoryRow } from "../model";
 
 interface CategoryMobileListProps {
@@ -9,7 +10,8 @@ interface CategoryMobileListProps {
   emptyState?: DataTableEmptyState;
   onManageArticles: (category: CategoryRow) => void;
   onEdit: (category: CategoryRow) => void;
-  onDelete: (category: CategoryRow) => void;
+  deletingCategoryId: string | null;
+  onConfirmDelete: (categoryId: string) => Promise<void>;
 }
 
 function CategoryMobileListSkeleton() {
@@ -56,7 +58,8 @@ export function CategoryMobileList({
   emptyState,
   onManageArticles,
   onEdit,
-  onDelete,
+  deletingCategoryId,
+  onConfirmDelete,
 }: CategoryMobileListProps) {
   if (isLoading) {
     return <CategoryMobileListSkeleton />;
@@ -112,15 +115,12 @@ export function CategoryMobileList({
             >
               编辑
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
+            <CategoryDeleteButton
+              category={category}
+              isDeleting={deletingCategoryId === category.id}
+              onConfirm={onConfirmDelete}
               className="h-8 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onPress={() => onDelete(category)}
-            >
-              删除
-            </Button>
+            />
           </div>
         </li>
       ))}

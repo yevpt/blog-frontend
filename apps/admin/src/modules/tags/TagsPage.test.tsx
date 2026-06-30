@@ -117,14 +117,15 @@ describe("TagsPage", () => {
     expect(await screen.findByRole("dialog", { name: "编辑标签" })).toBeInTheDocument();
   });
 
-  it("点击删除打开确认弹窗", async () => {
+  it("点击删除打开确认浮层", async () => {
     const user = userEvent.setup();
     renderTagsPage();
 
     await user.click(screen.getAllByRole("button", { name: "删除" })[0]!);
 
     await waitFor(() => {
-      expect(screen.getByText(/删除「Go」/)).toBeInTheDocument();
+      expect(screen.getByRole("dialog", { name: /确认删除「Go」/ })).toBeInTheDocument();
+      expect(screen.getByText(/确定删除标签「Go」/)).toBeInTheDocument();
     });
   });
 });

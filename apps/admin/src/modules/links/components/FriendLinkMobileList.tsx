@@ -1,5 +1,6 @@
 import { SvgIcon } from "@repo/icons";
 import { Button, type DataTableEmptyState } from "@repo/ui";
+import { FriendLinkDeleteButton } from "./FriendLinkDeleteButton";
 import { FriendLinkNameCell } from "./FriendLinkNameCell";
 import { FriendLinkStatusBadge } from "./FriendLinkStatusBadge";
 import type { FriendLinkRow } from "../model";
@@ -9,7 +10,8 @@ interface FriendLinkMobileListProps {
   isLoading?: boolean;
   emptyState?: DataTableEmptyState;
   onEdit: (link: FriendLinkRow) => void;
-  onDelete: (link: FriendLinkRow) => void;
+  deletingLinkId: string | null;
+  onConfirmDelete: (linkId: string) => Promise<void>;
 }
 
 function FriendLinkMobileListSkeleton() {
@@ -52,7 +54,8 @@ export function FriendLinkMobileList({
   isLoading = false,
   emptyState,
   onEdit,
-  onDelete,
+  deletingLinkId,
+  onConfirmDelete,
 }: FriendLinkMobileListProps) {
   if (isLoading) {
     return <FriendLinkMobileListSkeleton />;
@@ -91,15 +94,12 @@ export function FriendLinkMobileList({
             >
               编辑
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
+            <FriendLinkDeleteButton
+              link={link}
+              isDeleting={deletingLinkId === link.id}
+              onConfirm={onConfirmDelete}
               className="h-8 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onPress={() => onDelete(link)}
-            >
-              删除
-            </Button>
+            />
           </div>
         </li>
       ))}

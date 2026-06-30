@@ -1,4 +1,5 @@
 import { Badge, Button, type DataTableEmptyState } from "@repo/ui";
+import { MomentDeleteButton } from "./MomentDeleteButton";
 import type { MomentRow } from "../model";
 
 interface MomentMobileListProps {
@@ -7,7 +8,8 @@ interface MomentMobileListProps {
   emptyState: DataTableEmptyState;
   onToggleTop: (moment: MomentRow) => void;
   onEdit: (moment: MomentRow) => void;
-  onDelete: (moment: MomentRow) => void;
+  deletingMomentId: string | null;
+  onConfirmDelete: (moment: MomentRow) => Promise<void>;
 }
 
 export function MomentMobileList({
@@ -16,7 +18,8 @@ export function MomentMobileList({
   emptyState,
   onToggleTop,
   onEdit,
-  onDelete,
+  deletingMomentId,
+  onConfirmDelete,
 }: MomentMobileListProps) {
   if (isLoading) {
     return <div className="px-4 py-10 text-center text-sm text-muted-foreground">加载中…</div>;
@@ -77,14 +80,11 @@ export function MomentMobileList({
             >
               {moment.isTop ? "取消置顶" : "置顶"}
             </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onPress={() => onDelete(moment)}
-            >
-              删除
-            </Button>
+            <MomentDeleteButton
+              moment={moment}
+              isDeleting={deletingMomentId === moment.id}
+              onConfirm={onConfirmDelete}
+            />
           </div>
         </article>
       ))}

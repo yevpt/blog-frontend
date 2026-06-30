@@ -13,8 +13,12 @@ import {
   ModerationContentPlaceholder,
   ModerationStatusBadge,
   getAuthorMomentDisplayContent,
+  getAuthorMomentDisplayImages,
+  getVisitorMomentDisplayImages,
   normalizeModerationView,
   shouldShowModerationContentPlaceholder,
+  shouldShowMomentImageReviewOverlay,
+  shouldUseVisitorMomentPreviewSizing,
 } from "@/components/moderation";
 import { MomentContent } from "./moment-content";
 import { RelativeTime } from "@/components/common/relative-time";
@@ -81,12 +85,14 @@ export function MomentCard({
 
   const openViewer = useImageViewer((s) => s.open);
 
-  const images = moment.images ?? [];
+  const isOwner = userId !== null && userId === (moment.user?.id ?? moment.user_id);
+  const images = isOwner
+    ? getAuthorMomentDisplayImages(moment)
+    : getVisitorMomentDisplayImages(moment);
   // 预览画廊只包含可查看原图的图片；blurred/gif_placeholder 不进入查看器
   const viewerImages = images
     .filter((img) => img.display_mode === "original")
     .map((img) => ({ src: img.access_url, alt: img.name }));
-  const isOwner = userId !== null && userId === (moment.user?.id ?? moment.user_id);
   const topLabel = moment.is_top ? "取消置顶" : "置顶";
   const edited = shouldShowMomentEditedAt(moment.created_at, moment.updated_at);
   // 审核状态：缺失或零值回退为可见且可交互，避免生产审核关闭期间禁用全部互动
@@ -98,6 +104,8 @@ export function MomentCard({
     moment.moderation,
     isOwner,
   );
+  const reviewImageOverlay = shouldShowMomentImageReviewOverlay(moment.moderation, isOwner, images);
+  const visitorPreviewSizing = shouldUseVisitorMomentPreviewSizing(isOwner, images);
 
   const body = (
     <>
@@ -153,7 +161,12 @@ export function MomentCard({
         </>
       )}
 
-      <MomentImageGrid images={images} onOpen={(idx) => openViewer(viewerImages, idx)} />
+      <MomentImageGrid
+        images={images}
+        reviewOverlay={reviewImageOverlay}
+        visitorPreviewSizing={visitorPreviewSizing}
+        onOpen={(idx) => openViewer(viewerImages, idx)}
+      />
 
       {edited && (
         <p className="mt-3 text-[11px] text-(--fg3)">

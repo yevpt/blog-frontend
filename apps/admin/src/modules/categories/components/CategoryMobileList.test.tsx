@@ -26,7 +26,8 @@ describe("CategoryMobileList", () => {
         items={rows}
         onManageArticles={() => {}}
         onEdit={() => {}}
-        onDelete={() => {}}
+        deletingCategoryId={null}
+        onConfirmDelete={async () => {}}
       />,
     );
 
@@ -42,7 +43,8 @@ describe("CategoryMobileList", () => {
         emptyState={{ icon: "folder", title: "还没有分类", description: "先创建一个吧" }}
         onManageArticles={() => {}}
         onEdit={() => {}}
-        onDelete={() => {}}
+        deletingCategoryId={null}
+        onConfirmDelete={async () => {}}
       />,
     );
 
@@ -58,7 +60,8 @@ describe("CategoryMobileList", () => {
         items={rows}
         onManageArticles={onManageArticles}
         onEdit={() => {}}
-        onDelete={() => {}}
+        deletingCategoryId={null}
+        onConfirmDelete={async () => {}}
       />,
     );
 

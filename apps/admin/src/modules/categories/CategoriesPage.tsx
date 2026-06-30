@@ -11,7 +11,7 @@ import { apiClient } from "../../lib/api";
 import { addToast } from "../../lib/toast";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
 import { CategoryArticlesDrawer } from "./components/CategoryArticlesDrawer";
-import { CategoryDeleteDialog } from "./components/CategoryDeleteDialog";
+import { CategoryDeleteButton } from "./components/CategoryDeleteButton";
 import { CategoryFormDialog } from "./components/CategoryFormDialog";
 import { CategoryListToolbar } from "./components/CategoryListToolbar";
 import { CategoryMobileList } from "./components/CategoryMobileList";
@@ -36,10 +36,9 @@ export function CategoriesPage() {
   const [formMode, setFormMode] = useState<FormMode>("create");
   const [formOpen, setFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryRow | null>(null);
-  const [deletingCategory, setDeletingCategory] = useState<CategoryRow | null>(null);
+  const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null);
   const [articlesCategory, setArticlesCategory] = useState<CategoryRow | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const {
     tableState,
     handleSearchChange,
@@ -93,17 +92,16 @@ export function CategoriesPage() {
 
   const handleDelete = useCallback(
     async (categoryId: string) => {
-      setIsDeleting(true);
+      setDeletingCategoryId(categoryId);
       try {
         await apiClient.categories.delete(Number(categoryId));
         addToast("分类已删除", "success");
-        setDeletingCategory(null);
         await refetch();
       } catch (err) {
         addToast(err instanceof ApiError ? err.message : "删除失败，请稍后重试", "error");
         throw err;
       } finally {
-        setIsDeleting(false);
+        setDeletingCategoryId(null);
       }
     },
     [refetch],
@@ -190,20 +188,16 @@ export function CategoriesPage() {
             >
               编辑
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onPress={() => setDeletingCategory(category)}
-            >
-              删除
-            </Button>
+            <CategoryDeleteButton
+              category={category}
+              isDeleting={deletingCategoryId === category.id}
+              onConfirm={handleDelete}
+            />
           </div>
         ),
       },
     ],
-    [openEditDialog],
+    [deletingCategoryId, handleDelete, openEditDialog],
   );
 
   const hasActiveSearch = hasActiveListQuery;
@@ -284,7 +278,8 @@ export function CategoriesPage() {
                   emptyState={emptyState}
                   onManageArticles={setArticlesCategory}
                   onEdit={openEditDialog}
-                  onDelete={setDeletingCategory}
+                  deletingCategoryId={deletingCategoryId}
+                  onConfirmDelete={handleDelete}
                 />
               </div>
             )}
@@ -307,13 +302,6 @@ export function CategoriesPage() {
         isSubmitting={isSubmitting}
         onClose={() => setFormOpen(false)}
         onSubmit={handleSubmit}
-      />
-
-      <CategoryDeleteDialog
-        category={deletingCategory}
-        isDeleting={isDeleting}
-        onClose={() => setDeletingCategory(null)}
-        onConfirm={handleDelete}
       />
 
       <CategoryArticlesDrawer

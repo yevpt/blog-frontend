@@ -16,7 +16,7 @@ import { apiClient } from "../../lib/api";
 import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
 import { addToast } from "../../lib/toast";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
-import { CommentDeleteDialog } from "./components/CommentDeleteDialog";
+import { CommentDeleteButton } from "./components/CommentDeleteButton";
 import { CommentListToolbar } from "./components/CommentListToolbar";
 import { CommentMobileList } from "./components/CommentMobileList";
 import { useAdminCommentList } from "./hooks/use-admin-comment-list";
@@ -38,12 +38,16 @@ export function CommentsPage() {
     refetch,
   } = useAdminCommentList();
   const isMdScreen = useIsMdScreen();
-  const [deletingComment, setDeletingComment] = useState<CommentRow | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingCommentKey, setDeletingCommentKey] = useState<string | null>(null);
+
+  const commentRowKey = useCallback(
+    (comment: CommentRow) => `${comment.targetType}-${comment.id}`,
+    [],
+  );
 
   const handleDeleteComment = useCallback(
     async (comment: CommentRow) => {
-      setIsDeleting(true);
+      setDeletingCommentKey(commentRowKey(comment));
       try {
         if (comment.targetType === "article") {
           await apiClient.comments.deleteArticle(Number(comment.id));
@@ -51,16 +55,15 @@ export function CommentsPage() {
           await apiClient.comments.deleteMoment(Number(comment.id));
         }
         addToast("评论已删除", "success");
-        setDeletingComment(null);
         await refetch();
       } catch (err) {
         addToast(err instanceof ApiError ? err.message : "删除失败，请稍后重试", "error");
         throw err;
       } finally {
-        setIsDeleting(false);
+        setDeletingCommentKey(null);
       }
     },
-    [refetch],
+    [commentRowKey, refetch],
   );
 
   const columns = useMemo<Array<DataTableColumn<CommentRow>>>(
@@ -120,19 +123,15 @@ export function CommentsPage() {
         className: "text-center",
         headerClassName: "text-center [&>div]:justify-center",
         cell: (comment) => (
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onPress={() => setDeletingComment(comment)}
-          >
-            删除
-          </Button>
+          <CommentDeleteButton
+            comment={comment}
+            isDeleting={deletingCommentKey === commentRowKey(comment)}
+            onConfirm={handleDeleteComment}
+          />
         ),
       },
     ],
-    [],
+    [commentRowKey, deletingCommentKey, handleDeleteComment],
   );
 
   const hasActiveFilter = filters.targetType !== "all" || filters.search.trim().length > 0;
@@ -209,7 +208,8 @@ export function CommentsPage() {
                   items={rows}
                   isLoading={isLoading}
                   emptyState={emptyState}
-                  onDelete={setDeletingComment}
+                  deletingCommentKey={deletingCommentKey}
+                  onConfirmDelete={handleDeleteComment}
                 />
               </div>
             )}
@@ -236,13 +236,6 @@ export function CommentsPage() {
           ) : null}
         </AdminListCard>
       </section>
-
-      <CommentDeleteDialog
-        comment={deletingComment}
-        isDeleting={isDeleting}
-        onClose={() => setDeletingComment(null)}
-        onConfirm={handleDeleteComment}
-      />
     </div>
   );
 }

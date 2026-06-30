@@ -7,8 +7,8 @@ import type {
 import type { DataTableState } from "@repo/ui";
 import { createClientTableQueryCodec } from "../../lib/admin-list-query";
 
-/** 选图后、压缩前原始体积上限，对齐后端 MaxFriendLinkLogoBytes */
-export const FRIEND_LINK_LOGO_RAW_MAX_BYTES = 2 * 1024 * 1024;
+/** 选图后上传体积上限，对齐后端 MaxFriendLinkLogoBytes */
+export const FRIEND_LINK_LOGO_RAW_MAX_BYTES = 256 * 1024;
 
 export interface FriendLinkRow {
   id: string;

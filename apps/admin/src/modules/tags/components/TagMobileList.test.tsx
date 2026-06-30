@@ -19,7 +19,8 @@ describe("TagMobileList", () => {
       <TagMobileList
         items={rows}
         onEdit={() => {}}
-        onDelete={() => {}}
+        deletingTagId={null}
+        onConfirmDelete={async () => {}}
       />,
     );
 
@@ -34,7 +35,8 @@ describe("TagMobileList", () => {
         items={[]}
         emptyState={{ icon: "tag", title: "还没有标签", description: "先创建一个吧" }}
         onEdit={() => {}}
-        onDelete={() => {}}
+        deletingTagId={null}
+        onConfirmDelete={async () => {}}
       />,
     );
 
@@ -45,7 +47,14 @@ describe("TagMobileList", () => {
     const user = userEvent.setup();
     const onEdit = vi.fn();
 
-    render(<TagMobileList items={rows} onEdit={onEdit} onDelete={() => {}} />);
+    render(
+      <TagMobileList
+        items={rows}
+        onEdit={onEdit}
+        deletingTagId={null}
+        onConfirmDelete={async () => {}}
+      />,
+    );
 
     await user.click(screen.getAllByRole("button", { name: "编辑" })[0]!);
 

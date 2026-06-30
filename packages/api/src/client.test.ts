@@ -2039,4 +2039,115 @@ describe("createApiClient", () => {
       expect.objectContaining({ method: "POST", body: JSON.stringify({ reason: "紧急下架" }) }),
     );
   });
+
+  // ── 审核规则管理 ─────────────────────────────────────────────────
+
+  it("规则列表只发送明确提供的游标筛选", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: { list: [], next_cursor: 0, has_more: false } }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token" });
+
+    await client.moderation.rules.list({
+      cursor: 42,
+      limit: 50,
+      search_mode: "prefix",
+      pattern: "风险",
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/moderation/rules?cursor=42&limit=50&search_mode=prefix&pattern=%E9%A3%8E%E9%99%A9",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("规则导入使用 FormData 且不覆盖 multipart boundary", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: {
+          id: 1,
+          file_name: "rules.txt",
+          format: "txt",
+          file_size: 10,
+          source_id: 1,
+          default_category: "other",
+          default_effect: "review",
+          default_risk_level: "medium",
+          default_priority: 100,
+          validation_status: "queued",
+          total_rows: 0,
+          valid_rows: 0,
+          duplicate_rows: 0,
+          error_rows: 0,
+          operator_id: 1,
+          created_at: "2026-06-30T00:00:00Z",
+          updated_at: "2026-06-30T00:00:00Z",
+        },
+      }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token" });
+    const file = new File(["词条"], "rules.txt", { type: "text/plain" });
+
+    await client.moderation.ruleImports.create({
+      file,
+      format: "txt",
+      source_name: "采购词库-2026",
+      default_category: "other",
+      default_risk_level: "medium",
+      default_effect: "review",
+      default_priority: 100,
+    });
+
+    const init = vi.mocked(global.fetch).mock.calls.at(-1)?.[1];
+    expect(init?.body).toBeInstanceOf(FormData);
+    expect(new Headers(init?.headers).has("Content-Type")).toBe(false);
+  });
+
+  it("二进制下载解析 Content-Disposition 文件名", async () => {
+    vi.mocked(global.fetch).mockResolvedValue({
+      status: 200,
+      ok: true,
+      headers: {
+        get: (key: string) =>
+          key.toLowerCase() === "content-type"
+            ? "text/csv; charset=utf-8"
+            : key.toLowerCase() === "content-disposition"
+              ? 'attachment; filename="moderation-rules-export.csv"'
+              : null,
+      },
+      blob: () => Promise.resolve(new Blob(["id,pattern"])),
+      text: () => Promise.resolve("id,pattern"),
+      json: () => Promise.reject(new Error("not json")),
+    } as Response);
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token" });
+
+    const result = await client.moderation.rules.exportRules({ category: "fraud" });
+
+    expect(result.filename).toBe("moderation-rules-export.csv");
+    expect(await result.blob.text()).toBe("id,pattern");
+  });
+
+  it("二进制错误响应解析 JSON 信封为 ApiError", async () => {
+    vi.mocked(global.fetch).mockResolvedValue({
+      status: 400,
+      ok: false,
+      headers: {
+        get: (key: string) => (key.toLowerCase() === "content-type" ? "application/json" : null),
+      },
+      blob: () => Promise.reject(new Error("should not read blob")),
+      text: () =>
+        Promise.resolve(
+          JSON.stringify({ code: "MODERATION_RULESET_CONFLICT", message: "版本已变化" }),
+        ),
+      json: () => Promise.resolve({ code: "MODERATION_RULESET_CONFLICT", message: "版本已变化" }),
+    } as Response);
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token" });
+
+    await expect(client.moderation.rules.exportRules()).rejects.toMatchObject({
+      code: "MODERATION_RULESET_CONFLICT",
+      message: "版本已变化",
+    });
+  });
 });

@@ -23,7 +23,8 @@ interface MusicSongsPanelProps {
   onClear?: () => void;
   onCreate: () => void;
   onEdit: (row: MusicRow) => void;
-  onDelete: (row: MusicRow) => void;
+  deletingKey: string | null;
+  onConfirmDeleteSong: (row: MusicRow) => Promise<void>;
 }
 
 export function MusicSongsPanel({
@@ -41,9 +42,10 @@ export function MusicSongsPanel({
   onClear,
   onCreate,
   onEdit,
-  onDelete,
+  deletingKey,
+  onConfirmDeleteSong,
 }: MusicSongsPanelProps) {
-  const columns = createMusicColumns(onEdit, onDelete);
+  const columns = createMusicColumns(onEdit, deletingKey, onConfirmDeleteSong);
   const hasActiveFilter = canClear;
   const emptyState: DataTableEmptyState = hasActiveFilter
     ? { icon: "search", title: "未找到匹配的音乐", description: "调整搜索或筛选条件后再试。" }
@@ -94,7 +96,8 @@ export function MusicSongsPanel({
               isLoading={isLoading}
               emptyState={emptyState}
               onEdit={onEdit}
-              onDelete={onDelete}
+              deletingKey={deletingKey}
+              onConfirmDeleteSong={onConfirmDeleteSong}
             />
           </div>
         )}

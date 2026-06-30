@@ -1,6 +1,7 @@
 import { SvgIcon } from "@repo/icons";
 import { Button, type DataTableEmptyState } from "@repo/ui";
 import { MusicArtwork } from "./MusicArtwork";
+import { MusicDeleteButton } from "./MusicDeleteButton";
 import { MusicPreviewButton } from "./MusicPreviewButton";
 import { MusicStatusBadge } from "./MusicStatusBadge";
 import { formatDuration, type MusicRow } from "../model";
@@ -10,7 +11,8 @@ interface MusicMobileListProps {
   isLoading?: boolean;
   emptyState?: DataTableEmptyState;
   onEdit: (row: MusicRow) => void;
-  onDelete: (row: MusicRow) => void;
+  deletingKey: string | null;
+  onConfirmDeleteSong: (row: MusicRow) => Promise<void>;
 }
 
 function MusicMobileListSkeleton() {
@@ -53,7 +55,8 @@ export function MusicMobileList({
   isLoading = false,
   emptyState,
   onEdit,
-  onDelete,
+  deletingKey,
+  onConfirmDeleteSong,
 }: MusicMobileListProps) {
   if (isLoading) return <MusicMobileListSkeleton />;
   if (items.length === 0) return <MusicMobileEmptyState emptyState={emptyState} />;
@@ -87,15 +90,13 @@ export function MusicMobileList({
             >
               编辑
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
+            <MusicDeleteButton
+              ariaLabel={`确认删除「${row.name}」`}
+              message={`确定删除「${row.name}」？删除后不会再出现在音乐资料库中。`}
+              isDeleting={deletingKey === `song-${row.id}`}
+              onConfirm={() => onConfirmDeleteSong(row)}
               className="h-8 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onPress={() => onDelete(row)}
-            >
-              删除
-            </Button>
+            />
           </div>
         </li>
       ))}

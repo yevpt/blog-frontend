@@ -7,7 +7,7 @@ import { AdminListCard } from "../../components/AdminListCard";
 import { AdminListSummary } from "../../components/AdminListSummary";
 import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
 import { useClientTableQuery } from "../../lib/admin-list-query";
-import { TagDeleteDialog } from "./components/TagDeleteDialog";
+import { TagDeleteButton } from "./components/TagDeleteButton";
 import { TagFormDialog } from "./components/TagFormDialog";
 import { TagListToolbar } from "./components/TagListToolbar";
 import { TagMobileList } from "./components/TagMobileList";
@@ -35,9 +35,8 @@ export function TagsPage() {
   const [formMode, setFormMode] = useState<FormMode>("create");
   const [formOpen, setFormOpen] = useState(false);
   const [editingTag, setEditingTag] = useState<TagRow | null>(null);
-  const [deletingTag, setDeletingTag] = useState<TagRow | null>(null);
+  const [deletingTagId, setDeletingTagId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const {
     tableState,
     handleSearchChange,
@@ -88,17 +87,16 @@ export function TagsPage() {
 
   const handleDeleteTag = useCallback(
     async (tagId: string) => {
-      setIsDeleting(true);
+      setDeletingTagId(tagId);
       try {
         await apiClient.tags.delete(Number(tagId));
         addToast("标签已删除", "success");
-        setDeletingTag(null);
         await refetch();
       } catch (err) {
         addToast(err instanceof ApiError ? err.message : "删除失败，请稍后重试", "error");
         throw err;
       } finally {
-        setIsDeleting(false);
+        setDeletingTagId(null);
       }
     },
     [refetch],
@@ -171,20 +169,16 @@ export function TagsPage() {
             >
               编辑
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onPress={() => setDeletingTag(tag)}
-            >
-              删除
-            </Button>
+            <TagDeleteButton
+              tag={tag}
+              isDeleting={deletingTagId === tag.id}
+              onConfirm={handleDeleteTag}
+            />
           </div>
         ),
       },
     ],
-    [openEditDialog],
+    [deletingTagId, handleDeleteTag, openEditDialog],
   );
 
   const hasActiveSearch = hasActiveListQuery;
@@ -264,7 +258,8 @@ export function TagsPage() {
                   isLoading={isLoading}
                   emptyState={emptyState}
                   onEdit={openEditDialog}
-                  onDelete={setDeletingTag}
+                  deletingTagId={deletingTagId}
+                  onConfirmDelete={handleDeleteTag}
                 />
               </div>
             )}
@@ -287,13 +282,6 @@ export function TagsPage() {
         isSubmitting={isSubmitting}
         onClose={() => setFormOpen(false)}
         onSubmit={handleSubmit}
-      />
-
-      <TagDeleteDialog
-        tag={deletingTag}
-        isDeleting={isDeleting}
-        onClose={() => setDeletingTag(null)}
-        onConfirm={handleDeleteTag}
       />
     </div>
   );

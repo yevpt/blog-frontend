@@ -15,7 +15,7 @@ import { apiClient } from "../../lib/api";
 import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
 import { addToast } from "../../lib/toast";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
-import { GuestbookDeleteDialog } from "./components/GuestbookDeleteDialog";
+import { GuestbookDeleteButton } from "./components/GuestbookDeleteButton";
 import { GuestbookListToolbar } from "./components/GuestbookListToolbar";
 import { GuestbookMobileList } from "./components/GuestbookMobileList";
 import { useAdminGuestbookList } from "./hooks/use-admin-guestbook-list";
@@ -36,22 +36,20 @@ export function GuestbookPage() {
     refetch,
   } = useAdminGuestbookList();
   const isMdScreen = useIsMdScreen();
-  const [deletingMessage, setDeletingMessage] = useState<GuestbookRow | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
 
   const handleDeleteMessage = useCallback(
     async (message: GuestbookRow) => {
-      setIsDeleting(true);
+      setDeletingMessageId(message.id);
       try {
         await apiClient.guestbook.delete(Number(message.id));
         addToast("留言已删除", "success");
-        setDeletingMessage(null);
         await refetch();
       } catch (err) {
         addToast(err instanceof ApiError ? err.message : "删除失败，请稍后重试", "error");
         throw err;
       } finally {
-        setIsDeleting(false);
+        setDeletingMessageId(null);
       }
     },
     [refetch],
@@ -105,19 +103,15 @@ export function GuestbookPage() {
         className: "text-center",
         headerClassName: "text-center [&>div]:justify-center",
         cell: (message) => (
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onPress={() => setDeletingMessage(message)}
-          >
-            删除
-          </Button>
+          <GuestbookDeleteButton
+            message={message}
+            isDeleting={deletingMessageId === message.id}
+            onConfirm={handleDeleteMessage}
+          />
         ),
       },
     ],
-    [],
+    [deletingMessageId, handleDeleteMessage],
   );
 
   const emptyState: DataTableEmptyState = filters.search.trim()
@@ -191,7 +185,8 @@ export function GuestbookPage() {
                   items={rows}
                   isLoading={isLoading}
                   emptyState={emptyState}
-                  onDelete={setDeletingMessage}
+                  deletingMessageId={deletingMessageId}
+                  onConfirmDelete={handleDeleteMessage}
                 />
               </div>
             )}
@@ -218,13 +213,6 @@ export function GuestbookPage() {
           ) : null}
         </AdminListCard>
       </section>
-
-      <GuestbookDeleteDialog
-        message={deletingMessage}
-        isDeleting={isDeleting}
-        onClose={() => setDeletingMessage(null)}
-        onConfirm={handleDeleteMessage}
-      />
     </div>
   );
 }

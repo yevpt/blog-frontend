@@ -47,7 +47,7 @@ export function FriendLinkLogoPicker({
       if (!file) return;
 
       if (file.size > FRIEND_LINK_LOGO_RAW_MAX_BYTES) {
-        addToast("友链 Logo 不能超过 2MB", "error");
+        addToast("友链 Logo 不能超过 256KB", "error");
         if (event.target) event.target.value = "";
         return;
       }
@@ -137,7 +137,7 @@ export function FriendLinkLogoPicker({
           <p className="mt-1 text-xs text-muted-foreground/70">
             {isCompressing
               ? "Logo 处理中…"
-              : "JPG / PNG / WebP · 原始 ≤ 2MB · 自动压缩为 120px · ≤ 20KB"}
+              : "JPG / PNG / WebP · 上传 ≤ 256KB · 入库自动规范为 120px · ≤ 20KB"}
           </p>
         </button>
       </div>

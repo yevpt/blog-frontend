@@ -9,9 +9,9 @@ vi.mock("@repo/editor", () => ({
   readImageAspectRatio: vi.fn().mockResolvedValue(1.5),
 }));
 
-const compressImage = vi.fn();
+const prepareImageForUpload = vi.fn();
 vi.mock("./compress-image", () => ({
-  compressImage: (file: File) => compressImage(file),
+  prepareImageForUpload: (file: File, scene: string) => prepareImageForUpload(file, scene),
   USER_FACING_IMAGE_ERROR_PREFIXES: ["图片过大"],
 }));
 
@@ -25,10 +25,10 @@ describe("useEditorImageUpload", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    compressImage.mockImplementation(async (file: File) => file);
+    prepareImageForUpload.mockImplementation(async (file: File) => file);
   });
 
-  it("comment 场景先压缩再上传", async () => {
+  it("comment 场景先准备图片再上传", async () => {
     const upload = vi.fn().mockResolvedValue("https://cdn.example.com/a.png");
     const { result } = renderHook(() =>
       useEditorImageUpload({ scene: "comment", upload, onError: vi.fn() }),
@@ -47,7 +47,7 @@ describe("useEditorImageUpload", () => {
       await result.current.handleFileChange(event);
     });
 
-    expect(compressImage).toHaveBeenCalledWith(file);
+    expect(prepareImageForUpload).toHaveBeenCalledWith(file, "comment");
     expect(handlers.insertLoading).toHaveBeenCalledWith(
       expect.objectContaining({ aspectRatio: 1.5, alt: "a.png" }),
     );
@@ -59,7 +59,7 @@ describe("useEditorImageUpload", () => {
     );
   });
 
-  it("article 场景不压缩", async () => {
+  it("article 场景仅走体积校验准备流程", async () => {
     const upload = vi.fn().mockResolvedValue("https://cdn.example.com/b.png");
     const { result } = renderHook(() => useEditorImageUpload({ scene: "article", upload }));
 
@@ -76,7 +76,7 @@ describe("useEditorImageUpload", () => {
       await result.current.handleFileChange(event);
     });
 
-    expect(compressImage).not.toHaveBeenCalled();
+    expect(prepareImageForUpload).toHaveBeenCalledWith(file, "article");
     expect(upload).toHaveBeenCalledWith(file);
   });
 

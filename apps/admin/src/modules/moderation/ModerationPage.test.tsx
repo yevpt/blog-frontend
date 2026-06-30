@@ -99,6 +99,11 @@ vi.mock("../../lib/api", () => ({
       hideItem: vi.fn(),
       restoreItem: vi.fn(),
       getItem: vi.fn(),
+      rules: {
+        list: vi.fn(),
+        metadata: vi.fn(),
+        status: vi.fn(),
+      },
     },
   },
 }));
@@ -241,13 +246,14 @@ describe("ModerationPage", () => {
     });
   });
 
-  it("渲染审核队列表格与三个 Tab", () => {
+  it("渲染审核队列表格与四个 Tab", () => {
     renderPage();
 
     expect(screen.getByRole("heading", { name: "内容审核" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "审核队列" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "全站控制" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "用户治理" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "规则管理" })).toBeInTheDocument();
     expect(screen.getByRole("grid", { name: "审核队列" })).toBeInTheDocument();
     expect(
       within(screen.getByRole("grid", { name: "审核队列" })).getByText("碎语"),
@@ -514,5 +520,38 @@ describe("ModerationPage", () => {
     renderPage();
 
     expect(screen.queryByRole("button", { name: /清除筛选/ })).not.toBeInTheDocument();
+  });
+
+  it("内容审核页提供规则管理标签且不提前请求隐藏标签数据", async () => {
+    vi.mocked(apiClient.moderation.rules.list).mockResolvedValue({
+      list: [],
+      next_cursor: 0,
+      has_more: false,
+    });
+    vi.mocked(apiClient.moderation.rules.metadata).mockResolvedValue({
+      categories: [],
+      rule_types: [],
+      effects: [],
+      risk_levels: [],
+      sources: [],
+    });
+    vi.mocked(apiClient.moderation.rules.status).mockResolvedValue({
+      current_ruleset_id: 7,
+      rule_count: 0,
+      keyword_count: 0,
+      regexp_count: 0,
+      composite_count: 0,
+      index_bytes: 0,
+      build_peak_bytes: 0,
+      build_duration_ms: 0,
+      updated_at: "2026-06-30T00:00:00Z",
+    });
+
+    const user = userEvent.setup();
+    renderPage();
+    expect(screen.getByRole("tab", { name: "规则管理" })).toBeInTheDocument();
+    expect(apiClient.moderation.rules.list).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("tab", { name: "规则管理" }));
+    await waitFor(() => expect(apiClient.moderation.rules.list).toHaveBeenCalledTimes(1));
   });
 });

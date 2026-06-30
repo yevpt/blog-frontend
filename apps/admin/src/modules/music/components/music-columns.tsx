@@ -1,13 +1,15 @@
 import type { DataTableColumn } from "@repo/ui";
 import { Button } from "@repo/ui";
 import { MusicArtwork } from "./MusicArtwork";
+import { MusicDeleteButton } from "./MusicDeleteButton";
 import { MusicPreviewButton } from "./MusicPreviewButton";
 import { MusicStatusBadge } from "./MusicStatusBadge";
 import { formatDuration, type MusicRow } from "../model";
 
 export function createMusicColumns(
   onEdit: (row: MusicRow) => void,
-  onDelete: (row: MusicRow) => void,
+  deletingKey: string | null,
+  onConfirmDeleteSong: (row: MusicRow) => Promise<void>,
 ): Array<DataTableColumn<MusicRow>> {
   return [
     {
@@ -82,15 +84,12 @@ export function createMusicColumns(
           >
             编辑
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onPress={() => onDelete(row)}
-          >
-            删除
-          </Button>
+          <MusicDeleteButton
+            ariaLabel={`确认删除「${row.name}」`}
+            message={`确定删除「${row.name}」？删除后不会再出现在音乐资料库中。`}
+            isDeleting={deletingKey === `song-${row.id}`}
+            onConfirm={() => onConfirmDeleteSong(row)}
+          />
         </div>
       ),
     },

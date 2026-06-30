@@ -735,6 +735,36 @@ describe("MomentCard", () => {
     expect(screen.queryByText("不该显示的正文")).toBeNull();
   });
 
+  it("中风险首次发布访客可见预览图布局并展示审核中遮罩", () => {
+    mockSessionUserId = 2;
+    const moment = makeMoment({
+      content: "不该显示的正文",
+      images: [
+        {
+          id: 11,
+          name: "preview.jpg",
+          file_type: "jpg",
+          url: "preview.jpg",
+          access_url: "https://cdn.example.com/preview.jpg",
+          display_mode: "blurred",
+          size: 1,
+          seq: 1,
+        },
+      ],
+      moderation: {
+        public_state: "placeholder",
+        display_version: "none",
+        has_pending_revision: true,
+        pending_risk_level: "medium",
+        can_interact: false,
+      },
+    });
+    render(<MomentCard moment={moment} />);
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(screen.getByText("审核中")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /查看图片/ })).toBeNull();
+  });
+
   it("中风险首次发布作者可见待审正文与等待人工审核徽标", () => {
     mockSessionUserId = 1;
     const moment = makeMoment({
@@ -752,6 +782,54 @@ describe("MomentCard", () => {
     expect(screen.getByText("作者待审碎语")).toBeInTheDocument();
     expect(screen.getByText("等待人工审核")).toBeInTheDocument();
     expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("作者待审碎语优先展示 pending_images 原图并可打开查看器", async () => {
+    const user = userEvent.setup();
+    mockSessionUserId = 1;
+    useImageViewer.setState({ isOpen: false, images: [], index: 0 });
+    const moment = makeMoment({
+      content: "",
+      images: [
+        {
+          id: 11,
+          name: "new.jpg",
+          file_type: "jpg",
+          url: "moments/new.jpg",
+          access_url: "/blurred.jpg",
+          display_mode: "blurred",
+          size: 1024,
+          seq: 1,
+        },
+      ],
+      moderation: {
+        public_state: "placeholder",
+        display_version: "none",
+        has_pending_revision: true,
+        pending_risk_level: "medium",
+        pending_content: "作者待审碎语",
+        pending_images: [
+          {
+            id: 11,
+            name: "new.jpg",
+            file_type: "jpg",
+            url: "moments/new.jpg",
+            access_url: "/original.jpg",
+            display_mode: "original",
+            seq: 1,
+          },
+        ],
+        can_interact: false,
+      },
+    });
+    render(<MomentCard moment={moment} />);
+    const img = screen
+      .getAllByRole("img")
+      .find((el) => el.tagName === "IMG" && el.getAttribute("src") === "/original.jpg");
+    expect(img).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "查看图片 new.jpg" }));
+    expect(useImageViewer.getState().images[0]).toEqual({ src: "/original.jpg", alt: "new.jpg" });
+    expect(screen.queryByText("审核中")).toBeNull();
   });
 
   it("中风险编辑展示最后通过正文与等待人工审核徽标", () => {

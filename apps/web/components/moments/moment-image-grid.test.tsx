@@ -5,11 +5,43 @@ import { MomentImageGrid } from "./moment-image-grid";
 import type { MomentMediaResp } from "@repo/api";
 
 vi.mock("@/components/common/loading-image", () => ({
-  DeferredNativeImage: ({ src, alt }: { src: string; alt: string }) => (
-    <img data-testid="deferred-native" src={src} alt={alt} />
+  DeferredNativeImage: ({
+    src,
+    alt,
+    className,
+    defer,
+  }: {
+    src: string;
+    alt: string;
+    className?: string;
+    defer?: boolean;
+  }) => (
+    <img
+      data-testid="deferred-native"
+      data-defer={defer ?? true}
+      src={src}
+      alt={alt}
+      className={className}
+    />
   ),
-  LoadingImage: ({ src, alt }: { src: string; alt: string }) => (
-    <img data-testid="loading-image" src={src} alt={alt} />
+  LoadingImage: ({
+    src,
+    alt,
+    fill,
+    className,
+  }: {
+    src: string;
+    alt: string;
+    fill?: boolean;
+    className?: string;
+  }) => (
+    <img
+      data-testid="loading-image"
+      src={src}
+      alt={alt}
+      data-fill={fill ?? false}
+      className={className}
+    />
   ),
 }));
 
@@ -86,9 +118,8 @@ describe("MomentImageGrid display_mode", () => {
     );
 
     // 使用后端返回的静态占位 access_url，而非原 GIF
-    const img = screen.getByRole("img");
+    const img = screen.getByTestId("loading-image");
     expect(img).toHaveAttribute("src", "/static-placeholder.jpg");
-    expect(screen.queryByTestId("deferred-native")).toBeNull();
 
     expect(screen.queryByRole("button", { name: "查看图片 motion.gif" })).toBeNull();
     await user.click(img);
@@ -149,5 +180,62 @@ describe("MomentImageGrid display_mode", () => {
     );
 
     expect(screen.getAllByRole("button")).toHaveLength(2);
+  });
+});
+
+describe("MomentImageGrid reviewOverlay", () => {
+  it("单图审核遮罩展示「审核中」且不可打开查看器", async () => {
+    const user = userEvent.setup();
+    const onOpen = vi.fn();
+    render(
+      <MomentImageGrid
+        images={[
+          makeImage({
+            access_url: "https://cdn.example.com/preview.jpg",
+            display_mode: "blurred",
+          }),
+        ]}
+        reviewOverlay
+        visitorPreviewSizing
+        onOpen={onOpen}
+      />,
+    );
+
+    expect(screen.getByText("审核中")).toBeInTheDocument();
+    const img = screen.getByTestId("deferred-native");
+    expect(img).toHaveAttribute("src", expect.stringContaining("w=480"));
+    expect(img).toHaveAttribute("data-defer", "false");
+    expect(img.className).toContain("w-full");
+    expect(img.className).not.toContain("w-auto");
+    expect(screen.queryByRole("button", { name: "查看图片 photo" })).toBeNull();
+    await user.click(screen.getByTestId("deferred-native"));
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it("多图审核遮罩每张图均展示「审核中」", () => {
+    render(
+      <MomentImageGrid
+        reviewOverlay
+        visitorPreviewSizing
+        images={[
+          makeImage({
+            id: 1,
+            name: "a",
+            access_url: "https://cdn.example.com/a.jpg",
+            display_mode: "blurred",
+          }),
+          makeImage({
+            id: 2,
+            name: "b",
+            access_url: "https://cdn.example.com/b.jpg",
+            display_mode: "blurred",
+          }),
+        ]}
+        onOpen={vi.fn()}
+      />,
+    );
+
+    expect(screen.getAllByText("审核中")).toHaveLength(2);
+    expect(screen.queryByRole("button", { name: /查看图片/ })).toBeNull();
   });
 });

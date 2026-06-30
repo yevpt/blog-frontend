@@ -1,7 +1,7 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { readImageAspectRatio, type ImageInsertHandlers } from "@repo/editor";
 import type { TempImageUploadScene } from "@repo/api";
-import { compressImage } from "./compress-image";
+import { prepareImageForUpload } from "./compress-image";
 
 function createUploadId(): string {
   const browserCrypto = globalThis.crypto;
@@ -27,7 +27,7 @@ export interface UseEditorImageUploadOptions {
 
 /**
  * 富文本编辑器插图上传：选图后立即占位，上传完成后替换。
- * comment 场景会先客户端压缩；article 场景直传。
+ * comment 场景超过 2MB 会客户端压缩；article 场景仅校验 10MB 体积上限。
  */
 export function useEditorImageUpload({ scene, upload, onError }: UseEditorImageUploadOptions) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -60,7 +60,10 @@ export function useEditorImageUpload({ scene, upload, onError }: UseEditorImageU
     setIsUploading(true);
 
     try {
-      const prepared = scene === "comment" ? await compressImage(file) : file;
+      const prepared = await prepareImageForUpload(
+        file,
+        scene === "comment" ? "comment" : "article",
+      );
       const url = await upload(prepared);
       handlers.resolveLoading(uploadId, url, prepared.name);
     } catch (err) {

@@ -154,6 +154,23 @@ import type {
   AdminModerationEmergencyItemResp,
   AdminModerationEmergencyBatchResp,
 } from "./types/moderation";
+import type {
+  AdminModerationRuleListReq,
+  AdminModerationRulePageResp,
+  AdminModerationRuleMetadataResp,
+  AdminModerationRuleStatusResp,
+  AdminModerationRuleSaveReq,
+  AdminModerationRuleBatchStatusReq,
+  AdminModerationRuleJobResp,
+  AdminModerationRuleTestReq,
+  AdminModerationRuleTestResp,
+  AdminModerationImportCreateReq,
+  AdminModerationImportResp,
+  AdminModerationImportPageResp,
+  AdminModerationRuleImportPublishReq,
+  BinaryDownload,
+  ModerationImportFormat,
+} from "./types/moderation-rule";
 
 /** createApiClient 的注入配置接口 */
 export interface ApiClientConfig {
@@ -181,23 +198,61 @@ function idempotencyHeaders(idempotencyKey?: string): Record<string, string> {
   return key ? { "Idempotency-Key": key } : {};
 }
 
-/**
- * 发起一次 HTTP 请求，附加指定 token，解析后端统一响应格式。
- * HTTP 401 会作为 ApiError(401) 抛出，由调用方决定是否触发刷新重试。
- */
-async function request<T>(url: string, init: RequestInit, accessToken: string | null): Promise<T> {
+function buildRequestHeaders(
+  init: RequestInit,
+  accessToken: string | null,
+): Record<string, string> {
   const headers: Record<string, string> = {
     ...(init.headers as Record<string, string>),
   };
   // FormData 由浏览器自动设置 multipart boundary，不能手动加 JSON Content-Type
   if (!(init.body instanceof FormData)) {
-    headers["Content-Type"] = "application/json";
+    headers["Content-Type"] = headers["Content-Type"] ?? "application/json";
   }
   if (accessToken) {
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
+  return headers;
+}
 
-  const res = await fetch(url, { ...init, headers });
+function parseContentDispositionFilename(header: string | null): string | undefined {
+  if (!header) return undefined;
+  const star = header.match(/filename\*\s*=\s*UTF-8''([^;]+)/i);
+  if (star?.[1]) {
+    try {
+      return decodeURIComponent(star[1]);
+    } catch {
+      return star[1];
+    }
+  }
+  const quoted = header.match(/filename\s*=\s*"([^"]+)"/i);
+  if (quoted?.[1]) return quoted[1];
+  const plain = header.match(/filename\s*=\s*([^;]+)/i);
+  return plain?.[1]?.trim();
+}
+
+function buildRuleListQuery(req: AdminModerationRuleListReq): string {
+  const p = new URLSearchParams();
+  if (req.cursor !== undefined) p.set("cursor", String(req.cursor));
+  if (req.limit !== undefined) p.set("limit", String(req.limit));
+  if (req.id !== undefined) p.set("id", String(req.id));
+  if (req.search_mode !== undefined) p.set("search_mode", req.search_mode);
+  if (req.pattern !== undefined) p.set("pattern", req.pattern);
+  if (req.category !== undefined) p.set("category", req.category);
+  if (req.rule_type !== undefined) p.set("rule_type", req.rule_type);
+  if (req.risk_level !== undefined) p.set("risk_level", req.risk_level);
+  if (req.effect !== undefined) p.set("effect", req.effect);
+  if (req.source_id !== undefined) p.set("source_id", String(req.source_id));
+  if (req.active !== undefined) p.set("active", String(req.active));
+  return p.toString();
+}
+
+/**
+ * 发起一次 HTTP 请求，附加指定 token，解析后端统一响应格式。
+ * HTTP 401 会作为 ApiError(401) 抛出，由调用方决定是否触发刷新重试。
+ */
+async function request<T>(url: string, init: RequestInit, accessToken: string | null): Promise<T> {
+  const res = await fetch(url, { ...init, headers: buildRequestHeaders(init, accessToken) });
   const rawText = await res.text();
   let json: BackendResponse<T>;
   try {
@@ -214,6 +269,46 @@ async function request<T>(url: string, init: RequestInit, accessToken: string | 
     throw new ApiError(json.code, json.message);
   }
   return json.data as T;
+}
+
+/** 二进制下载：成功返回 Blob 与文件名；业务错误解析统一 JSON 信封。 */
+async function requestBinary(
+  url: string,
+  init: RequestInit,
+  accessToken: string | null,
+): Promise<BinaryDownload> {
+  const res = await fetch(url, { ...init, headers: buildRequestHeaders(init, accessToken) });
+  const contentType = res.headers.get("Content-Type") ?? "";
+
+  if (res.status === 401) {
+    const rawText = await res.text();
+    try {
+      const json = JSON.parse(rawText) as BackendResponse<unknown>;
+      throw new ApiError(401, json.message);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(401, rawText || "未授权");
+    }
+  }
+
+  if (!res.ok || contentType.includes("application/json")) {
+    const rawText = await res.text();
+    try {
+      const json = JSON.parse(rawText) as BackendResponse<unknown>;
+      if (json.code !== 0) {
+        throw new ApiError(json.code, json.message);
+      }
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(res.status || 500, rawText || "下载失败");
+    }
+  }
+
+  const blob = await res.blob();
+  return {
+    blob,
+    filename: parseContentDispositionFilename(res.headers.get("Content-Disposition")),
+  };
 }
 
 export function createApiClient(config: ApiClientConfig) {
@@ -265,6 +360,36 @@ export function createApiClient(config: ApiClientConfig) {
         return await request<T>(`${baseUrl}${path}`, init, newToken);
       } catch {
         // 刷新也失败（refresh token 过期），触发登出回调
+        await onRefreshFailed?.();
+        throw err;
+      }
+    }
+  }
+
+  /** 认证二进制下载：与 fetchAuthed 共享 401 刷新重试。 */
+  async function fetchAuthedBinary(path: string, init: RequestInit): Promise<BinaryDownload> {
+    const accessToken = await getAccessToken();
+    try {
+      return await requestBinary(`${baseUrl}${path}`, init, accessToken);
+    } catch (err) {
+      if (!(err instanceof ApiError) || err.code !== 401) throw err;
+
+      const refreshToken = await getRefreshToken?.();
+      if (!refreshToken) {
+        await onRefreshFailed?.();
+        throw err;
+      }
+
+      try {
+        const tokens = await request<TokenResp>(
+          `${baseUrl}/auth/refresh`,
+          { method: "POST", body: JSON.stringify({ refresh_token: refreshToken }) },
+          null,
+        );
+        await onTokenRefreshed?.(tokens);
+        const newToken = await getAccessToken();
+        return await requestBinary(`${baseUrl}${path}`, init, newToken);
+      } catch {
         await onRefreshFailed?.();
         throw err;
       }
@@ -1054,6 +1179,107 @@ export function createApiClient(config: ApiClientConfig) {
           `/admin/moderation/users/${userId}/restore-content`,
           { method: "POST", body: JSON.stringify(req) },
         ),
+      rules: {
+        /** 游标分页查询审核规则（需管理员）。 */
+        list: (req: AdminModerationRuleListReq = {}) => {
+          const qs = buildRuleListQuery(req);
+          return fetchAuthed<AdminModerationRulePageResp>(
+            `/admin/moderation/rules${qs ? `?${qs}` : ""}`,
+            { method: "GET" },
+          );
+        },
+        /** 查询规则目录元数据（需管理员）。 */
+        metadata: () =>
+          fetchAuthed<AdminModerationRuleMetadataResp>("/admin/moderation/rules/metadata", {
+            method: "GET",
+          }),
+        /** 查询规则集状态（需管理员）。 */
+        status: () =>
+          fetchAuthed<AdminModerationRuleStatusResp>("/admin/moderation/rules/status", {
+            method: "GET",
+          }),
+        /** 新增规则并触发候选构建（需管理员）。 */
+        create: (req: AdminModerationRuleSaveReq) =>
+          fetchAuthed<AdminModerationRuleJobResp>("/admin/moderation/rules", {
+            method: "POST",
+            body: JSON.stringify(req),
+          }),
+        /** 创建替代规则（需管理员）。 */
+        replace: (ruleId: number, req: AdminModerationRuleSaveReq) =>
+          fetchAuthed<AdminModerationRuleJobResp>(`/admin/moderation/rules/${ruleId}`, {
+            method: "PATCH",
+            body: JSON.stringify(req),
+          }),
+        /** 批量启停规则（需管理员）。 */
+        batchStatus: (req: AdminModerationRuleBatchStatusReq) =>
+          fetchAuthed<AdminModerationRuleJobResp>("/admin/moderation/rules/batch-status", {
+            method: "POST",
+            body: JSON.stringify(req),
+          }),
+        /** 文本试跑（需管理员）。 */
+        testText: (req: AdminModerationRuleTestReq) =>
+          fetchAuthed<AdminModerationRuleTestResp>("/admin/moderation/rules/test", {
+            method: "POST",
+            body: JSON.stringify(req),
+          }),
+        /** 流式导出当前筛选规则 CSV（需管理员）。 */
+        exportRules: (req: AdminModerationRuleListReq = {}) => {
+          const qs = buildRuleListQuery(req);
+          return fetchAuthedBinary(`/admin/moderation/rules/export${qs ? `?${qs}` : ""}`, {
+            method: "GET",
+          });
+        },
+      },
+      ruleImports: {
+        /** 游标分页查询导入历史（需管理员）。 */
+        list: (req: { cursor?: number; limit?: number } = {}) => {
+          const p = new URLSearchParams();
+          if (req.cursor !== undefined) p.set("cursor", String(req.cursor));
+          if (req.limit !== undefined) p.set("limit", String(req.limit));
+          const qs = p.toString();
+          return fetchAuthed<AdminModerationImportPageResp>(
+            `/admin/moderation/rule-imports${qs ? `?${qs}` : ""}`,
+            { method: "GET" },
+          );
+        },
+        /** 查询导入任务详情（需管理员）。 */
+        get: (importId: number) =>
+          fetchAuthed<AdminModerationImportResp>(`/admin/moderation/rule-imports/${importId}`, {
+            method: "GET",
+          }),
+        /** 上传文件创建导入任务（需管理员）。 */
+        create: (req: AdminModerationImportCreateReq) => {
+          const formData = new FormData();
+          formData.append("file", req.file, req.file.name);
+          formData.append("format", req.format);
+          formData.append("source_name", req.source_name);
+          formData.append("default_category", req.default_category);
+          formData.append("default_effect", req.default_effect);
+          formData.append("default_risk_level", req.default_risk_level);
+          formData.append("default_priority", String(req.default_priority));
+          return fetchAuthed<AdminModerationImportResp>("/admin/moderation/rule-imports", {
+            method: "POST",
+            body: formData,
+          });
+        },
+        /** 发布 ready 候选（需管理员）。 */
+        publish: (importId: number, req: AdminModerationRuleImportPublishReq) =>
+          fetchAuthed<void>(`/admin/moderation/rule-imports/${importId}/publish`, {
+            method: "POST",
+            body: JSON.stringify(req),
+          }),
+        /** 取消未发布导入任务（需管理员）。 */
+        cancel: (importId: number) =>
+          fetchAuthed<void>(`/admin/moderation/rule-imports/${importId}`, { method: "DELETE" }),
+        /** 下载 CSV/TXT 导入模板（需管理员）。 */
+        template: (format: ModerationImportFormat) =>
+          fetchAuthedBinary(`/admin/moderation/rule-imports/template?format=${format}`, {
+            method: "GET",
+          }),
+        /** 下载导入错误报告（需管理员）。 */
+        errors: (importId: number) =>
+          fetchAuthedBinary(`/admin/moderation/rule-imports/${importId}/errors`, { method: "GET" }),
+      },
     },
     friendLinks: {
       /** 查询公开友情链接（含显示和失联状态） */

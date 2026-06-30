@@ -81,6 +81,10 @@ export interface AdminModerationItemResp {
   item_id: number;
   subject: AdminModerationSubjectResp;
   author_id: number;
+  author?: {
+    nickname?: string;
+    avatar_url?: string;
+  };
   lock_version: number;
   lifecycle_state: ModerationLifecycleState;
   public_state: ModerationPublicState;

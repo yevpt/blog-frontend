@@ -3,6 +3,7 @@ import type { MusicAlbumResp, MusicArtistResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
 import { Button, Modal, SearchField, cn } from "@repo/ui";
 import { MusicArtwork } from "./MusicArtwork";
+import { MusicDeleteButton } from "./MusicDeleteButton";
 import { formatDuration, type MusicCatalogTab, type MusicRow } from "../model";
 
 interface MusicCatalogMiniListProps {
@@ -13,8 +14,9 @@ interface MusicCatalogMiniListProps {
   isLoading: boolean;
   onEditArtist: (artist: MusicArtistResp) => void;
   onEditAlbum: (album: MusicAlbumResp) => void;
-  onDeleteArtist: (artist: MusicArtistResp) => void;
-  onDeleteAlbum: (album: MusicAlbumResp) => void;
+  deletingKey: string | null;
+  onConfirmDeleteArtist: (artist: MusicArtistResp) => Promise<void>;
+  onConfirmDeleteAlbum: (album: MusicAlbumResp) => Promise<void>;
 }
 
 type ArtistListItem = {
@@ -49,8 +51,9 @@ export function MusicCatalogMiniList({
   isLoading,
   onEditArtist,
   onEditAlbum,
-  onDeleteArtist,
-  onDeleteAlbum,
+  deletingKey,
+  onConfirmDeleteArtist,
+  onConfirmDeleteAlbum,
 }: MusicCatalogMiniListProps) {
   const [keyword, setKeyword] = useState("");
   const [detailTarget, setDetailTarget] = useState<DetailTarget | null>(null);
@@ -115,9 +118,14 @@ export function MusicCatalogMiniList({
                   <ArtistRow
                     key={artist.id}
                     item={artist}
+                    deletingKey={deletingKey}
                     onDetail={() => setDetailTarget({ kind: "artist", item: artist })}
                     onEdit={sourceArtist ? () => onEditArtist(sourceArtist) : undefined}
-                    onDelete={sourceArtist ? () => onDeleteArtist(sourceArtist) : undefined}
+                    onConfirmDelete={
+                      sourceArtist ? () => onConfirmDeleteArtist(sourceArtist) : undefined
+                    }
+                    deleteKey={sourceArtist ? `artist-${sourceArtist.id}` : undefined}
+                    deleteName={sourceArtist?.display_name}
                   />
                 );
               })
@@ -127,9 +135,14 @@ export function MusicCatalogMiniList({
                   <AlbumRow
                     key={album.id}
                     item={album}
+                    deletingKey={deletingKey}
                     onDetail={() => setDetailTarget({ kind: "album", item: album })}
                     onEdit={sourceAlbum ? () => onEditAlbum(sourceAlbum) : undefined}
-                    onDelete={sourceAlbum ? () => onDeleteAlbum(sourceAlbum) : undefined}
+                    onConfirmDelete={
+                      sourceAlbum ? () => onConfirmDeleteAlbum(sourceAlbum) : undefined
+                    }
+                    deleteKey={sourceAlbum ? `album-${sourceAlbum.id}` : undefined}
+                    deleteName={sourceAlbum?.name}
                   />
                 );
               })}
@@ -143,14 +156,20 @@ export function MusicCatalogMiniList({
 
 function ArtistRow({
   item,
+  deletingKey,
   onDetail,
   onEdit,
-  onDelete,
+  onConfirmDelete,
+  deleteKey,
+  deleteName,
 }: {
   item: ArtistListItem;
+  deletingKey: string | null;
   onDetail: () => void;
   onEdit?: () => void;
-  onDelete?: () => void;
+  onConfirmDelete?: () => Promise<void>;
+  deleteKey?: string;
+  deleteName?: string;
 }) {
   return (
     <li className="flex items-center gap-3 px-4 py-3">
@@ -165,7 +184,12 @@ function ArtistRow({
         detailLabel={`查看 ${item.name} 详情`}
         onDetail={onDetail}
         onEdit={onEdit}
-        onDelete={onDelete}
+        deleteAriaLabel={deleteName ? `确认删除歌手「${deleteName}」` : undefined}
+        deleteMessage={
+          deleteName ? `确定删除歌手「${deleteName}」？删除后不会再出现在音乐资料库中。` : undefined
+        }
+        isDeleting={deleteKey ? deletingKey === deleteKey : false}
+        onConfirmDelete={onConfirmDelete}
       />
     </li>
   );
@@ -173,14 +197,20 @@ function ArtistRow({
 
 function AlbumRow({
   item,
+  deletingKey,
   onDetail,
   onEdit,
-  onDelete,
+  onConfirmDelete,
+  deleteKey,
+  deleteName,
 }: {
   item: AlbumListItem;
+  deletingKey: string | null;
   onDetail: () => void;
   onEdit?: () => void;
-  onDelete?: () => void;
+  onConfirmDelete?: () => Promise<void>;
+  deleteKey?: string;
+  deleteName?: string;
 }) {
   return (
     <li className="flex items-center gap-3 px-4 py-3">
@@ -196,7 +226,12 @@ function AlbumRow({
         detailLabel={`查看 ${item.name} 详情`}
         onDetail={onDetail}
         onEdit={onEdit}
-        onDelete={onDelete}
+        deleteAriaLabel={deleteName ? `确认删除专辑「${deleteName}」` : undefined}
+        deleteMessage={
+          deleteName ? `确定删除专辑「${deleteName}」？删除后不会再出现在音乐资料库中。` : undefined
+        }
+        isDeleting={deleteKey ? deletingKey === deleteKey : false}
+        onConfirmDelete={onConfirmDelete}
       />
     </li>
   );
@@ -206,12 +241,18 @@ function MiniActions({
   detailLabel,
   onDetail,
   onEdit,
-  onDelete,
+  deleteAriaLabel,
+  deleteMessage,
+  isDeleting,
+  onConfirmDelete,
 }: {
   detailLabel: string;
   onDetail: () => void;
   onEdit?: () => void;
-  onDelete?: () => void;
+  deleteAriaLabel?: string;
+  deleteMessage?: string;
+  isDeleting?: boolean;
+  onConfirmDelete?: () => Promise<void>;
 }) {
   return (
     <div className="flex shrink-0 items-center gap-0.5">
@@ -236,16 +277,14 @@ function MiniActions({
           编辑
         </Button>
       ) : null}
-      {onDelete ? (
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
+      {onConfirmDelete && deleteAriaLabel && deleteMessage ? (
+        <MusicDeleteButton
+          ariaLabel={deleteAriaLabel}
+          message={deleteMessage}
+          isDeleting={isDeleting ?? false}
+          onConfirm={onConfirmDelete}
           className="h-8 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-          onPress={onDelete}
-        >
-          删除
-        </Button>
+        />
       ) : null}
     </div>
   );

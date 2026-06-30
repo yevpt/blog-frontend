@@ -274,7 +274,7 @@ describe("MusicPage", () => {
     renderMusicPage();
 
     await user.click(screen.getAllByRole("button", { name: "删除" })[0]!);
-    const dialog = await screen.findByRole("dialog", { name: "删除音乐" });
+    const dialog = await screen.findByRole("dialog", { name: /确认删除「Ref:rain」/ });
     await user.click(within(dialog).getByRole("button", { name: "删除" }));
 
     expect(apiClient.music.delete).toHaveBeenCalledWith(1);

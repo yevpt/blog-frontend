@@ -1,5 +1,6 @@
 import type { BadgeProps } from "@repo/ui";
-import type { ModerationView } from "@repo/api";
+import type { ModerationPendingImage, ModerationView, MomentMediaResp } from "@repo/api";
+import { isVisitorModerationPreviewImage } from "@/components/moments/moment-image-display";
 
 export interface ModerationPresentation {
   label: string;
@@ -44,6 +45,75 @@ export function getAuthorMomentDisplayContent(moment: {
     if (pending) return pending;
   }
   return moment.content;
+}
+
+function pendingImagesToMedia(images: ModerationPendingImage[]): MomentMediaResp[] {
+  return images.map((image) => ({ ...image, size: 0 }));
+}
+
+/** 编辑弹窗回显：有待审修订时优先使用 pending_images 原图投影。 */
+export function getAuthorMomentEditImages(moment: {
+  images?: MomentMediaResp[];
+  moderation?: ModerationView | null;
+}): MomentMediaResp[] {
+  const pending = moment.moderation?.pending_images;
+  if (moment.moderation?.has_pending_revision && pending && pending.length > 0) {
+    return pendingImagesToMedia(pending);
+  }
+  return moment.images ?? [];
+}
+
+/** 作者列表展示：待审版本用 pending_images 原图，与通过后布局一致；中风险编辑仍显示最后通过图。 */
+export function getAuthorMomentDisplayImages(moment: {
+  images?: MomentMediaResp[];
+  moderation?: ModerationView | null;
+}): MomentMediaResp[] {
+  const moderation = normalizeModerationView(moment.moderation);
+  const pending = moment.moderation?.pending_images;
+
+  if (moderation.public_state === "placeholder" && pending && pending.length > 0) {
+    return pendingImagesToMedia(pending);
+  }
+
+  if (
+    moderation.has_pending_revision &&
+    moderation.display_version === "pending" &&
+    pending &&
+    pending.length > 0
+  ) {
+    return pendingImagesToMedia(pending);
+  }
+
+  return moment.images ?? [];
+}
+
+/** 访客列表展示：仅使用公开 images 投影（模糊预览），不读取 pending_images。 */
+export function getVisitorMomentDisplayImages(moment: {
+  images?: MomentMediaResp[];
+}): MomentMediaResp[] {
+  return moment.images ?? [];
+}
+
+/** 访客在待审态下叠加审核遮罩；已通过的正常模糊预览不遮罩。 */
+export function shouldShowMomentImageReviewOverlay(
+  moderation?: ModerationView | null,
+  isOwner = false,
+  images: MomentMediaResp[] = [],
+): boolean {
+  if (isOwner || images.length === 0) return false;
+  const view = normalizeModerationView(moderation);
+  if (view.public_state === "placeholder") {
+    return true;
+  }
+  return view.has_pending_revision && view.display_version === "pending";
+}
+
+/** 访客展示审核预览图时需放大布局，避免 48px 缩略图按原始像素渲染。 */
+export function shouldUseVisitorMomentPreviewSizing(
+  isOwner: boolean,
+  images: MomentMediaResp[],
+): boolean {
+  return !isOwner && images.some(isVisitorModerationPreviewImage);
 }
 
 /** 将后端审核事实转换为稳定、无业务耦合的前端文案。 */

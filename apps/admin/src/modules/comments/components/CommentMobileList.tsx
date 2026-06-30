@@ -1,18 +1,25 @@
-import { Badge, Button, type DataTableEmptyState } from "@repo/ui";
+import { Badge, type DataTableEmptyState } from "@repo/ui";
+import { CommentDeleteButton } from "./CommentDeleteButton";
 import type { CommentRow } from "../model";
+
+function commentRowKey(comment: CommentRow) {
+  return `${comment.targetType}-${comment.id}`;
+}
 
 interface CommentMobileListProps {
   items: CommentRow[];
   isLoading: boolean;
   emptyState: DataTableEmptyState;
-  onDelete: (comment: CommentRow) => void;
+  deletingCommentKey: string | null;
+  onConfirmDelete: (comment: CommentRow) => Promise<void>;
 }
 
 export function CommentMobileList({
   items,
   isLoading,
   emptyState,
-  onDelete,
+  deletingCommentKey,
+  onConfirmDelete,
 }: CommentMobileListProps) {
   if (isLoading) {
     return <div className="px-4 py-10 text-center text-sm text-muted-foreground">加载中…</div>;
@@ -45,14 +52,12 @@ export function CommentMobileList({
                 {comment.authorName}
               </span>
             </div>
-            <Button
-              size="sm"
-              variant="ghost"
+            <CommentDeleteButton
+              comment={comment}
+              isDeleting={deletingCommentKey === commentRowKey(comment)}
+              onConfirm={onConfirmDelete}
               className="h-7 shrink-0 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onPress={() => onDelete(comment)}
-            >
-              删除
-            </Button>
+            />
           </div>
           <p className="mt-2 line-clamp-3 text-sm leading-6 text-foreground">{comment.content}</p>
           <div className="mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground">

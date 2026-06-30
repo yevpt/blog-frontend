@@ -10,7 +10,7 @@ import { useClientTableQuery } from "../../lib/admin-list-query";
 import { apiClient } from "../../lib/api";
 import { addToast } from "../../lib/toast";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
-import { FriendLinkDeleteDialog } from "./components/FriendLinkDeleteDialog";
+import { FriendLinkDeleteButton } from "./components/FriendLinkDeleteButton";
 import { FriendLinkFormDialog } from "./components/FriendLinkFormDialog";
 import { FriendLinkListToolbar } from "./components/FriendLinkListToolbar";
 import { FriendLinkMobileList } from "./components/FriendLinkMobileList";
@@ -38,9 +38,8 @@ export function LinksPage() {
   const [formMode, setFormMode] = useState<FormMode>("create");
   const [formOpen, setFormOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<FriendLinkRow | null>(null);
-  const [deletingLink, setDeletingLink] = useState<FriendLinkRow | null>(null);
+  const [deletingLinkId, setDeletingLinkId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const {
     tableState,
     handleSearchChange,
@@ -111,17 +110,16 @@ export function LinksPage() {
 
   const handleDeleteLink = useCallback(
     async (linkId: string) => {
-      setIsDeleting(true);
+      setDeletingLinkId(linkId);
       try {
         await apiClient.friendLinks.delete(Number(linkId));
         addToast("友链已删除", "success");
-        setDeletingLink(null);
         await refetch();
       } catch (err) {
         addToast(err instanceof ApiError ? err.message : "删除失败，请稍后重试", "error");
         throw err;
       } finally {
-        setIsDeleting(false);
+        setDeletingLinkId(null);
       }
     },
     [refetch],
@@ -210,20 +208,16 @@ export function LinksPage() {
             >
               编辑
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onPress={() => setDeletingLink(link)}
-            >
-              删除
-            </Button>
+            <FriendLinkDeleteButton
+              link={link}
+              isDeleting={deletingLinkId === link.id}
+              onConfirm={handleDeleteLink}
+            />
           </div>
         ),
       },
     ],
-    [openEditDialog],
+    [deletingLinkId, handleDeleteLink, openEditDialog],
   );
 
   const hasActiveSearch = hasActiveListQuery;
@@ -307,7 +301,8 @@ export function LinksPage() {
                   isLoading={isLoading}
                   emptyState={emptyState}
                   onEdit={openEditDialog}
-                  onDelete={setDeletingLink}
+                  deletingLinkId={deletingLinkId}
+                  onConfirmDelete={handleDeleteLink}
                 />
               </div>
             )}
@@ -330,13 +325,6 @@ export function LinksPage() {
         isSubmitting={isSubmitting}
         onClose={() => setFormOpen(false)}
         onSubmit={handleSubmit}
-      />
-
-      <FriendLinkDeleteDialog
-        link={deletingLink}
-        isDeleting={isDeleting}
-        onClose={() => setDeletingLink(null)}
-        onConfirm={handleDeleteLink}
       />
     </div>
   );
