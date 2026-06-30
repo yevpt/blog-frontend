@@ -2150,4 +2150,76 @@ describe("createApiClient", () => {
       message: "版本已变化",
     });
   });
+
+  // ── Task 1: 审核历史接口 ────────────────────────────────────────
+
+  it("getHistory 使用正确 URL 和分页参数", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: {
+          total: 0,
+          page: 1,
+          page_size: 20,
+          item_id: 5,
+          revisions: [],
+        },
+      }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "admin-token" });
+
+    await client.moderation.getHistory(5, { page: 1, page_size: 20 });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/moderation/items/5/history?page=1&page_size=20",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("getHistory 不传分页参数时不拼接 query string", async () => {
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({
+        code: 0,
+        message: "ok",
+        data: { total: 0, page: 1, page_size: 20, item_id: 7, revisions: [] },
+      }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "admin-token" });
+
+    await client.moderation.getHistory(7);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/moderation/items/7/history",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("ruleImports.errors 返回 Blob 及文件名", async () => {
+    vi.mocked(global.fetch).mockResolvedValue({
+      status: 200,
+      ok: true,
+      headers: {
+        get: (key: string) =>
+          key.toLowerCase() === "content-type"
+            ? "text/csv; charset=utf-8"
+            : key.toLowerCase() === "content-disposition"
+              ? "attachment; filename*=UTF-8''%E9%94%99%E8%AF%AF%E6%8A%A5%E5%91%8A.csv"
+              : null,
+      },
+      blob: () => Promise.resolve(new Blob(["row,error"])),
+      text: () => Promise.resolve("row,error"),
+      json: () => Promise.reject(new Error("not json")),
+    } as Response);
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "admin-token" });
+
+    const result = await client.moderation.ruleImports.errors(42);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/moderation/rule-imports/42/errors",
+      expect.objectContaining({ method: "GET" }),
+    );
+    expect(result.filename).toBe("错误报告.csv");
+    expect(result.blob).toBeInstanceOf(Blob);
+  });
 });

@@ -183,3 +183,54 @@ export interface AdminModerationEmergencyBatchResp {
   next_cursor: number;
   has_more: boolean;
 }
+
+/** 审核历史单张图片快照 */
+export interface AdminModerationHistoryImageResp {
+  id: number;
+  name: string;
+  file_type: string;
+  access_url: string;
+  display_mode: ModerationImageDisplayMode;
+  seq: number;
+}
+
+/** 审核历史单个操作事件 */
+export interface AdminModerationHistoryEventResp {
+  /** 事件类型：submitted/resubmitted/approved/corrected/rejected/hidden/restored */
+  event_type: string;
+  operator_id: number;
+  operator_name?: string;
+  reason?: string;
+  created_at: string;
+}
+
+/** 审核历史单个修订版本 */
+export interface AdminModerationHistoryRevisionResp {
+  revision_id: number;
+  revision_version: number;
+  submitted_content: string;
+  published_content: string;
+  risk_level: ModerationRiskLevel;
+  policy_action: ModerationPolicyAction;
+  review_status: ModerationReviewStatus;
+  images: AdminModerationHistoryImageResp[];
+  events: AdminModerationHistoryEventResp[];
+  created_at: string;
+  reviewed_at?: string;
+}
+
+/** 审核历史分页响应 */
+export interface AdminModerationHistoryResp {
+  /** Go int64 — safe as JS number for blog-scale counts */
+  total: number;
+  page: number;
+  page_size: number;
+  item_id: number;
+  revisions: AdminModerationHistoryRevisionResp[];
+}
+
+/** 审核历史查询入参 */
+export interface AdminModerationHistoryReq {
+  page?: number;
+  page_size?: number;
+}

@@ -153,6 +153,8 @@ import type {
   AdminModerationEmergencyBatchReq,
   AdminModerationEmergencyItemResp,
   AdminModerationEmergencyBatchResp,
+  AdminModerationHistoryReq,
+  AdminModerationHistoryResp,
 } from "./types/moderation";
 import type {
   AdminModerationRuleListReq,
@@ -1179,6 +1181,17 @@ export function createApiClient(config: ApiClientConfig) {
           `/admin/moderation/users/${userId}/restore-content`,
           { method: "POST", body: JSON.stringify(req) },
         ),
+      /** 分页查询审核项历史修订和操作事件（需管理员）。 */
+      getHistory: (itemId: number, req: AdminModerationHistoryReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        const qs = p.toString();
+        return fetchAuthed<AdminModerationHistoryResp>(
+          `/admin/moderation/items/${itemId}/history${qs ? `?${qs}` : ""}`,
+          { method: "GET" },
+        );
+      },
       rules: {
         /** 游标分页查询审核规则（需管理员）。 */
         list: (req: AdminModerationRuleListReq = {}) => {

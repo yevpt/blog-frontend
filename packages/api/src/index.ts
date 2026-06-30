@@ -52,6 +52,11 @@ export type {
   AdminModerationEmergencyBatchReq,
   AdminModerationEmergencyItemResp,
   AdminModerationEmergencyBatchResp,
+  AdminModerationHistoryReq,
+  AdminModerationHistoryResp,
+  AdminModerationHistoryRevisionResp,
+  AdminModerationHistoryEventResp,
+  AdminModerationHistoryImageResp,
 } from "./types/moderation";
 export type {
   ModerationRuleType,
