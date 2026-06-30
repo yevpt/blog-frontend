@@ -43,7 +43,7 @@ export function ModerationPage() {
           <TabsPanel id="queue" className="min-h-0 h-full flex flex-col overflow-hidden">
             <ModerationQueuePanel list={list} desktop={isMdScreen} onReview={review.openReview} />
           </TabsPanel>
-          <TabsPanel id="control" className="min-h-0 overflow-y-auto overscroll-y-contain">
+          <TabsPanel id="control" className="h-full min-h-0 overflow-y-auto overscroll-y-contain">
             <ModerationControlPanel
               control={control.control}
               isLoading={control.isLoading}
@@ -53,7 +53,7 @@ export function ModerationPage() {
               onReload={control.reload}
             />
           </TabsPanel>
-          <TabsPanel id="user" className="min-h-0 overflow-y-auto overscroll-y-contain">
+          <TabsPanel id="user" className="h-full min-h-0 overflow-y-auto overscroll-y-contain">
             <ModerationUserPanel
               profile={user.profile}
               batch={user.batch}
@@ -70,7 +70,7 @@ export function ModerationPage() {
               onResetProfile={user.resetProfile}
             />
           </TabsPanel>
-          <TabsPanel id="rules" className="min-h-0 overflow-hidden">
+          <TabsPanel id="rules" className="min-h-0 h-full flex flex-col overflow-hidden">
             <RulesTab enabled={rulesTabVisited} />
           </TabsPanel>
         </TabsPanels>
