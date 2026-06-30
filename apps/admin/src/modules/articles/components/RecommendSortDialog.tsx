@@ -14,6 +14,7 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { restrictToFirstScrollableAncestor, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 import { ApiError, type AdminRecommendItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
@@ -72,13 +73,15 @@ function SortableRecommendRow({ item, index }: { item: AdminRecommendItemResp; i
       <span className="w-6 shrink-0 text-center text-xs tabular-nums text-muted-foreground">
         {index + 1}
       </span>
-      <div className="h-10 w-14 shrink-0 overflow-hidden rounded-md bg-muted">
+      <div className="relative h-10 w-14 shrink-0 overflow-hidden rounded-md bg-muted">
         {item.cover_img_url ? (
           <CdnResponsiveImage
             src={item.cover_img_url}
             alt=""
             preset="thumbnail"
             fill
+            priority
+            defer={false}
             className="object-cover"
           />
         ) : (
@@ -219,6 +222,7 @@ export function RecommendSortDialog({ open, onClose, onSaved }: RecommendSortDia
             {!isLoading && !loadError && items.length > 0 ? (
               <DndContext
                 sensors={sensors}
+                modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor]}
                 collisionDetection={closestCenter}
                 onDragEnd={handleDragEnd}
               >
