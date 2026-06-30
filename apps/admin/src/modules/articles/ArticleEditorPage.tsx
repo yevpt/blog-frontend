@@ -368,7 +368,7 @@ export function ArticleEditorPage() {
         "flex flex-col motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-200",
         // 小屏：整页滚动，写作区与发布栏纵向堆叠均可触达
         // 桌面：锁在视口内，正文在编辑器内滚动
-        "xl:max-h-[calc(100dvh-3.5rem)] xl:overflow-hidden xl:min-h-[calc(100dvh-3.5rem)]",
+        "xl:h-[calc(100dvh-3.5rem)] xl:overflow-hidden xl:min-h-[calc(100dvh-3.5rem)]",
       )}
     >
       <div className="grid shrink-0 gap-3">

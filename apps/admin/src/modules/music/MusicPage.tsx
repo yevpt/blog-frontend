@@ -234,7 +234,7 @@ export function MusicPage() {
   }, []);
 
   return (
-    <div className="grid min-h-0 min-w-0 max-w-full gap-4 overflow-hidden md:max-h-[calc(100dvh-3rem)] md:grid-rows-[auto_auto_minmax(0,1fr)] lg:max-h-[calc(100dvh-3.5rem)]">
+    <div className="grid min-h-0 min-w-0 max-w-full gap-4 overflow-hidden md:h-[calc(100dvh-3rem)] md:grid-rows-[auto_auto_minmax(0,1fr)] lg:h-[calc(100dvh-3.5rem)]">
       <MusicPageHeader
         activeTab={activeTab}
         onTabChange={setActiveTab}

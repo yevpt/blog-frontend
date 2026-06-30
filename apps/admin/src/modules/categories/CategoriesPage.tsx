@@ -222,7 +222,7 @@ export function CategoriesPage() {
   const showArticleSummary = !isLoading && rows.length > 0;
 
   return (
-    <div className="grid min-h-0 gap-4 overflow-hidden md:max-h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:max-h-[calc(100dvh-3.5rem)]">
+    <div className="grid min-h-0 gap-4 overflow-hidden md:h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:h-[calc(100dvh-3.5rem)]">
       <AdminPageHeader
         title="分类管理"
         description="维护首页 Tab 顺序、分类封面与文章归类。"

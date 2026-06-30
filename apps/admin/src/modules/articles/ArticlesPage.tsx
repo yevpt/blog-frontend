@@ -241,7 +241,7 @@ export function ArticlesPage() {
   };
 
   return (
-    <div className="grid min-h-0 gap-4 overflow-hidden md:max-h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:max-h-[calc(100dvh-3.5rem)]">
+    <div className="grid min-h-0 gap-4 overflow-hidden md:h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:h-[calc(100dvh-3.5rem)]">
       <AdminPageHeader
         title="文章管理"
         description="集中查看文章、按表头筛选排序，并从标题直接进入编辑页面。"

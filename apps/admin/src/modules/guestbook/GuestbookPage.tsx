@@ -132,7 +132,7 @@ export function GuestbookPage() {
   const showSummary = !isLoading && total > 0;
 
   return (
-    <div className="grid min-h-0 min-w-0 max-w-full gap-4 overflow-hidden md:max-h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:max-h-[calc(100dvh-3.5rem)]">
+    <div className="grid min-h-0 min-w-0 max-w-full gap-4 overflow-hidden md:h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:h-[calc(100dvh-3.5rem)]">
       <AdminPageHeader
         title="留言管理"
         description="管理留言板内容，查看互动并清理异常留言。"

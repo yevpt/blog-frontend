@@ -164,7 +164,7 @@ export function UsersPage() {
   const showSummary = !isLoading && total > 0;
 
   return (
-    <div className="flex min-w-0 max-w-full flex-col gap-4 md:min-h-0 md:max-h-[calc(100dvh-3rem)] md:overflow-y-auto lg:max-h-[calc(100dvh-3.5rem)]">
+    <div className="flex min-w-0 max-w-full flex-col gap-4 md:min-h-0 md:h-[calc(100dvh-3rem)] md:overflow-y-auto lg:h-[calc(100dvh-3.5rem)]">
       <AdminPageHeader
         title="用户管理"
         description="查看注册用户状态、管理 VIP 权限，并维护老用户头像规范。"

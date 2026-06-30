@@ -203,7 +203,7 @@ export function TagsPage() {
   const showArticleSummary = !isLoading && rows.length > 0;
 
   return (
-    <div className="grid min-h-0 gap-4 overflow-hidden md:max-h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:max-h-[calc(100dvh-3.5rem)]">
+    <div className="grid min-h-0 gap-4 overflow-hidden md:h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:h-[calc(100dvh-3.5rem)]">
       <AdminPageHeader
         title="标签管理"
         description="整理标签字典与文章关联，保持内容检索清晰。"

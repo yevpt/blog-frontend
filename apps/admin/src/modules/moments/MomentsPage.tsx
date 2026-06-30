@@ -146,7 +146,7 @@ export function MomentsPage() {
   const showSummary = !isLoading && total > 0;
 
   return (
-    <div className="grid min-h-0 min-w-0 max-w-full gap-4 overflow-hidden md:max-h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:max-h-[calc(100dvh-3.5rem)]">
+    <div className="grid min-h-0 min-w-0 max-w-full gap-4 overflow-hidden md:h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:h-[calc(100dvh-3.5rem)]">
       <AdminPageHeader
         title="碎语管理"
         description="管理全站碎语内容、公开状态与置顶顺序。"

@@ -21,14 +21,14 @@ export function ModerationPage() {
   const [rulesTabVisited, setRulesTabVisited] = useState(false);
 
   return (
-    <div className="grid min-h-0 min-w-0 max-w-full gap-4 overflow-hidden md:max-h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:max-h-[calc(100dvh-3.5rem)]">
+    <div className="grid min-h-0 min-w-0 max-w-full gap-4 overflow-hidden md:h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:h-[calc(100dvh-3.5rem)]">
       <AdminPageHeader
         title="内容审核"
         description="审核队列、全站控制、用户治理与规则管理：通过/驳回/修正、紧急隐藏、站点模式与大规模词库维护。"
       />
       <Tabs
         defaultSelectedKey="queue"
-        className="min-h-0 flex-1"
+        className="flex min-h-0 flex-1 flex-col"
         onSelectionChange={(key) => {
           if (key === "rules") setRulesTabVisited(true);
         }}
@@ -39,7 +39,7 @@ export function ModerationPage() {
           <TabsItem id="user">用户治理</TabsItem>
           <TabsItem id="rules">规则管理</TabsItem>
         </TabsList>
-        <TabsPanels className="min-h-0 flex-1 overflow-hidden">
+        <TabsPanels className="h-full min-h-0 flex-1 overflow-hidden">
           <TabsPanel id="queue" className="min-h-0 h-full flex flex-col overflow-hidden">
             <ModerationQueuePanel list={list} desktop={isMdScreen} onReview={review.openReview} />
           </TabsPanel>
