@@ -23,6 +23,7 @@ beforeAll(() => {
 
 const mockRows: ModerationRow[] = [
   {
+    rowId: "100:200",
     itemId: 100,
     authorId: 42,
     lockVersion: 3,
@@ -44,6 +45,7 @@ const mockRows: ModerationRow[] = [
     createdAt: "2026/06/29 16:00",
   },
   {
+    rowId: "101:201",
     itemId: 101,
     authorId: 7,
     lockVersion: 1,

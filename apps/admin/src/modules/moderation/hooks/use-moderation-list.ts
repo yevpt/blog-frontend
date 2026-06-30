@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AdminModerationPageResp } from "@repo/api";
 import { useAdminListQuery } from "../../../lib/admin-list-query";
 import { apiClient } from "../../../lib/api";
@@ -37,16 +37,28 @@ export function useModerationList(): UseModerationListResult {
   const [pageData, setPageData] = useState<AdminModerationPageResp | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [reloadToken, setReloadToken] = useState(0);
+  /** 递增序列号，用于触发重新加载 */
+  const [reloadSeq, setReloadSeq] = useState(0);
+  /** 每个序列号对应一个 resolve 函数，loadItems 完成后调用 */
+  const resolverRef = useRef<Map<number, () => void>>(new Map());
 
-  const refetch = useCallback(async () => {
-    setReloadToken((current) => current + 1);
+  const refetch = useCallback((): Promise<void> => {
+    return new Promise<void>((resolve) => {
+      setReloadSeq((current) => {
+        const next = current + 1;
+        // 存储 resolve，等 loadItems 完成后调用
+        resolverRef.current.set(next, resolve);
+        return next;
+      });
+    });
   }, []);
 
   const query = useMemo(() => toListReq({ page, filters }), [page, filters]);
 
   useEffect(() => {
     let cancelled = false;
+    // 捕获当前序列号，完成后 resolve 对应 Promise
+    const currentSeq = reloadSeq;
 
     async function loadItems() {
       setIsLoading(true);
@@ -61,7 +73,15 @@ export function useModerationList(): UseModerationListResult {
         setError(err instanceof Error ? err : new Error("加载审核列表失败"));
         setPageData(null);
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+          // 通知等待本次请求的 refetch 调用
+          const resolver = resolverRef.current.get(currentSeq);
+          if (resolver) {
+            resolverRef.current.delete(currentSeq);
+            resolver();
+          }
+        }
       }
     }
 
@@ -70,7 +90,7 @@ export function useModerationList(): UseModerationListResult {
     return () => {
       cancelled = true;
     };
-  }, [query, reloadToken]);
+  }, [query, reloadSeq]);
 
   const setPage = useCallback(
     (nextPage: number) => {

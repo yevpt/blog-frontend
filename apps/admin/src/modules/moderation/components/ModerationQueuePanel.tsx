@@ -69,7 +69,7 @@ export function ModerationQueuePanel({ list, desktop, onReview }: ModerationQueu
               aria-label="审核队列"
               items={list.rows}
               columns={columns}
-              getRowId={(row) => String(row.itemId)}
+              getRowId={(row) => row.rowId}
               showTotal={false}
               showToolbar={false}
               emptyState={emptyState}
@@ -217,7 +217,7 @@ function ModerationMobileList({
   return (
     <div className="grid min-w-0 gap-2 p-3">
       {items.map((row) => (
-        <article key={row.itemId} className="rounded-md border border-border/70 bg-background p-3">
+        <article key={row.rowId} className="rounded-md border border-border/70 bg-background p-3">
           <div className="flex flex-wrap items-center gap-1.5">
             <Avatar
               src={row.authorAvatar}

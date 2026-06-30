@@ -227,4 +227,59 @@ describe("useModerationList", () => {
     expect(result.current.error?.message).toBe("网络错误");
     expect(result.current.rows).toEqual([]);
   });
+
+  it("rows 使用 itemId:revisionId 作为复合行标识", async () => {
+    const { result } = renderHookWithAdminRouter(() => useModerationList());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    // item_id=100, revision_id=200 → rowId="100:200"
+    expect(result.current.rows[0]?.rowId).toBe("100:200");
+  });
+
+  it("refetch 返回的 Promise 在 HTTP 请求完成后 resolve", async () => {
+    let resolveHttp!: (value: AdminModerationPageResp) => void;
+    vi.mocked(apiClient.moderation.listItems).mockImplementationOnce(
+      () =>
+        new Promise<AdminModerationPageResp>((res) => {
+          resolveHttp = res;
+        }),
+    );
+
+    const { result } = renderHookWithAdminRouter(() => useModerationList());
+
+    // 等第一次加载
+    resolveHttp(mockPage);
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    // 第二次请求挂起
+    let resolveHttp2!: (value: AdminModerationPageResp) => void;
+    vi.mocked(apiClient.moderation.listItems).mockImplementationOnce(
+      () =>
+        new Promise<AdminModerationPageResp>((res) => {
+          resolveHttp2 = res;
+        }),
+    );
+
+    let refetchResolved = false;
+    act(() => {
+      void result.current.refetch().then(() => {
+        refetchResolved = true;
+      });
+    });
+
+    // HTTP 未完成，Promise 不应 resolve
+    await new Promise((r) => setTimeout(r, 10));
+    expect(refetchResolved).toBe(false);
+
+    // 完成 HTTP 请求
+    resolveHttp2(mockPage);
+    await waitFor(() => {
+      expect(refetchResolved).toBe(true);
+    });
+  });
 });

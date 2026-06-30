@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { SvgIcon } from "@repo/icons";
-import { ButtonUtility, Modal } from "@repo/ui";
+import { ButtonUtility, Modal, Tabs, TabsList, TabsItem, TabsPanels, TabsPanel } from "@repo/ui";
 import type { ModerationRow } from "../model";
 import { ModerationReviewActions, type ReviewMode } from "./ModerationReviewActions";
 import { ModerationReviewDetails } from "./ModerationReviewDetails";
+import { ModerationHistory } from "./ModerationHistory";
+import type { ModerationDetailsTab } from "../hooks/use-moderation-history";
 
 interface ModerationReviewDialogProps {
   open: boolean;
@@ -23,6 +25,7 @@ export function ModerationReviewDialog(props: ModerationReviewDialogProps) {
   const [reason, setReason] = useState("");
   const [correctContent, setCorrectContent] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<ModerationDetailsTab>("current");
 
   useEffect(() => {
     if (!props.open || !props.item) return;
@@ -30,6 +33,7 @@ export function ModerationReviewDialog(props: ModerationReviewDialogProps) {
     setReason("");
     setCorrectContent(props.item.submittedContent);
     setValidationError(null);
+    setActiveTab("current");
   }, [props.item, props.open]);
 
   const item = props.item;
@@ -91,7 +95,28 @@ export function ModerationReviewDialog(props: ModerationReviewDialogProps) {
             />
           </div>
         </header>
-        <ModerationReviewDetails item={item} />
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <Tabs
+            selectedKey={activeTab}
+            onSelectionChange={(key) => setActiveTab(key as ModerationDetailsTab)}
+            className="flex min-h-0 flex-1 flex-col"
+          >
+            <div className="shrink-0 border-b border-border/70 px-4 sm:px-5">
+              <TabsList aria-label="审核详情页签" className="border-b-0">
+                <TabsItem id="current">当前内容</TabsItem>
+                <TabsItem id="history">审计历史</TabsItem>
+              </TabsList>
+            </div>
+            <TabsPanels className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 py-5 sm:px-5">
+              <TabsPanel id="current" className="h-full">
+                <ModerationReviewDetails item={item} />
+              </TabsPanel>
+              <TabsPanel id="history" className="h-full">
+                <ModerationHistory itemId={item.itemId} open={props.open} activeTab={activeTab} />
+              </TabsPanel>
+            </TabsPanels>
+          </Tabs>
+        </div>
         {deleted ? null : (
           <ModerationReviewActions
             mode={mode}

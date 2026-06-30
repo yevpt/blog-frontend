@@ -83,7 +83,7 @@ describe("moderation model 标签与选项", () => {
     expect(contentTypeLabel("article_comment")).toBe("文章评论");
     expect(contentTypeLabel("guestbook_reply")).toBe("留言回复");
     expect(riskLevelLabel("high")).toBe("高风险");
-    expect(reviewStatusLabel("superseded")).toBe("已过期");
+    expect(reviewStatusLabel("superseded")).toBe("已被新版本替代");
     expect(publicStateLabel("emergency_hidden")).toBe("紧急隐藏");
     expect(policyActionLabel("pre_review")).toBe("先审后发");
   });
@@ -322,5 +322,18 @@ describe("moderationListQueryCodec", () => {
       page: 1,
       filters: defaultFilters,
     });
+  });
+});
+
+describe("superseded 文案", () => {
+  it('reviewStatusLabel superseded 返回"已被新版本替代"', () => {
+    expect(reviewStatusLabel("superseded")).toBe("已被新版本替代");
+  });
+});
+
+describe("mapItemToRow rowId", () => {
+  it("rowId 为 itemId:revisionId 格式", () => {
+    const row = mapItemToRow(createItem({ item_id: 42, revision_id: 99 }));
+    expect(row.rowId).toBe("42:99");
   });
 });

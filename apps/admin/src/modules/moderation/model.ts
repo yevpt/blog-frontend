@@ -46,6 +46,8 @@ export interface ModerationListQueryState {
 
 /** 表格行视图：把后端 itemResp 映射为列表/详情展示用的纯数据 */
 export interface ModerationRow {
+  /** 桌面/移动端统一行标识：`itemId:revisionId` */
+  rowId: string;
   itemId: number;
   authorId: number;
   authorName?: string;
@@ -172,7 +174,7 @@ const REVIEW_STATUS_LABEL: Record<ModerationReviewStatus, string> = {
   pending: "待审核",
   approved: "已通过",
   rejected: "已驳回",
-  superseded: "已过期",
+  superseded: "已被新版本替代",
 };
 
 const PUBLIC_STATE_LABEL: Record<ModerationPublicState, string> = {
@@ -267,6 +269,7 @@ export function formatModerationDate(value: string): string {
 
 export function mapItemToRow(item: AdminModerationItemResp): ModerationRow {
   return {
+    rowId: `${item.item_id}:${item.revision_id}`,
     itemId: item.item_id,
     authorId: item.author_id,
     authorName: item.author?.nickname,
