@@ -14,6 +14,8 @@ interface FeaturedCarouselSlideProps {
   post: FeaturedPost;
   /** Whether this slide is currently visible (for staggered text animation). */
   isActive: boolean;
+  /** 仅图片区骨架（桌面首帧占位），右侧文案正常展示 */
+  showImageSkeleton?: boolean;
 }
 
 /**
@@ -23,7 +25,11 @@ interface FeaturedCarouselSlideProps {
  *
  * Text enters with staggered opacity + translateX transitions driven by `isActive`.
  */
-export function FeaturedCarouselSlide({ post, isActive }: FeaturedCarouselSlideProps) {
+export function FeaturedCarouselSlide({
+  post,
+  isActive,
+  showImageSkeleton = false,
+}: FeaturedCarouselSlideProps) {
   const { locale } = useLocale();
   const formattedDate = formatDate(post.date, locale);
 
@@ -34,24 +40,29 @@ export function FeaturedCarouselSlide({ post, isActive }: FeaturedCarouselSlideP
         data-carousel-background-drag="true"
         className="absolute inset-0 overflow-hidden md:relative md:inset-auto md:h-full md:w-auto md:flex-1 md:shrink-0 md:rounded-xl md:shadow-md"
       >
-        <LoadingImage
-          src={post.coverImage}
-          alt={post.title}
-          fill
-          priority={isActive}
-          defer={!isActive}
-          className={cn(
-            "object-cover",
-            isActive && "transition-transform duration-[6000ms] ease-out",
-          )}
-          style={{
-            transform: isActive ? "scale(1.05)" : "scale(1)",
-            willChange: isActive ? "transform" : "auto",
-          }}
-          fallbackUnoptimized
-          unoptimized={isGifImageUrl(post.coverImage) || undefined}
-          sizes="(max-width: 768px) 100vw, 55vw"
-        />
+        {showImageSkeleton || !isActive ? (
+          <div
+            data-testid="loading-image-skeleton"
+            aria-hidden="true"
+            className="absolute inset-0 overflow-hidden loading-image-skeleton"
+          />
+        ) : (
+          <LoadingImage
+            src={post.coverImage}
+            alt={post.title}
+            fill
+            priority
+            defer={false}
+            className={cn("object-cover", "transition-transform duration-[6000ms] ease-out")}
+            style={{
+              transform: "scale(1.05)",
+              willChange: "transform",
+            }}
+            fallbackUnoptimized
+            unoptimized={isGifImageUrl(post.coverImage) || undefined}
+            sizes="(max-width: 768px) 100vw, 55vw"
+          />
+        )}
         <div className="absolute inset-0 bg-black/10" />
         {/* 移动端底部渐变叠加层 */}
         <div

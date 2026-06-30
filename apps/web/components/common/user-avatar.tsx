@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useDeferredMediaActivation, shouldDeferRemoteMediaSrc } from "@repo/hooks";
 import { cn } from "@repo/ui";
-import Image from "next/image";
 import {
   isLocalFallbackAvatarUrl,
   resolveFallbackAvatarUrl,
@@ -39,9 +38,9 @@ interface UserAvatarProps {
   className?: string;
   /** 首屏仅骨架，页面就绪后再加载（data:/blob: 与 defer=false 立即加载） */
   defer?: boolean;
-  /** 首屏 LCP 头像设 true 启用 priority + eager（跳过骨架延迟与 lazy） */
+  /** 首屏 LCP 头像设 true，跳过 defer 且 loading=eager */
   priority?: boolean;
-  /** 虚拟滚动等场景设为 true，跳过浏览器的 lazy 视口阈值，立即加载 */
+  /** 常驻头像设 true：img 使用 loading=eager（不跳过 defer 骨架） */
   loadingEager?: boolean;
 }
 
@@ -87,7 +86,19 @@ function isAvatarSrcLoaded(src: string | undefined): boolean {
   return Boolean(src && loadedAvatarSrcCache.has(src));
 }
 
-export function UserAvatar({
+/** 远程头像加载超时（毫秒） */
+export const AVATAR_LOAD_TIMEOUT_MS = 8_000;
+/** 超时/失败后重试次数（不含首次加载） */
+export const AVATAR_MAX_RETRIES = 3;
+/** 重试间隔（毫秒） */
+export const AVATAR_RETRY_DELAY_MS = 1_500;
+
+function shouldWatchAvatarLoad(src: string | undefined): boolean {
+  if (!src) return false;
+  return shouldDeferRemoteMediaSrc(src);
+}
+
+function UserAvatarInner({
   src,
   name,
   userId,
@@ -99,7 +110,13 @@ export function UserAvatar({
 }: UserAvatarProps) {
   const [userImageFailed, setUserImageFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [retryAttempt, setRetryAttempt] = useState(0);
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const imageLatchRef = useRef(false);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const failureHandledRef = useRef(false);
+  const [isClient, setIsClient] = useState(false);
   const deferredReady = useDeferredMediaActivation();
   const px = SIZE_PX[size];
   const initial = name[0]?.toUpperCase() ?? "?";
@@ -115,7 +132,6 @@ export function UserAvatar({
   const validSrc = usingUserAvatar ? userSrc : fallbackSrc;
   const showInitialsOnly = !usingUserAvatar && !fallbackSrc;
 
-  // 外圈承载 ring-offset；内圈 overflow-hidden 裁切图片
   const outerClass = cn("relative inline-flex shrink-0 rounded-full", SIZE[size], className);
   const innerClass = cn(
     "relative h-full w-full overflow-hidden rounded-full",
@@ -127,20 +143,123 @@ export function UserAvatar({
     !priority &&
     shouldDeferRemoteMediaSrc(validSrc) &&
     !isLocalFallbackAvatarUrl(validSrc);
-  const mediaReady = !shouldDefer || deferredReady;
+  const mediaReady = isClient && (!shouldDefer || deferredReady);
+
+  const reuseLoadedSrc = Boolean(validSrc && isAvatarSrcLoaded(validSrc));
+  const imageLoading = priority || loadingEager || reuseLoadedSrc ? "eager" : "lazy";
+
+  const showImage = Boolean(validSrc);
+  if (showImage && mediaReady) {
+    imageLatchRef.current = true;
+  }
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const clearAvatarTimers = useCallback(() => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+      loadTimeoutRef.current = null;
+    }
+  }, []);
+
+  const scheduleAvatarRetry = useCallback(() => {
+    clearAvatarTimers();
+    retryTimerRef.current = setTimeout(() => {
+      retryTimerRef.current = null;
+      failureHandledRef.current = false;
+      setLoaded(false);
+      setRetryAttempt((attempt) => attempt + 1);
+    }, AVATAR_RETRY_DELAY_MS);
+  }, [clearAvatarTimers]);
+
+  const handleAvatarLoadFailure = useCallback(() => {
+    if (failureHandledRef.current) return;
+    failureHandledRef.current = true;
+    clearAvatarTimers();
+
+    if (retryAttempt < AVATAR_MAX_RETRIES) {
+      scheduleAvatarRetry();
+      return;
+    }
+
+    if (userSrc && validSrc === userSrc) {
+      setUserImageFailed(true);
+    }
+    setLoaded(false);
+  }, [clearAvatarTimers, retryAttempt, scheduleAvatarRetry, userSrc, validSrc]);
 
   const isFirstSrcEffect = useRef(true);
+  const prevValidSrcRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (isFirstSrcEffect.current) {
       isFirstSrcEffect.current = false;
       return;
     }
+    failureHandledRef.current = false;
     setUserImageFailed(false);
     setLoaded(false);
-  }, [src]);
+    setRetryAttempt(0);
+    prevValidSrcRef.current = undefined;
+    clearAvatarTimers();
+  }, [src, clearAvatarTimers]);
 
-  // callback ref 在 DOM commit 阶段同步触发（早于 paint），
-  // 对重挂的缓存图片直接标记 loaded → 零帧闪烁
+  useEffect(() => {
+    if (prevValidSrcRef.current === validSrc) {
+      if (!validSrc) {
+        setLoaded(false);
+        return;
+      }
+      if (isAvatarSrcLoaded(validSrc)) {
+        setLoaded(true);
+      }
+      return;
+    }
+
+    prevValidSrcRef.current = validSrc;
+    failureHandledRef.current = false;
+    setRetryAttempt(0);
+    clearAvatarTimers();
+    if (!validSrc) {
+      setLoaded(false);
+      return;
+    }
+    if (isAvatarSrcLoaded(validSrc)) {
+      setLoaded(true);
+    } else {
+      setLoaded(false);
+    }
+  }, [validSrc, clearAvatarTimers]);
+
+  useEffect(() => {
+    failureHandledRef.current = false;
+  }, [retryAttempt]);
+
+  useEffect(() => {
+    if (!validSrc || !imageLatchRef.current || loaded) return;
+    if (!shouldWatchAvatarLoad(validSrc)) return;
+    if (isAvatarSrcLoaded(validSrc)) return;
+
+    loadTimeoutRef.current = setTimeout(() => {
+      loadTimeoutRef.current = null;
+      handleAvatarLoadFailure();
+    }, AVATAR_LOAD_TIMEOUT_MS);
+
+    return () => {
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+        loadTimeoutRef.current = null;
+      }
+    };
+  }, [validSrc, retryAttempt, loaded, mediaReady, handleAvatarLoadFailure]);
+
+  useEffect(() => () => clearAvatarTimers(), [clearAvatarTimers]);
+
   const handleImageRef = useCallback(
     (node: HTMLImageElement | null) => {
       imageRef.current = node;
@@ -152,9 +271,7 @@ export function UserAvatar({
         return;
       }
 
-      // 同一 URL 的 img 被父级 re-render/remount 重建：禁用浏览器缓存时 lazy 可能不再触发 load
       if (isAvatarSrcLoaded(validSrc)) {
-        node.loading = "eager";
         return;
       }
 
@@ -163,9 +280,6 @@ export function UserAvatar({
     [validSrc],
   );
 
-  // 稳定 DOM 结构：skeleton / placeholder / image 三层始终同在一个容器，
-  // 仅通过 opacity 切换，避免 DOM 替换触发浏览器网格 layout 重算 → CLS
-  const showImage = Boolean(validSrc);
   const skeletonVisible = showImage && !mediaReady;
   const placeholderVisible = !showImage || !loaded;
   const imageVisible = showImage && mediaReady && loaded;
@@ -173,7 +287,6 @@ export function UserAvatar({
   return (
     <span className={outerClass} aria-busy={skeletonVisible ? "true" : undefined}>
       <span className={innerClass}>
-        {/* 骨架层：页面就绪前可见，就绪后透明 */}
         {showImage && (
           <span
             data-testid="user-avatar-skeleton"
@@ -185,7 +298,6 @@ export function UserAvatar({
           />
         )}
 
-        {/* 占位层：始终存在，图片加载完成后透明 */}
         <span
           data-testid="user-avatar-placeholder"
           aria-hidden="true"
@@ -199,32 +311,47 @@ export function UserAvatar({
           {initial}
         </span>
 
-        {/* 图片层：页面就绪后挂载，加载完成后淡入 */}
-        {validSrc && showImage && mediaReady && (
-          <Image
-            key={validSrc}
+        {/* 头像极小且直连 OSS；latch 保证 defer 结束后不因父级重渲染卸载 img */}
+        {validSrc && showImage && imageLatchRef.current && (
+          <img
+            key={`${validSrc}-${retryAttempt}`}
             ref={handleImageRef}
             src={validSrc}
             alt={name}
             width={px}
             height={px}
-            unoptimized
-            priority={priority}
-            loading={priority || loadingEager ? "eager" : "lazy"}
+            loading={imageLoading}
             decoding="async"
+            data-retry-attempt={retryAttempt}
             className={cn(
               "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
               imageVisible ? "opacity-100" : "opacity-0",
             )}
             onLoad={() => {
+              clearAvatarTimers();
+              failureHandledRef.current = false;
               markAvatarSrcLoaded(validSrc);
               setLoaded(true);
             }}
-            onError={() => setUserImageFailed(true)}
-            suppressHydrationWarning
+            onError={() => handleAvatarLoadFailure()}
           />
         )}
       </span>
     </span>
   );
 }
+
+function areUserAvatarPropsEqual(prev: UserAvatarProps, next: UserAvatarProps): boolean {
+  return (
+    prev.src === next.src &&
+    prev.userId === next.userId &&
+    prev.name === next.name &&
+    prev.size === next.size &&
+    prev.className === next.className &&
+    prev.defer === next.defer &&
+    prev.priority === next.priority &&
+    prev.loadingEager === next.loadingEager
+  );
+}
+
+export const UserAvatar = memo(UserAvatarInner, areUserAvatarPropsEqual);

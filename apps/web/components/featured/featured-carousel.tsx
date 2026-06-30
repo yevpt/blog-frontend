@@ -1,10 +1,48 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
 import { Button, Carousel } from "@repo/ui";
 import type { FeaturedPost } from "@/app/_mock/types";
 import { resolveFeaturedPostForViewport } from "@/lib/article-cover";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { FeaturedCarouselSlide } from "./featured-carousel-slide";
+
+const DESKTOP_MEDIA_QUERY = "(min-width: 768px)";
+
+function useClientMounted(): boolean {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+}
+
+/** SSR/首帧占位：不输出图片 URL，避免隐藏轮播或懒加载 slide 被预取。 */
+function FeaturedCarouselSkeleton({ posts }: { posts: FeaturedPost[] }) {
+  const firstPost = posts[0];
+  if (!firstPost) return null;
+
+  return (
+    <>
+      <div
+        className="md:hidden h-[100svh] overflow-hidden loading-image-skeleton"
+        role="region"
+        aria-label="推荐文章"
+        aria-busy="true"
+      />
+      <div className="mx-auto hidden max-w-[1120px] px-5 pt-20 md:block">
+        <div
+          className="relative h-[50vh] min-h-[380px] max-h-[520px] overflow-hidden rounded-2xl"
+          role="region"
+          aria-label="推荐文章"
+          aria-busy="true"
+        >
+          <FeaturedCarouselSlide post={firstPost} isActive showImageSkeleton />
+        </div>
+      </div>
+    </>
+  );
+}
 
 // Derive CarouselApi type from Carousel.Root props to avoid a direct embla dependency.
 type CarouselApi = Parameters<NonNullable<React.ComponentProps<typeof Carousel.Root>["setApi"]>>[0];
@@ -220,18 +258,23 @@ function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
 // 主导出：桌面垂直 + 移动水平
 // ────────────────────────────────────────────────
 export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
-  if (posts.length === 0) return null;
+  const mounted = useClientMounted();
+  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
 
-  return (
-    <>
-      {/* 移动端：全屏，不受 max-width 约束 */}
-      <div className="md:hidden">
-        <FeaturedCarouselMobile posts={posts} />
-      </div>
-      {/* 桌面端（md+）：保持原有容器约束 */}
-      <div className="hidden md:block mx-auto max-w-[1120px] px-5 pt-20">
+  if (posts.length === 0) return null;
+  if (!mounted) return <FeaturedCarouselSkeleton posts={posts} />;
+
+  if (isDesktop) {
+    return (
+      <div className="mx-auto max-w-[1120px] px-5 pt-20">
         <FeaturedCarouselDesktop posts={posts} />
       </div>
-    </>
+    );
+  }
+
+  return (
+    <div className="md:hidden">
+      <FeaturedCarouselMobile posts={posts} />
+    </div>
   );
 }

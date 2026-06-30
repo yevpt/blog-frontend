@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { render, screen, act, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
@@ -195,9 +195,21 @@ const mockPosts: FeaturedPost[] = [
   },
 ];
 
-// 桌面垂直轮播（第二个 region = FeaturedCarouselDesktop，移动端先渲染故取 [1]）
-function getDesktopCarousel() {
-  return screen.getAllByRole("region", { name: "推荐文章" })[1];
+// 当前视口下唯一的推荐轮播 region
+function getFeaturedCarousel() {
+  return screen.getByRole("region", { name: "推荐文章" });
+}
+
+function mockViewport(desktop: boolean) {
+  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+    get matches() {
+      return query === "(min-width: 768px)" ? desktop : false;
+    },
+    media: query,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })) as typeof window.matchMedia;
 }
 
 afterEach(() => {
@@ -205,9 +217,13 @@ afterEach(() => {
   vi.clearAllMocks();
   deferredMediaMock.useDeferredMediaActivation.mockReturnValue(true);
   carouselMockState.watchDrag = undefined;
+  mockViewport(true);
 });
 
 describe("FeaturedCarousel", () => {
+  beforeEach(() => {
+    mockViewport(true);
+  });
   it("渲染不崩溃，DOM 中存在第一张幻灯片标题", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
     expect(screen.getAllByText("第一篇文章标题").length).toBeGreaterThan(0);
@@ -220,7 +236,8 @@ describe("FeaturedCarousel", () => {
     expect(screen.getAllByText("第三篇文章标题").length).toBeGreaterThan(0);
   });
 
-  it("移动端轮播优先使用 mobileCoverImage", () => {
+  it("移动端轮播优先使用 mobileCoverImage，且不加载桌面封面", () => {
+    mockViewport(false);
     const posts: FeaturedPost[] = [
       {
         id: "1",
@@ -237,20 +254,17 @@ describe("FeaturedCarousel", () => {
     render(<FeaturedCarousel posts={posts} />);
 
     const mobileCarousel = screen.getByTestId("carousel-root");
-    const desktopCarousel = getDesktopCarousel();
-
     expect(mobileCarousel.querySelector("img")?.getAttribute("src")).toBe(
       "https://example.com/mobile.jpg",
     );
-    expect(desktopCarousel.querySelector("img")?.getAttribute("src")).toBe(
-      "https://example.com/desktop.jpg",
-    );
+    expect(document.querySelector(`img[src="https://example.com/desktop.jpg"]`)).toBeNull();
   });
 
   it("普通轮播封面启用 Next 优化并保持等比裁切配置", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
     const images = screen.getAllByRole("img");
 
+    expect(images).toHaveLength(1);
     expect(images.every((image) => image.getAttribute("data-unoptimized") !== "true")).toBe(true);
     expect(images.every((image) => image.getAttribute("data-fill") === "true")).toBe(true);
     expect(images.every((image) => image.className.includes("object-cover"))).toBe(true);
@@ -267,13 +281,19 @@ describe("FeaturedCarousel", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
 
     const firstTitleImages = screen.getAllByRole("img", { name: "第一篇文章标题" });
-    expect(firstTitleImages).toHaveLength(2);
-    expect(firstTitleImages.every((img) => img.getAttribute("data-priority") === "true")).toBe(
-      true,
-    );
+    expect(firstTitleImages).toHaveLength(1);
+    expect(firstTitleImages[0]?.getAttribute("data-priority")).toBe("true");
 
     expect(screen.queryByRole("img", { name: "第二篇文章标题" })).not.toBeInTheDocument();
     expect(screen.getAllByTestId("loading-image-skeleton").length).toBeGreaterThan(0);
+  });
+
+  it("页面 idle 后非当前幻灯片仍保持骨架、不挂载图片", () => {
+    render(<FeaturedCarousel posts={mockPosts} />);
+
+    expect(screen.getByRole("img", { name: "第一篇文章标题" })).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "第二篇文章标题" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "第三篇文章标题" })).not.toBeInTheDocument();
   });
 
   it("GIF 轮播封面跳过 Next 优化", () => {
@@ -295,15 +315,15 @@ describe("FeaturedCarousel", () => {
   });
 
   it("移动端使用 Embla carousel-root，桌面端用纯 CSS region", () => {
+    mockViewport(true);
     render(<FeaturedCarousel posts={mockPosts} />);
-    // 桌面端是纯 CSS（FeaturedCarouselDesktop），移动端是 Embla（有 data-testid=carousel-root）
-    expect(screen.getByTestId("carousel-root")).toBeTruthy();
-    expect(screen.getAllByRole("region", { name: "推荐文章" })).toHaveLength(2);
+    expect(screen.queryByTestId("carousel-root")).not.toBeInTheDocument();
+    expect(getFeaturedCarousel()).toBeTruthy();
   });
 
   it("桌面轮播容器具有圆角且无全屏高度", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    const desktopCarousel = getDesktopCarousel();
+    const desktopCarousel = getFeaturedCarousel();
     expect(desktopCarousel.className).toContain("min-h-[380px]");
     expect(desktopCarousel.className).toContain("max-h-[520px]");
     expect(desktopCarousel.className).toContain("rounded-2xl");
@@ -312,6 +332,7 @@ describe("FeaturedCarousel", () => {
   });
 
   it("移动端文字区域标记为非拖拽区", () => {
+    mockViewport(false);
     render(<FeaturedCarousel posts={mockPosts} />);
     expect(screen.getByTestId("carousel-root")).toHaveAttribute("data-has-watch-drag", "true");
     const noDragElements = document.querySelectorAll("[data-carousel-no-drag='true']");
@@ -325,9 +346,9 @@ describe("FeaturedCarousel", () => {
     expect(screen.getByLabelText("第 3 张，共 3 张")).toBeTruthy();
   });
 
-  it("渲染两个轮播实例（桌面 + 移动端）", () => {
+  it("仅渲染当前视口对应的一个轮播实例", () => {
     render(<FeaturedCarousel posts={mockPosts} />);
-    expect(screen.getAllByRole("region", { name: "推荐文章" })).toHaveLength(2);
+    expect(screen.getAllByRole("region", { name: "推荐文章" })).toHaveLength(1);
   });
 
   it("阅读全文链接 href 正确", () => {
@@ -343,6 +364,7 @@ describe("FeaturedCarousel", () => {
   });
 
   it("移动端轮播容器高度为 100svh、无圆角", () => {
+    mockViewport(false);
     render(<FeaturedCarousel posts={mockPosts} />);
     const mobileCarousel = screen.getByTestId("carousel-root");
     expect(mobileCarousel.className).toContain("h-[100svh]");
@@ -350,6 +372,7 @@ describe("FeaturedCarousel", () => {
   });
 
   it("移动端 slide 文字 overlay 包裹层带 absolute bottom-0 class", () => {
+    mockViewport(false);
     render(<FeaturedCarousel posts={mockPosts} />);
     const mobileCarousel = screen.getByTestId("carousel-root");
     // 文字 overlay 包裹层（data-carousel-no-drag 在 no-drag 容器内部，找第一个匹配）
@@ -363,6 +386,7 @@ describe("FeaturedCarousel", () => {
   });
 
   it("移动端文字区为底部指示器预留空间，避免两者挤在一起", () => {
+    mockViewport(false);
     render(<FeaturedCarousel posts={mockPosts} />);
     const mobileCarousel = screen.getByTestId("carousel-root");
     const textNoDrag = mobileCarousel.querySelector("[data-carousel-no-drag='true']");
@@ -371,6 +395,7 @@ describe("FeaturedCarousel", () => {
   });
 
   it("移动端指示点仅渲染一组，不随 slide 数量重复", () => {
+    mockViewport(false);
     render(<FeaturedCarousel posts={mockPosts} />);
     // 每个按钮的 aria-label 应在整个文档中唯一
     expect(screen.getByRole("button", { name: "切换至第 1 张" })).toBeTruthy();
@@ -379,6 +404,7 @@ describe("FeaturedCarousel", () => {
   });
 
   it("移动端指示点容器为 Carousel.Root 的直接后代，不嵌套在 Carousel.Item 内", () => {
+    mockViewport(false);
     render(<FeaturedCarousel posts={mockPosts} />);
     const mobileCarousel = screen.getByTestId("carousel-root");
     // 指示点容器带 data-carousel-no-drag 且 className 含 bottom-5
@@ -389,6 +415,7 @@ describe("FeaturedCarousel", () => {
   });
 
   it("移动端仅允许从背景图层拖动翻页", () => {
+    mockViewport(false);
     render(<FeaturedCarousel posts={mockPosts} />);
     const mobileCarousel = screen.getByTestId("carousel-root");
     const background = mobileCarousel.querySelector("[data-carousel-background-drag='true']");
@@ -419,6 +446,10 @@ describe("FeaturedCarousel", () => {
 });
 
 describe("FeaturedCarousel 自动轮播（fake timers）", () => {
+  beforeEach(() => {
+    mockViewport(true);
+  });
+
   it("自动轮播：5 秒后桌面切换到第二张", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
@@ -459,7 +490,7 @@ describe("FeaturedCarousel 自动轮播（fake timers）", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
     act(() => {
-      fireEvent.mouseEnter(getDesktopCarousel());
+      fireEvent.mouseEnter(getFeaturedCarousel());
     });
     act(() => {
       vi.advanceTimersByTime(5000);
@@ -470,7 +501,7 @@ describe("FeaturedCarousel 自动轮播（fake timers）", () => {
   it("悬停结束后恢复桌面轮播", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
-    const carousel = getDesktopCarousel();
+    const carousel = getFeaturedCarousel();
     act(() => {
       fireEvent.mouseEnter(carousel);
     });

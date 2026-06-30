@@ -5,6 +5,8 @@ import type { MomentMediaResp } from "@repo/api";
 export const MOMENT_SINGLE_IMAGE_MAX_WIDTH = 480;
 /** 碎语卡片单图最大展示高度，与 MomentImageGrid 单图 class 一致。 */
 export const MOMENT_SINGLE_IMAGE_MAX_HEIGHT = 320;
+/** 九宫格单元格 CDN 固定宽度（对齐 sizes 上限 160px） */
+export const MOMENT_GRID_IMAGE_DISPLAY_WIDTH = 160;
 
 export interface MomentSingleImageDisplaySize {
   width: number;

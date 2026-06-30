@@ -4,10 +4,6 @@ import userEvent from "@testing-library/user-event";
 import { MomentImageGrid } from "./moment-image-grid";
 import type { MomentMediaResp } from "@repo/api";
 
-vi.mock("@/hooks/use-moment-single-image-display-size", () => ({
-  useMomentSingleImageDisplaySize: () => ({ width: 480, height: 270 }),
-}));
-
 vi.mock("@/components/common/loading-image", () => ({
   DeferredNativeImage: ({
     src,
@@ -31,7 +27,11 @@ vi.mock("@/components/common/loading-image", () => ({
       className={className}
     />
   ),
-  LoadingImage: ({
+}));
+
+vi.mock("@repo/ui", () => ({
+  cn: (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" "),
+  CdnResponsiveImage: ({
     src,
     alt,
     fill,
@@ -43,17 +43,13 @@ vi.mock("@/components/common/loading-image", () => ({
     className?: string;
   }) => (
     <img
-      data-testid="loading-image"
+      data-testid="cdn-responsive"
       src={src}
       alt={alt}
       data-fill={fill ?? false}
       className={className}
     />
   ),
-}));
-
-vi.mock("@repo/ui", () => ({
-  cn: (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" "),
 }));
 
 function makeImage(overrides: Partial<MomentMediaResp> = {}): MomentMediaResp {
@@ -80,7 +76,7 @@ describe("MomentImageGrid display_mode", () => {
     const onOpen = vi.fn();
     render(<MomentImageGrid images={[makeImage()]} onOpen={onOpen} />);
 
-    const img = screen.getByTestId("loading-image");
+    const img = screen.getByTestId("cdn-responsive");
     expect(img).toHaveAttribute("src", "/access.jpg");
 
     await user.click(screen.getByRole("button", { name: "查看图片 photo" }));
@@ -125,7 +121,7 @@ describe("MomentImageGrid display_mode", () => {
     );
 
     // 使用后端返回的静态占位 access_url，而非原 GIF
-    const img = screen.getByTestId("loading-image");
+    const img = screen.getByTestId("cdn-responsive");
     expect(img).toHaveAttribute("src", "/static-placeholder.jpg");
 
     expect(screen.queryByRole("button", { name: "查看图片 motion.gif" })).toBeNull();
@@ -209,13 +205,13 @@ describe("MomentImageGrid reviewOverlay", () => {
     );
 
     expect(screen.getByText("审核中")).toBeInTheDocument();
-    const img = screen.getByTestId("deferred-native");
+    const img = screen.getByRole("img", { name: "photo" });
     expect(img).toHaveAttribute("src", expect.stringContaining("w=480"));
-    expect(img).toHaveAttribute("data-defer", "false");
-    expect(img).toHaveAttribute("data-layout", "fill");
+    expect(img.className).toContain("w-full");
+    expect(img.className).toContain("max-h-[320px]");
     expect(img.className).toContain("object-contain");
     expect(screen.queryByRole("button", { name: "查看图片 photo" })).toBeNull();
-    await user.click(screen.getByTestId("deferred-native"));
+    await user.click(img);
     expect(onOpen).not.toHaveBeenCalled();
   });
 

@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeAll } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { activateDeferredMediaForTests, resetDeferredMediaActivationForTests } from "@repo/hooks";
 import { ArticleHero } from "./article-hero";
 import { useImageViewer } from "@/store/use-image-viewer";
 import type { ArticleDetailResp, MusicItemResp } from "@repo/api";
-import type * as RepoHooks from "@repo/hooks";
 
 vi.mock("next/image", () => ({
   default: ({
@@ -30,18 +30,6 @@ vi.mock("next/image", () => ({
   ),
 }));
 
-const deferredMediaMock = vi.hoisted(() => ({
-  useDeferredMediaActivation: vi.fn(() => true),
-}));
-
-vi.mock("@repo/hooks", async (importOriginal) => {
-  const actual = (await importOriginal()) as typeof RepoHooks;
-  return {
-    ...actual,
-    useDeferredMediaActivation: deferredMediaMock.useDeferredMediaActivation,
-  };
-});
-
 beforeAll(() => {
   vi.stubGlobal(
     "ResizeObserver",
@@ -53,6 +41,10 @@ beforeAll(() => {
       };
     }),
   );
+});
+
+beforeEach(() => {
+  activateDeferredMediaForTests();
 });
 
 const base: ArticleDetailResp = {
@@ -69,6 +61,8 @@ const base: ArticleDetailResp = {
   created_at: "2026-06-01T00:00:00Z",
   updated_at: "2026-06-01T00:00:00Z",
 };
+
+const COVER_SRC = "https://blog-dev-oss.yevpt.com/blog/articles/1/cover/test.png?a=sign&b=nonce";
 
 describe("ArticleHero", () => {
   it("渲染文章标题", () => {
@@ -87,23 +81,34 @@ describe("ArticleHero", () => {
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });
 
+  it("页面未就绪时封面仅骨架、不挂载图片", () => {
+    resetDeferredMediaActivationForTests();
+
+    render(<ArticleHero article={{ ...base, cover_img_url: COVER_SRC }} />);
+
+    expect(screen.getByTestId("cdn-responsive-image-skeleton")).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "Rust Web 框架" })).not.toBeInTheDocument();
+  });
+
   it("有封面图时渲染 img 并使用 alt 文字", () => {
-    render(<ArticleHero article={{ ...base, cover_img_url: "https://example.com/img.jpg" }} />);
+    render(<ArticleHero article={{ ...base, cover_img_url: COVER_SRC }} />);
     const img = screen.getByRole("img");
-    expect(img).toHaveAttribute("src", expect.stringContaining("img.jpg"));
+    expect(img).toHaveAttribute("src", expect.stringContaining("cover/test.png"));
     expect(img).toHaveAttribute("alt", "Rust Web 框架");
   });
 
-  it("封面 fill 图片带响应式 sizes，避免 Next Image 告警", () => {
-    render(<ArticleHero article={{ ...base, cover_img_url: "https://example.com/img.jpg" }} />);
-    expect(screen.getByRole("img")).toHaveAttribute("sizes", "(max-width: 768px) 100vw, 720px");
+  it("封面使用 article-cover 固定宽度 CDN 变换，避免 src+srcset 重复请求", () => {
+    render(<ArticleHero article={{ ...base, cover_img_url: COVER_SRC }} />);
+    const img = screen.getByRole("img");
+    expect(img.getAttribute("src")).toContain("w=1080");
+    expect(img).not.toHaveAttribute("srcset");
   });
 
   it("首屏封面以 priority 立即 eager 加载，避免 LCP 告警", () => {
-    render(<ArticleHero article={{ ...base, cover_img_url: "https://example.com/img.jpg" }} />);
+    render(<ArticleHero article={{ ...base, cover_img_url: COVER_SRC }} />);
     const img = screen.getByRole("img");
-    expect(img).toHaveAttribute("data-priority", "true");
     expect(img).toHaveAttribute("loading", "eager");
+    expect(img).toHaveAttribute("fetchpriority", "high");
   });
 
   it("显示分类标签", () => {
@@ -164,11 +169,11 @@ describe("ArticleHero", () => {
 
   it("点击封面打开图片查看器", () => {
     useImageViewer.setState({ isOpen: false, images: [], index: 0 });
-    render(<ArticleHero article={{ ...base, cover_img_url: "https://example.com/img.jpg" }} />);
+    render(<ArticleHero article={{ ...base, cover_img_url: COVER_SRC }} />);
     fireEvent.click(screen.getByRole("button", { name: "查看封面大图" }));
     const state = useImageViewer.getState();
     expect(state.isOpen).toBe(true);
-    expect(state.images).toEqual([{ src: "https://example.com/img.jpg", alt: "Rust Web 框架" }]);
+    expect(state.images).toEqual([{ src: COVER_SRC, alt: "Rust Web 框架" }]);
     expect(state.index).toBe(0);
   });
 

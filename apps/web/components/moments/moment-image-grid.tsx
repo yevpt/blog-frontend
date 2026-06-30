@@ -1,11 +1,12 @@
 "use client";
 
 import type { MomentItemResp } from "@repo/api";
-import { cn } from "@repo/ui";
-import { DeferredNativeImage, LoadingImage } from "@/components/common/loading-image";
+import { CdnResponsiveImage, cn } from "@repo/ui";
+import { DeferredNativeImage } from "@/components/common/loading-image";
 import {
   getMomentImageDisplayUrl,
   isVisitorModerationPreviewImage,
+  MOMENT_GRID_IMAGE_DISPLAY_WIDTH,
   MOMENT_SINGLE_IMAGE_MAX_WIDTH,
 } from "./moment-image-display";
 import { MomentImageReviewOverlay } from "./moment-image-review-overlay";
@@ -71,6 +72,8 @@ function resolveImageSrc(img: MomentImage, scalePreview: boolean): string {
   return scalePreview ? getMomentImageDisplayUrl(img, true) : img.access_url;
 }
 
+const SINGLE_IMAGE_PREVIEW_CLASS = "block h-auto max-h-[320px] w-full object-contain";
+
 /** 外框先占满卡片宽度，避免 inline-block 与百分比宽度循环塌缩 */
 const SINGLE_FRAME_PREVIEW_CLASS = `relative mt-3 block w-full max-w-[${MOMENT_SINGLE_IMAGE_MAX_WIDTH}px] overflow-hidden rounded-[6px]`;
 
@@ -78,14 +81,20 @@ const SINGLE_FRAME_PUBLIC_CLASS =
   "relative mt-3 block w-full max-w-full overflow-hidden rounded-[6px]";
 
 function renderSingleImageNode(img: MomentImage, src: string, scalePreview: boolean) {
-  return (
-    <MomentSingleImage
-      src={src}
-      alt={img.name}
-      scalePreview={scalePreview}
-      deferGif={shouldDeferGif(img)}
-    />
-  );
+  if (scalePreview) {
+    // 审核预览须为外层 block 容器的直接子 img，w-full 才能铺满遮罩区域
+    return (
+      <img
+        src={src}
+        alt={img.name}
+        className={SINGLE_IMAGE_PREVIEW_CLASS}
+        loading="lazy"
+        decoding="async"
+      />
+    );
+  }
+
+  return <MomentSingleImage src={src} alt={img.name} deferGif={shouldDeferGif(img)} />;
 }
 
 function renderGridImageNode(img: MomentImage, src: string, scalePreview: boolean) {
@@ -103,12 +112,13 @@ function renderGridImageNode(img: MomentImage, src: string, scalePreview: boolea
   }
 
   return (
-    <LoadingImage
+    <CdnResponsiveImage
       src={src}
       alt={img.name}
+      preset="comment"
       fill
-      fallbackUnoptimized
-      sizes="(max-width: 768px) 33vw, 160px"
+      imageMode="fixed"
+      displayWidth={MOMENT_GRID_IMAGE_DISPLAY_WIDTH}
       className="object-cover"
       skeletonClassName="rounded-[6px]"
     />

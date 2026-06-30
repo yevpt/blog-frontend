@@ -63,10 +63,6 @@ vi.mock("next/image", () => ({
   ),
 }));
 
-vi.mock("@/hooks/use-moment-single-image-display-size", () => ({
-  useMomentSingleImageDisplaySize: () => ({ width: 480, height: 270 }),
-}));
-
 const deferredMediaMock = vi.hoisted(() => ({
   useDeferredMediaActivation: vi.fn(() => true),
 }));
@@ -190,6 +186,29 @@ vi.mock("@repo/ui", () => ({
   Badge: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
     <span {...props}>{children}</span>
   ),
+  CdnResponsiveImage: ({
+    src,
+    alt,
+    fill,
+    className,
+  }: {
+    src: string;
+    alt: string;
+    fill?: boolean;
+    className?: string;
+  }) =>
+    deferredMediaMock.useDeferredMediaActivation() === false ? (
+      <span data-testid="cdn-responsive-image-skeleton" aria-hidden />
+    ) : (
+      <img
+        data-testid="cdn-responsive"
+        src={src}
+        alt={alt}
+        loading="lazy"
+        data-fill={fill ?? false}
+        className={className}
+      />
+    ),
 }));
 
 function makeMoment(overrides: Partial<MomentItemResp> = {}): MomentItemResp {
@@ -306,7 +325,7 @@ describe("MomentCard", () => {
     expect(button?.className).toContain("overflow-hidden");
     expect(imgs[0].className).toContain("object-contain");
     expect(screen.getByTestId("moment-single-image-frame")).toHaveStyle({
-      aspectRatio: "480 / 270",
+      aspectRatio: "480 / 320",
     });
   });
 
@@ -432,7 +451,7 @@ describe("MomentCard", () => {
     expect(img.tagName).toBe("IMG");
   });
 
-  it("非 GIF 碎语图优先走优化器，并启用 fallbackUnoptimized", () => {
+  it("非 GIF 碎语图走 CdnResponsiveImage 固定 CDN 宽度", () => {
     const moment = makeMoment({
       images: [
         {
@@ -450,8 +469,7 @@ describe("MomentCard", () => {
 
     render(<MomentCard moment={moment} />);
 
-    const img = screen.getByRole("img", { name: "photo.jpg" });
-    expect(img).toHaveAttribute("data-unoptimized", "false");
+    expect(screen.getByTestId("cdn-responsive")).toHaveAttribute("src", "/photo.jpg");
   });
 
   it("无图片时不渲染图片网格", () => {
@@ -678,7 +696,7 @@ describe("MomentCard", () => {
       ],
     });
     render(<MomentCard moment={moment} />);
-    expect(screen.getByTestId("loading-image-skeleton")).toBeInTheDocument();
+    expect(screen.getByTestId("cdn-responsive-image-skeleton")).toBeInTheDocument();
     expect(
       screen
         .queryAllByRole("img")

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { ArticleDetailResp } from "@repo/api";
 import { useLocale } from "@repo/hooks";
-import { LoadingImage } from "@/components/common/loading-image";
+import { CdnResponsiveImage } from "@repo/ui";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { useActiveArticle } from "@/store/use-active-article";
 import { useImageViewer } from "@/store/use-image-viewer";
@@ -41,15 +41,15 @@ export function ArticleHero({ article }: ArticleHeroProps) {
           onClick={() => openViewer([{ src: article.cover_img_url!, alt: article.title }], 0)}
           className="group relative mb-8 block aspect-video w-full cursor-zoom-in overflow-hidden rounded-2xl"
         >
-          <LoadingImage
+          <CdnResponsiveImage
             src={article.cover_img_url}
             alt={article.title}
+            preset="article-cover"
+            imageMode="fixed"
+            displayWidth={1080}
             fill
             priority
-            defer={false}
             className="object-cover object-center"
-            fallbackUnoptimized
-            sizes="(max-width: 768px) 100vw, 720px"
           />
         </button>
       )}

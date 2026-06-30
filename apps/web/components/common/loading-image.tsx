@@ -42,6 +42,7 @@ interface DeferredNativeImageProps {
   defer?: boolean;
   /** fill：九宫格单元内铺满；intrinsic：单图按内容伸缩并保留最小占位 */
   layout?: "fill" | "intrinsic";
+  onImageLoad?: (image: HTMLImageElement) => void;
 }
 
 /** GIF 等不走 next/image 的场景：同样支持首屏骨架 + 延迟挂载原生 img */
@@ -52,6 +53,7 @@ export function DeferredNativeImage({
   skeletonClassName,
   defer = true,
   layout = "intrinsic",
+  onImageLoad,
 }: DeferredNativeImageProps) {
   const deferredReady = useDeferredMediaActivation();
   const shouldDefer = defer && shouldDeferRemoteMediaSrc(src);
@@ -102,13 +104,19 @@ export function DeferredNativeImage({
         src={src}
         alt={alt}
         className={cn(
+          layout === "fill" && "absolute inset-0 h-full w-full",
           className,
           placeholder.animateImage && "transition-opacity duration-300",
           placeholder.hideImage && "opacity-0",
         )}
         loading="lazy"
         decoding="async"
-        onLoad={() => setLoaded(true)}
+        onLoad={(event) => {
+          setLoaded(true);
+          if (event.currentTarget.naturalWidth > 0) {
+            onImageLoad?.(event.currentTarget);
+          }
+        }}
         onError={() => setLoaded(true)}
       />
     </span>
