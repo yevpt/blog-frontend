@@ -40,7 +40,7 @@ export function ModerationPage() {
           <TabsItem id="rules">规则管理</TabsItem>
         </TabsList>
         <TabsPanels className="min-h-0 flex-1 overflow-hidden">
-          <TabsPanel id="queue" className="min-h-0 overflow-hidden">
+          <TabsPanel id="queue" className="min-h-0 h-full flex flex-col overflow-hidden">
             <ModerationQueuePanel list={list} desktop={isMdScreen} onReview={review.openReview} />
           </TabsPanel>
           <TabsPanel id="control" className="min-h-0 overflow-y-auto overscroll-y-contain">

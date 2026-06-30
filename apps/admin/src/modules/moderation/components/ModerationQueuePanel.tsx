@@ -44,7 +44,7 @@ export function ModerationQueuePanel({ list, desktop, onReview }: ModerationQueu
   const totalPages = Math.max(0, Math.ceil(total / (list.pageData?.page_size ?? 10)));
 
   return (
-    <section className="flex min-h-0 flex-col" aria-label="审核队列">
+    <section className="flex min-h-0 flex-1 h-full flex-col" aria-label="审核队列">
       {list.error ? (
         <p role="alert" className="pb-3 text-sm text-destructive">
           {list.error.message}
