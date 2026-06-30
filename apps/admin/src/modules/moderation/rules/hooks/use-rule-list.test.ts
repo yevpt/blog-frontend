@@ -50,7 +50,7 @@ const pageOne: AdminModerationRulePageResp = {
       priority: 2,
       source_id: 1,
       activated_ruleset_id: 7,
-      active: true,
+      active: false,
       created_at: "2026-06-30T00:00:00Z",
       updated_at: "2026-06-30T00:00:00Z",
     },
