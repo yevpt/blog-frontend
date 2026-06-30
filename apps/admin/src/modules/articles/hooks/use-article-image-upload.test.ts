@@ -7,9 +7,11 @@ import { apiClient } from "../../../lib/api";
 import { addToast } from "../../../lib/toast";
 
 const useEditorImageUploadMock = vi.fn();
+const prepareImageForUploadMock = vi.fn();
 
 vi.mock("@repo/hooks", () => ({
   useEditorImageUpload: (options: unknown) => useEditorImageUploadMock(options),
+  prepareImageForUpload: (file: File, scene: string) => prepareImageForUploadMock(file, scene),
 }));
 
 vi.mock("../../../lib/api", () => ({
@@ -33,6 +35,7 @@ describe("useArticleImageUpload", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useEditorImageUploadMock.mockReturnValue(inlineHandlers);
+    prepareImageForUploadMock.mockImplementation(async (file: File) => file);
     vi.mocked(apiClient.uploads.tempImage).mockResolvedValue({
       key: "temp/key.png",
       url: "https://cdn.example.com/key.png",
@@ -61,11 +64,30 @@ describe("useArticleImageUpload", () => {
       await result.current.handleCoverFileChange(event, onUploaded);
     });
 
+    expect(prepareImageForUploadMock).toHaveBeenCalledWith(file, "article");
     expect(apiClient.uploads.tempImage).toHaveBeenCalledWith(file, {
       dir: "covers",
       scene: "article",
     });
     expect(onUploaded).toHaveBeenCalledWith("https://cdn.example.com/key.png");
+  });
+
+  it("封面上传预处理失败时展示错误", async () => {
+    prepareImageForUploadMock.mockRejectedValueOnce(new Error("图片不能超过 10MB"));
+    const { result } = renderHook(() => useArticleImageUpload());
+    const onUploaded = vi.fn();
+    const file = new File(["cover"], "cover.png", { type: "image/png" });
+    const event = {
+      target: { files: [file], value: "cover.png" },
+    } as unknown as ChangeEvent<HTMLInputElement>;
+
+    await act(async () => {
+      await result.current.handleCoverFileChange(event, onUploaded);
+    });
+
+    expect(onUploaded).not.toHaveBeenCalled();
+    expect(apiClient.uploads.tempImage).not.toHaveBeenCalled();
+    expect(addToast).toHaveBeenCalledWith("图片不能超过 10MB", "error");
   });
 
   it("封面上传失败时提示错误", async () => {
@@ -97,6 +119,7 @@ describe("useArticleImageUpload", () => {
       await result.current.handleMobileCoverFileChange(event, onUploaded);
     });
 
+    expect(prepareImageForUploadMock).toHaveBeenCalledWith(file, "article");
     expect(apiClient.uploads.tempImage).toHaveBeenCalledWith(file, {
       dir: "mobile-covers",
       scene: "article",

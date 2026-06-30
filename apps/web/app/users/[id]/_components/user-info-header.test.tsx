@@ -1,12 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type * as RepoHooks from "@repo/hooks";
 import { usePresenceStore } from "@repo/hooks";
 import { UserInfoHeader } from "./user-info-header";
 
 const mockAddToast = vi.fn();
 const mockGrantVip = vi.fn().mockResolvedValue(undefined);
 const mockRevokeVip = vi.fn().mockResolvedValue(undefined);
+const mockCompressAvatarImage = vi.fn();
+
+vi.mock("@repo/hooks", async (importOriginal) => {
+  const actual = (await importOriginal()) as typeof RepoHooks;
+  return {
+    ...actual,
+    compressAvatarImage: (...args: unknown[]) => mockCompressAvatarImage(...args),
+  };
+});
 
 vi.mock("@/lib/toast", () => ({
   addToast: (...args: unknown[]) => mockAddToast(...args),
@@ -48,6 +58,8 @@ describe("UserInfoHeader", () => {
     mockAddToast.mockClear();
     mockGrantVip.mockClear();
     mockRevokeVip.mockClear();
+    mockCompressAvatarImage.mockReset();
+    mockCompressAvatarImage.mockImplementation(async (file: File) => file);
   });
 
   it("渲染不崩溃", () => {
@@ -149,8 +161,29 @@ describe("UserInfoHeader", () => {
     const file = new File(["avatar"], "avatar.png", { type: "image/png" });
     await userEvent.upload(input, file);
 
+    expect(mockCompressAvatarImage).toHaveBeenCalledWith(file);
     expect(onAvatarChange).toHaveBeenCalledWith(file);
     expect(mockAddToast).toHaveBeenCalledWith("缺少上传文件", "error");
+  });
+
+  it("头像预处理失败时 toast 展示处理错误", async () => {
+    mockCompressAvatarImage.mockRejectedValueOnce(
+      new Error("不支持 GIF 头像，请上传 JPG、PNG 或 WebP 图片"),
+    );
+    const onAvatarChange = vi.fn();
+    render(<UserInfoHeader {...baseProps} isOwner isEditMode onAvatarChange={onAvatarChange} />);
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(["gif"], "avatar.gif", { type: "image/gif" });
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(onAvatarChange).not.toHaveBeenCalled();
+      expect(mockAddToast).toHaveBeenCalledWith(
+        "不支持 GIF 头像，请上传 JPG、PNG 或 WebP 图片",
+        "error",
+      );
+    });
   });
 
   it("canManageVip 为 false 时不显示更多操作", () => {

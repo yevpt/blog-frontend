@@ -10,6 +10,7 @@ const SUPPORTED_FORMATS_TEXT = "JPG、PNG 或 WebP 图片";
 
 export const AVATAR_ERROR_PREFIXES = [
   "只能上传图片文件",
+  "不支持 GIF",
   "不支持",
   "图片文件为空",
   "头像过大",
@@ -21,7 +22,7 @@ export const AVATAR_ERROR_PREFIXES = [
 
 /**
  * 准备头像上传：HEIC 转码；超过 200KB 时高质量 WebP 压到 ≤256KB；其余原样上传。
- * 120px / 20KB 入库规范由后端 PrepareForStorage 负责。
+ * 120px / 20KB 入库规范由后端 PrepareForStorage 负责（合规原样，超出转 WebP）。
  */
 export async function compressAvatarImage(file: File): Promise<File> {
   return prepareImageForUpload(file, "avatar");

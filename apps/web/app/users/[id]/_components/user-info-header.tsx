@@ -4,7 +4,7 @@ import { useMemo, useState, useRef, type ChangeEvent } from "react";
 import type { IconName } from "@repo/icons";
 import { Card, cn, Dropdown, Modal, Button } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
-import { usePresence } from "@repo/hooks";
+import { compressAvatarImage, getAvatarProcessingErrorMessage, usePresence } from "@repo/hooks";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { isAdminUser, isVipUser } from "@/lib/user-roles";
 import { userAvatarRoleRingClass } from "@/lib/user-avatar-role-ring";
@@ -174,9 +174,14 @@ export function UserInfoHeader({
     if (!file || !onAvatarChange) return;
     setIsUploadingAvatar(true);
     try {
-      await onAvatarChange(file);
+      const prepared = await compressAvatarImage(file);
+      try {
+        await onAvatarChange(prepared);
+      } catch (err) {
+        addToast(err instanceof Error ? err.message : "上传失败", "error");
+      }
     } catch (err) {
-      addToast(err instanceof Error ? err.message : "上传失败", "error");
+      addToast(getAvatarProcessingErrorMessage(err), "error");
     } finally {
       setIsUploadingAvatar(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -314,7 +319,7 @@ export function UserInfoHeader({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
                 className="hidden"
                 onChange={handleAvatarFileChange}
               />

@@ -88,6 +88,12 @@ describe("prepareImageForUpload", () => {
     ).rejects.toThrow("GIF 图片过大，暂不支持压缩该格式，请上传 300KB 以内的 GIF。");
   });
 
+  it("头像场景拒绝 GIF", async () => {
+    const gif = fileOf(100 * 1024, "image/gif", "avatar.gif");
+
+    await expect(prepareImageForUpload(gif, "avatar")).rejects.toThrow("不支持 GIF 头像");
+  });
+
   it("文章场景仅校验 10MB 上限且不压缩", async () => {
     const input = fileOf(5 * 1024 * 1024, "image/png", "cover.png");
 

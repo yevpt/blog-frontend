@@ -137,7 +137,7 @@ export function FriendLinkLogoPicker({
           <p className="mt-1 text-xs text-muted-foreground/70">
             {isCompressing
               ? "Logo 处理中…"
-              : "JPG / PNG / WebP · 上传 ≤ 256KB · 入库自动规范为 120px · ≤ 20KB"}
+              : "JPG / PNG / WebP · 上传 ≤ 256KB · 入库 ≤120px · ≤20KB（合规原样，超出转 WebP）"}
           </p>
         </button>
       </div>

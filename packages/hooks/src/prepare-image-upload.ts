@@ -38,6 +38,9 @@ export async function prepareImageForUpload(file: File, scene: ImageUploadScene)
   validateImageFile(file);
 
   if (isGifImage(file)) {
+    if (scene === "avatar") {
+      throw new Error("不支持 GIF 头像，请上传 JPG、PNG 或 WebP 图片");
+    }
     return handleGifUpload(file);
   }
 

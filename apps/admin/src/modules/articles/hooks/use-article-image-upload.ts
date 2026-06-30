@@ -1,7 +1,7 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { ApiError } from "@repo/api";
 import type { TempImageUploadReq } from "@repo/api";
-import { useEditorImageUpload } from "@repo/hooks";
+import { prepareImageForUpload, useEditorImageUpload } from "@repo/hooks";
 import { apiClient } from "../../../lib/api";
 import { addToast } from "../../../lib/toast";
 
@@ -12,7 +12,8 @@ async function uploadArticleCoverImage(
   dir: ArticleCoverUploadDir,
   onUploaded: (url: string) => void,
 ) {
-  const resp = await apiClient.uploads.tempImage(file, { dir, scene: "article" });
+  const prepared = await prepareImageForUpload(file, "article");
+  const resp = await apiClient.uploads.tempImage(prepared, { dir, scene: "article" });
   onUploaded(resp.url || resp.key);
 }
 
@@ -46,7 +47,12 @@ export function useArticleImageUpload() {
     try {
       await uploadArticleCoverImage(file, dir, onUploaded);
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : errorMessage;
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error && err.message.trim()
+            ? err.message.trim()
+            : errorMessage;
       addToast(message, "error");
     } finally {
       setUploading(false);
