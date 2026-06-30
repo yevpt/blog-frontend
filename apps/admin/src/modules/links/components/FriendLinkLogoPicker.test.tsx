@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { FRIEND_LINK_LOGO_RAW_MAX_BYTES } from "../model";
 import { FriendLinkLogoPicker } from "./FriendLinkLogoPicker";
 
 const mockCompressAvatarImage = vi.fn();
@@ -44,18 +45,18 @@ describe("FriendLinkLogoPicker", () => {
     });
   });
 
-  it("超过 2MB 时提示错误", async () => {
+  it("超过 256KB 时提示错误", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(<FriendLinkLogoPicker value={null} onChange={onChange} />);
 
-    const file = new File([new Uint8Array(2 * 1024 * 1024 + 1)], "big.png", {
+    const file = new File([new Uint8Array(FRIEND_LINK_LOGO_RAW_MAX_BYTES + 1)], "big.png", {
       type: "image/png",
     });
     const input = document.querySelector('input[type="file"]') as HTMLInputElement;
     await user.upload(input, file);
 
-    expect(mockAddToast).toHaveBeenCalledWith("友链 Logo 不能超过 2MB", "error");
+    expect(mockAddToast).toHaveBeenCalledWith("友链 Logo 不能超过 256KB", "error");
     expect(mockCompressAvatarImage).not.toHaveBeenCalled();
     expect(onChange).not.toHaveBeenCalled();
   });
