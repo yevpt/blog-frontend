@@ -177,20 +177,58 @@ export async function proxyPatch(req: NextRequest, path: string): Promise<NextRe
   }
 }
 
-/** POST 代理：转发 multipart/form-data，携带 access token */
+/** 各 multipart 代理路径允许的最大请求体（与后端硬限制对齐，含表单开销）。 */
+const MULTIPART_MAX_BYTES_BY_PATH: Record<string, number> = {
+  "/uploads/temp": 10 * 1024 * 1024 + 64 * 1024,
+  "/users/me/avatar": 256 * 1024 + 64 * 1024,
+  "/moments": 128 * 1024 + 9 * (3 * 1024 * 1024 + 4 * 1024),
+};
+
+const DEFAULT_MULTIPART_MAX_BYTES = 16 * 1024 * 1024;
+
+function multipartMaxBytes(path: string): number {
+  return MULTIPART_MAX_BYTES_BY_PATH[path] ?? DEFAULT_MULTIPART_MAX_BYTES;
+}
+
+function rejectOversizedMultipart(req: NextRequest, path: string): NextResponse | null {
+  const contentLength = req.headers.get("content-length");
+  if (!contentLength) return null;
+  const size = Number(contentLength);
+  if (!Number.isFinite(size) || size <= 0) return null;
+  if (size > multipartMaxBytes(path)) {
+    return NextResponse.json({ error: "上传内容过大" }, { status: 413 });
+  }
+  return null;
+}
+
+/** POST 代理：流式转发 multipart/form-data，携带 access token */
 export async function proxyPostForm(req: NextRequest, path: string): Promise<NextResponse> {
   try {
-    const formData = await req.formData();
+    const rejected = rejectOversizedMultipart(req, path);
+    if (rejected) return rejected;
+
+    const contentType = req.headers.get("content-type");
+    if (!contentType?.includes("multipart/form-data")) {
+      return NextResponse.json({ error: "请求格式错误" }, { status: 400 });
+    }
+
+    const body = req.body;
+    if (!body) {
+      return NextResponse.json({ error: "缺少请求体" }, { status: 400 });
+    }
+
     return await proxyWithRefresh(req, { requireAuth: true }, (accessToken, tokens) =>
       fetch(`${apiBaseUrl()}${path}`, {
         method: "POST",
         headers: {
+          "Content-Type": contentType,
           ...authHeader(accessToken),
           ...cookieHeader(req, tokens),
           ...idempotencyHeader(req),
         },
-        body: formData,
-      }),
+        body,
+        duplex: "half",
+      } as RequestInit),
     );
   } catch {
     return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });

@@ -9,11 +9,6 @@ describe("POST /api/auth/register", () => {
   });
 
   it("注册成功时写入 Cookie 并仅向客户端返回 user", async () => {
-    const formData = new FormData();
-    formData.append("email", "user@example.com");
-    formData.append("password", "password1");
-    formData.append("code", "123456");
-
     vi.mocked(fetch).mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -31,7 +26,8 @@ describe("POST /api/auth/register", () => {
     );
 
     const req = {
-      formData: async () => formData,
+      headers: new Headers({ "content-type": "multipart/form-data; boundary=test" }),
+      body: new ReadableStream(),
     } as unknown as NextRequest;
 
     const res = await POST(req);
@@ -46,13 +42,7 @@ describe("POST /api/auth/register", () => {
     expect(res.cookies.get("refresh_token")?.value).toBe("ref");
   });
 
-  it("后端未返回 user 时从 JWT 与表单邮箱补全", async () => {
-    const formData = new FormData();
-    formData.append("email", "user@example.com");
-    formData.append("password", "password1");
-    formData.append("code", "123456");
-    formData.append("nickname", "Bob");
-
+  it("后端未返回 user 时从 JWT 补全 id", async () => {
     const accessToken = "eyJhbGciOiJIUzI1NiJ9.eyJ1aWQiOjcsInR5cGUiOiJhY2Nlc3MifQ.signature";
 
     vi.mocked(fetch).mockResolvedValue(
@@ -71,7 +61,8 @@ describe("POST /api/auth/register", () => {
     );
 
     const req = {
-      formData: async () => formData,
+      headers: new Headers({ "content-type": "multipart/form-data; boundary=test" }),
+      body: new ReadableStream(),
     } as unknown as NextRequest;
 
     const res = await POST(req);
@@ -79,9 +70,9 @@ describe("POST /api/auth/register", () => {
 
     expect(json.data.user).toEqual({
       id: 7,
-      username: "user@example.com",
-      email: "user@example.com",
-      nickname: "Bob",
+      username: "",
+      email: undefined,
+      nickname: undefined,
     });
   });
 });

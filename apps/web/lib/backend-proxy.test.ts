@@ -210,7 +210,7 @@ describe("backend-proxy parseBackendJson", () => {
     );
   });
 
-  it("proxyPostForm 向后端透传 Idempotency-Key", async () => {
+  it("proxyPostForm 流式透传 multipart 并向后端写入 Idempotency-Key", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       jsonResponse({ code: 0, message: "ok", data: { saved: true } }),
     );
@@ -230,9 +230,30 @@ describe("backend-proxy parseBackendJson", () => {
     expect(fetch).toHaveBeenCalledWith(
       "http://mock-backend/moments",
       expect.objectContaining({
-        headers: expect.objectContaining({ "Idempotency-Key": "moment:stable-key" }),
+        headers: expect.objectContaining({
+          "Idempotency-Key": "moment:stable-key",
+          "Content-Type": expect.stringContaining("multipart/form-data"),
+        }),
+        body: expect.any(ReadableStream),
+        duplex: "half",
       }),
     );
+  });
+
+  it("proxyPostForm 在 Content-Length 超限时返回 413", async () => {
+    const req = new NextRequest("http://localhost/api/uploads/temp", {
+      method: "POST",
+      headers: {
+        Cookie: "access_token=test-token",
+        "content-type": "multipart/form-data; boundary=test",
+        "content-length": String(20 * 1024 * 1024),
+      },
+      body: new ReadableStream(),
+    });
+
+    const res = await proxyPostForm(req, "/uploads/temp");
+    expect(res.status).toBe(413);
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("浏览器未提供幂等键时不向后端写入空请求头", async () => {
