@@ -42,6 +42,11 @@ export function resetDeferredMediaActivationForTests(): void {
   globalMediaActivated = false;
 }
 
+/** 仅供测试：模拟页面已就绪，允许挂载延迟媒体 */
+export function activateDeferredMediaForTests(): void {
+  globalMediaActivated = true;
+}
+
 /** 首屏仅骨架占位，页面主体就绪后再允许挂载真实媒体；remount 时立即视为已就绪。 */
 export function useDeferredMediaActivation(): boolean {
   const [activated, setActivated] = useState(() => globalMediaActivated);

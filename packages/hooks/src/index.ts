@@ -37,6 +37,8 @@ export {
   scheduleAfterPageReady,
   useDeferredMediaActivation,
   shouldDeferRemoteMediaSrc,
+  resetDeferredMediaActivationForTests,
+  activateDeferredMediaForTests,
 } from "./use-deferred-media-activation";
 export {
   useImageLoadPlaceholder,

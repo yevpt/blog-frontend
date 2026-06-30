@@ -253,6 +253,9 @@ importers:
 
   packages/editor:
     dependencies:
+      '@repo/hooks':
+        specifier: workspace:*
+        version: link:../hooks
       '@repo/icons':
         specifier: workspace:*
         version: link:../icons
