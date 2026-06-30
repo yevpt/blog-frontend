@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import type { CommentItemResp, CommentReplyResp } from "@repo/api";
+import type { CommentItemResp, CommentReplyResp, UserDetailResp } from "@repo/api";
 import type { ReplyTarget } from "@/components/comments/parts/comment-item";
 import { useCommentSectionState } from "./use-comment-section-state";
 
@@ -22,10 +22,11 @@ const mockDeleteReply = vi.fn();
 const mockClearError = vi.fn();
 
 let mockSessionUserId: number | null = 1;
+let mockSessionProfile: UserDetailResp | null = null;
 let mockComments: CommentItemResp[] = [];
 
 vi.mock("@/app/providers/session-provider", () => ({
-  useSession: () => ({ userId: mockSessionUserId }),
+  useSession: () => ({ userId: mockSessionUserId, profile: mockSessionProfile }),
 }));
 
 vi.mock("@/store/use-login-modal", () => ({
@@ -116,6 +117,13 @@ describe("useCommentSectionState", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSessionUserId = 1;
+    mockSessionProfile = {
+      id: 1,
+      username: "alice@example.com",
+      nickname: "Alice",
+      status: 1,
+      roles: ["user"],
+    };
     mockComments = [makeComment(1)];
     mockSubmitComment.mockResolvedValue(makeComment(99));
     mockSubmitReply.mockResolvedValue(makeReply(10));
@@ -193,6 +201,39 @@ describe("useCommentSectionState", () => {
     expect(onScrollToListTop).toHaveBeenCalledOnce();
   });
 
+  it("comment submit 在响应缺 user 时用 session profile 补全作者", async () => {
+    const commentWithoutUser: CommentItemResp = {
+      ...makeComment(99),
+      user: undefined,
+    };
+    mockSubmitComment.mockResolvedValue(commentWithoutUser);
+
+    const { result } = renderHook(() =>
+      useCommentSectionState({
+        targetType: "article",
+        targetId: 1,
+      }),
+    );
+
+    act(() => {
+      result.current.setContent("新评论");
+    });
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    expect(mockAddComment).toHaveBeenCalledWith({
+      ...commentWithoutUser,
+      user: {
+        id: 1,
+        username: "alice@example.com",
+        nickname: "Alice",
+        roles: ["user"],
+      },
+    });
+  });
+
   it("reply submit increments reply count and stores pending reply", async () => {
     const onScrollToComment = vi.fn();
     const { result } = renderHook(() =>
@@ -214,7 +255,15 @@ describe("useCommentSectionState", () => {
 
     expect(mockSubmitReply).toHaveBeenCalledWith(1, "回复一下", undefined);
     expect(mockIncrementReplyCount).toHaveBeenCalledWith(1);
-    expect(result.current.pendingReplies[1]).toEqual(makeReply(10));
+    expect(result.current.pendingReplies[1]).toEqual({
+      ...makeReply(10),
+      from_user: {
+        id: 1,
+        username: "alice@example.com",
+        nickname: "Alice",
+        roles: ["user"],
+      },
+    });
     expect(result.current.replyTarget).toBeNull();
     expect(result.current.content).toBe("");
     expect(onScrollToComment).toHaveBeenCalledWith(1);
@@ -367,7 +416,15 @@ describe("useCommentSectionState", () => {
       });
 
       expect(mockEditReply).toHaveBeenCalledWith(10, 0, "编辑后回复");
-      expect(result.current.editedReplies[1]).toEqual(updatedReply);
+      expect(result.current.editedReplies[1]).toEqual({
+        ...updatedReply,
+        from_user: {
+          id: 1,
+          username: "alice@example.com",
+          nickname: "Alice",
+          roles: ["user"],
+        },
+      });
       expect(mockIncrementReplyCount).not.toHaveBeenCalled();
       expect(mockDecrementReplyCount).not.toHaveBeenCalled();
     });

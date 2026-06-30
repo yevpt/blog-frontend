@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import type { CommentReplyResp } from "@repo/api";
 import { useSession } from "@/app/providers/session-provider";
+import { enrichCommentAuthor, enrichReplyFromAuthor } from "@/lib/enrich-ugc-author";
 import { useLoginModal } from "@/store/use-login-modal";
 import { useCommentList } from "@/hooks/use-comment-list";
 import { useCommentSubmit } from "@/hooks/use-comment-submit";
@@ -36,7 +37,7 @@ export function useCommentSectionState({
   onScrollToComment,
   onScrollToEditor,
 }: UseCommentSectionStateOptions) {
-  const { userId } = useSession();
+  const { userId, profile } = useSession();
   const openLoginModal = useLoginModal((state) => state.open);
 
   const {
@@ -124,7 +125,7 @@ export function useCommentSectionState({
       if (editTarget.type === "comment") {
         const updated = await editComment(editTarget.id, currentContent);
         if (updated) {
-          updateComment(updated);
+          updateComment(enrichCommentAuthor(updated, userId, profile));
           setEditTarget(null);
           setContent("");
           onScrollToComment?.(editTarget.id);
@@ -135,7 +136,7 @@ export function useCommentSectionState({
       if (updated) {
         setEditedReplies((current) => ({
           ...current,
-          [editTarget.commentId]: updated,
+          [editTarget.commentId]: enrichReplyFromAuthor(updated, userId, profile),
         }));
         setEditTarget(null);
         setContent("");
@@ -152,7 +153,10 @@ export function useCommentSectionState({
       );
       if (reply) {
         incrementReplyCount(replyTarget.commentId);
-        setPendingReplies((current) => ({ ...current, [replyTarget.commentId]: reply }));
+        setPendingReplies((current) => ({
+          ...current,
+          [replyTarget.commentId]: enrichReplyFromAuthor(reply, userId, profile),
+        }));
         setReplyTarget(null);
         setContent("");
         onScrollToComment?.(replyTarget.commentId);
@@ -162,7 +166,7 @@ export function useCommentSectionState({
 
     const comment = await submitComment(currentContent);
     if (comment) {
-      addComment(comment);
+      addComment(enrichCommentAuthor(comment, userId, profile));
       setContent("");
       onCommentAdded?.();
       onScrollToListTop?.();
@@ -179,7 +183,9 @@ export function useCommentSectionState({
     submitComment,
     submitReply,
     editTarget,
+    profile,
     updateComment,
+    userId,
   ]);
 
   const handleCommentLike = useCallback(
