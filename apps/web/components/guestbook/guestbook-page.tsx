@@ -13,6 +13,7 @@ import { GuestbookList } from "./guestbook-list";
 import { GuestbookInputBar } from "./guestbook-input-bar";
 import type { ReplyEditTarget, ReplyTarget } from "@/components/comments";
 import { PageContainer } from "@/components/common/page-container";
+import { enrichGuestbookAuthor, enrichReplyFromAuthor } from "@/lib/enrich-ugc-author";
 import { runAfterSmoothScroll, scrollIntoViewBelowFixedHeader } from "@/lib/scroll-into-view";
 
 interface GuestbookPageProps {
@@ -20,7 +21,7 @@ interface GuestbookPageProps {
 }
 
 export function GuestbookPage({ initialPage }: GuestbookPageProps) {
-  const { userId } = useSession();
+  const { userId, profile } = useSession();
   const { open: openLoginModal } = useLoginModal();
 
   const {
@@ -71,7 +72,7 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
         if (!reply) return false;
         setEditedReplies((current) => ({
           ...current,
-          [replyEditTarget.commentId]: reply,
+          [replyEditTarget.commentId]: enrichReplyFromAuthor(reply, userId, profile),
         }));
         setReplyEditTarget(null);
         return true;
@@ -80,7 +81,10 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
         const reply = await submitReply(replyTarget.commentId, content, replyTarget.parentReplyId);
         if (reply) {
           incrementReplyCount(replyTarget.commentId);
-          setPendingReplies((prev) => ({ ...prev, [replyTarget.commentId]: reply }));
+          setPendingReplies((prev) => ({
+            ...prev,
+            [replyTarget.commentId]: enrichReplyFromAuthor(reply, userId, profile),
+          }));
           setReplyTarget(null);
           return true;
         }
@@ -88,7 +92,7 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
       }
       const item = await submitEntry(content);
       if (item) {
-        addItem(item);
+        addItem(enrichGuestbookAuthor(item, userId, profile));
         return true;
       }
       return false;
@@ -97,10 +101,12 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
       addItem,
       editReply,
       incrementReplyCount,
+      profile,
       replyEditTarget,
       replyTarget,
       submitEntry,
       submitReply,
+      userId,
     ],
   );
 
@@ -144,12 +150,12 @@ export function GuestbookPage({ initialPage }: GuestbookPageProps) {
     async (id: number, content: string): Promise<boolean> => {
       const item = await editEntry(id, content);
       if (item) {
-        replaceItem(item);
+        replaceItem(enrichGuestbookAuthor(item, userId, profile));
         return true;
       }
       return false;
     },
-    [editEntry, replaceItem],
+    [editEntry, profile, replaceItem, userId],
   );
 
   const handleReplyDelete = useCallback(
