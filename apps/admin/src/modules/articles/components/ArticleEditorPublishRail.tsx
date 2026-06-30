@@ -139,6 +139,7 @@ export const ArticleEditorPublishRail = forwardRef<HTMLElement, ArticleEditorPub
                   coverUrl={mobileCoverUrl}
                   isCoverUploading={isMobileCoverUploading}
                   aspectRatio="9/16"
+                  imagePreset="article-mobile-cover"
                   previewAlt="移动端封面预览"
                   addLabel="添加移动端封面"
                   uploadingLabel="移动端封面上传中"
@@ -171,7 +172,7 @@ export const ArticleEditorPublishRail = forwardRef<HTMLElement, ArticleEditorPub
               <Select
                 id="article-category"
                 aria-label="文章分类"
-                selectedKey={categoryId !== null ? String(categoryId) : undefined}
+                selectedKey={categoryId !== null ? String(categoryId) : null}
                 onSelectionChange={onCategoryChange}
                 placeholder="选择分类"
               >

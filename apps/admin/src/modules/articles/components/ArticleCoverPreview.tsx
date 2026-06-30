@@ -1,6 +1,6 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useState } from "react";
 import { SvgIcon } from "@repo/icons";
-import { Button, cn } from "@repo/ui";
+import { Button, CdnResponsiveImage, cn, type CdnImagePreset } from "@repo/ui";
 
 /** 封面预览浮层上的紧凑操作钮，对齐推荐稿 chip-btn（26px 高、11px 字） */
 const coverChipClassName = cn(
@@ -18,6 +18,8 @@ interface ArticleCoverPreviewProps {
   onRemoveCover: () => void;
   /** 预览区宽高比，默认 16:9。 */
   aspectRatio?: "video" | "9/16";
+  /** CDN 展示预设，默认 PC 封面。 */
+  imagePreset?: CdnImagePreset;
   previewAlt?: string;
   addLabel?: string;
   uploadingLabel?: string;
@@ -38,19 +40,19 @@ function CoverBusyOverlay({ label }: { label: string }) {
   );
 }
 
-/** 封面预览：上传 API 返回后仍保持加载态，直到新 URL 的图片解码完成。 */
+/** 封面预览：上传 API 返回后仍保持加载态，直到 CDN 图解码完成。 */
 export function ArticleCoverPreview({
   coverUrl,
   isCoverUploading,
   onPickCover,
   onRemoveCover,
   aspectRatio = "video",
+  imagePreset = "article-cover",
   previewAlt = "文章封面预览",
   addLabel = "添加封面",
   uploadingLabel = "封面上传中",
   loadingLabel = "封面加载中",
 }: ArticleCoverPreviewProps) {
-  const imgRef = useRef<HTMLImageElement>(null);
   const [isImageLoading, setIsImageLoading] = useState(false);
 
   const markImageLoading = useCallback(() => {
@@ -66,13 +68,6 @@ export function ArticleCoverPreview({
       markImageReady();
       return;
     }
-
-    const img = imgRef.current;
-    if (img?.complete && img.naturalWidth > 0) {
-      markImageReady();
-      return;
-    }
-
     markImageLoading();
   }, [coverUrl, markImageLoading, markImageReady]);
 
@@ -86,14 +81,17 @@ export function ArticleCoverPreview({
       className={cn("relative overflow-hidden rounded-lg bg-muted shadow-card", aspectClassName)}
     >
       {coverUrl ? (
-        <img
-          ref={imgRef}
+        <CdnResponsiveImage
           src={coverUrl}
           alt={previewAlt}
+          preset={imagePreset}
+          fill
+          defer={false}
+          enabled={!isCoverUploading}
           onLoad={markImageReady}
           onError={markImageReady}
           className={cn(
-            "size-full object-cover transition-opacity duration-300",
+            "object-cover transition-opacity duration-300",
             isCoverBusy ? "opacity-0" : "opacity-100",
           )}
         />

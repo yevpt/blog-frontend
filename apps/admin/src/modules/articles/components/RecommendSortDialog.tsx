@@ -17,7 +17,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { ApiError, type AdminRecommendItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
-import { Button, Modal, cn } from "@repo/ui";
+import { Button, Modal, cn, CdnResponsiveImage } from "@repo/ui";
 import { apiClient } from "../../../lib/api";
 import { ArticleStatusBadge } from "./ArticleStatusBadge";
 import { moveItem } from "../move-item";
@@ -74,11 +74,12 @@ function SortableRecommendRow({ item, index }: { item: AdminRecommendItemResp; i
       </span>
       <div className="h-10 w-14 shrink-0 overflow-hidden rounded-md bg-muted">
         {item.cover_img_url ? (
-          <img
+          <CdnResponsiveImage
             src={item.cover_img_url}
             alt=""
-            className="h-full w-full object-cover"
-            loading="lazy"
+            preset="thumbnail"
+            fill
+            className="object-cover"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">

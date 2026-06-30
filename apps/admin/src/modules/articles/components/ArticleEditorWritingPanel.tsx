@@ -103,6 +103,7 @@ export function ArticleEditorWritingPanel({
           onInsertImage={onInsertImage}
           onInsertLink={handleInsertLink}
           enableBlockquote
+          imageOptimizationPreset="article"
         />
         <LinkDialog
           open={linkDialog.open}
