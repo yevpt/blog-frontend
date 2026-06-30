@@ -12,9 +12,16 @@ function jsonResponse(body: unknown, status = 200, headers: Record<string, strin
   });
 }
 
+function accessToken(expiresAt = Date.now() + 60 * 60 * 1000): string {
+  const payload = Buffer.from(
+    JSON.stringify({ type: "access", exp: Math.floor(expiresAt / 1000) }),
+  ).toString("base64url");
+  return `e30.${payload}.signature`;
+}
+
 function makeReq(url: string, method = "GET", withAuth = false): NextRequest {
   const headers: Record<string, string> = {};
-  if (withAuth) headers.Cookie = "access_token=test-token";
+  if (withAuth) headers.Cookie = `access_token=${accessToken()}`;
   return new NextRequest(url, { method, headers });
 }
 
@@ -166,7 +173,7 @@ describe("backend-proxy parseBackendJson", () => {
     const req = makeReqWithCookie(
       "http://localhost/api/test",
       "GET",
-      "access_token=old-acc; refresh_token=old-ref",
+      `access_token=${accessToken()}; refresh_token=old-ref`,
     );
     const res = await proxyGet(req, "/test");
     const body = await res.json();
@@ -193,7 +200,7 @@ describe("backend-proxy parseBackendJson", () => {
     const req = new NextRequest("http://localhost/api/test", {
       method,
       headers: {
-        Cookie: "access_token=test-token",
+        Cookie: `access_token=${accessToken()}`,
         "Content-Type": "application/json",
         "Idempotency-Key": "comment:stable-key",
       },
@@ -219,7 +226,7 @@ describe("backend-proxy parseBackendJson", () => {
     const req = new NextRequest("http://localhost/api/moments", {
       method: "POST",
       headers: {
-        Cookie: "access_token=test-token",
+        Cookie: `access_token=${accessToken()}`,
         "Idempotency-Key": "moment:stable-key",
       },
       body: form,
@@ -240,11 +247,77 @@ describe("backend-proxy parseBackendJson", () => {
     );
   });
 
+  it("proxyPostForm 在 access token 过期时先续期再发送一次请求体", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(
+        jsonResponse({
+          code: 0,
+          message: "ok",
+          data: { access_token: "new-acc", refresh_token: "new-ref", expires_in: 7200 },
+        }),
+      )
+      .mockResolvedValueOnce(jsonResponse({ code: 0, message: "ok", data: { saved: true } }));
+
+    const form = new FormData();
+    form.append("content", "碎语");
+    const req = new NextRequest("http://localhost/api/moments", {
+      method: "POST",
+      headers: {
+        Cookie: `access_token=${accessToken(Date.now() - 60_000)}; refresh_token=old-ref`,
+      },
+      body: form,
+    });
+
+    const res = await proxyPostForm(req, "/moments");
+
+    expect(res.status).toBe(200);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenNthCalledWith(1, "http://mock-backend/auth/refresh", expect.anything());
+    expect(fetch).toHaveBeenNthCalledWith(
+      2,
+      "http://mock-backend/moments",
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer new-acc" }),
+        body: expect.any(ReadableStream),
+      }),
+    );
+  });
+
+  it("proxyPostForm 收到后端 401 时不复用请求流", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(jsonResponse({ code: 401, message: "token 已撤销" }, 401))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          code: 0,
+          message: "ok",
+          data: { access_token: "new-acc", refresh_token: "new-ref", expires_in: 7200 },
+        }),
+      )
+      .mockResolvedValueOnce(jsonResponse({ code: 0, message: "ok", data: { saved: true } }));
+
+    const form = new FormData();
+    form.append("content", "碎语");
+    const req = new NextRequest("http://localhost/api/moments", {
+      method: "POST",
+      headers: {
+        Cookie: `access_token=${accessToken()}; refresh_token=old-ref`,
+      },
+      body: form,
+    });
+
+    const res = await proxyPostForm(req, "/moments");
+    const body = await res.json();
+
+    expect(res.status).toBe(401);
+    expect(body.error).toBe("token 已撤销");
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
   it("proxyPostForm 在 Content-Length 超限时返回 413", async () => {
     const req = new NextRequest("http://localhost/api/uploads/temp", {
       method: "POST",
       headers: {
-        Cookie: "access_token=test-token",
+        Cookie: `access_token=${accessToken()}`,
         "content-type": "multipart/form-data; boundary=test",
         "content-length": String(20 * 1024 * 1024),
       },

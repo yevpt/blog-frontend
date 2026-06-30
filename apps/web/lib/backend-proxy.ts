@@ -5,6 +5,7 @@ import {
   REFRESH_TOKEN_COOKIE,
   type AuthTokens,
   authCookieHeader,
+  isAccessTokenValid,
   refreshAuthTokens,
   setAuthCookies,
 } from "@/lib/auth-refresh";
@@ -14,7 +15,8 @@ function apiBaseUrl(): string {
 }
 
 function token(req: NextRequest) {
-  return req.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+  const value = req.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+  return isAccessTokenValid(value) ? value : undefined;
 }
 
 function authHeader(t: string | undefined): Record<string, string> {
@@ -84,7 +86,7 @@ async function refreshFromRequest(req: NextRequest): Promise<AuthTokens | null> 
 
 async function proxyWithRefresh(
   req: NextRequest,
-  opts: { requireAuth: boolean },
+  opts: { requireAuth: boolean; retryOnUnauthorized?: boolean },
   fetchBackend: (accessToken: string | undefined, tokens: AuthTokens | null) => Promise<Response>,
 ): Promise<NextResponse> {
   let accessToken = token(req);
@@ -100,7 +102,7 @@ async function proxyWithRefresh(
   }
 
   let res = await fetchBackend(accessToken, tokens);
-  if (res.status === 401 && !tokens) {
+  if (res.status === 401 && !tokens && (opts.retryOnUnauthorized ?? true)) {
     tokens = await refreshFromRequest(req);
     if (tokens) {
       accessToken = tokens.accessToken;
@@ -217,18 +219,21 @@ export async function proxyPostForm(req: NextRequest, path: string): Promise<Nex
       return NextResponse.json({ error: "缺少请求体" }, { status: 400 });
     }
 
-    return await proxyWithRefresh(req, { requireAuth: true }, (accessToken, tokens) =>
-      fetch(`${apiBaseUrl()}${path}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": contentType,
-          ...authHeader(accessToken),
-          ...cookieHeader(req, tokens),
-          ...idempotencyHeader(req),
-        },
-        body,
-        duplex: "half",
-      } as RequestInit),
+    return await proxyWithRefresh(
+      req,
+      { requireAuth: true, retryOnUnauthorized: false },
+      (accessToken, tokens) =>
+        fetch(`${apiBaseUrl()}${path}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": contentType,
+            ...authHeader(accessToken),
+            ...cookieHeader(req, tokens),
+            ...idempotencyHeader(req),
+          },
+          body,
+          duplex: "half",
+        } as RequestInit),
     );
   } catch {
     return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
