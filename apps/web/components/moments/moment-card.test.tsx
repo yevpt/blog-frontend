@@ -63,6 +63,10 @@ vi.mock("next/image", () => ({
   ),
 }));
 
+vi.mock("@/hooks/use-moment-single-image-display-size", () => ({
+  useMomentSingleImageDisplaySize: () => ({ width: 480, height: 270 }),
+}));
+
 const deferredMediaMock = vi.hoisted(() => ({
   useDeferredMediaActivation: vi.fn(() => true),
 }));
@@ -300,7 +304,10 @@ describe("MomentCard", () => {
     const button = imgs[0].closest("button");
     expect(button?.className).toContain("rounded-[6px]");
     expect(button?.className).toContain("overflow-hidden");
-    expect(imgs[0].className).toContain("max-w-full");
+    expect(imgs[0].className).toContain("object-contain");
+    expect(screen.getByTestId("moment-single-image-frame")).toHaveStyle({
+      aspectRatio: "480 / 270",
+    });
   });
 
   it("显示点赞和评论数字（ArticleCardStats 风格）", () => {

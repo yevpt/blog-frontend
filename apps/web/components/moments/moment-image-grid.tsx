@@ -9,6 +9,7 @@ import {
   MOMENT_SINGLE_IMAGE_MAX_WIDTH,
 } from "./moment-image-display";
 import { MomentImageReviewOverlay } from "./moment-image-review-overlay";
+import { MomentSingleImage } from "./moment-single-image";
 
 type MomentImage = NonNullable<MomentItemResp["images"]>[number];
 
@@ -70,49 +71,19 @@ function resolveImageSrc(img: MomentImage, scalePreview: boolean): string {
   return scalePreview ? getMomentImageDisplayUrl(img, true) : img.access_url;
 }
 
-const SINGLE_IMAGE_PUBLIC_CLASS = "block h-auto max-h-[320px] w-auto max-w-full object-contain";
-
 /** 外框先占满卡片宽度，避免 inline-block 与百分比宽度循环塌缩 */
 const SINGLE_FRAME_PREVIEW_CLASS = `relative mt-3 block w-full max-w-[${MOMENT_SINGLE_IMAGE_MAX_WIDTH}px] overflow-hidden rounded-[6px]`;
 
-const SINGLE_IMAGE_PREVIEW_CLASS = "block h-auto max-h-[320px] w-full object-contain";
-
-const SINGLE_FRAME_PUBLIC_CLASS = "relative mt-3 flex max-w-full overflow-hidden rounded-[6px]";
+const SINGLE_FRAME_PUBLIC_CLASS =
+  "relative mt-3 block w-full max-w-full overflow-hidden rounded-[6px]";
 
 function renderSingleImageNode(img: MomentImage, src: string, scalePreview: boolean) {
-  if (scalePreview) {
-    return (
-      <DeferredNativeImage
-        src={src}
-        alt={img.name}
-        defer={false}
-        className={SINGLE_IMAGE_PREVIEW_CLASS}
-        skeletonClassName="rounded-[6px]"
-      />
-    );
-  }
-
-  if (shouldDeferGif(img)) {
-    return (
-      <DeferredNativeImage
-        src={src}
-        alt={img.name}
-        className={SINGLE_IMAGE_PUBLIC_CLASS}
-        skeletonClassName="rounded-[6px]"
-      />
-    );
-  }
-
   return (
-    <LoadingImage
+    <MomentSingleImage
       src={src}
       alt={img.name}
-      width={0}
-      height={0}
-      fallbackUnoptimized
-      sizes="(max-width: 768px) 90vw, 480px"
-      className={SINGLE_IMAGE_PUBLIC_CLASS}
-      skeletonClassName="rounded-[6px]"
+      scalePreview={scalePreview}
+      deferGif={shouldDeferGif(img)}
     />
   );
 }
@@ -124,6 +95,7 @@ function renderGridImageNode(img: MomentImage, src: string, scalePreview: boolea
         src={src}
         alt={img.name}
         defer={scalePreview ? false : undefined}
+        layout="fill"
         className="h-full w-full object-cover"
         skeletonClassName="rounded-[6px]"
       />

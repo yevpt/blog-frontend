@@ -3,6 +3,31 @@ import type { MomentMediaResp } from "@repo/api";
 
 /** 碎语卡片单图最大展示宽度，与 MomentImageGrid 单图上限一致。 */
 export const MOMENT_SINGLE_IMAGE_MAX_WIDTH = 480;
+/** 碎语卡片单图最大展示高度，与 MomentImageGrid 单图 class 一致。 */
+export const MOMENT_SINGLE_IMAGE_MAX_HEIGHT = 320;
+
+export interface MomentSingleImageDisplaySize {
+  width: number;
+  height: number;
+}
+
+/** 按 object-contain 规则计算单图在卡片内的实际展示尺寸（不放大原图）。 */
+export function computeMomentSingleImageDisplaySize(
+  naturalWidth: number,
+  naturalHeight: number,
+  maxWidth = MOMENT_SINGLE_IMAGE_MAX_WIDTH,
+  maxHeight = MOMENT_SINGLE_IMAGE_MAX_HEIGHT,
+): MomentSingleImageDisplaySize {
+  if (naturalWidth <= 0 || naturalHeight <= 0) {
+    return { width: maxWidth, height: maxHeight };
+  }
+
+  const scale = Math.min(maxWidth / naturalWidth, maxHeight / naturalHeight, 1);
+  return {
+    width: Math.max(1, Math.round(naturalWidth * scale)),
+    height: Math.max(1, Math.round(naturalHeight * scale)),
+  };
+}
 
 type MomentImageSource = Pick<MomentMediaResp, "access_url" | "display_mode">;
 

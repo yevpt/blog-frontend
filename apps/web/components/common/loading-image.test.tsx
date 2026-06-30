@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import type * as RepoHooks from "@repo/hooks";
-import { LoadingImage } from "./loading-image";
+import { LoadingImage, DeferredNativeImage } from "./loading-image";
 
 const IMAGE_PLACEHOLDER_DELAY_MS = 200;
 
@@ -303,5 +303,44 @@ describe("LoadingImage", () => {
     render(<LoadingImage src="https://example.com/cover.jpg" alt="封面" fill defer={false} />);
 
     expect(screen.getByRole("img", { name: "封面" })).toBeInTheDocument();
+  });
+});
+
+describe("DeferredNativeImage", () => {
+  it("媒体未激活时仅渲染 defer 骨架", () => {
+    vi.mocked(useDeferredMediaActivation).mockReturnValue(false);
+
+    render(<DeferredNativeImage src="https://example.com/photo.gif" alt="动图" />);
+
+    expect(screen.getByTestId("deferred-native-image-skeleton")).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "动图" })).not.toBeInTheDocument();
+  });
+
+  it("远程图片加载中在最小占位内显示骨架", async () => {
+    vi.useFakeTimers();
+    render(<DeferredNativeImage src="https://example.com/photo.gif" alt="动图" defer={false} />);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(IMAGE_PLACEHOLDER_DELAY_MS);
+    });
+
+    expect(screen.getByTestId("deferred-native-image-skeleton")).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it("fill 布局在父级尺寸内铺满", () => {
+    render(
+      <div className="h-40 w-40">
+        <DeferredNativeImage
+          src="https://example.com/photo.gif"
+          alt="动图"
+          layout="fill"
+          className="h-full w-full object-cover"
+          defer={false}
+        />
+      </div>,
+    );
+
+    expect(screen.getByRole("img", { name: "动图" })).toHaveClass("object-cover");
   });
 });

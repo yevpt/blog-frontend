@@ -4,21 +4,28 @@ import userEvent from "@testing-library/user-event";
 import { MomentImageGrid } from "./moment-image-grid";
 import type { MomentMediaResp } from "@repo/api";
 
+vi.mock("@/hooks/use-moment-single-image-display-size", () => ({
+  useMomentSingleImageDisplaySize: () => ({ width: 480, height: 270 }),
+}));
+
 vi.mock("@/components/common/loading-image", () => ({
   DeferredNativeImage: ({
     src,
     alt,
     className,
     defer,
+    layout,
   }: {
     src: string;
     alt: string;
     className?: string;
     defer?: boolean;
+    layout?: string;
   }) => (
     <img
       data-testid="deferred-native"
       data-defer={defer ?? true}
+      data-layout={layout ?? "intrinsic"}
       src={src}
       alt={alt}
       className={className}
@@ -205,8 +212,8 @@ describe("MomentImageGrid reviewOverlay", () => {
     const img = screen.getByTestId("deferred-native");
     expect(img).toHaveAttribute("src", expect.stringContaining("w=480"));
     expect(img).toHaveAttribute("data-defer", "false");
-    expect(img.className).toContain("w-full");
-    expect(img.className).not.toContain("w-auto");
+    expect(img).toHaveAttribute("data-layout", "fill");
+    expect(img.className).toContain("object-contain");
     expect(screen.queryByRole("button", { name: "查看图片 photo" })).toBeNull();
     await user.click(screen.getByTestId("deferred-native"));
     expect(onOpen).not.toHaveBeenCalled();

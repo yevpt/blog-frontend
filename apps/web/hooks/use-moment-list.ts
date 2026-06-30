@@ -16,6 +16,7 @@ import { addToast } from "@/lib/toast";
 import { apiForm, apiJson, ApiClientError, getApiErrorMessage } from "@/lib/client-fetch";
 import { useIdempotencyKey } from "@/hooks/use-idempotency-key";
 import { normalizeModerationView } from "@/components/moderation";
+import { mergePageWithPublishedMoment } from "@/components/moments/enrich-moment-from-publish";
 import { momentEditFingerprint } from "@/components/moments/moment-submit-fingerprint";
 import { buildQuery } from "@/lib/query";
 import type { MomentImageItem } from "@/components/moments/types";
@@ -110,6 +111,7 @@ export function useMomentList({
   const { getIdempotencyKey, resetIdempotencyKey } = useIdempotencyKey("moment-edit");
   const publishCount = useMomentModal((s) => s.publishCount);
   const lastPublishedUserId = useMomentModal((s) => s.lastPublishedUserId);
+  const lastPublishedMoment = useMomentModal((s) => s.lastPublishedMoment);
 
   const [activeTab, setActiveTab] = useState<MomentTab>(initialTab);
   const [activeSort, setActiveSort] = useState<MomentSort>(initialSort);
@@ -169,12 +171,16 @@ export function useMomentList({
     [buildFeedQuery, buildUserQuery, mode],
   );
 
-  const applyPageData = useCallback((data: MomentPageResp) => {
-    setMoments(data.list);
-    setPageData(data);
-    setCurrentPage(data.page);
-    setEndReached(computeEndReached(data.page, data.pages));
-  }, []);
+  const applyPageData = useCallback(
+    (data: MomentPageResp) => {
+      const merged = mergePageWithPublishedMoment(data, lastPublishedMoment);
+      setMoments(merged.list);
+      setPageData(merged);
+      setCurrentPage(merged.page);
+      setEndReached(computeEndReached(merged.page, merged.pages));
+    },
+    [lastPublishedMoment],
+  );
 
   const refreshForSessionChange = useCallback(async () => {
     setFetchError(false);

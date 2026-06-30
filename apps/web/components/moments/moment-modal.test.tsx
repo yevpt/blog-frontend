@@ -94,6 +94,7 @@ beforeEach(() => {
     isOpen: true,
     publishCount: 0,
     lastPublishedUserId: null,
+    lastPublishedMoment: null,
     editingMoment: null,
     submitEdit: null,
   });

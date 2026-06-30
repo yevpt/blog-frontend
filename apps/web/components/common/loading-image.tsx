@@ -40,6 +40,8 @@ interface DeferredNativeImageProps {
   className?: string;
   skeletonClassName?: string;
   defer?: boolean;
+  /** fill：九宫格单元内铺满；intrinsic：单图按内容伸缩并保留最小占位 */
+  layout?: "fill" | "intrinsic";
 }
 
 /** GIF 等不走 next/image 的场景：同样支持首屏骨架 + 延迟挂载原生 img */
@@ -49,22 +51,68 @@ export function DeferredNativeImage({
   className,
   skeletonClassName,
   defer = true,
+  layout = "intrinsic",
 }: DeferredNativeImageProps) {
   const deferredReady = useDeferredMediaActivation();
   const shouldDefer = defer && shouldDeferRemoteMediaSrc(src);
   const mediaReady = !shouldDefer || deferredReady;
+  const [loaded, setLoaded] = useState(false);
+  const pendingLoad = mediaReady && !loaded;
+  const placeholder = useImageLoadPlaceholder(pendingLoad);
+  const frameClass =
+    layout === "fill"
+      ? "relative block h-full w-full overflow-hidden"
+      : "relative inline-block min-h-[120px] min-w-[120px] max-w-full overflow-hidden";
+
+  useEffect(() => {
+    setLoaded(false);
+  }, [src]);
 
   if (!mediaReady) {
     return (
       <span
         data-testid="deferred-native-image-skeleton"
         aria-hidden="true"
-        className={cn("loading-image-skeleton", skeletonClassName, className)}
+        className={cn(
+          "overflow-hidden loading-image-skeleton",
+          layout === "fill"
+            ? "block h-full w-full"
+            : "inline-block min-h-[120px] min-w-[120px] max-w-full",
+          skeletonClassName,
+          className,
+        )}
       />
     );
   }
 
-  return <img src={src} alt={alt} className={className} loading="lazy" decoding="async" />;
+  return (
+    <span className={frameClass}>
+      {placeholder.renderPlaceholder && (
+        <span
+          data-testid="deferred-native-image-skeleton"
+          aria-hidden="true"
+          className={cn(
+            "absolute inset-0 z-10 overflow-hidden loading-image-skeleton transition-opacity duration-200",
+            placeholder.placeholderOpaque ? "opacity-100" : "opacity-0",
+            skeletonClassName,
+          )}
+        />
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={cn(
+          className,
+          placeholder.animateImage && "transition-opacity duration-300",
+          placeholder.hideImage && "opacity-0",
+        )}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+      />
+    </span>
+  );
 }
 
 export function LoadingImage({

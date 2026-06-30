@@ -74,7 +74,12 @@ describe("useMomentList", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
     mockSessionUserId = 7;
-    useMomentModal.setState({ isOpen: false, publishCount: 0, lastPublishedUserId: null });
+    useMomentModal.setState({
+      isOpen: false,
+      publishCount: 0,
+      lastPublishedUserId: null,
+      lastPublishedMoment: null,
+    });
     mockOpenLoginModal.mockReset();
     mockAddToast.mockReset();
   });
@@ -322,6 +327,67 @@ describe("useMomentList", () => {
       expect(getLastFetchUrl()).toContain("scope=owner");
       expect(getLastFetchUrl()).toContain("page_size=3");
       expect(result.current.moments.map((item) => item.id)).toEqual([10]);
+    });
+  });
+
+  it("发布后用 POST 响应补齐列表缺失的图片投影", async () => {
+    const pendingImage = {
+      id: 10,
+      name: "orig.jpg",
+      file_type: "jpg",
+      url: "orig.jpg",
+      access_url: "/orig.jpg",
+      display_mode: "original" as const,
+      seq: 1,
+    };
+    const listMoment = makeMoment(10, {
+      user_id: 7,
+      moderation: {
+        public_state: "placeholder",
+        display_version: "none",
+        has_pending_revision: true,
+        can_interact: false,
+      },
+    });
+    const publishedMoment = makeMoment(10, {
+      user_id: 7,
+      moderation: {
+        public_state: "placeholder",
+        display_version: "none",
+        has_pending_revision: true,
+        pending_images: [pendingImage],
+        can_interact: false,
+      },
+    });
+
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(jsonResponse(makePageResp({ list: [makeMoment(5)] })))
+      .mockResolvedValueOnce(jsonResponse(makePageResp({ list: [listMoment] })));
+
+    const emptyInitial: MomentPageResp = {
+      total: 0,
+      pages: 0,
+      page: 1,
+      page_size: 20,
+      list: [],
+    };
+
+    const { result } = renderHook(() =>
+      useMomentList({
+        initialPage: emptyInitial,
+        mode: "user",
+        userId: 7,
+      }),
+    );
+
+    await waitFor(() => expect(result.current.isLoadingInitial).toBe(false));
+
+    act(() => {
+      useMomentModal.getState().markPublished(7, publishedMoment);
+    });
+
+    await waitFor(() => {
+      expect(result.current.moments[0]?.moderation?.pending_images).toHaveLength(1);
     });
   });
 

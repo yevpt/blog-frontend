@@ -102,7 +102,7 @@ export function MomentModal() {
       });
       resetIdempotencyKey();
       addToast(res.moderation?.notice ?? "发布成功", "success");
-      markPublished(userId);
+      markPublished(userId, res);
       reset();
       close();
     } catch (err) {
