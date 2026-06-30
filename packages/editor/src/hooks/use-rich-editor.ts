@@ -51,6 +51,7 @@ import { AtomParagraphMergeExtension } from "../extensions/atom-paragraph-merge"
 import { MarkBoundaryExtension } from "../extensions/mark-boundary";
 import { CharacterLimitExtension } from "../extensions/character-limit";
 import type { MentionItem } from "../types";
+import type { CdnImagePreset } from "@repo/hooks/cdn-image";
 
 interface UseRichEditorOptions {
   initialValue: string;
@@ -60,6 +61,7 @@ interface UseRichEditorOptions {
   disabled?: boolean;
   maxLength?: number;
   enableBlockquote?: boolean;
+  imageOptimizationPreset?: CdnImagePreset;
 }
 
 export function useRichEditor({
@@ -70,6 +72,7 @@ export function useRichEditor({
   disabled = false,
   maxLength,
   enableBlockquote = false,
+  imageOptimizationPreset = "off",
 }: UseRichEditorOptions) {
   // 通过 ref 持有最新 onChange，避免 stale closure 问题
   const onChangeRef = useRef(onChange);
@@ -125,7 +128,7 @@ export function useRichEditor({
         // 导致 contenteditable 对内联原子节点的点击命中测试/光标渲染严重错位
         // （点击图片右侧光标不可见、按 Left 键移动后光标位置与实际插入位置不一致）。
         // 改为块级后，图片独占一行，由 StarterKit 内置的 Gapcursor 处理光标定位，问题消失。
-        ImageExtension,
+        ImageExtension.configure({ imageOptimizationPreset }),
 
         // ⑥ 修复空段落与图片相邻时 Backspace/Delete 无法删除空段落的问题（见该扩展内注释）
         AtomParagraphMergeExtension,
@@ -161,6 +164,6 @@ export function useRichEditor({
     },
     // deps 数组：mentionsJson 是序列化后的字符串，仅在候选列表实际变化时才重建 editor
     // 直接用 mentionSuggestions 数组引用会导致每次渲染创建新引用 → 无限循环
-    [mentionsJson, maxLength, enableBlockquote],
+    [mentionsJson, maxLength, enableBlockquote, imageOptimizationPreset],
   );
 }

@@ -1,12 +1,18 @@
 import Image from "@tiptap/extension-image";
 import { ReactNodeViewRenderer } from "@tiptap/react";
+import { createElement } from "react";
 import type { JSONContent, MarkdownRendererHelpers, RenderContext } from "@tiptap/core";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import type { CdnImagePreset } from "@repo/hooks/cdn-image";
 import { ImageNodeView } from "../nodes/image-node-view";
 
 import { IMAGE_UPLOAD_PLACEHOLDER_SRC } from "../constants/image-upload";
 
 export { IMAGE_UPLOAD_PLACEHOLDER_SRC };
+
+export interface ImageExtensionOptions {
+  imageOptimizationPreset: CdnImagePreset;
+}
 
 export interface ImagePlaceholderOptions {
   uploadId: string;
@@ -45,7 +51,16 @@ declare module "@tiptap/core" {
   }
 }
 
-export const ImageExtension = Image.extend({
+export const ImageExtension = Image.extend<ImageExtensionOptions>({
+  addOptions() {
+    return {
+      ...this.parent?.(),
+      inline: false,
+      allowBase64: false,
+      imageOptimizationPreset: "off",
+    };
+  },
+
   addAttributes() {
     return {
       ...this.parent?.(),
@@ -71,7 +86,10 @@ export const ImageExtension = Image.extend({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(ImageNodeView);
+    const imageOptimizationPreset = this.options.imageOptimizationPreset;
+    return ReactNodeViewRenderer((props) =>
+      createElement(ImageNodeView, { ...props, imageOptimizationPreset }),
+    );
   },
 
   addCommands() {
@@ -143,7 +161,4 @@ export const ImageExtension = Image.extend({
     const alt = typeof node.attrs?.alt === "string" ? node.attrs.alt : "";
     return `![${alt}](${src})`;
   },
-}).configure({
-  inline: false,
-  allowBase64: false,
 });

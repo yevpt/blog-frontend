@@ -1,15 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { NodeViewWrapper } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/core";
+import { useCdnOptimizedImage } from "@repo/hooks/use-cdn-optimized-image";
+import { useImageLoadPlaceholder } from "@repo/hooks";
 import { cn } from "@repo/ui";
 import { IMAGE_UPLOAD_PLACEHOLDER_SRC } from "../constants/image-upload";
+import type { ImageExtensionOptions } from "../extensions/image";
 
 const REVEAL_MS = 280;
+const DEFAULT_ASPECT_RATIO = 16 / 9;
 
 const SELECTED_OUTLINE = "rounded-md outline outline-2 outline-primary -outline-offset-2";
 
 /** 上传完成前占位：对齐碎语 SnippetImageUploader LoadingTile。 */
-export function ImageNodeView({ node, selected, updateAttributes }: NodeViewProps) {
+export function ImageNodeView({
+  node,
+  selected,
+  updateAttributes,
+  extension,
+  imageOptimizationPreset: imageOptimizationPresetProp,
+}: NodeViewProps & { imageOptimizationPreset?: ImageExtensionOptions["imageOptimizationPreset"] }) {
   const { src, alt, uploadState, aspectRatio } = node.attrs as {
     src: string;
     alt?: string;
@@ -17,19 +27,36 @@ export function ImageNodeView({ node, selected, updateAttributes }: NodeViewProp
     aspectRatio?: string | null;
   };
 
+  const optimizationPreset =
+    imageOptimizationPresetProp ??
+    (extension.options as ImageExtensionOptions).imageOptimizationPreset ??
+    "off";
+
   const isUploading = uploadState === "loading";
   const isDecoding = uploadState === "decoding";
   const isPending = isUploading || isDecoding;
 
   const parsedAspectRatio = aspectRatio ? Number.parseFloat(aspectRatio) : null;
-  const aspectRatioStyle =
+  const storedAspectRatio =
     parsedAspectRatio && Number.isFinite(parsedAspectRatio) && parsedAspectRatio > 0
-      ? { aspectRatio: String(parsedAspectRatio) }
-      : { aspectRatio: "16 / 9" };
+      ? parsedAspectRatio
+      : null;
 
   const imageRef = useRef<HTMLImageElement>(null);
   const [revealed, setRevealed] = useState(false);
   const [layoutNatural, setLayoutNatural] = useState(!isPending);
+  const [probedAspectRatio, setProbedAspectRatio] = useState<number | null>(null);
+
+  const hasRemoteSrc = Boolean(src) && src !== IMAGE_UPLOAD_PLACEHOLDER_SRC;
+  const cdnImage = useCdnOptimizedImage(src, optimizationPreset, {
+    enabled: hasRemoteSrc && optimizationPreset !== "off",
+  });
+  const isCdnLoading = hasRemoteSrc && !isUploading && cdnImage.isLoading && !cdnImage.isError;
+  const cdnPlaceholder = useImageLoadPlaceholder(isCdnLoading);
+
+  useEffect(() => {
+    setProbedAspectRatio(null);
+  }, [src]);
 
   useEffect(() => {
     if (isUploading) {
@@ -47,7 +74,6 @@ export function ImageNodeView({ node, selected, updateAttributes }: NodeViewProp
   const finishDecoding = () => {
     if (revealed) return;
     setRevealed(true);
-    // 解码完成后立刻切自然布局，避免选中框仍套在比例盒（object-contain 留白）上
     setLayoutNatural(true);
     window.setTimeout(() => {
       updateAttributes({
@@ -58,23 +84,34 @@ export function ImageNodeView({ node, selected, updateAttributes }: NodeViewProp
     }, REVEAL_MS);
   };
 
+  const handleImageReady = () => {
+    const image = imageRef.current;
+    if (image && image.naturalWidth > 0 && image.naturalHeight > 0) {
+      setProbedAspectRatio(image.naturalWidth / image.naturalHeight);
+    }
+    cdnImage.onLoad();
+    if (isDecoding) {
+      finishDecoding();
+    }
+  };
+
   useEffect(() => {
     if (!isDecoding) return;
     const image = imageRef.current;
     if (image?.complete && image.naturalWidth > 0) {
-      finishDecoding();
+      handleImageReady();
     }
     // uploadId/src 变化时需重新检测缓存命中
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDecoding, src]);
+  }, [isDecoding, cdnImage.displaySrc, cdnImage.imgKey]);
 
-  const hasRemoteSrc = Boolean(src) && src !== IMAGE_UPLOAD_PLACEHOLDER_SRC;
   const showImage = hasRemoteSrc || !isPending;
   const showSpinner = isPending && !revealed;
-  const useAspectBox = isPending && !layoutNatural;
+  const useFramedLayout = (isPending && !layoutNatural) || isCdnLoading;
+  const tightToImage = layoutNatural && !showSpinner && !isCdnLoading;
   const showLoadingAttr = isPending && !layoutNatural;
-  // 就绪后 wrapper 不参与布局，选中框直接贴合 img
-  const tightToImage = layoutNatural && !showSpinner;
+  const frameAspectRatio = storedAspectRatio ?? probedAspectRatio ?? DEFAULT_ASPECT_RATIO;
+  const frameStyle = useFramedLayout ? { aspectRatio: String(frameAspectRatio) } : undefined;
 
   return (
     <NodeViewWrapper
@@ -86,32 +123,58 @@ export function ImageNodeView({ node, selected, updateAttributes }: NodeViewProp
       <div
         className={cn(
           tightToImage ? "contents" : "relative w-full overflow-hidden rounded-md",
-          useAspectBox && "bg-muted/60",
+          useFramedLayout && "bg-muted/60",
           !tightToImage && selected && SELECTED_OUTLINE,
         )}
-        style={useAspectBox ? aspectRatioStyle : undefined}
+        style={frameStyle}
         aria-label={
           isUploading ? "图片处理中" : isDecoding && showSpinner ? "图片加载中" : undefined
         }
       >
         {showImage ? (
-          <img
-            ref={imageRef}
-            src={src}
-            alt={alt ?? ""}
-            draggable={false}
-            onLoad={isDecoding ? finishDecoding : undefined}
-            onError={isDecoding ? finishDecoding : undefined}
-            className={cn(
-              "block w-full transition-opacity duration-300",
-              tightToImage
-                ? cn("h-auto rounded-md opacity-100", selected && SELECTED_OUTLINE)
-                : cn(
-                    "absolute inset-0 h-full object-contain",
-                    revealed ? "opacity-100" : "opacity-0",
-                  ),
-            )}
-          />
+          <>
+            {cdnPlaceholder.renderPlaceholder ? (
+              <span
+                data-testid="editor-image-cdn-skeleton"
+                aria-hidden="true"
+                className={cn(
+                  "absolute inset-0 z-10 overflow-hidden loading-image-skeleton transition-opacity duration-200",
+                  cdnPlaceholder.placeholderOpaque ? "opacity-100" : "opacity-0",
+                )}
+              />
+            ) : null}
+            <img
+              key={cdnImage.imgKey}
+              ref={imageRef}
+              src={cdnImage.displaySrc}
+              srcSet={cdnImage.srcSet}
+              sizes={cdnImage.sizes}
+              alt={alt ?? ""}
+              draggable={false}
+              loading="lazy"
+              decoding="async"
+              onLoad={handleImageReady}
+              onError={() => {
+                cdnImage.onError();
+                if (isDecoding) finishDecoding();
+              }}
+              className={cn(
+                "transition-opacity duration-300",
+                tightToImage
+                  ? cn(
+                      "block w-full h-auto rounded-md",
+                      cdnPlaceholder.hideImage ? "opacity-0" : "opacity-100",
+                      selected && SELECTED_OUTLINE,
+                    )
+                  : cn(
+                      "absolute inset-0 h-full w-full object-contain",
+                      (revealed || !isPending) && !cdnPlaceholder.hideImage
+                        ? "opacity-100"
+                        : "opacity-0",
+                    ),
+              )}
+            />
+          </>
         ) : null}
 
         {showSpinner ? (

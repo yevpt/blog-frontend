@@ -12,6 +12,8 @@
  * ================================================================
  */
 
+import type { CdnImagePreset } from "@repo/hooks/cdn-image";
+
 /** 工具栏图片按钮注入的插入 API。 */
 export interface ImageInsertHandlers {
   /** 插入已就绪图片（评论 URL 对话框等） */
@@ -143,4 +145,9 @@ export interface RichEditorProps extends InsertHandlers {
    * 评论/碎语场景默认关闭；文章编辑页传 true。
    */
   enableBlockquote?: boolean;
+
+  /**
+   * 正文图片 CDN 展示预设；未传时 plain→article、card→comment，传 off 关闭。
+   */
+  imageOptimizationPreset?: CdnImagePreset;
 }

@@ -17,6 +17,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@repo/hooks": "workspace:*",
     "@repo/icons": "workspace:*",
     "@repo/ui": "workspace:*",
     "@tiptap/core": "^3.26.0",

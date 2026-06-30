@@ -19,6 +19,9 @@ function makeProps(overrides: Partial<NodeViewProps["node"]["attrs"]> = {}): Nod
     },
     selected: false,
     updateAttributes: vi.fn(),
+    extension: {
+      options: { imageOptimizationPreset: "off" },
+    },
   } as unknown as NodeViewProps;
 }
 
@@ -100,5 +103,21 @@ describe("ImageNodeView", () => {
     expect(screen.getByAltText("demo.png")).toBe(image);
     expect(screen.getByAltText("demo.png")).toHaveClass("h-auto");
     expect(screen.queryByLabelText("图片加载中")).not.toBeInTheDocument();
+  });
+
+  it("article 预设与详情页一致使用 responsive CDN 变换", () => {
+    const props = makeProps({
+      src: "https://blog-oss.yevpt.com/blog/a.jpg?sign=1",
+      uploadState: null,
+      uploadId: null,
+      aspectRatio: null,
+    });
+
+    render(<ImageNodeView {...props} imageOptimizationPreset="article" />);
+
+    const image = screen.getByAltText("demo.png");
+    expect(image.getAttribute("src")).toContain("w=1080");
+    expect(image.getAttribute("srcset")).toContain("640w");
+    expect(image.getAttribute("sizes")).toContain("768px");
   });
 });

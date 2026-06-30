@@ -41,6 +41,7 @@ import { normalizeMarkdownEols } from "./utils/normalize-markdown-eols";
 import { useRichEditor } from "./hooks/use-rich-editor";
 import { Toolbar } from "./toolbar/Toolbar";
 import type { RichEditorProps } from "./types";
+import { resolveDefaultImageOptimizationPreset } from "./image-optimization-context";
 
 /** plain 画布水平留白：标题/正文/页脚共用 */
 const PLAIN_SURFACE_INSET_X = "px-5 sm:px-10";
@@ -80,7 +81,12 @@ export function RichEditor({
   toolbarPlacement = "bottom",
   toolbarTrailing,
   enableBlockquote = false,
+  imageOptimizationPreset,
 }: RichEditorProps) {
+  const resolvedImagePreset = resolveDefaultImageOptimizationPreset(
+    variant,
+    imageOptimizationPreset,
+  );
   const editor = useRichEditor({
     initialValue: value,
     onChange,
@@ -89,6 +95,7 @@ export function RichEditor({
     disabled,
     maxLength,
     enableBlockquote,
+    imageOptimizationPreset: resolvedImagePreset,
   });
 
   useEffect(() => {
@@ -115,14 +122,19 @@ export function RichEditor({
     const currentMarkdown = editor.getMarkdown();
     if (normalizeMarkdownEols(value) === normalizeMarkdownEols(currentMarkdown)) return;
 
-    if (value === "") {
-      if (!editor.isEmpty) {
-        editor.commands.clearContent(true);
+    const syncContent = () => {
+      if (value === "") {
+        if (!editor.isEmpty) {
+          editor.commands.clearContent(true);
+        }
+        return;
       }
-      return;
-    }
 
-    editor.commands.setContent(value, { contentType: "markdown", emitUpdate: false });
+      editor.commands.setContent(value, { contentType: "markdown", emitUpdate: false });
+    };
+
+    // 避开 useEffect 内 flushSync（Tiptap NodeView 挂载会同步渲染 React）
+    queueMicrotask(syncContent);
   }, [value, editor]);
 
   const isPlain = variant === "plain";
