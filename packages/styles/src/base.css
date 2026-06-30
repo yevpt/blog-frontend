@@ -146,6 +146,9 @@
 :root {
   color-scheme: light;
 
+  --loading-image-base-a: #e4e4e7;
+  --loading-image-base-b: #f4f4f5;
+
   /* 文字层级 */
   --fg1: #4c4e4d; /* 正文小字、时间戳等元信息 */
   --fg2: #52525b;
@@ -159,6 +162,9 @@
 
   @variant dark {
     color-scheme: dark;
+
+    --loading-image-base-a: #27272a;
+    --loading-image-base-b: #3f3f46;
 
     /*
               深色模式文字层级：
@@ -782,6 +788,30 @@ body {
   .ui-modal-overlay-exit,
   .ui-modal-panel-enter,
   .ui-modal-panel-exit {
+    animation: none;
+  }
+}
+
+/* 图片加载骨架：web / admin / ui 共享 */
+@keyframes loadingImageBreathe {
+  0%,
+  100% {
+    filter: brightness(1);
+    opacity: 0.92;
+  }
+  50% {
+    filter: brightness(1.04);
+    opacity: 1;
+  }
+}
+
+.loading-image-skeleton {
+  background: linear-gradient(135deg, var(--loading-image-base-a), var(--loading-image-base-b));
+  animation: loadingImageBreathe 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-image-skeleton {
     animation: none;
   }
 }

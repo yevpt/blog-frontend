@@ -140,3 +140,5 @@ export {
   type ImageViewerProps,
   type ViewerTransform,
 } from "./image-viewer";
+export { CdnResponsiveImage, type CdnResponsiveImageProps } from "./cdn-responsive-image";
+export type { CdnImagePreset } from "@repo/hooks/cdn-image";
