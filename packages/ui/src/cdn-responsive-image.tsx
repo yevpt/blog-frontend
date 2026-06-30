@@ -168,7 +168,8 @@ export function CdnResponsiveImage({
           fill ? "absolute inset-0 size-full" : "block max-w-full",
           className,
           placeholder.animateImage && "transition-opacity duration-300",
-          hideImage ? "opacity-0" : "opacity-100",
+          // 仅骨架阶段隐藏图片；不强制 opacity-100，避免覆盖调用方传入的透明度
+          hideImage && "opacity-0",
         )}
       />
     </span>

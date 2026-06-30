@@ -104,7 +104,7 @@ describe("CdnResponsiveImage", () => {
     );
 
     expect(screen.queryByTestId("cdn-responsive-image-skeleton")).not.toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "封面" })).toHaveClass("opacity-100");
+    expect(screen.getByRole("img", { name: "封面" })).not.toHaveClass("opacity-0");
   });
 
   it("解码完成前 complete 且 naturalWidth=0 不误判失败", () => {
@@ -119,7 +119,7 @@ describe("CdnResponsiveImage", () => {
       />,
     );
 
-    expect(screen.getByRole("img", { name: "封面" })).toHaveClass("opacity-100");
+    expect(screen.getByRole("img", { name: "封面" })).not.toHaveClass("opacity-0");
     fireEvent.load(screen.getByRole("img", { name: "封面" }));
     expect(screen.queryByTestId("cdn-responsive-image-skeleton")).not.toBeInTheDocument();
   });
@@ -139,7 +139,7 @@ describe("CdnResponsiveImage", () => {
     );
 
     expect(screen.queryByTestId("cdn-responsive-image-skeleton")).not.toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "封面" })).toHaveClass("opacity-100");
+    expect(screen.getByRole("img", { name: "封面" })).not.toHaveClass("opacity-0");
   });
 
   it("已加载后忽略误触发的 onError", () => {
@@ -154,7 +154,7 @@ describe("CdnResponsiveImage", () => {
     fireEvent.load(image);
     fireEvent.error(image);
 
-    expect(screen.getByRole("img", { name: "封面" })).toHaveClass("opacity-100");
+    expect(screen.getByRole("img", { name: "封面" })).not.toHaveClass("opacity-0");
     expect(screen.queryByTestId("cdn-responsive-image-skeleton")).not.toBeInTheDocument();
   });
 
@@ -185,6 +185,6 @@ describe("CdnResponsiveImage", () => {
     }
 
     expect(() => render(<ParentWithInlineCallback />)).not.toThrow();
-    expect(screen.getByRole("img", { name: "封面" })).toHaveClass("opacity-100");
+    expect(screen.getByRole("img", { name: "封面" })).not.toHaveClass("opacity-0");
   });
 });

@@ -2,7 +2,7 @@ import { prepareImageForUpload } from "./prepare-image-upload";
 import { AVATAR_UPLOAD_MAX_BYTES } from "./image-upload-limits";
 
 /** 头像最长边（px），与后端 avatar.Service 入库规范一致 */
-export const AVATAR_MAX_EDGE_PX = 120;
+export const AVATAR_MAX_EDGE_PX = 240;
 /** 头像上传体积上限（字节），入库仍由后端压缩到 20KB */
 export const AVATAR_MAX_BYTES = AVATAR_UPLOAD_MAX_BYTES;
 
@@ -22,7 +22,7 @@ export const AVATAR_ERROR_PREFIXES = [
 
 /**
  * 准备头像上传：HEIC 转码；超过 200KB 时高质量 WebP 压到 ≤256KB；其余原样上传。
- * 120px / 20KB 入库规范由后端 PrepareForStorage 负责（合规原样，超出转 WebP）。
+ * 240px / 20KB 入库规范由后端 PrepareForStorage 负责（合规原样，超出转 WebP）。
  */
 export async function compressAvatarImage(file: File): Promise<File> {
   return prepareImageForUpload(file, "avatar");

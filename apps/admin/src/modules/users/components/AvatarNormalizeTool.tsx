@@ -133,7 +133,7 @@ export function AvatarNormalizeTool() {
             <span>头像归一化</span>
           </div>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
-            检查本站托管头像是否符合 120px、20KB 规范；已合规的 JPG/PNG/WebP
+            检查本站托管头像是否符合 240px、20KB 规范；已合规的 JPG/PNG/WebP
             原样保留，不合规则压缩为 WebP 并替换（含 GIF 转 WebP）。无法处理的文件会列出完整
             key，可单独清除。
           </p>
