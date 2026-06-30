@@ -84,7 +84,7 @@ function RevisionCard({ revision }: RevisionCardProps) {
       ) : null}
 
       {/* 图片快照 */}
-      {revision.images.length > 0 ? (
+      {revision.images?.length > 0 ? (
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-1">图片快照</p>
           <ModerationImageGallery images={revision.images} />
@@ -92,7 +92,7 @@ function RevisionCard({ revision }: RevisionCardProps) {
       ) : null}
 
       {/* 操作事件 */}
-      {revision.events.length > 0 ? (
+      {revision.events?.length > 0 ? (
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-1">操作记录</p>
           <ul className="space-y-1">
@@ -128,7 +128,7 @@ export function ModerationHistory({ itemId, open, activeTab }: ModerationHistory
     return <p className="py-6 text-center text-sm text-destructive">{error.message}</p>;
   }
 
-  if (!data || data.revisions.length === 0) {
+  if (!data || !data.revisions || data.revisions.length === 0) {
     return <p className="py-6 text-center text-sm text-muted-foreground">暂无历史记录</p>;
   }
 
