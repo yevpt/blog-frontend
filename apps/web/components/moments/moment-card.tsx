@@ -17,7 +17,6 @@ import {
   getVisitorMomentDisplayImages,
   normalizeModerationView,
   shouldShowModerationContentPlaceholder,
-  shouldShowMomentImageReviewOverlay,
   shouldUseVisitorMomentPreviewSizing,
 } from "@/components/moderation";
 import { MomentContent } from "./moment-content";
@@ -104,7 +103,6 @@ export function MomentCard({
     moment.moderation,
     isOwner,
   );
-  const reviewImageOverlay = shouldShowMomentImageReviewOverlay(moment.moderation, isOwner, images);
   const visitorPreviewSizing = shouldUseVisitorMomentPreviewSizing(isOwner, images);
 
   const body = (
@@ -163,7 +161,6 @@ export function MomentCard({
 
       <MomentImageGrid
         images={images}
-        reviewOverlay={reviewImageOverlay}
         visitorPreviewSizing={visitorPreviewSizing}
         onOpen={(idx) => openViewer(viewerImages, idx)}
       />

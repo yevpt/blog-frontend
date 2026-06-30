@@ -18,8 +18,6 @@ interface MomentImageGridProps {
   images: MomentImage[];
   /** 点击第 index 张（从 0 起）时回调，用于打开全屏画廊 */
   onOpen: (index: number) => void;
-  /** 访客待审：叠加审核遮罩 */
-  reviewOverlay?: boolean;
   /** 访客审核预览：经 CDN 放大模糊缩略图，布局与公开单图一致 */
   visitorPreviewSizing?: boolean;
 }
@@ -133,7 +131,6 @@ function renderGridImageNode(img: MomentImage, src: string, scalePreview: boolea
 export function MomentImageGrid({
   images,
   onOpen,
-  reviewOverlay = false,
   visitorPreviewSizing = false,
 }: MomentImageGridProps) {
   if (images.length === 0) {
@@ -144,14 +141,15 @@ export function MomentImageGrid({
     const img = images[0]!;
     const scalePreview = visitorPreviewSizing && isVisitorModerationPreviewImage(img);
     const src = resolveImageSrc(img, scalePreview);
+    const needsOverlay = isVisitorModerationPreviewImage(img);
     const frameClass = scalePreview ? SINGLE_FRAME_PREVIEW_CLASS : SINGLE_FRAME_PUBLIC_CLASS;
     const imageNode = renderSingleImageNode(img, src, scalePreview);
 
     if (!isViewable(img)) {
       return (
-        <div className={frameClass} aria-label={reviewOverlay ? "图片审核中" : undefined}>
+        <div className={frameClass} aria-label={needsOverlay ? "图片审核中" : undefined}>
           {imageNode}
-          {reviewOverlay ? <MomentImageReviewOverlay /> : null}
+          {needsOverlay ? <MomentImageReviewOverlay /> : null}
         </div>
       );
     }
@@ -184,6 +182,7 @@ export function MomentImageGrid({
         const scalePreview = visitorPreviewSizing && isVisitorModerationPreviewImage(img);
         const src = resolveImageSrc(img, scalePreview);
         const imageNode = renderGridImageNode(img, src, scalePreview);
+        const needsOverlay = isVisitorModerationPreviewImage(img);
         const cellClassName = "relative aspect-square overflow-hidden rounded-[6px] bg-muted";
 
         if (!isViewable(img)) {
@@ -191,10 +190,10 @@ export function MomentImageGrid({
             <div
               key={momentImageKey(img, idx)}
               className={cellClassName}
-              aria-label={reviewOverlay ? "图片审核中" : undefined}
+              aria-label={needsOverlay ? "图片审核中" : undefined}
             >
               {imageNode}
-              {reviewOverlay ? <MomentImageReviewOverlay compact /> : null}
+              {needsOverlay ? <MomentImageReviewOverlay compact /> : null}
               {showOverflow && (
                 <span className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 text-sm font-medium text-white">
                   +{overflow}

@@ -94,20 +94,6 @@ export function getVisitorMomentDisplayImages(moment: {
   return moment.images ?? [];
 }
 
-/** 访客在待审态下叠加审核遮罩；已通过的正常模糊预览不遮罩。 */
-export function shouldShowMomentImageReviewOverlay(
-  moderation?: ModerationView | null,
-  isOwner = false,
-  images: MomentMediaResp[] = [],
-): boolean {
-  if (isOwner || images.length === 0) return false;
-  const view = normalizeModerationView(moderation);
-  if (view.public_state === "placeholder") {
-    return true;
-  }
-  return view.has_pending_revision && view.display_version === "pending";
-}
-
 /** 访客展示审核预览图时需放大布局，避免 48px 缩略图按原始像素渲染。 */
 export function shouldUseVisitorMomentPreviewSizing(
   isOwner: boolean,

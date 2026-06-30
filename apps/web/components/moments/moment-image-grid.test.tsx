@@ -186,7 +186,51 @@ describe("MomentImageGrid display_mode", () => {
   });
 });
 
-describe("MomentImageGrid reviewOverlay", () => {
+describe("MomentImageGrid display_mode independent", () => {
+  it("同一碎语包含 original、blurred、gif_placeholder 时各自按 display_mode 独立渲染，不因整体 pending 遮罩 original", async () => {
+    const user = userEvent.setup();
+    const onOpen = vi.fn();
+    render(
+      <MomentImageGrid
+        visitorPreviewSizing
+        images={[
+          makeImage({
+            id: 1,
+            name: "orig",
+            access_url: "/orig.jpg",
+            display_mode: "original",
+          }),
+          makeImage({
+            id: 2,
+            name: "blur",
+            access_url: "https://cdn.example.com/blur.jpg",
+            display_mode: "blurred",
+          }),
+          makeImage({
+            id: 3,
+            name: "gif",
+            file_type: "image/gif",
+            access_url: "/static-placeholder.jpg",
+            display_mode: "gif_placeholder",
+          }),
+        ]}
+        onOpen={onOpen}
+      />,
+    );
+
+    // original 没有遮罩（即没有“审核中”文字），可点击
+    const origBtn = screen.getByRole("button", { name: "查看图片 orig" });
+    expect(origBtn).toBeInTheDocument();
+    expect(origBtn).not.toHaveTextContent("审核中");
+
+    // blurred 有遮罩
+    const reviewCells = screen.getAllByLabelText("图片审核中", { selector: "div" });
+    expect(reviewCells).toHaveLength(2);
+
+    await user.click(origBtn);
+    expect(onOpen).toHaveBeenCalledWith(0);
+  });
+
   it("单图审核遮罩展示「审核中」且不可打开查看器", async () => {
     const user = userEvent.setup();
     const onOpen = vi.fn();
@@ -198,7 +242,6 @@ describe("MomentImageGrid reviewOverlay", () => {
             display_mode: "blurred",
           }),
         ]}
-        reviewOverlay
         visitorPreviewSizing
         onOpen={onOpen}
       />,
@@ -218,7 +261,6 @@ describe("MomentImageGrid reviewOverlay", () => {
   it("多图审核遮罩每张图均展示「审核中」", () => {
     render(
       <MomentImageGrid
-        reviewOverlay
         visitorPreviewSizing
         images={[
           makeImage({

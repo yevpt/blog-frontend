@@ -8,7 +8,6 @@ export {
   getVisitorMomentDisplayImages,
   normalizeModerationView,
   shouldShowModerationContentPlaceholder,
-  shouldShowMomentImageReviewOverlay,
   shouldUseVisitorMomentPreviewSizing,
   type ModerationPresentation,
 } from "./moderation-presentation";

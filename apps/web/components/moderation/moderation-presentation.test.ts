@@ -3,7 +3,6 @@ import {
   getAuthorMomentDisplayContent,
   getAuthorMomentDisplayImages,
   shouldShowModerationContentPlaceholder,
-  shouldShowMomentImageReviewOverlay,
   shouldUseVisitorMomentPreviewSizing,
 } from "./moderation-presentation";
 
@@ -123,84 +122,6 @@ describe("moderation-presentation author helpers", () => {
     expect(images[0]?.access_url).toBe("/approved.jpg");
   });
 
-  it("访客在占位审核态展示图片审核遮罩", () => {
-    expect(
-      shouldShowMomentImageReviewOverlay(
-        {
-          public_state: "placeholder",
-          display_version: "none",
-          has_pending_revision: true,
-          can_interact: false,
-        },
-        false,
-        [
-          {
-            id: 1,
-            name: "a",
-            file_type: "jpg",
-            url: "a",
-            access_url: "/a.jpg",
-            display_mode: "blurred",
-            size: 1,
-            seq: 1,
-          },
-        ],
-      ),
-    ).toBe(true);
-  });
-
-  it("低风险待审模糊图也展示审核遮罩", () => {
-    expect(
-      shouldShowMomentImageReviewOverlay(
-        {
-          public_state: "visible",
-          display_version: "pending",
-          has_pending_revision: true,
-          can_interact: true,
-        },
-        false,
-        [
-          {
-            id: 1,
-            name: "a",
-            file_type: "jpg",
-            url: "a",
-            access_url: "/a.jpg",
-            display_mode: "blurred",
-            size: 1,
-            seq: 1,
-          },
-        ],
-      ),
-    ).toBe(true);
-  });
-
-  it("已通过且无待审修订的模糊预览不展示审核遮罩", () => {
-    expect(
-      shouldShowMomentImageReviewOverlay(
-        {
-          public_state: "visible",
-          display_version: "last_approved",
-          has_pending_revision: false,
-          can_interact: true,
-        },
-        false,
-        [
-          {
-            id: 16,
-            name: "preview.jpg",
-            file_type: "jpg",
-            url: "moderation/previews/preview.jpg",
-            access_url: "https://cdn.example.com/moderation/previews/preview.jpg",
-            display_mode: "blurred",
-            size: 0,
-            seq: 1,
-          },
-        ],
-      ),
-    ).toBe(false);
-  });
-
   it("访客预览图启用撑满布局", () => {
     expect(
       shouldUseVisitorMomentPreviewSizing(false, [
@@ -216,31 +137,5 @@ describe("moderation-presentation author helpers", () => {
         },
       ]),
     ).toBe(true);
-  });
-
-  it("作者不展示图片审核遮罩", () => {
-    expect(
-      shouldShowMomentImageReviewOverlay(
-        {
-          public_state: "placeholder",
-          display_version: "none",
-          has_pending_revision: true,
-          can_interact: false,
-        },
-        true,
-        [
-          {
-            id: 1,
-            name: "a",
-            file_type: "jpg",
-            url: "a",
-            access_url: "/a.jpg",
-            display_mode: "blurred",
-            size: 1,
-            seq: 1,
-          },
-        ],
-      ),
-    ).toBe(false);
   });
 });
