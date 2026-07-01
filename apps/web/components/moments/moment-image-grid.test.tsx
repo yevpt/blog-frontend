@@ -252,7 +252,7 @@ describe("MomentImageGrid display_mode independent", () => {
     expect(img).toHaveAttribute("src", expect.stringContaining("w=480"));
     expect(img.className).toContain("w-full");
     expect(img.className).toContain("max-h-[320px]");
-    expect(img.className).toContain("object-contain");
+    expect(img.className).toContain("object-cover");
     expect(screen.queryByRole("button", { name: "查看图片 photo" })).toBeNull();
     await user.click(img);
     expect(onOpen).not.toHaveBeenCalled();

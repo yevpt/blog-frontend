@@ -70,7 +70,7 @@ function resolveImageSrc(img: MomentImage, scalePreview: boolean): string {
   return scalePreview ? getMomentImageDisplayUrl(img, true) : img.access_url;
 }
 
-const SINGLE_IMAGE_PREVIEW_CLASS = "block h-auto max-h-[320px] w-full object-contain";
+const SINGLE_IMAGE_PREVIEW_CLASS = "block h-auto max-h-[320px] w-full object-cover";
 
 /** 外框先占满卡片宽度，避免 inline-block 与百分比宽度循环塌缩 */
 const SINGLE_FRAME_PREVIEW_CLASS = `relative mt-3 block w-full max-w-[${MOMENT_SINGLE_IMAGE_MAX_WIDTH}px] overflow-hidden rounded-[6px]`;
