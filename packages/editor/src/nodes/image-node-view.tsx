@@ -48,8 +48,12 @@ export function ImageNodeView({
   const [probedAspectRatio, setProbedAspectRatio] = useState<number | null>(null);
 
   const hasRemoteSrc = Boolean(src) && src !== IMAGE_UPLOAD_PLACEHOLDER_SRC;
+  const isCompactLayout = optimizationPreset === "comment";
   const cdnImage = useCdnOptimizedImage(src, optimizationPreset, {
     enabled: hasRemoteSrc && optimizationPreset !== "off",
+    // 编辑器内固定宽度展示，避免 src + srcSet 同时预取缩略图与原图
+    mode: isCompactLayout ? "fixed" : "responsive",
+    displayWidth: isCompactLayout ? 640 : undefined,
   });
   const isCdnLoading = hasRemoteSrc && !isUploading && cdnImage.isLoading && !cdnImage.isError;
   const cdnPlaceholder = useImageLoadPlaceholder(isCdnLoading);
@@ -84,6 +88,12 @@ export function ImageNodeView({
     }, REVEAL_MS);
   };
 
+  const markCompactImageReady = () => {
+    if (!isCompactLayout || revealed) return;
+    setRevealed(true);
+    setLayoutNatural(true);
+  };
+
   const handleImageReady = () => {
     const image = imageRef.current;
     if (image && image.naturalWidth > 0 && image.naturalHeight > 0) {
@@ -92,39 +102,62 @@ export function ImageNodeView({
     cdnImage.onLoad();
     if (isDecoding) {
       finishDecoding();
+      return;
     }
+    markCompactImageReady();
   };
 
   useEffect(() => {
-    if (!isDecoding) return;
     const image = imageRef.current;
-    if (image?.complete && image.naturalWidth > 0) {
+    if (!image?.complete || image.naturalWidth <= 0) return;
+    if (isDecoding || (isCompactLayout && !revealed && hasRemoteSrc && !isUploading)) {
       handleImageReady();
     }
     // uploadId/src 变化时需重新检测缓存命中
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDecoding, cdnImage.displaySrc, cdnImage.imgKey]);
+  }, [
+    isDecoding,
+    isCompactLayout,
+    revealed,
+    hasRemoteSrc,
+    isUploading,
+    cdnImage.displaySrc,
+    cdnImage.imgKey,
+  ]);
+
+  useEffect(() => {
+    if (!isCompactLayout || !cdnImage.isError || revealed) return;
+    markCompactImageReady();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cdnImage.isError, isCompactLayout, revealed]);
 
   const showImage = hasRemoteSrc || !isPending;
   const showSpinner = isPending && !revealed;
-  const useFramedLayout = (isPending && !layoutNatural) || isCdnLoading;
-  const tightToImage = layoutNatural && !showSpinner && !isCdnLoading;
-  const showLoadingAttr = isPending && !layoutNatural;
+  // 评论/碎语小图：占位阶段保持定宽比框；就绪后用 w-auto 贴合原图，避免 w-full 先撑满再缩回。
+  const useFramedLayout = isCompactLayout
+    ? (isPending && !revealed) || (isCdnLoading && !revealed)
+    : (isPending && !layoutNatural) || isCdnLoading;
+  const tightToImage = !isCompactLayout && layoutNatural && !showSpinner && !isCdnLoading;
+  const compactReady = isCompactLayout && hasRemoteSrc && revealed && !isCdnLoading;
+  const showLoadingAttr = isCompactLayout ? isPending && !revealed : isPending && !layoutNatural;
   const frameAspectRatio = storedAspectRatio ?? probedAspectRatio ?? DEFAULT_ASPECT_RATIO;
   const frameStyle = useFramedLayout ? { aspectRatio: String(frameAspectRatio) } : undefined;
 
   return (
     <NodeViewWrapper
       as="figure"
-      className={cn("my-6 block", !tightToImage && "w-full")}
+      className={cn(
+        "my-6 block max-w-full",
+        isCompactLayout ? (compactReady ? "w-fit" : "w-full") : !tightToImage && "w-full",
+      )}
       data-rich-editor-image={!showLoadingAttr ? true : undefined}
       data-rich-editor-image-loading={showLoadingAttr ? true : undefined}
     >
       <div
         className={cn(
-          tightToImage ? "contents" : "relative w-full overflow-hidden rounded-md",
+          tightToImage || compactReady ? "contents" : "relative w-full overflow-hidden rounded-md",
           useFramedLayout && "bg-muted/60",
-          !tightToImage && selected && SELECTED_OUTLINE,
+          !tightToImage && !compactReady && selected && SELECTED_OUTLINE,
         )}
         style={frameStyle}
         aria-label={
@@ -155,23 +188,34 @@ export function ImageNodeView({
               decoding="async"
               onLoad={handleImageReady}
               onError={() => {
+                const image = imageRef.current;
+                // decoding=async 时可能误触 error；已解码出尺寸则忽略，避免 CDN 已成功仍回退原图
+                if (revealed || (image?.naturalWidth ?? 0) > 0) return;
                 cdnImage.onError();
-                if (isDecoding) finishDecoding();
+                if (isDecoding) {
+                  finishDecoding();
+                }
               }}
               className={cn(
                 "transition-opacity duration-300",
-                tightToImage
+                compactReady
                   ? cn(
-                      "block w-full h-auto rounded-md",
+                      "block h-auto w-auto max-w-full rounded-md",
                       cdnPlaceholder.hideImage ? "opacity-0" : "opacity-100",
                       selected && SELECTED_OUTLINE,
                     )
-                  : cn(
-                      "absolute inset-0 h-full w-full object-contain",
-                      (revealed || !isPending) && !cdnPlaceholder.hideImage
-                        ? "opacity-100"
-                        : "opacity-0",
-                    ),
+                  : tightToImage
+                    ? cn(
+                        "block w-full h-auto rounded-md",
+                        cdnPlaceholder.hideImage ? "opacity-0" : "opacity-100",
+                        selected && SELECTED_OUTLINE,
+                      )
+                    : cn(
+                        "absolute inset-0 h-full w-full object-contain",
+                        (revealed || !isPending) && !cdnPlaceholder.hideImage
+                          ? "opacity-100"
+                          : "opacity-0",
+                      ),
               )}
             />
           </>

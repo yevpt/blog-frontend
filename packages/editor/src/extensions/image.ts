@@ -2,8 +2,9 @@ import Image from "@tiptap/extension-image";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { createElement } from "react";
 import type { JSONContent, MarkdownRendererHelpers, RenderContext } from "@tiptap/core";
+import { mergeAttributes } from "@tiptap/core";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
-import type { CdnImagePreset } from "@repo/hooks/cdn-image";
+import { resolveCdnImageAttrs, type CdnImagePreset } from "@repo/hooks/cdn-image";
 import { ImageNodeView } from "../nodes/image-node-view";
 
 import { IMAGE_UPLOAD_PLACEHOLDER_SRC } from "../constants/image-upload";
@@ -12,6 +13,8 @@ export { IMAGE_UPLOAD_PLACEHOLDER_SRC };
 
 export interface ImageExtensionOptions {
   imageOptimizationPreset: CdnImagePreset;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  HTMLAttributes: Record<string, any>;
 }
 
 export interface ImagePlaceholderOptions {
@@ -58,12 +61,18 @@ export const ImageExtension = Image.extend<ImageExtensionOptions>({
       inline: false,
       allowBase64: false,
       imageOptimizationPreset: "off",
+      HTMLAttributes: {},
     };
   },
 
   addAttributes() {
     return {
       ...this.parent?.(),
+      src: {
+        default: null,
+        parseHTML: (element) =>
+          element.getAttribute("data-original-src") || element.getAttribute("src"),
+      },
       uploadState: {
         default: null,
         parseHTML: (element) => element.getAttribute("data-upload-state"),
@@ -90,6 +99,36 @@ export const ImageExtension = Image.extend<ImageExtensionOptions>({
     return ReactNodeViewRenderer((props) =>
       createElement(ImageNodeView, { ...props, imageOptimizationPreset }),
     );
+  },
+
+  renderHTML({ node, HTMLAttributes }) {
+    const preset = this.options.imageOptimizationPreset;
+    const src = node.attrs.src;
+    const attributes = { ...HTMLAttributes };
+
+    if (
+      preset !== "off" &&
+      typeof src === "string" &&
+      src &&
+      src !== IMAGE_UPLOAD_PLACEHOLDER_SRC
+    ) {
+      // 避免 ProseMirror 生成内部 DOM 时，带有原图 src 的 img 标签触发浏览器预取庞大的原图。
+      const isCompactLayout = preset === "comment";
+      const attrs = resolveCdnImageAttrs(src, preset, {
+        mode: isCompactLayout ? "fixed" : "responsive",
+        displayWidth: isCompactLayout ? 640 : undefined,
+      });
+      if (attrs.optimizable) {
+        attributes.src = attrs.src;
+        if (attrs.srcSet) attributes.srcset = attrs.srcSet;
+        if (attrs.sizes) attributes.sizes = attrs.sizes;
+        attributes["data-original-src"] = src;
+      }
+    }
+
+    attributes.loading = "lazy";
+
+    return ["img", mergeAttributes(this.options.HTMLAttributes, attributes)];
   },
 
   addCommands() {
