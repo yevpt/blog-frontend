@@ -69,6 +69,8 @@ const mockRows: ModerationRow[] = [
 ];
 
 const mockRefetch = vi.fn();
+const mockControlReload = vi.fn();
+const mockUserReload = vi.fn();
 const mockSetPage = vi.fn();
 const mockSetContentType = vi.fn();
 const mockSetRiskLevel = vi.fn();
@@ -143,7 +145,7 @@ function setupControlHook(overrides: Partial<ReturnType<typeof useModerationCont
     isSaving: false,
     error: null,
     saveControl: vi.fn().mockResolvedValue(undefined),
-    reload: vi.fn().mockResolvedValue(undefined),
+    reload: mockControlReload,
     ...overrides,
   });
 }
@@ -163,6 +165,7 @@ function setupUserHook(overrides: Partial<ReturnType<typeof useModerationUser>> 
     hideContentBatch: vi.fn().mockResolvedValue(undefined),
     restoreContentBatch: vi.fn().mockResolvedValue(undefined),
     resetProfile: vi.fn(),
+    reload: mockUserReload,
     ...overrides,
   });
 }
@@ -181,6 +184,8 @@ describe("ModerationPage", () => {
     vi.clearAllMocks();
     toastQueue.clear();
     mockRefetch.mockResolvedValue(undefined);
+    mockControlReload.mockResolvedValue(undefined);
+    mockUserReload.mockResolvedValue(undefined);
     vi.mocked(useIsMdScreen).mockReturnValue(true);
     setupListHook();
     setupControlHook();
@@ -522,6 +527,75 @@ describe("ModerationPage", () => {
     renderPage();
 
     expect(screen.queryByRole("button", { name: /清除筛选/ })).not.toBeInTheDocument();
+  });
+
+  it("从其他 Tab 切回审核队列时刷新列表", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(mockRefetch).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("tab", { name: "全站控制" }));
+    await user.click(screen.getByRole("tab", { name: "审核队列" }));
+
+    expect(mockRefetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("切换到全站控制 Tab 时刷新控制数据", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(mockControlReload).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("tab", { name: "全站控制" }));
+
+    expect(mockControlReload).toHaveBeenCalledTimes(1);
+  });
+
+  it("切换到用户治理 Tab 时刷新已加载的用户画像", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole("tab", { name: "全站控制" }));
+    await user.click(screen.getByRole("tab", { name: "用户治理" }));
+
+    expect(mockUserReload).toHaveBeenCalledTimes(1);
+  });
+
+  it("再次切回规则管理 Tab 时刷新规则数据", async () => {
+    vi.mocked(apiClient.moderation.rules.list).mockResolvedValue({
+      list: [],
+      next_cursor: 0,
+      has_more: false,
+    });
+    vi.mocked(apiClient.moderation.rules.metadata).mockResolvedValue({
+      categories: [],
+      rule_types: [],
+      effects: [],
+      risk_levels: [],
+      sources: [],
+    });
+    vi.mocked(apiClient.moderation.rules.status).mockResolvedValue({
+      current_ruleset_id: 7,
+      rule_count: 0,
+      keyword_count: 0,
+      regexp_count: 0,
+      composite_count: 0,
+      index_bytes: 0,
+      build_peak_bytes: 0,
+      build_duration_ms: 0,
+      updated_at: "2026-06-30T00:00:00Z",
+    });
+
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole("tab", { name: "规则管理" }));
+    await waitFor(() => expect(apiClient.moderation.rules.list).toHaveBeenCalledTimes(1));
+
+    await user.click(screen.getByRole("tab", { name: "审核队列" }));
+    await user.click(screen.getByRole("tab", { name: "规则管理" }));
+    await waitFor(() => expect(apiClient.moderation.rules.list).toHaveBeenCalledTimes(2));
   });
 
   it("内容审核页提供规则管理标签且不提前请求隐藏标签数据", async () => {

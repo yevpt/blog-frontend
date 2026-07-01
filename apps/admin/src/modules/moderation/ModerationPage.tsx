@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Tabs, TabsItem, TabsList, TabsPanel, TabsPanels } from "@repo/ui";
 import { AdminPageHeader } from "../../components/AdminPageHeader";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
@@ -19,6 +19,28 @@ export function ModerationPage() {
   const review = useModerationReview(list);
   const isMdScreen = useIsMdScreen();
   const [rulesTabVisited, setRulesTabVisited] = useState(false);
+  const activeTabRef = useRef("queue");
+
+  const refreshTabData = useCallback(
+    (tab: string) => {
+      switch (tab) {
+        case "queue":
+          void list.refetch();
+          break;
+        case "control":
+          void control.reload();
+          break;
+        case "user":
+          void user.reload();
+          break;
+        case "rules":
+          // 规则 Tab 离开后会卸载，切回时重新挂载并自动拉取
+          setRulesTabVisited(true);
+          break;
+      }
+    },
+    [control, list, user],
+  );
 
   return (
     <div className="grid min-h-0 min-w-0 max-w-full gap-4 overflow-hidden md:h-[calc(100dvh-3rem)] md:grid-rows-[auto_minmax(0,1fr)] lg:h-[calc(100dvh-3.5rem)]">
@@ -30,7 +52,9 @@ export function ModerationPage() {
         defaultSelectedKey="queue"
         className="flex min-h-0 flex-1 flex-col"
         onSelectionChange={(key) => {
-          if (key === "rules") setRulesTabVisited(true);
+          const tab = String(key);
+          if (tab !== activeTabRef.current) refreshTabData(tab);
+          activeTabRef.current = tab;
         }}
       >
         <TabsList className="mb-4">

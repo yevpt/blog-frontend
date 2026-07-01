@@ -35,6 +35,7 @@ export interface UseModerationUserResult {
   hideContentBatch: (req: HideBatchReq) => Promise<void>;
   restoreContentBatch: (req: HideBatchReq) => Promise<void>;
   resetProfile: () => void;
+  reload: () => Promise<void>;
 }
 
 function toError(err: unknown, fallback: string): Error {
@@ -176,6 +177,22 @@ export function useModerationUser(): UseModerationUserResult {
     setError(null);
   }, []);
 
+  const reload = useCallback(async () => {
+    if (!profile) return;
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      await refreshProfile(profile.user_id);
+    } catch (err) {
+      setError(toError(err, "加载用户画像失败"));
+      setProfile(null);
+      setBatch(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [profile, refreshProfile]);
+
   return {
     profile,
     batch,
@@ -190,5 +207,6 @@ export function useModerationUser(): UseModerationUserResult {
     hideContentBatch,
     restoreContentBatch,
     resetProfile,
+    reload,
   };
 }

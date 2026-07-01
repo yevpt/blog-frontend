@@ -250,4 +250,30 @@ describe("useModerationUser", () => {
 
     expect(result.current.profile).toBeNull();
   });
+
+  it("reload 在无画像时不请求", async () => {
+    const { result } = renderHookWithAdminRouter(() => useModerationUser());
+
+    await act(async () => {
+      await result.current.reload();
+    });
+
+    expect(apiClient.moderation.getUserProfile).not.toHaveBeenCalled();
+  });
+
+  it("reload 重新拉取当前用户画像", async () => {
+    const { result } = renderHookWithAdminRouter(() => useModerationUser());
+
+    await act(async () => {
+      await result.current.loadProfile(42);
+    });
+    vi.mocked(apiClient.moderation.getUserProfile).mockClear();
+
+    await act(async () => {
+      await result.current.reload();
+    });
+
+    expect(apiClient.moderation.getUserProfile).toHaveBeenCalledWith(42);
+    expect(result.current.profile?.trust_level).toBe("normal");
+  });
 });
