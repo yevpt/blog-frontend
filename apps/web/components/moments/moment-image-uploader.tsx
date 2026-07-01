@@ -20,13 +20,13 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { SvgIcon } from "@repo/icons";
 import { ImageViewer } from "@repo/ui";
-import { prepareImageForUpload, USER_FACING_IMAGE_ERROR_PREFIXES } from "@/lib/compress-image";
+import { prepareImageForUpload, getImageProcessingErrorMessage } from "@/lib/compress-image";
 import { addToast } from "@/lib/toast";
 import { moveItem } from "./move-item";
+import { logMomentUploadImages } from "./log-moment-upload-images";
 import type { MomentImageItem } from "./types";
 
 const MAX_IMAGES = 9;
-const GENERIC_IMAGE_ERROR_MESSAGE = "图片处理失败，请重试";
 
 interface Props {
   items: MomentImageItem[];
@@ -83,7 +83,9 @@ export function MomentImageUploader({ items, onChange, disabled, readOnly = fals
             URL.revokeObjectURL(item.previewUrl);
             return prev;
           }
-          return [...prev, item];
+          const next = [...prev, item];
+          logMomentUploadImages("prepare", next);
+          return next;
         });
       } catch (err) {
         addToast(getImageProcessingErrorMessage(err), "error");
@@ -201,16 +203,6 @@ function createImageId(): string {
 function formatUuid(bytes: Uint8Array): string {
   const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"));
   return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10, 16).join("")}`;
-}
-
-function getImageProcessingErrorMessage(err: unknown): string {
-  if (
-    err instanceof Error &&
-    USER_FACING_IMAGE_ERROR_PREFIXES.some((prefix) => err.message.startsWith(prefix))
-  ) {
-    return err.message;
-  }
-  return GENERIC_IMAGE_ERROR_MESSAGE;
 }
 
 /** 压缩中的占位格：固定 80px，居中转圈。 */

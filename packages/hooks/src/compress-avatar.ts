@@ -13,6 +13,7 @@ export const AVATAR_ERROR_PREFIXES = [
   "不支持 GIF",
   "不支持",
   "图片文件为空",
+  "请选择",
   "头像过大",
   "图片无法读取",
   "HEIC 图片转换失败",

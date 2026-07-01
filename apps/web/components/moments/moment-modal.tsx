@@ -12,6 +12,7 @@ import { getAuthorMomentEditImages } from "@/components/moderation";
 import { MomentTextInput } from "./moment-text-input";
 import { MomentImageUploader } from "./moment-image-uploader";
 import { momentPublishFingerprint } from "./moment-submit-fingerprint";
+import { logMomentUploadImages } from "./log-moment-upload-images";
 import type { MomentImageItem } from "./types";
 
 const MAX_CONTENT = 800;
@@ -95,6 +96,7 @@ export function MomentModal() {
         form.append("images", it.file, it.file.name);
         form.append("image_order", `file:${i}`);
       });
+      logMomentUploadImages("publish", images);
       const key = getIdempotencyKey(momentPublishFingerprint(content, "1", "1", images));
       const res = await apiForm<MomentItemResp>("/api/moments", form, {
         method: "POST",

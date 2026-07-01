@@ -18,6 +18,7 @@ import { useIdempotencyKey } from "@/hooks/use-idempotency-key";
 import { normalizeModerationView } from "@/components/moderation";
 import { mergePageWithPublishedMoment } from "@/components/moments/enrich-moment-from-publish";
 import { momentEditFingerprint } from "@/components/moments/moment-submit-fingerprint";
+import { logMomentUploadImages } from "@/components/moments/log-moment-upload-images";
 import { buildQuery } from "@/lib/query";
 import type { MomentImageItem } from "@/components/moments/types";
 
@@ -407,6 +408,7 @@ export function useMomentList({
           }
         });
 
+        logMomentUploadImages("publish", images);
         const key = getIdempotencyKey(
           momentEditFingerprint(moment.id, content, moment.status, moment.comment_status, images),
         );

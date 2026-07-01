@@ -25,6 +25,8 @@ describe("useEditorImageUpload", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    vi.spyOn(console, "info").mockImplementation(() => undefined);
     prepareImageForUpload.mockImplementation(async (file: File) => file);
   });
 
@@ -48,6 +50,16 @@ describe("useEditorImageUpload", () => {
     });
 
     expect(prepareImageForUpload).toHaveBeenCalledWith(file, "comment");
+    // eslint-disable-next-line no-console
+    expect(console.info).toHaveBeenCalledWith(
+      "[upload-image:comment:select]",
+      expect.objectContaining({ name: "a.png", sizeBytes: file.size }),
+    );
+    // eslint-disable-next-line no-console
+    expect(console.info).toHaveBeenCalledWith(
+      "[upload-image:comment:upload]",
+      expect.objectContaining({ name: "a.png", sizeBytes: file.size }),
+    );
     expect(handlers.insertLoading).toHaveBeenCalledWith(
       expect.objectContaining({ aspectRatio: 1.5, alt: "a.png" }),
     );

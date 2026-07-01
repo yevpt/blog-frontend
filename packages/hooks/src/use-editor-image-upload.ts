@@ -2,6 +2,7 @@ import { useRef, useState, type ChangeEvent } from "react";
 import { readImageAspectRatio, type ImageInsertHandlers } from "@repo/editor";
 import type { TempImageUploadScene } from "@repo/api";
 import { prepareImageForUpload } from "./compress-image";
+import { logUploadFileSize, formatUploadFileSize } from "./log-upload-file-size";
 
 function createUploadId(): string {
   const browserCrypto = globalThis.crypto;
@@ -60,10 +61,16 @@ export function useEditorImageUpload({ scene, upload, onError }: UseEditorImageU
     setIsUploading(true);
 
     try {
+      logUploadFileSize(`${scene}:select`, file);
       const prepared = await prepareImageForUpload(
         file,
         scene === "comment" ? "comment" : "article",
       );
+      logUploadFileSize(`${scene}:upload`, prepared, {
+        originalBytes: file.size,
+        originalLabel: formatUploadFileSize(file.size),
+        ...(await readUploadDimensions(prepared)),
+      });
       const url = await upload(prepared);
       handlers.resolveLoading(uploadId, url, prepared.name);
     } catch (err) {
@@ -81,4 +88,20 @@ export function useEditorImageUpload({ scene, upload, onError }: UseEditorImageU
     handleInsertImageRequest,
     handleFileChange,
   };
+}
+
+async function readUploadDimensions(file: File): Promise<{ width?: number; height?: number }> {
+  if (typeof createImageBitmap === "undefined") {
+    return {};
+  }
+  try {
+    const bitmap = await createImageBitmap(file);
+    try {
+      return { width: bitmap.width, height: bitmap.height };
+    } finally {
+      bitmap.close();
+    }
+  } catch {
+    return {};
+  }
 }

@@ -2,17 +2,22 @@ import imageCompression from "browser-image-compression";
 import {
   ARTICLE_UPLOAD_MAX_BYTES,
   AVATAR_COMPRESS_TRIGGER_BYTES,
+  AVATAR_SELECTION_MAX_BYTES,
   AVATAR_UPLOAD_MAX_BYTES,
+  BACKEND_SAFE_MAX_PIXELS,
+  COMMENT_IMAGE_COMPRESS_TARGET_BYTES,
   GIF_MAX_BYTES,
+  IMAGE_SELECTION_MAX_BYTES,
   INTERACTIVE_IMAGE_COMPRESS_TARGET_BYTES,
   INTERACTIVE_IMAGE_COMPRESS_TRIGGER_BYTES,
+  INTERACTIVE_IMAGE_MAX_EDGE_PX,
   INTERACTIVE_IMAGE_UPLOAD_MAX_BYTES,
 } from "./image-upload-limits";
 
 export type ImageUploadScene = "moment" | "comment" | "article" | "avatar";
 
 const WEBP_COMPRESS_INITIAL_QUALITY = 0.92;
-const HEIC_CONVERT_QUALITY = 0.92;
+const HEIC_CONVERT_QUALITY = 0.85;
 const SUPPORTED_IMAGE_FORMATS_TEXT = "JPG、PNG、WebP、GIF 或 HEIC/HEIF 图片";
 const HEIC_CONVERT_ERROR_MESSAGE = "HEIC 图片转换失败，请换一张或转为 JPG 后上传";
 
@@ -20,22 +25,33 @@ export const USER_FACING_IMAGE_ERROR_PREFIXES = [
   "只能上传图片文件",
   "不支持",
   "图片文件为空",
+  "请选择",
   "图片过大",
+  "图片不能超过",
   "GIF 图片过大",
   "图片无法读取",
   "HEIC 图片转换失败",
 ] as const;
 
+const GENERIC_IMAGE_ERROR_MESSAGE = "图片处理失败，请重试";
+
 /** @deprecated 使用场景常量替代 */
 export const MAX_IMAGE_BYTES = INTERACTIVE_IMAGE_UPLOAD_MAX_BYTES;
 
 let webpEncodeSupported: boolean | undefined;
+let readImageDimensionsOverride: ((file: File) => Promise<ImageDimensions>) | undefined;
+
+interface ImageDimensions {
+  width: number;
+  height: number;
+}
 
 /**
  * 按场景准备上传图片：合规原样返回；仅在超过阈值时高质量 WebP 压缩。
  */
 export async function prepareImageForUpload(file: File, scene: ImageUploadScene): Promise<File> {
   validateImageFile(file);
+  rejectOversizedSelection(file, scene);
 
   if (isGifImage(file)) {
     if (scene === "avatar") {
@@ -44,8 +60,12 @@ export async function prepareImageForUpload(file: File, scene: ImageUploadScene)
     return handleGifUpload(file);
   }
 
-  let prepared = isHeicImage(file) ? await convertHeicForUpload(file) : file;
-  prepared = await enforceSceneLimits(prepared, scene);
+  const convertedFromHeic = isHeicImage(file);
+  let prepared = convertedFromHeic ? await convertHeicForUpload(file) : file;
+  prepared = await enforceSceneLimits(prepared, scene, {
+    // HEIC 转 WebP/JPEG 后体积常膨胀，需始终再压一层确保落在上传上限内
+    alwaysCompress: convertedFromHeic && scene !== "article",
+  });
   return prepared;
 }
 
@@ -76,30 +96,129 @@ function getUploadTooLargeMessage(scene: ImageUploadScene): string {
   }
 }
 
-async function enforceSceneLimits(file: File, scene: ImageUploadScene): Promise<File> {
-  const uploadMaxBytes = getSceneUploadMaxBytes(scene);
-  if (file.size > uploadMaxBytes) {
-    throw new Error(getUploadTooLargeMessage(scene));
+function getSelectionMaxBytes(scene: ImageUploadScene): number {
+  return scene === "avatar" ? AVATAR_SELECTION_MAX_BYTES : IMAGE_SELECTION_MAX_BYTES;
+}
+
+function getSelectionTooLargeMessage(scene: ImageUploadScene): string {
+  const maxMb = getSelectionMaxBytes(scene) / (1024 * 1024);
+  return scene === "avatar" ? `请选择 ${maxMb}MB 以内的头像图片` : `请选择 ${maxMb}MB 以内的图片`;
+}
+
+function rejectOversizedSelection(file: File, scene: ImageUploadScene): void {
+  const maxBytes = getSelectionMaxBytes(scene);
+  if (file.size > maxBytes) {
+    throw new Error(getSelectionTooLargeMessage(scene));
   }
+}
+
+async function enforceSceneLimits(
+  file: File,
+  scene: ImageUploadScene,
+  options?: { alwaysCompress?: boolean },
+): Promise<File> {
+  const uploadMaxBytes = getSceneUploadMaxBytes(scene);
 
   if (scene === "article") {
+    if (file.size >= uploadMaxBytes) {
+      throw new Error(getUploadTooLargeMessage(scene));
+    }
     return file;
   }
 
   const triggerBytes =
     scene === "avatar" ? AVATAR_COMPRESS_TRIGGER_BYTES : INTERACTIVE_IMAGE_COMPRESS_TRIGGER_BYTES;
-  const targetBytes =
-    scene === "avatar" ? AVATAR_UPLOAD_MAX_BYTES : INTERACTIVE_IMAGE_COMPRESS_TARGET_BYTES;
+  const targetBytes = getSceneCompressTargetBytes(scene);
+  const maxEdgePx = getSceneMaxEdgePx(scene);
+  const dimensions = await readImageDimensions(file).catch(() => null);
+  const needsResize = dimensions ? exceedsBackendPixelLimit(dimensions) : false;
 
-  if (file.size <= triggerBytes) {
-    return file;
+  let prepared = file;
+  if (options?.alwaysCompress || scene === "comment" || file.size > triggerBytes || needsResize) {
+    prepared = await compressToWebPWithinBytes(file, targetBytes, maxEdgePx);
   }
 
-  const compressed = await compressToWebPWithinBytes(file, targetBytes);
-  if (compressed.size > uploadMaxBytes) {
+  return ensureWithinUploadMax(prepared, targetBytes, uploadMaxBytes, scene, maxEdgePx);
+}
+
+function getSceneCompressTargetBytes(scene: ImageUploadScene): number {
+  switch (scene) {
+    case "avatar":
+      return AVATAR_UPLOAD_MAX_BYTES;
+    case "comment":
+      return COMMENT_IMAGE_COMPRESS_TARGET_BYTES;
+    default:
+      return INTERACTIVE_IMAGE_COMPRESS_TARGET_BYTES;
+  }
+}
+
+function getSceneMaxEdgePx(scene: ImageUploadScene): number {
+  return scene === "article" ? 4096 : INTERACTIVE_IMAGE_MAX_EDGE_PX;
+}
+
+function exceedsBackendPixelLimit(dimensions: ImageDimensions): boolean {
+  const { width, height } = dimensions;
+  if (width <= 0 || height <= 0) return false;
+  return (
+    width * height >= BACKEND_SAFE_MAX_PIXELS ||
+    width > INTERACTIVE_IMAGE_MAX_EDGE_PX ||
+    height > INTERACTIVE_IMAGE_MAX_EDGE_PX
+  );
+}
+
+async function readImageDimensions(file: File): Promise<ImageDimensions> {
+  if (readImageDimensionsOverride) {
+    return readImageDimensionsOverride(file);
+  }
+
+  if (typeof createImageBitmap !== "undefined") {
+    const bitmap = await createImageBitmap(file);
+    try {
+      return { width: bitmap.width, height: bitmap.height };
+    } finally {
+      bitmap.close();
+    }
+  }
+
+  if (typeof document === "undefined") {
+    throw new Error("image dimensions unavailable");
+  }
+
+  const url = URL.createObjectURL(file);
+  try {
+    return await new Promise<ImageDimensions>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      img.onerror = () => reject(new Error("image dimensions unavailable"));
+      img.src = url;
+    });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function ensureWithinUploadMax(
+  file: File,
+  compressTargetBytes: number,
+  uploadMaxBytes: number,
+  scene: ImageUploadScene,
+  maxEdgePx: number,
+): Promise<File> {
+  let prepared = file;
+  let targetBytes = compressTargetBytes;
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (prepared.size < uploadMaxBytes) {
+      return prepared;
+    }
+    targetBytes = Math.max(Math.floor(targetBytes * 0.75), 256 * 1024);
+    prepared = await compressToWebPWithinBytes(prepared, targetBytes, maxEdgePx);
+  }
+
+  if (prepared.size >= uploadMaxBytes) {
     throw new Error(getUploadTooLargeMessage(scene));
   }
-  return compressed;
+  return prepared;
 }
 
 function handleGifUpload(file: File): File {
@@ -109,14 +228,18 @@ function handleGifUpload(file: File): File {
   return file;
 }
 
-async function compressToWebPWithinBytes(file: File, maxBytes: number): Promise<File> {
+async function compressToWebPWithinBytes(
+  file: File,
+  maxBytes: number,
+  maxEdgePx: number,
+): Promise<File> {
   const maxSizeMB = maxBytes / (1024 * 1024);
   const useWebP = canEncodeWebP();
 
   try {
     const compressed = await imageCompression(file, {
       maxSizeMB,
-      maxWidthOrHeight: 4096,
+      maxWidthOrHeight: maxEdgePx,
       useWebWorker: true,
       initialQuality: WEBP_COMPRESS_INITIAL_QUALITY,
       ...(useWebP ? { fileType: "image/webp" as const } : {}),
@@ -179,6 +302,10 @@ function validateImageFile(file: File): void {
 }
 
 async function convertHeicForUpload(file: File): Promise<File> {
+  if (typeof window === "undefined") {
+    throw new Error(HEIC_CONVERT_ERROR_MESSAGE);
+  }
+
   const useWebP = canEncodeWebP();
   const toType = useWebP ? "image/webp" : "image/jpeg";
   const extension = useWebP ? "webp" : "jpg";
@@ -224,7 +351,25 @@ function isGifImage(file: File): boolean {
 
 function isHeicImage(file: File): boolean {
   const type = file.type.toLowerCase();
-  return type === "image/heic" || type === "image/heif" || /\.hei[cf]$/i.test(file.name);
+  return (
+    type === "image/heic" ||
+    type === "image/heif" ||
+    type === "image/heic-sequence" ||
+    type === "image/heif-sequence" ||
+    type === "public.heic" ||
+    type === "public.heif" ||
+    /\.hei[cf]$/i.test(file.name)
+  );
+}
+
+export function getImageProcessingErrorMessage(err: unknown): string {
+  if (
+    err instanceof Error &&
+    USER_FACING_IMAGE_ERROR_PREFIXES.some((prefix) => err.message.startsWith(prefix))
+  ) {
+    return err.message;
+  }
+  return GENERIC_IMAGE_ERROR_MESSAGE;
 }
 
 function replaceImageExtension(fileName: string, extension: string): string {
@@ -256,4 +401,15 @@ export function resetWebpEncodeSupportCacheForTests(): void {
 /** 测试钩子：强制 WebP 编码能力检测结果 */
 export function setWebpEncodeSupportedForTests(value: boolean | undefined): void {
   webpEncodeSupported = value;
+}
+
+/** 测试钩子：替换图片尺寸读取，避免 happy-dom 解码假文件卡住 */
+export function setReadImageDimensionsForTests(
+  fn: ((file: File) => Promise<ImageDimensions>) | undefined,
+): void {
+  readImageDimensionsOverride = fn;
+}
+
+export function resetReadImageDimensionsForTests(): void {
+  readImageDimensionsOverride = undefined;
 }

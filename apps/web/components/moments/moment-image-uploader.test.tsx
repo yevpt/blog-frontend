@@ -8,18 +8,14 @@ const dndState = vi.hoisted(() => ({
 }));
 
 const prepareImageForUpload = vi.fn();
-vi.mock("@/lib/compress-image", () => ({
-  prepareImageForUpload: (f: File, scene: string) => prepareImageForUpload(f, scene),
-  MAX_IMAGE_BYTES: 3 * 1024 * 1024,
-  USER_FACING_IMAGE_ERROR_PREFIXES: [
-    "只能上传图片文件",
-    "不支持",
-    "图片文件为空",
-    "图片过大",
-    "图片无法读取",
-    "HEIC 图片转换失败",
-  ],
-}));
+vi.mock("@/lib/compress-image", async () => {
+  const actual = await vi.importActual<Record<string, unknown>>("@repo/hooks");
+  return {
+    prepareImageForUpload: (f: File, scene: string) => prepareImageForUpload(f, scene),
+    getImageProcessingErrorMessage: actual.getImageProcessingErrorMessage,
+    MAX_IMAGE_BYTES: 3 * 1024 * 1024,
+  };
+});
 const addToast = vi.fn();
 vi.mock("@/lib/toast", () => ({ addToast: (...a: unknown[]) => addToast(...a) }));
 vi.mock("@dnd-kit/core", () => ({
@@ -212,6 +208,27 @@ describe("MomentImageUploader", () => {
 
     expect(await screen.findByRole("button", { name: "删除图片" })).toBeInTheDocument();
     expect(addToast).not.toHaveBeenCalled();
+  });
+
+  it("图片超过 3MB 且压缩后仍超限时报具体原因", async () => {
+    const user = userEvent.setup();
+    prepareImageForUpload.mockRejectedValue(new Error("图片不能超过 3MB"));
+
+    render(<Harness />);
+    await user.upload(screen.getByTestId("moment-image-input") as HTMLInputElement, img());
+
+    await waitFor(() => expect(addToast).toHaveBeenCalledWith("图片不能超过 3MB", "error"));
+  });
+
+  it("选图超过 10MB 时立即 toast 报错", async () => {
+    const user = userEvent.setup();
+    prepareImageForUpload.mockRejectedValue(new Error("请选择 10MB 以内的图片"));
+
+    render(<Harness />);
+    await user.upload(screen.getByTestId("moment-image-input") as HTMLInputElement, img());
+
+    await waitFor(() => expect(addToast).toHaveBeenCalledWith("请选择 10MB 以内的图片", "error"));
+    expect(screen.queryByRole("button", { name: "删除图片" })).not.toBeInTheDocument();
   });
 
   it("内部异常不向用户透出原始错误", async () => {
