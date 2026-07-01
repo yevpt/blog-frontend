@@ -38,9 +38,14 @@ const mockHistoryResp: AdminModerationHistoryResp = {
   total: 2,
   page: 1,
   page_size: 20,
-  item_id: 100,
-  revisions: [
+  list: [
     {
+      item_id: 100,
+      subject: { type: "moment", id: 9 },
+      author_id: 42,
+      lock_version: 3,
+      lifecycle_state: "active",
+      public_state: "visible",
       revision_id: 200,
       revision_version: 1,
       submitted_content: "第一版提交内容",
@@ -48,27 +53,26 @@ const mockHistoryResp: AdminModerationHistoryResp = {
       risk_level: "medium",
       policy_action: "post_review",
       review_status: "superseded",
+      can_interact: true,
       images: [
         {
-          id: 1,
-          name: "photo.jpg",
-          file_type: "image/jpeg",
+          object_key: "moderation/history/moments/100/photo.jpg",
           access_url: "https://cdn.example.com/moderation/history/moments/1/photo.jpg",
-          display_mode: "original",
+          display_mode: "visible",
+          media_type: "image/jpeg",
+          is_gif: false,
           seq: 0,
-        },
-      ],
-      events: [
-        {
-          event_type: "submitted",
-          operator_id: 42,
-          operator_name: "用户A",
-          created_at: "2026-06-29T08:00:00Z",
         },
       ],
       created_at: "2026-06-29T08:00:00Z",
     },
     {
+      item_id: 100,
+      subject: { type: "moment", id: 9 },
+      author_id: 42,
+      lock_version: 3,
+      lifecycle_state: "active",
+      public_state: "visible",
       revision_id: 201,
       revision_version: 2,
       submitted_content: "第二版提交内容",
@@ -76,18 +80,34 @@ const mockHistoryResp: AdminModerationHistoryResp = {
       risk_level: "low",
       policy_action: "auto_approve",
       review_status: "approved",
+      can_interact: true,
       images: [],
-      events: [
-        {
-          event_type: "approved",
-          operator_id: 1,
-          operator_name: "管理员",
-          reason: "内容合规",
-          created_at: "2026-06-29T10:00:00Z",
-        },
-      ],
       created_at: "2026-06-29T09:00:00Z",
       reviewed_at: "2026-06-29T10:00:00Z",
+    },
+  ],
+  events: [
+    {
+      id: 1,
+      revision_id: 200,
+      actor_user_id: 42,
+      action: "submit",
+      created_at: "2026-06-29T08:00:00Z",
+    },
+    {
+      id: 2,
+      revision_id: 201,
+      actor_user_id: 1,
+      action: "approve",
+      reason: "内容合规",
+      created_at: "2026-06-29T10:00:00Z",
+    },
+    {
+      id: 3,
+      actor_user_id: 1,
+      action: "emergency_hide",
+      reason: "紧急处置",
+      created_at: "2026-06-29T11:00:00Z",
     },
   ],
 };
@@ -158,8 +178,10 @@ describe("ModerationHistory", () => {
       expect(screen.queryByText("加载中...")).not.toBeInTheDocument();
     });
 
-    expect(screen.getByText(/用户A/)).toBeInTheDocument();
-    expect(screen.getByText(/管理员/)).toBeInTheDocument();
+    expect(screen.getByText(/#42/)).toBeInTheDocument();
+    expect(screen.getAllByText(/#1/)).toHaveLength(2);
+    expect(screen.getByText("内容级操作记录")).toBeInTheDocument();
+    expect(screen.getByText("紧急隐藏")).toBeInTheDocument();
     expect(screen.getByText(/内容合规/)).toBeInTheDocument();
   });
 

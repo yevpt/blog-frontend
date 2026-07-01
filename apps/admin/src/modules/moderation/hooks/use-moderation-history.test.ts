@@ -17,9 +17,14 @@ const mockHistoryResp: AdminModerationHistoryResp = {
   total: 1,
   page: 1,
   page_size: 20,
-  item_id: 100,
-  revisions: [
+  list: [
     {
+      item_id: 100,
+      subject: { type: "moment", id: 9 },
+      author_id: 42,
+      lock_version: 1,
+      lifecycle_state: "active",
+      public_state: "visible",
       revision_id: 200,
       revision_version: 1,
       submitted_content: "提交内容",
@@ -27,24 +32,26 @@ const mockHistoryResp: AdminModerationHistoryResp = {
       risk_level: "medium",
       policy_action: "post_review",
       review_status: "superseded",
+      can_interact: true,
       images: [
         {
-          id: 1,
-          name: "photo.jpg",
-          file_type: "image/jpeg",
+          object_key: "moderation/history/moments/100/photo.jpg",
           access_url: "https://example.com/photo.jpg",
-          display_mode: "original",
+          display_mode: "visible",
+          media_type: "image/jpeg",
+          is_gif: false,
           seq: 0,
         },
       ],
-      events: [
-        {
-          event_type: "submitted",
-          operator_id: 42,
-          operator_name: "用户A",
-          created_at: "2026-06-29T08:00:00Z",
-        },
-      ],
+      created_at: "2026-06-29T08:00:00Z",
+    },
+  ],
+  events: [
+    {
+      id: 1,
+      revision_id: 200,
+      actor_user_id: 42,
+      action: "submit",
       created_at: "2026-06-29T08:00:00Z",
     },
   ],
@@ -76,10 +83,10 @@ describe("useModerationHistory", () => {
     });
 
     expect(apiClient.moderation.getHistory).toHaveBeenCalledWith(100, { page: 1 });
-    expect(result.current.data?.revisions).toHaveLength(1);
-    expect(result.current.data?.revisions[0]?.review_status).toBe("superseded");
-    expect(result.current.data?.revisions[0]?.images).toHaveLength(1);
-    expect(result.current.data?.revisions[0]?.images[0]?.access_url).toBe(
+    expect(result.current.data?.list).toHaveLength(1);
+    expect(result.current.data?.list[0]?.review_status).toBe("superseded");
+    expect(result.current.data?.list[0]?.images).toHaveLength(1);
+    expect(result.current.data?.list[0]?.images[0]?.access_url).toBe(
       "https://example.com/photo.jpg",
     );
   });

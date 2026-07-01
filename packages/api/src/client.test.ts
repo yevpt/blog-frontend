@@ -2162,8 +2162,8 @@ describe("createApiClient", () => {
           total: 0,
           page: 1,
           page_size: 20,
-          item_id: 5,
-          revisions: [],
+          list: [],
+          events: [],
         },
       }),
     );
@@ -2182,7 +2182,7 @@ describe("createApiClient", () => {
       mockResponse({
         code: 0,
         message: "ok",
-        data: { total: 0, page: 1, page_size: 20, item_id: 7, revisions: [] },
+        data: { total: 0, page: 1, page_size: 20, list: [], events: [] },
       }),
     );
     const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "admin-token" });

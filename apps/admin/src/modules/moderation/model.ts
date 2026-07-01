@@ -143,7 +143,7 @@ export const REVIEW_STATUS_OPTIONS: FilterOption<FilterValue>[] = [
   { value: "pending", label: "待审核" },
   { value: "approved", label: "已通过" },
   { value: "rejected", label: "已驳回" },
-  { value: "superseded", label: "已过期" },
+  { value: "superseded", label: "已被新版本替代" },
 ];
 
 export const PUBLIC_STATE_OPTIONS: FilterOption<FilterValue>[] = [

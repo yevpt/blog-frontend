@@ -9,13 +9,17 @@ import { reviewStatusLabel, reviewStatusVariant } from "../model";
 
 // 事件类型 → 中文
 const EVENT_TYPE_LABEL: Record<string, string> = {
-  submitted: "提交",
-  resubmitted: "重新提交",
-  approved: "通过",
-  corrected: "修正",
-  rejected: "驳回",
-  hidden: "隐藏",
-  restored: "恢复",
+  submit: "提交",
+  resubmit: "重新提交",
+  approve: "通过",
+  correct_and_approve: "修正后通过",
+  reject: "驳回",
+  emergency_hide: "紧急隐藏",
+  restore: "恢复",
+  delete: "删除",
+  admin_delete: "管理员删除",
+  trust_change: "调整信任等级",
+  sanction_change: "调整处罚状态",
 };
 
 function formatEventTime(iso: string) {
@@ -32,11 +36,9 @@ function EventItem({ event }: EventItemProps) {
   return (
     <li className="flex flex-col gap-0.5 text-sm">
       <div className="flex items-center gap-2">
-        <span className="font-medium">
-          {EVENT_TYPE_LABEL[event.event_type] ?? event.event_type}
-        </span>
+        <span className="font-medium">{EVENT_TYPE_LABEL[event.action] ?? event.action}</span>
         <span className="text-muted-foreground">
-          {event.operator_name ?? `#${event.operator_id}`}
+          {event.actor_user_id ? `#${event.actor_user_id}` : "系统"}
         </span>
         <span className="text-xs text-muted-foreground">{formatEventTime(event.created_at)}</span>
       </div>
@@ -47,9 +49,10 @@ function EventItem({ event }: EventItemProps) {
 
 interface RevisionCardProps {
   revision: AdminModerationHistoryRevisionResp;
+  events: AdminModerationHistoryEventResp[];
 }
 
-function RevisionCard({ revision }: RevisionCardProps) {
+function RevisionCard({ revision, events }: RevisionCardProps) {
   return (
     <article className="rounded-lg border border-border/80 bg-background p-4 space-y-3">
       {/* 标题行 */}
@@ -92,12 +95,12 @@ function RevisionCard({ revision }: RevisionCardProps) {
       ) : null}
 
       {/* 操作事件 */}
-      {revision.events?.length > 0 ? (
+      {events.length > 0 ? (
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-1">操作记录</p>
           <ul className="space-y-1">
-            {revision.events.map((event, idx) => (
-              <EventItem key={`${event.event_type}-${idx}`} event={event} />
+            {events.map((event) => (
+              <EventItem key={event.id} event={event} />
             ))}
           </ul>
         </div>
@@ -128,7 +131,7 @@ export function ModerationHistory({ itemId, open, activeTab }: ModerationHistory
     return <p className="py-6 text-center text-sm text-destructive">{error.message}</p>;
   }
 
-  if (!data || !data.revisions || data.revisions.length === 0) {
+  if (!data || !data.list || data.list.length === 0) {
     return <p className="py-6 text-center text-sm text-muted-foreground">暂无历史记录</p>;
   }
 
@@ -137,11 +140,30 @@ export function ModerationHistory({ itemId, open, activeTab }: ModerationHistory
   return (
     <div className="space-y-4">
       <div className="space-y-3">
-        {/* 倒序展示，最新版本在前 */}
-        {[...data.revisions].reverse().map((revision) => (
-          <RevisionCard key={revision.revision_id} revision={revision} />
+        {/* 后端已按版本倒序分页，保持最新版本在前。 */}
+        {data.list.map((revision) => (
+          <RevisionCard
+            key={revision.revision_id}
+            revision={revision}
+            events={(data.events ?? []).filter(
+              (event) => event.revision_id === revision.revision_id,
+            )}
+          />
         ))}
       </div>
+
+      {(data.events ?? []).some((event) => event.revision_id == null) ? (
+        <section className="rounded-lg border border-border/80 bg-background p-4">
+          <p className="mb-2 text-xs font-medium text-muted-foreground">内容级操作记录</p>
+          <ul className="space-y-1">
+            {(data.events ?? [])
+              .filter((event) => event.revision_id == null)
+              .map((event) => (
+                <EventItem key={event.id} event={event} />
+              ))}
+          </ul>
+        </section>
+      ) : null}
 
       {/* 分页 */}
       {totalPages > 1 ? (

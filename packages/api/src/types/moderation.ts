@@ -184,39 +184,32 @@ export interface AdminModerationEmergencyBatchResp {
   has_more: boolean;
 }
 
-/** 审核历史单张图片快照 */
+export type ModerationHistoryImageDisplayMode = "visible" | "pending" | "blocked";
+
+/** 审核历史单张图片快照，与后端 AdminModerationHistoryImageResp 对齐。 */
 export interface AdminModerationHistoryImageResp {
-  id: number;
-  name: string;
-  file_type: string;
-  access_url: string;
-  display_mode: ModerationImageDisplayMode;
   seq: number;
+  object_key: string;
+  access_url: string;
+  display_mode: ModerationHistoryImageDisplayMode;
+  media_type: string;
+  is_gif: boolean;
 }
 
-/** 审核历史单个操作事件 */
+/** 审核历史单个操作事件，与 moderation_action_log 字段对齐。 */
 export interface AdminModerationHistoryEventResp {
-  /** 事件类型：submitted/resubmitted/approved/corrected/rejected/hidden/restored */
-  event_type: string;
-  operator_id: number;
-  operator_name?: string;
+  id: number;
+  revision_id?: number;
+  actor_user_id?: number;
+  action: string;
   reason?: string;
+  metadata_json?: string;
   created_at: string;
 }
 
 /** 审核历史单个修订版本 */
-export interface AdminModerationHistoryRevisionResp {
-  revision_id: number;
-  revision_version: number;
-  submitted_content: string;
-  published_content: string;
-  risk_level: ModerationRiskLevel;
-  policy_action: ModerationPolicyAction;
-  review_status: ModerationReviewStatus;
+export interface AdminModerationHistoryRevisionResp extends AdminModerationItemResp {
   images: AdminModerationHistoryImageResp[];
-  events: AdminModerationHistoryEventResp[];
-  created_at: string;
-  reviewed_at?: string;
 }
 
 /** 审核历史分页响应 */
@@ -225,8 +218,8 @@ export interface AdminModerationHistoryResp {
   total: number;
   page: number;
   page_size: number;
-  item_id: number;
-  revisions: AdminModerationHistoryRevisionResp[];
+  list: AdminModerationHistoryRevisionResp[];
+  events: AdminModerationHistoryEventResp[];
 }
 
 /** 审核历史查询入参 */
