@@ -64,6 +64,53 @@ describe("useCdnOptimizedImage", () => {
     expect(result.current.isLoading).toBe(true);
   });
 
+  it("onLoad 后 onError 不触发回退", () => {
+    const { result } = renderHook(() => useCdnOptimizedImage(OPTIMIZABLE, "thumbnail"));
+
+    act(() => {
+      result.current.onLoad();
+    });
+    act(() => {
+      result.current.onError();
+    });
+
+    expect(result.current.displaySrc).toContain("w=112");
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it("fallbackToOriginal=false 时重试耗尽后保持 CDN URL 并标记 error", () => {
+    vi.useFakeTimers();
+    const { result } = renderHook(() =>
+      useCdnOptimizedImage(OPTIMIZABLE, "thumbnail", { fallbackToOriginal: false }),
+    );
+
+    act(() => {
+      result.current.onError();
+    });
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+    act(() => {
+      result.current.onError();
+    });
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+    act(() => {
+      result.current.onError();
+    });
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+    act(() => {
+      result.current.onError();
+    });
+
+    expect(result.current.displaySrc).toContain("w=112");
+    expect(result.current.displaySrc).not.toBe(OPTIMIZABLE);
+    expect(result.current.isError).toBe(true);
+  });
+
   it("onLoad 后忽略 onError", () => {
     const { result } = renderHook(() => useCdnOptimizedImage(OPTIMIZABLE, "thumbnail"));
     act(() => {

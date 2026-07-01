@@ -19,6 +19,8 @@ export interface UseCdnOptimizedImageOptions {
   mode?: "responsive" | "fixed";
   /** mode=fixed 时的目标展示宽度 */
   displayWidth?: number;
+  /** CDN 重试耗尽后是否回退原图；编辑器预览应设为 false，避免额外拉整图 */
+  fallbackToOriginal?: boolean;
 }
 
 export interface UseCdnOptimizedImageResult {
@@ -41,6 +43,7 @@ export function useCdnOptimizedImage(
   options?: UseCdnOptimizedImageOptions,
 ): UseCdnOptimizedImageResult {
   const active = (options?.enabled ?? true) && preset !== "off";
+  const fallbackToOriginal = options?.fallbackToOriginal ?? true;
   const attrs = useMemo((): CdnImageDisplayAttrs | null => {
     if (!originalSrc || preset === "off") return null;
     return resolveCdnImageAttrs(originalSrc, preset, {
@@ -54,6 +57,7 @@ export function useCdnOptimizedImage(
   const [status, setStatus] = useState<CdnOptimizedImageStatus>("loading");
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const failureHandledRef = useRef(false);
+  const loadedRef = useRef(false);
   const statusRef = useRef(status);
   statusRef.current = status;
 
@@ -80,6 +84,7 @@ export function useCdnOptimizedImage(
 
   useEffect(() => {
     failureHandledRef.current = false;
+    loadedRef.current = false;
     setUseFallback(false);
     setRetryAttempt(0);
     setStatus(originalSrc ? "loading" : "loaded");
@@ -93,6 +98,7 @@ export function useCdnOptimizedImage(
   }, [retryAttempt, useFallback]);
 
   const onLoad = useCallback(() => {
+    loadedRef.current = true;
     if (retryTimerRef.current) {
       clearTimeout(retryTimerRef.current);
       retryTimerRef.current = null;
@@ -101,7 +107,7 @@ export function useCdnOptimizedImage(
   }, []);
 
   const onError = useCallback(() => {
-    if (failureHandledRef.current || statusRef.current === "loaded") return;
+    if (failureHandledRef.current || loadedRef.current || statusRef.current === "loaded") return;
     failureHandledRef.current = true;
 
     if (optimizable && retryAttempt < CDN_IMAGE_MAX_RETRIES) {
@@ -110,7 +116,7 @@ export function useCdnOptimizedImage(
       return;
     }
 
-    if (optimizable && !useFallback) {
+    if (optimizable && !useFallback && fallbackToOriginal) {
       failureHandledRef.current = false;
       setUseFallback(true);
       setRetryAttempt(0);
@@ -119,7 +125,7 @@ export function useCdnOptimizedImage(
     }
 
     setStatus("error");
-  }, [optimizable, retryAttempt, scheduleRetry, useFallback]);
+  }, [fallbackToOriginal, optimizable, retryAttempt, scheduleRetry, useFallback]);
 
   const fallbackSrc = originalSrc ? stripTransformParams(originalSrc) : originalSrc;
   const resolvedDisplaySrc = useFallback ? fallbackSrc : displaySrc;
