@@ -45,10 +45,17 @@ export function attachMarkdownImageRetries(container: HTMLElement): () => void {
     };
 
     image.addEventListener("error", handleError);
-    if (image.complete && image.naturalWidth === 0 && image.getAttribute("src")) {
-      handleError(new Event("error"));
-    }
+    let mountCheckCancelled = false;
+    const mountCheckTimer = setTimeout(() => {
+      if (mountCheckCancelled || usingOriginal) return;
+      // decoding=async 时首帧 naturalWidth 可能仍为 0，延后确认避免误回退原图
+      if (image.complete && image.naturalWidth === 0 && image.getAttribute("src")) {
+        handleError(new Event("error"));
+      }
+    }, 0);
     cleanups.push(() => {
+      mountCheckCancelled = true;
+      clearTimeout(mountCheckTimer);
       image.removeEventListener("error", handleError);
       if (retryTimer) clearTimeout(retryTimer);
     });

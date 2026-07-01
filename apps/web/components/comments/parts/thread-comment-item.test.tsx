@@ -57,6 +57,8 @@ vi.mock("next/link", () => ({
 
 vi.mock("@repo/markdown", () => ({
   markdownToHtmlSync: vi.fn((content: string) => content),
+  wrapMarkdownImagesWithSkeletonHtml: (h: string) => h,
+  deferMarkdownImageSources: (h: string) => h,
   MarkdownContent: ({ html }: { html: string }) => (
     <div dangerouslySetInnerHTML={{ __html: html }} />
   ),

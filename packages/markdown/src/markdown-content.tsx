@@ -2,8 +2,8 @@
 
 import { useRef, useEffect } from "react";
 import clsx from "clsx";
-import { attachMarkdownImageFallbacks, MD_IMAGE_FALLBACK_CLASS } from "./image-fallback";
-import { attachMarkdownImageRetries } from "./image-retry";
+import { MD_IMAGE_FALLBACK_CLASS } from "./image-fallback";
+import { bindMarkdownContentInteractions } from "./markdown-interactions";
 import { PROSE_BLOCKQUOTE_QUOTELESS_CLASSES } from "./prose-blockquote-classes";
 
 export interface MarkdownContentProps {
@@ -24,6 +24,11 @@ export interface MarkdownContentProps {
    * 无效 src 需在渲染前通过 stripInvalidImages 预处理。
    */
   imageErrorFallback?: boolean;
+  /**
+   * 为 true 时，页面初次渲染不请求图片，仅展示骨架屏，并由客户端在可见时按需加载。
+   * 需要 HTML 已经过 deferMarkdownImageSources 等预处理。
+   */
+  deferImages?: boolean;
 }
 
 const IMAGE_FALLBACK_VARIANT_CLASSES = [
@@ -74,72 +79,25 @@ const VARIANT_CLASSES: Record<"article" | "comment", string> = {
   ].join(" "),
 };
 
-// 复制成功后显示的勾图标（绿色），2 秒后恢复
-const CHECKMARK_SVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
-
 export function MarkdownContent({
   html,
   variant = "article",
   className,
   onImagePreview,
   imageErrorFallback = variant === "comment",
+  deferImages = false,
 }: MarkdownContentProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-
-    // 用事件委托绑在稳定的 container 上，避免 dangerouslySetInnerHTML 替换 innerHTML 后旧节点失效
-    const handleClick = (event: MouseEvent) => {
-      // 图片预览：点击正文 <img> 收集同容器全部图片
-      const img = (event.target as Element).closest<HTMLImageElement>("img");
-      if (img && onImagePreview) {
-        const all = Array.from(container.querySelectorAll("img"));
-        const items = all.map((el) => ({
-          src: el.dataset.originalSrc || el.currentSrc || el.src,
-          alt: el.alt || undefined,
-        }));
-        const index = all.indexOf(img);
-        if (index >= 0) onImagePreview(items, index);
-        return;
-      }
-
-      const btn = (event.target as Element).closest<HTMLButtonElement>(".md-copy-btn");
-      if (!btn) return;
-      const wrapper = btn.closest(".md-code-wrapper");
-      if (!wrapper) return;
-      const code = wrapper.querySelector("pre > code");
-      if (!code) return;
-
-      const originalHTML = btn.innerHTML;
-      const text = code.textContent ?? "";
-      navigator.clipboard.writeText(text).then(() => {
-        btn.innerHTML = CHECKMARK_SVG;
-        btn.style.color = "rgb(22, 163, 74)";
-        setTimeout(() => {
-          btn.innerHTML = originalHTML;
-          btn.style.color = "";
-        }, 2000);
-      });
-    };
-
-    container.addEventListener("click", handleClick);
-    return () => container.removeEventListener("click", handleClick);
-  }, [onImagePreview]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    return attachMarkdownImageRetries(container);
-  }, [html]);
-
-  useEffect(() => {
-    if (!imageErrorFallback) return;
-    const container = containerRef.current;
-    if (!container) return;
-    attachMarkdownImageFallbacks(container);
-  }, [html, imageErrorFallback]);
+    return bindMarkdownContentInteractions(container, {
+      imageErrorFallback,
+      deferImages,
+      onImagePreview,
+    });
+  }, [html, imageErrorFallback, deferImages, onImagePreview]);
 
   return (
     <div

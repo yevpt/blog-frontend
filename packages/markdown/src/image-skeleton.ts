@@ -117,6 +117,7 @@ export function bindMarkdownImageSkeletons(container: HTMLElement): () => void {
     img.addEventListener("error", handleError);
 
     cleanups.push(() => {
+      delete img.dataset.mdImageSkeleton;
       if (revealTimer) clearTimeout(revealTimer);
       img.removeEventListener("load", handleLoad);
       img.removeEventListener("error", handleError);

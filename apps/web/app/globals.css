@@ -154,7 +154,9 @@ body::after {
 }
 
 .md-image-wrapper--comment {
+  display: inline-block;
   min-height: 4rem;
+  min-width: 4rem;
   border-radius: 0.375rem;
 }
 

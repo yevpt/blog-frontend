@@ -183,6 +183,9 @@ describe("MarkdownContent 图片加载失败", () => {
     );
     const image = screen.getByAltText("预加载失败图") as HTMLImageElement;
 
+    act(() => {
+      vi.advanceTimersByTime(0);
+    });
     act(() => vi.advanceTimersByTime(1500));
     expect(image.src).toContain("md_retry=1");
 
@@ -198,5 +201,6 @@ describe("MarkdownContent 图片加载失败", () => {
 
     fireEvent.error(image);
     expect(container.querySelector(".md-image-fallback")).toBeInTheDocument();
+    vi.useRealTimers();
   });
 });
