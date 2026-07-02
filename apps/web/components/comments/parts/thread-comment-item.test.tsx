@@ -123,6 +123,38 @@ describe("ThreadCommentHeader", () => {
     const links = screen.getAllByRole("link", { name: "Alice" });
     expect(links.some((link) => link.getAttribute("href") === "/users/10")).toBe(true);
   });
+
+  it("isReplying=true 时回复按钮文案变为取消回复", () => {
+    render(
+      <ThreadCommentHeader
+        user={{ id: 1, username: "alice", nickname: "Alice" }}
+        createdAt="2026-01-01T00:00:00Z"
+        likeCount={0}
+        isLiked={false}
+        onLike={vi.fn()}
+        onReply={vi.fn()}
+        isReplying
+      />,
+    );
+    expect(screen.getByText("取消回复")).toBeTruthy();
+    expect(screen.queryByText("回复")).toBeNull();
+  });
+
+  it("isEditing=true 时编辑按钮文案变为取消编辑", () => {
+    render(
+      <ThreadCommentHeader
+        user={{ id: 1, username: "alice", nickname: "Alice" }}
+        createdAt="2026-01-01T00:00:00Z"
+        likeCount={0}
+        isLiked={false}
+        onLike={vi.fn()}
+        onEdit={vi.fn()}
+        isEditing
+      />,
+    );
+    expect(screen.getByText("取消编辑")).toBeTruthy();
+    expect(screen.queryByText("编辑")).toBeNull();
+  });
 });
 
 describe("ThreadCommentContent", () => {
@@ -180,6 +212,40 @@ describe("ThreadReplyItem", () => {
     );
     await userEvent.click(screen.getByRole("button", { name: "回复" }));
     expect(onReply).toHaveBeenCalled();
+  });
+
+  it("isReplying=true 时回复按钮文案变为取消回复", () => {
+    render(
+      <ThreadReplyItem
+        user={{ id: 1, username: "bob" }}
+        createdAt="2026-01-01T00:00:00Z"
+        content="test"
+        likeCount={0}
+        isLiked={false}
+        onLike={vi.fn()}
+        onReply={vi.fn()}
+        isReplying
+      />,
+    );
+    expect(screen.getByText("取消回复")).toBeTruthy();
+    expect(screen.queryByText("回复")).toBeNull();
+  });
+
+  it("isEditing=true 时编辑按钮文案变为取消编辑", () => {
+    render(
+      <ThreadReplyItem
+        user={{ id: 1, username: "bob" }}
+        createdAt="2026-01-01T00:00:00Z"
+        content="test"
+        likeCount={0}
+        isLiked={false}
+        onLike={vi.fn()}
+        onEdit={vi.fn()}
+        isEditing
+      />,
+    );
+    expect(screen.getByText("取消编辑")).toBeTruthy();
+    expect(screen.queryByText("编辑")).toBeNull();
   });
 
   describe("审核展示", () => {

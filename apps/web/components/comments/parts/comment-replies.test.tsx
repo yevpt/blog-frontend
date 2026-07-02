@@ -320,11 +320,36 @@ describe("CommentReplies", () => {
     await waitFor(() => screen.getByText("回复 1"));
 
     await user.click(screen.getAllByText("回复")[0]);
-    expect(screen.getByTestId("inline-editor-placeholder")).toHaveTextContent("回复 @Alice…");
+    expect(screen.getByTestId("inline-editor-placeholder")).toHaveTextContent("请输入你的回复内容");
 
     await user.click(screen.getByText("提交"));
 
     expect(onSubmitReply).toHaveBeenCalledWith(1, 1, "内联提交内容");
+  });
+
+  it("展开回复内的回复框后按钮变为取消回复，再次点击收起", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
+
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={1}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => screen.getByText("回复 1"));
+
+    await user.click(screen.getByRole("button", { name: "回复" }));
+    expect(screen.getByTestId("inline-reply-editor")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "回复" })).toBeNull();
+
+    // ReplyBanner 里的取消「×」按钮也叫 aria-label「取消回复」，头部按钮取第一个即可
+    await user.click(screen.getAllByRole("button", { name: "取消回复" })[0]!);
+    expect(screen.queryByTestId("inline-reply-editor")).toBeNull();
+    expect(screen.getByRole("button", { name: "回复" })).toBeTruthy();
   });
 
   it("仅提供旧版 onReply/onEditReply 时点击回复/编辑直接调用回调，不展开内联编辑器", async () => {
@@ -1093,6 +1118,35 @@ describe("CommentReplies", () => {
 
       await user.click(screen.getByText("提交"));
       expect(onSubmitEditReply).toHaveBeenCalledWith(1, 0, 1, "内联提交内容");
+    });
+
+    it("展开回复编辑框后按钮变为取消编辑，再次点击收起", async () => {
+      const user = userEvent.setup();
+      vi.mocked(global.fetch).mockResolvedValue(
+        jsonResponse(mockPage([makeReply(1, { from_user_id: 1, parent_reply_id: 0 })])),
+      );
+
+      render(
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          currentUserId={1}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+          onSubmitEditReply={vi.fn().mockResolvedValue(true)}
+        />,
+      );
+      await user.click(screen.getByText(/展开 1 条回复/));
+      await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+
+      await user.click(screen.getByRole("button", { name: "编辑回复" }));
+      expect(screen.getByTestId("inline-editor-value")).toBeTruthy();
+      expect(screen.queryByRole("button", { name: "编辑回复" })).toBeNull();
+
+      // ReplyBanner 里的取消「×」按钮也叫 aria-label「取消编辑」，头部按钮取第一个即可
+      await user.click(screen.getAllByRole("button", { name: "取消编辑" })[0]!);
+      expect(screen.queryByTestId("inline-editor-value")).toBeNull();
+      expect(screen.getByRole("button", { name: "编辑回复" })).toBeTruthy();
     });
 
     it("编辑 pending_content 时编辑框初始内容为待审版本", async () => {

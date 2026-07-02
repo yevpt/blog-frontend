@@ -154,6 +154,26 @@ describe("CommentItem", () => {
     expect(screen.getByTestId("inline-reply-editor")).toBeTruthy();
   });
 
+  it("展开回复框后按钮变为取消回复，再次点击收起", async () => {
+    const user = userEvent.setup();
+    render(
+      <CommentItem
+        comment={baseComment}
+        targetType="article"
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "回复" }));
+    expect(screen.getByTestId("inline-reply-editor")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "回复" })).toBeNull();
+
+    // ReplyBanner 里的取消「×」按钮也叫 aria-label「取消回复」，头部按钮取第一个即可
+    await user.click(screen.getAllByRole("button", { name: "取消回复" })[0]!);
+    expect(screen.queryByTestId("inline-reply-editor")).toBeNull();
+    expect(screen.getByRole("button", { name: "回复" })).toBeTruthy();
+  });
+
   it("内联回复框提交成功后调用 onSubmitReply 并收起", async () => {
     const user = userEvent.setup();
     const onSubmitReply = vi.fn().mockResolvedValue(true);
@@ -234,6 +254,27 @@ describe("CommentItem", () => {
       screen.queryByText("这篇文章写得很好", { ignore: "script, style, textarea" }),
     ).toBeNull();
     expect(screen.getByTestId("inline-editor-value")).toHaveValue("这篇文章写得很好");
+  });
+
+  it("展开编辑框后按钮变为取消编辑，再次点击收起", async () => {
+    const user = userEvent.setup();
+    render(
+      <CommentItem
+        comment={baseComment}
+        targetType="article"
+        currentUserId={10}
+        onSubmitEditComment={vi.fn().mockResolvedValue(true)}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "编辑评论" }));
+    expect(screen.getByTestId("inline-editor-value")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "编辑评论" })).toBeNull();
+
+    // ReplyBanner 里的取消「×」按钮也叫 aria-label「取消编辑」，头部按钮取第一个即可
+    await user.click(screen.getAllByRole("button", { name: "取消编辑" })[0]!);
+    expect(screen.queryByTestId("inline-editor-value")).toBeNull();
+    expect(screen.getByRole("button", { name: "编辑评论" })).toBeTruthy();
   });
 
   it("内联编辑提交成功后调用 onSubmitEditComment 并恢复正文显示", async () => {

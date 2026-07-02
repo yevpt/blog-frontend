@@ -126,6 +126,19 @@ describe("GuestbookItem", () => {
     expect(onSubmitReply).toHaveBeenCalledWith(1, undefined, "内联提交内容");
   });
 
+  it("展开回复框后按钮变为取消回复，再次点击收起", async () => {
+    render(<GuestbookItem item={mockItem} onSubmitReply={vi.fn().mockResolvedValue(true)} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "回复" }));
+    expect(screen.getByTestId("inline-editor")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "回复" })).toBeNull();
+
+    // ReplyBanner 里的取消「×」按钮也叫 aria-label「取消回复」，头部按钮取第一个即可
+    await userEvent.click(screen.getAllByRole("button", { name: "取消回复" })[0]!);
+    expect(screen.queryByTestId("inline-editor")).toBeNull();
+    expect(screen.getByRole("button", { name: "回复" })).toBeTruthy();
+  });
+
   it("当前用户是留言作者时显示删除按钮并二次确认", async () => {
     const onDelete = vi.fn().mockResolvedValue(undefined);
     render(<GuestbookItem item={mockItem} currentUserId={1} onDelete={onDelete} />);
@@ -298,6 +311,20 @@ describe("GuestbookItem", () => {
       const onEdit = vi.fn();
       render(<GuestbookItem item={mockItem} currentUserId={99} onEdit={onEdit} />);
       expect(screen.queryByRole("button", { name: "编辑留言" })).toBeNull();
+    });
+
+    it("展开编辑框后按钮变为取消编辑，再次点击收起", async () => {
+      const onEdit = vi.fn().mockResolvedValue(true);
+      render(<GuestbookItem item={mockItem} currentUserId={1} onEdit={onEdit} />);
+
+      await userEvent.click(screen.getByRole("button", { name: "编辑留言" }));
+      expect(screen.getByTestId("inline-editor")).toBeTruthy();
+      expect(screen.queryByRole("button", { name: "编辑留言" })).toBeNull();
+
+      // ReplyBanner 里的取消「×」按钮也叫 aria-label「取消编辑」，头部按钮取第一个即可
+      await userEvent.click(screen.getAllByRole("button", { name: "取消编辑" })[0]!);
+      expect(screen.queryByTestId("inline-editor")).toBeNull();
+      expect(screen.getByRole("button", { name: "编辑留言" })).toBeTruthy();
     });
 
     it("中风险留言：公开显示旧正文，编辑器初始正文为 pending_content", async () => {

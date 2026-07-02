@@ -136,17 +136,25 @@ const ReplyItem = memo(function ReplyItem({
   const fromName = reply.from_user?.nickname ?? reply.from_user?.username ?? "匿名";
 
   const handleReply = useCallback(() => {
-    if (!userId) {
-      openLoginModal();
-      return;
-    }
     if (onSubmitReply) {
+      if (isReplying) {
+        setIsReplying(false);
+        return;
+      }
+      if (!userId) {
+        openLoginModal();
+        return;
+      }
       setIsEditing(false);
       setIsReplying(true);
       return;
     }
+    if (!userId) {
+      openLoginModal();
+      return;
+    }
     onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName });
-  }, [userId, openLoginModal, onSubmitReply, onReply, commentId, reply.id, fromName]);
+  }, [isReplying, userId, openLoginModal, onSubmitReply, onReply, commentId, reply.id, fromName]);
 
   const handleDelete = useCallback(() => {
     return onDeleteReply?.(reply.id) ?? false;
@@ -161,6 +169,10 @@ const ReplyItem = memo(function ReplyItem({
   const handleEdit = useCallback(() => {
     if (!isOwnReply || !canEdit) return;
     if (onSubmitEditReply) {
+      if (isEditing) {
+        setIsEditing(false);
+        return;
+      }
       setIsReplying(false);
       setIsEditing(true);
       return;
@@ -173,7 +185,16 @@ const ReplyItem = memo(function ReplyItem({
       initialContent: pendingContent,
       pendingReview: Boolean(reply.moderation?.has_pending_revision),
     });
-  }, [isOwnReply, canEdit, onSubmitEditReply, onEditReply, reply, commentId, pendingContent]);
+  }, [
+    isOwnReply,
+    canEdit,
+    isEditing,
+    onSubmitEditReply,
+    onEditReply,
+    reply,
+    commentId,
+    pendingContent,
+  ]);
 
   const handleReplySubmit = useCallback(
     async (content: string) => {
@@ -205,8 +226,10 @@ const ReplyItem = memo(function ReplyItem({
         isLiked={reply.is_liked}
         onLike={() => void handleLike()}
         onReply={canReply ? handleReply : undefined}
+        isReplying={isReplying}
         onDelete={isOwnReply && onDeleteReply ? handleDelete : undefined}
         onEdit={isOwnReply && canEdit ? handleEdit : undefined}
+        isEditing={isEditing}
         deleteLabel="删除回复"
         deleteConfirmMessage="确定删除这条回复吗？"
         linkProfile={linkProfile}
@@ -215,7 +238,7 @@ const ReplyItem = memo(function ReplyItem({
       />
       {isReplying && (
         <InlineReplyEditor
-          placeholder={`回复 @${fromName}…`}
+          placeholder="请输入你的回复内容"
           header={<ReplyBanner toUsername={fromName} onCancel={() => setIsReplying(false)} />}
           isLoggedIn={!!userId}
           onLoginRequired={openLoginModal}
@@ -377,12 +400,12 @@ export const CommentReplies = memo(function CommentReplies({
 
   if (!isOpen) {
     return (
-      <div className="mb-3">
+      <div className="mb-4">
         <Button
           variant="text"
           onPress={handleToggle}
           isDisabled={isLoading}
-          className="flex h-auto min-h-0 items-center gap-1.5 p-0 text-xs leading-none text-(--fg2) transition-colors"
+          className="-mx-1 -my-3 flex h-auto min-h-0 items-center gap-1.5 px-1 py-3 text-xs leading-none text-(--fg2) transition-colors"
         >
           <div className="h-px w-4 bg-accent-foreground/15" />
           {isLoading ? (
@@ -429,7 +452,7 @@ export const CommentReplies = memo(function CommentReplies({
             size="sm"
             isDisabled={isLoading}
             onPress={handleLoadMore}
-            className="flex items-center gap-1 text-xs font-semibold text-(--fg2)"
+            className="-mx-1 -my-2.5 flex h-auto min-h-0 items-center gap-1 px-1 py-2.5 text-xs font-semibold text-(--fg2)"
           >
             {isLoading && (
               <span className="inline-block size-3 animate-spin rounded-full border-[1.5px] border-current border-t-transparent" />
@@ -441,7 +464,7 @@ export const CommentReplies = memo(function CommentReplies({
           variant="text"
           size="sm"
           onPress={handleToggle}
-          className="text-xs font-semibold text-(--fg2)"
+          className="-mx-1 -my-2.5 h-auto min-h-0 px-1 py-2.5 text-xs font-semibold text-(--fg2)"
         >
           收起回复
         </Button>

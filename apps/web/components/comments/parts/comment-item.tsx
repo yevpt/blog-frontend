@@ -96,17 +96,25 @@ export const CommentItem = memo(function CommentItem({
   }, [onLike, comment.id]);
 
   const handleReply = useCallback(() => {
-    if (!userId) {
-      openLoginModal();
-      return;
-    }
     if (onSubmitReply) {
+      if (isReplying) {
+        setIsReplying(false);
+        return;
+      }
+      if (!userId) {
+        openLoginModal();
+        return;
+      }
       setIsEditing(false);
       setIsReplying(true);
       return;
     }
+    if (!userId) {
+      openLoginModal();
+      return;
+    }
     onReply?.({ commentId: comment.id, toUsername: displayName });
-  }, [userId, openLoginModal, onSubmitReply, onReply, comment.id, displayName]);
+  }, [isReplying, userId, openLoginModal, onSubmitReply, onReply, comment.id, displayName]);
 
   const handleDelete = useCallback(() => {
     return onDelete?.(comment.id) ?? false;
@@ -135,6 +143,10 @@ export const CommentItem = memo(function CommentItem({
   const handleEdit = useCallback(() => {
     if (!isOwnComment || !canEdit) return;
     if (onSubmitEditComment) {
+      if (isEditing) {
+        setIsEditing(false);
+        return;
+      }
       setIsReplying(false);
       setIsEditing(true);
       return;
@@ -145,7 +157,15 @@ export const CommentItem = memo(function CommentItem({
       initialContent: pendingContent,
       pendingReview: Boolean(comment.moderation?.has_pending_revision),
     });
-  }, [isOwnComment, canEdit, onSubmitEditComment, onEditComment, comment, pendingContent]);
+  }, [
+    isOwnComment,
+    canEdit,
+    isEditing,
+    onSubmitEditComment,
+    onEditComment,
+    comment,
+    pendingContent,
+  ]);
 
   const handleEditSubmit = useCallback(
     async (content: string) => {
@@ -165,8 +185,10 @@ export const CommentItem = memo(function CommentItem({
         isLiked={comment.is_liked}
         onLike={handleLike}
         onReply={canReply ? handleReply : undefined}
+        isReplying={isReplying}
         onDelete={isOwnComment && onDelete ? handleDelete : undefined}
         onEdit={isOwnComment && canEdit ? handleEdit : undefined}
+        isEditing={isEditing}
         deleteLabel="删除评论"
         deleteConfirmMessage="确定删除这条评论吗？"
         linkProfile
@@ -193,7 +215,7 @@ export const CommentItem = memo(function CommentItem({
       ) : (
         <ThreadCommentContent
           content={comment.content}
-          className={cn(hasReplies && (repliesOpen ? "mb-6" : "mb-4"))}
+          className={cn(isReplying ? "mb-4" : hasReplies && (repliesOpen ? "mb-6" : "mb-4"))}
           moderation={comment.moderation}
           isOwner={isOwnComment}
         />
@@ -201,7 +223,7 @@ export const CommentItem = memo(function CommentItem({
 
       {isReplying && (
         <InlineReplyEditor
-          placeholder={`回复 @${displayName}…`}
+          placeholder="请输入你的回复内容"
           header={<ReplyBanner toUsername={displayName} onCancel={() => setIsReplying(false)} />}
           isLoggedIn={!!userId}
           onLoginRequired={openLoginModal}

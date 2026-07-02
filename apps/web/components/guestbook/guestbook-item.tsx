@@ -72,13 +72,17 @@ export const GuestbookItem = memo(function GuestbookItem({
 
   const handleReply = useCallback(() => {
     if (!canInteract) return;
+    if (isReplying) {
+      setIsReplying(false);
+      return;
+    }
     if (!userId) {
       openLoginModal();
       return;
     }
     setIsEditing(false);
     setIsReplying(true);
-  }, [canInteract, userId, openLoginModal]);
+  }, [canInteract, isReplying, userId, openLoginModal]);
 
   const handleDelete = useCallback(() => onDelete?.(item.id) ?? false, [onDelete, item.id]);
   const handleDeleteReply = useCallback(
@@ -86,10 +90,14 @@ export const GuestbookItem = memo(function GuestbookItem({
     [onDeleteReply, item.id],
   );
 
-  const handleOpenEditor = useCallback(() => {
+  const handleToggleEditor = useCallback(() => {
+    if (isEditing) {
+      setIsEditing(false);
+      return;
+    }
     setIsReplying(false);
     setIsEditing(true);
-  }, []);
+  }, [isEditing]);
 
   const handleReplySubmit = useCallback(
     async (content: string) => {
@@ -121,6 +129,7 @@ export const GuestbookItem = memo(function GuestbookItem({
         isLiked={item.is_liked}
         onLike={handleLike}
         onReply={onSubmitReply && canInteract ? handleReply : undefined}
+        isReplying={isReplying}
         onDelete={isOwnItem && onDelete ? handleDelete : undefined}
         deleteLabel="删除留言"
         deleteConfirmMessage="确定删除这条留言吗？"
@@ -128,15 +137,15 @@ export const GuestbookItem = memo(function GuestbookItem({
         moderation={item.moderation}
       />
 
-      {isOwnItem && onEdit && !isEditing && (
+      {isOwnItem && onEdit && (
         <div className="mb-2">
           <Button
             variant="text"
-            aria-label="编辑留言"
-            onPress={handleOpenEditor}
+            aria-label={isEditing ? "取消编辑" : "编辑留言"}
+            onPress={handleToggleEditor}
             className="h-auto min-h-0 p-0 text-xs leading-none font-medium text-(--fg3) transition-colors hover:text-foreground"
           >
-            编辑
+            {isEditing ? "取消编辑" : "编辑"}
           </Button>
         </div>
       )}
@@ -163,13 +172,13 @@ export const GuestbookItem = memo(function GuestbookItem({
           content={item.content}
           moderation={item.moderation}
           isOwner={isOwnItem}
-          className={cn(hasReplies && (repliesOpen ? "mb-6" : "mb-4"))}
+          className={cn(isReplying ? "mb-4" : hasReplies && (repliesOpen ? "mb-6" : "mb-4"))}
         />
       )}
 
       {isReplying && (
         <InlineReplyEditor
-          placeholder={`回复 @${displayName}…`}
+          placeholder="请输入你的回复内容"
           header={<ReplyBanner toUsername={displayName} onCancel={() => setIsReplying(false)} />}
           isLoggedIn={!!userId}
           onLoginRequired={openLoginModal}

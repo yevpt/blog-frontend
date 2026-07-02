@@ -171,8 +171,12 @@ export interface ThreadCommentHeaderProps {
   isLiked: boolean;
   onLike: () => void;
   onReply?: () => void;
+  /** 回复框是否已展开；展开时「回复」按钮切换为「取消回复」。 */
+  isReplying?: boolean;
   onDelete?: () => DeleteResult;
   onEdit?: () => void;
+  /** 编辑框是否已展开；展开时「编辑」按钮切换为「取消编辑」。 */
+  isEditing?: boolean;
   editLabel?: string;
   deleteLabel?: string;
   deleteConfirmMessage?: string;
@@ -188,8 +192,10 @@ export const ThreadCommentHeader = memo(function ThreadCommentHeader({
   isLiked,
   onLike,
   onReply,
+  isReplying = false,
   onDelete,
   onEdit,
+  isEditing = false,
   editLabel = "编辑评论",
   deleteLabel = "删除评论",
   deleteConfirmMessage = "确定删除这条评论吗？",
@@ -224,10 +230,10 @@ export const ThreadCommentHeader = memo(function ThreadCommentHeader({
                 <Button
                   variant="text"
                   onPress={onEdit}
-                  aria-label={editLabel}
+                  aria-label={isEditing ? "取消编辑" : editLabel}
                   className="h-auto min-h-0 shrink-0 p-0 text-xs leading-none font-medium text-(--fg3) transition-colors hover:text-foreground"
                 >
-                  编辑
+                  {isEditing ? "取消编辑" : "编辑"}
                 </Button>
               )}
               {onReply && interactive && (
@@ -236,7 +242,7 @@ export const ThreadCommentHeader = memo(function ThreadCommentHeader({
                   onPress={onReply}
                   className="h-auto min-h-0 shrink-0 p-0 text-xs leading-none font-medium text-(--fg3) transition-colors hover:text-foreground"
                 >
-                  回复
+                  {isReplying ? "取消回复" : "回复"}
                 </Button>
               )}
               {onDelete && (
@@ -303,8 +309,12 @@ export interface ThreadReplyItemProps {
   isLiked: boolean;
   onLike: () => void;
   onReply?: () => void;
+  /** 回复框是否已展开；展开时「回复」按钮切换为「取消回复」。 */
+  isReplying?: boolean;
   onDelete?: () => DeleteResult;
   onEdit?: () => void;
+  /** 编辑框是否已展开；展开时「编辑」按钮切换为「取消编辑」。 */
+  isEditing?: boolean;
   editLabel?: string;
   deleteLabel?: string;
   deleteConfirmMessage?: string;
@@ -324,8 +334,10 @@ export const ThreadReplyItem = memo(function ThreadReplyItem({
   isLiked,
   onLike,
   onReply,
+  isReplying = false,
   onDelete,
   onEdit,
+  isEditing = false,
   editLabel = "编辑回复",
   deleteLabel = "删除回复",
   deleteConfirmMessage = "确定删除这条回复吗？",
@@ -366,10 +378,10 @@ export const ThreadReplyItem = memo(function ThreadReplyItem({
                 <Button
                   variant="text"
                   onPress={onEdit}
-                  aria-label={editLabel}
+                  aria-label={isEditing ? "取消编辑" : editLabel}
                   className="h-auto min-h-0 shrink-0 p-0 text-xs leading-none font-medium text-(--fg3) transition-colors hover:text-foreground"
                 >
-                  编辑
+                  {isEditing ? "取消编辑" : "编辑"}
                 </Button>
               )}
               {onReply && interactive && (
@@ -378,7 +390,7 @@ export const ThreadReplyItem = memo(function ThreadReplyItem({
                   onPress={onReply}
                   className="h-auto min-h-0 shrink-0 p-0 text-xs leading-none font-medium text-(--fg3) transition-colors hover:text-foreground"
                 >
-                  回复
+                  {isReplying ? "取消回复" : "回复"}
                 </Button>
               )}
               {onDelete && (
