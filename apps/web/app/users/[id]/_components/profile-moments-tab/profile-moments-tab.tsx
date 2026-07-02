@@ -1,18 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import type { MomentItemResp } from "@repo/api";
-import dynamic from "next/dynamic";
 import { useMomentList } from "@/hooks/use-moment-list";
 import { useMomentModal } from "@/store/use-moment-modal";
+import { useCommentModal } from "@/store/use-comment-modal";
 import { ProfileTabCompactSkeleton } from "../profile-tab-compact-skeleton";
 import { ProfileTabEmptyState } from "../profile-tab-empty-state";
 import { EMPTY_MOMENTS_PAGE, shouldShowProfileMomentsEndMessage } from "./constants";
 import { ProfileMomentsVirtualList } from "./profile-moments-virtual-list";
-
-const CommentModal = dynamic(() => import("@/components/comments").then((m) => m.CommentModal), {
-  ssr: false,
-});
 
 interface ProfileMomentsTabProps {
   userId: number;
@@ -43,7 +39,7 @@ export function ProfileMomentsTab({ userId, isOwner, onTotalChange }: ProfileMom
     userId,
   });
   const openMomentModal = useMomentModal((state) => state.open);
-  const [activeComment, setActiveComment] = useState<{ momentId: number } | null>(null);
+  const { open: openCommentModal } = useCommentModal();
 
   useEffect(() => {
     if (!isLoadingInitial) {
@@ -51,9 +47,23 @@ export function ProfileMomentsTab({ userId, isOwner, onTotalChange }: ProfileMom
     }
   }, [isLoadingInitial, onTotalChange, pageData.total]);
 
-  const openComment = useCallback((moment: MomentItemResp) => {
-    setActiveComment({ momentId: moment.id });
-  }, []);
+  const handleCommentAdded = useCallback(
+    (momentId: number) => {
+      setMoments((current) =>
+        current.map((item) =>
+          item.id === momentId ? { ...item, comment_count: item.comment_count + 1 } : item,
+        ),
+      );
+    },
+    [setMoments],
+  );
+
+  const openComment = useCallback(
+    (moment: MomentItemResp) => {
+      openCommentModal("moment", moment.id, () => handleCommentAdded(moment.id));
+    },
+    [openCommentModal, handleCommentAdded],
+  );
 
   const openEdit = useCallback(
     (moment: MomentItemResp) => {
@@ -61,23 +71,6 @@ export function ProfileMomentsTab({ userId, isOwner, onTotalChange }: ProfileMom
     },
     [openMomentModal, updateMoment],
   );
-
-  const closeComment = useCallback(() => {
-    setActiveComment(null);
-  }, []);
-
-  const handleCommentAdded = useCallback(() => {
-    if (!activeComment) {
-      return;
-    }
-    setMoments((current) =>
-      current.map((item) =>
-        item.id === activeComment.momentId
-          ? { ...item, comment_count: item.comment_count + 1 }
-          : item,
-      ),
-    );
-  }, [activeComment, setMoments]);
 
   const isPendingInitial =
     isLoadingInitial || (pageData.total > 0 && moments.length === 0 && !fetchError);
@@ -99,38 +92,27 @@ export function ProfileMomentsTab({ userId, isOwner, onTotalChange }: ProfileMom
   }
 
   return (
-    <>
-      <div className="flex flex-col px-3 pb-3">
-        <ProfileMomentsVirtualList
-          items={moments}
-          hasMore={!endReached}
-          loading={isLoadingMore}
-          fetchError={fetchError}
-          showEndMessage={shouldShowProfileMomentsEndMessage(
-            moments.length,
-            !endReached,
-            pageData.page,
-            pageData.page_size,
-          )}
-          pendingLikeIds={pendingLikeIds}
-          pendingActionIds={pendingActionIds}
-          onLoadMore={loadMore}
-          onLike={toggleLike}
-          onComment={openComment}
-          onEdit={openEdit}
-          onToggleTop={toggleTop}
-          onDelete={deleteMoment}
-        />
-      </div>
-
-      {activeComment !== null && (
-        <CommentModal
-          targetType="moment"
-          targetId={activeComment.momentId}
-          onClose={closeComment}
-          onCommentAdded={handleCommentAdded}
-        />
-      )}
-    </>
+    <div className="flex flex-col px-3 pb-3">
+      <ProfileMomentsVirtualList
+        items={moments}
+        hasMore={!endReached}
+        loading={isLoadingMore}
+        fetchError={fetchError}
+        showEndMessage={shouldShowProfileMomentsEndMessage(
+          moments.length,
+          !endReached,
+          pageData.page,
+          pageData.page_size,
+        )}
+        pendingLikeIds={pendingLikeIds}
+        pendingActionIds={pendingActionIds}
+        onLoadMore={loadMore}
+        onLike={toggleLike}
+        onComment={openComment}
+        onEdit={openEdit}
+        onToggleTop={toggleTop}
+        onDelete={deleteMoment}
+      />
+    </div>
   );
 }
