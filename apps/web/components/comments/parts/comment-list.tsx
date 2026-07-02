@@ -3,12 +3,8 @@
 import { Button } from "@repo/ui";
 import type { CommentItemResp, CommentReplyResp } from "@repo/api";
 import type { TargetType } from "@/hooks/use-comment-like";
-import {
-  CommentItem,
-  type EditTarget,
-  type ReplyEditTarget,
-  type ReplyTarget,
-} from "./comment-item";
+import { CommentItem } from "./comment-item";
+import type { EditTarget, ReplyEditTarget, ReplyTarget } from "./comment-item";
 import { CommentListSkeleton } from "./comment-skeleton";
 
 const COMMENT_PAGE_SIZE = 10;
@@ -34,13 +30,25 @@ export interface CommentListProps {
   /** 编辑成功后按 commentId 索引的最新回复，触发对应评论回复列表原位替换 */
   editedReplies?: Record<number, CommentReplyResp | null>;
   targetType: TargetType;
-  onReply: (target: ReplyTarget) => void;
+  onReply?: (target: ReplyTarget) => void;
+  onSubmitReply?: (
+    commentId: number,
+    parentReplyId: number | undefined,
+    content: string,
+  ) => Promise<boolean>;
   onLike: (commentId: number) => void;
   currentUserId?: number | null;
   onDelete?: (commentId: number) => Promise<boolean>;
   onDeleteReply?: (commentId: number, replyId: number) => Promise<boolean>;
   onEditComment?: (target: EditTarget) => void;
+  onSubmitEditComment?: (commentId: number, content: string) => Promise<boolean>;
   onEditReply?: (target: ReplyEditTarget) => void;
+  onSubmitEditReply?: (
+    replyId: number,
+    parentReplyId: number,
+    commentId: number,
+    content: string,
+  ) => Promise<boolean>;
   onLoadMore: () => void;
 }
 
@@ -55,12 +63,15 @@ export function CommentList({
   editedReplies,
   targetType,
   onReply,
+  onSubmitReply,
   onLike,
   currentUserId,
   onDelete,
   onDeleteReply,
   onEditComment,
+  onSubmitEditComment,
   onEditReply,
+  onSubmitEditReply,
   onLoadMore,
 }: CommentListProps) {
   if (error) {
@@ -87,12 +98,15 @@ export function CommentList({
             comment={comment}
             targetType={targetType}
             onReply={onReply}
+            onSubmitReply={onSubmitReply}
             onLike={onLike}
             currentUserId={currentUserId}
             onDelete={onDelete}
             onDeleteReply={onDeleteReply}
             onEditComment={onEditComment}
+            onSubmitEditComment={onSubmitEditComment}
             onEditReply={onEditReply}
+            onSubmitEditReply={onSubmitEditReply}
             pendingReply={pendingReplies[comment.id] ?? null}
             editedReply={editedReplies?.[comment.id] ?? null}
           />

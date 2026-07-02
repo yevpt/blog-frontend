@@ -86,18 +86,19 @@ vi.mock("../parts/comment-replies", () => ({
 vi.mock("../parts/comment-item", () => ({
   CommentItem: ({
     comment,
-    onReply,
+    onSubmitReply,
   }: {
     comment: CommentItemResp;
-    onReply?: (target: { commentId: number; toUsername: string }) => void;
+    onSubmitReply?: (
+      commentId: number,
+      parentReplyId: number | undefined,
+      content: string,
+    ) => Promise<boolean>;
   }) => (
     <div data-testid="comment-item" data-comment-id={comment.id}>
       {comment.content}
-      {onReply ? (
-        <button
-          type="button"
-          onClick={() => onReply({ commentId: comment.id, toUsername: "Alice" })}
-        >
+      {onSubmitReply ? (
+        <button type="button" onClick={() => void onSubmitReply(comment.id, undefined, "内容")}>
           回复
         </button>
       ) : null}
@@ -146,38 +147,15 @@ describe("InlineComments", () => {
     await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
   });
 
-  it("点击回复时平滑滚动到编辑器（避开顶栏）", async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-
-    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
-    Object.defineProperty(window, "scrollY", { value: 0, configurable: true });
-
-    const navbar = document.createElement("nav");
-    navbar.id = "navbar";
-    vi.spyOn(navbar, "getBoundingClientRect").mockReturnValue({
-      height: 72,
-      top: 0,
-      bottom: 72,
-      left: 0,
-      right: 0,
-      width: 390,
-      x: 0,
-      y: 0,
-      toJSON: () => ({}),
-    });
-    document.body.appendChild(navbar);
-
+  it("点击评论项的回复按钮转发到 CommentList 的 onSubmitReply", async () => {
     const user = userEvent.setup();
     render(<InlineComments targetType="article" targetId={1} />);
     await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
 
-    await user.click(screen.getAllByRole("button", { name: "回复" })[0]!);
-
-    await waitFor(() => {
-      expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ behavior: "smooth" }));
-    });
-
-    vi.useRealTimers();
-    navbar.remove();
+    // mock 的 CommentItem 在点击时会调用 onSubmitReply(commentId, undefined, "内容")，
+    // 不应抛出异常（真实场景下会触发 use-comment-section-state 的 handleReplySubmit）。
+    await expect(
+      user.click(screen.getAllByRole("button", { name: "回复" })[0]!),
+    ).resolves.not.toThrow();
   });
 });

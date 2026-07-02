@@ -82,6 +82,29 @@ vi.mock("@/components/common/user-avatar", () => ({
   ),
 }));
 
+vi.mock("../inputs/inline-reply-editor", () => ({
+  InlineReplyEditor: ({
+    initialValue = "",
+    placeholder,
+    header,
+    onSubmit,
+  }: {
+    initialValue?: string;
+    placeholder?: string;
+    header?: React.ReactNode;
+    onSubmit: (content: string) => Promise<boolean>;
+  }) => (
+    <div data-testid="inline-reply-editor">
+      {header}
+      <span data-testid="inline-editor-placeholder">{placeholder}</span>
+      <textarea data-testid="inline-editor-value" readOnly value={initialValue} />
+      <button type="button" onClick={() => void onSubmit("内联提交内容")}>
+        提交
+      </button>
+    </div>
+  ),
+}));
+
 function makeReply(id: number, overrides?: Partial<CommentReplyResp>): CommentReplyResp {
   return {
     id,
@@ -120,7 +143,12 @@ describe("CommentReplies", () => {
 
   it("replyCount=0 时不渲染任何内容", () => {
     const { container } = render(
-      <CommentReplies commentId={1} targetType="article" replyCount={0} onReply={vi.fn()} />,
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={0}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
     );
     expect(container.innerHTML).toBe("");
   });
@@ -134,7 +162,14 @@ describe("CommentReplies", () => {
   });
 
   it("replyCount>0 时显示展开按钮", () => {
-    render(<CommentReplies commentId={1} targetType="article" replyCount={5} onReply={vi.fn()} />);
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={5}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
     expect(screen.getByText(/展开 5 条回复/)).toBeTruthy();
   });
 
@@ -142,7 +177,14 @@ describe("CommentReplies", () => {
     const user = userEvent.setup();
     vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1), makeReply(3)])));
 
-    render(<CommentReplies commentId={1} targetType="article" replyCount={2} onReply={vi.fn()} />);
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={2}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
     await user.click(screen.getByText(/展开 2 条回复/));
     await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
     expect(screen.getByText("回复 3")).toBeTruthy();
@@ -154,7 +196,14 @@ describe("CommentReplies", () => {
       jsonResponse({ total: 10, pages: 2, page: 1, page_size: 5, list: [makeReply(1)] }),
     );
 
-    render(<CommentReplies commentId={1} targetType="article" replyCount={10} onReply={vi.fn()} />);
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={10}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
     await user.click(screen.getByText(/展开 10 条回复/));
     await waitFor(() => expect(screen.getByText("查看更多回复")).toBeTruthy());
   });
@@ -171,7 +220,7 @@ describe("CommentReplies", () => {
         targetType="article"
         replyCount={1}
         pendingReply={pending}
-        onReply={vi.fn()}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
       />,
     );
     await user.click(screen.getByText(/展开 1 条回复/));
@@ -199,7 +248,7 @@ describe("CommentReplies", () => {
         targetType="article"
         replyCount={1}
         pendingReply={pending}
-        onReply={vi.fn()}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
       />,
     );
     await user.click(screen.getByText(/展开 1 条回复/));
@@ -236,7 +285,7 @@ describe("CommentReplies", () => {
         targetType="article"
         replyCount={1}
         pendingReply={pending}
-        onReply={vi.fn()}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
       />,
     );
     // 第一次展开
@@ -254,21 +303,49 @@ describe("CommentReplies", () => {
     await waitFor(() => expect(screen.getByLabelText("取消点赞")).toBeTruthy());
   });
 
-  it("点击回复内的回复按钮触发 onReply", async () => {
+  it("点击回复内的回复按钮展开内联回复框，提交时调用 onSubmitReply", async () => {
     const user = userEvent.setup();
-    const onReply = vi.fn();
+    const onSubmitReply = vi.fn().mockResolvedValue(true);
     vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
 
-    render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={onReply} />);
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={1}
+        onSubmitReply={onSubmitReply}
+      />,
+    );
     await user.click(screen.getByText(/展开 1 条回复/));
     await waitFor(() => screen.getByText("回复 1"));
 
     await user.click(screen.getAllByText("回复")[0]);
-    expect(onReply).toHaveBeenCalledWith({
-      commentId: 1,
-      parentReplyId: 1,
-      toUsername: "Alice",
-    });
+    expect(screen.getByTestId("inline-editor-placeholder")).toHaveTextContent("回复 @Alice…");
+
+    await user.click(screen.getByText("提交"));
+
+    expect(onSubmitReply).toHaveBeenCalledWith(1, 1, "内联提交内容");
+  });
+
+  it("回复提交成功后内联回复框收起", async () => {
+    const user = userEvent.setup();
+    const onSubmitReply = vi.fn().mockResolvedValue(true);
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
+
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={1}
+        onSubmitReply={onSubmitReply}
+      />,
+    );
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => screen.getByText("回复 1"));
+    await user.click(screen.getAllByText("回复")[0]);
+    await user.click(screen.getByText("提交"));
+
+    await waitFor(() => expect(screen.queryByTestId("inline-reply-editor")).toBeNull());
   });
 
   it("当前用户是回复作者时显示删除按钮并二次确认", async () => {
@@ -283,7 +360,7 @@ describe("CommentReplies", () => {
         targetType="article"
         replyCount={1}
         currentUserId={1}
-        onReply={vi.fn()}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
         onDeleteReply={onDeleteReply}
         onReplyDeleted={onReplyDeleted}
       />,
@@ -310,7 +387,7 @@ describe("CommentReplies", () => {
         targetType="article"
         replyCount={1}
         currentUserId={99}
-        onReply={vi.fn()}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
         onDeleteReply={vi.fn()}
       />,
     );
@@ -326,7 +403,14 @@ describe("CommentReplies", () => {
       jsonResponse(mockPage([makeReply(1, { like_count: 3, is_liked: false })])),
     );
 
-    render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />);
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={1}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
     await user.click(screen.getByText(/展开 1 条回复/));
     await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
 
@@ -339,7 +423,12 @@ describe("CommentReplies", () => {
     vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
 
     const { container } = render(
-      <CommentReplies commentId={1} targetType="guestbook" replyCount={1} onReply={vi.fn()} />,
+      <CommentReplies
+        commentId={1}
+        targetType="guestbook"
+        replyCount={1}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
     );
     await user.click(screen.getByText(/展开 1 条回复/));
     await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
@@ -353,7 +442,14 @@ describe("CommentReplies", () => {
     const user = userEvent.setup();
     vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
 
-    render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />);
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={1}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
     await user.click(screen.getByText(/展开 1 条回复/));
     await waitFor(() => screen.getByText("回复 1"));
 
@@ -372,7 +468,14 @@ describe("CommentReplies", () => {
       }) as unknown as Promise<Response>,
     );
 
-    render(<CommentReplies commentId={1} targetType="article" replyCount={3} onReply={vi.fn()} />);
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={3}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
     await user.click(screen.getByText(/展开 3 条回复/));
 
     // 加载期间：按钮保持可见，显示加载中状态
@@ -392,7 +495,14 @@ describe("CommentReplies", () => {
     const user = userEvent.setup();
     vi.mocked(global.fetch).mockRejectedValue(new Error("network error"));
 
-    render(<CommentReplies commentId={1} targetType="article" replyCount={2} onReply={vi.fn()} />);
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={2}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
     await user.click(screen.getByText(/展开 2 条回复/));
 
     await waitFor(() => expect(screen.getByText("加载回复失败")).toBeTruthy());
@@ -405,7 +515,14 @@ describe("CommentReplies", () => {
     const user = userEvent.setup();
     vi.mocked(global.fetch).mockResolvedValue(jsonResponse({ error: "评论已关闭" }, 403));
 
-    render(<CommentReplies commentId={1} targetType="article" replyCount={2} onReply={vi.fn()} />);
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={2}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
     await user.click(screen.getByText(/展开 2 条回复/));
 
     await waitFor(() => expect(screen.getByText("评论已关闭")).toBeTruthy());
@@ -419,7 +536,14 @@ describe("CommentReplies", () => {
       )
       .mockReturnValueOnce(new Promise(() => {}) as unknown as Promise<Response>);
 
-    render(<CommentReplies commentId={1} targetType="article" replyCount={10} onReply={vi.fn()} />);
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={10}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
     await user.click(screen.getByText(/展开 10 条回复/));
     await waitFor(() => screen.getByText("查看更多回复"));
 
@@ -462,7 +586,14 @@ describe("CommentReplies", () => {
         }),
       );
 
-    render(<CommentReplies commentId={1} targetType="article" replyCount={2} onReply={vi.fn()} />);
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={2}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
     await user.click(screen.getByText(/展开 2 条回复/));
     await waitFor(() => expect(screen.getByText("查看更多回复")).toBeTruthy());
 
@@ -506,8 +637,18 @@ describe("CommentReplies", () => {
 
     render(
       <>
-        <CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />
-        <CommentReplies commentId={2} targetType="article" replyCount={1} onReply={vi.fn()} />
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+        />
+        <CommentReplies
+          commentId={2}
+          targetType="article"
+          replyCount={1}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+        />
       </>,
     );
 
@@ -530,7 +671,14 @@ describe("CommentReplies", () => {
       jsonResponse(mockPage([makeReply(1, { is_liked: true })])),
     );
 
-    render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />);
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={1}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
     (await userEvent.setup()).click(screen.getByText(/展开 1 条回复/));
     await waitFor(() => expect(screen.getByTestId("icon-heart-fill")).toBeTruthy());
   });
@@ -540,7 +688,12 @@ describe("CommentReplies", () => {
     vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
 
     render(
-      <CommentReplies commentId={1} targetType="guestbook" replyCount={1} onReply={vi.fn()} />,
+      <CommentReplies
+        commentId={1}
+        targetType="guestbook"
+        replyCount={1}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
     );
     await user.click(screen.getByText(/展开 1 条回复/));
     await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
@@ -552,7 +705,14 @@ describe("CommentReplies", () => {
       jsonResponse(mockPage([makeReply(1, { like_count: 0 })])),
     );
 
-    render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />);
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={1}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
     await user.click(screen.getByText(/展开 1 条回复/));
     await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
 
@@ -562,23 +722,23 @@ describe("CommentReplies", () => {
     expect(screen.getAllByRole("button", { name: "回复" })).toHaveLength(1);
   });
 
-  it("targetType=guestbook 时点击回复按钮触发 onReply", async () => {
+  it("targetType=guestbook 时点击回复按钮展开内联回复框", async () => {
     const user = userEvent.setup();
-    const onReply = vi.fn();
     vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
 
     render(
-      <CommentReplies commentId={1} targetType="guestbook" replyCount={1} onReply={onReply} />,
+      <CommentReplies
+        commentId={1}
+        targetType="guestbook"
+        replyCount={1}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
     );
     await user.click(screen.getByText(/展开 1 条回复/));
     await waitFor(() => screen.getByText("回复 1"));
     await user.click(screen.getByRole("button", { name: "回复" }));
 
-    expect(onReply).toHaveBeenCalledWith({
-      commentId: 1,
-      parentReplyId: 1,
-      toUsername: "Alice",
-    });
+    expect(screen.getByTestId("inline-reply-editor")).toBeTruthy();
   });
 
   it("targetType=guestbook 时 fetch URL 包含 guestbook 路径", async () => {
@@ -586,7 +746,12 @@ describe("CommentReplies", () => {
     vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
 
     render(
-      <CommentReplies commentId={7} targetType="guestbook" replyCount={1} onReply={vi.fn()} />,
+      <CommentReplies
+        commentId={7}
+        targetType="guestbook"
+        replyCount={1}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
     );
     await user.click(screen.getByText(/展开 1 条回复/));
     await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
@@ -601,7 +766,14 @@ describe("CommentReplies", () => {
     const user = userEvent.setup();
     vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
 
-    render(<CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />);
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={1}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
     await user.click(screen.getByText(/展开 1 条回复/));
     await waitFor(() => {
       const links = screen.getAllByRole("link", { name: "Alice" });
@@ -614,7 +786,12 @@ describe("CommentReplies", () => {
     vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
 
     render(
-      <CommentReplies commentId={1} targetType="guestbook" replyCount={1} onReply={vi.fn()} />,
+      <CommentReplies
+        commentId={1}
+        targetType="guestbook"
+        replyCount={1}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
     );
     await user.click(screen.getByText(/展开 1 条回复/));
     await waitFor(() => {
@@ -650,7 +827,7 @@ describe("CommentReplies", () => {
           commentId={1}
           targetType="article"
           replyCount={1}
-          onReply={vi.fn()}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
           currentUserId={1}
         />,
       );
@@ -679,7 +856,12 @@ describe("CommentReplies", () => {
       );
 
       render(
-        <CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />,
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+        />,
       );
       await user.click(screen.getByText(/展开 1 条回复/));
       await waitFor(() => expect(screen.getByTestId("moderation-placeholder")).toBeTruthy());
@@ -706,7 +888,12 @@ describe("CommentReplies", () => {
       );
 
       render(
-        <CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />,
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+        />,
       );
       await user.click(screen.getByText(/展开 1 条回复/));
       await waitFor(() => expect(screen.getByText("正文")).toBeTruthy());
@@ -733,7 +920,12 @@ describe("CommentReplies", () => {
       );
 
       render(
-        <CommentReplies commentId={1} targetType="guestbook" replyCount={1} onReply={vi.fn()} />,
+        <CommentReplies
+          commentId={1}
+          targetType="guestbook"
+          replyCount={1}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+        />,
       );
       await user.click(screen.getByText(/展开 1 条回复/));
       await waitFor(() => expect(screen.getByTestId("moderation-placeholder")).toBeTruthy());
@@ -758,7 +950,14 @@ describe("CommentReplies", () => {
         ),
       );
 
-      render(<CommentReplies commentId={1} targetType="moment" replyCount={1} onReply={vi.fn()} />);
+      render(
+        <CommentReplies
+          commentId={1}
+          targetType="moment"
+          replyCount={1}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+        />,
+      );
       await user.click(screen.getByText(/展开 1 条回复/));
       await waitFor(() => expect(screen.getByTestId("moderation-placeholder")).toBeTruthy());
     });
@@ -783,7 +982,12 @@ describe("CommentReplies", () => {
       );
 
       render(
-        <CommentReplies commentId={1} targetType="article" replyCount={1} onReply={vi.fn()} />,
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+        />,
       );
       await user.click(screen.getByText(/展开 1 条回复/));
       await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
@@ -815,7 +1019,7 @@ describe("CommentReplies", () => {
           targetType="article"
           replyCount={1}
           currentUserId={1}
-          onReply={vi.fn()}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
           onDeleteReply={vi.fn().mockResolvedValue(true)}
         />,
       );
@@ -827,12 +1031,12 @@ describe("CommentReplies", () => {
   });
 
   describe("作者编辑入口", () => {
-    it("作者点击编辑按钮触发 onEditReply", async () => {
+    it("作者点击编辑按钮后内联展示编辑器，替换正文显示", async () => {
       const user = userEvent.setup();
       vi.mocked(global.fetch).mockResolvedValue(
         jsonResponse(mockPage([makeReply(1, { from_user_id: 1, parent_reply_id: 0 })])),
       );
-      const onEditReply = vi.fn();
+      const onSubmitEditReply = vi.fn().mockResolvedValue(true);
 
       render(
         <CommentReplies
@@ -840,25 +1044,21 @@ describe("CommentReplies", () => {
           targetType="article"
           replyCount={1}
           currentUserId={1}
-          onReply={vi.fn()}
-          onEditReply={onEditReply}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+          onSubmitEditReply={onSubmitEditReply}
         />,
       );
       await user.click(screen.getByText(/展开 1 条回复/));
       await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
 
       await user.click(screen.getByRole("button", { name: "编辑回复" }));
-      expect(onEditReply).toHaveBeenCalledWith({
-        type: "reply",
-        id: 1,
-        commentId: 1,
-        parentReplyId: 0,
-        initialContent: "回复 1",
-        pendingReview: false,
-      });
+      expect(screen.getByTestId("inline-editor-value")).toHaveValue("回复 1");
+
+      await user.click(screen.getByText("提交"));
+      expect(onSubmitEditReply).toHaveBeenCalledWith(1, 0, 1, "内联提交内容");
     });
 
-    it("编辑 pending_content 时初始内容为待审版本", async () => {
+    it("编辑 pending_content 时编辑框初始内容为待审版本", async () => {
       const user = userEvent.setup();
       vi.mocked(global.fetch).mockResolvedValue(
         jsonResponse(
@@ -877,7 +1077,6 @@ describe("CommentReplies", () => {
           ]),
         ),
       );
-      const onEditReply = vi.fn();
 
       render(
         <CommentReplies
@@ -885,17 +1084,15 @@ describe("CommentReplies", () => {
           targetType="article"
           replyCount={1}
           currentUserId={1}
-          onReply={vi.fn()}
-          onEditReply={onEditReply}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+          onSubmitEditReply={vi.fn().mockResolvedValue(true)}
         />,
       );
       await user.click(screen.getByText(/展开 1 条回复/));
       await waitFor(() => expect(screen.getByText("旧公开版本")).toBeTruthy());
 
       await user.click(screen.getByRole("button", { name: "编辑回复" }));
-      expect(onEditReply).toHaveBeenCalledWith(
-        expect.objectContaining({ initialContent: "新待审版本" }),
-      );
+      expect(screen.getByTestId("inline-editor-value")).toHaveValue("新待审版本");
     });
 
     it("非作者不显示编辑按钮", async () => {
@@ -910,8 +1107,8 @@ describe("CommentReplies", () => {
           targetType="article"
           replyCount={1}
           currentUserId={1}
-          onReply={vi.fn()}
-          onEditReply={vi.fn()}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+          onSubmitEditReply={vi.fn().mockResolvedValue(true)}
         />,
       );
       await user.click(screen.getByText(/展开 1 条回复/));
@@ -920,7 +1117,7 @@ describe("CommentReplies", () => {
       expect(screen.queryByRole("button", { name: "编辑回复" })).toBeNull();
     });
 
-    it("未提供 onEditReply 时不显示编辑按钮", async () => {
+    it("未提供 onSubmitEditReply 时不显示编辑按钮", async () => {
       const user = userEvent.setup();
       vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
 
@@ -930,7 +1127,7 @@ describe("CommentReplies", () => {
           targetType="article"
           replyCount={1}
           currentUserId={1}
-          onReply={vi.fn()}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
         />,
       );
       await user.click(screen.getByText(/展开 1 条回复/));

@@ -3,7 +3,6 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { CommentItemResp, CommentReplyResp } from "@repo/api";
 import { CommentList, getCommentListSkeletonCount } from "./comment-list";
-import type { ReplyTarget } from "./comment-item";
 
 const mockState = vi.hoisted(() => ({
   commentItemProps: [] as Array<{
@@ -55,7 +54,10 @@ describe("CommentList", () => {
     hasMore: false,
     pendingReplies: {} as Record<number, CommentReplyResp | null>,
     targetType: "article" as const,
-    onReply: vi.fn<(target: ReplyTarget) => void>(),
+    onSubmitReply:
+      vi.fn<
+        (commentId: number, parentReplyId: number | undefined, content: string) => Promise<boolean>
+      >(),
     onLike: vi.fn<(commentId: number) => void>(),
     onLoadMore: vi.fn<() => void>(),
   };

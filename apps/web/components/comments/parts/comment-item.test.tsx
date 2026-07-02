@@ -35,19 +35,51 @@ vi.mock("@/lib/format-time", () => ({
   formatDateTime: () => "2022-01-03 20:56",
 }));
 
+vi.mock("@/app/providers/session-provider", () => ({
+  useSession: () => ({ userId: 1 }),
+}));
+
+vi.mock("@/store/use-login-modal", () => ({
+  useLoginModal: (selector?: (s: { open: ReturnType<typeof vi.fn> }) => unknown) => {
+    const store = { open: vi.fn() };
+    return typeof selector === "function" ? selector(store) : store;
+  },
+}));
+
+vi.mock("../inputs/inline-reply-editor", () => ({
+  InlineReplyEditor: ({
+    initialValue = "",
+    header,
+    onSubmit,
+  }: {
+    initialValue?: string;
+    header?: React.ReactNode;
+    onSubmit: (content: string) => Promise<boolean>;
+  }) => (
+    <div data-testid="inline-reply-editor">
+      {header}
+      <textarea data-testid="inline-editor-value" readOnly value={initialValue} />
+      <button type="button" onClick={() => void onSubmit("内联提交内容")}>
+        提交
+      </button>
+    </div>
+  ),
+}));
+
 vi.mock("./comment-replies", () => ({
   CommentReplies: (props: {
     replyCount: number;
-    onReply: (target: unknown) => void;
+    onSubmitReply: (
+      commentId: number,
+      parentReplyId: number | undefined,
+      content: string,
+    ) => Promise<boolean>;
     pendingReply: CommentReplyResp | null;
   }) => {
     if (props.replyCount <= 0) return null;
     return (
       <div data-testid="comment-replies" data-reply-count={props.replyCount}>
-        <button
-          type="button"
-          onClick={() => props.onReply({ commentId: 1, parentReplyId: 2, toUsername: "Bob" })}
-        >
+        <button type="button" onClick={() => void props.onSubmitReply(1, 2, "子回复内容")}>
           回复子评论
         </button>
         {props.pendingReply && <span data-testid="pending-in-comment">pending</span>}
@@ -107,16 +139,38 @@ describe("CommentItem", () => {
     expect(onLike).toHaveBeenCalledWith(1);
   });
 
-  it("点击回复触发 onReply 回调", async () => {
+  it("点击回复展开内联回复框", async () => {
     const user = userEvent.setup();
-    const onReply = vi.fn();
-    render(<CommentItem comment={baseComment} targetType="article" onReply={onReply} />);
+    render(
+      <CommentItem
+        comment={baseComment}
+        targetType="article"
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
+
+    expect(screen.queryByTestId("inline-reply-editor")).toBeNull();
+    await user.click(screen.getByText("回复"));
+    expect(screen.getByTestId("inline-reply-editor")).toBeTruthy();
+  });
+
+  it("内联回复框提交成功后调用 onSubmitReply 并收起", async () => {
+    const user = userEvent.setup();
+    const onSubmitReply = vi.fn().mockResolvedValue(true);
+    render(
+      <CommentItem comment={baseComment} targetType="article" onSubmitReply={onSubmitReply} />,
+    );
 
     await user.click(screen.getByText("回复"));
-    expect(onReply).toHaveBeenCalledWith({
-      commentId: 1,
-      toUsername: "Alice",
-    });
+    await user.click(screen.getByText("提交"));
+
+    expect(onSubmitReply).toHaveBeenCalledWith(1, undefined, "内联提交内容");
+    expect(screen.queryByTestId("inline-reply-editor")).toBeNull();
+  });
+
+  it("未提供 onSubmitReply 时不显示回复按钮", () => {
+    render(<CommentItem comment={baseComment} targetType="article" />);
+    expect(screen.queryByText("回复")).toBeNull();
   });
 
   it("当前用户是评论作者时显示删除按钮并二次确认", async () => {
@@ -150,6 +204,58 @@ describe("CommentItem", () => {
     expect(screen.queryByRole("button", { name: "删除评论" })).toBeNull();
   });
 
+  it("作者点击编辑按钮后内联展示编辑器，替换正文显示", async () => {
+    const user = userEvent.setup();
+    render(
+      <CommentItem
+        comment={baseComment}
+        targetType="article"
+        currentUserId={10}
+        onSubmitEditComment={vi.fn().mockResolvedValue(true)}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "编辑评论" }));
+    // mock 的 InlineReplyEditor 用一个 readOnly textarea 展示 initialValue，其内容恰好与被隐藏的正文相同，
+    // 默认的 queryByText 会把这个 textarea 也当作候选节点匹配到；用 ignore 选项把 textarea 排除在候选之外，
+    // 这样断言真正验证的是「ThreadCommentContent 没有渲染」而不是被 mock 的读数误伤。
+    expect(
+      screen.queryByText("这篇文章写得很好", { ignore: "script, style, textarea" }),
+    ).toBeNull();
+    expect(screen.getByTestId("inline-editor-value")).toHaveValue("这篇文章写得很好");
+  });
+
+  it("内联编辑提交成功后调用 onSubmitEditComment 并恢复正文显示", async () => {
+    const user = userEvent.setup();
+    const onSubmitEditComment = vi.fn().mockResolvedValue(true);
+    render(
+      <CommentItem
+        comment={baseComment}
+        targetType="article"
+        currentUserId={10}
+        onSubmitEditComment={onSubmitEditComment}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "编辑评论" }));
+    await user.click(screen.getByText("提交"));
+
+    expect(onSubmitEditComment).toHaveBeenCalledWith(1, "内联提交内容");
+    expect(screen.getByText("这篇文章写得很好")).toBeTruthy();
+  });
+
+  it("非作者不显示编辑按钮", () => {
+    render(
+      <CommentItem
+        comment={baseComment}
+        targetType="article"
+        currentUserId={99}
+        onSubmitEditComment={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "编辑评论" })).toBeNull();
+  });
+
   it("reply_count>0 时渲染 CommentReplies", () => {
     render(<CommentItem comment={baseComment} targetType="article" />);
     expect(screen.getByTestId("comment-replies")).toBeTruthy();
@@ -162,17 +268,15 @@ describe("CommentItem", () => {
     expect(screen.queryByTestId("comment-replies")).toBeNull();
   });
 
-  it("转发 onReply 到 CommentReplies", async () => {
+  it("转发 onSubmitReply 到 CommentReplies", async () => {
     const user = userEvent.setup();
-    const onReply = vi.fn();
-    render(<CommentItem comment={baseComment} targetType="article" onReply={onReply} />);
+    const onSubmitReply = vi.fn().mockResolvedValue(true);
+    render(
+      <CommentItem comment={baseComment} targetType="article" onSubmitReply={onSubmitReply} />,
+    );
 
     await user.click(screen.getByText("回复子评论"));
-    expect(onReply).toHaveBeenCalledWith({
-      commentId: 1,
-      parentReplyId: 2,
-      toUsername: "Bob",
-    });
+    expect(onSubmitReply).toHaveBeenCalledWith(1, 2, "子回复内容");
   });
 
   it("pendingReply 传递给 CommentReplies", () => {

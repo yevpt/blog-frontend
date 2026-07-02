@@ -10,6 +10,9 @@ import { useCommentLike } from "@/hooks/use-comment-like";
 import { apiJson, getApiErrorMessage } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
 import { ThreadReplyItem } from "./thread-comment-item";
+import { InlineReplyEditor } from "../inputs/inline-reply-editor";
+import { ReplyBanner } from "../inputs/reply-banner";
+
 import type { ReplyEditTarget, ReplyTarget } from "./comment-item";
 
 export type { ReplyTarget };
@@ -78,10 +81,21 @@ interface ReplyItemProps {
   commentId: number;
   targetType: TargetType;
   onReply?: (target: ReplyTarget) => void;
+  onSubmitReply?: (
+    commentId: number,
+    parentReplyId: number | undefined,
+    content: string,
+  ) => Promise<boolean>;
   onLikeResult?: (replyId: number, isLiked: boolean, likeCount: number) => void;
   currentUserId?: number | null;
   onDeleteReply?: (replyId: number) => Promise<boolean>;
   onEditReply?: (target: ReplyEditTarget) => void;
+  onSubmitEditReply?: (
+    replyId: number,
+    parentReplyId: number,
+    commentId: number,
+    content: string,
+  ) => Promise<boolean>;
   linkProfile?: boolean;
 }
 
@@ -90,16 +104,20 @@ const ReplyItem = memo(function ReplyItem({
   commentId,
   targetType,
   onReply,
+  onSubmitReply,
   onLikeResult,
   currentUserId,
   onDeleteReply,
   onEditReply,
+  onSubmitEditReply,
   linkProfile = false,
 }: ReplyItemProps) {
   const { userId } = useSession();
   const openLoginModal = useLoginModal((s) => s.open);
   const { toggleReplyLike } = useCommentLike(targetType);
   const isOwnReply = currentUserId != null && currentUserId === reply.from_user_id;
+  const [isReplying, setIsReplying] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleLike = useCallback(async () => {
     if (!userId) {
@@ -112,23 +130,42 @@ const ReplyItem = memo(function ReplyItem({
     }
   }, [userId, openLoginModal, toggleReplyLike, commentId, reply.id, onLikeResult]);
 
+  const canReply = Boolean(onSubmitReply || onReply);
+  const canEdit = Boolean(onSubmitEditReply || onEditReply);
+
+  const fromName = reply.from_user?.nickname ?? reply.from_user?.username ?? "匿名";
+
   const handleReply = useCallback(() => {
-    const fromName = reply.from_user?.nickname ?? reply.from_user?.username ?? "匿名";
+    if (!userId) {
+      openLoginModal();
+      return;
+    }
+    if (onSubmitReply) {
+      setIsEditing(false);
+      setIsReplying(true);
+      return;
+    }
     onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName });
-  }, [onReply, commentId, reply.id, reply.from_user]);
+  }, [userId, openLoginModal, onSubmitReply, onReply, commentId, reply.id, fromName]);
 
   const handleDelete = useCallback(() => {
     return onDeleteReply?.(reply.id) ?? false;
   }, [onDeleteReply, reply.id]);
 
+  // 编辑时优先使用 pending_content，让作者编辑待审版本而非公开旧版本
+  const pendingContent =
+    reply.moderation?.pending_content?.trim() && reply.moderation!.pending_content!.length > 0
+      ? reply.moderation!.pending_content!
+      : reply.content;
+
   const handleEdit = useCallback(() => {
-    if (!isOwnReply || !onEditReply) return;
-    // 编辑时优先使用 pending_content，让作者编辑待审版本而非公开旧版本
-    const pendingContent =
-      reply.moderation?.pending_content?.trim() && reply.moderation!.pending_content!.length > 0
-        ? reply.moderation!.pending_content!
-        : reply.content;
-    onEditReply({
+    if (!isOwnReply || !canEdit) return;
+    if (onSubmitEditReply) {
+      setIsReplying(false);
+      setIsEditing(true);
+      return;
+    }
+    onEditReply?.({
       type: "reply",
       id: reply.id,
       commentId,
@@ -136,26 +173,73 @@ const ReplyItem = memo(function ReplyItem({
       initialContent: pendingContent,
       pendingReview: Boolean(reply.moderation?.has_pending_revision),
     });
-  }, [isOwnReply, onEditReply, reply, commentId]);
+  }, [isOwnReply, canEdit, onSubmitEditReply, onEditReply, reply, commentId, pendingContent]);
+
+  const handleReplySubmit = useCallback(
+    async (content: string) => {
+      const ok = (await onSubmitReply?.(commentId, reply.id, content)) ?? false;
+      if (ok) setIsReplying(false);
+      return ok;
+    },
+    [onSubmitReply, commentId, reply.id],
+  );
+
+  const handleEditSubmit = useCallback(
+    async (content: string) => {
+      const ok =
+        (await onSubmitEditReply?.(reply.id, reply.parent_reply_id, commentId, content)) ?? false;
+      if (ok) setIsEditing(false);
+      return ok;
+    },
+    [onSubmitEditReply, reply.id, reply.parent_reply_id, commentId],
+  );
 
   return (
-    <ThreadReplyItem
-      user={reply.from_user}
-      createdAt={reply.created_at}
-      content={reply.content}
-      mentionUser={reply.to_user}
-      likeCount={reply.like_count}
-      isLiked={reply.is_liked}
-      onLike={() => void handleLike()}
-      onReply={onReply ? handleReply : undefined}
-      onDelete={isOwnReply && onDeleteReply ? handleDelete : undefined}
-      onEdit={isOwnReply && onEditReply ? handleEdit : undefined}
-      deleteLabel="删除回复"
-      deleteConfirmMessage="确定删除这条回复吗？"
-      linkProfile={linkProfile}
-      moderation={reply.moderation}
-      isOwner={isOwnReply}
-    />
+    <div className="flex flex-col gap-3">
+      <ThreadReplyItem
+        user={reply.from_user}
+        createdAt={reply.created_at}
+        content={reply.content}
+        mentionUser={reply.to_user}
+        likeCount={reply.like_count}
+        isLiked={reply.is_liked}
+        onLike={() => void handleLike()}
+        onReply={canReply ? handleReply : undefined}
+        onDelete={isOwnReply && onDeleteReply ? handleDelete : undefined}
+        onEdit={isOwnReply && canEdit ? handleEdit : undefined}
+        deleteLabel="删除回复"
+        deleteConfirmMessage="确定删除这条回复吗？"
+        linkProfile={linkProfile}
+        moderation={reply.moderation}
+        isOwner={isOwnReply}
+      />
+      {isReplying && (
+        <InlineReplyEditor
+          placeholder={`回复 @${fromName}…`}
+          header={<ReplyBanner toUsername={fromName} onCancel={() => setIsReplying(false)} />}
+          isLoggedIn={!!userId}
+          onLoginRequired={openLoginModal}
+          onSubmit={handleReplySubmit}
+        />
+      )}
+      {isEditing && (
+        <InlineReplyEditor
+          initialValue={pendingContent}
+          placeholder="编辑内容..."
+          header={
+            <ReplyBanner
+              toUsername="编辑中"
+              onCancel={() => setIsEditing(false)}
+              editing
+              pendingReview={Boolean(reply.moderation?.has_pending_revision)}
+            />
+          }
+          isLoggedIn={!!userId}
+          onLoginRequired={openLoginModal}
+          onSubmit={handleEditSubmit}
+        />
+      )}
+    </div>
   );
 });
 
@@ -166,11 +250,22 @@ export interface CommentRepliesProps {
   pendingReply?: CommentReplyResp | null;
   /** 编辑成功后由父组件传入的最新回复，触发一次按 ID 原位替换；传入同一引用只替换一次。 */
   editedReply?: CommentReplyResp | null;
-  onReply: (target: ReplyTarget) => void;
+  onReply?: (target: ReplyTarget) => void;
+  onSubmitReply?: (
+    commentId: number,
+    parentReplyId: number | undefined,
+    content: string,
+  ) => Promise<boolean>;
   currentUserId?: number | null;
   onDeleteReply?: (replyId: number) => Promise<boolean>;
   onReplyDeleted?: (replyId: number) => void;
   onEditReply?: (target: ReplyEditTarget) => void;
+  onSubmitEditReply?: (
+    replyId: number,
+    parentReplyId: number,
+    commentId: number,
+    content: string,
+  ) => Promise<boolean>;
   onOpenChange?: (open: boolean) => void;
   linkProfile?: boolean;
 }
@@ -182,10 +277,12 @@ export const CommentReplies = memo(function CommentReplies({
   pendingReply,
   editedReply,
   onReply,
+  onSubmitReply,
   currentUserId,
   onDeleteReply,
   onReplyDeleted,
   onEditReply,
+  onSubmitEditReply,
   onOpenChange,
   linkProfile = true,
 }: CommentRepliesProps) {
@@ -312,10 +409,12 @@ export const CommentReplies = memo(function CommentReplies({
             commentId={commentId}
             targetType={targetType}
             onReply={onReply}
+            onSubmitReply={onSubmitReply}
             onLikeResult={updateReplyLike}
             currentUserId={currentUserId}
             onDeleteReply={onDeleteReply ? handleDeleteReply : undefined}
             onEditReply={onEditReply}
+            onSubmitEditReply={onSubmitEditReply}
             linkProfile={linkProfile}
           />
         ))}
