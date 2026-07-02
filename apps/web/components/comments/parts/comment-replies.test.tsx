@@ -327,6 +327,43 @@ describe("CommentReplies", () => {
     expect(onSubmitReply).toHaveBeenCalledWith(1, 1, "内联提交内容");
   });
 
+  it("仅提供旧版 onReply/onEditReply 时点击回复/编辑直接调用回调，不展开内联编辑器", async () => {
+    const user = userEvent.setup();
+    const onReply = vi.fn();
+    const onEditReply = vi.fn();
+    vi.mocked(global.fetch).mockResolvedValue(
+      jsonResponse(mockPage([makeReply(1, { from_user_id: 1, parent_reply_id: 0 })])),
+    );
+
+    render(
+      <CommentReplies
+        commentId={1}
+        targetType="article"
+        replyCount={1}
+        currentUserId={1}
+        onReply={onReply}
+        onEditReply={onEditReply}
+      />,
+    );
+    await user.click(screen.getByText(/展开 1 条回复/));
+    await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+
+    await user.click(screen.getByRole("button", { name: "回复" }));
+    expect(onReply).toHaveBeenCalledWith({ commentId: 1, parentReplyId: 1, toUsername: "Alice" });
+    expect(screen.queryByTestId("inline-reply-editor")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "编辑回复" }));
+    expect(onEditReply).toHaveBeenCalledWith({
+      type: "reply",
+      id: 1,
+      commentId: 1,
+      parentReplyId: 0,
+      initialContent: "回复 1",
+      pendingReview: false,
+    });
+    expect(screen.queryByTestId("inline-reply-editor")).toBeNull();
+  });
+
   it("回复提交成功后内联回复框收起", async () => {
     const user = userEvent.setup();
     const onSubmitReply = vi.fn().mockResolvedValue(true);

@@ -173,6 +173,17 @@ describe("CommentItem", () => {
     expect(screen.queryByText("回复")).toBeNull();
   });
 
+  it("仅提供旧版 onReply 时点击回复直接调用回调，不展开内联编辑器", async () => {
+    const user = userEvent.setup();
+    const onReply = vi.fn();
+    render(<CommentItem comment={baseComment} targetType="article" onReply={onReply} />);
+
+    await user.click(screen.getByText("回复"));
+
+    expect(onReply).toHaveBeenCalledWith({ commentId: 1, toUsername: "Alice" });
+    expect(screen.queryByTestId("inline-reply-editor")).toBeNull();
+  });
+
   it("当前用户是评论作者时显示删除按钮并二次确认", async () => {
     const user = userEvent.setup();
     const onDelete = vi.fn().mockResolvedValue(undefined);
@@ -242,6 +253,29 @@ describe("CommentItem", () => {
 
     expect(onSubmitEditComment).toHaveBeenCalledWith(1, "内联提交内容");
     expect(screen.getByText("这篇文章写得很好")).toBeTruthy();
+  });
+
+  it("仅提供旧版 onEditComment 时点击编辑直接调用回调，不展开内联编辑器", async () => {
+    const user = userEvent.setup();
+    const onEditComment = vi.fn();
+    render(
+      <CommentItem
+        comment={baseComment}
+        targetType="article"
+        currentUserId={10}
+        onEditComment={onEditComment}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "编辑评论" }));
+
+    expect(onEditComment).toHaveBeenCalledWith({
+      type: "comment",
+      id: 1,
+      initialContent: "这篇文章写得很好",
+      pendingReview: false,
+    });
+    expect(screen.queryByTestId("inline-reply-editor")).toBeNull();
   });
 
   it("非作者不显示编辑按钮", () => {

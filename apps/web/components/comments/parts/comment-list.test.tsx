@@ -10,6 +10,7 @@ const mockState = vi.hoisted(() => ({
     currentUserId?: number | null;
     onDelete?: (commentId: number) => Promise<boolean>;
     onDeleteReply?: (commentId: number, replyId: number) => Promise<boolean>;
+    onReply?: (target: unknown) => void;
   }>,
 }));
 
@@ -19,6 +20,7 @@ vi.mock("./comment-item", () => ({
     currentUserId?: number | null;
     onDelete?: (commentId: number) => Promise<boolean>;
     onDeleteReply?: (commentId: number, replyId: number) => Promise<boolean>;
+    onReply?: (target: unknown) => void;
   }) => {
     mockState.commentItemProps.push(props);
     return <div data-testid="comment-item">{props.comment.content}</div>;
@@ -82,6 +84,13 @@ describe("CommentList", () => {
     expect(mockState.commentItemProps[0].currentUserId).toBe(7);
     expect(mockState.commentItemProps[0].onDelete).toBe(onDelete);
     expect(mockState.commentItemProps[0].onDeleteReply).toBe(onDeleteReply);
+  });
+
+  it("向评论项透传旧版 onReply 回调", () => {
+    const onReply = vi.fn();
+    render(<CommentList {...defaultProps} onSubmitReply={undefined} onReply={onReply} />);
+
+    expect(mockState.commentItemProps[0].onReply).toBe(onReply);
   });
 
   it("加载中且预期有评论时按评论数渲染骨架屏", () => {
