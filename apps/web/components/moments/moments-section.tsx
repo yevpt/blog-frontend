@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useLocale } from "@repo/hooks";
 import { SvgIcon } from "@repo/icons";
 import type { MomentItemResp, MomentPageResp } from "@repo/api";
-import { CommentModal } from "@/components/comments";
 import {
   SidebarFooterButton,
   SidebarSectionAction,
@@ -14,6 +13,7 @@ import {
 import { useSession } from "@/app/providers/session-provider";
 import { useMomentList } from "@/hooks/use-moment-list";
 import { useMomentShuffle } from "@/hooks/use-moment-shuffle";
+import { useCommentModal } from "@/store/use-comment-modal";
 import { useLoginModal } from "@/store/use-login-modal";
 import { useMomentModal } from "@/store/use-moment-modal";
 import { MomentCard } from "./moment-card";
@@ -35,6 +35,7 @@ export function MomentsSection({ initialMoments, loading, ownerUserId }: Moments
   const { profile } = useSession();
   const { open: openLoginModal } = useLoginModal();
   const openMomentModal = useMomentModal((state) => state.open);
+  const { open: openCommentModal } = useCommentModal();
   const initialPage = useMemo<MomentPageResp>(
     () => ({
       total: initialMoments.length,
@@ -65,21 +66,29 @@ export function MomentsSection({ initialMoments, loading, ownerUserId }: Moments
     initialMomentIds: initialMoments.map((moment) => moment.id),
     onShuffled: setMoments,
   });
-  const [activeComment, setActiveComment] = useState<{ momentId: number } | null>(null);
-
   const visibleMoments = moments.slice(0, MAX_MOMENTS);
-  const openComment = useCallback((moment: MomentItemResp) => {
-    setActiveComment({ momentId: moment.id });
-  }, []);
+  const handleCommentAdded = useCallback(
+    (momentId: number) => {
+      setMoments((current) =>
+        current.map((item) =>
+          item.id === momentId ? { ...item, comment_count: item.comment_count + 1 } : item,
+        ),
+      );
+    },
+    [setMoments],
+  );
+  const openComment = useCallback(
+    (moment: MomentItemResp) => {
+      openCommentModal("moment", moment.id, () => handleCommentAdded(moment.id));
+    },
+    [openCommentModal, handleCommentAdded],
+  );
   const openEdit = useCallback(
     (moment: MomentItemResp) => {
       openMomentModal(moment, (content, images) => updateMoment(moment, content, images));
     },
     [openMomentModal, updateMoment],
   );
-  const closeComment = useCallback(() => {
-    setActiveComment(null);
-  }, []);
   const handlePostNew = useCallback(() => {
     if (!profile) {
       openLoginModal();
@@ -87,79 +96,58 @@ export function MomentsSection({ initialMoments, loading, ownerUserId }: Moments
     }
     openMomentModal();
   }, [openLoginModal, openMomentModal, profile]);
-  const handleCommentAdded = useCallback(() => {
-    if (!activeComment) return;
-    setMoments((current) =>
-      current.map((item) =>
-        item.id === activeComment.momentId
-          ? { ...item, comment_count: item.comment_count + 1 }
-          : item,
-      ),
-    );
-  }, [activeComment, setMoments]);
 
   return (
-    <>
-      <section className="overflow-hidden rounded-2xl bg-card shadow-card">
-        <SidebarSectionHeader
-          title={t("home.moments")}
-          action={
-            <SidebarSectionAction
-              aria-label={t("moment.shuffle")}
-              onPress={shuffle}
-              isDisabled={isShuffling}
-            >
-              <SvgIcon
-                name="refresh-cw"
-                size={12}
-                className={isShuffling ? "animate-spin" : undefined}
+    <section className="overflow-hidden rounded-2xl bg-card shadow-card">
+      <SidebarSectionHeader
+        title={t("home.moments")}
+        action={
+          <SidebarSectionAction
+            aria-label={t("moment.shuffle")}
+            onPress={shuffle}
+            isDisabled={isShuffling}
+          >
+            <SvgIcon
+              name="refresh-cw"
+              size={12}
+              className={isShuffling ? "animate-spin" : undefined}
+            />
+            {t("moment.shuffle")}
+          </SidebarSectionAction>
+        }
+      />
+
+      <div className="flex flex-col px-3 pb-3">
+        {loading
+          ? Array.from({ length: MAX_MOMENTS }, (_, i) => (
+              <MomentCardSkeleton key={i} variant={i} layout="embedded" />
+            ))
+          : visibleMoments.map((moment) => (
+              <MomentCard
+                key={moment.id}
+                layout="embedded"
+                moment={moment}
+                onLike={toggleLike}
+                likeDisabled={pendingLikeIds.has(moment.id)}
+                onComment={openComment}
+                onEdit={openEdit}
+                onToggleTop={toggleTop}
+                onDelete={deleteMoment}
+                actionDisabled={pendingActionIds.has(moment.id)}
               />
-              {t("moment.shuffle")}
-            </SidebarSectionAction>
-          }
-        />
+            ))}
+      </div>
 
-        <div className="flex flex-col px-3 pb-3">
-          {loading
-            ? Array.from({ length: MAX_MOMENTS }, (_, i) => (
-                <MomentCardSkeleton key={i} variant={i} layout="embedded" />
-              ))
-            : visibleMoments.map((moment) => (
-                <MomentCard
-                  key={moment.id}
-                  layout="embedded"
-                  moment={moment}
-                  onLike={toggleLike}
-                  likeDisabled={pendingLikeIds.has(moment.id)}
-                  onComment={openComment}
-                  onEdit={openEdit}
-                  onToggleTop={toggleTop}
-                  onDelete={deleteMoment}
-                  actionDisabled={pendingActionIds.has(moment.id)}
-                />
-              ))}
-        </div>
-
-        <SidebarSectionFooter>
-          <SidebarFooterButton tone="primary" onPress={handlePostNew}>
-            <SvgIcon name="plus" size={12} />
-            {t("moment.postNew")}
-          </SidebarFooterButton>
-          <SidebarFooterButton tone="ghost" href="/moments">
-            {t("moment.viewMore")}
-            <SvgIcon name="arrow-forward" size={12} />
-          </SidebarFooterButton>
-        </SidebarSectionFooter>
-      </section>
-
-      {activeComment !== null && (
-        <CommentModal
-          targetType="moment"
-          targetId={activeComment.momentId}
-          onClose={closeComment}
-          onCommentAdded={handleCommentAdded}
-        />
-      )}
-    </>
+      <SidebarSectionFooter>
+        <SidebarFooterButton tone="primary" onPress={handlePostNew}>
+          <SvgIcon name="plus" size={12} />
+          {t("moment.postNew")}
+        </SidebarFooterButton>
+        <SidebarFooterButton tone="ghost" href="/moments">
+          {t("moment.viewMore")}
+          <SvgIcon name="arrow-forward" size={12} />
+        </SidebarFooterButton>
+      </SidebarSectionFooter>
+    </section>
   );
 }

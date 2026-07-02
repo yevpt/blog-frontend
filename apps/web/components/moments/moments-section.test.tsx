@@ -9,6 +9,7 @@ import type { MomentItemResp, UserDetailResp } from "@repo/api";
 
 const mockOpenLoginModal = vi.fn();
 const mockOpenMomentModal = vi.fn();
+const mockOpenCommentModal = vi.fn();
 const toastMockState = vi.hoisted(() => ({
   addToast: vi.fn(),
 }));
@@ -125,21 +126,11 @@ vi.mock("@/lib/toast", () => ({
   addToast: toastMockState.addToast,
 }));
 
-vi.mock("@/components/comments", () => ({
-  CommentModal: ({
-    targetId,
-    targetType,
-  }: {
-    targetId: number;
-    targetType: string;
-    onClose: () => void;
-  }) => (
-    <div
-      data-testid="comment-modal"
-      data-target-id={String(targetId)}
-      data-target-type={targetType}
-    />
-  ),
+vi.mock("@/store/use-comment-modal", () => ({
+  useCommentModal: (selector?: (state: { open: typeof mockOpenCommentModal }) => unknown) => {
+    const state = { open: mockOpenCommentModal };
+    return selector ? selector(state) : state;
+  },
 }));
 
 function makeMoment(
@@ -324,15 +315,13 @@ describe("MomentsSection", () => {
     expect(screen.queryByText(`${SHORT_CONTENT} #6`)).toBeNull();
   });
 
-  it("点击评论按钮后弹窗接收到正确的 momentId", async () => {
+  it("点击评论按钮后调用 useCommentModal.open 并传入正确的 momentId", async () => {
     const user = userEvent.setup();
     render(<MomentsSection initialMoments={[makeMoment(7, SHORT_CONTENT)]} />);
 
     await user.click(screen.getByLabelText("评论"));
 
-    const modal = screen.getByTestId("comment-modal");
-    expect(modal.dataset.targetId).toBe("7");
-    expect(modal.dataset.targetType).toBe("moment");
+    expect(mockOpenCommentModal).toHaveBeenCalledWith("moment", 7, expect.any(Function));
   });
 
   it("已登录时点击喜欢会调用接口并使用服务端最新结果更新状态", async () => {
