@@ -91,6 +91,11 @@ export function startOAuthRedirect(authorizeUrl: string): void {
  *   此时唯一可靠的信号是服务端已经写入的登录态 cookie，由调用方提供 pollFallback
  *   定期查询后端确认，不依赖 popup 与本窗口之间任何 JS 层面的引用。
  *
+ * 重要：轮询期间不能用 popup.closed 判断"用户是否已放弃"来提前停止——
+ * 同一次 COOP 隔离会导致本窗口持有的 popup 引用同样失真，实测 popup.closed 会在
+ * 弹窗仍在走第三方登录流程时就被误判为 true，一旦据此提前 cleanup，会导致轮询
+ * 在真正登录成功前就被掐断（这正是线上复现的故障根因）。因此只用超时兜底。
+ *
  * @returns 清理函数（移除监听器/计时器）；popup 被浏览器拦截时返回 null。
  */
 export function openOAuthPopup(
@@ -147,13 +152,6 @@ export function openOAuthPopup(
       if (settled || polling) return;
       pollAttempts += 1;
 
-      let popupClosed = false;
-      try {
-        popupClosed = popup.closed;
-      } catch {
-        // 极端情况下跨 origin 隔离可能导致读取抛错，按未关闭处理，靠超时兜底
-      }
-
       polling = true;
       pollFallback()
         .then((result) => {
@@ -161,8 +159,12 @@ export function openOAuthPopup(
             finish(result);
             return;
           }
-          // popup 已关闭仍未确认结果，或轮询超时，放弃并清理，避免无限轮询
-          if (popupClosed || pollAttempts >= POLL_MAX_ATTEMPTS) cleanup();
+          // 注意：这里刻意不读 popup.closed 作为提前放弃轮询的依据——
+          // 触发 pollFallback 兜底的场景本身就是 opener/window.name 被 COOP 重置，
+          // 同一次隔离会导致本窗口持有的 popup 引用同样失真，popup.closed 可能过早
+          // 误报为 true（弹窗其实还在走第三方登录），会让轮询在真正登录成功前被掐断。
+          // 只用超时兜底放弃，避免用户手动关闭弹窗后无限轮询。
+          if (pollAttempts >= POLL_MAX_ATTEMPTS) cleanup();
         })
         .finally(() => {
           polling = false;

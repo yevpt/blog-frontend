@@ -205,6 +205,33 @@ describe("OAuthGrid — OAuth Popup 登录流程", () => {
     expect(mockFetch).toHaveBeenCalledWith("/api/users/me");
   }, 8000);
 
+  it("popup.closed 被误判为 true 时轮询不应提前中止（回归用例）", async () => {
+    // 复现真实故障：COOP 切断 opener 关联后，本窗口持有的 popup 引用同样失真，
+    // popup.closed 可能从第一次检查起就一直误报 true（弹窗其实还在走第三方登录），
+    // 此时轮询必须继续，不能因为 closed===true 就提前放弃，否则真正登录成功后也没人再确认
+    const user = userEvent.setup();
+    const mockUser: UserResp = { id: 1, username: "vpt" };
+    mockFetch
+      .mockResolvedValueOnce(mockProviders(["github"]))
+      .mockResolvedValueOnce(mockAuthorize("https://github.com/login/oauth/authorize"))
+      .mockResolvedValueOnce({ ok: false } as Response)
+      .mockResolvedValueOnce({ ok: false } as Response)
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockUser) } as Response);
+    // 全程 closed: true，模拟 popup.closed 被浏览器误判
+    mockWindowOpen.mockReturnValue({ closed: true });
+
+    render(<OAuthGrid onSuccess={mockSuccess} />);
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/oauth/providers"));
+    await waitFor(() => expect(screen.getByLabelText("GitHub")).not.toHaveClass("opacity-40"));
+    await user.click(screen.getByLabelText("GitHub"));
+    await waitFor(() => expect(mockWindowOpen).toHaveBeenCalled());
+
+    await waitFor(() => expect(mockSuccess).toHaveBeenCalledWith(mockUser), { timeout: 6500 });
+    // 至少轮询了 3 次才成功，证明中间两次 ok:false 没有让轮询提前终止
+    const meCalls = mockFetch.mock.calls.filter((c) => c[0] === "/api/users/me");
+    expect(meCalls.length).toBeGreaterThanOrEqual(3);
+  }, 9000);
+
   it("popup 被浏览器拦截时，不调用 onSuccess", async () => {
     const user = userEvent.setup();
     mockFetch
