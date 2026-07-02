@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -309,74 +309,87 @@ describe("ArticleEditorPage", () => {
     expect(screen.getByRole("button", { name: "播放 Hidden Drafts" })).toBeEnabled();
   });
 
-  it("编辑页仅在本机备份比远端更新时恢复", async () => {
-    localStorage.setItem(
-      getArticleEditorAutosaveKey(12),
-      JSON.stringify({
-        schemaVersion: 1,
-        updatedAt: "2026-06-24T08:10:00.000Z",
-        form: {
-          title: "本机恢复标题",
-          description: "本机摘要",
-          content: "本机正文",
-          coverUrl: "",
-          mobileCoverUrl: "",
-          categoryId: 1,
-          selectedTags: [],
-          musicId: null,
-          articleStatus: 3,
-          commentStatus: 1,
-          isRecommended: false,
-        },
-      }),
-    );
-    vi.mocked(apiClient.articles.getAdminDetail).mockResolvedValue({
-      ...mockDetail,
-      updated_at: "2026-06-24T08:00:00.000Z",
+  describe("本机备份恢复", () => {
+    const autosaveTestTime = new Date("2026-06-24T08:15:00.000Z");
+
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      vi.setSystemTime(autosaveTestTime);
     });
 
-    renderEditorPage("/articles/12/edit");
-
-    await waitFor(() => {
-      expect(screen.getByRole("textbox", { name: "文章标题" })).toHaveValue("本机恢复标题");
-    });
-    expect(screen.getByText("已恢复意外关闭前的内容")).toBeInTheDocument();
-  });
-
-  it("远端更新时间比本机备份更新时不恢复并清理本机备份", async () => {
-    const key = getArticleEditorAutosaveKey(12);
-    localStorage.setItem(
-      key,
-      JSON.stringify({
-        schemaVersion: 1,
-        updatedAt: "2026-06-24T08:00:00.000Z",
-        form: {
-          title: "较旧本机标题",
-          description: "",
-          content: "",
-          coverUrl: "",
-          mobileCoverUrl: "",
-          categoryId: 1,
-          selectedTags: [],
-          musicId: null,
-          articleStatus: 3,
-          commentStatus: 1,
-          isRecommended: false,
-        },
-      }),
-    );
-    vi.mocked(apiClient.articles.getAdminDetail).mockResolvedValue({
-      ...mockDetail,
-      title: "远端较新标题",
-      updated_at: "2026-06-24T08:30:00.000Z",
+    afterEach(() => {
+      vi.useRealTimers();
     });
 
-    renderEditorPage("/articles/12/edit");
+    it("编辑页仅在本机备份比远端更新时恢复", async () => {
+      localStorage.setItem(
+        getArticleEditorAutosaveKey(12),
+        JSON.stringify({
+          schemaVersion: 1,
+          updatedAt: "2026-06-24T08:10:00.000Z",
+          form: {
+            title: "本机恢复标题",
+            description: "本机摘要",
+            content: "本机正文",
+            coverUrl: "",
+            mobileCoverUrl: "",
+            categoryId: 1,
+            selectedTags: [],
+            musicId: null,
+            articleStatus: 3,
+            commentStatus: 1,
+            isRecommended: false,
+          },
+        }),
+      );
+      vi.mocked(apiClient.articles.getAdminDetail).mockResolvedValue({
+        ...mockDetail,
+        updated_at: "2026-06-24T08:00:00.000Z",
+      });
 
-    await waitFor(() => {
-      expect(screen.getByRole("textbox", { name: "文章标题" })).toHaveValue("远端较新标题");
+      renderEditorPage("/articles/12/edit");
+
+      await waitFor(() => {
+        expect(screen.getByRole("textbox", { name: "文章标题" })).toHaveValue("本机恢复标题");
+      });
+      expect(screen.getByText("已恢复意外关闭前的内容")).toBeInTheDocument();
     });
-    expect(localStorage.getItem(key)).toBeNull();
+
+    it("远端更新时间比本机备份更新时不恢复并清理本机备份", async () => {
+      const key = getArticleEditorAutosaveKey(12);
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          schemaVersion: 1,
+          updatedAt: "2026-06-24T08:00:00.000Z",
+          form: {
+            title: "较旧本机标题",
+            description: "",
+            content: "",
+            coverUrl: "",
+            mobileCoverUrl: "",
+            categoryId: 1,
+            selectedTags: [],
+            musicId: null,
+            articleStatus: 3,
+            commentStatus: 1,
+            isRecommended: false,
+          },
+        }),
+      );
+      vi.mocked(apiClient.articles.getAdminDetail).mockResolvedValue({
+        ...mockDetail,
+        title: "远端较新标题",
+        updated_at: "2026-06-24T08:30:00.000Z",
+      });
+
+      renderEditorPage("/articles/12/edit");
+
+      await waitFor(() => {
+        expect(screen.getByRole("textbox", { name: "文章标题" })).toHaveValue("远端较新标题");
+      });
+      expect(localStorage.getItem(key)).toBeNull();
+    });
   });
 
   it("非法 articleId 显示错误", async () => {
@@ -419,7 +432,10 @@ describe("ArticleEditorPage", () => {
   });
 
   it("主动返回文章列表时清理本机备份", async () => {
-    const user = userEvent.setup();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date("2026-06-24T08:15:00.000Z"));
+
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const key = getArticleEditorAutosaveKey(undefined);
     localStorage.setItem(
       key,
@@ -450,6 +466,8 @@ describe("ArticleEditorPage", () => {
 
     expect(localStorage.getItem(key)).toBeNull();
     expect(mockNavigate).toHaveBeenCalledWith({ pathname: "/articles", search: "" });
+
+    vi.useRealTimers();
   });
 
   it("返回文章列表时恢复进入编辑页前的筛选状态", async () => {
