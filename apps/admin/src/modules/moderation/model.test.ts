@@ -7,6 +7,7 @@ import {
   REVIEW_STATUS_OPTIONS,
   PUBLIC_STATE_OPTIONS,
   canReview,
+  canBatchReviewRow,
   canHide,
   canRestore,
   contentTypeLabel,
@@ -173,6 +174,17 @@ describe("操作可用性", () => {
     expect(canReview(createItem({ review_status: "approved" }))).toBe(false);
     expect(canReview(createItem({ review_status: "rejected" }))).toBe(false);
     expect(canReview(createItem({ review_status: "superseded" }))).toBe(false);
+  });
+
+  it("列表行批量审核可用性与 canReview 一致", () => {
+    const pending = mapItemToRow(createItem({ review_status: "pending" }));
+    const deleted = mapItemToRow(
+      createItem({ lifecycle_state: "deleted", review_status: "pending" }),
+    );
+
+    expect(canBatchReviewRow(pending)).toBe(true);
+    expect(canBatchReviewRow(deleted)).toBe(false);
+    expect(canBatchReviewRow(mapItemToRow(createItem({ review_status: "approved" })))).toBe(false);
   });
 
   it("active 且 visible 可隐藏", () => {

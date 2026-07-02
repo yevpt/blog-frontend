@@ -61,6 +61,7 @@ export interface ModerationRow {
   riskLevel: ModerationRiskLevel;
   policyAction: ModerationPolicyAction;
   contentTypeLabel: string;
+  contentType: ModerationContentType;
   riskLabel: string;
   policyLabel: string;
   reviewLabel: string;
@@ -283,6 +284,7 @@ export function mapItemToRow(item: AdminModerationItemResp): ModerationRow {
     riskLevel: item.risk_level,
     policyAction: item.policy_action,
     contentTypeLabel: contentTypeLabel(item.subject.type),
+    contentType: item.subject.type,
     riskLabel: riskLevelLabel(item.risk_level),
     policyLabel: policyActionLabel(item.policy_action),
     reviewLabel: reviewStatusLabel(item.review_status),
@@ -306,6 +308,14 @@ export function mapItemToRow(item: AdminModerationItemResp): ModerationRow {
 /** lifecycle_state=deleted 时禁用审核、隐藏与恢复 */
 export function canReview(item: AdminModerationItemResp): boolean {
   return item.lifecycle_state !== "deleted" && item.review_status === "pending";
+}
+
+/** 审核队列批量操作上限，逐条调用后端接口，避免一次选中过多。 */
+export const MAX_QUEUE_BATCH_SIZE = 50;
+
+/** 列表行是否可参与批量通过/驳回 */
+export function canBatchReviewRow(row: ModerationRow): boolean {
+  return row.lifecycleState !== "deleted" && row.reviewStatus === "pending";
 }
 
 /** 已公开且未紧急隐藏的 item 可紧急隐藏 */

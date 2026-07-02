@@ -35,6 +35,7 @@ const mockRows: ModerationRow[] = [
     riskLevel: "medium",
     policyAction: "post_review",
     contentTypeLabel: "碎语",
+    contentType: "moment",
     riskLabel: "中风险",
     policyLabel: "审后通过",
     reviewLabel: "待审核",
@@ -57,6 +58,7 @@ const mockRows: ModerationRow[] = [
     riskLevel: "high",
     policyAction: "block",
     contentTypeLabel: "留言",
+    contentType: "guestbook",
     riskLabel: "高风险",
     policyLabel: "阻断",
     reviewLabel: "待审核",
@@ -94,6 +96,24 @@ vi.mock("../tags/hooks/use-is-md-screen", () => ({
   useIsMdScreen: vi.fn(),
 }));
 
+vi.mock("./components/ModerationCorrectContentEditor", () => ({
+  ModerationCorrectContentEditor: ({
+    value,
+    onChange,
+  }: {
+    value: string;
+    onChange: (value: string) => void;
+  }) => (
+    <div data-testid="moderation-correct-content">
+      <textarea
+        aria-label="修正正文"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </div>
+  ),
+}));
+
 vi.mock("../../lib/api", () => ({
   apiClient: {
     moderation: {
@@ -103,6 +123,7 @@ vi.mock("../../lib/api", () => ({
       hideItem: vi.fn(),
       restoreItem: vi.fn(),
       getItem: vi.fn(),
+      getHistory: vi.fn(),
       rules: {
         list: vi.fn(),
         metadata: vi.fn(),
@@ -190,6 +211,13 @@ describe("ModerationPage", () => {
     setupListHook();
     setupControlHook();
     setupUserHook();
+    vi.mocked(apiClient.moderation.getHistory).mockResolvedValue({
+      total: 0,
+      page: 1,
+      page_size: 20,
+      list: [],
+      events: [],
+    });
     vi.mocked(apiClient.moderation.approveItem).mockResolvedValue({
       item_id: 100,
       subject: { type: "moment", id: 9 },
@@ -367,6 +395,80 @@ describe("ModerationPage", () => {
         reason: "内容不当",
       });
     });
+  });
+
+  it("勾选待审项后展示批量操作条", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const table = screen.getByRole("grid", { name: "审核队列" });
+    await user.click(within(table).getByLabelText("选择审核项 100"));
+
+    expect(screen.getByText("已选 1 条")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "批量通过" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "批量驳回" })).toBeInTheDocument();
+  });
+
+  it("已删除项不可勾选批量操作", () => {
+    renderPage();
+
+    const table = screen.getByRole("grid", { name: "审核队列" });
+    expect(within(table).getByLabelText("选择审核项 101")).toBeDisabled();
+  });
+
+  it("批量通过逐条调用 approveItem", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const table = screen.getByRole("grid", { name: "审核队列" });
+    await user.click(within(table).getByLabelText("选择审核项 100"));
+    await user.click(screen.getByRole("button", { name: "批量通过" }));
+    const confirmDialog = screen.getByRole("dialog", { name: "批量通过 1 条待审内容" });
+    await user.click(within(confirmDialog).getByRole("button", { name: "批量通过" }));
+
+    await waitFor(() => {
+      expect(apiClient.moderation.approveItem).toHaveBeenCalledWith(100, {
+        revision_id: 200,
+        lock_version: 3,
+        reason: "",
+      });
+    });
+    expect(mockRefetch).toHaveBeenCalled();
+  });
+
+  it("批量驳回理由为空时不发请求", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const table = screen.getByRole("grid", { name: "审核队列" });
+    await user.click(within(table).getByLabelText("选择审核项 100"));
+    await user.click(screen.getByRole("button", { name: "批量驳回" }));
+    await user.click(screen.getByRole("button", { name: "确认驳回" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("驳回必须填写理由")).toBeInTheDocument();
+    });
+    expect(apiClient.moderation.rejectItem).not.toHaveBeenCalled();
+  });
+
+  it("批量驳回填写理由后逐条调用 rejectItem", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const table = screen.getByRole("grid", { name: "审核队列" });
+    await user.click(within(table).getByLabelText("选择审核项 100"));
+    await user.click(screen.getByRole("button", { name: "批量驳回" }));
+    await user.type(screen.getByLabelText("批量驳回理由"), "批量下架");
+    await user.click(screen.getByRole("button", { name: "确认驳回" }));
+
+    await waitFor(() => {
+      expect(apiClient.moderation.rejectItem).toHaveBeenCalledWith(100, {
+        revision_id: 200,
+        lock_version: 3,
+        reason: "批量下架",
+      });
+    });
+    expect(mockRefetch).toHaveBeenCalled();
   });
 
   it("修正正文或理由为空时不发请求", async () => {

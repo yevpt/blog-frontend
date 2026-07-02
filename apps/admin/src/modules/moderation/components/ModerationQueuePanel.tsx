@@ -13,6 +13,7 @@ import { AdminListCard } from "../../../components/AdminListCard";
 import { AdminListSummary } from "../../../components/AdminListSummary";
 import { adminFlushDataTableClassNames } from "../../../lib/data-table-flush";
 import {
+  canBatchReviewRow,
   riskLevelVariant,
   reviewStatusVariant,
   publicStateVariant,
@@ -20,15 +21,47 @@ import {
 } from "../model";
 import type { UseModerationListResult } from "../hooks/use-moderation-list";
 import { ModerationListToolbar } from "./ModerationListToolbar";
+import { ModerationQueueBatchBar } from "./ModerationQueueBatchBar";
+
+interface ModerationQueueSelection {
+  selectedRowIds: Set<string>;
+  selectableCount: number;
+  allSelectableSelected?: boolean;
+  onToggleSelect: (rowId: string, checked: boolean) => void;
+  onToggleSelectAll: (checked: boolean) => void;
+}
+
+interface ModerationQueueBatchBarState {
+  selectedCount: number;
+  isBusy: boolean;
+  onApprove: () => Promise<void>;
+  onReject: () => void;
+  onClear: () => void;
+}
 
 interface ModerationQueuePanelProps {
   list: UseModerationListResult;
   desktop: boolean;
   onReview: (row: ModerationRow) => void;
+  selection: ModerationQueueSelection;
+  batchBar: ModerationQueueBatchBarState;
 }
 
-export function ModerationQueuePanel({ list, desktop, onReview }: ModerationQueuePanelProps) {
-  const columns = useQueueColumns(onReview);
+export function ModerationQueuePanel({
+  list,
+  desktop,
+  onReview,
+  selection,
+  batchBar,
+}: ModerationQueuePanelProps) {
+  const selectableRows = list.rows.filter(canBatchReviewRow);
+  const allSelectableSelected =
+    selectableRows.length > 0 &&
+    selectableRows.every((row) => selection.selectedRowIds.has(row.rowId));
+  const columns = useQueueColumns(onReview, {
+    ...selection,
+    allSelectableSelected,
+  });
   const emptyState: DataTableEmptyState = list.hasActiveListQuery
     ? {
         icon: "search",
@@ -63,6 +96,7 @@ export function ModerationQueuePanel({ list, desktop, onReview }: ModerationQueu
           canClear={list.hasActiveListQuery}
           onClear={list.resetListQuery}
         />
+        <ModerationQueueBatchBar {...batchBar} />
         <div className="min-h-0 flex-1 overflow-hidden">
           {desktop ? (
             <DataTable
@@ -84,6 +118,10 @@ export function ModerationQueuePanel({ list, desktop, onReview }: ModerationQueu
               isLoading={list.isLoading}
               emptyState={emptyState}
               onReview={onReview}
+              selection={{
+                ...selection,
+                allSelectableSelected,
+              }}
             />
           )}
         </div>
@@ -109,9 +147,37 @@ export function ModerationQueuePanel({ list, desktop, onReview }: ModerationQueu
   );
 }
 
-function useQueueColumns(onReview: (row: ModerationRow) => void) {
+function useQueueColumns(
+  onReview: (row: ModerationRow) => void,
+  selection: ModerationQueueSelection,
+) {
   return useMemo<Array<DataTableColumn<ModerationRow>>>(
     () => [
+      {
+        id: "select",
+        header: (
+          <input
+            type="checkbox"
+            aria-label="全选当前页可批量审核项"
+            checked={selection.allSelectableSelected ?? false}
+            disabled={selection.selectableCount === 0}
+            onChange={(event) => selection.onToggleSelectAll(event.target.checked)}
+          />
+        ),
+        minWidth: 44,
+        cell: (row) => {
+          const selectable = canBatchReviewRow(row);
+          return (
+            <input
+              type="checkbox"
+              aria-label={`选择审核项 ${row.itemId}`}
+              checked={selection.selectedRowIds.has(row.rowId)}
+              disabled={!selectable}
+              onChange={(event) => selection.onToggleSelect(row.rowId, event.target.checked)}
+            />
+          );
+        },
+      },
       { id: "contentType", header: "类型", minWidth: 96, cell: (row) => row.contentTypeLabel },
       {
         id: "author",
@@ -183,7 +249,7 @@ function useQueueColumns(onReview: (row: ModerationRow) => void) {
         ),
       },
     ],
-    [onReview],
+    [onReview, selection],
   );
 }
 
@@ -192,11 +258,13 @@ function ModerationMobileList({
   isLoading,
   emptyState,
   onReview,
+  selection,
 }: {
   items: ModerationRow[];
   isLoading: boolean;
   emptyState: DataTableEmptyState;
   onReview: (row: ModerationRow) => void;
+  selection: ModerationQueueSelection;
 }) {
   if (isLoading)
     return <div className="px-4 py-10 text-center text-sm text-muted-foreground">加载中…</div>;
@@ -218,18 +286,31 @@ function ModerationMobileList({
     <div className="grid min-w-0 gap-2 p-3">
       {items.map((row) => (
         <article key={row.rowId} className="rounded-md border border-border/70 bg-background p-3">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Avatar
-              src={row.authorAvatar}
-              alt={row.authorName || `用户 ${row.authorId}`}
-              size="xs"
-            />
-            <Badge variant={riskLevelVariant(row.riskLevel)}>{row.riskLabel}</Badge>
-            <Badge variant={reviewStatusVariant(row.reviewStatus)}>{row.reviewLabel}</Badge>
-            <Badge variant={publicStateVariant(row.publicState)}>{row.publicStateLabel}</Badge>
-            <span className="text-sm font-medium">
-              {row.contentTypeLabel} · {row.authorName || "未知用户"} (#{row.authorId})
-            </span>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+              <Avatar
+                src={row.authorAvatar}
+                alt={row.authorName || `用户 ${row.authorId}`}
+                size="xs"
+              />
+              <Badge variant={riskLevelVariant(row.riskLevel)}>{row.riskLabel}</Badge>
+              <Badge variant={reviewStatusVariant(row.reviewStatus)}>{row.reviewLabel}</Badge>
+              <Badge variant={publicStateVariant(row.publicState)}>{row.publicStateLabel}</Badge>
+              <span className="text-sm font-medium">
+                {row.contentTypeLabel} · {row.authorName || "未知用户"} (#{row.authorId})
+              </span>
+            </div>
+            {canBatchReviewRow(row) ? (
+              <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+                <input
+                  type="checkbox"
+                  aria-label={`选择审核项 ${row.itemId}`}
+                  checked={selection.selectedRowIds.has(row.rowId)}
+                  onChange={(event) => selection.onToggleSelect(row.rowId, event.target.checked)}
+                />
+                选择
+              </label>
+            ) : null}
           </div>
           <p className="mt-2 line-clamp-3 text-sm leading-6">{row.summary}</p>
           <div className="mt-3 flex items-center justify-between gap-3">

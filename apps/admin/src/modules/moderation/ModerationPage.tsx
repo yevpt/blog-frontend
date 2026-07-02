@@ -8,8 +8,10 @@ import { ModerationReviewDialog } from "./components/ModerationReviewDialog";
 import { ModerationUserPanel } from "./components/ModerationUserPanel";
 import { useModerationControl } from "./hooks/use-moderation-control";
 import { useModerationList } from "./hooks/use-moderation-list";
+import { useModerationBatchReview } from "./hooks/use-moderation-batch-review";
 import { useModerationReview } from "./hooks/use-moderation-review";
 import { useModerationUser } from "./hooks/use-moderation-user";
+import { ModerationBatchRejectDialog } from "./components/ModerationBatchRejectDialog";
 import { RulesTab } from "./rules/RulesTab";
 
 export function ModerationPage() {
@@ -17,6 +19,7 @@ export function ModerationPage() {
   const control = useModerationControl();
   const user = useModerationUser();
   const review = useModerationReview(list);
+  const batchReview = useModerationBatchReview(list);
   const isMdScreen = useIsMdScreen();
   const [rulesTabVisited, setRulesTabVisited] = useState(false);
   const activeTabRef = useRef("queue");
@@ -65,7 +68,24 @@ export function ModerationPage() {
         </TabsList>
         <TabsPanels className="h-full min-h-0 flex-1 overflow-hidden">
           <TabsPanel id="queue" className="min-h-0 h-full flex flex-col overflow-hidden">
-            <ModerationQueuePanel list={list} desktop={isMdScreen} onReview={review.openReview} />
+            <ModerationQueuePanel
+              list={list}
+              desktop={isMdScreen}
+              onReview={review.openReview}
+              selection={{
+                selectedRowIds: batchReview.selectedRowIds,
+                selectableCount: batchReview.selectableCount,
+                onToggleSelect: batchReview.toggleSelect,
+                onToggleSelectAll: batchReview.toggleSelectAll,
+              }}
+              batchBar={{
+                selectedCount: batchReview.selectedCount,
+                isBusy: batchReview.isBusy,
+                onApprove: batchReview.batchApprove,
+                onReject: () => batchReview.setRejectDialogOpen(true),
+                onClear: batchReview.clearSelection,
+              }}
+            />
           </TabsPanel>
           <TabsPanel id="control" className="h-full min-h-0 overflow-y-auto overscroll-y-contain">
             <ModerationControlPanel
@@ -100,6 +120,13 @@ export function ModerationPage() {
         </TabsPanels>
       </Tabs>
       <ModerationReviewDialog {...review.dialogProps} />
+      <ModerationBatchRejectDialog
+        open={batchReview.rejectDialogOpen}
+        selectedCount={batchReview.selectedCount}
+        isSaving={batchReview.isBusy}
+        onClose={() => batchReview.setRejectDialogOpen(false)}
+        onSubmit={batchReview.batchReject}
+      />
     </div>
   );
 }
