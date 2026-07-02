@@ -1027,6 +1027,21 @@ EOF
 ### Task 6: 评论区（文章/动态）内联化 — `CommentReplies` + `CommentItem` + `CommentList` + `InlineComments`
 
 > 这四个文件通过 props 契约互相耦合（`CommentReplies` 改签名 → `CommentItem` 必须同步改 → `CommentList` 必须同步改 → `InlineComments` 必须同步改），只有四个文件全部改完项目才重新可编译，因此作为一个任务整体提交。以下按「先改被依赖的底层，再改上层」的顺序排列步骤。
+>
+> **⚠️ 执行期修正（双模式契约）**：原始 Step 3/7/9 的设计（下方仍保留，作为「新增内联提交路径」的实现基础）错误地假设可以直接把 `onReply`/`onEditComment`/`onEditReply`（目标态回调）整体替换成 `onSubmitReply`/`onSubmitEditComment`/`onSubmitEditReply`（内联提交回调）。但 `CommentList`/`CommentItem`/`CommentReplies` 同时被 `InlineComments`（本任务）和 `ModalComments`（明确不改动的弹窗场景，仍然只会传 `onReply`/`onEditComment`/`onEditReply`）共用——完全替换会导致 `modal-comments.tsx` 编译失败。
+>
+> 实际落地时改为**双模式共存**：三个组件的 props 里目标态回调（`onReply?`/`onEditComment?`/`onEditReply?`，全部可选，类型不变）和内联提交回调（`onSubmitReply?`/`onSubmitEditComment?`/`onSubmitEditReply?`，均改为可选）**同时存在**；每处入口按「内联回调优先，否则回退到目标态回调」解析：
+> ```ts
+> const canReply = Boolean(onSubmitReply || onReply);
+> const handleReply = () => {
+>   if (!userId) { openLoginModal(); return; }
+>   if (onSubmitReply) { /* 内联模式：本地 isReplying=true */ return; }
+>   onReply?.(target); // 目标态模式：原样转发，行为与改造前逐字一致
+> };
+> ```
+> `onEditComment`/`onEditReply` 同理。`InlineComments` 全程只传 `onSubmit*` 三个新回调；`modal-comments.tsx` 完全不用改一行代码——它继续传 `onReply`/`onEditComment`/`onEditReply`，自动落入目标态分支，行为零变化。`CommentItem`/`CommentReplies` 之间不再用 `NOOP_SUBMIT_REPLY` 兜底转发（会让 `canReply` 误判为真），而是把两组回调原样透传下去，由更内层的组件做同样的「优先取内联」判断。
+>
+> 下面 Step 1/3/5/7/9 里的代码块是「新增内联路径」这一半的设计基础，实现时需要按上面这条规则，把目标态回调（`onReply?`/`onEditComment?`/`onEditReply?`，及 `comment-item.tsx` 里已导出的 `ReplyTarget`/`EditTarget`/`ReplyEditTarget` 类型）加回各 Props 接口，而不是删除它们。
 
 **Files:**
 - Modify: `apps/web/components/comments/parts/comment-replies.tsx`
@@ -1040,8 +1055,8 @@ EOF
 - Delete: `apps/web/components/comments/views/inline-comments.composition.test.tsx`（整份测试的前提——`InlineComments` 靠 `replyTarget` 驱动顶部编辑器 header——不再成立）
 
 **Interfaces:**
-- Consumes: Task 4 的 `handleReplySubmit`/`handleEditCommentSubmit`/`handleEditReplySubmit`；Task 5 的 `InlineReplyEditor`；`comment-item.tsx` 里已导出、不变的 `ReplyTarget`/`EditTarget`/`ReplyEditTarget` 类型（继续给 `ModalComments`/`use-comment-section-state.ts` 用，本任务不删除这几个类型声明）。
-- Produces（供 Task 7 复用）：`CommentReplies` 新契约
+- Consumes: Task 4 的 `handleReplySubmit`/`handleEditCommentSubmit`/`handleEditReplySubmit`；Task 5 的 `InlineReplyEditor`；`comment-item.tsx` 里已导出、不变的 `ReplyTarget`/`EditTarget`/`ReplyEditTarget` 类型（继续给 `ModalComments`/`use-comment-section-state.ts` 用，本任务不删除这几个类型声明，且要在 `CommentRepliesProps`/`CommentItemProps`/`CommentListProps` 里重新作为可选字段引用，见上方「执行期修正」）。
+- Produces（供 Task 7 复用）：`CommentReplies` 最终双模式契约（`onSubmitReply`/`onSubmitEditReply` 均为可选，与 `onReply`/`onEditReply` 并存）：
 
 ```ts
 export interface CommentRepliesProps {
@@ -1050,23 +1065,54 @@ export interface CommentRepliesProps {
   replyCount: number;
   pendingReply?: CommentReplyResp | null;
   editedReply?: CommentReplyResp | null;
-  onSubmitReply: (commentId: number, parentReplyId: number | undefined, content: string) => Promise<boolean>;
+  onReply?: (target: ReplyTarget) => void;
+  onSubmitReply?: (commentId: number, parentReplyId: number | undefined, content: string) => Promise<boolean>;
   currentUserId?: number | null;
   onDeleteReply?: (replyId: number) => Promise<boolean>;
   onReplyDeleted?: (replyId: number) => void;
+  onEditReply?: (target: ReplyEditTarget) => void;
   onSubmitEditReply?: (replyId: number, parentReplyId: number, commentId: number, content: string) => Promise<boolean>;
   onOpenChange?: (open: boolean) => void;
   linkProfile?: boolean;
 }
 ```
 
+Task 7（`GuestbookItem`）只会传 `onSubmitReply`/`onSubmitEditReply`（新回调），不受此次修正影响，继续沿用下方 Step 内容不变。
+
 #### Step 1: 重写 `comment-replies.test.tsx` 里回复/编辑相关的用例
 
 打开 `apps/web/components/comments/parts/comment-replies.test.tsx`：
 
+0) `InlineReplyEditor` 内部渲染的是 `RichCommentInput`→`@repo/editor` 的 `RichEditor`（Tiptap contenteditable，`placeholder` 是 CSS `data-placeholder` 伪元素而非真实 DOM 属性，也没有 `value` 表单控件），所以**不能**像对普通 `<textarea>` 那样用 `getByPlaceholderText`/`getByDisplayValue`/`user.type` 去查询和交互。在顶部 mock 区（紧挨着其它 `vi.mock(...)` 调用之后）新增对 `InlineReplyEditor` 的 mock，和 `comment-item.test.tsx`（本任务 Step 5）、`guestbook-item.test.tsx`（Task 7）用的是同一套 mock 形状：
+
+```tsx
+vi.mock("../inputs/inline-reply-editor", () => ({
+  InlineReplyEditor: ({
+    initialValue = "",
+    placeholder,
+    header,
+    onSubmit,
+  }: {
+    initialValue?: string;
+    placeholder?: string;
+    header?: React.ReactNode;
+    onSubmit: (content: string) => Promise<boolean>;
+  }) => (
+    <div data-testid="inline-reply-editor">
+      {header}
+      <span data-testid="inline-editor-placeholder">{placeholder}</span>
+      <textarea data-testid="inline-editor-value" readOnly value={initialValue} />
+      <button type="button" onClick={() => void onSubmit("内联提交内容")}>
+        提交
+      </button>
+    </div>
+  ),
+}));
+```
+
 1) 顶部所有 `onReply={vi.fn()}` 的地方，保留原样但把 prop 名从 `onReply` 换成 `onSubmitReply`，并让传入的 mock 是 `vi.fn().mockResolvedValue(true)`（因为新签名返回 `Promise<boolean>`）。**这一步是纯改名，不改测试意图**——用编辑器的多光标/批量替换：把整份文件里的 `onReply={vi.fn()}` 全部替换为 `onSubmitReply={vi.fn().mockResolvedValue(true)}`，把 `onReply={onReply}`（有名字变量的那处）保留变量名但改成 `onSubmitReply={onReply}`（后面 Step 会把变量本身也重命名，见下）。
 
-2) 把「点击回复内的回复按钮触发 onReply」这个 `it` 替换为：
+2) 把「点击回复内的回复按钮触发 onReply」这个 `it` 替换为（用上面新增的 mock，断言 `data-testid`/`onSubmit` 回调，而不是查询真实富文本编辑器）：
 
 ```ts
   it("点击回复内的回复按钮展开内联回复框，提交时调用 onSubmitReply", async () => {
@@ -1086,12 +1132,11 @@ export interface CommentRepliesProps {
     await waitFor(() => screen.getByText("回复 1"));
 
     await user.click(screen.getAllByText("回复")[0]);
-    expect(screen.getByPlaceholderText("回复 @Alice…")).toBeTruthy();
+    expect(screen.getByTestId("inline-editor-placeholder")).toHaveTextContent("回复 @Alice…");
 
-    await user.type(screen.getByPlaceholderText("回复 @Alice…"), "回复内容");
-    await user.click(screen.getByLabelText("发送评论"));
+    await user.click(screen.getByText("提交"));
 
-    expect(onSubmitReply).toHaveBeenCalledWith(1, 1, "回复内容");
+    expect(onSubmitReply).toHaveBeenCalledWith(1, 1, "内联提交内容");
   });
 
   it("回复提交成功后内联回复框收起", async () => {
@@ -1110,10 +1155,9 @@ export interface CommentRepliesProps {
     await user.click(screen.getByText(/展开 1 条回复/));
     await waitFor(() => screen.getByText("回复 1"));
     await user.click(screen.getAllByText("回复")[0]);
-    await user.type(screen.getByPlaceholderText("回复 @Alice…"), "回复内容");
-    await user.click(screen.getByLabelText("发送评论"));
+    await user.click(screen.getByText("提交"));
 
-    await waitFor(() => expect(screen.queryByPlaceholderText("回复 @Alice…")).toBeNull());
+    await waitFor(() => expect(screen.queryByTestId("inline-reply-editor")).toBeNull());
   });
 ```
 
@@ -1142,10 +1186,10 @@ export interface CommentRepliesProps {
       await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
 
       await user.click(screen.getByRole("button", { name: "编辑回复" }));
-      expect(screen.getByDisplayValue("回复 1")).toBeTruthy();
+      expect(screen.getByTestId("inline-editor-value")).toHaveValue("回复 1");
 
-      await user.click(screen.getByLabelText("发送评论"));
-      expect(onSubmitEditReply).toHaveBeenCalledWith(1, 0, 1, "回复 1");
+      await user.click(screen.getByText("提交"));
+      expect(onSubmitEditReply).toHaveBeenCalledWith(1, 0, 1, "内联提交内容");
     });
 
     it("编辑 pending_content 时编辑框初始内容为待审版本", async () => {
@@ -1182,7 +1226,7 @@ export interface CommentRepliesProps {
       await waitFor(() => expect(screen.getByText("旧公开版本")).toBeTruthy());
 
       await user.click(screen.getByRole("button", { name: "编辑回复" }));
-      expect(screen.getByDisplayValue("新待审版本")).toBeTruthy();
+      expect(screen.getByTestId("inline-editor-value")).toHaveValue("新待审版本");
     });
 
     it("非作者不显示编辑按钮", async () => {
@@ -1247,7 +1291,7 @@ export interface CommentRepliesProps {
     await waitFor(() => screen.getByText("回复 1"));
     await user.click(screen.getByRole("button", { name: "回复" }));
 
-    expect(screen.getByPlaceholderText("回复 @Alice…")).toBeTruthy();
+    expect(screen.getByTestId("inline-reply-editor")).toBeTruthy();
   });
 ```
 
@@ -1713,7 +1757,12 @@ describe("CommentItem", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "编辑评论" }));
-    expect(screen.queryByText("这篇文章写得很好")).toBeNull();
+    // mock 的 InlineReplyEditor 用一个 readOnly textarea 展示 initialValue，其内容恰好与被隐藏的正文相同，
+    // 默认的 queryByText 会把这个 textarea 也当作候选节点匹配到；用 ignore 选项把 textarea 排除在候选之外，
+    // 这样断言真正验证的是「ThreadCommentContent 没有渲染」而不是被 mock 的读数误伤。
+    expect(
+      screen.queryByText("这篇文章写得很好", { ignore: "script, style, textarea" }),
+    ).toBeNull();
     expect(screen.getByTestId("inline-editor-value")).toHaveValue("这篇文章写得很好");
   });
 
