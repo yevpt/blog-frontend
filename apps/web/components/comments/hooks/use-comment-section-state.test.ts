@@ -459,4 +459,115 @@ describe("useCommentSectionState", () => {
       expect(result.current.content).toBe("");
     });
   });
+
+  describe("细粒度提交函数（内联编辑器用）", () => {
+    it("handleReplySubmit 成功时增加回复计数、写入 pendingReplies 并返回 true", async () => {
+      const { result } = renderHook(() =>
+        useCommentSectionState({ targetType: "article", targetId: 1 }),
+      );
+
+      let ok = false;
+      await act(async () => {
+        ok = await result.current.handleReplySubmit(1, undefined, "回复一下");
+      });
+
+      expect(ok).toBe(true);
+      expect(mockSubmitReply).toHaveBeenCalledWith(1, "回复一下", undefined);
+      expect(mockIncrementReplyCount).toHaveBeenCalledWith(1);
+      expect(result.current.pendingReplies[1]).toEqual({
+        ...makeReply(10),
+        from_user: {
+          id: 1,
+          username: "alice@example.com",
+          nickname: "Alice",
+          roles: ["user"],
+        },
+      });
+    });
+
+    it("handleReplySubmit 内容为空白时不发起请求并返回 false", async () => {
+      const { result } = renderHook(() =>
+        useCommentSectionState({ targetType: "article", targetId: 1 }),
+      );
+
+      let ok = true;
+      await act(async () => {
+        ok = await result.current.handleReplySubmit(1, undefined, "   ");
+      });
+
+      expect(ok).toBe(false);
+      expect(mockSubmitReply).not.toHaveBeenCalled();
+    });
+
+    it("handleReplySubmit 失败（submitReply 返回 null）时返回 false 且不增加计数", async () => {
+      mockSubmitReply.mockResolvedValueOnce(null);
+      const { result } = renderHook(() =>
+        useCommentSectionState({ targetType: "article", targetId: 1 }),
+      );
+
+      let ok = true;
+      await act(async () => {
+        ok = await result.current.handleReplySubmit(1, undefined, "回复一下");
+      });
+
+      expect(ok).toBe(false);
+      expect(mockIncrementReplyCount).not.toHaveBeenCalled();
+    });
+
+    it("handleEditCommentSubmit 成功时调用 updateComment 原位替换并返回 true", async () => {
+      const updated = { ...makeComment(1), content: "编辑后内容" };
+      mockEditComment.mockResolvedValueOnce(updated);
+      const { result } = renderHook(() =>
+        useCommentSectionState({ targetType: "article", targetId: 1 }),
+      );
+
+      let ok = false;
+      await act(async () => {
+        ok = await result.current.handleEditCommentSubmit(1, "编辑后内容");
+      });
+
+      expect(ok).toBe(true);
+      expect(mockEditComment).toHaveBeenCalledWith(1, "编辑后内容");
+      expect(mockUpdateComment).toHaveBeenCalledWith(updated);
+    });
+
+    it("handleEditReplySubmit 成功时写入 editedReplies 并返回 true", async () => {
+      const updatedReply = { ...makeReply(10), content: "编辑后回复" };
+      mockEditReply.mockResolvedValueOnce(updatedReply);
+      const { result } = renderHook(() =>
+        useCommentSectionState({ targetType: "article", targetId: 1 }),
+      );
+
+      let ok = false;
+      await act(async () => {
+        ok = await result.current.handleEditReplySubmit(10, 0, 1, "编辑后回复");
+      });
+
+      expect(ok).toBe(true);
+      expect(mockEditReply).toHaveBeenCalledWith(10, 0, "编辑后回复");
+      expect(result.current.editedReplies[1]).toEqual({
+        ...updatedReply,
+        from_user: {
+          id: 1,
+          username: "alice@example.com",
+          nickname: "Alice",
+          roles: ["user"],
+        },
+      });
+    });
+
+    it("handleEditReplySubmit 失败时返回 false", async () => {
+      mockEditReply.mockResolvedValueOnce(null);
+      const { result } = renderHook(() =>
+        useCommentSectionState({ targetType: "article", targetId: 1 }),
+      );
+
+      let ok = true;
+      await act(async () => {
+        ok = await result.current.handleEditReplySubmit(10, 0, 1, "编辑后回复");
+      });
+
+      expect(ok).toBe(false);
+    });
+  });
 });

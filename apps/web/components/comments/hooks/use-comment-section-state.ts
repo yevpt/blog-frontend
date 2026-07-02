@@ -228,6 +228,59 @@ export function useCommentSectionState({
     setContent(value);
   }, []);
 
+  // 内联编辑器专用：不经过 replyTarget/editTarget，直接提交并处理副作用，返回是否成功。
+  const handleReplySubmit = useCallback(
+    async (
+      commentId: number,
+      parentReplyId: number | undefined,
+      content: string,
+    ): Promise<boolean> => {
+      const trimmed = content.trim();
+      if (!trimmed) return false;
+      const reply = await submitReply(commentId, trimmed, parentReplyId);
+      if (!reply) return false;
+      incrementReplyCount(commentId);
+      setPendingReplies((current) => ({
+        ...current,
+        [commentId]: enrichReplyFromAuthor(reply, userId, profile),
+      }));
+      return true;
+    },
+    [incrementReplyCount, profile, submitReply, userId],
+  );
+
+  const handleEditCommentSubmit = useCallback(
+    async (commentId: number, content: string): Promise<boolean> => {
+      const trimmed = content.trim();
+      if (!trimmed) return false;
+      const updated = await editComment(commentId, trimmed);
+      if (!updated) return false;
+      updateComment(enrichCommentAuthor(updated, userId, profile));
+      return true;
+    },
+    [editComment, profile, updateComment, userId],
+  );
+
+  const handleEditReplySubmit = useCallback(
+    async (
+      replyId: number,
+      parentReplyId: number,
+      commentId: number,
+      content: string,
+    ): Promise<boolean> => {
+      const trimmed = content.trim();
+      if (!trimmed) return false;
+      const updated = await editReply(replyId, parentReplyId, trimmed);
+      if (!updated) return false;
+      setEditedReplies((current) => ({
+        ...current,
+        [commentId]: enrichReplyFromAuthor(updated, userId, profile),
+      }));
+      return true;
+    },
+    [editReply, profile, userId],
+  );
+
   return {
     userId,
     comments,
@@ -253,5 +306,8 @@ export function useCommentSectionState({
     handleCommentDelete,
     handleReplyDelete,
     handleChange,
+    handleReplySubmit,
+    handleEditCommentSubmit,
+    handleEditReplySubmit,
   };
 }
