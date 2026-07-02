@@ -133,6 +133,9 @@ importers:
       '@repo/icons':
         specifier: workspace:*
         version: link:../../packages/icons
+      '@repo/markdown':
+        specifier: workspace:*
+        version: link:../../packages/markdown
       '@repo/styles':
         specifier: workspace:*
         version: link:../../packages/styles

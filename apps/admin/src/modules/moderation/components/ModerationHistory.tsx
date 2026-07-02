@@ -1,10 +1,10 @@
 import { Badge, Button } from "@repo/ui";
 import type {
-  AdminModerationHistoryEventResp,
   AdminModerationHistoryRevisionResp,
+  AdminModerationHistoryEventResp,
 } from "@repo/api";
 import { useModerationHistory } from "../hooks/use-moderation-history";
-import { ModerationImageGallery } from "./ModerationImageGallery";
+import { ModerationContentPreview } from "./ModerationContentPreview";
 import { reviewStatusLabel, reviewStatusVariant } from "../model";
 
 // 事件类型 → 中文
@@ -69,28 +69,28 @@ function RevisionCard({ revision, events }: RevisionCardProps) {
       </div>
 
       {/* 提交内容 */}
-      {revision.submitted_content ? (
-        <div>
+      {revision.submitted_content || revision.images?.length ? (
+        <div className="min-w-0">
           <p className="text-xs font-medium text-muted-foreground mb-1">提交内容</p>
-          <p className="whitespace-pre-wrap text-sm">{revision.submitted_content}</p>
+          <ModerationContentPreview
+            contentType={revision.subject.type}
+            content={revision.submitted_content}
+            images={revision.images}
+          />
         </div>
       ) : null}
 
       {/* 已发布内容（若与提交不同则展示） */}
       {revision.published_content && revision.published_content !== revision.submitted_content ? (
-        <div>
+        <div className="min-w-0">
           <p className="text-xs font-medium text-muted-foreground mb-1">发布内容（修正后）</p>
-          <p className="whitespace-pre-wrap text-sm text-blue-700 dark:text-blue-300">
-            {revision.published_content}
-          </p>
-        </div>
-      ) : null}
-
-      {/* 图片快照 */}
-      {revision.images?.length > 0 ? (
-        <div>
-          <p className="text-xs font-medium text-muted-foreground mb-1">图片快照</p>
-          <ModerationImageGallery images={revision.images} />
+          <ModerationContentPreview
+            contentType={revision.subject.type}
+            content={revision.published_content}
+            images={revision.images}
+            includeMomentImages={false}
+            muted
+          />
         </div>
       ) : null}
 

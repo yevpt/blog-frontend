@@ -21,6 +21,7 @@
     "@repo/editor": "workspace:*",
     "@repo/hooks": "workspace:*",
     "@repo/icons": "workspace:*",
+    "@repo/markdown": "workspace:*",
     "@repo/styles": "workspace:*",
     "@repo/ui": "workspace:*",
     "react": "^19.2.6",

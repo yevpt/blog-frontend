@@ -1,8 +1,12 @@
 import { Button, cn } from "@repo/ui";
+import type { ModerationContentType } from "@repo/api";
+import { moderationContentMaxLength } from "../moderation-content";
+import { ModerationCorrectContentEditor } from "./ModerationCorrectContentEditor";
 
 export type ReviewMode = "approve" | "reject" | "correct" | "hide" | "restore";
 
 interface ModerationReviewActionsProps {
+  contentType: ModerationContentType;
   mode: ReviewMode;
   reason: string;
   correctContent: string;
@@ -38,6 +42,9 @@ export function ModerationReviewActions(props: ModerationReviewActionsProps) {
     ...(props.canRestore ? [{ id: "restore" as const, label: "恢复" }] : []),
   ];
   const activeMode = modes.some((item) => item.id === props.mode) ? props.mode : null;
+  const correctOverLimit =
+    activeMode === "correct" &&
+    props.correctContent.length > moderationContentMaxLength(props.contentType);
 
   return (
     <div className="shrink-0 border-t border-border/70 bg-card px-4 py-4 sm:px-5 max-md:pb-[max(1rem,env(safe-area-inset-bottom))]">
@@ -64,12 +71,11 @@ export function ModerationReviewActions(props: ModerationReviewActionsProps) {
       {activeMode ? (
         <div className="mt-3 grid gap-3">
           {activeMode === "correct" ? (
-            <TextAreaField
-              id="moderation-correct-content"
-              label="修正正文"
+            <ModerationCorrectContentEditor
+              contentType={props.contentType}
               value={props.correctContent}
-              placeholder="覆盖后的公开正文…"
               onChange={props.onCorrectContentChange}
+              disabled={props.isSaving}
             />
           ) : null}
           {activeMode === "approve" ? (
@@ -113,6 +119,7 @@ export function ModerationReviewActions(props: ModerationReviewActionsProps) {
             onPress={props.onSubmit}
             isLoading={props.isSaving}
             loadingText="提交中…"
+            isDisabled={correctOverLimit}
             className="w-full md:w-auto"
           >
             {actionLabel(activeMode)}

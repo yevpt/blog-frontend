@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Badge, cn } from "@repo/ui";
 import {
   reviewStatusVariant,
@@ -5,9 +6,26 @@ import {
   publicStateVariant,
   type ModerationRow,
 } from "../model";
+import { useModerationRevisionImages } from "../hooks/use-moderation-revision-images";
+import { ModerationContentPreview } from "./ModerationContentPreview";
 
-export function ModerationReviewDetails({ item }: { item: ModerationRow }) {
+interface ModerationReviewDetailsProps {
+  item: ModerationRow;
+  open: boolean;
+}
+
+export function ModerationReviewDetails({ item, open }: ModerationReviewDetailsProps) {
   const deleted = item.lifecycleState === "deleted";
+  const {
+    images,
+    isLoading: imagesLoading,
+    error: imagesError,
+  } = useModerationRevisionImages({
+    open,
+    itemId: item.itemId,
+    revisionId: item.revisionId,
+  });
+
   return (
     <div className="grid gap-5">
       <div className="flex flex-wrap items-center gap-2">
@@ -16,14 +34,39 @@ export function ModerationReviewDetails({ item }: { item: ModerationRow }) {
         <Badge variant="secondary">{item.policyLabel}</Badge>
         <Badge variant={publicStateVariant(item.publicState)}>{item.publicStateLabel}</Badge>
       </div>
-      <section className="grid min-w-0 gap-4 md:grid-cols-2">
-        <ContentVersion title="原始提交" content={item.submittedContent || "（空）"} />
-        <ContentVersion
-          title="当前公开版本"
-          content={item.publishedContent || "（尚未发布）"}
-          muted
-        />
+
+      <section className="grid min-w-0 gap-4 lg:grid-cols-2">
+        <ContentVersionPanel title="原始提交">
+          {imagesLoading ? (
+            <LoadingHint />
+          ) : (
+            <>
+              {imagesError ? <ErrorHint message={imagesError.message} /> : null}
+              <ModerationContentPreview
+                contentType={item.contentType}
+                content={item.submittedContent}
+                images={images}
+                emptyLabel="（空）"
+              />
+            </>
+          )}
+        </ContentVersionPanel>
+        <ContentVersionPanel title="当前公开版本" muted>
+          {imagesLoading ? (
+            <LoadingHint />
+          ) : (
+            <ModerationContentPreview
+              contentType={item.contentType}
+              content={item.publishedContent}
+              images={images}
+              includeMomentImages={false}
+              muted
+              emptyLabel="（尚未发布）"
+            />
+          )}
+        </ContentVersionPanel>
       </section>
+
       {item.momentOptions ? (
         <p className="text-sm text-muted-foreground">
           碎语选项：状态 {item.momentOptions.status === 1 ? "公开" : "隐藏"} · 评论{" "}
@@ -53,28 +96,34 @@ export function ModerationReviewDetails({ item }: { item: ModerationRow }) {
   );
 }
 
-function ContentVersion({
+function ContentVersionPanel({
   title,
-  content,
   muted = false,
+  children,
 }: {
   title: string;
-  content: string;
   muted?: boolean;
+  children: ReactNode;
 }) {
   return (
-    <div className="grid min-w-0 gap-2">
+    <article
+      className={cn(
+        "grid min-w-0 gap-2 rounded-lg border border-border bg-muted/10 p-3 sm:p-4",
+        muted && "border-border/70 bg-muted/5",
+      )}
+    >
       <p className="text-sm font-medium text-foreground">{title}</p>
-      <pre
-        className={cn(
-          "min-h-32 whitespace-pre-wrap break-words rounded-lg border border-border bg-muted/20 p-3 text-sm leading-6",
-          muted ? "text-muted-foreground" : "text-foreground",
-        )}
-      >
-        {content}
-      </pre>
-    </div>
+      <div className="min-w-0">{children}</div>
+    </article>
   );
+}
+
+function LoadingHint() {
+  return <p className="text-sm text-muted-foreground">加载内容预览...</p>;
+}
+
+function ErrorHint({ message }: { message: string }) {
+  return <p className="mb-2 text-xs text-destructive">图片快照加载失败：{message}</p>;
 }
 
 function decisionLabel(type: "approved" | "corrected" | "rejected"): string {

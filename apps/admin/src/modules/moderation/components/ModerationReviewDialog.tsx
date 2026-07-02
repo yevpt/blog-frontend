@@ -109,7 +109,7 @@ export function ModerationReviewDialog(props: ModerationReviewDialogProps) {
             </div>
             <TabsPanels className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 py-5 sm:px-5">
               <TabsPanel id="current" className="h-full">
-                <ModerationReviewDetails item={item} />
+                <ModerationReviewDetails item={item} open={props.open} />
               </TabsPanel>
               <TabsPanel id="history" className="h-full">
                 <ModerationHistory itemId={item.itemId} open={props.open} activeTab={activeTab} />
@@ -119,6 +119,7 @@ export function ModerationReviewDialog(props: ModerationReviewDialogProps) {
         </div>
         {deleted ? null : (
           <ModerationReviewActions
+            contentType={item.contentType}
             mode={mode}
             reason={reason}
             correctContent={correctContent}
