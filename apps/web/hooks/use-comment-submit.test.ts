@@ -422,4 +422,52 @@ describe("useCommentSubmit", () => {
       expect(addToastMock).toHaveBeenCalledWith("内容涉高风险，已被拦截", "error");
     });
   });
+
+  describe("并发提交", () => {
+    it("同一评论并发重复提交回复时第二次调用短路返回 null", async () => {
+      const resolvers: Array<(response: Response) => void> = [];
+      vi.mocked(global.fetch).mockImplementation(
+        () => new Promise<Response>((resolve) => resolvers.push(resolve)),
+      );
+      const { result } = renderHook(() => useCommentSubmit("article", 5));
+
+      const first = result.current.submitReply(1, "hello", 0);
+      const duplicate = result.current.submitReply(1, "hello", 0);
+      resolvers.forEach((resolve) => resolve(jsonResponse(makeReplyResp())));
+
+      let duplicateResult: unknown = "sentinel";
+      await act(async () => {
+        await first;
+        duplicateResult = await duplicate;
+      });
+
+      expect(duplicateResult).toBeNull();
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("不同评论并发提交回复互不阻塞，均能成功返回", async () => {
+      const resolvers: Array<(response: Response) => void> = [];
+      vi.mocked(global.fetch).mockImplementation(
+        () => new Promise<Response>((resolve) => resolvers.push(resolve)),
+      );
+      const { result } = renderHook(() => useCommentSubmit("article", 5));
+
+      const forCommentA = result.current.submitReply(1, "回复A", 0);
+      const forCommentB = result.current.submitReply(2, "回复B", 0);
+      resolvers.forEach((resolve, index) =>
+        resolve(jsonResponse(makeReplyResp({ id: index === 0 ? 10 : 11 }))),
+      );
+
+      let resultA: unknown;
+      let resultB: unknown;
+      await act(async () => {
+        resultA = await forCommentA;
+        resultB = await forCommentB;
+      });
+
+      expect(resultA).not.toBeNull();
+      expect(resultB).not.toBeNull();
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+  });
 });

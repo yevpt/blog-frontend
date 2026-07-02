@@ -54,19 +54,30 @@ function notifySubmitSuccess(resp: CommentItemResp | CommentReplyResp, fallback:
 
 export function useCommentSubmit(targetType: TargetType, targetId: number) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isSubmittingRef = useRef(false);
+  const inFlightKeysRef = useRef<Set<string>>(new Set());
 
   // 评论与回复分别使用各自 scope 的幂等键，互不复用、互不干扰。
   const commentKey = useIdempotencyKey("comment");
   const replyKey = useIdempotencyKey("reply");
 
+  // 按 target 维度（而非全局）加锁：同一 target 的重复提交会被拒绝，
+  // 不同 target（如不同评论）之间互不阻塞，支持同时展开多个内联编辑器并发提交。
+  const beginRequest = useCallback((key: string): boolean => {
+    if (inFlightKeysRef.current.has(key)) return false;
+    inFlightKeysRef.current.add(key);
+    setIsSubmitting(true);
+    return true;
+  }, []);
+
+  const endRequest = useCallback((key: string) => {
+    inFlightKeysRef.current.delete(key);
+    setIsSubmitting(inFlightKeysRef.current.size > 0);
+  }, []);
+
   const submitComment = useCallback(
     async (content: string): Promise<CommentItemResp | null> => {
-      if (isSubmittingRef.current) {
-        return null;
-      }
-      isSubmittingRef.current = true;
-      setIsSubmitting(true);
+      const key = "comment";
+      if (!beginRequest(key)) return null;
       const fingerprint = JSON.stringify({ targetType, targetId, content });
       try {
         const resp = await apiJson<CommentItemResp>(commentUrl(targetType, targetId), {
@@ -85,11 +96,10 @@ export function useCommentSubmit(targetType: TargetType, targetId: number) {
         notifySubmitError(err, "发布失败，请稍后重试");
         return null;
       } finally {
-        isSubmittingRef.current = false;
-        setIsSubmitting(false);
+        endRequest(key);
       }
     },
-    [targetType, targetId, commentKey],
+    [targetType, targetId, commentKey, beginRequest, endRequest],
   );
 
   const submitReply = useCallback(
@@ -98,11 +108,8 @@ export function useCommentSubmit(targetType: TargetType, targetId: number) {
       content: string,
       parentReplyId = 0,
     ): Promise<CommentReplyResp | null> => {
-      if (isSubmittingRef.current) {
-        return null;
-      }
-      isSubmittingRef.current = true;
-      setIsSubmitting(true);
+      const key = `reply:${commentId}:${parentReplyId}`;
+      if (!beginRequest(key)) return null;
       const fingerprint = JSON.stringify({
         targetType,
         commentId,
@@ -126,11 +133,10 @@ export function useCommentSubmit(targetType: TargetType, targetId: number) {
         notifySubmitError(err, "回复失败，请稍后重试");
         return null;
       } finally {
-        isSubmittingRef.current = false;
-        setIsSubmitting(false);
+        endRequest(key);
       }
     },
-    [targetType, replyKey],
+    [targetType, replyKey, beginRequest, endRequest],
   );
 
   return { isSubmitting, submitComment, submitReply };
