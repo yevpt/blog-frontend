@@ -8,7 +8,6 @@ import { ArticleListHeader } from "./article-list-header";
 import { PageSectionHeader } from "@/components/common/page-section-header";
 import { ArticleCard } from "./article-card";
 import { ArticleCardSkeleton } from "./article-card-skeleton";
-import { CommentModal } from "@/components/comments";
 import { MomentEndReached, MomentScrollLoader } from "@/components/moments/moment-scroll-loader";
 import { useSession } from "@/app/providers/session-provider";
 import { ALL_CATEGORY_ID, useArticleList } from "@/hooks/use-article-list";
@@ -18,6 +17,7 @@ import {
   getCategoryArticleCount,
   shouldUseCategoryPagination,
 } from "@/lib/category-tabs";
+import { useCommentModal } from "@/store/use-comment-modal";
 
 /** 与 ArticleSection 侧栏 `lg:grid-cols` 对齐：窄屏文章与碎言纵向堆叠 */
 const DESKTOP_LAYOUT_MEDIA_QUERY = "(min-width: 1024px)";
@@ -36,12 +36,6 @@ interface ArticleSectionProps {
   sidebar?: ReactNode;
   /** 受控模式：由父组件控制当前分类，不渲染内部 Tabs */
   currentCategoryId?: number;
-}
-
-interface ActiveComment {
-  articleId: number;
-  title: string;
-  type: string;
 }
 
 export function ArticleSection({
@@ -70,8 +64,8 @@ export function ArticleSection({
 
   // TODO: 待后端支持文字搜索接口后，在 fetchPage 中加入 search 参数
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeComment, setActiveComment] = useState<ActiveComment | null>(null);
   const { userId } = useSession();
+  const { open: openCommentModal } = useCommentModal();
 
   const visibleCategories = useMemo(() => filterVisibleCategories(categories), [categories]);
   const allCategories = useMemo(
@@ -149,24 +143,23 @@ export function ArticleSection({
 
   const skeletonCount = articles.length || pageData.list.length || 6;
 
-  const handleCommentAdded = useCallback(() => {
-    if (!activeComment) return;
-    setArticles((current) =>
-      current.map((item) =>
-        item.id === activeComment.articleId
-          ? { ...item, comment_count: item.comment_count + 1 }
-          : item,
-      ),
-    );
-  }, [activeComment, setArticles]);
+  const handleCommentAdded = useCallback(
+    (articleId: number) => {
+      setArticles((current) =>
+        current.map((item) =>
+          item.id === articleId ? { ...item, comment_count: item.comment_count + 1 } : item,
+        ),
+      );
+    },
+    [setArticles],
+  );
 
-  const openComment = useCallback((article: ArticleListItemResp) => {
-    setActiveComment({
-      articleId: article.id,
-      title: article.title,
-      type: article.category?.name ?? "文章",
-    });
-  }, []);
+  const openComment = useCallback(
+    (article: ArticleListItemResp) => {
+      openCommentModal("article", article.id, () => handleCommentAdded(article.id));
+    },
+    [openCommentModal, handleCommentAdded],
+  );
 
   const articleGrid = (
     <>
@@ -240,15 +233,6 @@ export function ArticleSection({
         </div>
       ) : (
         articleGrid
-      )}
-
-      {activeComment !== null && (
-        <CommentModal
-          targetType={activeComment.type === "moment" ? "moment" : "article"}
-          targetId={activeComment.articleId}
-          onClose={() => setActiveComment(null)}
-          onCommentAdded={handleCommentAdded}
-        />
       )}
     </section>
   );

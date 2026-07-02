@@ -6,6 +6,7 @@ import type { ArticlePageResp, CategoryTabItem } from "@repo/api";
 import { ArticleSection } from "./article-section";
 
 const mockOpenLoginModal = vi.fn();
+const mockOpenCommentModal = vi.fn();
 const toastMockState = vi.hoisted(() => ({
   addToast: vi.fn(),
 }));
@@ -165,6 +166,10 @@ vi.mock("@/store/use-login-modal", () => ({
   useLoginModal: () => ({ open: mockOpenLoginModal }),
 }));
 
+vi.mock("@/store/use-comment-modal", () => ({
+  useCommentModal: () => ({ open: mockOpenCommentModal }),
+}));
+
 vi.mock("@/lib/toast", () => ({
   addToast: toastMockState.addToast,
 }));
@@ -175,13 +180,6 @@ vi.mock("@/lib/article-list-cache", () => ({
   getLastArticleListCategoryId: () => 0,
   setLastArticleListCategoryId: () => undefined,
   shouldRestoreArticleListCache: () => false,
-}));
-
-vi.mock("@/components/comments", () => ({
-  // CommentModal 不接受 open prop，由父组件条件挂载控制显隐
-  CommentModal: ({ targetId }: { targetId: number; targetType: string; onClose: () => void }) => (
-    <div data-testid="comment-modal" data-target-id={String(targetId)} />
-  ),
 }));
 
 function makeArticle(id: number, title: string) {
@@ -573,7 +571,7 @@ describe("ArticleSection", () => {
     });
   });
 
-  it("点击评论按钮后弹窗接收到正确的 articleId", async () => {
+  it("点击评论按钮后调用 useCommentModal.open 并传入正确的 articleId", async () => {
     const user = userEvent.setup();
 
     render(
@@ -585,8 +583,7 @@ describe("ArticleSection", () => {
 
     await user.click(screen.getByLabelText("评论"));
 
-    const modal = screen.getByTestId("comment-modal");
-    expect(modal.dataset.targetId).toBe("7");
+    expect(mockOpenCommentModal).toHaveBeenCalledWith("article", 7, expect.any(Function));
   });
 
   it("已登录时点击喜欢会调用接口并使用服务端最新结果更新状态", async () => {
