@@ -344,5 +344,45 @@ describe("GuestbookItem", () => {
       await userEvent.click(screen.getByRole("button", { name: "编辑留言" }));
       expect(screen.getByTestId("inline-editor-value")).toHaveValue("普通正文");
     });
+
+    it("存在待审版本时编辑横幅展示「编辑中 · 内容正在审核」", async () => {
+      const onEdit = vi.fn().mockResolvedValue(true);
+      render(
+        <GuestbookItem
+          item={{
+            ...mockItem,
+            content: "旧版本正文",
+            moderation: {
+              public_state: "visible",
+              display_version: "last_approved",
+              has_pending_revision: true,
+              pending_risk_level: "medium",
+              pending_content: "待审新版本",
+              can_interact: true,
+            },
+          }}
+          currentUserId={1}
+          onEdit={onEdit}
+        />,
+      );
+
+      await userEvent.click(screen.getByRole("button", { name: "编辑留言" }));
+      expect(screen.getByText("编辑中 · 内容正在审核")).toBeTruthy();
+      expect(screen.queryByText("编辑中", { exact: true })).toBeNull();
+    });
+
+    it("无待审版本时编辑横幅仅展示「编辑中」，不带审核后缀", async () => {
+      const onEdit = vi.fn().mockResolvedValue(true);
+      render(
+        <GuestbookItem
+          item={{ ...mockItem, content: "普通正文", moderation: undefined }}
+          currentUserId={1}
+          onEdit={onEdit}
+        />,
+      );
+      await userEvent.click(screen.getByRole("button", { name: "编辑留言" }));
+      expect(screen.getByText("编辑中", { exact: true })).toBeTruthy();
+      expect(screen.queryByText("编辑中 · 内容正在审核")).toBeNull();
+    });
   });
 });

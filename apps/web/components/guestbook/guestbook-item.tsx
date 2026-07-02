@@ -147,7 +147,14 @@ export const GuestbookItem = memo(function GuestbookItem({
         <InlineReplyEditor
           initialValue={editInitialContent}
           placeholder="编辑留言正文…"
-          header={<ReplyBanner toUsername="编辑中" onCancel={() => setIsEditing(false)} editing />}
+          header={
+            <ReplyBanner
+              toUsername="编辑中"
+              onCancel={() => setIsEditing(false)}
+              editing
+              pendingReview={Boolean(item.moderation?.has_pending_revision)}
+            />
+          }
           isLoggedIn={!!userId}
           onLoginRequired={openLoginModal}
           onSubmit={handleEditSubmit}
