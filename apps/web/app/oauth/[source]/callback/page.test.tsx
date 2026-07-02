@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, waitFor } from "@testing-library/react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import OAuthCallbackPage from "./page";
+import { OAUTH_RESULT_KEY } from "@/lib/oauth";
 
 vi.mock("next/navigation", () => ({
   useParams: vi.fn(),
@@ -45,6 +46,8 @@ describe("OAuth 回调接收页", () => {
 
   afterEach(() => {
     sessionStorage.clear();
+    localStorage.clear();
+    window.name = "";
   });
 
   it("渲染加载中提示文字", () => {
@@ -104,6 +107,26 @@ describe("OAuth 回调接收页", () => {
     expect(stored.user.username).toBe("vpt");
     // 无 opener 时不应调用 postMessage
     expect(mockPostMessage).not.toHaveBeenCalled();
+  });
+
+  it("Popup 模式：opener 被 COOP 切断时，写入 localStorage 并关闭自身（不整页跳转）", async () => {
+    // 部分 OAuth 提供方的授权页会设置 Cross-Origin-Opener-Policy，
+    // 导致浏览器切断 popup 的 window.opener；但 window.name 不受影响，仍可识别自己是 popup
+    Object.defineProperty(window, "opener", { writable: true, value: null });
+    window.name = "oauth_popup";
+
+    vi.mocked(global.fetch).mockResolvedValue({
+      json: () => Promise.resolve({ code: 0, data: { user: { id: 1, username: "vpt" } } }),
+    } as Response);
+
+    render(<OAuthCallbackPage />);
+
+    await waitFor(() => expect(mockClose).toHaveBeenCalled());
+    expect(mockLocationReplace).not.toHaveBeenCalled();
+    expect(mockPostMessage).not.toHaveBeenCalled();
+    const stored = JSON.parse(localStorage.getItem(OAUTH_RESULT_KEY) ?? "{}");
+    expect(stored.type).toBe("oauth_success");
+    expect(stored.user.username).toBe("vpt");
   });
 
   it("Popup 模式：绑定成功后 postMessage 通知父窗口并关闭自身", async () => {

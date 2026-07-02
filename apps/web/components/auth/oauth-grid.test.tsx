@@ -33,6 +33,7 @@ beforeEach(() => {
   mockFetch.mockClear();
   mockWindowOpen.mockClear();
   sessionStorage.clear();
+  localStorage.clear();
   Object.defineProperty(window, "location", { writable: true, value: defaultLocation });
   mockMatchMedia();
 });
@@ -153,6 +154,32 @@ describe("OAuthGrid — OAuth Popup 登录流程", () => {
     );
 
     expect(mockSuccess).toHaveBeenCalledWith(mockUser);
+  });
+
+  it("opener 被 COOP 切断时，回调页改走 storage 事件也能调用 onSuccess", async () => {
+    const user = userEvent.setup();
+    const mockUser: UserResp = { id: 1, username: "vpt" };
+    mockFetch
+      .mockResolvedValueOnce(mockProviders(["github"]))
+      .mockResolvedValueOnce(mockAuthorize("https://github.com/login/oauth/authorize"));
+    mockWindowOpen.mockReturnValue({ closed: false });
+
+    render(<OAuthGrid onSuccess={mockSuccess} />);
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/oauth/providers"));
+    await waitFor(() => expect(screen.getByLabelText("GitHub")).not.toHaveClass("opacity-40"));
+    await user.click(screen.getByLabelText("GitHub"));
+    await waitFor(() => expect(mockWindowOpen).toHaveBeenCalled());
+
+    localStorage.setItem("oauth_result", JSON.stringify({ type: "oauth_success", user: mockUser }));
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: "oauth_result",
+        newValue: JSON.stringify({ type: "oauth_success", user: mockUser }),
+      }),
+    );
+
+    expect(mockSuccess).toHaveBeenCalledWith(mockUser);
+    expect(localStorage.getItem("oauth_result")).toBeNull();
   });
 
   it("popup 被浏览器拦截时，不调用 onSuccess", async () => {

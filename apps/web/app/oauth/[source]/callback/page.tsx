@@ -3,7 +3,12 @@
 import { Suspense, useEffect, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import type { UserResp } from "@repo/api";
-import { OAUTH_RESULT_KEY, consumeOAuthReturnUrl, type OAuthMessage } from "@/lib/oauth";
+import {
+  OAUTH_POPUP_WINDOW_NAME,
+  OAUTH_RESULT_KEY,
+  consumeOAuthReturnUrl,
+  type OAuthMessage,
+} from "@/lib/oauth";
 
 interface OAuthCallbackResult {
   code?: number;
@@ -84,13 +89,22 @@ function OAuthCallbackContent() {
       });
 
     /**
-     * 统一通知父窗口（或跳转首页）。
-     * - Popup 场景：postMessage 后关闭自身
-     * - 直接打开场景：存 sessionStorage 后跳转 /（供首页读取并展示 toast）
+     * 统一通知发起页（或跳转回发起页）。
+     * - Popup 场景（opener 正常）：postMessage 后关闭自身
+     * - Popup 场景（opener 被切断）：部分 OAuth 提供方的授权页会设置 Cross-Origin-Opener-Policy，
+     *   导致浏览器切断 popup 的 window.opener 引用（跨域导航后不可恢复），postMessage 无法送达。
+     *   window.name 不受 COOP 影响，仍可用于识别"自己是 popup"；改写 localStorage 触发
+     *   发起页的 storage 事件监听（见 openOAuthPopup）后关闭自身，不能整页跳转（会跳错窗口）。
+     * - 直接打开场景（真无 opener 也非 popup，如移动端全页跳转）：存 sessionStorage 后跳转回发起页
      */
     function notify(msg: OAuthMessage) {
       if (window.opener && !window.opener.closed) {
         window.opener.postMessage(msg, window.location.origin);
+        window.close();
+        return;
+      }
+      if (window.name === OAUTH_POPUP_WINDOW_NAME) {
+        localStorage.setItem(OAUTH_RESULT_KEY, JSON.stringify(msg));
         window.close();
         return;
       }
