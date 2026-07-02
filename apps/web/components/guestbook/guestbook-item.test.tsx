@@ -39,12 +39,32 @@ vi.mock("@/lib/format-time", () => ({
   formatDateTime: () => "2020-04-17 15:54",
 }));
 
-// 编辑器在留言项内联渲染；测试只关心初始值与提交回调，mock 掉富文本实现
-vi.mock("@/components/comments/inputs/rich-comment-input", () => ({
-  RichCommentInput: ({ value, onSubmit }: { value: string; onSubmit: () => void }) => (
+vi.mock("@/app/providers/session-provider", () => ({
+  useSession: () => ({ userId: 1 }),
+}));
+
+vi.mock("@/store/use-login-modal", () => ({
+  useLoginModal: (selector?: (s: { open: ReturnType<typeof vi.fn> }) => unknown) => {
+    const store = { open: vi.fn() };
+    return typeof selector === "function" ? selector(store) : store;
+  },
+}));
+
+// 编辑器/回复框在留言项内联渲染；测试只关心初始值与提交回调，mock 掉共享组件
+vi.mock("@/components/comments/inputs/inline-reply-editor", () => ({
+  InlineReplyEditor: ({
+    initialValue = "",
+    header,
+    onSubmit,
+  }: {
+    initialValue?: string;
+    header?: React.ReactNode;
+    onSubmit: (content: string) => Promise<boolean>;
+  }) => (
     <div data-testid="inline-editor">
-      <textarea data-testid="inline-editor-value" readOnly value={value} />
-      <button type="button" onClick={onSubmit}>
+      {header}
+      <textarea data-testid="inline-editor-value" readOnly value={initialValue} />
+      <button type="button" onClick={() => void onSubmit(initialValue || "内联提交内容")}>
         保存
       </button>
     </div>
@@ -94,11 +114,16 @@ describe("GuestbookItem", () => {
     expect(onLike).toHaveBeenCalledWith(1);
   });
 
-  it("点击回复按钮调用 onReply", async () => {
-    const onReply = vi.fn();
-    render(<GuestbookItem item={mockItem} onReply={onReply} />);
+  it("点击回复按钮内联展开回复框，提交时调用 onSubmitReply", async () => {
+    const onSubmitReply = vi.fn().mockResolvedValue(true);
+    render(<GuestbookItem item={mockItem} onSubmitReply={onSubmitReply} />);
+
+    expect(screen.queryByTestId("inline-editor")).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "回复" }));
-    expect(onReply).toHaveBeenCalledWith(expect.objectContaining({ commentId: 1 }));
+    expect(screen.getByTestId("inline-editor")).toBeTruthy();
+
+    await userEvent.click(screen.getByText("保存"));
+    expect(onSubmitReply).toHaveBeenCalledWith(1, undefined, "内联提交内容");
   });
 
   it("当前用户是留言作者时显示删除按钮并二次确认", async () => {
@@ -238,7 +263,7 @@ describe("GuestbookItem", () => {
 
     it("can_interact=false 时点击点赞不调用 onLike，且不渲染回复按钮", async () => {
       const onLike = vi.fn();
-      const onReply = vi.fn();
+      const onSubmitReply = vi.fn().mockResolvedValue(true);
       render(
         <GuestbookItem
           item={{
@@ -251,7 +276,7 @@ describe("GuestbookItem", () => {
             },
           }}
           onLike={onLike}
-          onReply={onReply}
+          onSubmitReply={onSubmitReply}
         />,
       );
       // 回复按钮不应出现

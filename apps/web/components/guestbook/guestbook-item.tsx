@@ -2,22 +2,27 @@
 
 import { memo, useCallback, useState } from "react";
 import type { CommentReplyResp, GuestbookItemResp } from "@repo/api";
-import type { ReplyEditTarget } from "@/components/comments";
 import { cn, Button } from "@repo/ui";
 import {
   CommentReplies,
-  RichCommentInput,
   getThreadDisplayName,
   ThreadCommentContent,
   ThreadCommentHeader,
   ThreadReplyIndent,
-  type ReplyTarget,
 } from "@/components/comments";
+import { InlineReplyEditor } from "@/components/comments/inputs/inline-reply-editor";
+import { ReplyBanner } from "@/components/comments/inputs/reply-banner";
+import { useSession } from "@/app/providers/session-provider";
+import { useLoginModal } from "@/store/use-login-modal";
 import { normalizeModerationView } from "@/components/moderation";
 
 interface GuestbookItemProps {
   item: GuestbookItemResp;
-  onReply?: (target: ReplyTarget) => void;
+  onSubmitReply?: (
+    commentId: number,
+    parentReplyId: number | undefined,
+    content: string,
+  ) => Promise<boolean>;
   onLike?: (id: number) => void;
   currentUserId?: number | null;
   onDelete?: (id: number) => Promise<boolean>;
@@ -25,27 +30,35 @@ interface GuestbookItemProps {
   pendingReply?: CommentReplyResp | null;
   /** 作者编辑回调；返回 true 表示已按 ID 原位替换。 */
   onEdit?: (id: number, content: string) => Promise<boolean>;
-  onEditReply?: (target: ReplyEditTarget) => void;
+  onSubmitEditReply?: (
+    replyId: number,
+    parentReplyId: number,
+    commentId: number,
+    content: string,
+  ) => Promise<boolean>;
   editedReply?: CommentReplyResp | null;
 }
 
+const NOOP_SUBMIT_REPLY = async () => false;
+
 export const GuestbookItem = memo(function GuestbookItem({
   item,
-  onReply,
+  onSubmitReply,
   onLike,
   currentUserId,
   onDelete,
   onDeleteReply,
   pendingReply,
   onEdit,
-  onEditReply,
+  onSubmitEditReply,
   editedReply,
 }: GuestbookItemProps) {
   const displayName = getThreadDisplayName(item.user);
+  const { userId } = useSession();
+  const openLoginModal = useLoginModal((s) => s.open);
   const [repliesOpen, setRepliesOpen] = useState(false);
+  const [isReplying, setIsReplying] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [editContent, setEditContent] = useState("");
 
   // 所有互动判断先经规范化，审核关闭/旧响应缺失时回退为充分可交互的可见旧版本
   const moderation = normalizeModerationView(item.moderation);
@@ -61,8 +74,13 @@ export const GuestbookItem = memo(function GuestbookItem({
 
   const handleReply = useCallback(() => {
     if (!canInteract) return;
-    onReply?.({ commentId: item.id, toUsername: displayName });
-  }, [canInteract, onReply, item.id, displayName]);
+    if (!userId) {
+      openLoginModal();
+      return;
+    }
+    setIsEditing(false);
+    setIsReplying(true);
+  }, [canInteract, userId, openLoginModal]);
 
   const handleDelete = useCallback(() => onDelete?.(item.id) ?? false, [onDelete, item.id]);
   const handleDeleteReply = useCallback(
@@ -71,31 +89,30 @@ export const GuestbookItem = memo(function GuestbookItem({
   );
 
   const handleOpenEditor = useCallback(() => {
-    // 中风险编辑：作者看到的是待审新版本，便于在其基础上修订或撤销
-    setEditContent(item.moderation?.pending_content ?? item.content);
+    setIsReplying(false);
     setIsEditing(true);
-  }, [item.content, item.moderation]);
-
-  const handleCancelEdit = useCallback(() => {
-    setIsEditing(false);
-    setEditContent("");
   }, []);
 
-  const handleSubmitEdit = useCallback(async () => {
-    if (!onEdit) return;
-    const trimmed = editContent.trim();
-    if (!trimmed || isSaving) return;
-    setIsSaving(true);
-    try {
-      const ok = await onEdit(item.id, editContent);
-      if (ok) {
-        setIsEditing(false);
-        setEditContent("");
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  }, [editContent, isSaving, item.id, onEdit]);
+  const handleReplySubmit = useCallback(
+    async (content: string) => {
+      const ok = (await onSubmitReply?.(item.id, undefined, content)) ?? false;
+      if (ok) setIsReplying(false);
+      return ok;
+    },
+    [onSubmitReply, item.id],
+  );
+
+  const handleEditSubmit = useCallback(
+    async (content: string) => {
+      const ok = (await onEdit?.(item.id, content)) ?? false;
+      if (ok) setIsEditing(false);
+      return ok;
+    },
+    [onEdit, item.id],
+  );
+
+  // 中风险编辑：作者看到的是待审新版本，便于在其基础上修订或撤销
+  const editInitialContent = item.moderation?.pending_content ?? item.content;
 
   return (
     <div className={cn("pt-4", hasReplies ? "pb-5" : "pb-2")}>
@@ -105,7 +122,7 @@ export const GuestbookItem = memo(function GuestbookItem({
         likeCount={item.like_count}
         isLiked={item.is_liked}
         onLike={handleLike}
-        onReply={onReply && canInteract ? handleReply : undefined}
+        onReply={onSubmitReply && canInteract ? handleReply : undefined}
         onDelete={isOwnItem && onDelete ? handleDelete : undefined}
         deleteLabel="删除留言"
         deleteConfirmMessage="确定删除这条留言吗？"
@@ -127,12 +144,14 @@ export const GuestbookItem = memo(function GuestbookItem({
       )}
 
       {isEditing ? (
-        <GuestbookInlineEditor
-          value={editContent}
-          onChange={setEditContent}
-          onSubmit={handleSubmitEdit}
-          onCancel={handleCancelEdit}
-          isSaving={isSaving}
+        <InlineReplyEditor
+          initialValue={editInitialContent}
+          placeholder="编辑留言正文…"
+          header={<ReplyBanner toUsername="编辑中" onCancel={() => setIsEditing(false)} editing />}
+          isLoggedIn={!!userId}
+          onLoginRequired={openLoginModal}
+          onSubmit={handleEditSubmit}
+          className="mb-4"
         />
       ) : (
         <ThreadCommentContent
@@ -140,6 +159,17 @@ export const GuestbookItem = memo(function GuestbookItem({
           moderation={item.moderation}
           isOwner={isOwnItem}
           className={cn(hasReplies && (repliesOpen ? "mb-6" : "mb-4"))}
+        />
+      )}
+
+      {isReplying && (
+        <InlineReplyEditor
+          placeholder={`回复 @${displayName}…`}
+          header={<ReplyBanner toUsername={displayName} onCancel={() => setIsReplying(false)} />}
+          isLoggedIn={!!userId}
+          onLoginRequired={openLoginModal}
+          onSubmit={handleReplySubmit}
+          className="mb-4"
         />
       )}
 
@@ -151,10 +181,10 @@ export const GuestbookItem = memo(function GuestbookItem({
             replyCount={item.reply_count}
             pendingReply={pendingReply}
             editedReply={editedReply}
-            onReply={onReply ?? (() => undefined)}
+            onSubmitReply={onSubmitReply ?? NOOP_SUBMIT_REPLY}
             currentUserId={currentUserId}
             onDeleteReply={onDeleteReply ? handleDeleteReply : undefined}
-            onEditReply={onEditReply}
+            onSubmitEditReply={onSubmitEditReply}
             onOpenChange={setRepliesOpen}
             linkProfile
           />
@@ -163,40 +193,3 @@ export const GuestbookItem = memo(function GuestbookItem({
     </div>
   );
 });
-
-interface GuestbookInlineEditorProps {
-  value: string;
-  onChange: (value: string) => void;
-  onSubmit: () => void;
-  onCancel: () => void;
-  isSaving?: boolean;
-}
-
-/** 留言作者内联编辑器，复用 RichCommentInput 以保持与发布一致的交互与外链策略。 */
-function GuestbookInlineEditor({
-  value,
-  onChange,
-  onSubmit,
-  onCancel,
-  isSaving,
-}: GuestbookInlineEditorProps) {
-  return (
-    <div className="mb-4 flex flex-col gap-2">
-      <RichCommentInput
-        value={value}
-        onChange={onChange}
-        onSubmit={onSubmit}
-        isSubmitting={isSaving}
-        placeholder="编辑留言正文…"
-        maxLength={2000}
-        header={
-          <div className="flex justify-end">
-            <Button variant="text" onPress={onCancel} className="h-auto p-0 text-xs text-(--fg3)">
-              取消
-            </Button>
-          </div>
-        }
-      />
-    </div>
-  );
-}

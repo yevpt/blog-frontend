@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 import { GuestbookInputBar } from "./guestbook-input-bar";
@@ -20,19 +20,23 @@ vi.mock("@/store/use-login-modal", () => ({
 vi.mock("@/components/comments", () => ({
   RichCommentInput: ({
     value,
+    onChange,
     onSubmit,
     placeholder,
-    header,
   }: {
     value: string;
+    onChange: (v: string) => void;
     onSubmit: () => void;
     placeholder?: string;
-    header?: React.ReactNode;
   }) => (
     <div data-testid="rich-input">
-      {header && <div data-testid="reply-banner">{header}</div>}
       <span data-testid="input-value">{value}</span>
       <span data-testid="placeholder">{placeholder}</span>
+      <textarea
+        data-testid="rich-input-textarea"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
       <button onClick={onSubmit}>发布</button>
     </div>
   ),
@@ -44,59 +48,22 @@ describe("GuestbookInputBar", () => {
     expect(screen.getByTestId("rich-input")).toBeTruthy();
   });
 
-  it("默认 placeholder 为留言提示", () => {
+  it("placeholder 为留言提示", () => {
     render(<GuestbookInputBar onSubmit={vi.fn()} />);
     expect(screen.getByTestId("placeholder").textContent).toContain("说点什么");
   });
 
-  it("replyTarget 传入时 placeholder 包含回复对象名", () => {
-    render(
-      <GuestbookInputBar onSubmit={vi.fn()} replyTarget={{ commentId: 1, toUsername: "Alice" }} />,
-    );
-    expect(screen.getByTestId("placeholder").textContent).toContain("Alice");
-  });
+  it("点击发布调用 onSubmit 并在成功后清空内容", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(true);
+    render(<GuestbookInputBar onSubmit={onSubmit} />);
 
-  it("replyTarget 传入时通过 header 显示回复指示条（包含用户名）", () => {
-    render(
-      <GuestbookInputBar onSubmit={vi.fn()} replyTarget={{ commentId: 1, toUsername: "Alice" }} />,
-    );
-    expect(screen.getByTestId("reply-banner")).toBeTruthy();
-    expect(screen.getByText("@Alice")).toBeTruthy();
-  });
+    // handleSubmit 有 `!content.trim()` 空内容拦截，必须先真正输入内容再点击发布，
+    // 否则无论实现对错这个用例都会因为守卫拦截而通不过。
+    await user.type(screen.getByTestId("rich-input-textarea"), "留言内容");
+    await user.click(screen.getByText("发布"));
 
-  it("点击取消按钮调用 onCancelReply", async () => {
-    const onCancelReply = vi.fn();
-    render(
-      <GuestbookInputBar
-        onSubmit={vi.fn()}
-        replyTarget={{ commentId: 1, toUsername: "Alice" }}
-        onCancelReply={onCancelReply}
-      />,
-    );
-    await userEvent.click(screen.getByText("×"));
-    expect(onCancelReply).toHaveBeenCalled();
-  });
-
-  it("编辑回复时回显待审正文并显示审核提示", async () => {
-    const onCancelEdit = vi.fn();
-    render(
-      <GuestbookInputBar
-        onSubmit={vi.fn()}
-        editTarget={{
-          type: "reply",
-          id: 9,
-          commentId: 1,
-          parentReplyId: 0,
-          initialContent: "待审回复",
-          pendingReview: true,
-        }}
-        onCancelEdit={onCancelEdit}
-      />,
-    );
-
-    expect(screen.getByTestId("input-value")).toHaveTextContent("待审回复");
-    expect(screen.getByText("编辑中 · 内容正在审核")).toBeTruthy();
-    await userEvent.click(screen.getByLabelText("取消编辑"));
-    expect(onCancelEdit).toHaveBeenCalledOnce();
+    expect(onSubmit).toHaveBeenCalledWith("留言内容");
+    await waitFor(() => expect(screen.getByTestId("input-value").textContent).toBe(""));
   });
 });

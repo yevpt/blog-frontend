@@ -1,10 +1,9 @@
 "use client";
 
 import type { CommentReplyResp, GuestbookItemResp } from "@repo/api";
-import type { ReplyEditTarget } from "@/components/comments";
 import { Card, Pagination } from "@repo/ui";
 import type { RefObject } from "react";
-import { CommentItemSkeleton, type ReplyTarget } from "@/components/comments";
+import { CommentItemSkeleton } from "@/components/comments";
 import { GuestbookItem } from "./guestbook-item";
 
 /** 与 use-guestbook-list 的 PAGE_SIZE 保持一致 */
@@ -30,13 +29,22 @@ interface GuestbookListProps {
   isLoading: boolean;
   error: string | null;
   onPageChange: (page: number) => void;
-  onReply: (target: ReplyTarget) => void;
+  onSubmitReply: (
+    commentId: number,
+    parentReplyId: number | undefined,
+    content: string,
+  ) => Promise<boolean>;
   onLike: (id: number) => void;
   currentUserId?: number | null;
   onDelete?: (id: number) => Promise<boolean>;
   onDeleteReply?: (itemId: number, replyId: number) => Promise<boolean>;
   onEdit?: (id: number, content: string) => Promise<boolean>;
-  onEditReply?: (target: ReplyEditTarget) => void;
+  onSubmitEditReply?: (
+    replyId: number,
+    parentReplyId: number,
+    commentId: number,
+    content: string,
+  ) => Promise<boolean>;
   pendingReplies: Record<number, CommentReplyResp | null>;
   editedReplies?: Record<number, CommentReplyResp | null>;
   listRef?: RefObject<HTMLDivElement | null>;
@@ -50,13 +58,13 @@ export function GuestbookList({
   isLoading,
   error,
   onPageChange,
-  onReply,
+  onSubmitReply,
   onLike,
   currentUserId,
   onDelete,
   onDeleteReply,
   onEdit,
-  onEditReply,
+  onSubmitEditReply,
   pendingReplies,
   editedReplies,
   listRef,
@@ -80,13 +88,13 @@ export function GuestbookList({
               <GuestbookItem
                 key={item.id}
                 item={item}
-                onReply={onReply}
+                onSubmitReply={onSubmitReply}
                 onLike={onLike}
                 currentUserId={currentUserId}
                 onDelete={onDelete}
                 onDeleteReply={onDeleteReply}
                 onEdit={onEdit}
-                onEditReply={onEditReply}
+                onSubmitEditReply={onSubmitEditReply}
                 pendingReply={pendingReplies[item.id] ?? null}
                 editedReply={editedReplies?.[item.id] ?? null}
               />

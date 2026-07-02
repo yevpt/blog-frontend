@@ -69,7 +69,7 @@ describe("GuestbookList", () => {
     isLoading: false,
     error: null,
     onPageChange: vi.fn(),
-    onReply: vi.fn(),
+    onSubmitReply: vi.fn().mockResolvedValue(true),
     onLike: vi.fn(),
     currentUserId: 1,
     onDelete: vi.fn(),
