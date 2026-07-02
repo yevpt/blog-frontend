@@ -6,6 +6,7 @@ import { ToastRegion } from "@repo/ui";
 import { toastQueue } from "@/lib/toast";
 
 import { MomentModal } from "@/components/moments/moment-modal";
+import { GlobalCommentModal } from "@/components/comments";
 import { ImageViewerHost } from "@/components/common/image-viewer-host";
 
 export function GlobalModals() {
@@ -14,6 +15,7 @@ export function GlobalModals() {
       <OAuthResultHandler />
       <LoginModal />
       <MomentModal />
+      <GlobalCommentModal />
       <ImageViewerHost />
       <ToastRegion queue={toastQueue} position="top-right" className="top-20" />
     </>
