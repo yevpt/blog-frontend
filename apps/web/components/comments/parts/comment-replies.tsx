@@ -1,11 +1,12 @@
 // apps/web/components/comments/parts/comment-replies.tsx
 "use client";
 
-import { memo, useState, useCallback, useEffect } from "react";
+import { memo, useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@repo/ui";
 import type { CommentReplyResp, CommentReplyPageResp, CommentUserResp } from "@repo/api";
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
+import { useCommentRepliesStore } from "@/store/use-comment-replies-store";
 import { useCommentLike } from "@/hooks/use-comment-like";
 import { apiJson, getApiErrorMessage } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
@@ -309,7 +310,8 @@ export const CommentReplies = memo(function CommentReplies({
   onOpenChange,
   linkProfile = true,
 }: CommentRepliesProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const isOpen = useCommentRepliesStore((s) => s.openKeys.has(`${targetType}:${commentId}`));
+  const setStoreOpen = useCommentRepliesStore((s) => s.setOpen);
   const [replies, setReplies] = useState<CommentReplyResp[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
@@ -330,14 +332,14 @@ export const CommentReplies = memo(function CommentReplies({
         setReplies((prev) => hydrateReplyAvatars(append ? [...prev, ...data.list] : data.list));
         setPage(pageNum);
         setHasMore(pageNum < data.pages);
-        if (!append) setIsOpen(true);
+        if (!append) setStoreOpen(targetType, commentId, true);
       } catch (err) {
         setError(getApiErrorMessage(err, "加载回复失败"));
       } finally {
         setIsLoading(false);
       }
     },
-    [targetType, commentId],
+    [targetType, commentId, setStoreOpen],
   );
 
   const handleToggle = useCallback(() => {
@@ -345,9 +347,9 @@ export const CommentReplies = memo(function CommentReplies({
       setError(null);
       void fetchReplies(1, false);
     } else {
-      setIsOpen(false);
+      setStoreOpen(targetType, commentId, false);
     }
-  }, [isOpen, fetchReplies]);
+  }, [isOpen, fetchReplies, setStoreOpen, targetType, commentId]);
 
   const handleLoadMore = useCallback(() => {
     if (!isLoading && hasMore) void fetchReplies(page + 1, true);
@@ -365,6 +367,17 @@ export const CommentReplies = memo(function CommentReplies({
       prev.map((r) => (r.id === updated.id ? hydrateReplyAvatars([updated])[0] : r)),
     );
   }, []);
+
+  // 展开态从 store 恢复（如路由返回导航后重新挂载）但本地回复数据已清空时，
+  // 自动重新拉取一次，避免停留在「已展开但空列表」的状态
+  const didAutoRestoreRef = useRef(false);
+  useEffect(() => {
+    if (didAutoRestoreRef.current) return;
+    didAutoRestoreRef.current = true;
+    if (isOpen && replies.length === 0) {
+      void fetchReplies(1, false);
+    }
+  }, [isOpen, replies.length, fetchReplies]);
 
   const handleDeleteReply = useCallback(
     async (replyId: number) => {

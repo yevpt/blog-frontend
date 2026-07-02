@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { CommentReplyResp, CommentReplyPageResp } from "@repo/api";
 import { CommentReplies } from "./comment-replies";
+import { useCommentRepliesStore } from "@/store/use-comment-replies-store";
 
 vi.mock("next/link", () => ({
   default: ({
@@ -139,6 +140,7 @@ describe("CommentReplies", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     global.fetch = vi.fn();
+    useCommentRepliesStore.setState({ openKeys: new Set() });
   });
 
   it("replyCount=0 时不渲染任何内容", () => {
@@ -1225,6 +1227,81 @@ describe("CommentReplies", () => {
       await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
 
       expect(screen.queryByRole("button", { name: "编辑回复" })).toBeNull();
+    });
+  });
+
+  describe("跨挂载保持展开态", () => {
+    it("展开后卸载重新挂载，无需再次点击即自动展开并重新拉取", async () => {
+      const user = userEvent.setup();
+      // 展开一次 + 重新挂载后自动恢复再拉取一次，共两次 fetch，body 只能读一次，
+      // 用 mockImplementation 保证每次调用都返回新的 Response
+      vi.mocked(global.fetch).mockImplementation(() =>
+        Promise.resolve(jsonResponse(mockPage([makeReply(1)]))),
+      );
+
+      const { unmount } = render(
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+        />,
+      );
+      await user.click(screen.getByText(/展开 1 条回复/));
+      await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+
+      unmount();
+
+      render(
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+        />,
+      );
+
+      // 重新挂载后不应再显示折叠态的「展开」按钮
+      expect(screen.queryByText(/展开 1 条回复/)).toBeNull();
+      await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+    });
+
+    it("未展开过时重新挂载仍保持折叠", () => {
+      render(
+        <CommentReplies
+          commentId={2}
+          targetType="article"
+          replyCount={3}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+        />,
+      );
+      expect(screen.getByText(/展开 3 条回复/)).toBeTruthy();
+    });
+
+    it("不同 targetType 相同 commentId 的展开态互不影响", async () => {
+      const user = userEvent.setup();
+      vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
+
+      render(
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+        />,
+      );
+      await user.click(screen.getByText(/展开 1 条回复/));
+      await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
+
+      render(
+        <CommentReplies
+          commentId={1}
+          targetType="guestbook"
+          replyCount={1}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+        />,
+      );
+      expect(screen.getByText(/展开 1 条回复/)).toBeTruthy();
     });
   });
 });
