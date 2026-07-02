@@ -2428,16 +2428,23 @@ vi.mock("@/store/use-login-modal", () => ({
 vi.mock("@/components/comments", () => ({
   RichCommentInput: ({
     value,
+    onChange,
     onSubmit,
     placeholder,
   }: {
     value: string;
+    onChange: (v: string) => void;
     onSubmit: () => void;
     placeholder?: string;
   }) => (
     <div data-testid="rich-input">
       <span data-testid="input-value">{value}</span>
       <span data-testid="placeholder">{placeholder}</span>
+      <textarea
+        data-testid="rich-input-textarea"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
       <button onClick={onSubmit}>发布</button>
     </div>
   ),
@@ -2455,13 +2462,22 @@ describe("GuestbookInputBar", () => {
   });
 
   it("点击发布调用 onSubmit 并在成功后清空内容", async () => {
+    const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(true);
     render(<GuestbookInputBar onSubmit={onSubmit} />);
-    await userEvent.click(screen.getByText("发布"));
-    expect(onSubmit).toHaveBeenCalled();
+
+    // handleSubmit 有 `!content.trim()` 空内容拦截，必须先真正输入内容再点击发布，
+    // 否则无论实现对错这个用例都会因为守卫拦截而通不过。
+    await user.type(screen.getByTestId("rich-input-textarea"), "留言内容");
+    await user.click(screen.getByText("发布"));
+
+    expect(onSubmit).toHaveBeenCalledWith("留言内容");
+    await waitFor(() => expect(screen.getByTestId("input-value").textContent).toBe(""));
   });
 });
 ```
+
+（顶部 import 需要新增 `waitFor`：`import { render, screen, waitFor } from "@testing-library/react";`。）
 
 把 `apps/web/components/guestbook/guestbook-input-bar.tsx` 整个文件替换为：
 
@@ -2518,7 +2534,22 @@ Expected: PASS
 
 打开 `apps/web/components/guestbook/guestbook-item.test.tsx`，做以下改动（其余未提及的用例——渲染内容、跳转链接、点赞数、心跳动效、格式化时间、审核展示——保持原样不动）：
 
-把顶部 `vi.mock("@/components/comments/inputs/rich-comment-input", ...)` 改成 mock `InlineReplyEditor`（因为编辑/回复现在都通过 `InlineReplyEditor` 渲染）：
+`GuestbookItem` 的新实现（Step 5）会直接调用 `useSession()`/`useLoginModal()`（原实现不这样做，回复的登录态判断原来在 `GuestbookPage` 层做）。在顶部 mock 区新增这两个 mock（放在 `vi.mock("@/lib/format-time", ...)` 之后即可）：
+
+```ts
+vi.mock("@/app/providers/session-provider", () => ({
+  useSession: () => ({ userId: 1 }),
+}));
+
+vi.mock("@/store/use-login-modal", () => ({
+  useLoginModal: (selector?: (s: { open: ReturnType<typeof vi.fn> }) => unknown) => {
+    const store = { open: vi.fn() };
+    return typeof selector === "function" ? selector(store) : store;
+  },
+}));
+```
+
+把顶部 `vi.mock("@/components/comments/inputs/rich-comment-input", ...)` 改成 mock `InlineReplyEditor`（因为编辑/回复现在都通过 `InlineReplyEditor` 渲染）。**注意**：下方「作者编辑」`describe` 块里有两个未改动的旧用例会点击「保存」后断言 `onEdit` 收到的是**当时预填的真实初始值**（例如 `"待审新版本"`），而不是固定字符串——所以 mock 的提交回调要在 `initialValue` 非空时回显它，只有在没有初始值（回复场景）时才退回固定字符串，这样才能同时满足新增的回复用例和下面保留不变的编辑用例：
 
 ```ts
 // 编辑器/回复框在留言项内联渲染；测试只关心初始值与提交回调，mock 掉共享组件
@@ -2535,7 +2566,7 @@ vi.mock("@/components/comments/inputs/inline-reply-editor", () => ({
     <div data-testid="inline-editor">
       {header}
       <textarea data-testid="inline-editor-value" readOnly value={initialValue} />
-      <button type="button" onClick={() => void onSubmit("内联提交内容")}>
+      <button type="button" onClick={() => void onSubmit(initialValue || "内联提交内容")}>
         保存
       </button>
     </div>
