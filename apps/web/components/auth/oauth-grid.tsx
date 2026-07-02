@@ -9,8 +9,28 @@ import {
   openOAuthPopup,
   saveOAuthReturnUrl,
   startOAuthRedirect,
+  type OAuthMessage,
 } from "@/lib/oauth";
 import { addToast } from "@/lib/toast";
+
+/**
+ * popup 通知彻底失联时的兜底：直接问后端"我现在是谁"。
+ * 用户若在弹窗打开前已登录第三方平台，授权页会跳过登录表单静默跳转，这条链路常经过
+ * 设有 Cross-Origin-Opener-Policy 的中间页，导致 popup 与本窗口的 opener/name 都被
+ * 浏览器重置，postMessage 和 storage 事件都送不到（详见 openOAuthPopup 的实现注释）。
+ * 但后端 session cookie 已经写入，直接查询即可确认登录是否成功。
+ */
+async function pollCurrentUser(): Promise<OAuthMessage | null> {
+  try {
+    const res = await fetch("/api/users/me");
+    if (!res.ok) return null;
+    const user = (await res.json()) as UserResp;
+    if (!user?.id) return null;
+    return { type: "oauth_success", user };
+  } catch {
+    return null;
+  }
+}
 
 // 模块级缓存：整个页面生命周期内只发一次请求，React StrictMode 双执行不重复请求
 let _providersPromise: Promise<Set<string>> | null = null;
@@ -102,14 +122,18 @@ export function OAuthGrid({ className, onSuccess }: OAuthGridProps) {
 
       // 复位上一次未触发的监听器，再开新的 popup
       cleanupRef.current?.();
-      const cleanup = openOAuthPopup(data.data.authorize_url, (msg) => {
-        if (msg.type === "oauth_success") {
-          onSuccess?.(msg.user);
-        } else if (msg.type === "oauth_error") {
-          addToast(msg.message ?? "登录失败，请稍后重试", "error");
-        }
-        cleanupRef.current = null;
-      });
+      const cleanup = openOAuthPopup(
+        data.data.authorize_url,
+        (msg) => {
+          if (msg.type === "oauth_success") {
+            onSuccess?.(msg.user);
+          } else if (msg.type === "oauth_error") {
+            addToast(msg.message ?? "登录失败，请稍后重试", "error");
+          }
+          cleanupRef.current = null;
+        },
+        { pollFallback: pollCurrentUser },
+      );
 
       if (!cleanup) {
         addToast("浏览器阻止了弹出窗口，请允许后重试", "error");
