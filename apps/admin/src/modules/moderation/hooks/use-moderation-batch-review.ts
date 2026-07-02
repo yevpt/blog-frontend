@@ -17,7 +17,7 @@ interface BatchResult {
 
 async function runBatchAction(
   rows: ModerationRow[],
-  action: (row: ModerationRow) => Promise<void>,
+  action: (row: ModerationRow) => Promise<unknown>,
 ): Promise<BatchResult> {
   let succeeded = 0;
   let failed = 0;
