@@ -100,14 +100,13 @@ vi.mock("@/lib/toast", () => ({
   addToast: vi.fn(),
 }));
 
-vi.mock("@/components/comments", () => ({
-  CommentModal: ({ targetId, targetType }: { targetId: number; targetType: string }) => (
-    <div
-      data-testid="comment-modal"
-      data-target-id={String(targetId)}
-      data-target-type={targetType}
-    />
-  ),
+const mockOpenCommentModal = vi.fn();
+
+vi.mock("@/store/use-comment-modal", () => ({
+  useCommentModal: (selector?: (state: { open: typeof mockOpenCommentModal }) => unknown) => {
+    const state = { open: mockOpenCommentModal };
+    return selector ? selector(state) : state;
+  },
 }));
 
 vi.mock("./moment-card", () => ({
@@ -204,15 +203,13 @@ describe("MomentsList", () => {
     expect(screen.getByText("暂无碎语")).toBeTruthy();
   });
 
-  it("点击评论打开 moment 弹窗", async () => {
+  it("点击评论后调用 useCommentModal.open 并传入正确的 momentId", async () => {
     const user = userEvent.setup();
     render(<MomentsList initialPage={makePageResp()} />);
 
     await user.click(screen.getByLabelText("评论"));
 
-    const modal = screen.getByTestId("comment-modal");
-    expect(modal.dataset.targetId).toBe("1");
-    expect(modal.dataset.targetType).toBe("moment");
+    expect(mockOpenCommentModal).toHaveBeenCalledWith("moment", 1, expect.any(Function));
   });
 
   it("pages > 1 时显示加载更多哨兵", () => {

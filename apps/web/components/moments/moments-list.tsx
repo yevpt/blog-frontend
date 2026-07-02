@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { MomentPageResp, MomentItemResp } from "@repo/api";
-import dynamic from "next/dynamic";
 import { useMomentList } from "@/hooks/use-moment-list";
+import { useCommentModal } from "@/store/use-comment-modal";
 import { useMomentModal } from "@/store/use-moment-modal";
 import { Card } from "@repo/ui";
 import { MomentCard } from "./moment-card";
@@ -13,10 +13,6 @@ import { MomentScrollLoader, MomentEndReached } from "./moment-scroll-loader";
 import { distributeToColumns, getMomentColumnCount } from "./moment-masonry";
 
 export { getMomentColumnCount } from "./moment-masonry";
-
-const CommentModal = dynamic(() => import("@/components/comments").then((m) => m.CommentModal), {
-  ssr: false,
-});
 
 interface MomentsListProps {
   initialPage: MomentPageResp;
@@ -82,8 +78,7 @@ export function MomentsList({ initialPage }: MomentsListProps) {
     setMoments,
   } = useMomentList({ initialPage });
   const openMomentModal = useMomentModal((state) => state.open);
-
-  const [activeComment, setActiveComment] = useState<{ momentId: number } | null>(null);
+  const { open: openCommentModal } = useCommentModal();
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef(loadMore);
@@ -142,9 +137,23 @@ export function MomentsList({ initialPage }: MomentsListProps) {
     return () => observer.disconnect();
   }, [showSentinel]);
 
-  const openComment = useCallback((moment: MomentItemResp) => {
-    setActiveComment({ momentId: moment.id });
-  }, []);
+  const handleCommentAdded = useCallback(
+    (momentId: number) => {
+      setMoments((current) =>
+        current.map((item) =>
+          item.id === momentId ? { ...item, comment_count: item.comment_count + 1 } : item,
+        ),
+      );
+    },
+    [setMoments],
+  );
+
+  const openComment = useCallback(
+    (moment: MomentItemResp) => {
+      openCommentModal("moment", moment.id, () => handleCommentAdded(moment.id));
+    },
+    [openCommentModal, handleCommentAdded],
+  );
 
   const openEdit = useCallback(
     (moment: MomentItemResp) => {
@@ -152,23 +161,6 @@ export function MomentsList({ initialPage }: MomentsListProps) {
     },
     [openMomentModal, updateMoment],
   );
-
-  const closeComment = useCallback(() => {
-    setActiveComment(null);
-  }, []);
-
-  const handleCommentAdded = useCallback(() => {
-    if (!activeComment) {
-      return;
-    }
-    setMoments((current) =>
-      current.map((item) =>
-        item.id === activeComment.momentId
-          ? { ...item, comment_count: item.comment_count + 1 }
-          : item,
-      ),
-    );
-  }, [activeComment, setMoments]);
 
   if (moments.length === 0 && !isLoadingInitial && !isLoadingMore) {
     return (
@@ -233,15 +225,6 @@ export function MomentsList({ initialPage }: MomentsListProps) {
             <p className="mt-4 text-center text-sm text-muted-foreground">加载失败，请稍后重试</p>
           )}
         </>
-      )}
-
-      {activeComment !== null && (
-        <CommentModal
-          targetType="moment"
-          targetId={activeComment.momentId}
-          onClose={closeComment}
-          onCommentAdded={handleCommentAdded}
-        />
       )}
     </>
   );
