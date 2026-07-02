@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import type { UserResp } from "@repo/api";
 import {
-  OAUTH_POPUP_WINDOW_NAME,
+  OAUTH_BROADCAST_CHANNEL,
   OAUTH_RESULT_KEY,
   consumeOAuthReturnUrl,
   type OAuthMessage,
@@ -20,12 +20,14 @@ interface OAuthCallbackResult {
 }
 
 /**
- * OAuth 回调接收页（Popup 窗口内运行）
+ * OAuth 回调接收页（popup 窗口内运行，或移动端整页跳转时在当前标签页运行）
  *
  * 流程：
- *   GitHub 授权完成 → 重定向至此页面 → 调用 /api/oauth/:source/callback 换取 token
- *   → 若在 popup 中：postMessage 给父窗口后关闭自身
- *   → 若直接打开：存 sessionStorage 后跳转首页
+ *   第三方授权完成 → 重定向至此页面 → 调用 /api/oauth/:source/callback 换取 token
+ *   → BroadcastChannel 广播结果给发起页 → 尝试 window.close()
+ *   → 若确实是 popup：成功关闭，发起页收到广播即可
+ *   → 若不是 popup（如移动端整页跳转）：close() 被浏览器忽略，300ms 后走 sessionStorage
+ *     + 硬跳转兜底，回到发起页
  *
  * Next.js 15 中 useSearchParams() 必须在 Suspense 边界内使用，
  * 因此将实际逻辑拆到 OAuthCallbackContent，用 Suspense 包裹。
@@ -90,27 +92,38 @@ function OAuthCallbackContent() {
 
     /**
      * 统一通知发起页（或跳转回发起页）。
-     * - Popup 场景（opener 正常）：postMessage 后关闭自身
-     * - Popup 场景（opener 被切断）：部分 OAuth 提供方的授权页会设置 Cross-Origin-Opener-Policy，
-     *   导致浏览器切断 popup 的 window.opener 引用（跨域导航后不可恢复），postMessage 无法送达。
-     *   window.name 不受 COOP 影响，仍可用于识别"自己是 popup"；改写 localStorage 触发
-     *   发起页的 storage 事件监听（见 openOAuthPopup）后关闭自身，不能整页跳转（会跳错窗口）。
-     * - 直接打开场景（真无 opener 也非 popup，如移动端全页跳转）：存 sessionStorage 后跳转回发起页
+     *
+     * - BroadcastChannel 广播结果作为主通道——同源即可送达，不依赖 window.opener。
+     * - opener 若恰好存活，postMessage 作为加速路径（双通道，谁先到都行；
+     *   接收方必须校验消息本身的结构，不能只信 origin——见 openOAuthPopup 里
+     *   isOAuthMessage 的说明，同源的浏览器扩展 content script 也会 postMessage）。
+     * - window.close() 的成功与否本身就是"我是不是 popup"的判据：只有真正由
+     *   window.open() 打开的窗口才会被浏览器允许关闭；直接导航打开的标签页（如移动端
+     *   整页跳转）调用 close() 会被静默忽略，页面仍然存活。若 300ms 后页面还活着，
+     *   说明刚才不是 popup，走整页跳转兜底。
      */
     function notify(msg: OAuthMessage) {
+      const channel = new BroadcastChannel(OAUTH_BROADCAST_CHANNEL);
+      channel.postMessage(msg);
+      channel.close();
+
+      // opener 若恰好存活，postMessage 作为加速路径；失败也无妨，BroadcastChannel 兜底
       if (window.opener && !window.opener.closed) {
-        window.opener.postMessage(msg, window.location.origin);
-        window.close();
-        return;
+        try {
+          window.opener.postMessage(msg, window.location.origin);
+        } catch {
+          // opener 已跨域隔离或不可用，忽略
+        }
       }
-      if (window.name === OAUTH_POPUP_WINDOW_NAME) {
-        localStorage.setItem(OAUTH_RESULT_KEY, JSON.stringify(msg));
-        window.close();
-        return;
-      }
-      // 移动端跨域授权后 opener 常失效；硬跳转确保 layout 重新读取 Cookie 登录态
-      sessionStorage.setItem(OAUTH_RESULT_KEY, JSON.stringify(msg));
-      window.location.replace(consumeOAuthReturnUrl());
+
+      window.close();
+
+      setTimeout(() => {
+        // 走到这说明 window.close() 没有真正关闭当前窗口（不是 popup），
+        // 移动端跨域授权后硬跳转确保 layout 重新读取 Cookie 登录态
+        sessionStorage.setItem(OAUTH_RESULT_KEY, JSON.stringify(msg));
+        window.location.replace(consumeOAuthReturnUrl());
+      }, 300);
     }
   }, [params.source, searchParams]);
 

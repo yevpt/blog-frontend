@@ -156,7 +156,12 @@ describe("OAuthGrid — OAuth Popup 登录流程", () => {
     expect(mockSuccess).toHaveBeenCalledWith(mockUser);
   });
 
-  it("opener 被 COOP 切断时，回调页改走 storage 事件也能调用 onSuccess", async () => {
+  it("同源但结构不符的 postMessage（如浏览器扩展的握手消息）不应抢占结果、真正的消息仍需被处理（回归用例）", async () => {
+    // 复现真实线上故障：React DevTools 等浏览器扩展的 content script 会定期向页面
+    // 广播形如 { source: "react-devtools-content-script", hello: true } 的同源
+    // postMessage。旧代码的 handleMessage 只校验了 event.origin，没校验消息结构，
+    // 这类消息一旦先到，会通过 settled 标记提前"占位"、cleanup() 提前拆掉监听器，
+    // 导致真正的 OAuth 结果消息到达时已经没有监听器在处理——登录弹窗永远收不到通知。
     const user = userEvent.setup();
     const mockUser: UserResp = { id: 1, username: "vpt" };
     mockFetch
@@ -170,28 +175,30 @@ describe("OAuthGrid — OAuth Popup 登录流程", () => {
     await user.click(screen.getByLabelText("GitHub"));
     await waitFor(() => expect(mockWindowOpen).toHaveBeenCalled());
 
-    localStorage.setItem("oauth_result", JSON.stringify({ type: "oauth_success", user: mockUser }));
+    // 先来一条同源但无关的扩展握手消息
     window.dispatchEvent(
-      new StorageEvent("storage", {
-        key: "oauth_result",
-        newValue: JSON.stringify({ type: "oauth_success", user: mockUser }),
+      new MessageEvent("message", {
+        data: { source: "react-devtools-content-script", hello: true },
+        origin: window.location.origin,
+      }),
+    );
+    // 真正的 OAuth 结果消息随后到达，必须仍然生效
+    window.dispatchEvent(
+      new MessageEvent("message", {
+        data: { type: "oauth_success", user: mockUser },
+        origin: window.location.origin,
       }),
     );
 
     expect(mockSuccess).toHaveBeenCalledWith(mockUser);
-    expect(localStorage.getItem("oauth_result")).toBeNull();
   });
 
-  it("postMessage 和 storage 事件都失联时，轮询 /api/users/me 兜底确认登录成功", async () => {
+  it("window.opener 不可用时，改走 BroadcastChannel 也能调用 onSuccess", async () => {
     const user = userEvent.setup();
     const mockUser: UserResp = { id: 1, username: "vpt" };
     mockFetch
       .mockResolvedValueOnce(mockProviders(["github"]))
-      .mockResolvedValueOnce(mockAuthorize("https://github.com/login/oauth/authorize"))
-      // 第一次轮询：后端还没确认登录态
-      .mockResolvedValueOnce({ ok: false } as Response)
-      // 第二次轮询：登录态已生效
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockUser) } as Response);
+      .mockResolvedValueOnce(mockAuthorize("https://github.com/login/oauth/authorize"));
     mockWindowOpen.mockReturnValue({ closed: false });
 
     render(<OAuthGrid onSuccess={mockSuccess} />);
@@ -200,37 +207,14 @@ describe("OAuthGrid — OAuth Popup 登录流程", () => {
     await user.click(screen.getByLabelText("GitHub"));
     await waitFor(() => expect(mockWindowOpen).toHaveBeenCalled());
 
-    // 不触发 message / storage 事件，模拟 opener 与 window.name 均被 COOP 重置的场景
-    await waitFor(() => expect(mockSuccess).toHaveBeenCalledWith(mockUser), { timeout: 5000 });
-    expect(mockFetch).toHaveBeenCalledWith("/api/users/me");
-  }, 8000);
+    // 不触发 window message 事件，模拟 opener 已被切断；改用回调页会用的同一条
+    // BroadcastChannel 频道广播结果
+    const channel = new BroadcastChannel("oauth-result");
+    channel.postMessage({ type: "oauth_success", user: mockUser });
+    channel.close();
 
-  it("popup.closed 被误判为 true 时轮询不应提前中止（回归用例）", async () => {
-    // 复现真实故障：COOP 切断 opener 关联后，本窗口持有的 popup 引用同样失真，
-    // popup.closed 可能从第一次检查起就一直误报 true（弹窗其实还在走第三方登录），
-    // 此时轮询必须继续，不能因为 closed===true 就提前放弃，否则真正登录成功后也没人再确认
-    const user = userEvent.setup();
-    const mockUser: UserResp = { id: 1, username: "vpt" };
-    mockFetch
-      .mockResolvedValueOnce(mockProviders(["github"]))
-      .mockResolvedValueOnce(mockAuthorize("https://github.com/login/oauth/authorize"))
-      .mockResolvedValueOnce({ ok: false } as Response)
-      .mockResolvedValueOnce({ ok: false } as Response)
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockUser) } as Response);
-    // 全程 closed: true，模拟 popup.closed 被浏览器误判
-    mockWindowOpen.mockReturnValue({ closed: true });
-
-    render(<OAuthGrid onSuccess={mockSuccess} />);
-    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("/api/oauth/providers"));
-    await waitFor(() => expect(screen.getByLabelText("GitHub")).not.toHaveClass("opacity-40"));
-    await user.click(screen.getByLabelText("GitHub"));
-    await waitFor(() => expect(mockWindowOpen).toHaveBeenCalled());
-
-    await waitFor(() => expect(mockSuccess).toHaveBeenCalledWith(mockUser), { timeout: 6500 });
-    // 至少轮询了 3 次才成功，证明中间两次 ok:false 没有让轮询提前终止
-    const meCalls = mockFetch.mock.calls.filter((c) => c[0] === "/api/users/me");
-    expect(meCalls.length).toBeGreaterThanOrEqual(3);
-  }, 9000);
+    await waitFor(() => expect(mockSuccess).toHaveBeenCalledWith(mockUser));
+  });
 
   it("popup 被浏览器拦截时，不调用 onSuccess", async () => {
     const user = userEvent.setup();
