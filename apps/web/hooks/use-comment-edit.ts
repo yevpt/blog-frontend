@@ -44,15 +44,27 @@ function notifyEditSuccess(resp: CommentItemResp | CommentReplyResp, fallback: s
  */
 export function useCommentEdit(targetType: TargetType) {
   const [isEditing, setIsEditing] = useState(false);
-  const isEditingRef = useRef(false);
+  const inFlightKeysRef = useRef<Set<string>>(new Set());
   const commentKey = useIdempotencyKey("comment-edit");
   const replyKey = useIdempotencyKey("reply-edit");
 
+  // 按 target 维度（而非全局）加锁，理由同 use-comment-submit.ts。
+  const beginRequest = useCallback((key: string): boolean => {
+    if (inFlightKeysRef.current.has(key)) return false;
+    inFlightKeysRef.current.add(key);
+    setIsEditing(true);
+    return true;
+  }, []);
+
+  const endRequest = useCallback((key: string) => {
+    inFlightKeysRef.current.delete(key);
+    setIsEditing(inFlightKeysRef.current.size > 0);
+  }, []);
+
   const editComment = useCallback(
     async (commentId: number, content: string): Promise<CommentItemResp | null> => {
-      if (isEditingRef.current) return null;
-      isEditingRef.current = true;
-      setIsEditing(true);
+      const key = `comment:${commentId}`;
+      if (!beginRequest(key)) return null;
       const fingerprint = JSON.stringify({ targetType, commentId, content });
       try {
         const resp = await apiJson<CommentItemResp>(commentEditUrl(targetType, commentId), {
@@ -71,11 +83,10 @@ export function useCommentEdit(targetType: TargetType) {
         notifyEditError(err, "编辑失败，请稍后重试");
         return null;
       } finally {
-        isEditingRef.current = false;
-        setIsEditing(false);
+        endRequest(key);
       }
     },
-    [targetType, commentKey],
+    [targetType, commentKey, beginRequest, endRequest],
   );
 
   const editReply = useCallback(
@@ -84,9 +95,8 @@ export function useCommentEdit(targetType: TargetType) {
       parentReplyId: number,
       content: string,
     ): Promise<CommentReplyResp | null> => {
-      if (isEditingRef.current) return null;
-      isEditingRef.current = true;
-      setIsEditing(true);
+      const key = `reply:${replyId}`;
+      if (!beginRequest(key)) return null;
       const fingerprint = JSON.stringify({ targetType, replyId, parentReplyId, content });
       try {
         const resp = await apiJson<CommentReplyResp>(replyEditUrl(targetType, replyId), {
@@ -105,11 +115,10 @@ export function useCommentEdit(targetType: TargetType) {
         notifyEditError(err, "编辑失败，请稍后重试");
         return null;
       } finally {
-        isEditingRef.current = false;
-        setIsEditing(false);
+        endRequest(key);
       }
     },
-    [targetType, replyKey],
+    [targetType, replyKey, beginRequest, endRequest],
   );
 
   return { isEditing, editComment, editReply };

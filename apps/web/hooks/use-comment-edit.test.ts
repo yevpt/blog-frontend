@@ -222,6 +222,29 @@ describe("useCommentEdit", () => {
       expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 
+    it("不同评论并发编辑互不阻塞，均能成功返回", async () => {
+      const resolvers: Array<(response: Response) => void> = [];
+      vi.mocked(global.fetch).mockImplementation(
+        () => new Promise<Response>((resolve) => resolvers.push(resolve)),
+      );
+      const { result } = renderHook(() => useCommentEdit("article"));
+
+      const forCommentA = result.current.editComment(7, "编辑A");
+      const forCommentB = result.current.editComment(9, "编辑B");
+      resolvers.forEach((resolve) => resolve(jsonResponse(makeCommentResp())));
+
+      let resultA: unknown;
+      let resultB: unknown;
+      await act(async () => {
+        resultA = await forCommentA;
+        resultB = await forCommentB;
+      });
+
+      expect(resultA).not.toBeNull();
+      expect(resultB).not.toBeNull();
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+
     it("5xx 失败期间保留同一个 Idempotency-Key", async () => {
       vi.mocked(global.fetch)
         .mockResolvedValueOnce(jsonResponse({ error: "boom" }, 500))
