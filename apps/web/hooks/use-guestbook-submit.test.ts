@@ -256,4 +256,52 @@ describe("useGuestbookSubmit", () => {
     expect(returned).toBeNull();
     expect(addToastMock).toHaveBeenCalledWith("修改过于频繁", "error");
   });
+
+  describe("并发提交", () => {
+    it("不同留言并发提交回复互不阻塞，均能成功返回", async () => {
+      const resolvers: Array<(response: Response) => void> = [];
+      vi.mocked(fetch).mockImplementation(
+        () => new Promise<Response>((resolve) => resolvers.push(resolve)),
+      );
+      const { result } = renderHook(() => useGuestbookSubmit());
+
+      const forEntryA = result.current.submitReply(1, "回复A");
+      const forEntryB = result.current.submitReply(2, "回复B");
+      resolvers.forEach((resolve, index) =>
+        resolve(jsonResponse({ ...mockReply, id: index === 0 ? 10 : 11 })),
+      );
+
+      let resultA: unknown;
+      let resultB: unknown;
+      await act(async () => {
+        resultA = await forEntryA;
+        resultB = await forEntryB;
+      });
+
+      expect(resultA).not.toBeNull();
+      expect(resultB).not.toBeNull();
+      expect(vi.mocked(fetch)).toHaveBeenCalledTimes(2);
+    });
+
+    it("同一留言并发重复提交回复时第二次调用短路返回 null", async () => {
+      const resolvers: Array<(response: Response) => void> = [];
+      vi.mocked(fetch).mockImplementation(
+        () => new Promise<Response>((resolve) => resolvers.push(resolve)),
+      );
+      const { result } = renderHook(() => useGuestbookSubmit());
+
+      const first = result.current.submitReply(1, "回复A", 0);
+      const duplicate = result.current.submitReply(1, "回复A", 0);
+      resolvers.forEach((resolve) => resolve(jsonResponse(mockReply)));
+
+      let duplicateResult: unknown = "sentinel";
+      await act(async () => {
+        await first;
+        duplicateResult = await duplicate;
+      });
+
+      expect(duplicateResult).toBeNull();
+      expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1);
+    });
+  });
 });

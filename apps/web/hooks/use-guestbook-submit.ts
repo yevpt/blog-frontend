@@ -47,16 +47,28 @@ function notifySuccess(moderation: ModerationView | undefined, fallback: string)
 
 export function useGuestbookSubmit() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isSubmittingRef = useRef(false);
+  const inFlightKeysRef = useRef<Set<string>>(new Set());
   const entryKey = useIdempotencyKey("guestbook");
   const replyKey = useIdempotencyKey("reply");
   const editKey = useIdempotencyKey("guestbook-edit");
 
+  // 按 target 维度（而非全局）加锁，理由同 use-comment-submit.ts。
+  const beginRequest = useCallback((key: string): boolean => {
+    if (inFlightKeysRef.current.has(key)) return false;
+    inFlightKeysRef.current.add(key);
+    setIsSubmitting(true);
+    return true;
+  }, []);
+
+  const endRequest = useCallback((key: string) => {
+    inFlightKeysRef.current.delete(key);
+    setIsSubmitting(inFlightKeysRef.current.size > 0);
+  }, []);
+
   const submitEntry = useCallback(
     async (content: string, ownerUserId?: number): Promise<GuestbookItemResp | null> => {
-      if (isSubmittingRef.current) return null;
-      isSubmittingRef.current = true;
-      setIsSubmitting(true);
+      const key = "entry";
+      if (!beginRequest(key)) return null;
       const fingerprint = `${ownerUserId ?? 0}:${content}`;
       const idempotencyKey = entryKey.getIdempotencyKey(fingerprint);
       try {
@@ -76,11 +88,10 @@ export function useGuestbookSubmit() {
         notifySubmitError(err, "发布失败，请稍后重试");
         return null;
       } finally {
-        isSubmittingRef.current = false;
-        setIsSubmitting(false);
+        endRequest(key);
       }
     },
-    [entryKey],
+    [entryKey, beginRequest, endRequest],
   );
 
   const submitReply = useCallback(
@@ -89,9 +100,8 @@ export function useGuestbookSubmit() {
       content: string,
       parentReplyId = 0,
     ): Promise<CommentReplyResp | null> => {
-      if (isSubmittingRef.current) return null;
-      isSubmittingRef.current = true;
-      setIsSubmitting(true);
+      const key = `reply:${guestbookId}:${parentReplyId}`;
+      if (!beginRequest(key)) return null;
       const fingerprint = `${guestbookId}:${parentReplyId}:${content}`;
       const idempotencyKey = replyKey.getIdempotencyKey(fingerprint);
       try {
@@ -116,18 +126,16 @@ export function useGuestbookSubmit() {
         notifySubmitError(err, "回复失败，请稍后重试");
         return null;
       } finally {
-        isSubmittingRef.current = false;
-        setIsSubmitting(false);
+        endRequest(key);
       }
     },
-    [replyKey],
+    [replyKey, beginRequest, endRequest],
   );
 
   const editEntry = useCallback(
     async (id: number, content: string): Promise<GuestbookItemResp | null> => {
-      if (isSubmittingRef.current) return null;
-      isSubmittingRef.current = true;
-      setIsSubmitting(true);
+      const key = `edit:${id}`;
+      if (!beginRequest(key)) return null;
       const fingerprint = `${id}:${content}`;
       const idempotencyKey = editKey.getIdempotencyKey(fingerprint);
       try {
@@ -147,11 +155,10 @@ export function useGuestbookSubmit() {
         notifySubmitError(err, "修改失败，请稍后重试");
         return null;
       } finally {
-        isSubmittingRef.current = false;
-        setIsSubmitting(false);
+        endRequest(key);
       }
     },
-    [editKey],
+    [editKey, beginRequest, endRequest],
   );
 
   return { isSubmitting, submitEntry, submitReply, editEntry };
