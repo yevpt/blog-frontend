@@ -39,8 +39,6 @@ interface GuestbookItemProps {
   editedReply?: CommentReplyResp | null;
 }
 
-const NOOP_SUBMIT_REPLY = async () => false;
-
 export const GuestbookItem = memo(function GuestbookItem({
   item,
   onSubmitReply,
@@ -188,7 +186,7 @@ export const GuestbookItem = memo(function GuestbookItem({
             replyCount={item.reply_count}
             pendingReply={pendingReply}
             editedReply={editedReply}
-            onSubmitReply={onSubmitReply ?? NOOP_SUBMIT_REPLY}
+            onSubmitReply={onSubmitReply}
             currentUserId={currentUserId}
             onDeleteReply={onDeleteReply ? handleDeleteReply : undefined}
             onSubmitEditReply={onSubmitEditReply}
