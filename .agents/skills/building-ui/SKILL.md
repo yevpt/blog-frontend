@@ -77,6 +77,14 @@ license: "MIT"
 - 取数统一走 `@repo/api` 类型化 client / 复用其 `*Req`/`*Resp` 类型，错误统一 `ApiError`；请求逻辑下沉到 `apps/*/hooks/use-*`，组件只消费。**加端点、选 fetch helper、各端消费通道（SC / admin / web 客户端）见 `extending-api` skill。**
 - 生产代码不 import `app/_mock`（仅限测试）；无接口时标 `// TODO(api): 待后端提供 xxx` 并临时降级，import 不指向 `_mock`。
 
+## 列表项组件必须 `memo`，回调 props 必须稳定
+
+`.map()` 渲染出的、会因为"列表里任意一项交互（点赞/回复/编辑/删除）"而跟着重渲染的卡片类组件（评论/留言/文章/碎语卡片等）必须 `React.memo`；父级传给它的每个回调 prop 必须是 `useCallback` 稳定引用，衍生数据只有真正变化的那一项才能产生新对象引用（`items.map(i => i.id === changedId ? {...i, ...} : i)`，未变项保留原引用）。只加 `memo` 不管这个前提等于没加——任何一个 prop 引用不稳定，memo 就会被打穿。
+
+- **为什么必须双管齐下**：这类组件不加 `memo`，点击列表里任意一项都会让全部同级项的组件函数体重新执行一遍。多数时候只是浪费渲染；但如果某个子组件用 `dangerouslySetInnerHTML` 渲染内容、又在 `useEffect` 里对同一段 DOM 做命令式的懒加载/骨架屏揭示（比如 Markdown 正文图片懒加载），这类无关重渲染会让 React 把这段 DOM 整体重写，将已经手动加载好的图片打回骨架屏——且懒加载用的 `IntersectionObserver` 因为 effect 依赖没变不会重新绑定，图片会永久卡死，直到刷新页面。真实案例：`GuestbookItem`／`ThreadCommentContent`／`MarkdownContent` 都补了 `memo` 才修好，见 `packages/markdown/src/markdown-content.tsx`、`apps/web/components/guestbook/guestbook-item.tsx`。
+- **凡是 `dangerouslySetInnerHTML` + `useEffect` 里做 DOM 副作用（懒加载 / 骨架屏揭示 / 失败重试）的叶子组件，本身也必须 `memo`**，不能只指望上层列表项 memo 兜底——它可能被多条链路复用。
+- **验收方式**：改完后在列表里触发任意一项的交互，确认其它项不会重新挂载/重渲染（React DevTools Profiler 高亮，或 `console.count` 打点）。
+
 ## 别再制造这些债（重构清单的教训）
 
 - ❌ app 手写基础 UI → ✅ `@repo/ui`
@@ -86,3 +94,5 @@ license: "MIT"
 - ❌ `any` → ✅ `unknown` / 精确类型
 - ❌ 单组件文件 > 250 行 → ✅ 拆子组件 + 抽 hook
 - ❌ `eslint-disable jsx-a11y/*` 绕无障碍 → ✅ react-aria 原语或补 `role`+键盘处理
+- ❌ 列表卡片组件不加 `memo`，任意一项交互引发全列表重渲染 → ✅ `React.memo` + 回调 `useCallback`
+- ❌ `dangerouslySetInnerHTML` 里靠 `useEffect` 做懒加载/骨架屏又不 `memo` → ✅ 该组件本身也要 `memo`，否则无关重渲染会把命令式加载好的 DOM 重写回初始态
