@@ -400,7 +400,7 @@ export const CommentReplies = memo(function CommentReplies({
 
   if (!isOpen) {
     return (
-      <div className="mb-4">
+      <div className="mt-1 mb-1">
         <Button
           variant="text"
           onPress={handleToggle}
@@ -446,6 +446,14 @@ export const CommentReplies = memo(function CommentReplies({
       {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
 
       <div className="mt-3 flex gap-3">
+        <Button
+          variant="text"
+          size="sm"
+          onPress={handleToggle}
+          className="-mx-1 -my-2.5 h-auto min-h-0 px-1 py-2.5 text-xs font-semibold text-(--fg2)"
+        >
+          收起回复
+        </Button>
         {hasMore && (
           <Button
             variant="text"
@@ -460,14 +468,6 @@ export const CommentReplies = memo(function CommentReplies({
             {isLoading ? "加载中" : "查看更多回复"}
           </Button>
         )}
-        <Button
-          variant="text"
-          size="sm"
-          onPress={handleToggle}
-          className="-mx-1 -my-2.5 h-auto min-h-0 px-1 py-2.5 text-xs font-semibold text-(--fg2)"
-        >
-          收起回复
-        </Button>
       </div>
     </div>
   );
