@@ -160,13 +160,13 @@ export function ArticleSection({
     );
   }, [activeComment, setArticles]);
 
-  const openComment = (article: ArticleListItemResp) => {
+  const openComment = useCallback((article: ArticleListItemResp) => {
     setActiveComment({
       articleId: article.id,
       title: article.title,
       type: article.category?.name ?? "文章",
     });
-  };
+  }, []);
 
   const articleGrid = (
     <>

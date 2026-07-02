@@ -46,15 +46,22 @@ vi.mock("@/store/use-login-modal", () => ({
   },
 }));
 
-vi.mock("@/components/moderation", () => ({
-  ModerationStatusBadge: ({ moderation }: { moderation?: { public_state: string } | null }) =>
-    moderation && moderation.public_state !== "visible" ? (
-      <span data-testid="moderation-badge">{moderation.public_state}</span>
-    ) : null,
-  ModerationContentPlaceholder: () => <div data-testid="moderation-placeholder">等待人工审核</div>,
-  normalizeModerationView: (m: unknown) =>
-    m ?? { public_state: "visible", display_version: "last_approved", can_interact: true },
-}));
+vi.mock("@/components/moderation", async (importOriginal) => {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+  const actual = await importOriginal<typeof import("@/components/moderation")>();
+  return {
+    ...actual,
+    ModerationStatusBadge: ({ moderation }: { moderation?: { public_state: string } | null }) =>
+      moderation && moderation.public_state !== "visible" ? (
+        <span data-testid="moderation-badge">{moderation.public_state}</span>
+      ) : null,
+    ModerationContentPlaceholder: () => (
+      <div data-testid="moderation-placeholder">等待人工审核</div>
+    ),
+    normalizeModerationView: (m: unknown) =>
+      m ?? { public_state: "visible", display_version: "last_approved", can_interact: true },
+  };
+});
 
 vi.mock("@/hooks/use-comment-like", () => ({
   useCommentLike: () => ({
@@ -617,6 +624,41 @@ describe("CommentReplies", () => {
   });
 
   describe("审核展示", () => {
+    it("placeholder 回复在作者视角渲染 pending_content 而非占位", async () => {
+      const user = userEvent.setup();
+      vi.mocked(global.fetch).mockResolvedValue(
+        jsonResponse(
+          mockPage([
+            makeReply(1, {
+              from_user_id: 1,
+              content: "",
+              moderation: {
+                public_state: "placeholder",
+                display_version: "none",
+                has_pending_revision: true,
+                pending_risk_level: "medium",
+                pending_content: "作者待审回复",
+                can_interact: false,
+              },
+            }),
+          ]),
+        ),
+      );
+
+      render(
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          onReply={vi.fn()}
+          currentUserId={1}
+        />,
+      );
+      await user.click(screen.getByText(/展开 1 条回复/));
+      await waitFor(() => expect(screen.getByText("作者待审回复")).toBeTruthy());
+      expect(screen.queryByTestId("moderation-placeholder")).toBeNull();
+    });
+
     it("placeholder 回复渲染安全占位而非 markdown", async () => {
       const user = userEvent.setup();
       vi.mocked(global.fetch).mockResolvedValue(

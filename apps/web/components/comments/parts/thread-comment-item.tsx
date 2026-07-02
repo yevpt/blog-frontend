@@ -7,9 +7,11 @@ import { SvgIcon } from "@repo/icons";
 import { markdownToHtmlSync } from "@repo/markdown";
 import type { ModerationView } from "@repo/api";
 import {
+  getAuthorModerationDisplayContent,
   ModerationContentPlaceholder,
   ModerationStatusBadge,
   normalizeModerationView,
+  shouldShowModerationContentPlaceholder,
 } from "@/components/moderation";
 import { UserAvatar } from "@/components/common/user-avatar";
 import { PreviewableMarkdown } from "@/components/common/previewable-markdown";
@@ -30,11 +32,11 @@ export function getThreadDisplayName(
   return user.nickname ?? user.username;
 }
 
-function ThreadMarkdownBody({ content }: { content: string }) {
+const ThreadMarkdownBody = memo(function ThreadMarkdownBody({ content }: { content: string }) {
   // 留言板留言/评论回复均为 UGC，外部链接需 nofollow ugc + 新窗口打开，区别于文章/碎语正文
   const html = useMemo(() => markdownToHtmlSync(content, { treatLinksAsUgc: true }), [content]);
   return <PreviewableMarkdown html={html} variant="comment" deferImages />;
-}
+});
 
 interface ThreadUserNameProps {
   name: string;
@@ -260,17 +262,24 @@ export interface ThreadCommentContentProps {
   content: string;
   className?: string;
   moderation?: ModerationView | null;
+  /** 作者本人可见待审正文；访客在 placeholder 态仅见安全占位。 */
+  isOwner?: boolean;
 }
 
-/** 主评论正文，占满卡片宽度；public_state=placeholder 时仅渲染审核占位，不传 content 到 markdown */
-export function ThreadCommentContent({
+/** 主评论正文，占满卡片宽度；访客在 placeholder 态仅渲染审核占位。 */
+export const ThreadCommentContent = memo(function ThreadCommentContent({
   content,
   className,
   moderation,
+  isOwner = false,
 }: ThreadCommentContentProps) {
   const view = normalizeModerationView(moderation);
+  const showPlaceholder = shouldShowModerationContentPlaceholder(moderation, isOwner);
+  const displayContent = isOwner
+    ? getAuthorModerationDisplayContent({ content, moderation })
+    : content;
 
-  if (view.public_state === "placeholder") {
+  if (showPlaceholder) {
     return (
       <div className={cn("text-[12px] leading-relaxed text-(--fg1)", className)}>
         <ModerationContentPlaceholder moderation={view} />
@@ -280,10 +289,10 @@ export function ThreadCommentContent({
 
   return (
     <div className={cn("text-[12px] leading-relaxed text-(--fg1)", className)}>
-      <ThreadMarkdownBody content={content} />
+      <ThreadMarkdownBody content={displayContent} />
     </div>
   );
-}
+});
 
 export interface ThreadReplyItemProps {
   user?: ThreadUserInfo | null;
@@ -301,6 +310,8 @@ export interface ThreadReplyItemProps {
   deleteConfirmMessage?: string;
   linkProfile?: boolean;
   moderation?: ModerationView | null;
+  /** 作者本人可见待审正文；访客在 placeholder 态仅见安全占位。 */
+  isOwner?: boolean;
 }
 
 /** 留言板风格回复项：头像列 + 头部 + @提及 + 正文 */
@@ -320,8 +331,13 @@ export const ThreadReplyItem = memo(function ThreadReplyItem({
   deleteConfirmMessage = "确定删除这条回复吗？",
   linkProfile = false,
   moderation,
+  isOwner = false,
 }: ThreadReplyItemProps) {
   const view = normalizeModerationView(moderation);
+  const showPlaceholder = shouldShowModerationContentPlaceholder(moderation, isOwner);
+  const displayContent = isOwner
+    ? getAuthorModerationDisplayContent({ content, moderation })
+    : content;
   const interactive = view.can_interact;
   const displayName = getThreadDisplayName(user);
   const mentionName = mentionUser ? getThreadDisplayName(mentionUser) : null;
@@ -383,10 +399,10 @@ export const ThreadReplyItem = memo(function ThreadReplyItem({
           {mentionName && (
             <ThreadMention name={mentionName} userId={mentionUser?.id} linkProfile={linkProfile} />
           )}
-          {view.public_state === "placeholder" ? (
+          {showPlaceholder ? (
             <ModerationContentPlaceholder moderation={view} />
           ) : (
-            <ThreadMarkdownBody content={content} />
+            <ThreadMarkdownBody content={displayContent} />
           )}
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { FriendLinkItemResp } from "@repo/api";
 import { cn } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
@@ -18,7 +19,7 @@ function AvatarFallback({ name }: { name: string }) {
 const baseCardClass =
   "flex items-center gap-3 rounded-xl border border-border bg-secondary px-4 py-3.5 transition-colors duration-150";
 
-export function FriendLinkCard({ link }: FriendLinkCardProps) {
+export const FriendLinkCard = memo(function FriendLinkCard({ link }: FriendLinkCardProps) {
   // status=0（隐藏）不应出现在公开列表，防御性处理
   if (link.status === 0) return null;
 
@@ -85,4 +86,4 @@ export function FriendLinkCard({ link }: FriendLinkCardProps) {
       {inner}
     </a>
   );
-}
+});

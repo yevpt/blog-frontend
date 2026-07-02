@@ -192,7 +192,7 @@ describe("GuestbookItem", () => {
       expect(screen.getByText("待审核")).toBeTruthy();
     });
 
-    it("public_state=placeholder 时渲染安全占位，不泄露提交正文或 pending_content", () => {
+    it("public_state=placeholder 时访客渲染安全占位，不泄露提交正文或 pending_content", () => {
       render(
         <GuestbookItem
           item={{
@@ -212,6 +212,28 @@ describe("GuestbookItem", () => {
       expect(screen.getByText("内容存在风险，正在等待人工审核。")).toBeTruthy();
       expect(screen.queryByText("提交正文")).toBeNull();
       expect(screen.queryByText("待审正文不该出现")).toBeNull();
+    });
+
+    it("public_state=placeholder 时作者可见 pending_content 正文", () => {
+      render(
+        <GuestbookItem
+          item={{
+            ...mockItem,
+            content: "",
+            moderation: {
+              public_state: "placeholder",
+              display_version: "none",
+              has_pending_revision: true,
+              pending_risk_level: "medium",
+              pending_content: "我的待审留言",
+              can_interact: false,
+            },
+          }}
+          currentUserId={1}
+        />,
+      );
+      expect(screen.getByText("我的待审留言")).toBeTruthy();
+      expect(screen.queryByText("内容存在风险，正在等待人工审核。")).toBeNull();
     });
 
     it("can_interact=false 时点击点赞不调用 onLike，且不渲染回复按钮", async () => {

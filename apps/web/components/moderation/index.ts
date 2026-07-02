@@ -3,6 +3,7 @@ export { ModerationContentPlaceholder } from "./moderation-content-placeholder";
 export {
   getModerationPresentation,
   getAuthorMomentDisplayContent,
+  getAuthorModerationDisplayContent,
   getAuthorMomentDisplayImages,
   getAuthorMomentEditImages,
   getVisitorMomentDisplayImages,

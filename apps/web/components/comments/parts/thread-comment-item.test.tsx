@@ -183,14 +183,29 @@ describe("ThreadReplyItem", () => {
   });
 
   describe("审核展示", () => {
-    it("ThreadCommentContent 在 public_state=placeholder 时渲染安全占位而非 markdown", () => {
+    it("ThreadCommentContent 在 public_state=placeholder 时访客渲染安全占位而非 markdown", () => {
       const { container } = render(
         <ThreadCommentContent content="敏感内容" moderation={placeholderModeration} />,
       );
       expect(screen.getByText("等待人工审核")).toBeTruthy();
-      // 不把 content 渲染到 markdown 容器
       const markdown = container.querySelector('[data-testid="markdown-body"]');
       expect(markdown).toBeNull();
+    });
+
+    it("ThreadCommentContent 在 public_state=placeholder 时作者渲染 pending_content", () => {
+      const { container } = render(
+        <ThreadCommentContent
+          content=""
+          moderation={{
+            ...placeholderModeration,
+            pending_content: "作者待审评论",
+          }}
+          isOwner
+        />,
+      );
+      expect(screen.getByText("作者待审评论")).toBeTruthy();
+      expect(screen.queryByText("等待人工审核")).toBeNull();
+      expect(container.querySelector('[data-testid="markdown-body"]')).toBeTruthy();
     });
 
     it("ThreadCommentContent 在 visible + has_pending_revision 时仍渲染 markdown（Badge 由 Header 渲染）", () => {
@@ -230,7 +245,7 @@ describe("ThreadReplyItem", () => {
       expect(screen.getByText("等待人工审核")).toBeTruthy();
     });
 
-    it("ThreadReplyItem 在 placeholder 时显示占位而非 markdown 内容", () => {
+    it("ThreadReplyItem 在 placeholder 时访客显示占位而非 markdown 内容", () => {
       const { container } = render(
         <ThreadReplyItem
           user={{ id: 1, username: "bob" }}
@@ -242,10 +257,28 @@ describe("ThreadReplyItem", () => {
           moderation={placeholderModeration}
         />,
       );
-      // 头部 badge 与占位正文都会出现「等待人工审核」
       expect(screen.getAllByText("等待人工审核").length).toBeGreaterThan(0);
       const markdown = container.querySelector('[data-testid="markdown-body"]');
       expect(markdown).toBeNull();
+    });
+
+    it("ThreadReplyItem 在 placeholder 时作者渲染 pending_content", () => {
+      render(
+        <ThreadReplyItem
+          user={{ id: 1, username: "bob" }}
+          createdAt="2026-01-01T00:00:00Z"
+          content=""
+          likeCount={0}
+          isLiked={false}
+          onLike={vi.fn()}
+          moderation={{
+            ...placeholderModeration,
+            pending_content: "作者待审回复",
+          }}
+          isOwner
+        />,
+      );
+      expect(screen.getByText("作者待审回复")).toBeTruthy();
     });
 
     it("ThreadReplyItem 在 visible + pending 时显示 badge 与 markdown content", () => {

@@ -154,6 +154,7 @@ const ReplyItem = memo(function ReplyItem({
       deleteConfirmMessage="确定删除这条回复吗？"
       linkProfile={linkProfile}
       moderation={reply.moderation}
+      isOwner={isOwnReply}
     />
   );
 });

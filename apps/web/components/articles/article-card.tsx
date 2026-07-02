@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import type { ArticleListItemResp } from "@repo/api";
 import { useLocale } from "@repo/hooks/locale";
@@ -15,7 +16,7 @@ interface ArticleCardProps {
   onComment?: (article: ArticleListItemResp) => void;
 }
 
-export function ArticleCard({
+export const ArticleCard = memo(function ArticleCard({
   article,
   onLike,
   likeDisabled = false,
@@ -88,4 +89,4 @@ export function ArticleCard({
       </article>
     </div>
   );
-}
+});

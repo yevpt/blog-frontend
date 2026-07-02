@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  getAuthorModerationDisplayContent,
   getAuthorMomentDisplayContent,
   getAuthorMomentDisplayImages,
   shouldShowModerationContentPlaceholder,
@@ -36,16 +37,23 @@ describe("moderation-presentation author helpers", () => {
   });
 
   it("作者优先展示 pending_content", () => {
+    const moderation = {
+      public_state: "placeholder" as const,
+      display_version: "none" as const,
+      has_pending_revision: true,
+      pending_content: "待审正文",
+      can_interact: false,
+    };
     expect(
       getAuthorMomentDisplayContent({
         content: "",
-        moderation: {
-          public_state: "placeholder",
-          display_version: "none",
-          has_pending_revision: true,
-          pending_content: "待审正文",
-          can_interact: false,
-        },
+        moderation,
+      }),
+    ).toBe("待审正文");
+    expect(
+      getAuthorModerationDisplayContent({
+        content: "",
+        moderation,
       }),
     ).toBe("待审正文");
   });

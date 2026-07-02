@@ -39,12 +39,20 @@ export function getAuthorMomentDisplayContent(moment: {
   content: string;
   moderation?: ModerationView | null;
 }): string {
-  const moderation = normalizeModerationView(moment.moderation);
+  return getAuthorModerationDisplayContent(moment);
+}
+
+/** 留言/评论/回复/碎语：作者在中风险首次发布占位态时优先展示待审正文。 */
+export function getAuthorModerationDisplayContent(item: {
+  content: string;
+  moderation?: ModerationView | null;
+}): string {
+  const moderation = normalizeModerationView(item.moderation);
   if (moderation.public_state === "placeholder") {
-    const pending = moment.moderation?.pending_content?.trim();
+    const pending = item.moderation?.pending_content?.trim();
     if (pending) return pending;
   }
-  return moment.content;
+  return item.content;
 }
 
 function pendingImagesToMedia(images: ModerationPendingImage[]): MomentMediaResp[] {

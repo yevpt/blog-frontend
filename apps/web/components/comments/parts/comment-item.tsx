@@ -119,6 +119,7 @@ export const CommentItem = memo(function CommentItem({
         content={comment.content}
         className={cn(hasReplies && (repliesOpen ? "mb-6" : "mb-4"))}
         moderation={comment.moderation}
+        isOwner={isOwnComment}
       />
 
       {hasReplies && (

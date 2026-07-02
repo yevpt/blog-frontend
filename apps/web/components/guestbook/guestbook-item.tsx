@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import type { CommentReplyResp, GuestbookItemResp } from "@repo/api";
 import type { ReplyEditTarget } from "@/components/comments";
 import { cn, Button } from "@repo/ui";
@@ -13,7 +13,7 @@ import {
   ThreadReplyIndent,
   type ReplyTarget,
 } from "@/components/comments";
-import { ModerationContentPlaceholder, normalizeModerationView } from "@/components/moderation";
+import { normalizeModerationView } from "@/components/moderation";
 
 interface GuestbookItemProps {
   item: GuestbookItemResp;
@@ -29,7 +29,7 @@ interface GuestbookItemProps {
   editedReply?: CommentReplyResp | null;
 }
 
-export function GuestbookItem({
+export const GuestbookItem = memo(function GuestbookItem({
   item,
   onReply,
   onLike,
@@ -49,7 +49,6 @@ export function GuestbookItem({
 
   // 所有互动判断先经规范化，审核关闭/旧响应缺失时回退为充分可交互的可见旧版本
   const moderation = normalizeModerationView(item.moderation);
-  const isPlaceholder = moderation.public_state === "placeholder";
   const canInteract = moderation.can_interact;
   const hasReplies = item.reply_count > 0;
   // 作者的删除/编辑入口不由前端审核状态擅自移除
@@ -135,15 +134,11 @@ export function GuestbookItem({
           onCancel={handleCancelEdit}
           isSaving={isSaving}
         />
-      ) : isPlaceholder ? (
-        // 占位态：只渲染安全占位，绝不渲染提交正文或 pending_content
-        <ModerationContentPlaceholder
-          moderation={item.moderation}
-          className={cn(hasReplies && "mb-4")}
-        />
       ) : (
         <ThreadCommentContent
           content={item.content}
+          moderation={item.moderation}
+          isOwner={isOwnItem}
           className={cn(hasReplies && (repliesOpen ? "mb-6" : "mb-4"))}
         />
       )}
@@ -167,7 +162,7 @@ export function GuestbookItem({
       )}
     </div>
   );
-}
+});
 
 interface GuestbookInlineEditorProps {
   value: string;

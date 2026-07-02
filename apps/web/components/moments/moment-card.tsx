@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import Link from "next/link";
 import type { MomentItemResp } from "@repo/api";
 import type { IconName } from "@repo/icons";
@@ -64,7 +64,7 @@ const pinOffIcon = DropdownIcon({ name: "pin-off" });
 const trashIcon = DropdownIcon({ name: "trash" });
 
 // 单条碎语：双行 header + 图片网格 + ArticleCardStats 风格操作区
-export function MomentCard({
+export const MomentCard = memo(function MomentCard({
   moment,
   layout = "standalone",
   onLike,
@@ -316,4 +316,4 @@ export function MomentCard({
       <CardContent className="p-4">{body}</CardContent>
     </Card>
   );
-}
+});

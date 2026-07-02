@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { memo, useRef, useEffect } from "react";
 import clsx from "clsx";
 import { MD_IMAGE_FALLBACK_CLASS } from "./image-fallback";
 import { bindMarkdownContentInteractions } from "./markdown-interactions";
@@ -79,7 +79,7 @@ const VARIANT_CLASSES: Record<"article" | "comment", string> = {
   ].join(" "),
 };
 
-export function MarkdownContent({
+export const MarkdownContent = memo(function MarkdownContent({
   html,
   variant = "article",
   className,
@@ -110,4 +110,4 @@ export function MarkdownContent({
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
-}
+});
