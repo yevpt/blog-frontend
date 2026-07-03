@@ -3,8 +3,9 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { RichCommentInput } from "./rich-comment-input";
 
-interface InlineReplyEditorProps {
-  initialValue?: string;
+export interface InlineReplyEditorProps {
+  value: string;
+  onChange: (value: string) => void;
   placeholder: string;
   header?: ReactNode;
   isLoggedIn?: boolean;
@@ -14,11 +15,13 @@ interface InlineReplyEditorProps {
 }
 
 /**
- * 内联回复/编辑输入框：封装「本地内容 state + 提交中状态 + RichCommentInput」，
- * 由调用方决定「是否展开」（本组件不负责收起自己——提交成功后调用方会把它从渲染树里移除）。
+ * 内联回复/编辑输入框：封装「提交中状态 + RichCommentInput」，内容完全受控
+ * （由调用方从 store 读写 value，这样组件卸载后草稿仍留在 store 里，重新挂载时能原样恢复）。
+ * 本组件不负责收起自己——调用方决定「是否展开」，提交成功后调用方会把它从渲染树里移除。
  */
 export function InlineReplyEditor({
-  initialValue = "",
+  value,
+  onChange,
   placeholder,
   header,
   isLoggedIn,
@@ -26,7 +29,6 @@ export function InlineReplyEditor({
   onSubmit,
   className,
 }: InlineReplyEditorProps) {
-  const [value, setValue] = useState(initialValue);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSubmit = useCallback(() => {
@@ -40,7 +42,7 @@ export function InlineReplyEditor({
     <div className={className}>
       <RichCommentInput
         value={value}
-        onChange={setValue}
+        onChange={onChange}
         onSubmit={handleSubmit}
         isSubmitting={isSaving}
         isLoggedIn={isLoggedIn}

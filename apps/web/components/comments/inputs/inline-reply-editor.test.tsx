@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-import React from "react";
+import React, { useState } from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { InlineReplyEditor } from "./inline-reply-editor";
+import { InlineReplyEditor, type InlineReplyEditorProps } from "./inline-reply-editor";
 
 vi.mock("./rich-comment-input", () => ({
   RichCommentInput: ({
@@ -32,11 +32,21 @@ vi.mock("./rich-comment-input", () => ({
   ),
 }));
 
+/** 测试用受控外壳：真实调用方（CommentItem 等）从 store 读写 value，这里用本地 state 模拟同样的受控关系 */
+function ControlledHarness({
+  initialValue = "",
+  ...props
+}: Omit<InlineReplyEditorProps, "value" | "onChange"> & { initialValue?: string }) {
+  const [value, setValue] = useState(initialValue);
+  return <InlineReplyEditor value={value} onChange={setValue} {...props} />;
+}
+
 describe("InlineReplyEditor", () => {
-  it("渲染 initialValue 作为初始内容", () => {
+  it("渲染 value 作为内容", () => {
     render(
       <InlineReplyEditor
-        initialValue="草稿内容"
+        value="草稿内容"
+        onChange={vi.fn()}
         placeholder="写点什么"
         onSubmit={vi.fn().mockResolvedValue(true)}
       />,
@@ -44,14 +54,38 @@ describe("InlineReplyEditor", () => {
     expect(screen.getByTestId("textarea")).toHaveValue("草稿内容");
   });
 
-  it("无 initialValue 时初始内容为空字符串", () => {
-    render(<InlineReplyEditor placeholder="写点什么" onSubmit={vi.fn().mockResolvedValue(true)} />);
+  it("value 为空字符串时内容为空", () => {
+    render(
+      <InlineReplyEditor
+        value=""
+        onChange={vi.fn()}
+        placeholder="写点什么"
+        onSubmit={vi.fn().mockResolvedValue(true)}
+      />,
+    );
     expect(screen.getByTestId("textarea")).toHaveValue("");
+  });
+
+  it("输入时调用 onChange", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <InlineReplyEditor
+        value=""
+        onChange={onChange}
+        placeholder="写点什么"
+        onSubmit={vi.fn().mockResolvedValue(true)}
+      />,
+    );
+    await user.type(screen.getByTestId("textarea"), "a");
+    expect(onChange).toHaveBeenCalledWith("a");
   });
 
   it("渲染传入的 header", () => {
     render(
       <InlineReplyEditor
+        value=""
+        onChange={vi.fn()}
         placeholder="写点什么"
         header={<span data-testid="banner">回复 @Alice</span>}
         onSubmit={vi.fn().mockResolvedValue(true)}
@@ -63,7 +97,7 @@ describe("InlineReplyEditor", () => {
   it("点击发送时用 trim 后的内容调用 onSubmit", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(true);
-    render(<InlineReplyEditor placeholder="写点什么" onSubmit={onSubmit} />);
+    render(<ControlledHarness placeholder="写点什么" onSubmit={onSubmit} />);
 
     await user.type(screen.getByTestId("textarea"), "  hello  ");
     await user.click(screen.getByText("发送"));
@@ -74,7 +108,7 @@ describe("InlineReplyEditor", () => {
   it("内容为空白时点击发送不调用 onSubmit", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(true);
-    render(<InlineReplyEditor placeholder="写点什么" onSubmit={onSubmit} />);
+    render(<ControlledHarness placeholder="写点什么" onSubmit={onSubmit} />);
 
     await user.type(screen.getByTestId("textarea"), "   ");
     await user.click(screen.getByText("发送"));
@@ -86,7 +120,7 @@ describe("InlineReplyEditor", () => {
     const user = userEvent.setup();
     let resolveSubmit!: (v: boolean) => void;
     const onSubmit = vi.fn(() => new Promise<boolean>((resolve) => (resolveSubmit = resolve)));
-    render(<InlineReplyEditor placeholder="写点什么" onSubmit={onSubmit} />);
+    render(<ControlledHarness placeholder="写点什么" onSubmit={onSubmit} />);
 
     await user.type(screen.getByTestId("textarea"), "hello");
     await user.click(screen.getByText("发送"));
