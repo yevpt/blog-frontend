@@ -90,4 +90,30 @@ describe("ImageViewer", () => {
     rerender(<ImageViewer images={imgs} index={0} isOpen={false} onClose={() => {}} />);
     expect(resetSpy).not.toHaveBeenCalled();
   });
+
+  it("放大后拖拽平移，松手时不应误关闭预览（setPointerCapture 会让抬手后合成的 click 落到舞台容器上）", () => {
+    const onClose = vi.fn();
+    render(<ImageViewer images={imgs} index={0} isOpen onClose={onClose} />);
+    const stage = screen.getByTestId("image-viewer-stage");
+
+    fireEvent.click(screen.getByLabelText("放大"));
+
+    fireEvent.pointerDown(stage, { pointerId: 1, clientX: 0, clientY: 0 });
+    fireEvent.pointerMove(stage, { pointerId: 1, clientX: 60, clientY: 40 });
+    fireEvent.pointerUp(stage, { pointerId: 1, clientX: 60, clientY: 40 });
+    // 模拟抬手后 target 落到舞台容器本身的合成 click
+    fireEvent.click(stage);
+
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("未发生拖拽时，点击暗区仍正常关闭", () => {
+    const onClose = vi.fn();
+    render(<ImageViewer images={imgs} index={0} isOpen onClose={onClose} />);
+    const stage = screen.getByTestId("image-viewer-stage");
+
+    fireEvent.click(stage);
+
+    expect(onClose).toHaveBeenCalled();
+  });
 });

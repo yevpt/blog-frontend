@@ -133,6 +133,25 @@ describe("useViewerTransform", () => {
     expect(result.current.transform).toEqual({ scale: 1, x: 0, y: 0, rotation: 0 });
   });
 
+  it("consumeDrag：超过死区判定为拖拽，读取后清零；未超过死区不算拖拽", () => {
+    const { result } = renderHook(() => useViewerTransform());
+    act(() => result.current.zoomIn());
+
+    // 微小位移（≤ 8px 死区）不算拖拽
+    act(() => result.current.handlers.onPointerDown(pointer(1, 0, 0)));
+    act(() => result.current.handlers.onPointerMove(pointer(1, 3, 2)));
+    act(() => result.current.handlers.onPointerUp(pointer(1, 3, 2)));
+    expect(result.current.consumeDrag()).toBe(false);
+
+    // 超过死区的拖拽
+    act(() => result.current.handlers.onPointerDown(pointer(1, 0, 0)));
+    act(() => result.current.handlers.onPointerMove(pointer(1, 60, 40)));
+    act(() => result.current.handlers.onPointerUp(pointer(1, 60, 40)));
+    expect(result.current.consumeDrag()).toBe(true);
+    // 读取后清零
+    expect(result.current.consumeDrag()).toBe(false);
+  });
+
   it("指针按下期间 isGesturing 为 true，全部抬起后恢复 false", () => {
     const { result } = renderHook(() => useViewerTransform());
     expect(result.current.isGesturing).toBe(false);

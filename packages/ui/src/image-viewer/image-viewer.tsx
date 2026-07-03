@@ -12,7 +12,8 @@ const NAV_BTN =
   "absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white/90 transition-colors hover:bg-black/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/60";
 
 export function ImageViewer({ images, index, isOpen, onClose, onIndexChange }: ImageViewerProps) {
-  const { transform, isGesturing, reset, zoomIn, zoomOut, rotate, handlers } = useViewerTransform();
+  const { transform, isGesturing, reset, zoomIn, zoomOut, rotate, consumeDrag, handlers } =
+    useViewerTransform();
   const current = images[index];
   const hasGallery = images.length > 1 && !!onIndexChange;
   // 下载文件名取自 URL 末段路径（剥离查询串），无法解析时回退空串
@@ -69,8 +70,10 @@ export function ImageViewer({ images, index, isOpen, onClose, onIndexChange }: I
         onPointerCancel={handlers.onPointerUp}
         onDoubleClick={handlers.onDoubleClick}
         onClick={(e) => {
-          // 点击图片以外的暗区关闭
-          if (e.target === e.currentTarget) onClose();
+          // 点击图片以外的暗区关闭；拖拽平移松手后紧跟的 click 不当作背景点击处理——
+          // setPointerCapture 会让抬手后合成的 click 事件 target 落到舞台容器本身，
+          // 若不加判断，放大后拖拽平移松手会被误判为点击暗区从而关闭预览
+          if (e.target === e.currentTarget && !consumeDrag()) onClose();
         }}
       >
         <img

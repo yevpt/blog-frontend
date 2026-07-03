@@ -7,6 +7,7 @@ const MAX_SCALE = 5;
 const WHEEL_STEP = 0.0015; // 每单位 deltaY 的缩放系数
 const BUTTON_FACTOR = 1.5; // 按钮单次缩放倍率
 const DOUBLE_CLICK_SCALE = 2;
+const DRAG_THRESHOLD = 8; // 拖拽死区（px），与 useSheetGesture 保持一致
 
 const IDENTITY: ViewerTransform = { scale: 1, x: 0, y: 0, rotation: 0 };
 
@@ -27,6 +28,8 @@ export interface UseViewerTransformResult {
   zoomIn: () => void;
   zoomOut: () => void;
   rotate: () => void;
+  /** 读取并清空「本次指针交互是否发生过拖拽平移」标记，供背景点击关闭判断使用 */
+  consumeDrag: () => boolean;
   handlers: {
     onWheel: (e: ReactWheelEvent) => void;
     onPointerDown: (e: ReactPointerEvent) => void;
@@ -40,6 +43,9 @@ export function useViewerTransform(): UseViewerTransformResult {
   const [transform, setTransform] = useState<ViewerTransform>(IDENTITY);
   const [isGesturing, setIsGesturing] = useState(false);
   const tracker = useRef<PointerTracker>({ pointers: new Map(), startDistance: 0 });
+  // 单指手势起点 + 是否已超过死区，用于抬手后判断这是一次拖拽还是点击
+  const dragStart = useRef<{ x: number; y: number } | null>(null);
+  const didDrag = useRef(false);
 
   const reset = useCallback(() => setTransform(IDENTITY), []);
 
@@ -73,6 +79,10 @@ export function useViewerTransform(): UseViewerTransformResult {
     (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
     const { pointers } = tracker.current;
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 1) {
+      dragStart.current = { x: e.clientX, y: e.clientY };
+      didDrag.current = false;
+    }
     if (pointers.size === 2) {
       const [a, b] = [...pointers.values()];
       tracker.current.startDistance = Math.hypot(a.x - b.x, a.y - b.y);
@@ -87,6 +97,10 @@ export function useViewerTransform(): UseViewerTransformResult {
     pointers.set(e.pointerId, next);
 
     if (pointers.size === 1) {
+      const start = dragStart.current;
+      if (start && Math.hypot(next.x - start.x, next.y - start.y) > DRAG_THRESHOLD) {
+        didDrag.current = true;
+      }
       // 单指/鼠标拖拽平移（仅在已放大时生效）
       const dx = next.x - prev.x;
       const dy = next.y - prev.y;
@@ -115,6 +129,12 @@ export function useViewerTransform(): UseViewerTransformResult {
     setTransform((t) => (t.scale > MIN_SCALE ? IDENTITY : { ...t, scale: DOUBLE_CLICK_SCALE }));
   }, []);
 
+  const consumeDrag = useCallback(() => {
+    const dragged = didDrag.current;
+    didDrag.current = false;
+    return dragged;
+  }, []);
+
   return {
     transform,
     isGesturing,
@@ -122,6 +142,7 @@ export function useViewerTransform(): UseViewerTransformResult {
     zoomIn,
     zoomOut,
     rotate,
+    consumeDrag,
     handlers: { onWheel, onPointerDown, onPointerMove, onPointerUp, onDoubleClick },
   };
 }
