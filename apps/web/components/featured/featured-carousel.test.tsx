@@ -443,6 +443,27 @@ describe("FeaturedCarousel", () => {
     expect(screen.getByLabelText("第 2 张，共 3 张")).toHaveAttribute("aria-current", "true");
     expect(screen.getByLabelText("第 1 张，共 3 张")).not.toHaveAttribute("aria-current");
   });
+
+  it("翻页离开已加载过的幻灯片后，图片保持挂载、不回退为骨架", async () => {
+    const user = userEvent.setup();
+    render(<FeaturedCarousel posts={mockPosts} />);
+
+    // 第一张已在初始渲染时加载
+    expect(screen.getByRole("img", { name: "第一篇文章标题" })).toBeInTheDocument();
+
+    // 翻到第二张：第二张开始加载图片，第一张的图片应仍保留在 DOM 中
+    await act(async () => {
+      await user.click(screen.getByLabelText("第 2 张，共 3 张"));
+    });
+    expect(screen.getByRole("img", { name: "第二篇文章标题" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "第一篇文章标题" })).toBeInTheDocument();
+
+    // 翻回第一张：不应该重新变回骨架（图片始终挂载）
+    await act(async () => {
+      await user.click(screen.getByLabelText("第 1 张，共 3 张"));
+    });
+    expect(screen.getByRole("img", { name: "第一篇文章标题" })).toBeInTheDocument();
+  });
 });
 
 describe("FeaturedCarousel 自动轮播（fake timers）", () => {

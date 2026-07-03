@@ -16,6 +16,11 @@ interface FeaturedCarouselSlideProps {
   isActive: boolean;
   /** 仅图片区骨架（桌面首帧占位），右侧文案正常展示 */
   showImageSkeleton?: boolean;
+  /**
+   * 是否挂载图片：懒加载策略下，尚未被访问过的 slide 保持骨架不挂载 `<LoadingImage>`；
+   * 一旦访问过就应恒为 true，避免翻页离开时图片被卸载、下次翻回又变回骨架闪烁。
+   */
+  shouldRenderImage?: boolean;
 }
 
 /**
@@ -29,6 +34,7 @@ export function FeaturedCarouselSlide({
   post,
   isActive,
   showImageSkeleton = false,
+  shouldRenderImage = true,
 }: FeaturedCarouselSlideProps) {
   const { locale } = useLocale();
   const formattedDate = formatDate(post.date, locale);
@@ -40,7 +46,7 @@ export function FeaturedCarouselSlide({
         data-carousel-background-drag="true"
         className="absolute inset-0 overflow-hidden md:relative md:inset-auto md:h-full md:w-auto md:flex-1 md:shrink-0 md:rounded-xl md:shadow-md"
       >
-        {showImageSkeleton || !isActive ? (
+        {showImageSkeleton || !shouldRenderImage ? (
           <div
             data-testid="loading-image-skeleton"
             aria-hidden="true"

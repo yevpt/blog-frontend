@@ -58,6 +58,14 @@ function FeaturedCarouselDesktop({ posts }: { posts: FeaturedPost[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 懒加载已访问过的 slide 索引：一旦加载过就恒久保留，避免翻页离开又变回骨架
+  const [visitedIndices, setVisitedIndices] = useState<ReadonlySet<number>>(() => new Set([0]));
+
+  useEffect(() => {
+    setVisitedIndices((prev) =>
+      prev.has(currentIndex) ? prev : new Set(prev).add(currentIndex),
+    );
+  }, [currentIndex]);
 
   const advanceSlide = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % posts.length);
@@ -100,7 +108,11 @@ function FeaturedCarouselDesktop({ posts }: { posts: FeaturedPost[] }) {
           role="group"
           aria-roledescription="slide"
         >
-          <FeaturedCarouselSlide post={post} isActive={index === currentIndex} />
+          <FeaturedCarouselSlide
+            post={post}
+            isActive={index === currentIndex}
+            shouldRenderImage={visitedIndices.has(index)}
+          />
         </div>
       ))}
 
@@ -143,6 +155,14 @@ function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 懒加载已访问过的 slide 索引：一旦加载过就恒久保留，避免翻页离开又变回骨架
+  const [visitedIndices, setVisitedIndices] = useState<ReadonlySet<number>>(() => new Set([0]));
+
+  useEffect(() => {
+    setVisitedIndices((prev) =>
+      prev.has(currentIndex) ? prev : new Set(prev).add(currentIndex),
+    );
+  }, [currentIndex]);
 
   useEffect(() => {
     if (!api) return;
@@ -237,7 +257,11 @@ function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
         <Carousel.Content className="h-full">
           {mobilePosts.map((post, index) => (
             <Carousel.Item key={post.id} className="h-full">
-              <FeaturedCarouselSlide post={post} isActive={index === currentIndex} />
+              <FeaturedCarouselSlide
+                post={post}
+                isActive={index === currentIndex}
+                shouldRenderImage={visitedIndices.has(index)}
+              />
             </Carousel.Item>
           ))}
         </Carousel.Content>
