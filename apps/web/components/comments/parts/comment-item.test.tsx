@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { CommentItemResp, CommentReplyResp } from "@repo/api";
@@ -46,20 +46,28 @@ vi.mock("@/store/use-login-modal", () => ({
   },
 }));
 
+import { useInlineEditorStore } from "@/store/use-inline-editor-store";
+
 vi.mock("../inputs/inline-reply-editor", () => ({
   InlineReplyEditor: ({
-    initialValue = "",
+    value,
+    onChange,
     header,
     onSubmit,
   }: {
-    initialValue?: string;
+    value: string;
+    onChange: (v: string) => void;
     header?: React.ReactNode;
     onSubmit: (content: string) => Promise<boolean>;
   }) => (
     <div data-testid="inline-reply-editor">
       {header}
-      <textarea data-testid="inline-editor-value" readOnly value={initialValue} />
-      <button type="button" onClick={() => void onSubmit("内联提交内容")}>
+      <textarea
+        data-testid="inline-editor-value"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <button type="button" onClick={() => void onSubmit(value || "内联提交内容")}>
         提交
       </button>
     </div>
@@ -103,6 +111,10 @@ const baseComment: CommentItemResp = {
 };
 
 describe("CommentItem", () => {
+  beforeEach(() => {
+    useInlineEditorStore.setState({ editors: {} });
+  });
+
   it("显示评论者昵称和评论内容", () => {
     render(<CommentItem comment={baseComment} targetType="article" />);
     expect(screen.getByText("Alice")).toBeTruthy();
@@ -290,9 +302,10 @@ describe("CommentItem", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "编辑评论" }));
+    // 编辑框已用 pendingContent（即原文）预填，直接点提交等于原样提交原内容
     await user.click(screen.getByText("提交"));
 
-    expect(onSubmitEditComment).toHaveBeenCalledWith(1, "内联提交内容");
+    expect(onSubmitEditComment).toHaveBeenCalledWith(1, "这篇文章写得很好");
     expect(screen.getByText("这篇文章写得很好")).toBeTruthy();
   });
 
@@ -385,5 +398,54 @@ describe("CommentItem", () => {
     render(<CommentItem comment={comment} targetType="article" />);
     expect(screen.queryByRole("link", { name: "匿名" })).toBeNull();
     expect(screen.getByText("匿名")).toBeTruthy();
+  });
+
+  it("展开回复框输入草稿后卸载重新挂载，草稿仍在", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(
+      <CommentItem
+        comment={baseComment}
+        targetType="article"
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "回复" }));
+    await user.type(screen.getByTestId("inline-editor-value"), "写了一半");
+    unmount();
+
+    render(
+      <CommentItem
+        comment={baseComment}
+        targetType="article"
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
+
+    expect(screen.getByTestId("inline-reply-editor")).toBeTruthy();
+    expect(screen.getByTestId("inline-editor-value")).toHaveValue("写了一半");
+  });
+
+  it("删除评论成功后清空该评论关联的回复/编辑草稿", async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn().mockResolvedValue(true);
+    render(
+      <CommentItem
+        comment={baseComment}
+        targetType="article"
+        currentUserId={10}
+        onDelete={onDelete}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "回复" }));
+    await user.type(screen.getByTestId("inline-editor-value"), "草稿");
+
+    await user.click(screen.getByRole("button", { name: "删除评论" }));
+    await user.click(screen.getByRole("button", { name: "删除" }));
+
+    await Promise.resolve();
+    expect(useInlineEditorStore.getState().editors).toEqual({});
   });
 });
