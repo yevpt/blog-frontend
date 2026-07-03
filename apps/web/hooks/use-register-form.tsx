@@ -20,6 +20,7 @@ export function validatePassword(value: string): string | null {
 
 interface ApiResponse<T> {
   code: number;
+  error_code?: string;
   message: string;
   data?: T;
 }
@@ -28,6 +29,7 @@ class RegisterApiError extends Error {
   constructor(
     message: string,
     public readonly code: number,
+    public readonly errorCode: string | null = null,
   ) {
     super(message);
     this.name = "RegisterApiError";
@@ -47,7 +49,7 @@ async function requestRegisterApi<T>(url: string, init: FetchInit): Promise<T> {
   const res = await fetch(url, init);
   const json = (await res.json()) as ApiResponse<T>;
   if (json.code !== 0) {
-    throw new RegisterApiError(json.message || "请求失败", json.code);
+    throw new RegisterApiError(json.message || "请求失败", json.code, json.error_code ?? null);
   }
   return json.data as T;
 }
@@ -62,6 +64,7 @@ export function useRegisterForm({ onSuccess }: UseRegisterFormOptions) {
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
   const [apiError, setApiError] = useState<string | null>(null);
+  const [emailTaken, setEmailTaken] = useState(false);
   const [loading, setLoading] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -117,6 +120,10 @@ export function useRegisterForm({ onSuccess }: UseRegisterFormOptions) {
   const captcha = useCaptchaToken({
     onToken: sendEmailCode,
     onRateLimited: (message) => addToast(message, "error"),
+    onError: (message, errorCode) => {
+      setApiError(message);
+      setEmailTaken(errorCode === "AUTH_EMAIL_TAKEN");
+    },
   });
   const { openCaptcha: openCaptchaChallenge, closeCaptcha } = captcha;
 
@@ -127,6 +134,7 @@ export function useRegisterForm({ onSuccess }: UseRegisterFormOptions) {
     }
     setLoading(true);
     setApiError(null);
+    setEmailTaken(false);
     try {
       await openCaptchaChallenge();
     } catch (err) {
@@ -139,6 +147,7 @@ export function useRegisterForm({ onSuccess }: UseRegisterFormOptions) {
   const submitRegistration = useCallback(async () => {
     setSubmitAttempted(true);
     setApiError(null);
+    setEmailTaken(false);
 
     if (!isValidEmail(email) || validatePassword(password) !== null || !code.trim()) {
       return;
@@ -240,6 +249,7 @@ export function useRegisterForm({ onSuccess }: UseRegisterFormOptions) {
     nickname,
     setNickname,
     apiError,
+    emailTaken,
     loading,
     codeSent,
     countdown,

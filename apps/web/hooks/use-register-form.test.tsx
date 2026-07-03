@@ -137,6 +137,39 @@ describe("useRegisterForm", () => {
     expect(result.current.codeSent).toBe(true);
   });
 
+  it("captcha verify with email already registered sets apiError and emailTaken", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(mockApiResponse(CHALLENGE))
+      .mockResolvedValueOnce(mockApiResponse({ captcha_token: "captcha-token" }))
+      .mockResolvedValueOnce({
+        json: async () => ({
+          code: 409,
+          error_code: "AUTH_EMAIL_TAKEN",
+          message: "该邮箱已被注册",
+          data: null,
+        }),
+      } as Response);
+
+    const { result } = renderHook(() => useRegisterForm({ onSuccess }));
+
+    act(() => {
+      result.current.setEmail("taken@example.com");
+    });
+
+    await act(async () => {
+      await result.current.openCaptcha();
+    });
+
+    await act(async () => {
+      await result.current.handleCaptchaVerify(162);
+    });
+
+    expect(result.current.apiError).toBe("该邮箱已被注册");
+    expect(result.current.emailTaken).toBe(true);
+    expect(result.current.captchaOpen).toBe(false);
+    expect(result.current.codeSent).toBe(false);
+  });
+
   it("registration success auto-logins and calls onSuccess", async () => {
     const user = { id: 1, username: "user@example.com", nickname: "新用户" };
     vi.mocked(fetch).mockResolvedValueOnce(mockApiResponse({ user }));
