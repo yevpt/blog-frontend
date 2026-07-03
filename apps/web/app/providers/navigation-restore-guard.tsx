@@ -24,6 +24,15 @@ function discardStaleState() {
   useFriendLinksPausedStore.getState().reset();
 }
 
+/** 当前是否有值得跨路由保留的状态（弹窗可见 / 有草稿 / 友邻展开） */
+function hasStateToProtect() {
+  return (
+    useCommentModal.getState().isVisible ||
+    Object.keys(useInlineEditorStore.getState().editors).length > 0 ||
+    useFriendLinksPausedStore.getState().open
+  );
+}
+
 /** 全局挂载一次，不渲染任何内容 */
 export function NavigationRestoreGuard() {
   const pathname = usePathname();
@@ -66,10 +75,15 @@ export function NavigationRestoreGuard() {
     // 走到这里说明是一次前进导航（Link 点击、router.push 等）
     if (useNavigationRestoreSlot.getState().pathname !== null) {
       discardStaleState();
+      useNavigationRestoreSlot.setState({ pathname: null });
     }
-    useNavigationRestoreSlot.setState({ pathname: prevPathnameRef.current });
-    if (useCommentModal.getState().isVisible) {
-      useCommentModal.getState().hide();
+    // 只有离开的页面确实有值得保留的状态时才占用槽位——否则任意两次前进导航
+    // 都会被误判成"深度跳转"，把中间毫无关系的新状态也一并清空
+    if (hasStateToProtect()) {
+      useNavigationRestoreSlot.setState({ pathname: prevPathnameRef.current });
+      if (useCommentModal.getState().isVisible) {
+        useCommentModal.getState().hide();
+      }
     }
     prevPathnameRef.current = pathname;
   }, [pathname]);

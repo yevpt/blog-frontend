@@ -113,4 +113,29 @@ describe("NavigationRestoreGuard", () => {
 
     expect(useCommentModal.getState().targetType).toBeNull();
   });
+
+  it("离开页面无任何状态时的前进导航不应占用槽位，不影响后续草稿的保留", () => {
+    const { rerender } = render(<NavigationRestoreGuard />);
+
+    // 第一次前进导航：离开的页面（首页）没有任何弹窗/草稿/展开态，不该占用槽位
+    pushTo(rerender, "/guestbook");
+
+    // 在留言板页面展开草稿
+    useInlineEditorStore.getState().open("guestbook:1:reply", "写了一半");
+
+    // 第二次前进导航：离开的留言板页面现在有草稿，应当被保护而不是被当成"深度跳转"清空
+    pushTo(rerender, "/users/1");
+
+    expect(useInlineEditorStore.getState().editors["guestbook:1:reply"]).toEqual({
+      isOpen: true,
+      content: "写了一半",
+    });
+
+    // 精确后退回留言板，草稿应完整恢复
+    popTo(rerender, "/guestbook");
+    expect(useInlineEditorStore.getState().editors["guestbook:1:reply"]).toEqual({
+      isOpen: true,
+      content: "写了一半",
+    });
+  });
 });
