@@ -2,9 +2,10 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GuestbookItem } from "./guestbook-item";
 import type { GuestbookItemResp } from "@repo/api";
+import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 
 vi.mock("next/link", () => ({
   default: ({
@@ -53,18 +54,24 @@ vi.mock("@/store/use-login-modal", () => ({
 // 编辑器/回复框在留言项内联渲染；测试只关心初始值与提交回调，mock 掉共享组件
 vi.mock("@/components/comments/inputs/inline-reply-editor", () => ({
   InlineReplyEditor: ({
-    initialValue = "",
+    value,
+    onChange,
     header,
     onSubmit,
   }: {
-    initialValue?: string;
+    value: string;
+    onChange: (v: string) => void;
     header?: React.ReactNode;
     onSubmit: (content: string) => Promise<boolean>;
   }) => (
     <div data-testid="inline-editor">
       {header}
-      <textarea data-testid="inline-editor-value" readOnly value={initialValue} />
-      <button type="button" onClick={() => void onSubmit(initialValue || "内联提交内容")}>
+      <textarea
+        data-testid="inline-editor-value"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <button type="button" onClick={() => void onSubmit(value || "内联提交内容")}>
         保存
       </button>
     </div>
@@ -85,6 +92,10 @@ const mockItem: GuestbookItemResp = {
 };
 
 describe("GuestbookItem", () => {
+  beforeEach(() => {
+    useInlineEditorStore.setState({ editors: {} });
+  });
+
   it("渲染留言内容和用户名", () => {
     render(<GuestbookItem item={mockItem} />);
     expect(screen.getByText("这是一条留言")).toBeTruthy();
@@ -411,5 +422,41 @@ describe("GuestbookItem", () => {
       expect(screen.getByText("编辑中", { exact: true })).toBeTruthy();
       expect(screen.queryByText("编辑中 · 内容正在审核")).toBeNull();
     });
+  });
+
+  it("展开回复框输入草稿后卸载重新挂载，草稿仍在", async () => {
+    const { unmount } = render(
+      <GuestbookItem item={mockItem} onSubmitReply={vi.fn().mockResolvedValue(true)} />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "回复" }));
+    await userEvent.type(screen.getByTestId("inline-editor-value"), "写了一半");
+    unmount();
+
+    render(<GuestbookItem item={mockItem} onSubmitReply={vi.fn().mockResolvedValue(true)} />);
+
+    expect(screen.getByTestId("inline-editor")).toBeTruthy();
+    expect(screen.getByTestId("inline-editor-value")).toHaveValue("写了一半");
+  });
+
+  it("删除留言成功后清空该留言关联的回复/编辑草稿", async () => {
+    const onDelete = vi.fn().mockResolvedValue(true);
+    render(
+      <GuestbookItem
+        item={mockItem}
+        currentUserId={1}
+        onDelete={onDelete}
+        onSubmitReply={vi.fn().mockResolvedValue(true)}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "回复" }));
+    await userEvent.type(screen.getByTestId("inline-editor-value"), "草稿");
+
+    await userEvent.click(screen.getByRole("button", { name: "删除留言" }));
+    await userEvent.click(screen.getByRole("button", { name: "删除" }));
+
+    await Promise.resolve();
+    expect(useInlineEditorStore.getState().editors).toEqual({});
   });
 });

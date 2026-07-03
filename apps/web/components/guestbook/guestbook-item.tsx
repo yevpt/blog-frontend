@@ -14,6 +14,7 @@ import { InlineReplyEditor } from "@/components/comments/inputs/inline-reply-edi
 import { ReplyBanner } from "@/components/comments/inputs/reply-banner";
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
+import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 import { normalizeModerationView } from "@/components/moderation";
 
 interface GuestbookItemProps {
@@ -55,8 +56,18 @@ export const GuestbookItem = memo(function GuestbookItem({
   const { userId } = useSession();
   const openLoginModal = useLoginModal((s) => s.open);
   const [repliesOpen, setRepliesOpen] = useState(false);
-  const [isReplying, setIsReplying] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const replyKey = `guestbook:${item.id}:reply`;
+  const editKey = `guestbook:${item.id}:edit`;
+  const isReplying = useInlineEditorStore((s) => Boolean(s.editors[replyKey]?.isOpen));
+  const isEditing = useInlineEditorStore((s) => Boolean(s.editors[editKey]?.isOpen));
+  const replyContent = useInlineEditorStore((s) => s.editors[replyKey]?.content ?? "");
+  const editContent = useInlineEditorStore((s) => s.editors[editKey]?.content ?? "");
+  const {
+    open: openEditor,
+    setContent: setEditorContent,
+    close: closeEditor,
+    submitSuccess: editorSubmitSuccess,
+  } = useInlineEditorStore();
 
   // 所有互动判断先经规范化，审核关闭/旧响应缺失时回退为充分可交互的可见旧版本
   const moderation = normalizeModerationView(item.moderation);
@@ -73,52 +84,61 @@ export const GuestbookItem = memo(function GuestbookItem({
   const handleReply = useCallback(() => {
     if (!canInteract) return;
     if (isReplying) {
-      setIsReplying(false);
+      closeEditor(replyKey);
       return;
     }
     if (!userId) {
       openLoginModal();
       return;
     }
-    setIsEditing(false);
-    setIsReplying(true);
-  }, [canInteract, isReplying, userId, openLoginModal]);
+    closeEditor(editKey);
+    openEditor(replyKey);
+  }, [canInteract, isReplying, userId, openLoginModal, closeEditor, openEditor, replyKey, editKey]);
 
-  const handleDelete = useCallback(() => onDelete?.(item.id) ?? false, [onDelete, item.id]);
+  const handleDelete = useCallback(() => {
+    const result = onDelete?.(item.id);
+    result?.then((ok) => {
+      if (ok) {
+        closeEditor(replyKey);
+        closeEditor(editKey);
+      }
+    });
+    return result ?? false;
+  }, [onDelete, item.id, closeEditor, replyKey, editKey]);
   const handleDeleteReply = useCallback(
     (replyId: number) => onDeleteReply?.(item.id, replyId) ?? Promise.resolve(false),
     [onDeleteReply, item.id],
   );
 
+  // 中风险编辑：作者看到的是待审新版本，便于在其基础上修订或撤销
+  const editInitialContent = item.moderation?.pending_content ?? item.content;
+
   const handleToggleEditor = useCallback(() => {
     if (isEditing) {
-      setIsEditing(false);
+      closeEditor(editKey);
       return;
     }
-    setIsReplying(false);
-    setIsEditing(true);
-  }, [isEditing]);
+    closeEditor(replyKey);
+    openEditor(editKey, editInitialContent);
+  }, [isEditing, closeEditor, openEditor, replyKey, editKey, editInitialContent]);
 
   const handleReplySubmit = useCallback(
     async (content: string) => {
       const ok = (await onSubmitReply?.(item.id, undefined, content)) ?? false;
-      if (ok) setIsReplying(false);
+      if (ok) editorSubmitSuccess(replyKey);
       return ok;
     },
-    [onSubmitReply, item.id],
+    [onSubmitReply, item.id, editorSubmitSuccess, replyKey],
   );
 
   const handleEditSubmit = useCallback(
     async (content: string) => {
       const ok = (await onEdit?.(item.id, content)) ?? false;
-      if (ok) setIsEditing(false);
+      if (ok) editorSubmitSuccess(editKey);
       return ok;
     },
-    [onEdit, item.id],
+    [onEdit, item.id, editorSubmitSuccess, editKey],
   );
-
-  // 中风险编辑：作者看到的是待审新版本，便于在其基础上修订或撤销
-  const editInitialContent = item.moderation?.pending_content ?? item.content;
 
   return (
     <div className={cn("pt-4", hasReplies ? "pb-5" : "pb-2")}>
@@ -152,12 +172,13 @@ export const GuestbookItem = memo(function GuestbookItem({
 
       {isEditing ? (
         <InlineReplyEditor
-          initialValue={editInitialContent}
+          value={editContent}
+          onChange={(value) => setEditorContent(editKey, value)}
           placeholder="编辑留言正文…"
           header={
             <ReplyBanner
               toUsername="编辑中"
-              onCancel={() => setIsEditing(false)}
+              onCancel={() => closeEditor(editKey)}
               editing
               pendingReview={Boolean(item.moderation?.has_pending_revision)}
             />
@@ -178,8 +199,10 @@ export const GuestbookItem = memo(function GuestbookItem({
 
       {isReplying && (
         <InlineReplyEditor
+          value={replyContent}
+          onChange={(value) => setEditorContent(replyKey, value)}
           placeholder="请输入你的回复内容"
-          header={<ReplyBanner toUsername={displayName} onCancel={() => setIsReplying(false)} />}
+          header={<ReplyBanner toUsername={displayName} onCancel={() => closeEditor(replyKey)} />}
           isLoggedIn={!!userId}
           onLoginRequired={openLoginModal}
           onSubmit={handleReplySubmit}
