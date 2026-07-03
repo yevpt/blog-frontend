@@ -8,6 +8,7 @@ import { resolve } from "node:path";
 import type { CommentReplyResp, CommentReplyPageResp } from "@repo/api";
 import { CommentReplies } from "./comment-replies";
 import { useCommentRepliesStore } from "@/store/use-comment-replies-store";
+import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 
 vi.mock("next/link", () => ({
   default: ({
@@ -85,12 +86,14 @@ vi.mock("@/components/common/user-avatar", () => ({
 
 vi.mock("../inputs/inline-reply-editor", () => ({
   InlineReplyEditor: ({
-    initialValue = "",
+    value,
+    onChange,
     placeholder,
     header,
     onSubmit,
   }: {
-    initialValue?: string;
+    value: string;
+    onChange: (v: string) => void;
     placeholder?: string;
     header?: React.ReactNode;
     onSubmit: (content: string) => Promise<boolean>;
@@ -98,8 +101,12 @@ vi.mock("../inputs/inline-reply-editor", () => ({
     <div data-testid="inline-reply-editor">
       {header}
       <span data-testid="inline-editor-placeholder">{placeholder}</span>
-      <textarea data-testid="inline-editor-value" readOnly value={initialValue} />
-      <button type="button" onClick={() => void onSubmit("内联提交内容")}>
+      <textarea
+        data-testid="inline-editor-value"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <button type="button" onClick={() => void onSubmit(value || "内联提交内容")}>
         提交
       </button>
     </div>
@@ -141,6 +148,7 @@ describe("CommentReplies", () => {
     vi.resetAllMocks();
     global.fetch = vi.fn();
     useCommentRepliesStore.setState({ openKeys: new Set() });
+    useInlineEditorStore.setState({ editors: {} });
   });
 
   it("replyCount=0 时不渲染任何内容", () => {
@@ -1119,7 +1127,8 @@ describe("CommentReplies", () => {
       expect(screen.getByTestId("inline-editor-value")).toHaveValue("回复 1");
 
       await user.click(screen.getByText("提交"));
-      expect(onSubmitEditReply).toHaveBeenCalledWith(1, 0, 1, "内联提交内容");
+      // 编辑框已用 pendingContent（即原文）预填，直接点提交等于原样提交原内容
+      expect(onSubmitEditReply).toHaveBeenCalledWith(1, 0, 1, "回复 1");
     });
 
     it("展开回复编辑框后按钮变为取消编辑，再次点击收起", async () => {
@@ -1227,6 +1236,70 @@ describe("CommentReplies", () => {
       await waitFor(() => expect(screen.getByText("回复 1")).toBeTruthy());
 
       expect(screen.queryByRole("button", { name: "编辑回复" })).toBeNull();
+    });
+  });
+
+  describe("回复内联输入框跨挂载保留草稿", () => {
+    it("展开回复框输入草稿后卸载重新挂载，草稿仍在", async () => {
+      const user = userEvent.setup();
+      vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
+
+      const { unmount } = render(
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+        />,
+      );
+      await user.click(screen.getByText(/展开 1 条回复/));
+      await waitFor(() => screen.getByText("回复 1"));
+
+      await user.click(screen.getAllByText("回复")[0]);
+      await user.type(screen.getByTestId("inline-editor-value"), "写了一半");
+      unmount();
+
+      vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
+      render(
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+        />,
+      );
+      await waitFor(() => screen.getByText("回复 1"));
+
+      expect(screen.getByTestId("inline-reply-editor")).toBeTruthy();
+      expect(screen.getByTestId("inline-editor-value")).toHaveValue("写了一半");
+    });
+
+    it("删除回复成功后清空该回复关联的回复/编辑草稿", async () => {
+      const user = userEvent.setup();
+      const onDeleteReply = vi.fn().mockResolvedValue(true);
+      vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeReply(1)])));
+
+      render(
+        <CommentReplies
+          commentId={1}
+          targetType="article"
+          replyCount={1}
+          currentUserId={1}
+          onSubmitReply={vi.fn().mockResolvedValue(true)}
+          onDeleteReply={onDeleteReply}
+        />,
+      );
+      await user.click(screen.getByText(/展开 1 条回复/));
+      await waitFor(() => screen.getByText("回复 1"));
+
+      await user.click(screen.getAllByText("回复")[0]);
+      await user.type(screen.getByTestId("inline-editor-value"), "草稿");
+
+      await user.click(screen.getByRole("button", { name: "删除回复" }));
+      await user.click(screen.getByRole("button", { name: "删除" }));
+
+      await Promise.resolve();
+      expect(useInlineEditorStore.getState().editors).toEqual({});
     });
   });
 

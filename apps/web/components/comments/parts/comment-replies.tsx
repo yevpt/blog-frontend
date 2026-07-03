@@ -7,6 +7,7 @@ import type { CommentReplyResp, CommentReplyPageResp, CommentUserResp } from "@r
 import { useSession } from "@/app/providers/session-provider";
 import { useLoginModal } from "@/store/use-login-modal";
 import { useCommentRepliesStore } from "@/store/use-comment-replies-store";
+import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 import { useCommentLike } from "@/hooks/use-comment-like";
 import { apiJson, getApiErrorMessage } from "@/lib/client-fetch";
 import { buildQuery } from "@/lib/query";
@@ -117,8 +118,18 @@ const ReplyItem = memo(function ReplyItem({
   const openLoginModal = useLoginModal((s) => s.open);
   const { toggleReplyLike } = useCommentLike(targetType);
   const isOwnReply = currentUserId != null && currentUserId === reply.from_user_id;
-  const [isReplying, setIsReplying] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const replyKey = `${targetType}-reply:${reply.id}:reply`;
+  const editKey = `${targetType}-reply:${reply.id}:edit`;
+  const isReplying = useInlineEditorStore((s) => Boolean(s.editors[replyKey]?.isOpen));
+  const isEditing = useInlineEditorStore((s) => Boolean(s.editors[editKey]?.isOpen));
+  const replyContent = useInlineEditorStore((s) => s.editors[replyKey]?.content ?? "");
+  const editContent = useInlineEditorStore((s) => s.editors[editKey]?.content ?? "");
+  const {
+    open: openEditor,
+    setContent: setEditorContent,
+    close: closeEditor,
+    submitSuccess: editorSubmitSuccess,
+  } = useInlineEditorStore();
 
   const handleLike = useCallback(async () => {
     if (!userId) {
@@ -139,15 +150,15 @@ const ReplyItem = memo(function ReplyItem({
   const handleReply = useCallback(() => {
     if (onSubmitReply) {
       if (isReplying) {
-        setIsReplying(false);
+        closeEditor(replyKey);
         return;
       }
       if (!userId) {
         openLoginModal();
         return;
       }
-      setIsEditing(false);
-      setIsReplying(true);
+      closeEditor(editKey);
+      openEditor(replyKey);
       return;
     }
     if (!userId) {
@@ -155,11 +166,31 @@ const ReplyItem = memo(function ReplyItem({
       return;
     }
     onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName });
-  }, [isReplying, userId, openLoginModal, onSubmitReply, onReply, commentId, reply.id, fromName]);
+  }, [
+    isReplying,
+    userId,
+    openLoginModal,
+    onSubmitReply,
+    onReply,
+    commentId,
+    reply.id,
+    fromName,
+    closeEditor,
+    openEditor,
+    replyKey,
+    editKey,
+  ]);
 
   const handleDelete = useCallback(() => {
-    return onDeleteReply?.(reply.id) ?? false;
-  }, [onDeleteReply, reply.id]);
+    const result = onDeleteReply?.(reply.id);
+    result?.then((ok) => {
+      if (ok) {
+        closeEditor(replyKey);
+        closeEditor(editKey);
+      }
+    });
+    return result ?? false;
+  }, [onDeleteReply, reply.id, closeEditor, replyKey, editKey]);
 
   // 编辑时优先使用 pending_content，让作者编辑待审版本而非公开旧版本
   const pendingContent =
@@ -171,11 +202,11 @@ const ReplyItem = memo(function ReplyItem({
     if (!isOwnReply || !canEdit) return;
     if (onSubmitEditReply) {
       if (isEditing) {
-        setIsEditing(false);
+        closeEditor(editKey);
         return;
       }
-      setIsReplying(false);
-      setIsEditing(true);
+      closeEditor(replyKey);
+      openEditor(editKey, pendingContent);
       return;
     }
     onEditReply?.({
@@ -195,25 +226,29 @@ const ReplyItem = memo(function ReplyItem({
     reply,
     commentId,
     pendingContent,
+    closeEditor,
+    openEditor,
+    replyKey,
+    editKey,
   ]);
 
   const handleReplySubmit = useCallback(
     async (content: string) => {
       const ok = (await onSubmitReply?.(commentId, reply.id, content)) ?? false;
-      if (ok) setIsReplying(false);
+      if (ok) editorSubmitSuccess(replyKey);
       return ok;
     },
-    [onSubmitReply, commentId, reply.id],
+    [onSubmitReply, commentId, reply.id, editorSubmitSuccess, replyKey],
   );
 
   const handleEditSubmit = useCallback(
     async (content: string) => {
       const ok =
         (await onSubmitEditReply?.(reply.id, reply.parent_reply_id, commentId, content)) ?? false;
-      if (ok) setIsEditing(false);
+      if (ok) editorSubmitSuccess(editKey);
       return ok;
     },
-    [onSubmitEditReply, reply.id, reply.parent_reply_id, commentId],
+    [onSubmitEditReply, reply.id, reply.parent_reply_id, commentId, editorSubmitSuccess, editKey],
   );
 
   return (
@@ -239,8 +274,10 @@ const ReplyItem = memo(function ReplyItem({
       />
       {isReplying && (
         <InlineReplyEditor
+          value={replyContent}
+          onChange={(value) => setEditorContent(replyKey, value)}
           placeholder="请输入你的回复内容"
-          header={<ReplyBanner toUsername={fromName} onCancel={() => setIsReplying(false)} />}
+          header={<ReplyBanner toUsername={fromName} onCancel={() => closeEditor(replyKey)} />}
           isLoggedIn={!!userId}
           onLoginRequired={openLoginModal}
           onSubmit={handleReplySubmit}
@@ -248,12 +285,13 @@ const ReplyItem = memo(function ReplyItem({
       )}
       {isEditing && (
         <InlineReplyEditor
-          initialValue={pendingContent}
+          value={editContent}
+          onChange={(value) => setEditorContent(editKey, value)}
           placeholder="编辑内容..."
           header={
             <ReplyBanner
               toUsername="编辑中"
-              onCancel={() => setIsEditing(false)}
+              onCancel={() => closeEditor(editKey)}
               editing
               pendingReview={Boolean(reply.moderation?.has_pending_revision)}
             />
