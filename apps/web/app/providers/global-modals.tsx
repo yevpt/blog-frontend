@@ -8,11 +8,13 @@ import { toastQueue } from "@/lib/toast";
 import { MomentModal } from "@/components/moments/moment-modal";
 import { GlobalCommentModal } from "@/components/comments";
 import { ImageViewerHost } from "@/components/common/image-viewer-host";
+import { NavigationRestoreGuard } from "./navigation-restore-guard";
 
 export function GlobalModals() {
   return (
     <>
       <OAuthResultHandler />
+      <NavigationRestoreGuard />
       <LoginModal />
       <MomentModal />
       <GlobalCommentModal />
