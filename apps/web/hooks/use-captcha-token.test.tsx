@@ -98,6 +98,32 @@ describe("useCaptchaToken", () => {
     expect(result.current.captchaX).toBe(30);
   });
 
+  it("handleVerify 中 onToken 抛出非限流业务错误时关闭弹层并调用 onError，不重拉挑战", async () => {
+    class BusinessError extends Error {
+      errorCode = "AUTH_EMAIL_TAKEN";
+    }
+    const onError = vi.fn();
+    const onToken = vi.fn().mockRejectedValue(new BusinessError("该邮箱已被注册"));
+    vi.spyOn(global, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ challenge_id: "c1", tile_x: 10, tile_y: 20 })),
+      )
+      .mockResolvedValueOnce(new Response(JSON.stringify({ captcha_token: "tok123" })));
+    const { result } = renderHook(() => useCaptchaToken({ onToken, onError }));
+
+    await act(async () => {
+      await result.current.openCaptcha();
+    });
+    await act(async () => {
+      await result.current.handleVerify(15);
+    });
+
+    expect(onError).toHaveBeenCalledWith("该邮箱已被注册", "AUTH_EMAIL_TAKEN");
+    expect(result.current.captchaOpen).toBe(false);
+    // 不应重拉新挑战：仅 challenge + verify 两次请求
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
   it("closeCaptcha 关闭并清空挑战", async () => {
     vi.spyOn(global, "fetch").mockResolvedValueOnce(
       new Response(JSON.stringify({ challenge_id: "c1", tile_x: 10, tile_y: 20 })),

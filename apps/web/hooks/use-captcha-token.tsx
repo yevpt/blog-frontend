@@ -58,6 +58,19 @@ function isRateLimited(err: unknown): boolean {
   return status === 429 || code === 429;
 }
 
+/**
+ * 从 onToken 抛出的业务错误中提取 error_code（若存在）。
+ * onToken 由各调用方自行实现（RegisterApiError / ApiClientError 等类型不一），
+ * 故用鸭子类型探测而非依赖具体错误类，与 isRateLimited 的做法一致。
+ */
+function extractErrorCode(err: unknown): string | null {
+  if (typeof err !== "object" || err === null) {
+    return null;
+  }
+  const { errorCode } = err as { errorCode?: unknown };
+  return typeof errorCode === "string" ? errorCode : null;
+}
+
 export interface UseCaptchaTokenResult {
   captchaOpen: boolean;
   captchaChallenge: CaptchaChallengeResp | null;
@@ -75,6 +88,8 @@ export interface UseCaptchaTokenOptions {
   onToken: (captchaToken: string) => Promise<void>;
   /** 命中限流（429）时的提示回调 */
   onRateLimited?: (message: string) => void;
+  /** onToken 抛出非限流业务错误时的提示回调（如「邮箱已注册」），errorCode 供调用方细分场景 */
+  onError?: (message: string, errorCode: string | null) => void;
 }
 
 /**
@@ -82,7 +97,7 @@ export interface UseCaptchaTokenOptions {
  * token 通用、一次性、IP 绑定，故统一走 /api/captcha/register/* 端点。
  */
 export function useCaptchaToken(opts: UseCaptchaTokenOptions): UseCaptchaTokenResult {
-  const { onToken, onRateLimited } = opts;
+  const { onToken, onRateLimited, onError } = opts;
 
   const [captchaOpen, setCaptchaOpen] = useState(false);
   const [captchaChallenge, setCaptchaChallenge] = useState<CaptchaChallengeResp | null>(null);
@@ -112,31 +127,46 @@ export function useCaptchaToken(opts: UseCaptchaTokenOptions): UseCaptchaTokenRe
         return;
       }
       setCaptchaLoading(true);
+
+      let verifyResult: CaptchaVerifyResp;
       try {
-        const result = await postJson<CaptchaVerifyResp>("/api/captcha/register/verify", {
+        verifyResult = await postJson<CaptchaVerifyResp>("/api/captcha/register/verify", {
           challenge_id: captchaChallenge.challenge_id,
           x,
           y: captchaChallenge.tile_y,
         });
-        await onToken(result.captcha_token);
-        closeCaptcha();
       } catch (err) {
         if (isRateLimited(err)) {
           closeCaptcha();
           onRateLimited?.(err instanceof Error ? err.message : "发送过于频繁");
-          return;
+        } else {
+          // 滑块验证请求本身失败：重拉一张新挑战，让用户重试；连重拉都失败才关闭
+          try {
+            await fetchChallenge();
+          } catch {
+            closeCaptcha();
+          }
         }
-        // 其它失败：重拉一张新挑战，让用户重试；连重拉都失败才关闭
-        try {
-          await fetchChallenge();
-        } catch {
-          closeCaptcha();
+        setCaptchaLoading(false);
+        return;
+      }
+
+      try {
+        await onToken(verifyResult.captcha_token);
+        closeCaptcha();
+      } catch (err) {
+        // 业务发码请求失败，不是滑块的问题：重拉验证码没有意义，直接关闭并把错误暴露给调用方
+        closeCaptcha();
+        if (isRateLimited(err)) {
+          onRateLimited?.(err instanceof Error ? err.message : "发送过于频繁");
+        } else {
+          onError?.(err instanceof Error ? err.message : "操作失败", extractErrorCode(err));
         }
       } finally {
         setCaptchaLoading(false);
       }
     },
-    [captchaChallenge, closeCaptcha, fetchChallenge, onToken, onRateLimited],
+    [captchaChallenge, closeCaptcha, fetchChallenge, onToken, onRateLimited, onError],
   );
 
   return {
