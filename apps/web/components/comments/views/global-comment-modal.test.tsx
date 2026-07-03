@@ -25,7 +25,12 @@ vi.mock("./comment-modal", () => ({
 
 describe("GlobalCommentModal", () => {
   beforeEach(() => {
-    useCommentModal.setState({ targetType: null, targetId: null, onCommentAdded: null });
+    useCommentModal.setState({
+      targetType: null,
+      targetId: null,
+      onCommentAdded: null,
+      isVisible: false,
+    });
   });
 
   it("store 无打开目标时不渲染任何内容", () => {
@@ -50,5 +55,16 @@ describe("GlobalCommentModal", () => {
 
     expect(useCommentModal.getState().targetType).toBeNull();
     expect(useCommentModal.getState().targetId).toBeNull();
+  });
+
+  it("有 target 但 isVisible 为 false 时不渲染", () => {
+    useCommentModal.setState({
+      targetType: "article",
+      targetId: 42,
+      onCommentAdded: null,
+      isVisible: false,
+    });
+    const { container } = render(<GlobalCommentModal />);
+    expect(container.innerHTML).toBe("");
   });
 });

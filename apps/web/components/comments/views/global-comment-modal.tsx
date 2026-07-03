@@ -7,9 +7,10 @@ export function GlobalCommentModal() {
   const targetType = useCommentModal((s) => s.targetType);
   const targetId = useCommentModal((s) => s.targetId);
   const onCommentAdded = useCommentModal((s) => s.onCommentAdded);
+  const isVisible = useCommentModal((s) => s.isVisible);
   const close = useCommentModal((s) => s.close);
 
-  if (targetType === null || targetId === null) {
+  if (targetType === null || targetId === null || !isVisible) {
     return null;
   }
 
