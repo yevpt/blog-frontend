@@ -1,8 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import type { FriendLinkItemResp } from "@repo/api";
+import { useFriendLinksPausedStore } from "@/store/use-friend-links-paused-store";
 import { FriendLinksPage } from "./friend-links-page";
 
 vi.mock("./friend-links-rules-card", () => ({
@@ -39,6 +40,10 @@ vi.mock("@repo/ui", () => ({
 }));
 
 describe("FriendLinksPage", () => {
+  beforeEach(() => {
+    useFriendLinksPausedStore.setState({ open: false });
+  });
+
   const activeLink: FriendLinkItemResp = {
     id: 1,
     name: "Blog A",

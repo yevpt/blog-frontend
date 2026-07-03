@@ -1,9 +1,10 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId } from "react";
 import type { FriendLinkItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
 import { Button, cn } from "@repo/ui";
+import { useFriendLinksPausedStore } from "@/store/use-friend-links-paused-store";
 import { FriendLinksList } from "./friend-links-list";
 
 interface FriendLinksPausedSectionProps {
@@ -11,7 +12,8 @@ interface FriendLinksPausedSectionProps {
 }
 
 export function FriendLinksPausedSection({ links }: FriendLinksPausedSectionProps) {
-  const [open, setOpen] = useState(false);
+  const open = useFriendLinksPausedStore((s) => s.open);
+  const setOpen = useFriendLinksPausedStore((s) => s.setOpen);
   const panelId = useId();
 
   if (links.length === 0) return null;
@@ -25,7 +27,7 @@ export function FriendLinksPausedSection({ links }: FriendLinksPausedSectionProp
         aria-label={`${open ? "收起" : "展开"}暂别友邻 · ${links.length}`}
         aria-expanded={open}
         aria-controls={panelId}
-        onPress={() => setOpen((value) => !value)}
+        onPress={() => setOpen(!open)}
       >
         <span className="flex min-w-0 flex-col items-start gap-0.5">
           <span className="text-sm font-semibold">暂别友邻 · {links.length}</span>
