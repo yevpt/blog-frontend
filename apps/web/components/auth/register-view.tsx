@@ -36,6 +36,7 @@ export function RegisterView({ onSwitchToLogin, onSuccess }: RegisterViewProps) 
     nickname,
     setNickname,
     apiError,
+    emailTaken,
     loading,
     setEmailTouched,
     setPasswordTouched,
@@ -246,6 +247,16 @@ export function RegisterView({ onSwitchToLogin, onSuccess }: RegisterViewProps) 
           <p role="alert" className="mt-3 text-[12px] leading-relaxed text-destructive/80">
             {apiError}
           </p>
+        )}
+        {emailTaken && (
+          <Button
+            type="button"
+            variant="text"
+            onPress={onSwitchToLogin}
+            className="mt-1.5 text-[12px] text-primary hover:underline"
+          >
+            去登录
+          </Button>
         )}
 
         <Button

@@ -284,4 +284,67 @@ describe("RegisterView", () => {
     expect(mockAddToast).toHaveBeenCalledWith("IP 已被封禁，请稍后再试", "error");
     expect(global.fetch).toHaveBeenCalledTimes(4);
   });
+
+  it("send-code 返回邮箱已注册时显示提示与去登录按钮，点击调用 onSwitchToLogin", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch)
+      .mockResolvedValueOnce(mockProviders())
+      .mockResolvedValueOnce({
+        json: async () => ({
+          code: 0,
+          message: "ok",
+          data: {
+            challenge_id: "c1",
+            master_image: "data:image/jpeg;base64,m",
+            tile_image: "data:image/png;base64,t",
+            tile_x: 10,
+            tile_y: 80,
+            tile_width: 60,
+            tile_height: 60,
+            image_width: 300,
+            image_height: 220,
+          },
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        json: async () => ({ code: 0, message: "ok", data: { captcha_token: "tok" } }),
+      } as Response)
+      .mockResolvedValueOnce({
+        json: async () => ({
+          code: 409,
+          error_code: "AUTH_EMAIL_TAKEN",
+          message: "该邮箱已被注册",
+          data: null,
+        }),
+      } as Response);
+
+    render(<RegisterView onSwitchToLogin={mockSwitch} onSuccess={mockSuccess} />);
+    await user.type(screen.getByPlaceholderText("邮箱地址"), "taken@example.com");
+    await user.click(screen.getByRole("button", { name: "获取验证码" }));
+
+    const track = await screen.findByTestId("captcha-track");
+    Object.defineProperty(track, "getBoundingClientRect", {
+      value: () => ({
+        left: 0,
+        top: 0,
+        right: 300,
+        bottom: 52,
+        width: 300,
+        height: 52,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      }),
+      configurable: true,
+    });
+    fireEvent.pointerDown(track, { clientX: 10, pointerId: 1 });
+    fireEvent.pointerMove(track, { clientX: 162 });
+    fireEvent.pointerUp(track, { clientX: 162, pointerId: 1 });
+
+    await waitFor(() => {
+      expect(screen.getByText("该邮箱已被注册")).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole("button", { name: "去登录" }));
+    expect(mockSwitch).toHaveBeenCalledOnce();
+  });
 });
