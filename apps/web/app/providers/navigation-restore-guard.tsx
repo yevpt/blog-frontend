@@ -6,6 +6,7 @@ import { create } from "zustand";
 import { useCommentModal } from "@/store/use-comment-modal";
 import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 import { useFriendLinksPausedStore } from "@/store/use-friend-links-paused-store";
+import { useModalCommentEditorStore } from "@/store/use-modal-comment-editor-store";
 
 interface RestoreSlotStore {
   pathname: string | null;
@@ -22,14 +23,16 @@ function discardStaleState() {
   useCommentModal.getState().close();
   useInlineEditorStore.getState().discardAll();
   useFriendLinksPausedStore.getState().reset();
+  useModalCommentEditorStore.getState().discardAll();
 }
 
-/** 当前是否有值得跨路由保留的状态（弹窗可见 / 有草稿 / 友邻展开） */
+/** 当前是否有值得跨路由保留的状态（弹窗可见 / 有草稿 / 友邻展开 / 弹窗内回复编辑草稿） */
 function hasStateToProtect() {
   return (
     useCommentModal.getState().isVisible ||
     Object.keys(useInlineEditorStore.getState().editors).length > 0 ||
-    useFriendLinksPausedStore.getState().open
+    useFriendLinksPausedStore.getState().open ||
+    Object.keys(useModalCommentEditorStore.getState().entries).length > 0
   );
 }
 

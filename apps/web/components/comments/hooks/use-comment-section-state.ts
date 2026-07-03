@@ -5,6 +5,7 @@ import type { CommentReplyResp } from "@repo/api";
 import { useSession } from "@/app/providers/session-provider";
 import { enrichCommentAuthor, enrichReplyFromAuthor } from "@/lib/enrich-ugc-author";
 import { useLoginModal } from "@/store/use-login-modal";
+import { useModalCommentEditorStore } from "@/store/use-modal-comment-editor-store";
 import { useCommentList } from "@/hooks/use-comment-list";
 import { useCommentSubmit } from "@/hooks/use-comment-submit";
 import { useCommentLike } from "@/hooks/use-comment-like";
@@ -61,9 +62,22 @@ export function useCommentSectionState({
   const { toggleCommentLike } = useCommentLike(targetType);
   const { deleteComment, deleteReply } = useCommentDelete(targetType);
 
-  const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
-  const [editTarget, setEditTarget] = useState<EditTargetValue | null>(null);
-  const [content, setContent] = useState("");
+  // 跨路由导航保留：回复/编辑目标 + 已输入内容存在全局 store 里，key 按弹窗目标区分，
+  // 不用组件内 useState——否则弹窗因导航被隐藏又恢复时（GlobalCommentModal 整体卸载重挂载）会丢失。
+  const editorKey = `${targetType}:${targetId}`;
+  const replyTarget = useModalCommentEditorStore((s) => s.entries[editorKey]?.replyTarget ?? null);
+  const editTarget = useModalCommentEditorStore((s) => s.entries[editorKey]?.editTarget ?? null);
+  const content = useModalCommentEditorStore((s) => s.entries[editorKey]?.content ?? "");
+  const {
+    startReply: startReplyEditor,
+    startEdit: startEditEditor,
+    setContent: setEditorContent,
+    reset: resetEditor,
+  } = useModalCommentEditorStore();
+  const setContent = useCallback(
+    (value: string) => setEditorContent(editorKey, value),
+    [setEditorContent, editorKey],
+  );
   const [pendingReplies, setPendingReplies] = useState<Record<number, CommentReplyResp | null>>({});
   // 编辑回复成功后存储按 commentId 索引的最新回复，父组件把它传给 CommentReplies.editedReply 触发原位替换。
   const [editedReplies, setEditedReplies] = useState<Record<number, CommentReplyResp | null>>({});
@@ -77,43 +91,35 @@ export function useCommentSectionState({
         openLoginModal();
         return;
       }
-      setReplyTarget(target);
-      setEditTarget(null);
-      setContent("");
+      startReplyEditor(editorKey, target);
       onScrollToEditor?.();
     },
-    [onScrollToEditor, openLoginModal, userId],
+    [onScrollToEditor, openLoginModal, userId, startReplyEditor, editorKey],
   );
 
   const handleCancelReply = useCallback(() => {
-    setReplyTarget(null);
-    setContent("");
-  }, []);
+    resetEditor(editorKey);
+  }, [resetEditor, editorKey]);
 
   const handleEditComment = useCallback(
     (target: CommentEditTarget) => {
-      setReplyTarget(null);
-      setEditTarget(target);
-      setContent(target.initialContent);
+      startEditEditor(editorKey, target);
       onScrollToEditor?.();
     },
-    [onScrollToEditor],
+    [onScrollToEditor, startEditEditor, editorKey],
   );
 
   const handleEditReply = useCallback(
     (target: ReplyEditTarget) => {
-      setReplyTarget(null);
-      setEditTarget(target);
-      setContent(target.initialContent);
+      startEditEditor(editorKey, target);
       onScrollToEditor?.();
     },
-    [onScrollToEditor],
+    [onScrollToEditor, startEditEditor, editorKey],
   );
 
   const handleCancelEdit = useCallback(() => {
-    setEditTarget(null);
-    setContent("");
-  }, []);
+    resetEditor(editorKey);
+  }, [resetEditor, editorKey]);
 
   const handleSubmit = useCallback(async () => {
     const currentContent = contentRef.current;
@@ -126,8 +132,7 @@ export function useCommentSectionState({
         const updated = await editComment(editTarget.id, currentContent);
         if (updated) {
           updateComment(enrichCommentAuthor(updated, userId, profile));
-          setEditTarget(null);
-          setContent("");
+          resetEditor(editorKey);
           onScrollToComment?.(editTarget.id);
         }
         return;
@@ -138,8 +143,7 @@ export function useCommentSectionState({
           ...current,
           [editTarget.commentId]: enrichReplyFromAuthor(updated, userId, profile),
         }));
-        setEditTarget(null);
-        setContent("");
+        resetEditor(editorKey);
         onScrollToComment?.(editTarget.commentId);
       }
       return;
@@ -157,8 +161,7 @@ export function useCommentSectionState({
           ...current,
           [replyTarget.commentId]: enrichReplyFromAuthor(reply, userId, profile),
         }));
-        setReplyTarget(null);
-        setContent("");
+        resetEditor(editorKey);
         onScrollToComment?.(replyTarget.commentId);
       }
       return;
@@ -167,7 +170,7 @@ export function useCommentSectionState({
     const comment = await submitComment(currentContent);
     if (comment) {
       addComment(enrichCommentAuthor(comment, userId, profile));
-      setContent("");
+      resetEditor(editorKey);
       onCommentAdded?.();
       onScrollToListTop?.();
     }
@@ -186,6 +189,8 @@ export function useCommentSectionState({
     profile,
     updateComment,
     userId,
+    resetEditor,
+    editorKey,
   ]);
 
   const handleCommentLike = useCallback(
@@ -224,9 +229,12 @@ export function useCommentSectionState({
     [decrementReplyCount, deleteReply],
   );
 
-  const handleChange = useCallback((value: string) => {
-    setContent(value);
-  }, []);
+  const handleChange = useCallback(
+    (value: string) => {
+      setContent(value);
+    },
+    [setContent],
+  );
 
   // 内联编辑器专用：不经过 replyTarget/editTarget，直接提交并处理副作用，返回是否成功。
   const handleReplySubmit = useCallback(

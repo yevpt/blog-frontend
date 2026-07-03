@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 import { useCommentModal } from "@/store/use-comment-modal";
 import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 import { useFriendLinksPausedStore } from "@/store/use-friend-links-paused-store";
+import { useModalCommentEditorStore } from "@/store/use-modal-comment-editor-store";
 import { NavigationRestoreGuard, useNavigationRestoreSlot } from "./navigation-restore-guard";
 
 const mockPathname = vi.hoisted(() => ({ value: "/" }));
@@ -43,6 +44,7 @@ describe("NavigationRestoreGuard", () => {
     });
     useInlineEditorStore.setState({ editors: {} });
     useFriendLinksPausedStore.setState({ open: false });
+    useModalCommentEditorStore.setState({ entries: {} });
     useNavigationRestoreSlot.setState({ pathname: null });
     mockPathname.value = "/";
     window.history.pushState({}, "", "/");
@@ -137,5 +139,41 @@ describe("NavigationRestoreGuard", () => {
       isOpen: true,
       content: "写了一半",
     });
+  });
+
+  it("首页评论弹窗内的回复/编辑草稿也能让前进导航占用槽位并跨路由保留", () => {
+    const { rerender } = render(<NavigationRestoreGuard />);
+
+    pushTo(rerender, "/"); // 无关的第一次前进导航，不应占用槽位
+    useModalCommentEditorStore
+      .getState()
+      .startReply("article:1", { commentId: 1, toUsername: "Alice" });
+    useModalCommentEditorStore.getState().setContent("article:1", "写了一半");
+
+    pushTo(rerender, "/users/1");
+    expect(useModalCommentEditorStore.getState().entries["article:1"]).toEqual({
+      replyTarget: { commentId: 1, toUsername: "Alice" },
+      editTarget: null,
+      content: "写了一半",
+    });
+
+    popTo(rerender, "/");
+    expect(useModalCommentEditorStore.getState().entries["article:1"]).toEqual({
+      replyTarget: { commentId: 1, toUsername: "Alice" },
+      editTarget: null,
+      content: "写了一半",
+    });
+  });
+
+  it("深度跳转时同时清空评论弹窗内的回复/编辑草稿", () => {
+    useModalCommentEditorStore
+      .getState()
+      .startReply("article:1", { commentId: 1, toUsername: "Alice" });
+    const { rerender } = render(<NavigationRestoreGuard />);
+
+    pushTo(rerender, "/users/456");
+    pushTo(rerender, "/moments");
+
+    expect(useModalCommentEditorStore.getState().entries).toEqual({});
   });
 });

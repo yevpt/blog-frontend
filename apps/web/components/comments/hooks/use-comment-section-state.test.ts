@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import type { CommentItemResp, CommentReplyResp, UserDetailResp } from "@repo/api";
 import type { ReplyTarget } from "@/components/comments/parts/comment-item";
+import { useModalCommentEditorStore } from "@/store/use-modal-comment-editor-store";
 import { useCommentSectionState } from "./use-comment-section-state";
 
 const mockOpenLoginModal = vi.fn();
@@ -116,6 +117,7 @@ function makeReply(id: number): CommentReplyResp {
 describe("useCommentSectionState", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useModalCommentEditorStore.setState({ entries: {} });
     mockSessionUserId = 1;
     mockSessionProfile = {
       id: 1,
