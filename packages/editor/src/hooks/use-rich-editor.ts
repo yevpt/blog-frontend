@@ -43,6 +43,7 @@ import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
 import { ImageExtension } from "../extensions/image";
+import { ImageGalleryExtension } from "../extensions/image-gallery";
 import { UnderlineExtension } from "../extensions/underline";
 import { createMentionExtension } from "../extensions/mention";
 import { PlaceholderExtension } from "../extensions/placeholder";
@@ -61,6 +62,7 @@ interface UseRichEditorOptions {
   disabled?: boolean;
   maxLength?: number;
   enableBlockquote?: boolean;
+  enableImageGallery?: boolean;
   imageOptimizationPreset?: CdnImagePreset;
 }
 
@@ -72,6 +74,7 @@ export function useRichEditor({
   disabled = false,
   maxLength,
   enableBlockquote = false,
+  enableImageGallery = false,
   imageOptimizationPreset = "off",
 }: UseRichEditorOptions) {
   // 通过 ref 持有最新 onChange，避免 stale closure 问题
@@ -130,6 +133,9 @@ export function useRichEditor({
         // 改为块级后，图片独占一行，由 StarterKit 内置的 Gapcursor 处理光标定位，问题消失。
         ImageExtension.configure({ imageOptimizationPreset }),
 
+        // ⑤.5 相邻图片自动成组轮播（仅文章编辑器启用）
+        ...(enableImageGallery ? [ImageGalleryExtension] : []),
+
         // ⑥ 修复空段落与图片相邻时 Backspace/Delete 无法删除空段落的问题（见该扩展内注释）
         AtomParagraphMergeExtension,
 
@@ -164,6 +170,6 @@ export function useRichEditor({
     },
     // deps 数组：mentionsJson 是序列化后的字符串，仅在候选列表实际变化时才重建 editor
     // 直接用 mentionSuggestions 数组引用会导致每次渲染创建新引用 → 无限循环
-    [mentionsJson, maxLength, enableBlockquote, imageOptimizationPreset],
+    [mentionsJson, maxLength, enableBlockquote, enableImageGallery, imageOptimizationPreset],
   );
 }

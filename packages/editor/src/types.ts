@@ -76,6 +76,12 @@ export interface RichEditorProps extends InsertHandlers {
    */
   value: string;
 
+  /**
+   * 启用相邻图片自动成组为轮播（imageGallery 节点）。
+   * 仅文章编辑场景开启；评论场景保持普通图片行为。
+   */
+  enableImageGallery?: boolean;
+
   /** 每次编辑器内容变化时触发，参数为当前 Markdown 字符串 */
   onChange: (markdown: string) => void;
 

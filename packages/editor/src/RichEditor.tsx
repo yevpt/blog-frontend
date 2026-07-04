@@ -42,6 +42,7 @@ import { useRichEditor } from "./hooks/use-rich-editor";
 import { Toolbar } from "./toolbar/Toolbar";
 import type { RichEditorProps } from "./types";
 import { resolveDefaultImageOptimizationPreset } from "./image-optimization-context";
+import type { ImageGalleryStorage } from "./extensions/image-gallery";
 
 /** plain 画布水平留白：标题/正文/页脚共用 */
 const PLAIN_SURFACE_INSET_X = "px-5 sm:px-10";
@@ -81,6 +82,7 @@ export function RichEditor({
   toolbarPlacement = "bottom",
   toolbarTrailing,
   enableBlockquote = false,
+  enableImageGallery = false,
   imageOptimizationPreset,
 }: RichEditorProps) {
   const resolvedImagePreset = resolveDefaultImageOptimizationPreset(
@@ -95,6 +97,7 @@ export function RichEditor({
     disabled,
     maxLength,
     enableBlockquote,
+    enableImageGallery,
     imageOptimizationPreset: resolvedImagePreset,
   });
 
@@ -136,6 +139,17 @@ export function RichEditor({
     // 避开 useEffect 内 flushSync（Tiptap NodeView 挂载会同步渲染 React）
     queueMicrotask(syncContent);
   }, [value, editor]);
+
+  // gallery NodeView 的「添加图片」按钮借用工具栏的选图流程。
+  useEffect(() => {
+    if (!editor || !enableImageGallery) return;
+    const storage = (editor.storage as { imageGallery?: ImageGalleryStorage }).imageGallery;
+    if (!storage) return;
+    storage.requestImageInsert = onInsertImage ?? null;
+    return () => {
+      storage.requestImageInsert = null;
+    };
+  }, [editor, enableImageGallery, onInsertImage]);
 
   const isPlain = variant === "plain";
   const toolbarOnTop = toolbarPlacement === "top";
