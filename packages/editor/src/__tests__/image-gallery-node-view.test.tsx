@@ -1,11 +1,48 @@
 // @vitest-environment jsdom
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { RichEditor } from "../RichEditor";
 
 const TWO_IMAGES = "![一](https://e.com/1.png)\n\n![二](https://e.com/2.png)";
 
 describe("ImageGalleryNodeView", () => {
+  it("翻页驱动 Tiptap 自建 contentDOM 滑道（图片横向单屏，与前台一致）", async () => {
+    render(<RichEditor value={TWO_IMAGES} onChange={vi.fn()} enableImageGallery />);
+    await waitFor(() => {
+      expect(screen.getByLabelText("下一张")).toBeTruthy();
+    });
+
+    // Tiptap React 对非叶子节点会在 NodeViewContent 内自建真正的 contentDOM，
+    // 图片子节点挂在它里面——滑道（flex/scroll-snap/滚动）必须作用于这一层
+    const track = document.querySelector<HTMLElement>("[data-node-view-content-react]");
+    if (!track) throw new Error("[data-node-view-content-react] 不存在");
+    expect(track.children.length).toBe(2);
+
+    // 补齐 jsdom 缺失的布局/滚动能力
+    Object.defineProperty(track, "clientWidth", { value: 600, configurable: true });
+    let scrollLeft = 0;
+    Object.defineProperty(track, "scrollLeft", {
+      configurable: true,
+      get: () => scrollLeft,
+      set: (value: number) => {
+        scrollLeft = value;
+      },
+    });
+    Object.defineProperty(track, "scrollTo", {
+      configurable: true,
+      value: (options: ScrollToOptions) => {
+        scrollLeft = options.left ?? 0;
+        track.dispatchEvent(new Event("scroll"));
+      },
+    });
+
+    await userEvent.click(screen.getByLabelText("下一张"));
+    await waitFor(() => {
+      expect(screen.getByText("2/2")).toBeTruthy();
+    });
+  });
+
   it("启用 enableImageGallery 时相邻图片渲染为轮播滑道与 chrome", async () => {
     render(<RichEditor value={TWO_IMAGES} onChange={vi.fn()} enableImageGallery />);
     await waitFor(() => {

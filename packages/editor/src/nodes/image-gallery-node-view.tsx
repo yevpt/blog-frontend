@@ -19,18 +19,25 @@ export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeVie
   const [index, setIndex] = useState(0);
   const count = node.childCount;
 
+  // Tiptap React 对非叶子节点会在 NodeViewContent 内自建真正的 contentDOM
+  // （[data-node-view-content-react]），图片子节点挂在它里面——滚动/翻页必须作用于这一层
   const getTrack = () =>
-    wrapperRef.current?.querySelector<HTMLElement>("[data-node-view-content]") ?? null;
+    wrapperRef.current?.querySelector<HTMLElement>("[data-node-view-content-react]") ?? null;
 
   useEffect(() => {
-    const track = getTrack();
-    if (!track) return;
-    const handleScroll = () => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    // Tiptap 在 React 提交之后才把自建 contentDOM 挂进 NodeViewContent，
+    // 此刻直接对滑道 addEventListener 会因元素尚不存在而失败；
+    // scroll 不冒泡但有捕获阶段，挂在稳定存在的 wrapper 上捕获，滑道现取
+    const handleScroll = (event: Event) => {
+      const track = getTrack();
+      if (!track || event.target !== track) return;
       const width = track.clientWidth || 1;
       setIndex(Math.min(count - 1, Math.max(0, Math.round(track.scrollLeft / width))));
     };
-    track.addEventListener("scroll", handleScroll, { passive: true });
-    return () => track.removeEventListener("scroll", handleScroll);
+    wrapper.addEventListener("scroll", handleScroll, { capture: true, passive: true });
+    return () => wrapper.removeEventListener("scroll", handleScroll, { capture: true });
   }, [count]);
 
   useEffect(() => {
@@ -96,9 +103,23 @@ export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeVie
         <TypedNodeViewContent
           as="div"
           className={cn(
-            "flex snap-x snap-mandatory overflow-x-auto rounded-2xl",
-            "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-            "[&>*]:w-full [&>*]:shrink-0 [&>*]:snap-center [&>*]:snap-always",
+            "overflow-hidden rounded-2xl",
+            // 滑道样式必须落在 Tiptap 自建的 contentDOM 上，落在本元素只会包住一个
+            // 中间层 div，图片仍是纵向 block 堆叠（详见 getTrack 处注释）
+            "[&>[data-node-view-content-react]]:flex",
+            "[&>[data-node-view-content-react]]:snap-x",
+            "[&>[data-node-view-content-react]]:snap-mandatory",
+            "[&>[data-node-view-content-react]]:overflow-x-auto",
+            "[&>[data-node-view-content-react]]:[scrollbar-width:none]",
+            "[&>[data-node-view-content-react]::-webkit-scrollbar]:hidden",
+            // 每个 slide（图片 NodeView 根元素）占满一屏、纵向居中
+            "[&>[data-node-view-content-react]>*]:w-full",
+            "[&>[data-node-view-content-react]>*]:shrink-0",
+            "[&>[data-node-view-content-react]>*]:snap-center",
+            "[&>[data-node-view-content-react]>*]:snap-always",
+            "[&>[data-node-view-content-react]>*]:self-center",
+            // 与前台 .md-gallery-slide img 一致：铺满宽度、限高、等比缩放
+            "[&_img]:max-h-[70vh] [&_img]:w-full [&_img]:object-contain",
           )}
         />
         <div contentEditable={false}>
