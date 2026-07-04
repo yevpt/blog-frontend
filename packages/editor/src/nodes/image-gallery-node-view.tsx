@@ -30,21 +30,31 @@ export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeVie
   const indexRef = useRef(index);
   indexRef.current = index;
 
-  // track 的高度由「最高的那张 slide」撑起（各 slide 保留自身原始宽高比、不做
-  // object-contain 裁切/留白）；宽高比差异大时，当前可见的矮图远矮于 track。
-  // chrome（翻页/指示点/计数/添加图片）若直接定位在 track 上就会飘到矮图外面，
-  // 因此单独用一层跟随「当前可见 slide 的真实渲染框」的定位层承载它们。
+  // track 的高度由「最高的那张 slide」撑起；宽高比差异大时，当前可见的矮图
+  // 远矮于 track。chrome（翻页/指示点/计数/添加图片）若直接定位在 track 上
+  // 就会飘到矮图外面，因此单独用一层跟随「当前可见 slide 的真实渲染框」的
+  // 定位层承载它们。
+  //
+  // 注意：高度必须以 <img> 自身的 getBoundingClientRect 为准，不能用 slide
+  // wrapper（ProseMirror 生成的 react-renderer 外层 div）的 offsetHeight——
+  // 图片有 max-h-[70vh] 限制时，wrapper 在 flex 布局里参与 sizing 计算用的
+  // 是被裁剪前的理论高度，比图片实际裁剪后的视觉高度大一截（已用真实浏览器
+  // 实测确认，二者可以相差几十像素），拿 wrapper 高度算出来的位置会飘出
+  // 图片视觉边界。
   const syncChromeFrame = () => {
     const track = getTrack();
     const chrome = chromeRef.current;
     if (!track || !chrome) return;
     const slide = track.children[indexRef.current] as HTMLElement | undefined;
     if (!slide) return;
+    const content = slide.querySelector("img") ?? slide;
+    const trackHeight = track.getBoundingClientRect().height;
+    const contentHeight = content.getBoundingClientRect().height;
     // slide 在 track 内是 self-center（居中，不拉伸），顶部相对 track 的偏移
     // 就是这段留白的一半
-    const top = Math.max(0, (track.clientHeight - slide.offsetHeight) / 2);
+    const top = Math.max(0, (trackHeight - contentHeight) / 2);
     chrome.style.top = `${top}px`;
-    chrome.style.height = `${slide.offsetHeight}px`;
+    chrome.style.height = `${contentHeight}px`;
   };
 
   useEffect(() => {
@@ -86,9 +96,17 @@ export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeVie
         observed.add(track);
       }
       for (const child of Array.from(track.children)) {
+        // img 才是视觉尺寸的真实来源（见 syncChromeFrame 顶部注释）；
+        // wrapper 自身也一并 observe，覆盖「wrapper 尺寸变化但 img 尺寸不变」
+        // 之类的边界情况（如样式加载完成引起的布局抖动）
         if (!observed.has(child)) {
           resizeObserver.observe(child);
           observed.add(child);
+        }
+        const img = child.querySelector("img");
+        if (img && !observed.has(img)) {
+          resizeObserver.observe(img);
+          observed.add(img);
         }
       }
     };

@@ -8,6 +8,15 @@ import type { ImageInsertHandlers } from "../types";
 const ONE_IMAGE = "![一](https://e.com/1.png)";
 const TWO_IMAGES = "![一](https://e.com/1.png)\n\n![二](https://e.com/2.png)";
 
+/**
+ * chrome 层的高度计算以 <img> 自身的 getBoundingClientRect 为准（wrapper 的
+ * offsetHeight 在 max-height 生效时会比图片真实视觉高度大一截，已用真实浏览器
+ * 实测确认），因此测试也要 stub 在 img 元素、而不是 slide wrapper 上。
+ */
+function stubRectHeight(el: Element, height: number) {
+  el.getBoundingClientRect = () => ({ height }) as DOMRect;
+}
+
 describe("ImageGalleryNodeView", () => {
   it("翻页驱动 Tiptap 自建 contentDOM 滑道（图片横向单屏，与前台一致）", async () => {
     render(<RichEditor value={TWO_IMAGES} onChange={vi.fn()} enableImageGallery />);
@@ -140,12 +149,15 @@ describe("ImageGalleryNodeView", () => {
       if (!track) throw new Error("[data-node-view-content-react] 不存在");
       const [slideA, slideB] = Array.from(track.children) as HTMLElement[];
       if (!slideA || !slideB) throw new Error("slide 不足两个");
+      const imgA = slideA.querySelector("img");
+      const imgB = slideB.querySelector("img");
+      if (!imgA || !imgB) throw new Error("slide 内没有 img");
 
       // 模拟两张宽高比差异很大的图：track（由最高的 slideB 撑起）高 400，
-      // 当前可见的 slideA 只有 160 —— 这正是复现问题的场景
-      Object.defineProperty(track, "clientHeight", { value: 400, configurable: true });
-      Object.defineProperty(slideA, "offsetHeight", { value: 160, configurable: true });
-      Object.defineProperty(slideB, "offsetHeight", { value: 400, configurable: true });
+      // 当前可见的 slideA 图片只有 160 —— 这正是复现问题的场景
+      stubRectHeight(track, 400);
+      stubRectHeight(imgA, 160);
+      stubRectHeight(imgB, 400);
 
       // 触发最近注册的 ResizeObserver 回调，模拟图片尺寸就绪/窗口 resize
       act(() => {
@@ -173,10 +185,13 @@ describe("ImageGalleryNodeView", () => {
     if (!track) throw new Error("[data-node-view-content-react] 不存在");
     const [slideA, slideB] = Array.from(track.children) as HTMLElement[];
     if (!slideA || !slideB) throw new Error("slide 不足两个");
+    const imgA = slideA.querySelector("img");
+    const imgB = slideB.querySelector("img");
+    if (!imgA || !imgB) throw new Error("slide 内没有 img");
 
-    Object.defineProperty(track, "clientHeight", { value: 400, configurable: true });
-    Object.defineProperty(slideA, "offsetHeight", { value: 160, configurable: true });
-    Object.defineProperty(slideB, "offsetHeight", { value: 400, configurable: true });
+    stubRectHeight(track, 400);
+    stubRectHeight(imgA, 160);
+    stubRectHeight(imgB, 400);
 
     // 补齐 jsdom 缺失的滚动能力：scrollTo 生效并派发 scroll 事件，
     // 使点击「下一张」真的驱动 index 从 0 变为 1（同 markdown 包的测试手法）
