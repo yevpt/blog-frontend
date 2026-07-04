@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ComponentType } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ComponentType } from "react";
 import type { NodeViewProps } from "@tiptap/core";
 import { NodeViewContent, NodeViewWrapper } from "@tiptap/react";
 import { SvgIcon } from "@repo/icons";
@@ -15,6 +15,7 @@ const NAV_BUTTON_CLASSES =
 /** imageGallery 的 WYSIWYG NodeView：contentDOM 即横向 scroll-snap 滑道。 */
 export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeViewProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const chromeRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const count = node.childCount;
 
@@ -22,6 +23,23 @@ export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeVie
   // （[data-node-view-content-react]），图片子节点挂在它里面——滚动/翻页必须作用于这一层
   const getTrack = () =>
     wrapperRef.current?.querySelector<HTMLElement>("[data-node-view-content-react]") ?? null;
+
+  // track 的高度由「最高的那张 slide」撑起（各 slide 保留自身原始宽高比、不做
+  // object-contain 裁切/留白）；宽高比差异大时，当前可见的矮图远矮于 track。
+  // chrome（翻页/指示点/计数/添加图片）若直接定位在 track 上就会飘到矮图外面，
+  // 因此单独用一层跟随「当前可见 slide 的真实渲染框」的定位层承载它们。
+  const syncChromeFrame = () => {
+    const track = getTrack();
+    const chrome = chromeRef.current;
+    if (!track || !chrome) return;
+    const slide = track.children[index] as HTMLElement | undefined;
+    if (!slide) return;
+    // slide 在 track 内是 self-center（居中，不拉伸），顶部相对 track 的偏移
+    // 就是这段留白的一半
+    const top = Math.max(0, (track.clientHeight - slide.offsetHeight) / 2);
+    chrome.style.top = `${top}px`;
+    chrome.style.height = `${slide.offsetHeight}px`;
+  };
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -38,6 +56,44 @@ export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeVie
     wrapper.addEventListener("scroll", handleScroll, { capture: true, passive: true });
     return () => wrapper.removeEventListener("scroll", handleScroll, { capture: true });
   }, [count]);
+
+  // 当前 slide 变化（翻页）或其自身尺寸变化（图片加载完成、窗口 resize）时
+  // 重新贴合 chrome 层；同时 observe track 本身，因为其他 slide 加载完成
+  // 也可能改变 track 的最大高度，从而改变当前 slide 的居中留白。
+  // 用 useLayoutEffect 而非 useEffect：在浏览器绘制前完成计算，避免从
+  // 兜底的 top-0/h-full 闪一下再跳到真实尺寸
+  useLayoutEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+
+    let resizeObserver: ResizeObserver | null = null;
+
+    const trySync = () => {
+      const track = getTrack();
+      const slide = track?.children[index] as HTMLElement | undefined;
+      if (!track || !slide) return;
+      syncChromeFrame();
+      resizeObserver?.disconnect();
+      if (typeof ResizeObserver === "undefined") return;
+      resizeObserver = new ResizeObserver(syncChromeFrame);
+      resizeObserver.observe(track);
+      resizeObserver.observe(slide);
+    };
+
+    trySync();
+
+    // 各 slide 内的图片是 ProseMirror 管理的独立 NodeView（非本组件的 React
+    // 子树），挂进 track 的时机不保证早于本 effect；用 MutationObserver 兜底
+    // 捕捉「子节点刚挂上/替换」，重试贴合与重新订阅 ResizeObserver
+    const mutationObserver = new MutationObserver(trySync);
+    mutationObserver.observe(wrapper, { childList: true, subtree: true });
+
+    return () => {
+      mutationObserver.disconnect();
+      resizeObserver?.disconnect();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, count]);
 
   useEffect(() => {
     if (index > count - 1) setIndex(Math.max(0, count - 1));
@@ -101,7 +157,13 @@ export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeVie
             "[&_img]:max-h-[70vh] [&_img]:w-full [&_img]:object-contain",
           )}
         />
-        <div contentEditable={false}>
+        {/* top/height 由 syncChromeFrame 写入内联样式，跟随当前 slide 的真实渲染框；
+            top-0/h-full 仅作首次绘制前的兜底，effect 会在绘制前用真实尺寸覆盖 */}
+        <div
+          ref={chromeRef}
+          contentEditable={false}
+          className="absolute inset-x-0 top-0 z-10 h-full"
+        >
           <Button
             type="button"
             aria-label="上一张"

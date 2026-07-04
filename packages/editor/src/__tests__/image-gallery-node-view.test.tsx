@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { RichEditor } from "../RichEditor";
@@ -116,6 +116,51 @@ describe("ImageGalleryNodeView", () => {
       expect(screen.getByLabelText("下一张")).toBeTruthy();
     });
     expect(screen.getAllByLabelText("添加图片")).toHaveLength(1);
+  });
+
+  it("chrome 层贴合当前 slide 的真实渲染框，而非 track 的最大高度（回归：宽高比不同的图会让按钮飘出）", async () => {
+    const resizeCallbacks: ResizeObserverCallback[] = [];
+    class FakeResizeObserver {
+      constructor(callback: ResizeObserverCallback) {
+        resizeCallbacks.push(callback);
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    vi.stubGlobal("ResizeObserver", FakeResizeObserver);
+
+    try {
+      render(<RichEditor value={TWO_IMAGES} onChange={vi.fn()} enableImageGallery />);
+      await waitFor(() => {
+        expect(screen.getByLabelText("下一张")).toBeTruthy();
+      });
+
+      const track = document.querySelector<HTMLElement>("[data-node-view-content-react]");
+      if (!track) throw new Error("[data-node-view-content-react] 不存在");
+      const [slideA, slideB] = Array.from(track.children) as HTMLElement[];
+      if (!slideA || !slideB) throw new Error("slide 不足两个");
+
+      // 模拟两张宽高比差异很大的图：track（由最高的 slideB 撑起）高 400，
+      // 当前可见的 slideA 只有 160 —— 这正是复现问题的场景
+      Object.defineProperty(track, "clientHeight", { value: 400, configurable: true });
+      Object.defineProperty(slideA, "offsetHeight", { value: 160, configurable: true });
+      Object.defineProperty(slideB, "offsetHeight", { value: 400, configurable: true });
+
+      // 触发最近注册的 ResizeObserver 回调，模拟图片尺寸就绪/窗口 resize
+      act(() => {
+        resizeCallbacks[resizeCallbacks.length - 1]?.([], {} as ResizeObserver);
+      });
+
+      // chrome 容器（翻页/指示点/计数/添加图片的公共父级）应跟随 slideA 的框：
+      // 居中偏移 top = (400-160)/2 = 120，height = 160
+      const chrome = screen.getByLabelText("上一张").parentElement;
+      if (!chrome) throw new Error("chrome 容器不存在");
+      expect(chrome.style.height).toBe("160px");
+      expect(chrome.style.top).toBe("120px");
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("顶层单图仍保留 my-6（非 gallery 场景的正常间距不受影响）", async () => {
