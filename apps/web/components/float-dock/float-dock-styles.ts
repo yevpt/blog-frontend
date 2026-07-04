@@ -65,3 +65,15 @@ export const FLOAT_SCROLL_TOP_MIN_UPWARD_PX = 80;
 
 /** Dock 圆钮隐藏态：保留占位，避免栈内其它按钮位移 */
 export const floatDockOrbHiddenClass = "pointer-events-none scale-90 opacity-0";
+
+/**
+ * 单次 scroll 事件向下位移超过此值才视为「快速下滑」并隐藏回顶钮；
+ * 低于此值（缓慢拖动、惯性尾端、误触）时保持可见。
+ */
+export const FLOAT_SCROLL_TOP_FAST_DOWN_PX = 40;
+
+/**
+ * 距页面底部不足一屏时强制显示回顶钮，无论滚动方向。
+ * 此处用 1 倍视口高度作为「底部区域」判定。
+ */
+export const FLOAT_SCROLL_TOP_NEAR_BOTTOM_RATIO = 1;

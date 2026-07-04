@@ -15,7 +15,10 @@ const EXTERNAL_LINK_PROPS = {
 
 function FooterSeparator({ className }: { className?: string }) {
   return (
-    <span className={cn("text-muted-foreground/25 select-none", className)} aria-hidden>
+    <span
+      className={cn("text-muted-foreground/25 select-none hidden sm:inline", className)}
+      aria-hidden
+    >
       ·
     </span>
   );
@@ -65,7 +68,7 @@ function PoweredByStack() {
 
 function ComplianceLinks() {
   return (
-    <div className="flex flex-row flex-wrap justify-center gap-x-2 gap-y-1">
+    <div className="flex flex-col sm:flex-row sm:flex-wrap justify-center items-center gap-x-2 gap-y-2 sm:gap-y-1">
       <FooterAnchor
         href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=37011202000953"
         external
@@ -86,7 +89,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-[1120px] px-5 py-7">
         <nav
           aria-label="站点信息"
-          className="flex flex-row flex-wrap justify-center gap-x-2.5 gap-y-1 text-center text-xs tracking-wide"
+          className="flex flex-col sm:flex-row sm:flex-wrap justify-center items-center gap-x-2.5 gap-y-2 sm:gap-y-1 text-center text-xs tracking-wide"
         >
           <FooterAnchor href="https://www.yevpt.com">© 2026 yevpt.com</FooterAnchor>
 
