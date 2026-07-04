@@ -118,6 +118,26 @@ describe("ImageGalleryNodeView", () => {
     expect(screen.getAllByLabelText("添加图片")).toHaveLength(1);
   });
 
+  it("添加图片按钮 hover/active 态文字仍是白色（回归：ghost 变体会把文字盖成不可见）", async () => {
+    render(
+      <RichEditor
+        value={ONE_IMAGE}
+        onChange={vi.fn()}
+        enableImageGallery
+        onInsertImage={vi.fn()}
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.getByLabelText("添加图片")).toBeTruthy();
+    });
+    const className = screen.getByLabelText("添加图片").className;
+    // ghost 变体自带 hover/active:text-accent-foreground（深色），twMerge 需要
+    // 被我们显式的 hover/active:text-white 覆盖，否则悬停时白字会消失在深色背景上
+    expect(className).not.toContain("text-accent-foreground");
+    expect(className).toContain("hover:text-white");
+    expect(className).toContain("active:text-white");
+  });
+
   it("注入 onInsertImage 后显示添加图片按钮", async () => {
     render(
       <RichEditor

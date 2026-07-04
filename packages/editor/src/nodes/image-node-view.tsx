@@ -277,7 +277,8 @@ export function ImageNodeView({
             aria-label="添加图片"
             className={cn(
               "h-auto rounded-full border-0 bg-black/45 px-2.5 py-1 text-xs text-white",
-              "opacity-0 transition-opacity hover:bg-black/60 group-hover:opacity-100 focus-visible:opacity-100",
+              // ghost 变体自带 hover/active:text-accent-foreground（深色），会把白字盖成不可见，需显式覆盖
+              "opacity-0 transition-opacity hover:bg-black/60 hover:text-white active:text-white group-hover:opacity-100 focus-visible:opacity-100",
             )}
             onPress={handleAddToGallery}
           >
