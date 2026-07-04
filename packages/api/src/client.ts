@@ -107,6 +107,10 @@ import type {
   NormalizeAvatarsReq,
   NormalizeAvatarsResp,
   ClearUserAvatarResp,
+  AdminUserListReq,
+  AdminUserPageResp,
+  AdminUserDetailResp,
+  AdminOperationLogPageResp,
 } from "./types/user";
 import type {
   FriendLinkAdminListReq,
@@ -854,6 +858,39 @@ export function createApiClient(config: ApiClientConfig) {
       /** 清除目标用户本站托管头像，需管理员登录 */
       clearUserAvatar: (userId: number) =>
         fetchAuthed<ClearUserAvatarResp>(`/admin/users/${userId}/avatar/clear`, { method: "POST" }),
+      /** 管理端分页查询用户，支持关键词/角色/状态筛选，需管理员登录 */
+      listAdmin: (req: AdminUserListReq = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        if (req.keyword) p.set("keyword", req.keyword);
+        if (req.role) p.set("role", req.role);
+        if (req.status) p.set("status", req.status);
+        const qs = p.toString();
+        return fetchAuthed<AdminUserPageResp>(`/admin/users${qs ? `?${qs}` : ""}`, {
+          method: "GET",
+        });
+      },
+      /** 管理端查询用户详情，需管理员登录 */
+      getAdminDetail: (userId: number) =>
+        fetchAuthed<AdminUserDetailResp>(`/admin/users/${userId}`, { method: "GET" }),
+      /** 禁用目标用户账号登录，需管理员登录 */
+      disableAccount: (userId: number) =>
+        fetchAuthed<void>(`/admin/users/${userId}/disable`, { method: "POST" }),
+      /** 启用目标用户账号登录，需管理员登录 */
+      enableAccount: (userId: number) =>
+        fetchAuthed<void>(`/admin/users/${userId}/enable`, { method: "POST" }),
+      /** 分页查询目标用户的管理员操作日志，需管理员登录 */
+      getOperationLogs: (userId: number, req: { page?: number; page_size?: number } = {}) => {
+        const p = new URLSearchParams();
+        if (req.page !== undefined) p.set("page", String(req.page));
+        if (req.page_size !== undefined) p.set("page_size", String(req.page_size));
+        const qs = p.toString();
+        return fetchAuthed<AdminOperationLogPageResp>(
+          `/admin/users/${userId}/operation-logs${qs ? `?${qs}` : ""}`,
+          { method: "GET" },
+        );
+      },
     },
     comments: {
       /** 后台分页查询文章与碎语评论（需管理员） */

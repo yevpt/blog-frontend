@@ -270,3 +270,77 @@ export interface ClearUserAvatarResp {
 export interface BatchPresenceResp {
   data: Record<string, { is_online: boolean; last_active_at?: number; last_login_at?: number }>;
 }
+
+/** GET /admin/users 管理端用户列表查询参数 */
+export interface AdminUserListReq {
+  page?: number;
+  page_size?: number;
+  keyword?: string;
+  role?: "ROLE_ADMIN" | "ROLE_VIP" | "ROLE_NORMAL";
+  status?: "active" | "disabled";
+}
+
+/** GET /admin/users 管理端用户列表项 */
+export interface AdminUserListItemResp {
+  id: number;
+  username: string;
+  nickname?: string;
+  email?: string;
+  avatar_url?: string;
+  mark?: string;
+  roles: string[];
+  status: number;
+  sanction_state: "active" | "muted" | "banned";
+  last_login_at?: string;
+  last_active_at?: string;
+  is_online: boolean;
+  created_at: string;
+}
+
+/** GET /admin/users 分页响应 */
+export interface AdminUserPageResp {
+  total: number;
+  pages: number;
+  page: number;
+  page_size: number;
+  list: AdminUserListItemResp[];
+}
+
+/** GET /admin/users/:id 管理端用户详情 */
+export interface AdminUserDetailResp {
+  id: number;
+  username: string;
+  nickname?: string;
+  email?: string;
+  email_verified: boolean;
+  phone?: string;
+  site?: string;
+  avatar_url?: string;
+  mark?: string;
+  status: number;
+  password_set: boolean;
+  roles: string[];
+  register_at: string;
+  last_login_at?: string;
+  last_active_at?: string;
+  is_online: boolean;
+  sanction_state: "active" | "muted" | "banned";
+}
+
+/** GET /admin/users/:id/operation-logs 单条操作日志 */
+export interface AdminOperationLogItemResp {
+  id: number;
+  operator_id: number;
+  action: string;
+  detail?: Record<string, unknown>;
+  created_at: string;
+}
+
+/** GET /admin/users/:id/operation-logs 分页响应 */
+export interface AdminOperationLogPageResp {
+  total: number;
+  pages: number;
+  page: number;
+  page_size: number;
+  list: AdminOperationLogItemResp[];
+}

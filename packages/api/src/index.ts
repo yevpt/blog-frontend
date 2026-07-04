@@ -212,6 +212,12 @@ export type {
   NormalizeAvatarsResp,
   ClearUserAvatarResp,
   BatchPresenceResp,
+  AdminUserListReq,
+  AdminUserListItemResp,
+  AdminUserPageResp,
+  AdminUserDetailResp,
+  AdminOperationLogItemResp,
+  AdminOperationLogPageResp,
 } from "./types/user";
 export type {
   FriendLinkItemResp,
