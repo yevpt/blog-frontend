@@ -115,4 +115,58 @@ describe("useEditorImageUpload", () => {
     expect(handlers.removeLoading).toHaveBeenCalled();
     expect(onError).toHaveBeenCalledWith("网络错误");
   });
+
+  it("多选文件：全部先插占位再依次上传替换", async () => {
+    const upload = vi
+      .fn()
+      .mockResolvedValueOnce("https://e.com/1.png")
+      .mockResolvedValueOnce("https://e.com/2.png");
+    const { result } = renderHook(() => useEditorImageUpload({ scene: "article", upload }));
+    act(() => result.current.handleInsertImageRequest(handlers));
+
+    const fileA = new File(["a"], "a.png", { type: "image/png" });
+    const fileB = new File(["b"], "b.png", { type: "image/png" });
+    await act(async () => {
+      await result.current.handleFileChange({
+        target: { files: [fileA, fileB], value: "" },
+      } as unknown as ChangeEvent<HTMLInputElement>);
+    });
+
+    expect(handlers.insertLoading).toHaveBeenCalledTimes(2);
+    expect(handlers.resolveLoading).toHaveBeenCalledTimes(2);
+    expect(upload).toHaveBeenCalledTimes(2);
+    expect(
+      (handlers.insertLoading as ReturnType<typeof vi.fn>).mock.invocationCallOrder[1],
+    ).toBeLessThan(
+      (handlers.resolveLoading as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0] ?? 0,
+    );
+  });
+
+  it("多选中单个文件上传失败：只移除该文件占位，其余正常", async () => {
+    const upload = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("boom"))
+      .mockResolvedValueOnce("https://e.com/2.png");
+    const onError = vi.fn();
+    const { result } = renderHook(() =>
+      useEditorImageUpload({ scene: "article", upload, onError }),
+    );
+    act(() => result.current.handleInsertImageRequest(handlers));
+
+    await act(async () => {
+      await result.current.handleFileChange({
+        target: {
+          files: [
+            new File(["a"], "a.png", { type: "image/png" }),
+            new File(["b"], "b.png", { type: "image/png" }),
+          ],
+          value: "",
+        },
+      } as unknown as ChangeEvent<HTMLInputElement>);
+    });
+
+    expect(handlers.removeLoading).toHaveBeenCalledTimes(1);
+    expect(handlers.resolveLoading).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledTimes(1);
+  });
 });

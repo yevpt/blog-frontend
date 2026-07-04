@@ -41,41 +41,49 @@ export function useEditorImageUpload({ scene, upload, onError }: UseEditorImageU
   };
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const files = Array.from(event.target.files ?? []);
     event.target.value = "";
-    if (!file) return;
+    if (files.length === 0) return;
 
     const handlers = handlersRef.current;
     if (!handlers) return;
 
-    const uploadId = createUploadId();
-    let aspectRatio = 16 / 9;
-
-    try {
-      aspectRatio = await readImageAspectRatio(file);
-    } catch {
-      aspectRatio = 16 / 9;
-    }
-
-    handlers.insertLoading({ uploadId, aspectRatio, alt: file.name });
     setIsUploading(true);
-
     try {
-      logUploadFileSize(`${scene}:select`, file);
-      const prepared = await prepareImageForUpload(
-        file,
-        scene === "comment" ? "comment" : "article",
-      );
-      logUploadFileSize(`${scene}:upload`, prepared, {
-        originalBytes: file.size,
-        originalLabel: formatUploadFileSize(file.size),
-        ...(await readUploadDimensions(prepared)),
-      });
-      const url = await upload(prepared);
-      handlers.resolveLoading(uploadId, url, prepared.name);
-    } catch (err) {
-      handlers.removeLoading(uploadId);
-      onError?.(getImageUploadErrorMessage(err));
+      // 先插入全部相邻占位，文章编辑器才能在上传开始前把它们自动归为同一 gallery。
+      const pending: Array<{ file: File; uploadId: string }> = [];
+      for (const file of files) {
+        const uploadId = createUploadId();
+        let aspectRatio = 16 / 9;
+        try {
+          aspectRatio = await readImageAspectRatio(file);
+        } catch {
+          aspectRatio = 16 / 9;
+        }
+        handlers.insertLoading({ uploadId, aspectRatio, alt: file.name });
+        pending.push({ file, uploadId });
+      }
+
+      for (const { file, uploadId } of pending) {
+        try {
+          logUploadFileSize(`${scene}:select`, file);
+          const prepared = await prepareImageForUpload(
+            file,
+            scene === "comment" ? "comment" : "article",
+          );
+          logUploadFileSize(`${scene}:upload`, prepared, {
+            originalBytes: file.size,
+            originalLabel: formatUploadFileSize(file.size),
+            ...(await readUploadDimensions(prepared)),
+          });
+          const url = await upload(prepared);
+          handlers.resolveLoading(uploadId, url, prepared.name);
+        } catch (err) {
+          // 单文件失败只回收自己的占位，不影响批次内其他文件。
+          handlers.removeLoading(uploadId);
+          onError?.(getImageUploadErrorMessage(err));
+        }
+      }
     } finally {
       setIsUploading(false);
       handlersRef.current = null;
