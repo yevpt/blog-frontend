@@ -111,8 +111,8 @@ export function BaseUserCard({
         )}
       </div>
 
-      {/* 昵称 + 正常模式的角色 */}
-      <div className="flex w-full flex-col items-center gap-0.5">
+      {/* 昵称 + 正常模式的角色；shrink-0 防止外层容器高度不足时被 flex 挤压裁切 */}
+      <div className="flex w-full shrink-0 flex-col items-center gap-0.5">
         <h3
           className={cn(
             "w-full truncate text-center font-semibold text-foreground",
@@ -136,11 +136,11 @@ export function BaseUserCard({
         )}
       </div>
 
-      {/* 在线状态：固定行高 + 统一 DOM，避免文案长短/在线样式切换引发布局偏移 */}
-      <div className="flex h-[14px] w-full items-center justify-center overflow-hidden">
+      {/* 在线状态：固定行高 + 统一 DOM，避免文案长短/在线样式切换引发布局偏移；shrink-0 防止外层容器（如圈子网格固定行高）高度不够时被 flex 挤压——overflow-hidden 元素的自动最小高度会退化为 0，挤压时会整体吃掉高度差导致文字被裁切 */}
+      <div className="flex h-4 w-full shrink-0 items-center justify-center overflow-hidden">
         {!hydrated || !presence ? (
           <span
-            className="block w-[5.5rem] max-w-full truncate text-center text-[10px] leading-[14px] text-(--fg3)"
+            className="block w-[5.5rem] max-w-full truncate text-center text-[10px] text-(--fg3)"
             aria-hidden="true"
           >
             &nbsp;
@@ -148,7 +148,7 @@ export function BaseUserCard({
         ) : (
           <span
             className={cn(
-              "block w-[5.5rem] max-w-full truncate text-center text-[10px] leading-[14px]",
+              "block w-[5.5rem] max-w-full truncate text-center text-[10px]",
               presence.kind === "online" ? "font-semibold text-emerald-500" : "text-(--fg3)",
             )}
           >

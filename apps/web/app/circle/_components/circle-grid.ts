@@ -7,8 +7,8 @@ export const CIRCLE_GRID_MAX_COLUMNS = 6;
 /** gap-2 = 0.5rem；6 列时共 5 个列间隙 */
 const GRID_GAP_TOTAL_REM = 2.5;
 
-/** 固定卡片行高，供 Virtuoso 测算与 grid-auto-rows 对齐，减少滚动 CLS */
-export const CIRCLE_GRID_ROW_HEIGHT = "7.5rem";
+/** 固定卡片行高，供 Virtuoso 测算与 grid-auto-rows 对齐，减少滚动 CLS；需 ≥ 头像(56px)+间距+昵称+状态文案的自然高度总和，否则子元素会被 flex 挤压裁切 */
+export const CIRCLE_GRID_ROW_HEIGHT = "8.5rem";
 
 export const CIRCLE_GRID_LIST_CLASS = "grid items-stretch gap-2";
 
@@ -24,7 +24,7 @@ export const CIRCLE_GRID_LIST_STYLE: CSSProperties = {
 export const CIRCLE_GRID_ITEM_CLASS = "box-border min-w-0 contain-[layout]";
 
 /** Virtuoso item 内层固定高度，与 gridAutoRows 一致 */
-export const CIRCLE_GRID_ITEM_INNER_CLASS = "h-[7.5rem]";
+export const CIRCLE_GRID_ITEM_INNER_CLASS = "h-[8.5rem]";
 
 /** 与 BaseUserCard variant=normal 一致的卡片壳（圈子网格专用，无交互态） */
 export const CIRCLE_USER_CARD_CLASS = "flex h-full flex-col items-center gap-2 rounded-xl p-2.5";
