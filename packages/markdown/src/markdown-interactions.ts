@@ -2,6 +2,7 @@ import { attachMarkdownImageFallbacks } from "./image-fallback";
 import { attachDeferredMarkdownImages } from "./image-deferred";
 import { attachMarkdownImageRetries } from "./image-retry";
 import { bindMarkdownImageSkeletons } from "./image-skeleton";
+import { bindMarkdownImageGalleries } from "./image-gallery-interactions";
 
 const CHECKMARK_SVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 
@@ -56,6 +57,7 @@ export function bindMarkdownContentInteractions(
   container.addEventListener("click", handleClick);
   cleanups.push(() => container.removeEventListener("click", handleClick));
 
+  cleanups.push(bindMarkdownImageGalleries(container));
   cleanups.push(bindMarkdownImageSkeletons(container));
   if (deferImages) cleanups.push(attachDeferredMarkdownImages(container));
   cleanups.push(attachMarkdownImageRetries(container));
