@@ -9,7 +9,9 @@ import {
   TabsPanels,
 } from "@repo/ui";
 import { useUserDetail } from "../hooks/use-user-detail";
+import { SingleUserAvatarTool } from "./AvatarNormalizeTool";
 import { UserModerationPanel } from "./UserModerationPanel";
+import { UserOperationLogList } from "./UserOperationLogList";
 
 interface UserDetailModalProps {
   userId: number | null;
@@ -64,6 +66,8 @@ export function UserDetailModal({ userId, onClose, onChanged }: UserDetailModalP
               <TabsItem id="profile">基本信息</TabsItem>
               <TabsItem id="role">角色与账号</TabsItem>
               <TabsItem id="moderation">内容治理</TabsItem>
+              <TabsItem id="avatar">头像</TabsItem>
+              <TabsItem id="logs">操作日志</TabsItem>
             </TabsList>
             <TabsPanels className="min-h-0 flex-1 overflow-y-auto">
               <TabsPanel id="profile" className="grid gap-2 text-sm">
@@ -116,6 +120,12 @@ export function UserDetailModal({ userId, onClose, onChanged }: UserDetailModalP
               </TabsPanel>
               <TabsPanel id="moderation" className="overflow-y-auto">
                 <UserModerationPanel userId={detail.id} />
+              </TabsPanel>
+              <TabsPanel id="avatar" className="overflow-y-auto">
+                <SingleUserAvatarTool userId={detail.id} />
+              </TabsPanel>
+              <TabsPanel id="logs" className="overflow-y-auto">
+                <UserOperationLogList userId={detail.id} />
               </TabsPanel>
             </TabsPanels>
           </Tabs>

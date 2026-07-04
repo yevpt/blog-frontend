@@ -86,4 +86,10 @@ describe("UserDetailModal", () => {
     render(<UserDetailModal userId={7} onClose={vi.fn()} />);
     expect(await screen.findByRole("tab", { name: "内容治理" })).toBeInTheDocument();
   });
+
+  it("提供头像与操作日志页签", async () => {
+    render(<UserDetailModal userId={7} onClose={vi.fn()} />);
+    expect(await screen.findByRole("tab", { name: "头像" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "操作日志" })).toBeInTheDocument();
+  });
 });
