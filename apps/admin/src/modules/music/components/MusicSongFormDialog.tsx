@@ -6,6 +6,7 @@ import {
   applyAudioUpload,
   createEmptyMusicForm,
   formatFileSize,
+  getAudioFileName,
   hasFormErrors,
   mapMusicToFormValues,
   validateMusicForm,
@@ -14,6 +15,7 @@ import {
   type MusicRow,
   type MusicUploadValue,
 } from "../model";
+import { MusicAudioPlayer } from "./MusicAudioPlayer";
 
 interface MusicSongFormDialogProps {
   mode: "create" | "edit";
@@ -51,6 +53,7 @@ export function MusicSongFormDialog({
   const [values, setValues] = useState<MusicFormValues>(createEmptyMusicForm(nextSeq));
   const [errors, setErrors] = useState<MusicFormErrors>({});
   const [uploadLabel, setUploadLabel] = useState<string | null>(null);
+  const [audioPreviewUrl, setAudioPreviewUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const selectedArtists = artists.filter((artist) => values.artistIds.includes(String(artist.id)));
@@ -63,6 +66,7 @@ export function MusicSongFormDialog({
     setErrors({});
     setSubmitError(null);
     setUploadLabel(null);
+    setAudioPreviewUrl(mode === "edit" && row ? (row.audioUrl ?? "") : "");
     setValues(mode === "edit" && row ? mapMusicToFormValues(row) : createEmptyMusicForm(nextSeq));
   }, [open, mode, nextSeq, row]);
 
@@ -91,6 +95,7 @@ export function MusicSongFormDialog({
     try {
       const upload = await onUploadAudio(file);
       setValues((current) => applyAudioUpload(current, upload));
+      setAudioPreviewUrl(upload.url);
       setUploadLabel(`${file.name} · ${formatFileSize(upload.size)}`);
     } catch (err) {
       setSubmitError(err instanceof ApiError ? err.message : "音频上传失败，请稍后重试");
@@ -261,12 +266,30 @@ export function MusicSongFormDialog({
                   音频文件
                 </Label>
                 <div className="grid min-w-0 gap-3 rounded-lg border border-border bg-background p-3">
+                  {values.audioKey ? (
+                    <MusicAudioPlayer
+                      variant="full"
+                      title={values.name || "当前音频"}
+                      url={audioPreviewUrl || values.audioKey}
+                      fileName={getAudioFileName(values.audioKey)}
+                      mime={values.audioMime || undefined}
+                      size={Number(values.audioSize)}
+                      fallbackDuration={Number(values.duration)}
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">还没有选择音频</p>
+                  )}
                   <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">当前音频</p>
-                      <p className="mt-1 break-all text-xs text-muted-foreground">
-                        {values.audioKey || "还没有选择音频"}
-                      </p>
+                    <div className="grid min-w-0 gap-1 text-xs text-muted-foreground">
+                      <span className="truncate">
+                        {uploadLabel ?? "支持 mp3、m4a、flac，最大 50MB"}
+                      </span>
+                      <span className="truncate">
+                        {values.audioMime || "MIME 待上传后自动填充"}
+                        {values.audioSize !== "0"
+                          ? ` · ${formatFileSize(Number(values.audioSize))}`
+                          : ""}
+                      </span>
                     </div>
                     <Button
                       type="button"
@@ -278,12 +301,13 @@ export function MusicSongFormDialog({
                       onPress={() => fileInputRef.current?.click()}
                     >
                       <SvgIcon name="arrow-up" size={14} />
-                      选择音频
+                      {values.audioKey ? "替换音频" : "选择音频"}
                     </Button>
                   </div>
                   <input
                     ref={fileInputRef}
                     type="file"
+                    aria-label="选择音频文件"
                     accept="audio/*,.mp3,.m4a,.flac"
                     className="sr-only"
                     onChange={(event) => {
@@ -291,17 +315,6 @@ export function MusicSongFormDialog({
                       event.currentTarget.value = "";
                     }}
                   />
-                  <div className="grid gap-1 rounded-md bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
-                    <span className="truncate">
-                      {uploadLabel ?? "支持 mp3、m4a、flac，最大 50MB"}
-                    </span>
-                    <span className="truncate">
-                      {values.audioMime || "MIME 待上传后自动填充"}
-                      {values.audioSize !== "0"
-                        ? ` · ${formatFileSize(Number(values.audioSize))}`
-                        : ""}
-                    </span>
-                  </div>
                 </div>
                 {errors.audioKey ? (
                   <p className="text-sm text-destructive">{errors.audioKey}</p>

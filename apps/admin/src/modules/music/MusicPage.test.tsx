@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ToastRegion } from "@repo/ui";
 import { apiClient } from "../../lib/api";
@@ -226,8 +226,15 @@ describe("MusicPage", () => {
     expect(screen.queryByRole("link", { name: "试听" })).not.toBeInTheDocument();
   });
 
-  it("音乐表单使用搜索式歌手选择并展示音频摘要", async () => {
+  it("音乐表单隐藏音频链接并展示完整播放器", async () => {
     const user = userEvent.setup();
+    vi.mocked(apiClient.music.uploadAudio).mockResolvedValue({
+      key: "temp/music/hash.m4a",
+      url: "https://cdn.example.com/preview.m4a?token=secret",
+      size: 3_145_728,
+      mime: "audio/mp4",
+      hash: "audio-hash",
+    });
     renderMusicPage();
 
     await user.click(screen.getAllByRole("button", { name: "编辑" })[0]!);
@@ -235,8 +242,23 @@ describe("MusicPage", () => {
 
     expect(within(dialog).getByRole("combobox", { name: "搜索并添加歌手" })).toBeInTheDocument();
     expect(within(dialog).queryByRole("checkbox", { name: "Aimer" })).not.toBeInTheDocument();
-    expect(within(dialog).getByText("当前音频")).toBeInTheDocument();
-    expect(within(dialog).getByText("https://cdn.example.com/ref.mp3")).toBeInTheDocument();
+    expect(within(dialog).getByText("ref.mp3")).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "播放 Ref:rain" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("slider", { name: "Ref:rain 播放进度" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "替换音频" })).toBeInTheDocument();
+    expect(within(dialog).queryByText("https://cdn.example.com/ref.mp3")).not.toBeInTheDocument();
+
+    fireEvent.change(within(dialog).getByLabelText("选择音频文件"), {
+      target: { files: [new File(["audio"], "original.m4a", { type: "audio/mp4" })] },
+    });
+
+    await waitFor(() => {
+      expect(dialog.querySelector("audio")).toHaveAttribute(
+        "src",
+        "https://cdn.example.com/preview.m4a?token=secret",
+      );
+    });
+    expect(within(dialog).getByText("hash.m4a")).toBeInTheDocument();
   });
 
   it("结构化歌手和专辑为空时从歌曲列表派生展示", async () => {
