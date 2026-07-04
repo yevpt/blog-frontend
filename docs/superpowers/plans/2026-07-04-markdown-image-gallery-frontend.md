@@ -1,6 +1,6 @@
 # 文章正文多图轮播 — 前台渲染实施计划
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** markdown 正文中相邻的纯图片段落在文章详情页渲染为局部轮播(scroll-snap + 翻页按钮 + 指示点),不影响其他 markdown 场景。
 
@@ -32,7 +32,7 @@
 **Interfaces:**
 - Produces: `markdownToHtml` 对 3+ 连续换行输出 `<p>&nbsp;</p>` 间隔段落,行为与 `markdownToHtmlSync` 一致。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `packages/markdown/src/render.test.ts` 追加:
 
@@ -48,12 +48,12 @@ it("异步 markdownToHtml 与同步版一致地保留多余空行间距", async 
 
 确认文件顶部已 import `markdownToHtml`(该文件现有用例若只测了 sync,需补 import)。
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter @repo/markdown test src/render.test.ts`
 Expected: 新用例 FAIL(async 输出无 nbsp 段落)。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `render.ts` 中 `markdownToHtml` 改为:
 
@@ -69,12 +69,12 @@ export async function markdownToHtml(
 }
 ```
 
-- [ ] **Step 4: 跑包内全部测试确认通过(含既有快照类用例无回归)**
+- [x] **Step 4: 跑包内全部测试确认通过(含既有快照类用例无回归)**
 
 Run: `pnpm --filter @repo/markdown test`
 Expected: PASS。若既有用例因空行行为变化而失败,逐个检查:预期内的行为统一(async 多了 nbsp 段落)可更新用例断言,其他失败必须修复实现。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/markdown/src/render.ts packages/markdown/src/render.test.ts
@@ -109,7 +109,7 @@ git commit -m "fix(markdown): 异步渲染管线同样保留多余空行段间�
 </div>
 ```
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 创建 `packages/markdown/src/image-gallery.test.ts`:
 
@@ -184,12 +184,12 @@ describe("rehypeImageGallery 相邻图片分组", () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter @repo/markdown test src/image-gallery.test.ts`
 Expected: FAIL(选项不存在/无 md-gallery 输出)。
 
-- [ ] **Step 3: 实现 `image-gallery.ts`**
+- [x] **Step 3: 实现 `image-gallery.ts`**
 
 ```ts
 import type { Element, ElementContent, Properties, Root, RootContent } from "hast";
@@ -388,7 +388,7 @@ export function rehypeImageGallery() {
 }
 ```
 
-- [ ] **Step 4: 接入 `render.ts`**
+- [x] **Step 4: 接入 `render.ts`**
 
 `MarkdownRenderOptions` 追加字段:
 
@@ -409,12 +409,12 @@ export function rehypeImageGallery() {
   }
 ```
 
-- [ ] **Step 5: 跑测试确认通过**
+- [x] **Step 5: 跑测试确认通过**
 
 Run: `pnpm --filter @repo/markdown test`
 Expected: 全部 PASS。若 `blockquote 内相邻图片` 用例因 remark 对 `>` 空行解析差异失败,先打印实际 HTML 检查:若 blockquote 内两图落在同一段落(软换行),该用例断言仍应成立;若被拆成两个 blockquote,调整用例的 markdown 写法为 `> ![一](/img/1.png)\n> \n> ![二](/img/2.png)`,不得删除用例。
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/markdown/src/image-gallery.ts packages/markdown/src/image-gallery.test.ts packages/markdown/src/render.ts
@@ -434,7 +434,7 @@ git commit -m "feat(markdown): 相邻图片段落合并为轮播的 rehype 插�
 - Consumes: Task 2 的类名常量与 HTML 结构。
 - Produces: `bindMarkdownImageGalleries(container: HTMLElement): () => void` — 由 `bindMarkdownContentInteractions` 调用,返回清理函数。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 创建 `packages/markdown/src/image-gallery-interactions.test.ts`:
 
@@ -546,12 +546,12 @@ describe("bindMarkdownImageGalleries", () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter @repo/markdown test src/image-gallery-interactions.test.ts`
 Expected: FAIL(模块不存在)。
 
-- [ ] **Step 3: 实现 `image-gallery-interactions.ts`**
+- [x] **Step 3: 实现 `image-gallery-interactions.ts`**
 
 ```ts
 import {
@@ -664,7 +664,7 @@ export function bindMarkdownImageGalleries(container: HTMLElement): () => void {
 }
 ```
 
-- [ ] **Step 4: 接入 `markdown-interactions.ts`**
+- [x] **Step 4: 接入 `markdown-interactions.ts`**
 
 顶部 import,并在 `cleanups.push(bindMarkdownImageSkeletons(container));` 之前插入一行:
 
@@ -674,12 +674,12 @@ import { bindMarkdownImageGalleries } from "./image-gallery-interactions";
   cleanups.push(bindMarkdownImageGalleries(container));
 ```
 
-- [ ] **Step 5: 跑测试确认通过**
+- [x] **Step 5: 跑测试确认通过**
 
 Run: `pnpm --filter @repo/markdown test`
 Expected: 全部 PASS(注意 `markdown-interactions` 既有用例不回归;点击轮播按钮不得触发 `onImagePreview` —— `closest("img")` 不会匹配按钮,如有失败按此排查)。
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/markdown/src/image-gallery-interactions.ts packages/markdown/src/image-gallery-interactions.test.ts packages/markdown/src/markdown-interactions.ts
@@ -697,7 +697,7 @@ git commit -m "feat(markdown): 轮播翻页与指示点交互绑定"
 - Consumes: Task 2 的 HTML 结构与类名。
 - 说明:滑动本体、slide 尺寸、按钮/指示点/计数覆盖层全在这里;`prose` 对 `figure`/`img` 的默认样式使用 `:where()` 零优先级选择器,普通类选择器即可覆盖,不需要 `!important`。
 
-- [ ] **Step 1: 追加样式**
+- [x] **Step 1: 追加样式**
 
 在 `base.css` 末尾(或 markdown 相关样式区块之后)追加:
 
@@ -822,12 +822,12 @@ git commit -m "feat(markdown): 轮播翻页与指示点交互绑定"
 }
 ```
 
-- [ ] **Step 2: 跑 styles 包测试(若 `base.test.ts` 对 css 有结构断言需保持通过)**
+- [x] **Step 2: 跑 styles 包测试(若 `base.test.ts` 对 css 有结构断言需保持通过)**
 
 Run: `pnpm --filter @repo/styles test`
 Expected: PASS(若该包无 test script,跳过并在报告中注明)。
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add packages/styles/src/base.css
@@ -846,7 +846,7 @@ git commit -m "feat(styles): 正文图片轮播样式"
 - Consumes: Task 2 的 `groupImageGalleries` 选项。
 - 说明:`prepareArticleMarkdownHtml` 之后的字符串级处理(`optimizeMarkdownImages` → `deferMarkdownImageSources` → `wrapMarkdownImagesWithSkeletonHtml`)都是对 `<img>` 标签的正则处理,不关心外层结构,轮播内图片自动获得 CDN 优化/懒加载/骨架。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `apps/web/lib/article-markdown-html.test.ts` 追加(遵循该文件既有的 mock/断言风格):
 
@@ -863,12 +863,12 @@ it("相邻图片段落合并为 md-gallery 轮播且图片仍带骨架包裹", a
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `pnpm --filter web test lib/article-markdown-html.test.ts`
 Expected: 新用例 FAIL(无 md-gallery)。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `article-markdown-html.ts` 中:
 
@@ -876,12 +876,12 @@ Expected: 新用例 FAIL(无 md-gallery)。
   const html = await markdownToHtml(markdown, { groupImageGalleries: true });
 ```
 
-- [ ] **Step 4: 跑 web 包相关测试**
+- [x] **Step 4: 跑 web 包相关测试**
 
 Run: `pnpm --filter web test lib/article-markdown-html.test.ts`,然后 `pnpm --filter web test`
 Expected: PASS。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/web/lib/article-markdown-html.ts apps/web/lib/article-markdown-html.test.ts
@@ -892,16 +892,16 @@ git commit -m "feat(web): 文章正文启用相邻图片轮播"
 
 ### Task 6: 全仓回归 + 收尾
 
-- [ ] **Step 1: 全仓测试**
+- [x] **Step 1: 全仓测试**
 
 Run: `pnpm test:run`
 Expected: 全部 PASS。重点关注:评论/碎语/通知等使用 `markdownToHtmlSync`/`markdownToHtml` 但未开启 `groupImageGalleries` 的场景零变化;Task 1 的空行行为统一是否影响既有 web 快照类断言,若影响且属预期(async 多出 nbsp 段落),更新断言并在报告中列明。
 
-- [ ] **Step 2: Lint/类型检查**
+- [x] **Step 2: Lint/类型检查**
 
 Run: `pnpm --filter @repo/markdown lint && pnpm --filter web lint`(若无 lint script 用 `pnpm lint`;再跑 `pnpm --filter @repo/markdown exec tsc --noEmit` 若有 typecheck script 则用之)
 Expected: 无错误。
 
-- [ ] **Step 3: 按 AGENTS.md 输出控制汇报**
+- [x] **Step 3: 按 AGENTS.md 输出控制汇报**
 
 报告:做了什么、改了哪些文件、验证了什么(测试命令与结果)、风险(尤其 Task 1 行为统一、历史文章中恰好相邻的多图会开始成组——这是产品预期,但需在报告中提醒)。
