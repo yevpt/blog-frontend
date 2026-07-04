@@ -172,6 +172,26 @@ export function formatFileSize(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+export function getAudioFileName(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "已上传音频";
+
+  let pathname: string;
+  try {
+    pathname = new URL(trimmed, "https://local.invalid").pathname;
+  } catch {
+    return "已上传音频";
+  }
+  const encodedName = pathname.split("/").filter(Boolean).at(-1);
+  if (!encodedName) return "已上传音频";
+
+  try {
+    return decodeURIComponent(encodedName);
+  } catch {
+    return encodedName;
+  }
+}
+
 export function uploadRespToValue(resp: MusicUploadResp): MusicUploadValue {
   return {
     key: resp.key,
