@@ -26,8 +26,9 @@ export function Slider({ label, showOutput = false, className, ...props }: Slide
       <Label className="sr-only">{label}</Label>
       {showOutput ? <SliderOutput className="text-xs text-muted-foreground" /> : null}
       <SliderTrack className="group relative flex h-5 w-full cursor-pointer items-center">
-        <span className="absolute h-1 w-full rounded-full bg-muted" />
-        <SliderFill className="absolute h-1 rounded-full bg-primary" />
+        <span className="relative h-1 w-full overflow-hidden rounded-full bg-muted">
+          <SliderFill className="rounded-full bg-primary" />
+        </span>
         <SliderThumb
           className={cn(
             "size-3 rounded-full border-2 border-primary bg-background outline-none",
