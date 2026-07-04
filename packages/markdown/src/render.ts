@@ -10,6 +10,7 @@ import { visit } from "unist-util-visit";
 import type { Root, Element, Properties } from "hast";
 import { isSafeImageSrc } from "./html-excerpt";
 import { buildImageFallbackHast } from "./image-fallback";
+import { rehypeImageGallery } from "./image-gallery";
 
 export interface TocItem {
   id: string;
@@ -26,6 +27,11 @@ export interface MarkdownRenderOptions {
    * 与链接是否失效无关——避免本站权重外泄给不可控的第三方链接，且不影响文章/碎语正文。
    */
   treatLinksAsUgc?: boolean;
+  /**
+   * 文章场景：相邻的「纯图片段落」合并为局部轮播（.md-gallery）。
+   * 仅文章详情启用；评论/摘录不开。成组契约详见 image-gallery.ts。
+   */
+  groupImageGalleries?: boolean;
 }
 
 /**
@@ -300,6 +306,11 @@ function buildPipeline(options: MarkdownRenderOptions = {}) {
 
   if (options.treatLinksAsUgc) {
     processor.use(rehypeUgcLinks);
+  }
+
+  if (options.groupImageGalleries) {
+    // 必须在 sanitize 之后：插件生成的 button/svg 是可信结构，不能被 schema 剥掉
+    processor.use(rehypeImageGallery);
   }
 
   return processor.use(rehypeStringify);
