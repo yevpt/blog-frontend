@@ -34,6 +34,7 @@ export {
 export { Input, type InputProps, Label, HintText } from "./input";
 export { Modal, type ModalPlacement, type ModalProps, type ModalSize } from "./modal";
 export { SearchField, type SearchFieldProps } from "./search-field";
+export { Slider, type SliderProps } from "./slider";
 export {
   TagGroup,
   TagList,
