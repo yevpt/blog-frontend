@@ -81,4 +81,9 @@ describe("UserDetailModal", () => {
 
     await waitFor(() => expect(apiClient.users.disableAccount).toHaveBeenCalledWith(7));
   });
+
+  it("提供内容治理页签", async () => {
+    render(<UserDetailModal userId={7} onClose={vi.fn()} />);
+    expect(await screen.findByRole("tab", { name: "内容治理" })).toBeInTheDocument();
+  });
 });
