@@ -316,7 +316,9 @@ export async function markdownToHtml(
   markdown: string,
   options?: MarkdownRenderOptions,
 ): Promise<string> {
-  return String(await buildPipeline(options).process(markdown));
+  // 与同步版保持一致：多余空行折叠前先转为 nbsp 段落，保留作者的段间距意图
+  const input = expandExtraBlankLines(markdown);
+  return String(await buildPipeline(options).process(input));
 }
 
 /**

@@ -98,6 +98,14 @@ describe("markdownToHtml", () => {
     expect(html.match(/<p>/g)).toHaveLength(3);
   });
 
+  it("异步 markdownToHtml 与同步版一致地保留多余空行间距", async () => {
+    const markdown = "第一段\n\n\n\n第二段";
+    const html = await markdownToHtml(markdown);
+    expect(html).toBe(markdownToHtmlSync(markdown));
+    // 存在 nbsp 间隔段落（rehype-stringify 的实体化形式以实际输出为准，必要时微调该正则）
+    expect(html).toMatch(/<p>(\u00a0|&#xA0;|&nbsp;)<\/p>/);
+  });
+
   it("默认不处理外部链接（文章/碎语正文场景）", () => {
     const html = markdownToHtmlSync("[官网](https://example.com)");
     expect(html).toContain('href="https://example.com"');
