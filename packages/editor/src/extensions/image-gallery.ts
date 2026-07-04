@@ -1,13 +1,22 @@
 import { mergeAttributes, Node } from "@tiptap/core";
 import type { JSONContent, MarkdownRendererHelpers, RenderContext } from "@tiptap/core";
 import type { Node as PMNode } from "@tiptap/pm/model";
-import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { NodeSelection, Plugin, PluginKey, TextSelection } from "@tiptap/pm/state";
 import type { EditorState, Transaction } from "@tiptap/pm/state";
 import type { ImageInsertHandlers } from "../types";
 import { renderImageMarkdown } from "./image";
 
 const GALLERY_TYPE = "imageGallery";
 const IMAGE_TYPE = "image";
+
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    imageGallery: {
+      /** gallery 内图片处于 NodeSelection 时，以该图为界拆分并插入 nbsp 分隔段落。 */
+      splitImageGallery: () => ReturnType;
+    };
+  }
+}
 
 /** RichEditor 通过 storage 注入「添加图片」的选图流程（复用工具栏的 onInsertImage）。 */
 export interface ImageGalleryStorage {
@@ -126,6 +135,58 @@ export const ImageGalleryExtension = Node.create({
   onCreate() {
     const tr = buildNormalizeStep(this.editor.state);
     if (tr) this.editor.view.dispatch(tr);
+  },
+
+  addCommands() {
+    return {
+      splitImageGallery:
+        () =>
+        ({ state, dispatch }) => {
+          const { selection } = state;
+          if (!(selection instanceof NodeSelection)) return false;
+          if (selection.node.type.name !== IMAGE_TYPE) return false;
+
+          const $from = selection.$from;
+          const depth = $from.depth;
+          if (depth === 0 || $from.node(depth).type.name !== GALLERY_TYPE) return false;
+          if (!dispatch) return true;
+
+          const gallery = $from.node(depth);
+          const galleryFrom = $from.before(depth);
+          const galleryTo = galleryFrom + gallery.nodeSize;
+          const splitIndex = $from.index(depth);
+          const before: PMNode[] = [];
+          const after: PMNode[] = [];
+          gallery.forEach((child, _offset, index) => {
+            (index <= splitIndex ? before : after).push(child);
+          });
+
+          const galleryType = state.schema.nodes[GALLERY_TYPE];
+          const wrap = (images: PMNode[]): PMNode[] => {
+            if (images.length === 0) return [];
+            if (images.length === 1) return [images[0]];
+            return [galleryType.create(null, images)];
+          };
+
+          // 纯空段落会被 remark 折叠；nbsp 才能稳定阻断前台再次成组。
+          const separator = state.schema.nodes.paragraph.create(null, state.schema.text("\u00a0"));
+          const wrappedBefore = wrap(before);
+          const nodes = [...wrappedBefore, separator, ...wrap(after)];
+          const tr = state.tr.replaceWith(galleryFrom, galleryTo, nodes);
+          const beforeSize = wrappedBefore.reduce((sum, node) => sum + node.nodeSize, 0);
+          tr.setSelection(
+            TextSelection.create(tr.doc, galleryFrom + beforeSize + separator.nodeSize - 1),
+          );
+          dispatch(tr);
+          return true;
+        },
+    };
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      Enter: () => this.editor.commands.splitImageGallery(),
+    };
   },
 
   addProseMirrorPlugins() {

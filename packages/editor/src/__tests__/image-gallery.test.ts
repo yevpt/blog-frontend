@@ -2,6 +2,7 @@
 import { Editor } from "@tiptap/core";
 import { Markdown } from "@tiptap/markdown";
 import type { Node as PMNode } from "@tiptap/pm/model";
+import { NodeSelection } from "@tiptap/pm/state";
 import StarterKit from "@tiptap/starter-kit";
 import { afterEach, describe, expect, it } from "vitest";
 import { ImageExtension, IMAGE_UPLOAD_PLACEHOLDER_SRC } from "../extensions/image";
@@ -156,5 +157,57 @@ describe("imageGallery 归一化", () => {
     expect(resolved).toBe(true);
     expect(resolvedGallery?.node.child(2).attrs.src).toBe("https://e.com/3.png");
     expect(resolvedGallery?.node.child(2).attrs.uploadState).toBe("decoding");
+  });
+});
+
+describe("splitImageGallery 回车拆组", () => {
+  it("选中第一张图回车：拆为 image + nbsp 段落 + image", async () => {
+    const editor = createEditor("![一](https://e.com/1.png)\n\n![二](https://e.com/2.png)");
+    await waitForCreate(editor);
+    const gallery = findGallery(editor);
+    if (!gallery) throw new Error("gallery 不存在");
+    editor.view.dispatch(
+      editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, gallery.pos + 1)),
+    );
+    const handled = editor.commands.splitImageGallery();
+    expect(handled).toBe(true);
+    expect(topLevelTypes(editor)).toEqual(["image", "paragraph", "image", "paragraph"]);
+    expect(editor.getMarkdown()).toContain("\u00a0");
+  });
+
+  it("三图 gallery 选中第二张回车：前两张成组 + nbsp 段落 + 单图", async () => {
+    const editor = createEditor(
+      "![一](https://e.com/1.png)\n\n![二](https://e.com/2.png)\n\n![三](https://e.com/3.png)",
+    );
+    await waitForCreate(editor);
+    const gallery = findGallery(editor);
+    if (!gallery) throw new Error("gallery 不存在");
+    const secondPos = gallery.pos + 1 + gallery.node.child(0).nodeSize;
+    editor.view.dispatch(
+      editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, secondPos)),
+    );
+    editor.commands.splitImageGallery();
+    expect(topLevelTypes(editor)).toEqual(["imageGallery", "paragraph", "image", "paragraph"]);
+    expect(findGallery(editor)?.node.childCount).toBe(2);
+  });
+
+  it("拆组后的 markdown 再次加载仍是拆开状态（round-trip 稳定）", async () => {
+    const editor = createEditor("![一](https://e.com/1.png)\n\n![二](https://e.com/2.png)");
+    await waitForCreate(editor);
+    const gallery = findGallery(editor);
+    if (!gallery) throw new Error("gallery 不存在");
+    editor.view.dispatch(
+      editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, gallery.pos + 1)),
+    );
+    editor.commands.splitImageGallery();
+    const markdown = editor.getMarkdown();
+    const reloaded = createEditor(markdown);
+    await waitForCreate(reloaded);
+    expect(findGallery(reloaded)).toBeNull();
+  });
+
+  it("选中不在 gallery 内时命令返回 false（不拦截默认回车）", () => {
+    const editor = createEditor("![一](https://e.com/1.png)");
+    expect(editor.commands.splitImageGallery()).toBe(false);
   });
 });
