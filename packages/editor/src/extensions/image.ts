@@ -54,6 +54,21 @@ declare module "@tiptap/core" {
   }
 }
 
+/** image 节点 → markdown。上传中/占位图返回空串（imageGallery 序列化复用）。 */
+export function renderImageMarkdown(node: JSONContent): string {
+  if (node.attrs?.uploadState === "loading" || node.attrs?.uploadState === "decoding") {
+    return "";
+  }
+
+  const src = typeof node.attrs?.src === "string" ? node.attrs.src : "";
+  if (!src || src === IMAGE_UPLOAD_PLACEHOLDER_SRC) {
+    return "";
+  }
+
+  const alt = typeof node.attrs?.alt === "string" ? node.attrs.alt : "";
+  return `![${alt}](${src})`;
+}
+
 export const ImageExtension = Image.extend<ImageExtensionOptions>({
   addOptions() {
     return {
@@ -188,16 +203,6 @@ export const ImageExtension = Image.extend<ImageExtensionOptions>({
   },
 
   renderMarkdown(node: JSONContent, _helpers: MarkdownRendererHelpers, _ctx: RenderContext) {
-    if (node.attrs?.uploadState === "loading" || node.attrs?.uploadState === "decoding") {
-      return "";
-    }
-
-    const src = typeof node.attrs?.src === "string" ? node.attrs.src : "";
-    if (!src || src === IMAGE_UPLOAD_PLACEHOLDER_SRC) {
-      return "";
-    }
-
-    const alt = typeof node.attrs?.alt === "string" ? node.attrs.alt : "";
-    return `![${alt}](${src})`;
+    return renderImageMarkdown(node);
   },
 });
