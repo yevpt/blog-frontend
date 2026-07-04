@@ -1,20 +1,18 @@
 import { Badge, Button, type DataTableEmptyState } from "@repo/ui";
-import type { UserRow } from "../model";
+import { getAccountStatusBadge, getSanctionBadge, type UserRow } from "../model";
 
 interface UserMobileListProps {
   items: UserRow[];
   isLoading: boolean;
   emptyState: DataTableEmptyState;
-  togglingUserId: string | null;
-  onToggleVip: (user: UserRow) => void;
+  onViewDetail: (user: UserRow) => void;
 }
 
 export function UserMobileList({
   items,
   isLoading,
   emptyState,
-  togglingUserId,
-  onToggleVip,
+  onViewDetail,
 }: UserMobileListProps) {
   if (isLoading) {
     return <div className="px-4 py-10 text-center text-sm text-muted-foreground">加载中…</div>;
@@ -50,12 +48,11 @@ export function UserMobileList({
             </div>
             <Button
               size="sm"
-              variant={user.isVip ? "outline" : "default"}
+              variant="outline"
               className="h-7 shrink-0 px-2 text-xs"
-              isLoading={togglingUserId === user.id}
-              onPress={() => onToggleVip(user)}
+              onPress={() => onViewDetail(user)}
             >
-              {user.isVip ? "取消 VIP" : "授予 VIP"}
+              查看详情
             </Button>
           </div>
 
@@ -65,6 +62,12 @@ export function UserMobileList({
             {!user.isAdmin && !user.isVip ? <Badge variant="secondary">普通用户</Badge> : null}
             <Badge variant={user.isOnline ? "success" : "secondary"}>
               {user.isOnline ? "在线" : "离线"}
+            </Badge>
+            <Badge variant={getAccountStatusBadge(user).variant}>
+              {getAccountStatusBadge(user).label}
+            </Badge>
+            <Badge variant={getSanctionBadge(user).variant}>
+              {getSanctionBadge(user).label}
             </Badge>
           </div>
 

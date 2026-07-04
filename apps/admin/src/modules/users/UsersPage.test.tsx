@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { ToastRegion } from "@repo/ui";
-import { apiClient } from "../../lib/api";
 import { toastQueue } from "../../lib/toast";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
 import { UsersPage } from "./UsersPage";
@@ -12,18 +11,23 @@ import type { UserRow } from "./model";
 const mockRows: UserRow[] = [
   {
     id: "7",
+    username: "vpt",
     displayName: "VPT",
+    email: "vpt@example.com",
     mark: "博主",
     roles: ["ROLE_ADMIN"],
     isVip: false,
     isAdmin: true,
     isOnline: true,
+    accountStatus: "active",
+    sanctionState: "active",
     lastActiveAt: "2026/06/26 16:00",
+    registerAt: "2026/01/01 08:00",
   },
 ];
 
 const mockRefetch = vi.fn();
-const mockSetSearch = vi.fn();
+const mockSetFilters = vi.fn();
 const mockSetPage = vi.fn();
 
 vi.mock("./hooks/use-admin-user-list", () => ({
@@ -34,41 +38,30 @@ vi.mock("../tags/hooks/use-is-md-screen", () => ({
   useIsMdScreen: vi.fn(() => true),
 }));
 
-vi.mock("../../lib/api", () => ({
-  apiClient: {
-    users: {
-      grantVipRole: vi.fn(),
-      revokeVipRole: vi.fn(),
-    },
-  },
-}));
-
 function renderUsersPage() {
   return render(
-    <>
+    <MemoryRouter>
       <UsersPage />
       <ToastRegion queue={toastQueue} />
-    </>,
+    </MemoryRouter>,
   );
 }
 
 describe("UsersPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useIsMdScreen).mockReturnValue(true);
     toastQueue.clear();
     mockRefetch.mockResolvedValue(undefined);
-    vi.mocked(apiClient.users.grantVipRole).mockResolvedValue({ user_id: 7, roles: ["ROLE_VIP"] });
-    vi.mocked(apiClient.users.revokeVipRole).mockResolvedValue({ user_id: 7, roles: [] });
     vi.mocked(useAdminUserList).mockReturnValue({
       rows: mockRows,
-      visibleRows: mockRows,
       pageData: { total: 1, pages: 1, page: 1, page_size: 10, list: [] },
       isLoading: false,
       error: null,
       page: 1,
       setPage: mockSetPage,
-      search: "",
-      setSearch: mockSetSearch,
+      filters: { keyword: "", role: "all", status: "all" },
+      setFilters: mockSetFilters,
       resetListQuery: vi.fn(),
       hasActiveListQuery: false,
       refetch: mockRefetch,
@@ -93,29 +86,26 @@ describe("UsersPage", () => {
     expect(region.parentElement).toHaveClass("max-w-full");
   });
 
-  it("点击授予 VIP 后调用接口并刷新", async () => {
-    const user = userEvent.setup();
+  it("显示账号、内容列与工具入口，并移除常驻头像工具", () => {
     renderUsersPage();
 
-    await user.click(screen.getByRole("button", { name: "授予 VIP" }));
-
-    await waitFor(() => {
-      expect(apiClient.users.grantVipRole).toHaveBeenCalledWith(7);
-    });
-    expect(mockRefetch).toHaveBeenCalled();
+    expect(screen.getByRole("columnheader", { name: "账号" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "内容" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "工具" })).toBeInTheDocument();
+    expect(screen.queryByText("头像归一化")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "查看详情" })).toBeInTheDocument();
   });
 
   it("加载失败时显示错误信息", () => {
     vi.mocked(useAdminUserList).mockReturnValue({
       rows: [],
-      visibleRows: [],
       pageData: null,
       isLoading: false,
       error: new Error("加载用户失败"),
       page: 1,
       setPage: mockSetPage,
-      search: "",
-      setSearch: mockSetSearch,
+      filters: { keyword: "", role: "all", status: "all" },
+      setFilters: mockSetFilters,
       resetListQuery: vi.fn(),
       hasActiveListQuery: false,
       refetch: mockRefetch,

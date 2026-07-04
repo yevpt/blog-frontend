@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { ApiError } from "@repo/api";
+import { useNavigate } from "react-router-dom";
 import { SvgIcon } from "@repo/icons";
 import {
   Badge,
@@ -12,55 +12,38 @@ import {
 import { AdminListCard } from "../../components/AdminListCard";
 import { AdminListSummary } from "../../components/AdminListSummary";
 import { AdminPageHeader } from "../../components/AdminPageHeader";
-import { apiClient } from "../../lib/api";
 import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
-import { addToast } from "../../lib/toast";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
 import { UserListToolbar } from "./components/UserListToolbar";
 import { UserMobileList } from "./components/UserMobileList";
-import { AvatarNormalizeTool } from "./components/AvatarNormalizeTool";
 import { useAdminUserList } from "./hooks/use-admin-user-list";
-import type { UserRow } from "./model";
+import {
+  getAccountStatusBadge,
+  getSanctionBadge,
+  type UserRow,
+} from "./model";
 
 export function UsersPage() {
   const {
     rows,
-    visibleRows,
     pageData,
     isLoading,
     error,
     page,
     setPage,
-    search,
-    setSearch,
+    filters,
+    setFilters,
     resetListQuery,
     hasActiveListQuery,
     refetch,
   } = useAdminUserList();
   const isMdScreen = useIsMdScreen();
-  const [togglingUserId, setTogglingUserId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [, setSelectedUserId] = useState<string | null>(null);
 
-  const handleToggleVip = useCallback(
-    async (user: UserRow) => {
-      setTogglingUserId(user.id);
-      try {
-        if (user.isVip) {
-          await apiClient.users.revokeVipRole(Number(user.id));
-          addToast("已取消 VIP", "success");
-        } else {
-          await apiClient.users.grantVipRole(Number(user.id));
-          addToast("已授予 VIP", "success");
-        }
-        await refetch();
-      } catch (err) {
-        addToast(err instanceof ApiError ? err.message : "操作失败，请稍后重试", "error");
-        throw err;
-      } finally {
-        setTogglingUserId(null);
-      }
-    },
-    [refetch],
-  );
+  const handleViewDetail = useCallback((user: UserRow) => {
+    setSelectedUserId(user.id);
+  }, []);
 
   const columns = useMemo<Array<DataTableColumn<UserRow>>>(
     () => [
@@ -68,7 +51,7 @@ export function UsersPage() {
         id: "user",
         header: "用户",
         isRowHeader: true,
-        width: "32%",
+        width: "24%",
         minWidth: 200,
         className: "min-w-0 whitespace-normal",
         cell: (user) => (
@@ -89,8 +72,8 @@ export function UsersPage() {
       {
         id: "roles",
         header: "角色",
-        width: "22%",
-        minWidth: 160,
+        width: "16%",
+        minWidth: 128,
         className: "text-center",
         headerClassName: "text-center [&>div]:justify-center",
         cell: (user) => (
@@ -102,22 +85,33 @@ export function UsersPage() {
         ),
       },
       {
-        id: "status",
-        header: "状态",
-        width: "14%",
-        minWidth: 96,
+        id: "accountStatus",
+        header: "账号",
+        width: "12%",
+        minWidth: 88,
         className: "text-center",
         headerClassName: "text-center [&>div]:justify-center",
-        cell: (user) => (
-          <Badge variant={user.isOnline ? "success" : "secondary"}>
-            {user.isOnline ? "在线" : "离线"}
-          </Badge>
-        ),
+        cell: (user) => {
+          const badge = getAccountStatusBadge(user);
+          return <Badge variant={badge.variant}>{badge.label}</Badge>;
+        },
+      },
+      {
+        id: "sanctionState",
+        header: "内容",
+        width: "12%",
+        minWidth: 88,
+        className: "text-center",
+        headerClassName: "text-center [&>div]:justify-center",
+        cell: (user) => {
+          const badge = getSanctionBadge(user);
+          return <Badge variant={badge.variant}>{badge.label}</Badge>;
+        },
       },
       {
         id: "lastActiveAt",
         header: "最近活跃",
-        width: "18%",
+        width: "20%",
         minWidth: 132,
         className: "text-muted-foreground tabular-nums",
         cell: (user) => user.lastActiveAt,
@@ -125,28 +119,27 @@ export function UsersPage() {
       {
         id: "actions",
         header: "操作",
-        width: "14%",
-        minWidth: 116,
+        width: "16%",
+        minWidth: 96,
         className: "text-center",
         headerClassName: "text-center [&>div]:justify-center",
         cell: (user) => (
           <Button
             type="button"
             size="sm"
-            variant={user.isVip ? "outline" : "default"}
+            variant="outline"
             className="h-7 px-2 text-xs"
-            isLoading={togglingUserId === user.id}
-            onPress={() => void handleToggleVip(user).catch(() => undefined)}
+            onPress={() => handleViewDetail(user)}
           >
-            {user.isVip ? "取消 VIP" : "授予 VIP"}
+            查看详情
           </Button>
         ),
       },
     ],
-    [handleToggleVip, togglingUserId],
+    [handleViewDetail],
   );
 
-  const emptyState: DataTableEmptyState = search.trim()
+  const emptyState: DataTableEmptyState = filters.keyword.trim()
     ? {
         icon: "search",
         title: "未找到匹配的用户",
@@ -167,21 +160,30 @@ export function UsersPage() {
     <div className="flex min-w-0 max-w-full flex-col gap-4 md:min-h-0 md:h-[calc(100dvh-3rem)] md:overflow-y-auto lg:h-[calc(100dvh-3.5rem)]">
       <AdminPageHeader
         title="用户管理"
-        description="查看注册用户状态、管理 VIP 权限，并维护老用户头像规范。"
+        description="查看注册用户状态、角色权限与内容治理情况。"
         action={
-          <Button
-            size="sm"
-            variant="outline"
-            className="w-full shrink-0 sm:w-auto"
-            onPress={() => void refetch()}
-          >
-            <SvgIcon name="refresh-cw" size={15} />
-            刷新
-          </Button>
+          <div className="flex w-full gap-2 sm:w-auto">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="shrink-0"
+              onPress={() => navigate("/users/tools")}
+            >
+              <SvgIcon name="image" size={15} />
+              工具
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full shrink-0 sm:w-auto"
+              onPress={() => void refetch()}
+            >
+              <SvgIcon name="refresh-cw" size={15} />
+              刷新
+            </Button>
+          </div>
         }
       />
-
-      <AvatarNormalizeTool />
 
       <section
         className="flex min-h-[360px] min-w-0 shrink-0 flex-col md:min-h-[min(360px,40vh)]"
@@ -195,8 +197,8 @@ export function UsersPage() {
 
         <AdminListCard className="flex min-h-[360px] flex-1 flex-col">
           <UserListToolbar
-            searchValue={search}
-            onSearchChange={setSearch}
+            filters={filters}
+            onFiltersChange={setFilters}
             canClear={hasActiveListQuery}
             onClear={resetListQuery}
           />
@@ -205,7 +207,7 @@ export function UsersPage() {
             {isMdScreen ? (
               <DataTable
                 aria-label="用户列表"
-                items={visibleRows}
+                items={rows}
                 columns={columns}
                 getRowId={(user) => user.id}
                 showTotal={false}
@@ -219,11 +221,10 @@ export function UsersPage() {
             ) : (
               <div className="h-full overflow-y-auto overscroll-y-contain">
                 <UserMobileList
-                  items={visibleRows}
+                  items={rows}
                   isLoading={isLoading}
                   emptyState={emptyState}
-                  togglingUserId={togglingUserId}
-                  onToggleVip={(user) => void handleToggleVip(user).catch(() => undefined)}
+                  onViewDetail={handleViewDetail}
                 />
               </div>
             )}
