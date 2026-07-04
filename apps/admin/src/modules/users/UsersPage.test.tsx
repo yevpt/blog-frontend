@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { ToastRegion } from "@repo/ui";
 import { toastQueue } from "../../lib/toast";
@@ -36,6 +37,11 @@ vi.mock("./hooks/use-admin-user-list", () => ({
 
 vi.mock("../tags/hooks/use-is-md-screen", () => ({
   useIsMdScreen: vi.fn(() => true),
+}));
+
+vi.mock("./components/UserDetailModal", () => ({
+  UserDetailModal: ({ userId }: { userId: number | null }) =>
+    userId === null ? null : <div>详情用户 {userId}</div>,
 }));
 
 function renderUsersPage() {
@@ -94,6 +100,14 @@ describe("UsersPage", () => {
     expect(screen.getByRole("button", { name: "工具" })).toBeInTheDocument();
     expect(screen.queryByText("头像归一化")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "查看详情" })).toBeInTheDocument();
+  });
+
+  it("点击查看详情后打开对应用户弹层", async () => {
+    const user = userEvent.setup();
+    renderUsersPage();
+
+    await user.click(screen.getByRole("button", { name: "查看详情" }));
+    expect(screen.getByText("详情用户 7")).toBeInTheDocument();
   });
 
   it("加载失败时显示错误信息", () => {

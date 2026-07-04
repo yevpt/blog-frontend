@@ -15,6 +15,7 @@ import { AdminPageHeader } from "../../components/AdminPageHeader";
 import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
 import { UserListToolbar } from "./components/UserListToolbar";
+import { UserDetailModal } from "./components/UserDetailModal";
 import { UserMobileList } from "./components/UserMobileList";
 import { useAdminUserList } from "./hooks/use-admin-user-list";
 import {
@@ -39,7 +40,7 @@ export function UsersPage() {
   } = useAdminUserList();
   const isMdScreen = useIsMdScreen();
   const navigate = useNavigate();
-  const [, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const handleViewDetail = useCallback((user: UserRow) => {
     setSelectedUserId(user.id);
@@ -251,6 +252,11 @@ export function UsersPage() {
           ) : null}
         </AdminListCard>
       </section>
+      <UserDetailModal
+        userId={selectedUserId ? Number(selectedUserId) : null}
+        onClose={() => setSelectedUserId(null)}
+        onChanged={() => void refetch()}
+      />
     </div>
   );
 }
