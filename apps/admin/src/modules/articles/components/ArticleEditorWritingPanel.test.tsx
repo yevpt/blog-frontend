@@ -43,6 +43,31 @@ describe("ArticleEditorWritingPanel", () => {
     expect(props.enableBlockquote).toBe(true);
   });
 
+  it("文章编辑器启用图片轮播并支持多选插图", () => {
+    const { container } = render(
+      <ArticleEditorWritingPanel
+        title=""
+        description=""
+        content=""
+        contentLength={0}
+        readMinutes={1}
+        autosaveStatusText="本机备份待命"
+        isContentImageUploading={false}
+        contentImageInputRef={{ current: null }}
+        onTitleChange={vi.fn()}
+        onDescriptionChange={vi.fn()}
+        onContentChange={vi.fn()}
+        onInsertImage={vi.fn()}
+        onContentImageFileChange={vi.fn()}
+      />,
+    );
+
+    const props = richEditorProps.mock.calls[0][0];
+    expect(props.enableImageGallery).toBe(true);
+    const input = container.querySelector('input[type="file"][accept="image/*"]');
+    expect(input).toHaveAttribute("multiple");
+  });
+
   it("渲染标题、摘要与字数统计", () => {
     render(
       <ArticleEditorWritingPanel

@@ -103,6 +103,7 @@ export function ArticleEditorWritingPanel({
           onInsertImage={onInsertImage}
           onInsertLink={handleInsertLink}
           enableBlockquote
+          enableImageGallery
           imageOptimizationPreset="article"
         />
         <LinkDialog
@@ -117,6 +118,7 @@ export function ArticleEditorWritingPanel({
           ref={contentImageInputRef}
           type="file"
           accept="image/*"
+          multiple
           className="sr-only"
           onChange={onContentImageFileChange}
         />
