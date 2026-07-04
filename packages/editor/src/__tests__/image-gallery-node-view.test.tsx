@@ -118,6 +118,31 @@ describe("ImageGalleryNodeView", () => {
     expect(screen.getAllByLabelText("添加图片")).toHaveLength(1);
   });
 
+  it("顶层单图仍保留 my-6（非 gallery 场景的正常间距不受影响）", async () => {
+    render(
+      <RichEditor value={ONE_IMAGE} onChange={vi.fn()} enableImageGallery onInsertImage={vi.fn()} />,
+    );
+    await waitFor(() => {
+      expect(screen.getByLabelText("添加图片")).toBeTruthy();
+    });
+    const figure = document.querySelector("figure");
+    expect(figure?.className.split(" ")).toContain("my-6");
+  });
+
+  it("gallery 内的 slide 不带自身 my-6（回归：会让覆盖层飘到图片外面）", async () => {
+    render(<RichEditor value={TWO_IMAGES} onChange={vi.fn()} enableImageGallery />);
+    await waitFor(() => {
+      expect(screen.getByLabelText("下一张")).toBeTruthy();
+    });
+    // ImageNodeView 复用于 gallery slide；slide 自身不应再带 my-6，
+    // 否则定位容器比图片本身高出一圈外边距，翻页/指示点/添加图片按钮会飘到图片外
+    const figures = document.querySelectorAll("figure");
+    expect(figures.length).toBeGreaterThan(0);
+    figures.forEach((figure) => {
+      expect(figure.className.split(" ")).not.toContain("my-6");
+    });
+  });
+
   it("添加图片按钮 hover/active 态文字仍是白色（回归：ghost 变体会把文字盖成不可见）", async () => {
     render(
       <RichEditor

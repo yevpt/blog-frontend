@@ -178,7 +178,10 @@ export function ImageNodeView({
     <NodeViewWrapper
       as="figure"
       className={cn(
-        "group relative my-6 block max-w-full",
+        "group relative block max-w-full",
+        // gallery 内的 slide 已由 gallery 容器统一加 my-6；这里再加会让定位容器比图片
+        // 本身高出一圈外边距，覆盖层（添加图片/翻页/指示点/计数）就会飘到图片外面
+        isTopLevelImage && "my-6",
         isCompactLayout ? (compactReady ? "w-fit" : "w-full") : !tightToImage && "w-full",
       )}
       data-rich-editor-image={!showLoadingAttr ? true : undefined}
