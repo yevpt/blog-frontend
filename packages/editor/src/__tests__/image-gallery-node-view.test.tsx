@@ -163,6 +163,51 @@ describe("ImageGalleryNodeView", () => {
     }
   });
 
+  it("翻页立即用新页码对应 slide 的尺寸重算，不依赖 ResizeObserver 回调触发（回归：曾因每次同步都重建 observer 而错过图片解码完成的通知，chrome 层停在旧尺寸上）", async () => {
+    render(<RichEditor value={TWO_IMAGES} onChange={vi.fn()} enableImageGallery />);
+    await waitFor(() => {
+      expect(screen.getByLabelText("下一张")).toBeTruthy();
+    });
+
+    const track = document.querySelector<HTMLElement>("[data-node-view-content-react]");
+    if (!track) throw new Error("[data-node-view-content-react] 不存在");
+    const [slideA, slideB] = Array.from(track.children) as HTMLElement[];
+    if (!slideA || !slideB) throw new Error("slide 不足两个");
+
+    Object.defineProperty(track, "clientHeight", { value: 400, configurable: true });
+    Object.defineProperty(slideA, "offsetHeight", { value: 160, configurable: true });
+    Object.defineProperty(slideB, "offsetHeight", { value: 400, configurable: true });
+
+    // 补齐 jsdom 缺失的滚动能力：scrollTo 生效并派发 scroll 事件，
+    // 使点击「下一张」真的驱动 index 从 0 变为 1（同 markdown 包的测试手法）
+    Object.defineProperty(track, "clientWidth", { value: 600, configurable: true });
+    let scrollLeft = 0;
+    Object.defineProperty(track, "scrollLeft", {
+      configurable: true,
+      get: () => scrollLeft,
+      set: (value: number) => {
+        scrollLeft = value;
+      },
+    });
+    Object.defineProperty(track, "scrollTo", {
+      configurable: true,
+      value: (options: ScrollToOptions) => {
+        scrollLeft = options.left ?? 0;
+        track.dispatchEvent(new Event("scroll"));
+      },
+    });
+
+    const chrome = screen.getByLabelText("上一张").parentElement;
+    if (!chrome) throw new Error("chrome 容器不存在");
+
+    // 点击翻到 slideB（更高的那张），完全不触发任何 resize 回调
+    await userEvent.click(screen.getByLabelText("下一张"));
+    await waitFor(() => {
+      expect(chrome.style.height).toBe("400px");
+    });
+    expect(chrome.style.top).toBe("0px");
+  });
+
   it("顶层单图仍保留 my-6（非 gallery 场景的正常间距不受影响）", async () => {
     render(
       <RichEditor value={ONE_IMAGE} onChange={vi.fn()} enableImageGallery onInsertImage={vi.fn()} />,

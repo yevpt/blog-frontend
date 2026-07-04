@@ -24,6 +24,12 @@ export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeVie
   const getTrack = () =>
     wrapperRef.current?.querySelector<HTMLElement>("[data-node-view-content-react]") ?? null;
 
+  // syncChromeFrame 可能被一个「只在 mount/count 变化时创建」的 ResizeObserver
+  // 长期持有（避免频繁 disconnect/recreate 错过图片解码完成那一次关键的尺寸变化），
+  // 因此不能靠闭包捕获 index——用 ref 让它始终读到最新页码
+  const indexRef = useRef(index);
+  indexRef.current = index;
+
   // track 的高度由「最高的那张 slide」撑起（各 slide 保留自身原始宽高比、不做
   // object-contain 裁切/留白）；宽高比差异大时，当前可见的矮图远矮于 track。
   // chrome（翻页/指示点/计数/添加图片）若直接定位在 track 上就会飘到矮图外面，
@@ -32,7 +38,7 @@ export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeVie
     const track = getTrack();
     const chrome = chromeRef.current;
     if (!track || !chrome) return;
-    const slide = track.children[index] as HTMLElement | undefined;
+    const slide = track.children[indexRef.current] as HTMLElement | undefined;
     if (!slide) return;
     // slide 在 track 内是 self-center（居中，不拉伸），顶部相对 track 的偏移
     // 就是这段留白的一半
@@ -57,35 +63,44 @@ export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeVie
     return () => wrapper.removeEventListener("scroll", handleScroll, { capture: true });
   }, [count]);
 
-  // 当前 slide 变化（翻页）或其自身尺寸变化（图片加载完成、窗口 resize）时
-  // 重新贴合 chrome 层；同时 observe track 本身，因为其他 slide 加载完成
-  // 也可能改变 track 的最大高度，从而改变当前 slide 的居中留白。
-  // 用 useLayoutEffect 而非 useEffect：在浏览器绘制前完成计算，避免从
-  // 兜底的 top-0/h-full 闪一下再跳到真实尺寸
+  // 建立一个「长期持有」的 ResizeObserver，只在 mount / count（图片数量真的
+  // 变化）时重建——而不是每次同步都 disconnect 重建。图片是 loading="lazy"
+  // decoding="async"，解码完成撑开高度这个关键的尺寸变化只会通知一次；如果
+  // 恰好落在「断开旧实例、建立新实例」的窄窗口里，这次通知会被吞掉，chrome
+  // 层就会停在解码完成前的错误尺寸上不再更新（早期版本的 bug）。
   useLayoutEffect(() => {
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
 
-    let resizeObserver: ResizeObserver | null = null;
+    syncChromeFrame();
 
-    const trySync = () => {
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined" ? new ResizeObserver(syncChromeFrame) : null;
+    const observed = new Set<Element>();
+
+    const ensureObserved = () => {
       const track = getTrack();
-      const slide = track?.children[index] as HTMLElement | undefined;
-      if (!track || !slide) return;
-      syncChromeFrame();
-      resizeObserver?.disconnect();
-      if (typeof ResizeObserver === "undefined") return;
-      resizeObserver = new ResizeObserver(syncChromeFrame);
-      resizeObserver.observe(track);
-      resizeObserver.observe(slide);
+      if (!track || !resizeObserver) return;
+      if (!observed.has(track)) {
+        resizeObserver.observe(track);
+        observed.add(track);
+      }
+      for (const child of Array.from(track.children)) {
+        if (!observed.has(child)) {
+          resizeObserver.observe(child);
+          observed.add(child);
+        }
+      }
     };
-
-    trySync();
+    ensureObserved();
 
     // 各 slide 内的图片是 ProseMirror 管理的独立 NodeView（非本组件的 React
     // 子树），挂进 track 的时机不保证早于本 effect；用 MutationObserver 兜底
-    // 捕捉「子节点刚挂上/替换」，重试贴合与重新订阅 ResizeObserver
-    const mutationObserver = new MutationObserver(trySync);
+    // 捕捉「子节点刚挂上/替换」，补齐待观察的节点并立即重新贴合一次
+    const mutationObserver = new MutationObserver(() => {
+      ensureObserved();
+      syncChromeFrame();
+    });
     mutationObserver.observe(wrapper, { childList: true, subtree: true });
 
     return () => {
@@ -93,7 +108,13 @@ export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeVie
       resizeObserver?.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, count]);
+  }, [count]);
+
+  // 翻页导致 index 变化时立即重算一次，不必等下一次尺寸变化事件
+  useLayoutEffect(() => {
+    syncChromeFrame();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index]);
 
   useEffect(() => {
     if (index > count - 1) setIndex(Math.max(0, count - 1));
