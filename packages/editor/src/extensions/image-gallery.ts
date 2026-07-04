@@ -2,8 +2,10 @@ import { mergeAttributes, Node } from "@tiptap/core";
 import type { JSONContent, MarkdownRendererHelpers, RenderContext } from "@tiptap/core";
 import type { Node as PMNode } from "@tiptap/pm/model";
 import { NodeSelection, Plugin, PluginKey, TextSelection } from "@tiptap/pm/state";
+import { ReactNodeViewRenderer } from "@tiptap/react";
 import type { EditorState, Transaction } from "@tiptap/pm/state";
 import type { ImageInsertHandlers } from "../types";
+import { ImageGalleryNodeView } from "../nodes/image-gallery-node-view";
 import { renderImageMarkdown } from "./image";
 
 const GALLERY_TYPE = "imageGallery";
@@ -130,6 +132,10 @@ export const ImageGalleryExtension = Node.create({
   renderMarkdown(node: JSONContent, _helpers: MarkdownRendererHelpers, _ctx: RenderContext) {
     const parts = (node.content ?? []).map((child) => renderImageMarkdown(child)).filter(Boolean);
     return parts.join("\n\n");
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ImageGalleryNodeView);
   },
 
   onCreate() {
