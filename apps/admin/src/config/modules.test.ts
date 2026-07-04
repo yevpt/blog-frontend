@@ -31,6 +31,7 @@ describe("admin 模块注册表", () => {
       "/guestbook",
       "/moments",
       "/users",
+      "/users/tools",
       "/categories",
       "/tags",
       "/music",
