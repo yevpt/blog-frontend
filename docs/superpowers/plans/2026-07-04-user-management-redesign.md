@@ -933,10 +933,10 @@ type AdminUserDetailResp struct {
 	LastActiveAt  *time.Time `json:"last_active_at,omitempty"`
 	IsOnline      bool       `json:"is_online"`
 	SanctionState string     `json:"sanction_state"`
-	LikesCount    int64      `json:"likes_count"`
-	MomentsCount  int64      `json:"moments_count"`
 }
 ```
+
+（注：Task 5 审查修复阶段移除了这里最初写的 `LikesCount`/`MomentsCount` 两个字段——整个计划里没有任何前端 Tab 会展示它们，保留只会是半吊子的死字段，遵循 YAGNI 直接删除；`IsOnline` 改为通过 `OnlineChecker`/`presence` 依赖真实填充，不再是零值占位。）
 
 - [ ] **Step 2: 定义最小的审核画像读取依赖**
 
@@ -1691,8 +1691,6 @@ export interface AdminUserDetailResp {
   last_active_at?: string;
   is_online: boolean;
   sanction_state: "active" | "muted" | "banned";
-  likes_count: number;
-  moments_count: number;
 }
 
 /** GET /admin/users/:id/operation-logs 单条操作日志 */
@@ -2374,7 +2372,6 @@ describe("useUserDetail", () => {
       id: 7, username: "vpt", email_verified: true, password_set: true,
       roles: ["ROLE_NORMAL"], register_at: "2026-01-01T00:00:00Z",
       is_online: false, sanction_state: "active", status: 1,
-      likes_count: 0, moments_count: 0,
     });
 
     const { result } = renderHook(() => useUserDetail(7));
@@ -2387,7 +2384,6 @@ describe("useUserDetail", () => {
       id: 7, username: "vpt", email_verified: true, password_set: true,
       roles: ["ROLE_NORMAL"], register_at: "2026-01-01T00:00:00Z",
       is_online: false, sanction_state: "active", status: 1,
-      likes_count: 0, moments_count: 0,
     });
     vi.mocked(apiClient.users.grantVipRole).mockResolvedValue({ user_id: 7, roles: ["ROLE_NORMAL", "ROLE_VIP"] });
 
