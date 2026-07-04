@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Button, Input } from "@repo/ui";
 import { SvgIcon } from "@repo/icons";
-import type { BatchState, HideBatchReq } from "../hooks/use-moderation-user";
+import { Button, Input } from "@repo/ui";
+import type { BatchState, HideBatchReq } from "../hooks/use-user-moderation";
 
 interface ModerationUserBatchPanelProps {
   batch: BatchState | null;

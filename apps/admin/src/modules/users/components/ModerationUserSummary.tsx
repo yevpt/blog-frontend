@@ -1,9 +1,9 @@
-import { Badge } from "@repo/ui";
 import type {
   AdminModerationProfileResp,
   ModerationSanctionState,
   ModerationTrustLevel,
 } from "@repo/api";
+import { Badge } from "@repo/ui";
 
 const SANCTION_VARIANT: Record<ModerationSanctionState, "success" | "warning" | "error"> = {
   active: "success",

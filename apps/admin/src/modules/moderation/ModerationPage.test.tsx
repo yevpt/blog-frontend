@@ -9,7 +9,6 @@ import { apiClient } from "../../lib/api";
 import { toastQueue } from "../../lib/toast";
 import { useModerationControl } from "./hooks/use-moderation-control";
 import { useModerationList } from "./hooks/use-moderation-list";
-import { useModerationUser } from "./hooks/use-moderation-user";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
 import type { ModerationRow } from "./model";
 
@@ -72,7 +71,6 @@ const mockRows: ModerationRow[] = [
 
 const mockRefetch = vi.fn();
 const mockControlReload = vi.fn();
-const mockUserReload = vi.fn();
 const mockSetPage = vi.fn();
 const mockSetContentType = vi.fn();
 const mockSetRiskLevel = vi.fn();
@@ -86,10 +84,6 @@ vi.mock("./hooks/use-moderation-list", () => ({
 
 vi.mock("./hooks/use-moderation-control", () => ({
   useModerationControl: vi.fn(),
-}));
-
-vi.mock("./hooks/use-moderation-user", () => ({
-  useModerationUser: vi.fn(),
 }));
 
 vi.mock("../tags/hooks/use-is-md-screen", () => ({
@@ -171,26 +165,6 @@ function setupControlHook(overrides: Partial<ReturnType<typeof useModerationCont
   });
 }
 
-function setupUserHook(overrides: Partial<ReturnType<typeof useModerationUser>> = {}) {
-  vi.mocked(useModerationUser).mockReturnValue({
-    profile: null,
-    batch: null,
-    isLoading: false,
-    isSaving: false,
-    error: null,
-    loadProfile: vi.fn().mockResolvedValue(undefined),
-    updateProfile: vi.fn().mockResolvedValue(undefined),
-    muteUser: vi.fn().mockResolvedValue(undefined),
-    banUser: vi.fn().mockResolvedValue(undefined),
-    releaseUser: vi.fn().mockResolvedValue(undefined),
-    hideContentBatch: vi.fn().mockResolvedValue(undefined),
-    restoreContentBatch: vi.fn().mockResolvedValue(undefined),
-    resetProfile: vi.fn(),
-    reload: mockUserReload,
-    ...overrides,
-  });
-}
-
 function renderPage() {
   return render(
     <MemoryRouter>
@@ -206,11 +180,9 @@ describe("ModerationPage", () => {
     toastQueue.clear();
     mockRefetch.mockResolvedValue(undefined);
     mockControlReload.mockResolvedValue(undefined);
-    mockUserReload.mockResolvedValue(undefined);
     vi.mocked(useIsMdScreen).mockReturnValue(true);
     setupListHook();
     setupControlHook();
-    setupUserHook();
     vi.mocked(apiClient.moderation.getHistory).mockResolvedValue({
       total: 0,
       page: 1,
@@ -281,13 +253,13 @@ describe("ModerationPage", () => {
     });
   });
 
-  it("渲染审核队列表格与四个 Tab", () => {
+  it("渲染审核队列表格与三个 Tab，不再提供用户治理入口", () => {
     renderPage();
 
     expect(screen.getByRole("heading", { name: "内容审核" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "审核队列" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "全站控制" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "用户治理" })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "用户治理" })).not.toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "规则管理" })).toBeInTheDocument();
     expect(screen.getByRole("grid", { name: "审核队列" })).toBeInTheDocument();
     expect(
@@ -598,21 +570,6 @@ describe("ModerationPage", () => {
     expect(screen.getByText(/lock_version 5/)).toBeInTheDocument();
   });
 
-  it("用户治理 Tab 输入 ID 查询画像", async () => {
-    const mockLoad = vi.fn().mockResolvedValue(undefined);
-    setupUserHook({ loadProfile: mockLoad });
-    const user = userEvent.setup();
-    renderPage();
-
-    await user.click(screen.getByRole("tab", { name: "用户治理" }));
-    await user.type(screen.getByLabelText("用户 ID"), "42");
-    await user.click(screen.getByRole("button", { name: "查询画像" }));
-
-    await waitFor(() => {
-      expect(mockLoad).toHaveBeenCalledWith(42);
-    });
-  });
-
   it("工具栏渲染三个筛选下拉并有激活时的清除按钮", () => {
     setupListHook({ hasActiveListQuery: true });
     renderPage();
@@ -652,16 +609,6 @@ describe("ModerationPage", () => {
     await user.click(screen.getByRole("tab", { name: "全站控制" }));
 
     expect(mockControlReload).toHaveBeenCalledTimes(1);
-  });
-
-  it("切换到用户治理 Tab 时刷新已加载的用户画像", async () => {
-    const user = userEvent.setup();
-    renderPage();
-
-    await user.click(screen.getByRole("tab", { name: "全站控制" }));
-    await user.click(screen.getByRole("tab", { name: "用户治理" }));
-
-    expect(mockUserReload).toHaveBeenCalledTimes(1);
   });
 
   it("再次切回规则管理 Tab 时刷新规则数据", async () => {

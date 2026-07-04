@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import type { AdminModerationProfileResp, ModerationTrustLevel } from "@repo/api";
 import { Button, Card, CardContent, Checkbox, Input, Select, cn } from "@repo/ui";
-import { ModerationUserBatchPanel } from "../../moderation/components/ModerationUserBatchPanel";
-import { ModerationUserSummary } from "../../moderation/components/ModerationUserSummary";
 import { useUserModeration } from "../hooks/use-user-moderation";
+import { ModerationUserBatchPanel } from "./ModerationUserBatchPanel";
+import { ModerationUserSummary } from "./ModerationUserSummary";
 
 interface UserModerationPanelProps {
   userId: number;
