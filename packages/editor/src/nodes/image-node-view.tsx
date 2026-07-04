@@ -3,9 +3,12 @@ import { NodeViewWrapper } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/core";
 import { useCdnOptimizedImage } from "@repo/hooks/use-cdn-optimized-image";
 import { useImageLoadPlaceholder } from "@repo/hooks";
-import { cn } from "@repo/ui";
+import { SvgIcon } from "@repo/icons";
+import { Button, cn } from "@repo/ui";
 import { IMAGE_UPLOAD_PLACEHOLDER_SRC } from "../constants/image-upload";
 import type { ImageExtensionOptions } from "../extensions/image";
+import type { ImageGalleryStorage } from "../extensions/image-gallery";
+import { createImageInsertHandlersAt } from "../utils/image-insert-handlers";
 
 const REVEAL_MS = 280;
 const DEFAULT_ASPECT_RATIO = 16 / 9;
@@ -15,6 +18,8 @@ const SELECTED_OUTLINE = "rounded-md outline outline-2 outline-primary -outline-
 /** 上传完成前占位：对齐碎语 SnippetImageUploader LoadingTile。 */
 export function ImageNodeView({
   node,
+  editor,
+  getPos,
   selected,
   updateAttributes,
   extension,
@@ -131,6 +136,32 @@ export function ImageNodeView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cdnImage.isError, isCompactLayout, revealed]);
 
+  // 顶层单图的「添加图片」：插入相邻图片后由归一化自动并组为轮播。
+  // 仅 gallery 扩展已注册（storage 存在）时显示；gallery 内的 slide 由
+  // gallery 自己的添加按钮负责，不重复渲染。回调在点击时现取。
+  // 组件测试会以不完整 props 直接渲染，editor/getPos 需做运行时防御
+  const galleryStorage = (editor?.storage as { imageGallery?: ImageGalleryStorage } | undefined)
+    ?.imageGallery;
+  const isTopLevelImage = (() => {
+    if (!editor || typeof getPos !== "function") return false;
+    const pos = getPos();
+    if (pos === undefined) return false;
+    return editor.state.doc.resolve(pos).parent.type.name !== "imageGallery";
+  })();
+  const showAddToGallery = Boolean(galleryStorage) && isTopLevelImage && hasRemoteSrc && !isPending;
+
+  const handleAddToGallery = () => {
+    const requestImageInsert = galleryStorage?.requestImageInsert;
+    if (!requestImageInsert) return;
+    requestImageInsert(
+      createImageInsertHandlersAt(editor, () => {
+        const pos = getPos();
+        if (pos === undefined) return null;
+        return pos + node.nodeSize;
+      }),
+    );
+  };
+
   const showImage = hasRemoteSrc || !isPending;
   const showSpinner = isPending && !revealed;
   // 评论/碎语小图：占位阶段保持定宽比框；就绪后用 w-auto 贴合原图，避免 w-full 先撑满再缩回。
@@ -147,7 +178,7 @@ export function ImageNodeView({
     <NodeViewWrapper
       as="figure"
       className={cn(
-        "my-6 block max-w-full",
+        "group relative my-6 block max-w-full",
         isCompactLayout ? (compactReady ? "w-fit" : "w-full") : !tightToImage && "w-full",
       )}
       data-rich-editor-image={!showLoadingAttr ? true : undefined}
@@ -236,6 +267,25 @@ export function ImageNodeView({
           </div>
         ) : null}
       </div>
+
+      {showAddToGallery ? (
+        // 内层容器在图片就绪后是 display:contents，定位上下文取 figure 本身
+        <div contentEditable={false} className="absolute bottom-3 right-3 z-10">
+          <Button
+            type="button"
+            variant="ghost"
+            aria-label="添加图片"
+            className={cn(
+              "h-auto rounded-full border-0 bg-black/45 px-2.5 py-1 text-xs text-white",
+              "opacity-0 transition-opacity hover:bg-black/60 group-hover:opacity-100 focus-visible:opacity-100",
+            )}
+            onPress={handleAddToGallery}
+          >
+            <SvgIcon name="plus" size={14} />
+            添加图片
+          </Button>
+        </div>
+      ) : null}
     </NodeViewWrapper>
   );
 }

@@ -3,7 +3,9 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { RichEditor } from "../RichEditor";
+import type { ImageInsertHandlers } from "../types";
 
+const ONE_IMAGE = "![一](https://e.com/1.png)";
 const TWO_IMAGES = "![一](https://e.com/1.png)\n\n![二](https://e.com/2.png)";
 
 describe("ImageGalleryNodeView", () => {
@@ -60,6 +62,60 @@ describe("ImageGalleryNodeView", () => {
       expect(document.querySelector(".ProseMirror")).toBeTruthy();
     });
     expect(screen.queryByLabelText("下一张")).toBeNull();
+  });
+
+  it("单图 hover 显示添加图片，插入后自动并组为轮播", async () => {
+    const holder: { current: ImageInsertHandlers | null } = { current: null };
+    const onInsertImage = vi.fn((handlers: ImageInsertHandlers) => {
+      holder.current = handlers;
+    });
+    render(
+      <RichEditor
+        value={ONE_IMAGE}
+        onChange={vi.fn()}
+        enableImageGallery
+        onInsertImage={onInsertImage}
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.getByLabelText("添加图片")).toBeTruthy();
+    });
+    // 单图此时还不是轮播
+    expect(screen.queryByLabelText("下一张")).toBeNull();
+
+    await userEvent.click(screen.getByLabelText("添加图片"));
+    expect(onInsertImage).toHaveBeenCalledTimes(1);
+    if (!holder.current) throw new Error("onInsertImage 未收到 handlers");
+    holder.current.insert("https://e.com/2.png", "二");
+
+    // 新图插在当前图之后，归一化自动并组为轮播
+    await waitFor(() => {
+      expect(screen.getByLabelText("下一张")).toBeTruthy();
+    });
+    expect(screen.getByText("1/2")).toBeTruthy();
+  });
+
+  it("未启用 enableImageGallery 的单图不显示添加图片", async () => {
+    render(<RichEditor value={ONE_IMAGE} onChange={vi.fn()} onInsertImage={vi.fn()} />);
+    await waitFor(() => {
+      expect(document.querySelector(".ProseMirror")).toBeTruthy();
+    });
+    expect(screen.queryByLabelText("添加图片")).toBeNull();
+  });
+
+  it("gallery 内的 slide 不重复渲染添加图片按钮", async () => {
+    render(
+      <RichEditor
+        value={TWO_IMAGES}
+        onChange={vi.fn()}
+        enableImageGallery
+        onInsertImage={vi.fn()}
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.getByLabelText("下一张")).toBeTruthy();
+    });
+    expect(screen.getAllByLabelText("添加图片")).toHaveLength(1);
   });
 
   it("注入 onInsertImage 后显示添加图片按钮", async () => {

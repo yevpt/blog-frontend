@@ -3,9 +3,8 @@ import type { NodeViewProps } from "@tiptap/core";
 import { NodeViewContent, NodeViewWrapper } from "@tiptap/react";
 import { SvgIcon } from "@repo/icons";
 import { Button, cn } from "@repo/ui";
-import { IMAGE_UPLOAD_PLACEHOLDER_SRC } from "../constants/image-upload";
 import type { ImageGalleryStorage } from "../extensions/image-gallery";
-import type { ImageInsertHandlers } from "../types";
+import { createImageInsertHandlersAt } from "../utils/image-insert-handlers";
 
 type AnyNodeViewContent = ComponentType<{ as?: string; className?: string }>;
 const TypedNodeViewContent = NodeViewContent as AnyNodeViewContent;
@@ -59,36 +58,16 @@ export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeVie
   const storage = (editor.storage as { imageGallery?: ImageGalleryStorage }).imageGallery;
   const requestImageInsert = storage?.requestImageInsert ?? null;
 
+  // 「添加图片」复用工具栏选图流程，插入位置固定在 gallery 内容末尾
   const handleAddImage = () => {
     if (!requestImageInsert) return;
-    const galleryEnd = () => {
-      const pos = getPos();
-      if (pos === undefined) return null;
-      return pos + node.nodeSize - 1;
-    };
-    const insertAt = (content: Record<string, unknown>) => {
-      const pos = galleryEnd();
-      if (pos === null) return;
-      editor.chain().insertContentAt(pos, content).run();
-    };
-    const handlers: ImageInsertHandlers = {
-      insert: (url, alt) => insertAt({ type: "image", attrs: { src: url, alt: alt ?? "" } }),
-      insertLoading: ({ uploadId, aspectRatio, alt }) =>
-        insertAt({
-          type: "image",
-          attrs: {
-            src: IMAGE_UPLOAD_PLACEHOLDER_SRC,
-            alt: alt ?? "",
-            uploadState: "loading",
-            uploadId,
-            aspectRatio: String(aspectRatio),
-          },
-        }),
-      resolveLoading: (uploadId, url, alt) =>
-        editor.chain().resolveImagePlaceholder({ uploadId, src: url, alt }).run(),
-      removeLoading: (uploadId) => editor.chain().removeImagePlaceholder({ uploadId }).run(),
-    };
-    requestImageInsert(handlers);
+    requestImageInsert(
+      createImageInsertHandlersAt(editor, () => {
+        const pos = getPos();
+        if (pos === undefined) return null;
+        return pos + node.nodeSize - 1;
+      }),
+    );
   };
 
   return (
