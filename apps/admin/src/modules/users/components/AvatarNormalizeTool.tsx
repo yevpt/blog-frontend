@@ -36,7 +36,86 @@ function isActionableItem(item: NormalizeAvatarItem) {
   return item.status === "updated" || item.status === "failed" || item.status === "cleared";
 }
 
-export function AvatarNormalizeTool() {
+export function SingleUserAvatarTool({ userId }: { userId: number }) {
+  const [clearInvalid, setClearInvalid] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<NormalizeAvatarItem | null>(null);
+
+  const handleSubmit = useCallback(async () => {
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      const data = await apiClient.users.normalizeAvatars({
+        user_id: userId,
+        clear_invalid: clearInvalid,
+      });
+      const item = data.items[0] ?? null;
+      setResult(item);
+      addToast(item ? (STATUS_LABELS[item.status] ?? item.status) : "已合规，无需处理", "success");
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : "头像归一化失败，请稍后重试";
+      setError(message);
+      addToast(message, "error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [clearInvalid, userId]);
+
+  const handleClearAvatar = useCallback(async () => {
+    setIsSubmitting(true);
+    try {
+      await apiClient.users.clearUserAvatar(userId);
+      addToast("已清除该用户头像", "success");
+      setResult(null);
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : "清除头像失败，请稍后重试";
+      addToast(message, "error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [userId]);
+
+  return (
+    <div className="grid gap-4">
+      <p className="text-sm text-muted-foreground">
+        检查该用户头像是否符合 240px、20KB 规范；不合规则压缩为 WebP 并替换。
+      </p>
+      <Checkbox
+        isSelected={clearInvalid}
+        onChange={setClearInvalid}
+        isDisabled={isSubmitting}
+        label="无法处理时自动清除"
+      />
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" isLoading={isSubmitting} onPress={() => void handleSubmit()}>
+          检查并处理
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          isLoading={isSubmitting}
+          onPress={() => void handleClearAvatar()}
+        >
+          清除头像
+        </Button>
+      </div>
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+      {result ? (
+        <p className="text-sm text-muted-foreground">
+          {STATUS_LABELS[result.status] ?? result.status}
+          {result.message ? `：${result.message}` : ""}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export function AllUsersAvatarTool() {
   const [userId, setUserId] = useState("");
   const [clearInvalid, setClearInvalid] = useState(false);
   const [submittingMode, setSubmittingMode] = useState<SubmitMode | null>(null);

@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { ToastRegion } from "@repo/ui";
 import { apiClient } from "../../../lib/api";
 import { toastQueue } from "../../../lib/toast";
-import { AvatarNormalizeTool } from "./AvatarNormalizeTool";
+import { AllUsersAvatarTool, SingleUserAvatarTool } from "./AvatarNormalizeTool";
 
 vi.mock("../../../lib/api", () => ({
   apiClient: {
@@ -15,7 +15,7 @@ vi.mock("../../../lib/api", () => ({
   },
 }));
 
-describe("AvatarNormalizeTool", () => {
+describe("头像归一化工具", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     toastQueue.clear();
@@ -52,7 +52,7 @@ describe("AvatarNormalizeTool", () => {
 
     render(
       <>
-        <AvatarNormalizeTool />
+        <AllUsersAvatarTool />
         <ToastRegion queue={toastQueue} />
       </>,
     );
@@ -72,7 +72,7 @@ describe("AvatarNormalizeTool", () => {
 
     render(
       <>
-        <AvatarNormalizeTool />
+        <AllUsersAvatarTool />
         <ToastRegion queue={toastQueue} />
       </>,
     );
@@ -89,7 +89,7 @@ describe("AvatarNormalizeTool", () => {
   it("处理单个用户时发送 user_id", async () => {
     const user = userEvent.setup();
 
-    render(<AvatarNormalizeTool />);
+    render(<AllUsersAvatarTool />);
 
     await user.type(screen.getByLabelText("用户 ID"), "42");
     await user.click(screen.getByRole("button", { name: "处理该用户" }));
@@ -99,6 +99,35 @@ describe("AvatarNormalizeTool", () => {
         user_id: 42,
         clear_invalid: false,
       });
+    });
+  });
+
+  it("单用户工具直接使用传入 ID 检查并处理", async () => {
+    const user = userEvent.setup();
+
+    render(<SingleUserAvatarTool userId={42} />);
+
+    expect(screen.getByRole("checkbox", { name: "无法处理时自动清除" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "清除头像" })).toBeInTheDocument();
+    await user.click(screen.getByRole("checkbox", { name: "无法处理时自动清除" }));
+    await user.click(screen.getByRole("button", { name: "检查并处理" }));
+
+    await waitFor(() => {
+      expect(apiClient.users.normalizeAvatars).toHaveBeenCalledWith({
+        user_id: 42,
+        clear_invalid: true,
+      });
+    });
+  });
+
+  it("单用户工具可直接清除头像", async () => {
+    const user = userEvent.setup();
+
+    render(<SingleUserAvatarTool userId={42} />);
+    await user.click(screen.getByRole("button", { name: "清除头像" }));
+
+    await waitFor(() => {
+      expect(apiClient.users.clearUserAvatar).toHaveBeenCalledWith(42);
     });
   });
 });
