@@ -1,19 +1,23 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { UserPageResp } from "@repo/api";
+import { useCallback, useEffect, useState } from "react";
+import type { AdminUserListReq, AdminUserPageResp } from "@repo/api";
 import { useAdminListQuery } from "../../../lib/admin-list-query";
 import { apiClient } from "../../../lib/api";
-import { mapUserToRow, matchUserSearch, userListQueryCodec, type UserRow } from "../model";
+import {
+  mapUserToRow,
+  userListQueryCodec,
+  type AdminUserListFilters,
+  type UserRow,
+} from "../model";
 
 export interface UseAdminUserListResult {
   rows: UserRow[];
-  visibleRows: UserRow[];
-  pageData: UserPageResp | null;
+  pageData: AdminUserPageResp | null;
   isLoading: boolean;
   error: Error | null;
   page: number;
   setPage: (page: number) => void;
-  search: string;
-  setSearch: (value: string) => void;
+  filters: AdminUserListFilters;
+  setFilters: (updater: (previous: AdminUserListFilters) => AdminUserListFilters) => void;
   resetListQuery: () => void;
   hasActiveListQuery: boolean;
   refetch: () => Promise<void>;
@@ -21,11 +25,21 @@ export interface UseAdminUserListResult {
 
 const DEFAULT_PAGE_SIZE = 10;
 
+function toAdminRole(role: string): AdminUserListReq["role"] {
+  if (role === "ROLE_ADMIN" || role === "ROLE_VIP" || role === "ROLE_NORMAL") return role;
+  return undefined;
+}
+
+function toAccountStatus(status: string): AdminUserListReq["status"] {
+  if (status === "active" || status === "disabled") return status;
+  return undefined;
+}
+
 export function useAdminUserList(): UseAdminUserListResult {
   const { state, patchState, resetListQuery, hasActiveListQuery } =
     useAdminListQuery(userListQueryCodec);
-  const { page, search } = state;
-  const [pageData, setPageData] = useState<UserPageResp | null>(null);
+  const { page, filters } = state;
+  const [pageData, setPageData] = useState<AdminUserPageResp | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
@@ -42,7 +56,14 @@ export function useAdminUserList(): UseAdminUserListResult {
       setError(null);
 
       try {
-        const data = await apiClient.users.listPublic({ page, page_size: DEFAULT_PAGE_SIZE });
+        const keyword = filters.keyword.trim();
+        const data = await apiClient.users.listAdmin({
+          page,
+          page_size: DEFAULT_PAGE_SIZE,
+          keyword: keyword || undefined,
+          role: toAdminRole(filters.role),
+          status: toAccountStatus(filters.status),
+        });
         if (cancelled) return;
         setPageData(data);
       } catch (err) {
@@ -59,7 +80,7 @@ export function useAdminUserList(): UseAdminUserListResult {
     return () => {
       cancelled = true;
     };
-  }, [page, reloadToken]);
+  }, [page, filters, reloadToken]);
 
   const setPage = useCallback(
     (nextPage: number) => {
@@ -68,33 +89,28 @@ export function useAdminUserList(): UseAdminUserListResult {
     [patchState],
   );
 
-  const setSearch = useCallback(
-    (value: string) => {
+  const setFilters = useCallback(
+    (updater: (previous: AdminUserListFilters) => AdminUserListFilters) => {
       patchState((previous) => ({
         ...previous,
         page: 1,
-        search: value,
+        filters: updater(previous.filters),
       }));
     },
     [patchState],
   );
 
-  const rows = useMemo(() => pageData?.list.map(mapUserToRow) ?? [], [pageData]);
-  const visibleRows = useMemo(
-    () => rows.filter((row) => matchUserSearch(row, search)),
-    [rows, search],
-  );
+  const rows = pageData?.list.map(mapUserToRow) ?? [];
 
   return {
     rows,
-    visibleRows,
     pageData,
     isLoading,
     error,
     page,
     setPage,
-    search,
-    setSearch,
+    filters,
+    setFilters,
     resetListQuery,
     hasActiveListQuery,
     refetch,
