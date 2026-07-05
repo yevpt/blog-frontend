@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createApiClient } from "./client";
 import { ApiError } from "./errors";
 import type { ArticleDetailResp, ArticlePageResp } from "./types/article";
+import type { MomentItemResp } from "./types/moment";
 
 // 构造一个最小的 mock Response
 function mockResponse(body: unknown, status = 200) {
@@ -1684,6 +1685,36 @@ describe("createApiClient", () => {
       "http://api/moments/7/view",
       expect.objectContaining({ method: "POST" }),
     );
+  });
+
+  it("moments.getDetail 调用正确的端点", async () => {
+    const detail: MomentItemResp = {
+      id: 1,
+      user_id: 1,
+      content: "今天的风很温柔",
+      status: 1,
+      comment_status: 1,
+      read_count: 20,
+      is_top: false,
+      like_count: 3,
+      comment_count: 2,
+      is_liked: false,
+      images: [],
+      created_at: "2026-06-01T00:00:00Z",
+      updated_at: "2026-06-01T00:00:00Z",
+    };
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: detail }),
+    );
+    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+
+    const result = await client.moments.getDetail(1);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/moments/1",
+      expect.objectContaining({ method: "GET" }),
+    );
+    expect(result.content).toBe("今天的风很温柔");
   });
 
   it("articles.getAdminDetail 调用正确端点并携带 Authorization", async () => {

@@ -687,6 +687,9 @@ export function createApiClient(config: ApiClientConfig) {
       },
       /** 上报一次碎语阅读（触发即可，不等待返回值） */
       view: (id: number) => fetchPublic<void>(`/moments/${id}/view`, { method: "POST" }),
+      /** 查询单条碎语详情，未登录可访问，登录态返回 is_liked */
+      getDetail: (id: number) =>
+        fetchOptionalAuth<MomentItemResp>(`/moments/${id}`, { method: "GET" }),
       /** 分页查询公开碎语，支持用户/角色过滤；登录态可返回 is_liked */
       listPublic: (req: MomentListReq = {}) => {
         const params = new URLSearchParams();
