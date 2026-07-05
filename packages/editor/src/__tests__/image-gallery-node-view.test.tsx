@@ -7,6 +7,8 @@ import type { ImageInsertHandlers } from "../types";
 
 const ONE_IMAGE = "![一](https://e.com/1.png)";
 const TWO_IMAGES = "![一](https://e.com/1.png)\n\n![二](https://e.com/2.png)";
+const THREE_IMAGES =
+  "![一](https://e.com/1.png)\n\n![二](https://e.com/2.png)\n\n![三](https://e.com/3.png)";
 
 /**
  * chrome 层的高度计算以 <img> 自身的 getBoundingClientRect 为准（wrapper 的
@@ -300,6 +302,47 @@ describe("ImageGalleryNodeView", () => {
       expect(screen.queryByLabelText("下一张")).toBeNull();
     });
     expect(screen.getByAltText("二")).toBeTruthy();
+  });
+
+  it("三图轮播翻到第二张后点删除,删的是当前这张而非第一张（回归：验证 forEach offset 换算绝对 pos 的定位逻辑）", async () => {
+    render(<RichEditor value={THREE_IMAGES} onChange={vi.fn()} enableImageGallery />);
+    await waitFor(() => {
+      expect(screen.getByLabelText("下一张")).toBeTruthy();
+    });
+
+    // 补齐 jsdom 缺失的布局/滚动能力，驱动翻页真的生效（同上方已有用例的写法）
+    const track = document.querySelector<HTMLElement>("[data-node-view-content-react]");
+    if (!track) throw new Error("[data-node-view-content-react] 不存在");
+    Object.defineProperty(track, "clientWidth", { value: 600, configurable: true });
+    let scrollLeft = 0;
+    Object.defineProperty(track, "scrollLeft", {
+      configurable: true,
+      get: () => scrollLeft,
+      set: (value: number) => {
+        scrollLeft = value;
+      },
+    });
+    Object.defineProperty(track, "scrollTo", {
+      configurable: true,
+      value: (options: ScrollToOptions) => {
+        scrollLeft = options.left ?? 0;
+        track.dispatchEvent(new Event("scroll"));
+      },
+    });
+
+    await userEvent.click(screen.getByLabelText("下一张"));
+    await waitFor(() => {
+      expect(screen.getByText("2/3")).toBeTruthy();
+    });
+
+    await userEvent.click(screen.getByLabelText("删除图片"));
+
+    await waitFor(() => {
+      expect(screen.queryByAltText("二")).toBeNull();
+    });
+    // 第一张、第三张仍在，证明删的是当前正在看的第二张，不是巧合删对了第一张
+    expect(screen.getByAltText("一")).toBeTruthy();
+    expect(screen.getByAltText("三")).toBeTruthy();
   });
 
   it("顶层单图新增删除按钮,点击后该图片节点从文档移除", async () => {
