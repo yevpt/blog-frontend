@@ -118,4 +118,36 @@ describe("liked-content-format", () => {
     expect(getLikedContentRootHref(item)).toBeNull();
     expect(formatLikedContentRootContext(item)).toBe("原内容已不可访问");
   });
+
+  it("碎语点赞跳转到碎语详情页", () => {
+    expect(
+      getLikedContentRootHref(
+        makeItem({ kind: "moment", filter: "moment", content: { id: 77, excerpt: "碎语摘要" } }),
+      ),
+    ).toBe("/moments/77");
+  });
+
+  it("碎语已删除时跳转地址为空", () => {
+    expect(
+      getLikedContentRootHref(
+        makeItem({
+          kind: "moment",
+          filter: "moment",
+          content: { id: 77, excerpt: "", deleted: true },
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it("根内容是碎语的评论点赞携带评论锚点跳转到碎语详情页", () => {
+    const href = getLikedContentRootHref(
+      makeItem({
+        kind: "comment",
+        filter: "comment",
+        content: { id: 5, excerpt: "评论正文" },
+        root: { kind: "moment", id: 30, excerpt: "碎语摘要" },
+      }),
+    );
+    expect(href).toBe("/moments/30#comment-5");
+  });
 });
