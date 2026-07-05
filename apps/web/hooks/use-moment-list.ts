@@ -17,6 +17,7 @@ import { apiForm, apiJson, ApiClientError, getApiErrorMessage } from "@/lib/clie
 import { useIdempotencyKey } from "@/hooks/use-idempotency-key";
 import { normalizeModerationView } from "@/components/moderation";
 import { mergePageWithPublishedMoment } from "@/components/moments/enrich-moment-from-publish";
+import { packMomentImagesFormData } from "@/components/moments/pack-moment-images-form-data";
 import { momentEditFingerprint } from "@/components/moments/moment-submit-fingerprint";
 import { logMomentUploadImages } from "@/components/moments/log-moment-upload-images";
 import { buildQuery } from "@/lib/query";
@@ -398,15 +399,7 @@ export function useMomentList({
         form.append("status", String(moment.status));
         form.append("comment_status", String(moment.comment_status));
 
-        images.forEach((image) => {
-          if (image.file) {
-            form.append("images", image.file, image.file.name);
-            form.append("image_order", `file:${form.getAll("images").length - 1}`);
-          } else if (image.remoteUrl) {
-            form.append("image_urls", image.remoteUrl);
-            form.append("image_order", `url:${form.getAll("image_urls").length - 1}`);
-          }
-        });
+        packMomentImagesFormData(form, images);
 
         logMomentUploadImages("publish", images);
         const key = getIdempotencyKey(
