@@ -1270,7 +1270,7 @@ function buildMomentTitle(content: string): string {
   if (!trimmed) {
     return "碎语";
   }
-  if (trimmed.length <= MOMENT_TITLE_MAX_LENGTH) {
+  if (trimmed.length < MOMENT_TITLE_MAX_LENGTH) {
     return trimmed;
   }
   return `${trimmed.slice(0, MOMENT_TITLE_MAX_LENGTH)}…`;
