@@ -6,6 +6,7 @@ import { cn } from "@repo/ui";
 import { useHydrated } from "@repo/hooks";
 import type { ArticleMusicSyncInput } from "@/lib/article-music";
 import { useArticleMusic, type ArticleMusicTrack } from "@/store/use-article-music";
+import { isMobileDevice } from "@/lib/is-mobile-device";
 import { MusicSeek } from "./article-music-seek";
 
 const DEFAULT_VISUALIZER_LEVELS = [0.4, 0.85, 0.55, 0.7] as const;
@@ -220,6 +221,13 @@ function MusicVisualizer({
     }
 
     if (!audioEl) {
+      setUseFallbackMotion(ENABLE_VISUALIZER_FALLBACK_MOTION);
+      return;
+    }
+
+    // 真实移动端不接入 Web Audio：iOS 后台会挂起 AudioContext 导致音频中断。
+    // 移动端频谱柱本就 CSS 隐藏，走 CSS 律动兜底即可。
+    if (isMobileDevice()) {
       setUseFallbackMotion(ENABLE_VISUALIZER_FALLBACK_MOTION);
       return;
     }

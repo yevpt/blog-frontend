@@ -27,6 +27,12 @@ vi.mock("@repo/ui", () => ({
   cn: (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" "),
 }));
 
+// 控制真实移动端判定，验证移动端不接入 Web Audio 图
+const mobileDeviceMock = vi.hoisted(() => ({ isMobileDevice: vi.fn(() => false) }));
+vi.mock("@/lib/is-mobile-device", () => ({
+  isMobileDevice: mobileDeviceMock.isMobileDevice,
+}));
+
 class ResizeObserverMock {
   observe = vi.fn();
   disconnect = vi.fn();
@@ -75,6 +81,8 @@ describe("ArticleMusicBar", () => {
     ioCallback = null;
     useArticleMusic.getState().clear();
     vi.clearAllMocks();
+    // 默认桌面端环境
+    mobileDeviceMock.isMobileDevice.mockReturnValue(false);
 
     class MockIntersectionObserver {
       constructor(
@@ -420,6 +428,39 @@ describe("ArticleMusicBar", () => {
       "scaleY(0.55)",
       "scaleY(0.7)",
     ]);
+  });
+
+  it("真实移动端不接入 Web Audio（避免 iOS 后台挂起 AudioContext）", () => {
+    mobileDeviceMock.isMobileDevice.mockReturnValue(true);
+    const createMediaElementSource = vi.fn();
+    const audioEl = document.createElement("audio");
+    audioEl.crossOrigin = "anonymous";
+    audioEl.pause = vi.fn();
+
+    class MockAudioContext {
+      state = "running";
+      destination = {};
+      resume = vi.fn(() => Promise.resolve());
+      createAnalyser = vi.fn();
+      createMediaElementSource = createMediaElementSource;
+    }
+
+    vi.stubGlobal("AudioContext", MockAudioContext);
+    useArticleMusic.setState({
+      track: {
+        url: "https://example.com/a.mp3",
+        name: "春夏秋冬",
+        durationSeconds: 100,
+      },
+      playbackState: "playing",
+      progress: 0,
+      audioEl,
+    });
+
+    render(<ArticleMusicBar />);
+
+    // 即使 crossOrigin 满足采样条件，移动端也应跳过 Web Audio，不创建 AudioContext 路由
+    expect(createMediaElementSource).not.toHaveBeenCalled();
   });
 
   it("加载失败时展示不可用态与重试", async () => {
