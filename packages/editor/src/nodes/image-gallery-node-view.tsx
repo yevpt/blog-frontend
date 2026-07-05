@@ -10,7 +10,7 @@ type AnyNodeViewContent = ComponentType<{ as?: string; className?: string }>;
 const TypedNodeViewContent = NodeViewContent as AnyNodeViewContent;
 
 const NAV_BUTTON_CLASSES =
-  "absolute top-1/2 z-10 size-8 -translate-y-1/2 rounded-full border-0 p-0 bg-black/45 text-white shadow-none hover:bg-black/60 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 disabled:pointer-events-none disabled:opacity-0";
+  "absolute top-1/2 z-10 size-8 -translate-y-1/2 rounded-full border-0 p-0 bg-black/45 text-white shadow-none hover:bg-black/60 opacity-100 can-hover:opacity-0 transition-opacity can-hover:group-hover:opacity-100 focus-visible:opacity-100 disabled:pointer-events-none disabled:opacity-0";
 
 /** imageGallery 的 WYSIWYG NodeView：contentDOM 即横向 scroll-snap 滑道。 */
 export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeViewProps) {
@@ -165,6 +165,22 @@ export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeVie
     );
   };
 
+  // 删除轮播里当前正在查看的这一张;node 是 gallery 节点,child 的绝对
+  // pos = gallery 起点(getPos())+ 1(跳过 gallery 自身的开始标记)+ forEach 给出的相对 offset
+  const handleDeleteImage = () => {
+    const pos = getPos();
+    if (pos === undefined) return;
+    let childFrom: number | null = null;
+    let childSize = 0;
+    node.forEach((child, offset, childIndex) => {
+      if (childIndex !== index) return;
+      childFrom = pos + 1 + offset;
+      childSize = child.nodeSize;
+    });
+    if (childFrom === null) return;
+    editor.commands.deleteRange({ from: childFrom, to: childFrom + childSize });
+  };
+
   return (
     <NodeViewWrapper
       as="div"
@@ -236,9 +252,24 @@ export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeVie
               />
             ))}
           </div>
-          <span className="absolute right-3 top-3 z-10 rounded-full bg-black/45 px-2 py-0.5 text-xs leading-tight text-white">
-            {index + 1}/{count}
-          </span>
+          <div className="absolute right-3 top-3 z-10 flex items-center gap-1.5">
+            <Button
+              type="button"
+              variant="ghost"
+              aria-label="删除图片"
+              className={cn(
+                "h-auto rounded-full border-0 bg-black/45 p-1.5 text-white",
+                // ghost 变体自带 hover/active:text-accent-foreground（深色），会把白字盖成不可见，需显式覆盖
+                "opacity-100 can-hover:opacity-0 transition-opacity hover:bg-black/60 hover:text-white active:text-white can-hover:group-hover:opacity-100 focus-visible:opacity-100",
+              )}
+              onPress={handleDeleteImage}
+            >
+              <SvgIcon name="trash" size={14} />
+            </Button>
+            <span className="rounded-full bg-black/45 px-2 py-0.5 text-xs leading-tight text-white">
+              {index + 1}/{count}
+            </span>
+          </div>
           {requestImageInsert && (
             <Button
               type="button"
@@ -247,7 +278,7 @@ export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeVie
               className={cn(
                 "absolute bottom-3 right-3 z-10 h-auto rounded-full border-0 bg-black/45 px-2.5 py-1 text-xs text-white",
                 // ghost 变体自带 hover/active:text-accent-foreground（深色），会把白字盖成不可见，需显式覆盖
-                "opacity-0 transition-opacity hover:bg-black/60 hover:text-white active:text-white group-hover:opacity-100 focus-visible:opacity-100",
+                "opacity-100 can-hover:opacity-0 transition-opacity hover:bg-black/60 hover:text-white active:text-white can-hover:group-hover:opacity-100 focus-visible:opacity-100",
               )}
               onPress={handleAddImage}
             >

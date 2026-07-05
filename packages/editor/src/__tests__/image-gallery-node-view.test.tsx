@@ -225,7 +225,12 @@ describe("ImageGalleryNodeView", () => {
 
   it("顶层单图仍保留 my-6（非 gallery 场景的正常间距不受影响）", async () => {
     render(
-      <RichEditor value={ONE_IMAGE} onChange={vi.fn()} enableImageGallery onInsertImage={vi.fn()} />,
+      <RichEditor
+        value={ONE_IMAGE}
+        onChange={vi.fn()}
+        enableImageGallery
+        onInsertImage={vi.fn()}
+      />,
     );
     await waitFor(() => {
       expect(screen.getByLabelText("添加图片")).toBeTruthy();
@@ -280,5 +285,20 @@ describe("ImageGalleryNodeView", () => {
     await waitFor(() => {
       expect(screen.getByLabelText("添加图片")).toBeTruthy();
     });
+  });
+
+  it("点击删除按钮移除轮播当前这张图片,只剩一张时自动解组为单图", async () => {
+    render(<RichEditor value={TWO_IMAGES} onChange={vi.fn()} enableImageGallery />);
+    await waitFor(() => {
+      expect(screen.getByLabelText("下一张")).toBeTruthy();
+    });
+    expect(screen.getByText("1/2")).toBeTruthy();
+
+    await userEvent.click(screen.getByLabelText("删除图片"));
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText("下一张")).toBeNull();
+    });
+    expect(screen.getByAltText("二")).toBeTruthy();
   });
 });
