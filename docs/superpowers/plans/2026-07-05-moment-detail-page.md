@@ -401,7 +401,16 @@ describe("useMomentDetail", () => {
     const { result } = renderHook(() => useMomentDetail(makeMoment()));
 
     await act(async () => {
-      await result.current.toggleLike(makeMoment({ moderation: { can_interact: false } }));
+      await result.current.toggleLike(
+        makeMoment({
+          moderation: {
+            public_state: "visible",
+            display_version: "last_approved",
+            has_pending_revision: false,
+            can_interact: false,
+          },
+        }),
+      );
     });
 
     expect(fetch).not.toHaveBeenCalled();
