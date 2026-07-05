@@ -14,10 +14,16 @@ vi.mock("react-virtuoso", () => ({
   VirtuosoGrid: ({
     data,
     itemContent,
+    increaseViewportBy,
   }: {
     data: Array<{ id: number; nickname: string }>;
     itemContent: (index: number, item: { id: number; nickname: string }) => ReactNode;
-  }) => <div data-testid="virtuoso-grid">{data.map((item, i) => itemContent(i, item))}</div>,
+    increaseViewportBy?: number;
+  }) => (
+    <div data-testid="virtuoso-grid" data-increase-viewport-by={increaseViewportBy}>
+      {data.map((item, i) => itemContent(i, item))}
+    </div>
+  ),
 }));
 
 vi.mock("@/components/common/base-user-card", () => ({
@@ -63,6 +69,12 @@ test("SSR 首屏直接渲染服务端用户列表，头像延迟到客户端", (
   expect(screen.getByText("Regular")).toBeInTheDocument();
   expect(screen.getAllByTestId("user-card")[0]).toHaveAttribute("data-defer-avatar", "true");
   expect(mockApiJson).not.toHaveBeenCalled();
+});
+
+test("只用 overscan 预渲染，避免重复扩大视口触发网格边界反馈环", () => {
+  render(<CircleList initialPage={initialPage} />);
+
+  expect(screen.getByTestId("virtuoso-grid")).not.toHaveAttribute("data-increase-viewport-by");
 });
 
 test("返回圈子页时从内存缓存恢复已加载列表", () => {

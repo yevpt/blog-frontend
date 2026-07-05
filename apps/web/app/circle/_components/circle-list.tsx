@@ -79,7 +79,6 @@ export function CircleList({ initialPage }: CircleListProps) {
         data={users}
         endReached={loadMore}
         overscan={viewportBuffer}
-        increaseViewportBy={viewportBuffer}
         initialItemCount={bootState.users.length}
         computeItemKey={(_, user) => user.id}
         components={CIRCLE_VIRTUOSO_COMPONENTS}
