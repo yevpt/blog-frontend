@@ -103,6 +103,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # 部署前的类型检查关卡：build 已不再内联 tsc，这里独立跑一遍，
+      # 确保类型错误的代码不会被打包上线（vite 只剥离类型、不做类型检查）。
+      - name: Type check admin
+        run: pnpm --filter admin check-types
+
       # 构建 admin 静态产物，输出目录为 apps/admin/dist。
       - name: Build admin
         run: pnpm --filter admin build
