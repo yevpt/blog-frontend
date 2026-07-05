@@ -46,14 +46,14 @@ describe("MomentContent", () => {
     expect(screen.queryByText("moment.expand")).toBeNull();
   });
 
-  it("碎语正文（管理员发布）的外部链接不受留言板/评论 UGC 加固影响", () => {
+  it("碎语正文的外部链接新窗口打开且不加 UGC nofollow", () => {
     const { container } = render(
       <MomentContent collapsible={false} content="[官网](https://example.com)" />,
     );
 
     const link = container.querySelector("a");
     expect(link?.getAttribute("href")).toBe("https://example.com");
-    expect(link?.getAttribute("rel")).toBeNull();
-    expect(link?.getAttribute("target")).toBeNull();
+    expect(link?.getAttribute("rel")).toBe("noopener noreferrer");
+    expect(link?.getAttribute("target")).toBe("_blank");
   });
 });

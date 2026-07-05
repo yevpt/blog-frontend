@@ -106,11 +106,19 @@ describe("markdownToHtml", () => {
     expect(html).toMatch(/<p>(\u00a0|&#xA0;|&nbsp;)<\/p>/);
   });
 
-  it("默认不处理外部链接（文章/碎语正文场景）", () => {
+  it("默认给外部 http(s) 链接新窗口打开（文章/碎语正文场景）", () => {
     const html = markdownToHtmlSync("[官网](https://example.com)");
     expect(html).toContain('href="https://example.com"');
+    expect(html).toContain('rel="noopener noreferrer"');
+    expect(html).toContain('target="_blank"');
     expect(html).not.toContain("nofollow");
+  });
+
+  it("默认不影响站内锚点等非 http(s) 链接", () => {
+    const html = markdownToHtmlSync("## 标题\n\n[跳转](#标题)");
+    expect(html).toContain('href="#');
     expect(html).not.toContain("target=");
+    expect(html).not.toContain("nofollow");
   });
 
   it("treatLinksAsUgc 给外部 http(s) 链接加 nofollow ugc + 新窗口打开（留言板/评论场景）", () => {
@@ -123,6 +131,7 @@ describe("markdownToHtml", () => {
     const html = markdownToHtmlSync("## 标题\n\n[跳转](#标题)", { treatLinksAsUgc: true });
     expect(html).toContain('href="#');
     expect(html).not.toContain("nofollow");
+    expect(html).not.toContain("target=");
   });
 });
 
