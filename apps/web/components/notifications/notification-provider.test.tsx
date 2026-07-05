@@ -149,7 +149,7 @@ describe("NotificationProvider", () => {
     const toastButton = screen.getByRole("button", { name: /寒蝉.*评论了你的碎语/ });
     fireEvent.click(toastButton);
 
-    expect(mockPush).toHaveBeenCalledWith("/moments");
+    expect(mockPush).toHaveBeenCalledWith("/moments/9");
   });
 
   it("点击弹窗的关闭按钮只消失，不触发跳转", async () => {
