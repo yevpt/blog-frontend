@@ -11,6 +11,7 @@
     "lint:fix": "pnpm -r --if-present lint:fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "push:verify": "PRE_PUSH_NO_CACHE=1 git push",
     "test": "vitest",
     "test:run": "vitest --run",
     "test:coverage": "vitest --coverage",
@@ -19,7 +20,7 @@
   "simple-git-hooks": {
     "commit-msg": "node scripts/validate-commit-msg.cjs $1",
     "pre-commit": "pnpm exec lint-staged",
-    "pre-push": "pnpm run check-types && pnpm exec vitest --run --changed origin/main"
+    "pre-push": "node scripts/pre-push.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
