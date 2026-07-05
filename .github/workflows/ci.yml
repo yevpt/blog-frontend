@@ -7,9 +7,16 @@ on:
     branches: [main, dev]
 
 jobs:
+  # 测试、类型检查、Lint 三者互不依赖，拆成并行 job 同时跑，
+  # CI 总耗时从「三者之和」降为「最慢的一个」。matrix.task 直接对应根目录脚本。
   ci:
-    name: Test & Lint
+    name: ${{ matrix.task }}
     runs-on: ubuntu-latest
+    strategy:
+      # 单个任务失败不取消其它任务，一次就能看全所有问题。
+      fail-fast: false
+      matrix:
+        task: [test:run, check-types, lint]
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -26,11 +33,5 @@ jobs:
       - name: 安装依赖
         run: pnpm install --frozen-lockfile
 
-      - name: 运行测试
-        run: pnpm test:run
-
-      - name: 类型检查
-        run: pnpm check-types
-
-      - name: Lint
-        run: pnpm lint
+      - name: ${{ matrix.task }}
+        run: pnpm ${{ matrix.task }}
