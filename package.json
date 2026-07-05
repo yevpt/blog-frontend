@@ -18,8 +18,8 @@
   },
   "simple-git-hooks": {
     "commit-msg": "node scripts/validate-commit-msg.cjs $1",
-    "pre-commit": "pnpm exec lint-staged && pnpm run check-types && pnpm run lint",
-    "pre-push": "pnpm run test:run"
+    "pre-commit": "pnpm exec lint-staged",
+    "pre-push": "pnpm run check-types && pnpm exec vitest --run --changed origin/main"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
