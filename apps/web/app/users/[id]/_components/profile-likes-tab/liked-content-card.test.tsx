@@ -82,7 +82,7 @@ describe("LikedContentCard", () => {
     expect(within(card).getByText("赞过碎语")).toBeInTheDocument();
     expect(within(card).getByRole("link", { name: /打开碎语/ })).toHaveAttribute(
       "href",
-      "/moments",
+      "/moments/3",
     );
   });
 
@@ -120,7 +120,7 @@ describe("LikedContentCard", () => {
     expect(screen.getByText("赞过评论")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "来自碎语：碎语来源" })).toHaveAttribute(
       "href",
-      "/moments",
+      "/moments/7#comment-5",
     );
   });
 
