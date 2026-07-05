@@ -301,4 +301,32 @@ describe("ImageGalleryNodeView", () => {
     });
     expect(screen.getByAltText("二")).toBeTruthy();
   });
+
+  it("顶层单图新增删除按钮,点击后该图片节点从文档移除", async () => {
+    render(
+      <RichEditor
+        value={ONE_IMAGE}
+        onChange={vi.fn()}
+        enableImageGallery
+        onInsertImage={vi.fn()}
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.getByLabelText("删除图片")).toBeTruthy();
+    });
+
+    await userEvent.click(screen.getByLabelText("删除图片"));
+
+    await waitFor(() => {
+      expect(screen.queryByAltText("一")).toBeNull();
+    });
+  });
+
+  it("未启用 enableImageGallery 时顶层单图仍显示删除按钮", async () => {
+    render(<RichEditor value={ONE_IMAGE} onChange={vi.fn()} />);
+    await waitFor(() => {
+      expect(screen.getByLabelText("删除图片")).toBeTruthy();
+    });
+    expect(screen.queryByLabelText("添加图片")).toBeNull();
+  });
 });

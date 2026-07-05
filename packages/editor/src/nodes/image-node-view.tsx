@@ -162,6 +162,16 @@ export function ImageNodeView({
     );
   };
 
+  // 删除按钮独立于 showAddToGallery：即便 gallery 扩展未启用，顶层图片也能删
+  const showDeleteImage = isTopLevelImage && hasRemoteSrc && !isPending;
+
+  const handleDeleteImage = () => {
+    if (!editor || typeof getPos !== "function") return;
+    const pos = getPos();
+    if (pos === undefined) return;
+    editor.commands.deleteRange({ from: pos, to: pos + node.nodeSize });
+  };
+
   const showImage = hasRemoteSrc || !isPending;
   const showSpinner = isPending && !revealed;
   // 评论/碎语小图：占位阶段保持定宽比框；就绪后用 w-auto 贴合原图，避免 w-full 先撑满再缩回。
@@ -271,23 +281,43 @@ export function ImageNodeView({
         ) : null}
       </div>
 
-      {showAddToGallery ? (
+      {showDeleteImage || showAddToGallery ? (
         // 内层容器在图片就绪后是 display:contents，定位上下文取 figure 本身
-        <div contentEditable={false} className="absolute bottom-3 right-3 z-10">
-          <Button
-            type="button"
-            variant="ghost"
-            aria-label="添加图片"
-            className={cn(
-              "h-auto rounded-full border-0 bg-black/45 px-2.5 py-1 text-xs text-white",
-              // ghost 变体自带 hover/active:text-accent-foreground（深色），会把白字盖成不可见，需显式覆盖
-              "opacity-0 transition-opacity hover:bg-black/60 hover:text-white active:text-white group-hover:opacity-100 focus-visible:opacity-100",
-            )}
-            onPress={handleAddToGallery}
-          >
-            <SvgIcon name="plus" size={14} />
-            添加图片
-          </Button>
+        <div
+          contentEditable={false}
+          className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5"
+        >
+          {showDeleteImage ? (
+            <Button
+              type="button"
+              variant="ghost"
+              aria-label="删除图片"
+              className={cn(
+                "h-auto rounded-full border-0 bg-black/45 p-1.5 text-white",
+                // ghost 变体自带 hover/active:text-accent-foreground（深色），会把白字盖成不可见，需显式覆盖
+                "opacity-100 can-hover:opacity-0 transition-opacity hover:bg-black/60 hover:text-white active:text-white can-hover:group-hover:opacity-100 focus-visible:opacity-100",
+              )}
+              onPress={handleDeleteImage}
+            >
+              <SvgIcon name="trash" size={14} />
+            </Button>
+          ) : null}
+          {showAddToGallery ? (
+            <Button
+              type="button"
+              variant="ghost"
+              aria-label="添加图片"
+              className={cn(
+                "h-auto rounded-full border-0 bg-black/45 px-2.5 py-1 text-xs text-white",
+                // ghost 变体自带 hover/active:text-accent-foreground（深色），会把白字盖成不可见，需显式覆盖
+                "opacity-100 can-hover:opacity-0 transition-opacity hover:bg-black/60 hover:text-white active:text-white can-hover:group-hover:opacity-100 focus-visible:opacity-100",
+              )}
+              onPress={handleAddToGallery}
+            >
+              <SvgIcon name="plus" size={14} />
+              添加图片
+            </Button>
+          ) : null}
         </div>
       ) : null}
     </NodeViewWrapper>
