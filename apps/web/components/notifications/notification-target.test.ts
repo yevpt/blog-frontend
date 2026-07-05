@@ -26,8 +26,8 @@ describe("getNotificationHref", () => {
     expect(getNotificationHref(item({ root_type: "article", root_id: 42 }))).toBe("/articles/42");
   });
 
-  it("moment 通知跳转碎语页而不是圈子页", () => {
-    expect(getNotificationHref(item({ root_type: "moment", root_id: 9 }))).toBe("/moments");
+  it("moment 通知跳转到具体碎语详情页", () => {
+    expect(getNotificationHref(item({ root_type: "moment", root_id: 9 }))).toBe("/moments/9");
   });
 
   it("guestbook 通知跳转留言页", () => {
