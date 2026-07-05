@@ -902,7 +902,12 @@ body {
   left: 50%;
   transform: translateX(-50%);
   display: flex;
+  align-items: center;
   gap: 0.375rem;
+  padding: 0.3125rem 0.5rem;
+  border-radius: 9999px;
+  /* 与 .md-gallery-nav/.md-gallery-counter 同款深色玻璃底，避免纯白圆点在浅色图片上不可见 */
+  background: rgba(0, 0, 0, 0.45);
 }
 
 .md-gallery-dot {
