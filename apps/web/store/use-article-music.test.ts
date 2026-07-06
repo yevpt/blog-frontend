@@ -3,15 +3,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/prepare-article-audio", () => ({
   prepareArticleAudioElement: vi.fn().mockResolvedValue(undefined),
   resetArticleAudioElement: vi.fn(),
+  reloadArticleAudioElement: vi.fn(),
 }));
 
-import { prepareArticleAudioElement, resetArticleAudioElement } from "@/lib/prepare-article-audio";
+import {
+  prepareArticleAudioElement,
+  reloadArticleAudioElement,
+  resetArticleAudioElement,
+} from "@/lib/prepare-article-audio";
 import { useArticleMusic } from "./use-article-music";
 
 describe("useArticleMusic", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     useArticleMusic.getState().clear();
+    vi.clearAllMocks();
   });
 
   it("init 写入曲目并重置播放状态", () => {
@@ -195,7 +200,9 @@ describe("useArticleMusic", () => {
     await vi.advanceTimersByTimeAsync(1500);
 
     expect(play).toHaveBeenCalledTimes(2);
-    expect(resetArticleAudioElement).toHaveBeenCalledWith(audioEl);
+    // 重试只 reload（不 pause/不清 src），避免打断回源与污染 loading 态
+    expect(reloadArticleAudioElement).toHaveBeenCalledWith(audioEl);
+    expect(resetArticleAudioElement).not.toHaveBeenCalled();
     expect(useArticleMusic.getState().playbackState).toBe("playing");
     expect(useArticleMusic.getState().hasPlayedOnce).toBe(true);
 
@@ -214,14 +221,75 @@ describe("useArticleMusic", () => {
 
     const togglePromise = useArticleMusic.getState().toggle();
 
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      await vi.advanceTimersByTimeAsync(1500);
-    }
+    // 指数退避：1500 → 3000 → 6000
+    await vi.advanceTimersByTimeAsync(1500);
+    await vi.advanceTimersByTimeAsync(3000);
+    await vi.advanceTimersByTimeAsync(6000);
     await togglePromise;
 
     expect(play).toHaveBeenCalledTimes(4);
     expect(useArticleMusic.getState().playbackState).toBe("error");
     expect(useArticleMusic.getState().hasPlayedOnce).toBe(false);
+
+    vi.useRealTimers();
+  });
+
+  it("重试间隔为指数退避（1500 → 3000 → 6000）", async () => {
+    vi.useFakeTimers();
+    const play = vi.fn().mockRejectedValue(new Error("network"));
+    const audioEl = { pause: vi.fn(), play, currentTime: 0 } as unknown as HTMLAudioElement;
+    useArticleMusic.setState({
+      track: { url: "https://example.com/a.mp3", name: "雨夜" },
+      playbackState: "idle",
+      audioEl,
+    });
+
+    const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
+    const togglePromise = useArticleMusic.getState().toggle();
+    await togglePromise;
+
+    // 每次推进触发重试失败后，才安排下一次重试；逐次收集 delay
+    const retryDelays: number[] = [];
+    retryDelays.push(setTimeoutSpy.mock.calls.at(-1)?.[1] as number);
+    await vi.advanceTimersByTimeAsync(retryDelays[0]!);
+    retryDelays.push(setTimeoutSpy.mock.calls.at(-1)?.[1] as number);
+    await vi.advanceTimersByTimeAsync(retryDelays[1]!);
+    retryDelays.push(setTimeoutSpy.mock.calls.at(-1)?.[1] as number);
+    await vi.advanceTimersByTimeAsync(retryDelays[2]!);
+
+    expect(retryDelays).toEqual([1500, 3000, 6000]);
+    expect(play).toHaveBeenCalledTimes(4);
+
+    setTimeoutSpy.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it("重试期间 playbackState 始终为 loading（pause 事件不污染）", async () => {
+    vi.useFakeTimers();
+    const play = vi.fn().mockRejectedValue(new Error("network"));
+    // 模拟 reloadArticleAudioElement 内部触发 pause 事件的行为不会发生（reload 不 pause），
+    // 但即便外部其它原因触发 audio.pause()，重试路径本身不应主动 pause 产生事件污染。
+    const audioEl = { pause: vi.fn(), play, currentTime: 0 } as unknown as HTMLAudioElement;
+    useArticleMusic.setState({
+      track: { url: "https://example.com/a.mp3", name: "雨夜" },
+      playbackState: "idle",
+      audioEl,
+    });
+
+    const togglePromise = useArticleMusic.getState().toggle();
+    await togglePromise;
+
+    // 整个重试过程中状态恒为 loading，不闪成 paused（Bug 2 回归保护）
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(useArticleMusic.getState().playbackState).toBe("loading");
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(useArticleMusic.getState().playbackState).toBe("loading");
+    await vi.advanceTimersByTimeAsync(6000);
+    expect(useArticleMusic.getState().playbackState).toBe("error");
+
+    // 重试路径调 reload（不 pause），不调 reset
+    expect(reloadArticleAudioElement).toHaveBeenCalled();
+    expect(resetArticleAudioElement).not.toHaveBeenCalled();
 
     vi.useRealTimers();
   });

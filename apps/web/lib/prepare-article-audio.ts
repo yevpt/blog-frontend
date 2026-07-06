@@ -8,6 +8,14 @@ export function resetArticleAudioElement(audio: HTMLAudioElement): void {
   audio.load();
 }
 
+/**
+ * 自动重试时重新发请求：仅 load，不 pause（避免触发 pause 事件污染 loading 态）、
+ * 不清 src（避免打断 CDN 进行中的回源）。浏览器会基于当前 src 重新拉取。
+ */
+export function reloadArticleAudioElement(audio: HTMLAudioElement): void {
+  audio.load();
+}
+
 function resolveAudioSrc(url: string): string {
   return new URL(url, window.location.href).href;
 }

@@ -71,3 +71,18 @@ describe("resetArticleAudioElement", () => {
     expect(audio.load).toHaveBeenCalledOnce();
   });
 });
+
+describe("reloadArticleAudioElement", () => {
+  it("仅重新 load，不 pause、不清 src、不重置 currentTime（避免打断回源与污染 loading 态）", () => {
+    const audio = createAudioStub();
+    audio.src = "https://example.com/a.mp3";
+    audio.currentTime = 12;
+
+    prepareArticleAudioModule.reloadArticleAudioElement(audio);
+
+    expect(audio.load).toHaveBeenCalledOnce();
+    expect(audio.pause).not.toHaveBeenCalled();
+    expect(audio.removeAttribute).not.toHaveBeenCalled();
+    expect(audio.currentTime).toBe(12);
+  });
+});

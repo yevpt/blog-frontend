@@ -1,9 +1,18 @@
 import { create } from "zustand";
-import { prepareArticleAudioElement, resetArticleAudioElement } from "@/lib/prepare-article-audio";
+import {
+  prepareArticleAudioElement,
+  reloadArticleAudioElement,
+  resetArticleAudioElement,
+} from "@/lib/prepare-article-audio";
 
 /** CDN 冷缓存时音频首次加载易失败，失败后间隔重试次数（不含首次播放） */
 const AUDIO_MAX_RETRIES = 3;
-const AUDIO_RETRY_DELAY_MS = 1500;
+/** 指数退避基数：第 n 次重试间隔 = base * 2^(n-1)，如 1500 → 3000 → 6000，总预算约 10.5s */
+const AUDIO_RETRY_BASE_DELAY_MS = 1500;
+
+function getRetryDelay(attempt: number): number {
+  return AUDIO_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1);
+}
 
 let retryAttempt = 0;
 let retryTimer: ReturnType<typeof setTimeout> | null = null;
@@ -85,7 +94,7 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => {
         retryTimer = null;
         failureHandled = false;
         void startPlayback(true);
-      }, AUDIO_RETRY_DELAY_MS);
+      }, getRetryDelay(retryAttempt));
       return;
     }
 
@@ -104,7 +113,9 @@ export const useArticleMusic = create<ArticleMusicStore>((set, get) => {
 
     try {
       if (fromAutoRetry) {
-        resetArticleAudioElement(audioEl);
+        // 重试只重新 load 发请求，不 pause/不清 src，避免触发 pause 事件污染 loading 态、
+        // 也避免打断 CDN 进行中的回源（见 reloadArticleAudioElement 注释）。
+        reloadArticleAudioElement(audioEl);
       }
       prepareArticleAudioElement(audioEl, track.url);
       await audioEl.play();
