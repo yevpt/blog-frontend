@@ -1,6 +1,7 @@
 import { SvgIcon } from "@repo/icons";
 import { cn } from "@repo/ui";
 import type { CategoryRow } from "../model";
+import { CategoryIconPreview } from "./CategoryIconPreview";
 
 interface CategoryNameCellProps {
   category: CategoryRow;
@@ -16,7 +17,7 @@ export function CategoryNameCell({ category }: CategoryNameCellProps) {
         )}
       >
         {category.icon ? (
-          <img src={category.icon} alt="" className="size-4 object-contain" />
+          <CategoryIconPreview url={category.icon} alt="" className="size-4 object-contain" />
         ) : (
           <SvgIcon name="folder" size={14} className="text-muted-foreground" />
         )}

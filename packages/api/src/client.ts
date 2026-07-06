@@ -33,6 +33,7 @@ import type {
 import type {
   CategoryArticlesReq,
   CategoryArticlesResp,
+  CategoryAssetUploadResp,
   CategoryCreateReq,
   CategoryItemResp,
   CategoryTabsResp,
@@ -539,6 +540,24 @@ export function createApiClient(config: ApiClientConfig) {
           method: "DELETE",
           body: JSON.stringify(req),
         }),
+      /** 上传分类 SVG 图标，需管理员登录 */
+      uploadIcon: (file: File) => {
+        const formData = new FormData();
+        formData.append("file", file, file.name);
+        return fetchAuthed<CategoryAssetUploadResp>("/admin/categories/uploads/icon", {
+          method: "POST",
+          body: formData,
+        });
+      },
+      /** 上传分类封面位图，需管理员登录 */
+      uploadCover: (file: File) => {
+        const formData = new FormData();
+        formData.append("file", file, file.name);
+        return fetchAuthed<CategoryAssetUploadResp>("/admin/categories/uploads/cover", {
+          method: "POST",
+          body: formData,
+        });
+      },
     },
     tags: {
       /** 查询标签列表（含公开文章数量，按 seq/count 排序） */

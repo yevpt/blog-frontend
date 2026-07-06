@@ -14,15 +14,21 @@ export interface CategoryTabsResp {
   list: CategoryTabItem[];
 }
 
+/** 分类图标/封面上传响应 */
+export interface CategoryAssetUploadResp {
+  key: string;
+  url: string;
+  size: number;
+  mime: string;
+}
+
 /** POST /admin/categories 请求 */
 export interface CategoryCreateReq {
   parent_id?: number;
   name: string;
   url?: string;
-  /** 后端暂未稳定支持，可选 */
   icon?: string;
-  description: string;
-  /** 后端暂未稳定支持，可选 */
+  description?: string;
   cover_img_url?: string;
   seq: number;
 }

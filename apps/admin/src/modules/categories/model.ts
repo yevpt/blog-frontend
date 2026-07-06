@@ -18,25 +18,67 @@ export interface CategoryRow {
   articleCount: number;
 }
 
+/** 素材提交引用与预览 URL 分离，禁止将 blob URL 作为提交值 */
+export interface CategoryAssetValue {
+  submitValue: string;
+  previewUrl: string;
+}
+
+export const EMPTY_CATEGORY_ASSET: CategoryAssetValue = { submitValue: "", previewUrl: "" };
+
+export interface CategoryFormDirtyFlags {
+  description: boolean;
+  icon: boolean;
+  coverImgUrl: boolean;
+}
+
 export interface CategoryFormValues {
   name: string;
   url: string;
   seq: string;
-  icon: string;
+  icon: CategoryAssetValue;
   description: string;
-  coverImgUrl: string;
+  coverImgUrl: CategoryAssetValue;
+  dirty: CategoryFormDirtyFlags;
 }
 
-export type CategoryFormErrors = Partial<Record<keyof CategoryFormValues, string>>;
+export type CategoryFormErrors = Partial<
+  Record<"name" | "seq" | "description" | "icon" | "coverImgUrl", string>
+>;
+
+const EMPTY_DIRTY: CategoryFormDirtyFlags = {
+  description: false,
+  icon: false,
+  coverImgUrl: false,
+};
+
+export function createCategoryAssetFromUrl(url: string): CategoryAssetValue {
+  return { submitValue: url, previewUrl: url };
+}
+
+export function createCategoryAssetFromUpload(key: string, url: string): CategoryAssetValue {
+  return { submitValue: key, previewUrl: url };
+}
+
+function isBlobUrl(value: string): boolean {
+  return value.startsWith("blob:");
+}
+
+function resolveAssetSubmitValue(asset: CategoryAssetValue): string {
+  const value = asset.submitValue.trim();
+  if (!value || isBlobUrl(value)) return "";
+  return value;
+}
 
 export function createEmptyCategoryForm(nextSeq = 0): CategoryFormValues {
   return {
     name: "",
     url: "",
     seq: String(nextSeq),
-    icon: "",
+    icon: EMPTY_CATEGORY_ASSET,
     description: "",
-    coverImgUrl: "",
+    coverImgUrl: EMPTY_CATEGORY_ASSET,
+    dirty: { ...EMPTY_DIRTY },
   };
 }
 
@@ -58,9 +100,12 @@ export function mapCategoryToFormValues(item: CategoryTabItem): CategoryFormValu
     name: item.name,
     url: item.url ?? "",
     seq: String(item.seq),
-    icon: item.icon ?? "",
+    icon: item.icon ? createCategoryAssetFromUrl(item.icon) : EMPTY_CATEGORY_ASSET,
     description: item.description ?? "",
-    coverImgUrl: item.cover_img_url ?? "",
+    coverImgUrl: item.cover_img_url
+      ? createCategoryAssetFromUrl(item.cover_img_url)
+      : EMPTY_CATEGORY_ASSET,
+    dirty: { ...EMPTY_DIRTY },
   };
 }
 
@@ -78,9 +123,6 @@ export function validateCategoryForm(values: CategoryFormValues): CategoryFormEr
   if (!Number.isInteger(seq) || seq < 0) {
     errors.seq = "排序必须是非负整数";
   }
-  if (!values.description.trim()) {
-    errors.description = "请输入分类描述";
-  }
   return errors;
 }
 
@@ -91,26 +133,42 @@ export function hasCategoryFormErrors(errors: CategoryFormErrors): boolean {
 export function toCategoryCreateReq(values: CategoryFormValues): CategoryCreateReq {
   const req: CategoryCreateReq = {
     name: values.name.trim(),
-    description: values.description.trim(),
     seq: Number(values.seq),
   };
   const url = values.url.trim();
   if (url) req.url = url;
-  const icon = values.icon.trim();
+  const description = values.description.trim();
+  if (description) req.description = description;
+  const icon = resolveAssetSubmitValue(values.icon);
   if (icon) req.icon = icon;
-  const cover = values.coverImgUrl.trim();
+  const cover = resolveAssetSubmitValue(values.coverImgUrl);
   if (cover) req.cover_img_url = cover;
   return req;
 }
 
 export function toCategoryUpdateReq(values: CategoryFormValues): CategoryUpdateReq {
-  // 图标与封面后端尚未稳定支持，更新时不触碰这两项。
-  return {
+  const req: CategoryUpdateReq = {
     name: values.name.trim(),
     url: values.url.trim(),
-    description: values.description.trim(),
     seq: Number(values.seq),
   };
+
+  if (values.dirty.description) {
+    req.description = values.description.trim();
+  } else {
+    const description = values.description.trim();
+    if (description) req.description = description;
+  }
+
+  if (values.dirty.icon) {
+    req.icon = resolveAssetSubmitValue(values.icon);
+  }
+
+  if (values.dirty.coverImgUrl) {
+    req.cover_img_url = resolveAssetSubmitValue(values.coverImgUrl);
+  }
+
+  return req;
 }
 
 export interface CategoryArticleRow {

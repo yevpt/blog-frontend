@@ -108,6 +108,7 @@ export type {
 export type {
   CategoryArticlesReq,
   CategoryArticlesResp,
+  CategoryAssetUploadResp,
   CategoryCreateReq,
   CategoryItemResp,
   CategoryTabItem,

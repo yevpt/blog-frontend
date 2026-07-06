@@ -525,6 +525,90 @@ describe("createApiClient", () => {
     );
   });
 
+  it("categories.create 允许省略描述、图标与封面", async () => {
+    const req = { name: "编程", seq: 0 };
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: { id: 1, ...req, article_count: 0 } }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+
+    await client.categories.create(req);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/categories",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify(req),
+      }),
+    );
+  });
+
+  it("categories.uploadIcon 使用 FormData 调用 POST /admin/categories/uploads/icon", async () => {
+    const uploadResp = {
+      key: "tmp/icon.svg",
+      url: "https://cdn.example.com/tmp/icon.svg",
+      size: 128,
+      mime: "image/svg+xml",
+    };
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: uploadResp }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+    const file = new File(["<svg></svg>"], "icon.svg", { type: "image/svg+xml" });
+
+    const result = await client.categories.uploadIcon(file);
+
+    expect(result).toEqual(uploadResp);
+    const [, init] = vi.mocked(global.fetch).mock.calls[0];
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBeInstanceOf(FormData);
+    expect((init?.body as FormData).get("file")).toBeInstanceOf(File);
+    expect(((init?.body as FormData).get("file") as File).name).toBe("icon.svg");
+    const headers = init?.headers as Record<string, string>;
+    expect(headers["Content-Type"]).toBeUndefined();
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/categories/uploads/icon",
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer admin-token" }),
+      }),
+    );
+  });
+
+  it("categories.uploadCover 使用 FormData 调用 POST /admin/categories/uploads/cover", async () => {
+    const uploadResp = {
+      key: "tmp/cover.jpg",
+      url: "https://cdn.example.com/tmp/cover.jpg",
+      size: 2048,
+      mime: "image/jpeg",
+    };
+    vi.mocked(global.fetch).mockResolvedValue(
+      mockResponse({ code: 0, message: "ok", data: uploadResp }),
+    );
+    const client = createApiClient({
+      baseUrl: "http://api",
+      getAccessToken: () => "admin-token",
+    });
+    const file = new File(["cover"], "cover.jpg", { type: "image/jpeg" });
+
+    const result = await client.categories.uploadCover(file);
+
+    expect(result).toEqual(uploadResp);
+    const [, init] = vi.mocked(global.fetch).mock.calls[0];
+    expect(init?.body).toBeInstanceOf(FormData);
+    expect((init?.body as FormData).get("file")).toBeInstanceOf(File);
+    expect(((init?.body as FormData).get("file") as File).name).toBe("cover.jpg");
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://api/admin/categories/uploads/cover",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
+
   it("categories.addArticles 使用 fetchAuthed 调用 POST /admin/categories/{id}/articles", async () => {
     vi.mocked(global.fetch).mockResolvedValue(
       mockResponse({

@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "@repo/api";
 import { Modal, Button, Input, Label, cn } from "@repo/ui";
-import { CategoryVisualAssetsPlaceholder } from "./CategoryVisualAssetsPlaceholder";
+import { CategoryAssetFileInputs, CategoryVisualAssetsEditor } from "./CategoryVisualAssetsEditor";
+import { useCategoryAssetUpload } from "../hooks/use-category-asset-upload";
 import {
   createEmptyCategoryForm,
+  EMPTY_CATEGORY_ASSET,
   hasCategoryFormErrors,
   mapCategoryToFormValues,
   validateCategoryForm,
@@ -18,7 +20,11 @@ interface CategoryFormDialogProps {
   nextSeq: number;
   isSubmitting: boolean;
   onClose: () => void;
-  onSubmit: (values: CategoryFormValues, mode: "create" | "edit", categoryId?: string) => Promise<void>;
+  onSubmit: (
+    values: CategoryFormValues,
+    mode: "create" | "edit",
+    categoryId?: string,
+  ) => Promise<void>;
 }
 
 /** 区块水平内边距：放在内容层，不放在滚动容器上，避免 w-full 溢出 */
@@ -43,29 +49,67 @@ export function CategoryFormDialog({
   const [errors, setErrors] = useState<ReturnType<typeof validateCategoryForm>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const {
+    iconInputRef,
+    coverInputRef,
+    isIconUploading,
+    isCoverUploading,
+    isUploading,
+    uploadError,
+    openIconPicker,
+    openCoverPicker,
+    handleIconFileChange,
+    handleCoverFileChange,
+    resetUploadState,
+  } = useCategoryAssetUpload();
+
+  const isBusy = isSubmitting || isUploading;
+
   useEffect(() => {
     if (!open) return;
     setErrors({});
     setSubmitError(null);
+    resetUploadState();
     if (mode === "edit" && category) {
-      setValues(mapCategoryToFormValues({
-        id: Number(category.id),
-        name: category.name,
-        url: category.url,
-        icon: category.icon,
-        description: category.description,
-        cover_img_url: category.coverImgUrl,
-        seq: category.seq,
-        article_count: category.articleCount,
-      }));
+      setValues(
+        mapCategoryToFormValues({
+          id: Number(category.id),
+          name: category.name,
+          url: category.url,
+          icon: category.icon,
+          description: category.description,
+          cover_img_url: category.coverImgUrl,
+          seq: category.seq,
+          article_count: category.articleCount,
+        }),
+      );
       return;
     }
     setValues(createEmptyCategoryForm(nextSeq));
-  }, [open, mode, category, nextSeq]);
+  }, [open, mode, category, nextSeq, resetUploadState]);
 
-  const updateField = <K extends keyof CategoryFormValues>(key: K, value: CategoryFormValues[K]) => {
+  const updateField = <K extends keyof CategoryFormValues>(
+    key: K,
+    value: CategoryFormValues[K],
+  ) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
+
+  const markIconDirty = useCallback((icon: CategoryFormValues["icon"]) => {
+    setValues((current) => ({
+      ...current,
+      icon,
+      dirty: { ...current.dirty, icon: true },
+    }));
+  }, []);
+
+  const markCoverDirty = useCallback((coverImgUrl: CategoryFormValues["coverImgUrl"]) => {
+    setValues((current) => ({
+      ...current,
+      coverImgUrl,
+      dirty: { ...current.dirty, coverImgUrl: true },
+    }));
+  }, []);
 
   const handleSubmit = async () => {
     const nextErrors = validateCategoryForm(values);
@@ -84,9 +128,9 @@ export function CategoryFormDialog({
     <Modal
       isOpen={open}
       onOpenChange={(next) => {
-        if (!next) onClose();
+        if (!next && !isBusy) onClose();
       }}
-      isDismissable={!isSubmitting}
+      isDismissable={!isBusy}
       placement="fullscreen-mobile"
       size="lg"
       aria-label={mode === "create" ? "新建分类" : "编辑分类"}
@@ -108,7 +152,6 @@ export function CategoryFormDialog({
           </p>
         </div>
 
-        {/* 滚动层不含 padding，避免子元素 w-full 超出可视宽度 */}
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain">
           <div className={cn(contentInsetClassName, "py-5")}>
             <div className="grid min-w-0 gap-5">
@@ -144,20 +187,43 @@ export function CategoryFormDialog({
                 className="min-w-0"
               />
 
-              <CategoryVisualAssetsPlaceholder
-                iconUrl={values.icon || undefined}
-                coverUrl={values.coverImgUrl || undefined}
+              <CategoryVisualAssetsEditor
+                icon={values.icon}
+                cover={values.coverImgUrl}
+                isIconUploading={isIconUploading}
+                isCoverUploading={isCoverUploading}
+                uploadError={uploadError}
+                onIconPick={openIconPicker}
+                onCoverPick={openCoverPicker}
+                onIconRemove={() => markIconDirty(EMPTY_CATEGORY_ASSET)}
+                onCoverRemove={() => markCoverDirty(EMPTY_CATEGORY_ASSET)}
+              />
+
+              <CategoryAssetFileInputs
+                iconInputRef={iconInputRef}
+                coverInputRef={coverInputRef}
+                onIconChange={(event) => {
+                  void handleIconFileChange(event, markIconDirty);
+                }}
+                onCoverChange={(event) => {
+                  void handleCoverFileChange(event, markCoverDirty);
+                }}
               />
 
               <div className="grid min-w-0 gap-2">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  描述<span className="text-destructive"> *</span>
-                </Label>
+                <Label className="text-xs font-medium text-muted-foreground">描述</Label>
                 <textarea
                   aria-label="分类描述"
                   value={values.description}
-                  onChange={(event) => updateField("description", event.target.value)}
-                  placeholder="简要说明该分类包含的内容"
+                  onChange={(event) => {
+                    const description = event.target.value;
+                    setValues((current) => ({
+                      ...current,
+                      description,
+                      dirty: { ...current.dirty, description: true },
+                    }));
+                  }}
+                  placeholder="简要说明该分类包含的内容（可选）"
                   className={textareaClassName}
                 />
                 {errors.description ? (
@@ -177,7 +243,7 @@ export function CategoryFormDialog({
             "py-4 max-md:pb-[max(1rem,env(safe-area-inset-bottom))]",
           )}
         >
-          <Button variant="outline" onPress={onClose} isDisabled={isSubmitting}>
+          <Button variant="outline" onPress={onClose} isDisabled={isBusy}>
             取消
           </Button>
           <Button
@@ -185,6 +251,7 @@ export function CategoryFormDialog({
               void handleSubmit();
             }}
             isLoading={isSubmitting}
+            isDisabled={isBusy}
             loadingText="保存中…"
           >
             {mode === "create" ? "创建" : "保存"}

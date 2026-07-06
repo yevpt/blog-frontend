@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  createCategoryAssetFromUpload,
+  createCategoryAssetFromUrl,
   createEmptyCategoryForm,
+  EMPTY_CATEGORY_ASSET,
   filterAndSortCategoryRows,
   isCategoryArticleAddCandidate,
   mapAdminArticleToCategoryArticleRow,
@@ -9,6 +12,7 @@ import {
   matchCategorySearch,
   suggestNextSeq,
   toCategoryCreateReq,
+  toCategoryUpdateReq,
   validateCategoryForm,
 } from "./model";
 
@@ -42,60 +46,122 @@ describe("categories model", () => {
       name: "编程",
       url: "programming",
       seq: "0",
-      icon: "https://cdn.example.com/icon.svg",
+      icon: createCategoryAssetFromUrl("https://cdn.example.com/icon.svg"),
       description: "编程学习与工程实践",
-      coverImgUrl: "https://cdn.example.com/cover.jpg",
+      coverImgUrl: createCategoryAssetFromUrl("https://cdn.example.com/cover.jpg"),
+      dirty: { description: false, icon: false, coverImgUrl: false },
     });
   });
 
   it("suggestNextSeq 取最大 seq + 1", () => {
-    expect(suggestNextSeq([{ ...sample, seq: 0 }, { ...sample, id: 2, seq: 3 }])).toBe(4);
+    expect(
+      suggestNextSeq([
+        { ...sample, seq: 0 },
+        { ...sample, id: 2, seq: 3 },
+      ]),
+    ).toBe(4);
     expect(suggestNextSeq([])).toBe(0);
   });
 
-  it("validateCategoryForm 仅校验名称、排序与描述", () => {
+  it("validateCategoryForm 空描述不产生校验错误", () => {
     const errors = validateCategoryForm(createEmptyCategoryForm());
     expect(errors.name).toBeTruthy();
-    expect(errors.description).toBeTruthy();
+    expect(errors.description).toBeUndefined();
     expect(errors.icon).toBeUndefined();
     expect(errors.coverImgUrl).toBeUndefined();
   });
 
-  it("toCategoryCreateReq 省略空的图标与封面", () => {
+  it("toCategoryCreateReq 省略三个空可选字段", () => {
     expect(
       toCategoryCreateReq({
         name: "编程",
         url: "programming",
         seq: "2",
-        icon: "",
-        description: "desc",
-        coverImgUrl: "",
+        icon: EMPTY_CATEGORY_ASSET,
+        description: "",
+        coverImgUrl: EMPTY_CATEGORY_ASSET,
+        dirty: { description: false, icon: false, coverImgUrl: false },
       }),
     ).toEqual({
       name: "编程",
       url: "programming",
-      description: "desc",
       seq: 2,
     });
   });
 
-  it("toCategoryCreateReq 保留已填写的图标与封面", () => {
+  it("toCategoryCreateReq 保留已填写的可选字段", () => {
     expect(
       toCategoryCreateReq({
         name: " 编程 ",
         url: "programming",
         seq: "2",
-        icon: "icon.svg",
+        icon: createCategoryAssetFromUpload("tmp/icon.svg", "https://cdn.example.com/icon.svg"),
         description: "desc",
-        coverImgUrl: "cover.jpg",
+        coverImgUrl: createCategoryAssetFromUpload(
+          "tmp/cover.jpg",
+          "https://cdn.example.com/cover.jpg",
+        ),
+        dirty: { description: false, icon: true, coverImgUrl: true },
       }),
     ).toEqual({
       name: "编程",
       url: "programming",
-      icon: "icon.svg",
+      icon: "tmp/icon.svg",
       description: "desc",
-      cover_img_url: "cover.jpg",
+      cover_img_url: "tmp/cover.jpg",
       seq: 2,
+    });
+  });
+
+  it("toCategoryUpdateReq 未改动素材时省略字段", () => {
+    const values = mapCategoryToFormValues(sample);
+    expect(toCategoryUpdateReq(values)).toEqual({
+      name: "编程",
+      url: "programming",
+      description: "编程学习与工程实践",
+      seq: 0,
+    });
+  });
+
+  it("toCategoryUpdateReq 主动清空素材与描述时传空字符串", () => {
+    const values = mapCategoryToFormValues(sample);
+    expect(
+      toCategoryUpdateReq({
+        ...values,
+        description: "",
+        icon: EMPTY_CATEGORY_ASSET,
+        coverImgUrl: EMPTY_CATEGORY_ASSET,
+        dirty: { description: true, icon: true, coverImgUrl: true },
+      }),
+    ).toEqual({
+      name: "编程",
+      url: "programming",
+      description: "",
+      icon: "",
+      cover_img_url: "",
+      seq: 0,
+    });
+  });
+
+  it("toCategoryUpdateReq 保存新上传素材引用", () => {
+    const values = mapCategoryToFormValues(sample);
+    expect(
+      toCategoryUpdateReq({
+        ...values,
+        icon: createCategoryAssetFromUpload("tmp/new.svg", "https://cdn.example.com/new.svg"),
+        coverImgUrl: createCategoryAssetFromUpload(
+          "tmp/new.jpg",
+          "https://cdn.example.com/new.jpg",
+        ),
+        dirty: { description: false, icon: true, coverImgUrl: true },
+      }),
+    ).toEqual({
+      name: "编程",
+      url: "programming",
+      description: "编程学习与工程实践",
+      icon: "tmp/new.svg",
+      cover_img_url: "tmp/new.jpg",
+      seq: 0,
     });
   });
 
@@ -162,12 +228,12 @@ describe("categories model", () => {
       updated_at: "",
     };
 
-    expect(
-      isCategoryArticleAddCandidate({ ...base, category: { id: 1, name: "A" } }, 1),
-    ).toBe(false);
-    expect(
-      isCategoryArticleAddCandidate({ ...base, category: { id: 2, name: "B" } }, 1),
-    ).toBe(true);
+    expect(isCategoryArticleAddCandidate({ ...base, category: { id: 1, name: "A" } }, 1)).toBe(
+      false,
+    );
+    expect(isCategoryArticleAddCandidate({ ...base, category: { id: 2, name: "B" } }, 1)).toBe(
+      true,
+    );
     expect(
       isCategoryArticleAddCandidate(
         { ...base, deleted_at: "2024-01-01", category: { id: 2, name: "B" } },
