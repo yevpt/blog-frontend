@@ -30,6 +30,9 @@ export const metadata: Metadata = {
   applicationName: SITE_TITLE,
   alternates: {
     canonical: "/",
+    types: {
+      "application/rss+xml": "/feed.xml",
+    },
   },
   openGraph: {
     title: SITE_TITLE,
