@@ -66,6 +66,7 @@ export type IconName =
   | "quote"
   | "refresh-cw"
   | "rotate-cw"
+  | "rss"
   | "search"
   | "share"
   | "shield"
