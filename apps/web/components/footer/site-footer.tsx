@@ -66,9 +66,30 @@ function PoweredByStack() {
   );
 }
 
+function RssLink() {
+  return (
+    <FooterAnchor href="/feed.xml" external className="inline-flex items-center gap-1">
+      <SvgIcon name="rss" size={13} className="shrink-0 opacity-55" aria-hidden />
+      RSS
+    </FooterAnchor>
+  );
+}
+
+function SiteIdentityLinks() {
+  return (
+    <span className="inline-flex w-full sm:w-auto justify-center items-center gap-x-2">
+      <FooterAnchor href="https://www.yevpt.com">© 2026 yevpt.com</FooterAnchor>
+      <span className="text-muted-foreground/25 select-none hidden sm:inline" aria-hidden>
+        ·
+      </span>
+      <RssLink />
+    </span>
+  );
+}
+
 function ComplianceLinks() {
   return (
-    <div className="flex flex-col sm:flex-row sm:flex-wrap justify-center items-center gap-x-2 gap-y-2 sm:gap-y-1">
+    <div className="flex w-full sm:w-auto flex-col sm:flex-row sm:flex-wrap justify-center items-center gap-x-2 gap-y-1.5 sm:gap-y-1">
       <FooterAnchor
         href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=37011202000953"
         external
@@ -89,13 +110,15 @@ export function SiteFooter() {
       <div className="mx-auto max-w-[1120px] px-5 py-7">
         <nav
           aria-label="站点信息"
-          className="flex flex-col sm:flex-row sm:flex-wrap justify-center items-center gap-x-2.5 gap-y-2 sm:gap-y-1 text-center text-xs tracking-wide"
+          className="flex flex-row flex-wrap justify-center items-center gap-x-2.5 gap-y-2.5 sm:gap-y-2 text-center text-xs tracking-normal sm:tracking-wide"
         >
-          <FooterAnchor href="https://www.yevpt.com">© 2026 yevpt.com</FooterAnchor>
+          <SiteIdentityLinks />
 
           <FooterSeparator />
 
-          <PoweredByStack />
+          <span className="w-full sm:w-auto text-muted-foreground/70">
+            <PoweredByStack />
+          </span>
 
           <FooterSeparator />
 

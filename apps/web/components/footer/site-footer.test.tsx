@@ -51,6 +51,26 @@ describe("SiteFooter", () => {
     expect(beianLink?.querySelector('[data-testid="icon-shield"]')).toBeTruthy();
   });
 
+  it("提供 RSS 入口，指向站内 /feed.xml 且在新窗口打开", () => {
+    render(<SiteFooter />);
+
+    const rssLink = screen.getByText("RSS").closest("a");
+    expect(rssLink).toHaveAttribute("href", "/feed.xml");
+    expect(rssLink).toHaveAttribute("target", "_blank");
+    expect(rssLink).toHaveAttribute("rel", "noopener noreferrer");
+    expect(rssLink?.querySelector('[data-testid="icon-rss"]')).toBeTruthy();
+  });
+
+  it("RSS 与版权同组内联，排在备案信息之前", () => {
+    render(<SiteFooter />);
+
+    const nav = screen.getByRole("navigation", { name: "站点信息" });
+    const text = nav.textContent ?? "";
+
+    expect(text.indexOf("yevpt.com")).toBeLessThan(text.indexOf("RSS"));
+    expect(text.indexOf("RSS")).toBeLessThan(text.indexOf("鲁公网安备"));
+  });
+
   it("外链在新窗口打开", () => {
     render(<SiteFooter />);
 
