@@ -90,7 +90,45 @@ vi.mock("./mark-all-read-button", () => ({
     </button>
   ),
 }));
-vi.mock("./notification-selection-bar", () => ({ default: () => <div data-testid="bar" /> }));
+vi.mock("./notification-selection-bar", () => ({
+  default: ({
+    count,
+    allSelected,
+    onToggleSelectAll,
+    onInvertSelect,
+    onMarkRead,
+    onCancel,
+  }: {
+    count: number;
+    allSelected: boolean;
+    onToggleSelectAll: () => void;
+    onInvertSelect: () => void;
+    onMarkRead: () => void;
+    onCancel: () => void;
+  }) => (
+    <div data-testid="bar">
+      <span data-testid="bar-count">{count}</span>
+      <span data-testid="bar-all-selected">{String(allSelected)}</span>
+      <button type="button" onClick={onToggleSelectAll}>
+        切换全选
+      </button>
+      <button type="button" onClick={onInvertSelect}>
+        反选
+      </button>
+      <button type="button" onClick={onMarkRead}>
+        标记已读
+      </button>
+      <button type="button" onClick={onCancel}>
+        取消
+      </button>
+    </div>
+  ),
+}));
+vi.mock("@/components/float-dock", () => ({
+  FloatDockPageAnchor: ({ enabled }: { enabled?: boolean }) => (
+    <div data-testid="float-dock-anchor" data-enabled={String(enabled)} />
+  ),
+}));
 vi.mock("./notification-virtual-list", () => ({
   NotificationVirtualList: (props: {
     items: NotificationItemResp[];
@@ -221,5 +259,35 @@ describe("NotificationsPage", () => {
     await vi.waitFor(() => expect(apiJson).toHaveBeenCalled());
     expect(hook.markRead).not.toHaveBeenCalled();
     expect(hook.updateItemEngagement).toHaveBeenCalledWith(1, { reply_count: 1 });
+  });
+
+  it("进入批量选择后悬浮 Dock 被禁用", () => {
+    hook.items = [listItem()];
+    render(<NotificationsPage />);
+    expect(screen.getByTestId("float-dock-anchor").dataset.enabled).toBe("true");
+    fireEvent.click(screen.getByRole("button", { name: "批量选择" }));
+    expect(screen.getByTestId("float-dock-anchor").dataset.enabled).toBe("false");
+  });
+
+  it("点击全选选中所有已加载消息，再次点击清空", () => {
+    hook.items = [listItem({ id: 1 }), listItem({ id: 2 })];
+    render(<NotificationsPage />);
+    fireEvent.click(screen.getByRole("button", { name: "批量选择" }));
+    expect(screen.getByTestId("bar-count").textContent).toBe("0");
+    fireEvent.click(screen.getByText("切换全选"));
+    expect(screen.getByTestId("bar-count").textContent).toBe("2");
+    expect(screen.getByTestId("bar-all-selected").textContent).toBe("true");
+    fireEvent.click(screen.getByText("切换全选"));
+    expect(screen.getByTestId("bar-count").textContent).toBe("0");
+  });
+
+  it("反选翻转当前选中集合", () => {
+    hook.items = [listItem({ id: 1 }), listItem({ id: 2 }), listItem({ id: 3 })];
+    render(<NotificationsPage />);
+    fireEvent.click(screen.getByRole("button", { name: "批量选择" }));
+    fireEvent.click(screen.getByText("切换全选"));
+    expect(screen.getByTestId("bar-count").textContent).toBe("3");
+    fireEvent.click(screen.getByText("反选"));
+    expect(screen.getByTestId("bar-count").textContent).toBe("0");
   });
 });

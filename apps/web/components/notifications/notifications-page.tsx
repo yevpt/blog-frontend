@@ -147,6 +147,22 @@ export default function NotificationsPage() {
     setSelected(new Set());
   }
 
+  const allSelected = n.items.length > 0 && selected.size === n.items.length;
+
+  function toggleSelectAll() {
+    setSelected(allSelected ? new Set() : new Set(n.items.map((item) => item.id)));
+  }
+
+  function invertSelect() {
+    setSelected((cur) => {
+      const next = new Set<number>();
+      for (const item of n.items) {
+        if (!cur.has(item.id)) next.add(item.id);
+      }
+      return next;
+    });
+  }
+
   async function openItem(item: NotificationItemResp) {
     if (!item.is_read) await n.markRead(item.id);
     router.push(getNotificationHref(item));
@@ -185,8 +201,13 @@ export default function NotificationsPage() {
 
   return (
     <>
-      <FloatDockPageAnchor layout={NOTIFICATIONS_FLOAT_DOCK_LAYOUT} />
-      <main className="mx-auto flex min-h-[100dvh] w-full max-w-2xl flex-col px-4 pt-[4.75rem] pb-8 md:pt-20">
+      <FloatDockPageAnchor layout={NOTIFICATIONS_FLOAT_DOCK_LAYOUT} enabled={!selecting} />
+      <main
+        className={cn(
+          "mx-auto flex min-h-[100dvh] w-full max-w-2xl flex-col px-4 pt-[4.75rem] pb-8 md:pt-20",
+          selecting && "pb-24",
+        )}
+      >
         <header className="mb-2 hidden md:block">
           <h1 className="text-xl font-medium text-foreground">消息中心</h1>
         </header>
@@ -259,6 +280,9 @@ export default function NotificationsPage() {
         {selecting && (
           <NotificationSelectionBar
             count={selected.size}
+            allSelected={allSelected}
+            onToggleSelectAll={toggleSelectAll}
+            onInvertSelect={invertSelect}
             onMarkRead={batchRead}
             onCancel={exitSelect}
           />
