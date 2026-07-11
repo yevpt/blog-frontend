@@ -1,0 +1,4 @@
+.env
+.auth/
+playwright-report/
+test-results/
