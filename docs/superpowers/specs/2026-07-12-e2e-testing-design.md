@@ -21,7 +21,7 @@
 | 决策项 | 选择 |
 | --- | --- |
 | 数据策略 | 真实测试后端（非 mock） |
-| 后端来源 | 共享测试 / staging 环境（已部署的 URL） |
+| 后端来源 | 默认共享测试 / staging 环境（env 驱动 URL）；本地验证用本地后端仓库 |
 | 第一期覆盖 | web + admin 各一条关键旅程 |
 | CI 时机 | 先只本地 / 手动，暂不接 CI |
 | admin 首期写操作 | 只读冒烟，不做 create/delete（避免污染共享 staging） |
@@ -37,6 +37,14 @@
   - dev 态经 `vite.config` 的 `/api` 代理转发到 `VITE_DEV_BACKEND_URL`（默认 `http://localhost:8080`）；`vite preview` 不带该代理。
   - 启动：`vite`（dev）。
 - **测试隔离**：现有测试为 `*.test.ts(x)`（vitest）；e2e 用 `*.spec.ts`（Playwright），并在根 vitest 配置 `exclude` 掉 `apps/e2e`。
+
+### 后端事实（`/Users/vpt/Documents/Codes/blog/blog-backend`）
+
+- 技术栈：Go 1.25 + Gin + GORM/MySQL 8.4 + Redis；含 `docker-compose.yml` 与 `Makefile`。
+- 启动：`make dev`（air 热重载）/ `make run`（`go run ./cmd/...`）；依赖 MySQL/Redis（可经 docker-compose）。
+- 初始化数据：`make dbsetup`（`cmd/dbsetup`）跑迁移 + `internal/dbschema/seed.go` 的 `SeedDefaults`，**幂等**，会 seed 一个默认管理员（用户名可配，默认密码 `admin`）。这是本地 e2e 的确定测试账号来源。
+- **验证码不挡登录**：`GoCaptcha` 只卡 `SendCode`（发邮箱验证码）/找回密码；`POST /auth/login`（identifier+password）与 `POST /admin/auth/login`（username+password）均无 captcha 要求 —— 自动化登录可行。
+- 限流：Redis 滑动窗口；靠 `storageState`「每 app 只登一次」规避重复登录被限流。
 
 ## 架构
 
@@ -61,9 +69,9 @@
 
 ### 配置与凭据
 
-全部走环境变量，提供 `apps/e2e/.env.example`（真实 secret 不进仓库）：
+全部走环境变量，提供 `apps/e2e/.env.example`（真实 secret 不进仓库）。后端 URL env 驱动：默认指向 staging，本地验证时改指向本地后端（`http://localhost:8080`），无需改代码。
 
-- `E2E_STAGING_API` —— 共享 staging 后端地址
+- `E2E_BACKEND_API` —— 后端地址（staging 或本地 `http://localhost:8080`）
 - `E2E_WEB_BASE_URL`（默认 `http://localhost:3000`）
 - `E2E_ADMIN_BASE_URL`（默认 `http://localhost:5173`）
 - `E2E_WEB_IDENTIFIER` / `E2E_WEB_PASSWORD`
@@ -110,6 +118,6 @@
 
 ## 验收标准
 
-- `pnpm --filter e2e test:e2e` 在本地（配好 `.env` 指向 staging）能跑通两条旅程且通过。
+- `pnpm --filter e2e test:e2e` 在本地（`.env` 指向本地后端并 `make dbsetup` 好，或指向 staging）能跑通两条旅程且通过。首次落地建议先打本地后端验证。
 - 现有 `pnpm test:run`（vitest）不受影响、不收 e2e 文件。
 - 新增 workspace 不影响 `pnpm -r build` / `check-types` / `lint`。
