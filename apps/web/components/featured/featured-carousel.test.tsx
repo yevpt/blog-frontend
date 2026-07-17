@@ -459,8 +459,9 @@ describe("FeaturedCarousel", () => {
     await act(async () => {
       await user.click(screen.getByLabelText("第 2 张，共 3 张"));
     });
+    // 第一张此时为非激活 slide（aria-hidden），需用 { hidden: true } 才能查到其图片
     expect(screen.getByRole("img", { name: "第二篇文章标题" })).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "第一篇文章标题" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "第一篇文章标题", hidden: true })).toBeInTheDocument();
 
     // 翻回第一张：不应该重新变回骨架（图片始终挂载）
     await act(async () => {
