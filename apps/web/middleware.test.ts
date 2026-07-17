@@ -2,7 +2,7 @@
 import { SignJWT } from "jose";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { config, proxy } from "./proxy";
+import { config, middleware } from "./middleware";
 
 vi.stubEnv("API_BASE_URL", "http://mock-backend");
 
@@ -29,14 +29,14 @@ function makeReq(path: string, cookie?: string): NextRequest {
   });
 }
 
-describe("web proxy auth refresh", () => {
+describe("web middleware auth refresh", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubGlobal("fetch", vi.fn());
   });
 
   it("公开页面没有 token 时直接放行", async () => {
-    const res = await proxy(makeReq("/"));
+    const res = await middleware(makeReq("/"));
 
     expect(res.headers.get("location")).toBeNull();
     expect(fetch).not.toHaveBeenCalled();
@@ -58,7 +58,7 @@ describe("web proxy auth refresh", () => {
       }),
     );
 
-    const res = await proxy(
+    const res = await middleware(
       makeReq("/", `access_token=${expiredAccess}; refresh_token=${refreshToken}`),
     );
 
