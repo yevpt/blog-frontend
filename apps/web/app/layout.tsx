@@ -61,8 +61,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     const api = await createServerApiClient();
     try {
       profile = await api.users.getMe();
-    } catch {
-      // /users/me 失败不影响页面渲染，profile 降级为 null。
+    } catch (error) {
+      // /users/me 失败不影响页面渲染，profile 降级为 null，但需记录以便排查续期问题。
+      console.error("[layout] getMe 失败，profile 降级为 null", error);
     }
     try {
       initialUnreadCount = (await api.notifications.unreadCount()).count;
