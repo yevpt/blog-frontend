@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { createApiClient } from "@repo/api";
-import { REFRESH_TOKEN_COOKIE } from "@/lib/auth-refresh";
+import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from "@/lib/auth-refresh";
 
 /**
  * 为当前请求创建一个携带 access token 的 API 客户端。
@@ -16,7 +16,7 @@ import { REFRESH_TOKEN_COOKIE } from "@/lib/auth-refresh";
  */
 export async function createServerApiClient() {
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get("access_token")?.value ?? null;
+  const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value ?? null;
   const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)?.value ?? null;
 
   // SSR 续期期间在闭包内暂存新 access token，供 client 重试原请求时读取
