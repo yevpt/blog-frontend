@@ -154,7 +154,11 @@ vi.mock("@repo/ui", () => ({
     Content: ({ children, className }: { children: ReactNode; className?: string }) => (
       <div className={className}>{children}</div>
     ),
-    Item: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+    Item: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
+      <div role="group" aria-roledescription="slide" {...props}>
+        {children}
+      </div>
+    ),
   },
 }));
 
@@ -463,6 +467,50 @@ describe("FeaturedCarousel", () => {
       await user.click(screen.getByLabelText("第 1 张，共 3 张"));
     });
     expect(screen.getByRole("img", { name: "第一篇文章标题" })).toBeInTheDocument();
+  });
+
+  it("桌面：非当前 slide 标记 inert 与 aria-hidden，当前 slide 不标记", () => {
+    render(<FeaturedCarousel posts={mockPosts} />);
+    const slides = getFeaturedCarousel().querySelectorAll('[aria-roledescription="slide"]');
+    expect(slides).toHaveLength(mockPosts.length);
+
+    // 初始 currentIndex 为 0：仅第一张可交互，其余移出 tab 序列
+    expect(slides[0]).not.toHaveAttribute("inert");
+    expect(slides[0]).toHaveAttribute("aria-hidden", "false");
+    expect(slides[1]).toHaveAttribute("inert");
+    expect(slides[1]).toHaveAttribute("aria-hidden", "true");
+    expect(slides[2]).toHaveAttribute("inert");
+    expect(slides[2]).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("桌面：切换 slide 后 inert 随当前索引移动", async () => {
+    const user = userEvent.setup();
+    render(<FeaturedCarousel posts={mockPosts} />);
+    await act(async () => {
+      await user.click(screen.getByLabelText("第 2 张，共 3 张"));
+    });
+
+    const slides = getFeaturedCarousel().querySelectorAll('[aria-roledescription="slide"]');
+    // 当前变为第二张：只有它可交互
+    expect(slides[0]).toHaveAttribute("inert");
+    expect(slides[1]).not.toHaveAttribute("inert");
+    expect(slides[2]).toHaveAttribute("inert");
+  });
+
+  it("移动端：非当前 slide 标记 inert 与 aria-hidden", () => {
+    mockViewport(false);
+    render(<FeaturedCarousel posts={mockPosts} />);
+    const slides = screen
+      .getByTestId("carousel-root")
+      .querySelectorAll('[aria-roledescription="slide"]');
+    expect(slides).toHaveLength(mockPosts.length);
+
+    expect(slides[0]).not.toHaveAttribute("inert");
+    expect(slides[0]).toHaveAttribute("aria-hidden", "false");
+    expect(slides[1]).toHaveAttribute("inert");
+    expect(slides[1]).toHaveAttribute("aria-hidden", "true");
+    expect(slides[2]).toHaveAttribute("inert");
+    expect(slides[2]).toHaveAttribute("aria-hidden", "true");
   });
 });
 
