@@ -62,9 +62,7 @@ function FeaturedCarouselDesktop({ posts }: { posts: FeaturedPost[] }) {
   const [visitedIndices, setVisitedIndices] = useState<ReadonlySet<number>>(() => new Set([0]));
 
   useEffect(() => {
-    setVisitedIndices((prev) =>
-      prev.has(currentIndex) ? prev : new Set(prev).add(currentIndex),
-    );
+    setVisitedIndices((prev) => (prev.has(currentIndex) ? prev : new Set(prev).add(currentIndex)));
   }, [currentIndex]);
 
   const advanceSlide = useCallback(() => {
@@ -107,6 +105,10 @@ function FeaturedCarouselDesktop({ posts }: { posts: FeaturedPost[] }) {
           style={{ transform: `translateY(${(index - currentIndex) * 100}%)` }}
           role="group"
           aria-roledescription="slide"
+          // 非激活 slide 移出 tab 序列：否则 tab 聚焦到屏外 slide 的链接/按钮时，
+          // 浏览器会强制滚动 overflow-hidden 容器令其可见，撑破轮播布局。
+          inert={index !== currentIndex}
+          aria-hidden={index !== currentIndex}
         >
           <FeaturedCarouselSlide
             post={post}
@@ -159,9 +161,7 @@ function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
   const [visitedIndices, setVisitedIndices] = useState<ReadonlySet<number>>(() => new Set([0]));
 
   useEffect(() => {
-    setVisitedIndices((prev) =>
-      prev.has(currentIndex) ? prev : new Set(prev).add(currentIndex),
-    );
+    setVisitedIndices((prev) => (prev.has(currentIndex) ? prev : new Set(prev).add(currentIndex)));
   }, [currentIndex]);
 
   useEffect(() => {
@@ -256,7 +256,12 @@ function FeaturedCarouselMobile({ posts }: { posts: FeaturedPost[] }) {
       <div className="relative h-full w-full">
         <Carousel.Content className="h-full">
           {mobilePosts.map((post, index) => (
-            <Carousel.Item key={post.id} className="h-full">
+            <Carousel.Item
+              key={post.id}
+              className="h-full"
+              inert={index !== currentIndex}
+              aria-hidden={index !== currentIndex}
+            >
               <FeaturedCarouselSlide
                 post={post}
                 isActive={index === currentIndex}
