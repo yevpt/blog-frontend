@@ -65,35 +65,78 @@ vi.mock("../parts/comment-replies", () => ({
 vi.mock("../parts/comment-item", () => ({
   CommentItem: ({
     comment,
+    onReply,
     onEditComment,
+    activeReplyTarget,
+    activeEditTarget,
+    onCancelReply,
+    onCancelEdit,
   }: {
     comment: CommentItemResp;
+    onReply?: (target: { commentId: number; parentReplyId?: number; toUsername: string }) => void;
     onEditComment?: (target: {
       type: "comment";
       id: number;
       initialContent: string;
       pendingReview: boolean;
     }) => void;
-  }) => (
-    <div data-testid="comment-item" data-comment-id={comment.id}>
-      {comment.content}
-      {onEditComment ? (
-        <button
-          type="button"
-          onClick={() =>
-            onEditComment({
-              type: "comment",
-              id: comment.id,
-              initialContent: comment.moderation?.pending_content ?? comment.content,
-              pendingReview: Boolean(comment.moderation?.has_pending_revision),
-            })
-          }
-        >
-          编辑评论
-        </button>
-      ) : null}
-    </div>
-  ),
+    activeReplyTarget?: { commentId: number; parentReplyId?: number; toUsername: string } | null;
+    activeEditTarget?: { type: "comment"; id: number } | null;
+    onCancelReply?: () => void;
+    onCancelEdit?: () => void;
+  }) => {
+    const isReplying =
+      activeReplyTarget != null &&
+      activeReplyTarget.commentId === comment.id &&
+      activeReplyTarget.parentReplyId == null;
+    const isEditing =
+      activeEditTarget != null &&
+      activeEditTarget.type === "comment" &&
+      activeEditTarget.id === comment.id;
+    return (
+      <div data-testid="comment-item" data-comment-id={comment.id}>
+        {comment.content}
+        {onReply &&
+          (isReplying ? (
+            <button type="button" onClick={() => onCancelReply?.()}>
+              取消回复
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() =>
+                onReply({
+                  commentId: comment.id,
+                  toUsername: comment.user?.nickname ?? comment.user?.username ?? "匿名",
+                })
+              }
+            >
+              回复
+            </button>
+          ))}
+        {onEditComment &&
+          (isEditing ? (
+            <button type="button" onClick={() => onCancelEdit?.()}>
+              取消编辑
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() =>
+                onEditComment({
+                  type: "comment",
+                  id: comment.id,
+                  initialContent: comment.moderation?.pending_content ?? comment.content,
+                  pendingReview: Boolean(comment.moderation?.has_pending_revision),
+                })
+              }
+            >
+              编辑评论
+            </button>
+          ))}
+      </div>
+    );
+  },
 }));
 vi.mock("../parts/comment-skeleton", () => ({
   CommentListSkeleton: () => <div data-testid="comment-list-skeleton" />,
@@ -198,6 +241,43 @@ describe("ModalComments", () => {
     render(<ModalComments targetType="article" targetId={1} />);
     await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
     expect(screen.queryByText("查看更多评论")).toBeNull();
+  });
+
+  it("点击评论「回复」后顶部按钮切换为「取消回复」并联动底部 pill banner，再次点击取消", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeComment(1)])));
+
+    render(<ModalComments targetType="article" targetId={1} />);
+    await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
+
+    await user.click(screen.getByRole("button", { name: "回复" }));
+    expect(screen.queryByRole("button", { name: "回复" })).toBeNull();
+    expect(screen.getAllByRole("button", { name: "取消回复" }).length).toBeGreaterThan(0);
+    expect(screen.getByText("@Alice")).toBeTruthy();
+
+    await user.click(screen.getAllByRole("button", { name: "取消回复" })[0]!);
+    expect(screen.getByRole("button", { name: "回复" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "取消回复" })).toBeNull();
+    expect(screen.queryByText("@Alice")).toBeNull();
+  });
+
+  it("点击自己评论的「编辑评论」后顶部按钮切换为「取消编辑」并联动底部 pill，再次点击取消", async () => {
+    const user = userEvent.setup();
+    vi.mocked(global.fetch).mockResolvedValue(jsonResponse(mockPage([makeComment(1)])));
+
+    render(<ModalComments targetType="article" targetId={1} />);
+    await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
+
+    await user.click(screen.getByRole("button", { name: "编辑评论" }));
+    expect(screen.queryByRole("button", { name: "编辑评论" })).toBeNull();
+    expect(screen.getAllByRole("button", { name: "取消编辑" }).length).toBeGreaterThan(0);
+    // PillCommentInput 在编辑态进入 focus 不展示 banner 文案，但 textarea 进入编辑态
+    expect(screen.getByPlaceholderText("编辑内容...")).toBeTruthy();
+
+    await user.click(screen.getAllByRole("button", { name: "取消编辑" })[0]!);
+    expect(screen.getByRole("button", { name: "编辑评论" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "取消编辑" })).toBeNull();
+    expect(screen.queryByPlaceholderText("编辑内容...")).toBeNull();
   });
 
   it("滚动区域尺寸变化时触发 onContentResize", async () => {

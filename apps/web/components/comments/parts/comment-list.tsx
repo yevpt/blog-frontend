@@ -4,7 +4,7 @@ import { Button } from "@repo/ui";
 import type { CommentItemResp, CommentReplyResp } from "@repo/api";
 import type { TargetType } from "@/hooks/use-comment-like";
 import { CommentItem } from "./comment-item";
-import type { EditTarget, ReplyEditTarget, ReplyTarget } from "./comment-item";
+import type { EditTarget, EditTargetValue, ReplyEditTarget, ReplyTarget } from "./comment-item";
 import { CommentListSkeleton } from "./comment-skeleton";
 
 const COMMENT_PAGE_SIZE = 10;
@@ -50,6 +50,14 @@ export interface CommentListProps {
     content: string,
   ) => Promise<boolean>;
   onLoadMore: () => void;
+  /** 单底部输入框（弹窗）场景：当前激活的回复目标，命中顶层评论时按钮显示「取消回复」。 */
+  activeReplyTarget?: ReplyTarget | null;
+  /** 单底部输入框场景：当前激活的编辑目标，命中对应评论/回复时按钮显示「取消编辑」。 */
+  activeEditTarget?: EditTargetValue | null;
+  /** 取消激活的回复目标（与 activeReplyTarget 配对的「取消回复」回调）。 */
+  onCancelReply?: () => void;
+  /** 取消激活的编辑目标（与 activeEditTarget 配对的「取消编辑」回调）。 */
+  onCancelEdit?: () => void;
 }
 
 export function CommentList({
@@ -73,6 +81,10 @@ export function CommentList({
   onEditReply,
   onSubmitEditReply,
   onLoadMore,
+  activeReplyTarget,
+  activeEditTarget,
+  onCancelReply,
+  onCancelEdit,
 }: CommentListProps) {
   if (error) {
     return <p className="py-4 text-center text-sm text-(--fg3)">{error}</p>;
@@ -109,6 +121,10 @@ export function CommentList({
             onSubmitEditReply={onSubmitEditReply}
             pendingReply={pendingReplies[comment.id] ?? null}
             editedReply={editedReplies?.[comment.id] ?? null}
+            activeReplyTarget={activeReplyTarget}
+            activeEditTarget={activeEditTarget}
+            onCancelReply={onCancelReply}
+            onCancelEdit={onCancelEdit}
           />
         ))}
       </div>

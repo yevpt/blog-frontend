@@ -344,6 +344,75 @@ describe("CommentItem", () => {
     expect(screen.queryByRole("button", { name: "编辑评论" })).toBeNull();
   });
 
+  it("旧版 onReply 模式下命中 activeReplyTarget 时按钮变为取消回复，点击调用 onCancelReply", async () => {
+    const user = userEvent.setup();
+    const onReply = vi.fn();
+    const onCancelReply = vi.fn();
+    render(
+      <CommentItem
+        comment={baseComment}
+        targetType="article"
+        onReply={onReply}
+        activeReplyTarget={{
+          commentId: baseComment.id,
+          parentReplyId: undefined,
+          toUsername: "Alice",
+        }}
+        onCancelReply={onCancelReply}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "取消回复" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "回复" })).toBeNull();
+    expect(screen.queryByTestId("inline-reply-editor")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "取消回复" }));
+    expect(onReply).not.toHaveBeenCalled();
+    expect(onCancelReply).toHaveBeenCalledTimes(1);
+  });
+
+  it("旧版 onEditComment 模式下命中 activeEditTarget 时按钮变为取消编辑，点击调用 onCancelEdit", async () => {
+    const user = userEvent.setup();
+    const onEditComment = vi.fn();
+    const onCancelEdit = vi.fn();
+    render(
+      <CommentItem
+        comment={baseComment}
+        targetType="article"
+        currentUserId={10}
+        onEditComment={onEditComment}
+        activeEditTarget={{
+          type: "comment",
+          id: baseComment.id,
+          initialContent: baseComment.content,
+          pendingReview: false,
+        }}
+        onCancelEdit={onCancelEdit}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "取消编辑" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "编辑评论" })).toBeNull();
+    expect(screen.queryByTestId("inline-reply-editor")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "取消编辑" }));
+    expect(onEditComment).not.toHaveBeenCalled();
+    expect(onCancelEdit).toHaveBeenCalledTimes(1);
+  });
+
+  it("旧版模式下未命中的 activeReplyTarget 不影响其它评论的按钮显示", () => {
+    render(
+      <CommentItem
+        comment={baseComment}
+        targetType="article"
+        onReply={vi.fn()}
+        activeReplyTarget={{ commentId: 999, toUsername: "别的评论" }}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "回复" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "取消回复" })).toBeNull();
+  });
+
   it("reply_count>0 时渲染 CommentReplies", () => {
     render(<CommentItem comment={baseComment} targetType="article" />);
     expect(screen.getByTestId("comment-replies")).toBeTruthy();

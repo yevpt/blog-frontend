@@ -15,7 +15,7 @@ import { ThreadReplyItem } from "./thread-comment-item";
 import { InlineReplyEditor } from "../inputs/inline-reply-editor";
 import { ReplyBanner } from "../inputs/reply-banner";
 
-import type { ReplyEditTarget, ReplyTarget } from "./comment-item";
+import type { EditTargetValue, ReplyEditTarget, ReplyTarget } from "./comment-item";
 
 export type { ReplyTarget };
 
@@ -98,6 +98,14 @@ interface ReplyItemProps {
     commentId: number,
     content: string,
   ) => Promise<boolean>;
+  /** 单底部输入框（弹窗）场景：当前激活的回复目标，命中本回复时按钮显示「取消回复」。 */
+  activeReplyTarget?: ReplyTarget | null;
+  /** 单底部输入框场景：当前激活的编辑目标，命中本回复时按钮显示「取消编辑」。 */
+  activeEditTarget?: EditTargetValue | null;
+  /** 取消激活的回复目标（与 activeReplyTarget 配对的「取消回复」回调）。 */
+  onCancelReply?: () => void;
+  /** 取消激活的编辑目标（与 activeEditTarget 配对的「取消编辑」回调）。 */
+  onCancelEdit?: () => void;
   linkProfile?: boolean;
 }
 
@@ -112,6 +120,10 @@ const ReplyItem = memo(function ReplyItem({
   onDeleteReply,
   onEditReply,
   onSubmitEditReply,
+  activeReplyTarget,
+  activeEditTarget,
+  onCancelReply,
+  onCancelEdit,
   linkProfile = false,
 }: ReplyItemProps) {
   const { userId } = useSession();
@@ -120,10 +132,21 @@ const ReplyItem = memo(function ReplyItem({
   const isOwnReply = currentUserId != null && currentUserId === reply.from_user_id;
   const replyKey = `${targetType}-reply:${reply.id}:reply`;
   const editKey = `${targetType}-reply:${reply.id}:edit`;
-  const isReplying = useInlineEditorStore((s) => Boolean(s.editors[replyKey]?.isOpen));
-  const isEditing = useInlineEditorStore((s) => Boolean(s.editors[editKey]?.isOpen));
+  const inlineReplyOpen = useInlineEditorStore((s) => Boolean(s.editors[replyKey]?.isOpen));
+  const inlineEditOpen = useInlineEditorStore((s) => Boolean(s.editors[editKey]?.isOpen));
   const replyContent = useInlineEditorStore((s) => s.editors[replyKey]?.content ?? "");
   const editContent = useInlineEditorStore((s) => s.editors[editKey]?.content ?? "");
+  // 单底部输入框（弹窗）场景：激活态由 activeReplyTarget 联动本回复按钮显示「取消回复」。
+  const legacyReplying =
+    activeReplyTarget != null &&
+    activeReplyTarget.commentId === commentId &&
+    activeReplyTarget.parentReplyId === reply.id;
+  const legacyEditing =
+    activeEditTarget != null &&
+    activeEditTarget.type === "reply" &&
+    activeEditTarget.id === reply.id;
+  const isReplying = inlineReplyOpen || (!onSubmitReply && legacyReplying);
+  const isEditing = inlineEditOpen || (!onSubmitEditReply && legacyEditing);
   const {
     open: openEditor,
     setContent: setEditorContent,
@@ -161,6 +184,10 @@ const ReplyItem = memo(function ReplyItem({
       openEditor(replyKey);
       return;
     }
+    if (isReplying) {
+      onCancelReply?.();
+      return;
+    }
     if (!userId) {
       openLoginModal();
       return;
@@ -179,6 +206,7 @@ const ReplyItem = memo(function ReplyItem({
     openEditor,
     replyKey,
     editKey,
+    onCancelReply,
   ]);
 
   const handleDelete = useCallback(() => {
@@ -209,6 +237,10 @@ const ReplyItem = memo(function ReplyItem({
       openEditor(editKey, pendingContent);
       return;
     }
+    if (isEditing) {
+      onCancelEdit?.();
+      return;
+    }
     onEditReply?.({
       type: "reply",
       id: reply.id,
@@ -230,6 +262,7 @@ const ReplyItem = memo(function ReplyItem({
     openEditor,
     replyKey,
     editKey,
+    onCancelEdit,
   ]);
 
   const handleReplySubmit = useCallback(
@@ -272,7 +305,7 @@ const ReplyItem = memo(function ReplyItem({
         moderation={reply.moderation}
         isOwner={isOwnReply}
       />
-      {isReplying && (
+      {inlineReplyOpen && (
         <InlineReplyEditor
           value={replyContent}
           onChange={(value) => setEditorContent(replyKey, value)}
@@ -283,7 +316,7 @@ const ReplyItem = memo(function ReplyItem({
           onSubmit={handleReplySubmit}
         />
       )}
-      {isEditing && (
+      {inlineEditOpen && (
         <InlineReplyEditor
           value={editContent}
           onChange={(value) => setEditorContent(editKey, value)}
@@ -329,6 +362,14 @@ export interface CommentRepliesProps {
     content: string,
   ) => Promise<boolean>;
   onOpenChange?: (open: boolean) => void;
+  /** 单底部输入框（弹窗）场景：当前激活的回复目标，转发到各 ReplyItem 顶部按钮联动「取消回复」。 */
+  activeReplyTarget?: ReplyTarget | null;
+  /** 单底部输入框场景：当前激活的编辑目标，转发到各 ReplyItem 顶部按钮联动「取消编辑」。 */
+  activeEditTarget?: EditTargetValue | null;
+  /** 取消激活的回复目标。 */
+  onCancelReply?: () => void;
+  /** 取消激活的编辑目标。 */
+  onCancelEdit?: () => void;
   linkProfile?: boolean;
 }
 
@@ -346,6 +387,10 @@ export const CommentReplies = memo(function CommentReplies({
   onEditReply,
   onSubmitEditReply,
   onOpenChange,
+  activeReplyTarget,
+  activeEditTarget,
+  onCancelReply,
+  onCancelEdit,
   linkProfile = true,
 }: CommentRepliesProps) {
   const isOpen = useCommentRepliesStore((s) => s.openKeys.has(`${targetType}:${commentId}`));
@@ -489,6 +534,10 @@ export const CommentReplies = memo(function CommentReplies({
             onDeleteReply={onDeleteReply ? handleDeleteReply : undefined}
             onEditReply={onEditReply}
             onSubmitEditReply={onSubmitEditReply}
+            activeReplyTarget={activeReplyTarget}
+            activeEditTarget={activeEditTarget}
+            onCancelReply={onCancelReply}
+            onCancelEdit={onCancelEdit}
             linkProfile={linkProfile}
           />
         ))}

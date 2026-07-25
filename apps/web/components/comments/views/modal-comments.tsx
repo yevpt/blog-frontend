@@ -88,6 +88,10 @@ export function ModalComments({
             onEditComment={handleEditComment}
             onEditReply={handleEditReply}
             onLoadMore={loadMore}
+            activeReplyTarget={replyTarget}
+            activeEditTarget={editTarget}
+            onCancelReply={handleCancelReply}
+            onCancelEdit={handleCancelEdit}
           />
         </div>
       </div>
