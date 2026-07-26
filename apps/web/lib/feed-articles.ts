@@ -22,14 +22,22 @@ export function createPublicFeedApiClient() {
   });
 }
 
+/** feed 文章过滤选项；categoryId/tagId 均缺省时为全站 */
+export interface ArticleFeedOptions {
+  categoryId?: number;
+  tagId?: number;
+  limit?: number;
+}
+
 /**
  * 拉取最新 N 篇公开文章（仅列表元数据）。
  * 按 updated_at 倒序，取第一页前 limit 条。
  */
-export async function fetchLatestArticleList(
+export async function fetchLatestArticleList({
+  categoryId,
+  tagId,
   limit = FEED_ARTICLE_LIMIT,
-  categoryId?: number,
-): Promise<ArticleListItemResp[]> {
+}: ArticleFeedOptions = {}): Promise<ArticleListItemResp[]> {
   const api = createPublicFeedApiClient();
   const page = await api.articles.listPublic({
     page: 1,
@@ -37,6 +45,7 @@ export async function fetchLatestArticleList(
     sort_by: "updated_at",
     sort_order: "desc",
     category_id: categoryId,
+    tag_id: tagId,
   });
   return page.list;
 }
@@ -80,13 +89,10 @@ export async function articleToRssItem(detail: ArticleDetailResp): Promise<RssIt
 
 /**
  * 端到端：拉取最新文章并转成 RSS items。
- * 主 feed 与分类 feed 共用；categoryId 缺省时为全站。
+ * 主 feed 与分类/标签 feed 共用；categoryId/tagId 缺省时为全站。
  */
-export async function buildArticleRssItems(
-  categoryId?: number,
-  limit = FEED_ARTICLE_LIMIT,
-): Promise<RssItem[]> {
-  const list = await fetchLatestArticleList(limit, categoryId);
+export async function buildArticleRssItems(options: ArticleFeedOptions = {}): Promise<RssItem[]> {
+  const list = await fetchLatestArticleList(options);
   if (list.length === 0) return [];
   const details = await fetchArticleDetails(list.map((a) => a.id));
   // 保持列表的 updated_at 倒序顺序

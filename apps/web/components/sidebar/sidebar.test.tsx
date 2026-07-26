@@ -205,11 +205,12 @@ describe("TagsCloud", () => {
     expect(screen.getByText("Next.js")).toBeTruthy();
   });
 
-  it("标签数量正确", () => {
+  it("每个标签渲染为指向标签详情页的链接", () => {
     render(<TagsCloud tags={mockTags} />);
-    // 每个标签渲染为 button
-    const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(mockTags.length);
+    const links = screen.getAllByRole("link");
+    expect(links).toHaveLength(mockTags.length);
+    expect(links[0]?.getAttribute("href")).toBe("/tags/1");
+    expect(links[2]?.getAttribute("href")).toBe("/tags/3");
   });
 
   it("显示区块标题", () => {
@@ -224,16 +225,13 @@ describe("TagsCloud", () => {
     expect(screen.getByText("9")).toBeTruthy();
   });
 
-  it("空标签列表不渲染按钮", () => {
+  it("空标签列表不渲染链接", () => {
     render(<TagsCloud tags={[]} />);
-    const buttons = screen.queryAllByRole("button");
-    expect(buttons).toHaveLength(0);
+    expect(screen.queryAllByRole("link")).toHaveLength(0);
   });
 
-  it("每个标签都显示计数", () => {
-    render(<TagsCloud tags={mockTags} />);
-    expect(screen.getByText("3")).toBeTruthy();
-    expect(screen.getByText("6")).toBeTruthy();
-    expect(screen.getByText("9")).toBeTruthy();
+  it("无文章的标签不展示", () => {
+    render(<TagsCloud tags={[...mockTags, makeTag(4, "空标签", 0)]} />);
+    expect(screen.queryByText("空标签")).toBeNull();
   });
 });

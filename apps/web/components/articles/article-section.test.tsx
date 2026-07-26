@@ -180,6 +180,8 @@ vi.mock("@/lib/article-list-cache", () => ({
   getLastArticleListCategoryId: () => 0,
   setLastArticleListCategoryId: () => undefined,
   shouldRestoreArticleListCache: () => false,
+  toArticleListCacheKey: (categoryId: number, tagId?: number) =>
+    tagId !== undefined ? `tag:${tagId}` : `cat:${categoryId}`,
 }));
 
 function makeArticle(id: number, title: string) {
@@ -266,6 +268,39 @@ describe("ArticleSection", () => {
     expect(screen.getByText("文章一")).toBeTruthy();
     expect(screen.getByText("文章二")).toBeTruthy();
     expect(vi.mocked(fetch)).not.toHaveBeenCalled();
+  });
+
+  it("受控模式下不渲染内部标题与分类 Tabs，仍渲染文章", () => {
+    render(<ArticleSection initialPage={makePageResp()} currentCategoryId={1} />);
+    expect(screen.queryByText("最新文章")).toBeNull();
+    expect(screen.queryByText("近期在写什么")).toBeNull();
+    expect(screen.queryByRole("button", { name: "全部" })).toBeNull();
+    expect(screen.getByText("文章一")).toBeTruthy();
+    expect(screen.getByText("文章二")).toBeTruthy();
+  });
+
+  it("受控标签模式下加载更多带 tag_id", async () => {
+    mockLayoutMediaQuery(false);
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse(
+        makePageResp({ page: 2, pages: 3, total: 25, list: [makeArticle(11, "标签第二页")] }),
+      ),
+    );
+
+    render(<ArticleSection initialPage={makePageResp({ total: 25, pages: 3 })} currentTagId={5} />);
+
+    expect(screen.queryByText("最新文章")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "加载更多" }));
+
+    await waitFor(() => {
+      const call = vi.mocked(fetch).mock.calls[0][0] as string;
+      const url = new URL(call, "http://localhost");
+      expect(url.searchParams.get("tag_id")).toBe("5");
+      expect(url.searchParams.get("category_id")).toBeNull();
+      expect(screen.getByText("标签第二页")).toBeTruthy();
+    });
   });
 
   it("文章网格使用更宽的卡片最小宽度", () => {

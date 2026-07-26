@@ -2,13 +2,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const mockState = vi.hoisted(() => ({
-  listTabs: vi.fn(),
+  listTags: vi.fn(),
   buildArticleRssItems: vi.fn(),
   buildRssFeed: vi.fn(),
 }));
 
 vi.mock("@/lib/feed-articles", () => ({
-  createPublicFeedApiClient: () => ({ categories: { listTabs: mockState.listTabs } }),
+  createPublicFeedApiClient: () => ({ tags: { list: mockState.listTags } }),
   buildArticleRssItems: mockState.buildArticleRssItems,
 }));
 
@@ -23,7 +23,7 @@ vi.mock("@/lib/seo", () => ({
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn(() => {
-    throw new Error("category feed should not read request cookies");
+    throw new Error("tag feed should not read request cookies");
   }),
 }));
 
@@ -37,9 +37,9 @@ function makeContext(id: string) {
 
 const emptyReq = {} as never;
 
-describe("GET /categories/[id]/feed.xml", () => {
+describe("GET /tags/[id]/feed.xml", () => {
   afterEach(() => {
-    mockState.listTabs.mockReset();
+    mockState.listTags.mockReset();
     mockState.buildArticleRssItems.mockReset();
     mockState.buildRssFeed.mockReset();
   });
@@ -54,12 +54,12 @@ describe("GET /categories/[id]/feed.xml", () => {
     expect(res1.status).toBe(404);
     const res2 = await GET(emptyReq, makeContext("abc"));
     expect(res2.status).toBe(404);
-    expect(mockState.listTabs).not.toHaveBeenCalled();
+    expect(mockState.listTags).not.toHaveBeenCalled();
   });
 
-  it("分类不存在时返回 404", async () => {
-    mockState.listTabs.mockResolvedValue({
-      list: [{ id: 1, name: "技术", seq: 1, article_count: 0 }],
+  it("标签不存在时返回 404", async () => {
+    mockState.listTags.mockResolvedValue({
+      list: [{ id: 1, name: "Go", seq: 1, article_count: 0 }],
     });
 
     const res = await GET(emptyReq, makeContext("999"));
@@ -67,9 +67,9 @@ describe("GET /categories/[id]/feed.xml", () => {
     expect(mockState.buildArticleRssItems).not.toHaveBeenCalled();
   });
 
-  it("用 categoryId 拉文章并生成带分类名的标题", async () => {
-    mockState.listTabs.mockResolvedValue({
-      list: [{ id: 5, name: "随笔", seq: 1, article_count: 3 }],
+  it("用 tagId 拉文章并生成带标签名的标题", async () => {
+    mockState.listTags.mockResolvedValue({
+      list: [{ id: 5, name: "Go", seq: 1, article_count: 3 }],
     });
     const items = [{ title: "x", link: "https://www.yevpt.com/articles/1", pubDate: "p" }];
     mockState.buildArticleRssItems.mockResolvedValue(items);
@@ -77,43 +77,25 @@ describe("GET /categories/[id]/feed.xml", () => {
 
     const res = await GET(emptyReq, makeContext("5"));
     expect(res.status).toBe(200);
-    expect(mockState.buildArticleRssItems).toHaveBeenCalledWith({ categoryId: 5 });
+    expect(mockState.buildArticleRssItems).toHaveBeenCalledWith({ tagId: 5 });
     expect(mockState.buildRssFeed).toHaveBeenCalledWith({
-      title: "随笔 - Yevpt's Blog",
-      description: "Yevpt's Blog 「随笔」分类下的文章",
+      title: "#Go - Yevpt's Blog",
+      description: "Yevpt's Blog 「Go」标签下的文章",
       link: "https://www.yevpt.com",
-      selfLink: "https://www.yevpt.com/categories/5/feed.xml",
+      selfLink: "https://www.yevpt.com/tags/5/feed.xml",
       items,
     });
   });
 
-  it("返回 application/xml 内容类型", async () => {
-    mockState.listTabs.mockResolvedValue({
-      list: [{ id: 5, name: "随笔", seq: 1, article_count: 0 }],
-    });
-    mockState.buildArticleRssItems.mockResolvedValue([]);
-    mockState.buildRssFeed.mockReturnValue("<?xml version='1.0'?><rss/>");
-
-    const res = await GET(emptyReq, makeContext("5"));
-    expect(res.headers.get("content-type")).toBe("application/xml; charset=utf-8");
-  });
-
-  it("listTabs 抛错时按分类不存在处理，返回 404", async () => {
-    mockState.listTabs.mockRejectedValue(new Error("api down"));
-
-    const res = await GET(emptyReq, makeContext("5"));
-    expect(res.status).toBe(404);
-  });
-
   it("buildArticleRssItems 抛错时降级为空列表，仍返回 200", async () => {
-    mockState.listTabs.mockResolvedValue({
-      list: [{ id: 5, name: "随笔", seq: 1, article_count: 0 }],
+    mockState.listTags.mockResolvedValue({
+      list: [{ id: 5, name: "Go", seq: 1, article_count: 3 }],
     });
+    mockState.buildRssFeed.mockReturnValue("<rss/>");
     mockState.buildArticleRssItems.mockRejectedValue(new Error("down"));
-    mockState.buildRssFeed.mockReturnValue("<rss><empty/></rss>");
 
     const res = await GET(emptyReq, makeContext("5"));
     expect(res.status).toBe(200);
-    expect(mockState.buildRssFeed).toHaveBeenCalledWith(expect.objectContaining({ items: [] }));
+    expect(res.headers.get("content-type")).toBe("application/xml; charset=utf-8");
   });
 });

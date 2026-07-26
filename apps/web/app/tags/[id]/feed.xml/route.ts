@@ -12,12 +12,12 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-/** 查询分类名；查不到返回 null（route 返回 404） */
-async function fetchCategoryName(id: number): Promise<string | null> {
+/** 查询标签名；查不到返回 null（route 返回 404） */
+async function fetchTagName(id: number): Promise<string | null> {
   const api = createPublicFeedApiClient();
   try {
-    const tabs = await api.categories.listTabs();
-    return tabs.list.find((c) => c.id === id)?.name ?? null;
+    const tags = await api.tags.list();
+    return tags.list.find((t) => t.id === id)?.name ?? null;
   } catch {
     return null;
   }
@@ -25,23 +25,23 @@ async function fetchCategoryName(id: number): Promise<string | null> {
 
 export async function GET(_request: NextRequest, context: RouteContext): Promise<Response> {
   const { id: rawId } = await context.params;
-  const categoryId = Number(rawId);
+  const tagId = Number(rawId);
 
   // 非法 id 直接 404，避免无谓回源
-  if (!Number.isInteger(categoryId) || categoryId <= 0) {
+  if (!Number.isInteger(tagId) || tagId <= 0) {
     return new Response("Not Found", { status: 404 });
   }
 
-  const categoryName = await fetchCategoryName(categoryId);
-  if (!categoryName) {
+  const tagName = await fetchTagName(tagId);
+  if (!tagName) {
     return new Response("Not Found", { status: 404 });
   }
 
-  const items = await buildArticleRssItems({ categoryId }).catch(() => []);
-  const selfUrl = getCanonicalUrl(`/categories/${categoryId}/feed.xml`).toString();
+  const items = await buildArticleRssItems({ tagId }).catch(() => []);
+  const selfUrl = getCanonicalUrl(`/tags/${tagId}/feed.xml`).toString();
   const xml = buildRssFeed({
-    title: `${categoryName} - ${SITE_TITLE}`,
-    description: `${SITE_TITLE} 「${categoryName}」分类下的文章`,
+    title: `#${tagName} - ${SITE_TITLE}`,
+    description: `${SITE_TITLE} 「${tagName}」标签下的文章`,
     link: getSiteUrl(),
     selfLink: selfUrl,
     items,

@@ -65,7 +65,7 @@ export const ArticleCard = memo(function ArticleCard({
           <ArticleDateCategory
             dateTime={article.created_at}
             formattedDate={formattedDate}
-            category={article.category?.name}
+            category={article.category}
             className="mb-3"
           />
 

@@ -168,7 +168,7 @@ describe("useArticleList", () => {
       list: [makeArticle(1, "第一页")],
     });
 
-    setArticleListCache(0, {
+    setArticleListCache("cat:0", {
       articles: [makeArticle(1, "第一页"), makeArticle(11, "第二页")],
       currentPage: 2,
       pageData: makePageResp({ page: 2, pages: 2, list: [makeArticle(11, "第二页")] }),
@@ -185,7 +185,7 @@ describe("useArticleList", () => {
   });
 
   it("changeCategory 命中缓存时不重复请求", async () => {
-    setArticleListCache(1, {
+    setArticleListCache("cat:1", {
       articles: [makeArticle(3, "编程文章")],
       currentPage: 1,
       pageData: makePageResp({ list: [makeArticle(3, "编程文章")] }),
@@ -252,6 +252,47 @@ describe("useArticleList", () => {
     await waitFor(() => {
       expect(result.current.articles[0]?.title).toBe("分类结果");
     });
+  });
+
+  it("受控标签模式下 loadMore 带 tag_id 不带 category_id", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(
+        JSON.stringify(
+          makePageResp({ page: 2, pages: 2, total: 3, list: [makeArticle(11, "标签第二页")] }),
+        ),
+        { status: 200 },
+      ),
+    );
+
+    const initialPage = makePageResp({ total: 3, pages: 2, list: [makeArticle(1, "标签文章")] });
+    const { result } = renderHook(() => useArticleList({ initialPage, controlledTagId: 5 }));
+
+    expect(result.current.currentCategoryId).toBe(0);
+
+    await act(async () => {
+      await result.current.loadMore();
+    });
+
+    await waitFor(() => {
+      const lastCall = vi.mocked(fetch).mock.calls.at(-1);
+      expect(lastCall?.[0]).toBe("/api/articles?page=2&tag_id=5");
+      expect(result.current.articles.map((item) => item.id)).toEqual([1, 11]);
+    });
+  });
+
+  it("受控标签模式与分类缓存 key 互不污染", () => {
+    setArticleListCache("cat:5", {
+      articles: [makeArticle(7, "同名分类缓存")],
+      currentPage: 2,
+      pageData: makePageResp({ page: 2, pages: 2 }),
+      endReached: true,
+    });
+
+    const initialPage = makePageResp({ list: [makeArticle(1, "标签首屏")] });
+    const { result } = renderHook(() => useArticleList({ initialPage, controlledTagId: 5 }));
+
+    // cat:5 缓存不影响 tag:5 的启动数据
+    expect(result.current.articles.map((item) => item.id)).toEqual([1]);
   });
 
   it("toggleLike(article) opens login modal when user is missing", async () => {

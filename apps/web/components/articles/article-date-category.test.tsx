@@ -21,15 +21,16 @@ describe("ArticleDateCategory", () => {
     expect(container.querySelectorAll("span")).toHaveLength(0);
   });
 
-  it("有 category 时渲染分类名称", () => {
+  it("有 category 时渲染指向分类详情页的链接", () => {
     render(
       <ArticleDateCategory
         dateTime="2026-06-01T00:00:00Z"
         formattedDate="2026/06/01"
-        category="技术"
+        category={{ id: 1, name: "技术" }}
       />,
     );
-    expect(screen.getByText("技术")).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "技术" });
+    expect(link).toHaveAttribute("href", "/categories/1");
   });
 
   it("className 被合并到容器", () => {

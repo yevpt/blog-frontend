@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { CategoryTabItem } from "@repo/api";
-import { ALL_CATEGORY_ID } from "@/hooks/use-article-list";
+import { ALL_CATEGORY_ID } from "@/lib/category-tabs";
 import {
   CATEGORY_PAGINATION_THRESHOLD,
   filterVisibleCategories,

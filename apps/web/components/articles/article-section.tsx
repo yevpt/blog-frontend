@@ -36,6 +36,8 @@ interface ArticleSectionProps {
   sidebar?: ReactNode;
   /** 受控模式：由父组件控制当前分类，不渲染内部 Tabs */
   currentCategoryId?: number;
+  /** 受控模式（标签）：与 currentCategoryId 互斥，按标签过滤文章 */
+  currentTagId?: number;
 }
 
 export function ArticleSection({
@@ -43,6 +45,7 @@ export function ArticleSection({
   categories = [],
   sidebar,
   currentCategoryId: controlledCategoryId,
+  currentTagId: controlledTagId,
 }: ArticleSectionProps) {
   const {
     currentCategoryId,
@@ -60,7 +63,7 @@ export function ArticleSection({
     toggleLike,
     refreshForSessionChange,
     setArticles,
-  } = useArticleList({ initialPage, controlledCategoryId });
+  } = useArticleList({ initialPage, controlledCategoryId, controlledTagId });
 
   // TODO: 待后端支持文字搜索接口后，在 fetchPage 中加入 search 参数
   const [searchQuery, setSearchQuery] = useState("");
@@ -211,18 +214,23 @@ export function ArticleSection({
     </>
   );
 
+  // 受控模式（如分类/标签详情页）：头部由父页面渲染，内部不再展示标题与分类 Tabs
+  const isControlled = controlledCategoryId !== undefined || controlledTagId !== undefined;
+
   return (
     <section id="articles" ref={sectionRef} className="scroll-mt-20">
-      <div data-testid="home-articles-header" className="mb-6">
-        <PageSectionHeader label="最新文章" title="近期在写什么" as="h2" titleClassName="mb-5" />
-        <ArticleListHeader
-          categories={allCategories}
-          currentCategoryId={currentCategoryId}
-          onCategoryChange={changeCategory}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-      </div>
+      {!isControlled && (
+        <div data-testid="home-articles-header" className="mb-6">
+          <PageSectionHeader label="最新文章" title="近期在写什么" as="h2" titleClassName="mb-5" />
+          <ArticleListHeader
+            categories={allCategories}
+            currentCategoryId={currentCategoryId}
+            onCategoryChange={changeCategory}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
+        </div>
+      )}
 
       {sidebar ? (
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_328px]">

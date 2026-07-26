@@ -7,6 +7,7 @@ import {
   setArticleListCache,
   setLastArticleListCategoryId,
   shouldRestoreArticleListCache,
+  toArticleListCacheKey,
 } from "./article-list-cache";
 
 const initialPage: ArticlePageResp = {
@@ -67,7 +68,7 @@ describe("article-list-cache", () => {
 
   it("读写分类缓存并记住最后访问分类", () => {
     setLastArticleListCategoryId(3);
-    setArticleListCache(3, {
+    setArticleListCache("cat:3", {
       articles: initialPage.list,
       currentPage: 1,
       pageData: initialPage,
@@ -75,12 +76,18 @@ describe("article-list-cache", () => {
     });
 
     expect(getLastArticleListCategoryId()).toBe(3);
-    expect(getArticleListCache(3)?.currentPage).toBe(1);
+    expect(getArticleListCache("cat:3")?.currentPage).toBe(1);
+  });
+
+  it("toArticleListCacheKey 按维度区分分类与标签", () => {
+    expect(toArticleListCacheKey(3)).toBe("cat:3");
+    expect(toArticleListCacheKey(0, 5)).toBe("tag:5");
+    expect(toArticleListCacheKey(3, 5)).toBe("tag:5");
   });
 
   it("clearArticleListCache 复位缓存", () => {
     setLastArticleListCategoryId(2);
-    setArticleListCache(2, {
+    setArticleListCache("cat:2", {
       articles: initialPage.list,
       currentPage: 2,
       pageData: initialPage,
@@ -90,6 +97,6 @@ describe("article-list-cache", () => {
     clearArticleListCache();
 
     expect(getLastArticleListCategoryId()).toBe(0);
-    expect(getArticleListCache(2)).toBeUndefined();
+    expect(getArticleListCache("cat:2")).toBeUndefined();
   });
 });

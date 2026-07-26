@@ -13,14 +13,19 @@ import {
   setArticleListCache,
   setLastArticleListCategoryId,
   shouldRestoreArticleListCache,
+  toArticleListCacheKey,
 } from "@/lib/article-list-cache";
+import { ALL_CATEGORY_ID } from "@/lib/category-tabs";
 
-export const ALL_CATEGORY_ID = 0;
+// 保持对外导出路径不变（常量定义在 lib/category-tabs，避免 lib 反向依赖 hook）
+export { ALL_CATEGORY_ID };
 
 export interface UseArticleListOptions {
   initialPage: ArticlePageResp;
   /** 受控分类 ID；传入时 hook 不维护内部分类状态 */
   controlledCategoryId?: number;
+  /** 受控标签 ID；与 controlledCategoryId 互斥，传入时按标签过滤 */
+  controlledTagId?: number;
 }
 
 function isAbortError(err: unknown): boolean {
@@ -38,7 +43,7 @@ function resolveBootCategoryId(isControlled: boolean, controlledCategoryId?: num
 }
 
 function resolveBootListState(
-  categoryId: number,
+  cacheKey: string,
   initialPage: ArticlePageResp,
 ): {
   articles: ArticleListItemResp[];
@@ -46,7 +51,7 @@ function resolveBootListState(
   pageData: ArticlePageResp;
   endReached: boolean;
 } {
-  const cached = getArticleListCache(categoryId);
+  const cached = getArticleListCache(cacheKey);
   if (cached && shouldRestoreArticleListCache(cached, initialPage)) {
     return cached;
   }
@@ -58,18 +63,28 @@ function resolveBootListState(
   };
 }
 
-export function useArticleList({ initialPage, controlledCategoryId }: UseArticleListOptions) {
+export function useArticleList({
+  initialPage,
+  controlledCategoryId,
+  controlledTagId,
+}: UseArticleListOptions) {
   const { userId } = useSession();
   const { open: openLoginModal } = useLoginModal();
 
-  const isControlled = controlledCategoryId !== undefined;
+  const isControlled = controlledCategoryId !== undefined || controlledTagId !== undefined;
   const bootCategoryId = resolveBootCategoryId(isControlled, controlledCategoryId);
-  const bootListState = resolveBootListState(bootCategoryId, initialPage);
+  const bootListState = resolveBootListState(
+    toArticleListCacheKey(bootCategoryId, controlledTagId),
+    initialPage,
+  );
 
   const [internalCategoryId, setInternalCategoryId] = useState(
     isControlled ? ALL_CATEGORY_ID : bootCategoryId,
   );
-  const currentCategoryId = isControlled ? controlledCategoryId : internalCategoryId;
+  // 受控标签模式下分类恒为「全部」，过滤维度由 tag_id 承担
+  const currentCategoryId = isControlled
+    ? (controlledCategoryId ?? ALL_CATEGORY_ID)
+    : internalCategoryId;
 
   const [currentPage, setCurrentPage] = useState(bootListState.currentPage);
   const [pageData, setPageData] = useState(bootListState.pageData);
@@ -97,7 +112,7 @@ export function useArticleList({ initialPage, controlledCategoryId }: UseArticle
   currentPageRef.current = currentPage;
 
   useEffect(() => {
-    setArticleListCache(currentCategoryId, {
+    setArticleListCache(toArticleListCacheKey(currentCategoryId, controlledTagId), {
       articles,
       currentPage,
       pageData,
@@ -106,15 +121,31 @@ export function useArticleList({ initialPage, controlledCategoryId }: UseArticle
     if (!isControlled) {
       setLastArticleListCategoryId(currentCategoryId);
     }
-  }, [articles, currentCategoryId, currentPage, endReached, isControlled, pageData]);
+  }, [
+    articles,
+    controlledTagId,
+    currentCategoryId,
+    currentPage,
+    endReached,
+    isControlled,
+    pageData,
+  ]);
 
-  const fetchPage = useCallback(async (categoryId: number, page: number, signal?: AbortSignal) => {
-    const qs = buildQuery({
-      page,
-      ...(categoryId !== ALL_CATEGORY_ID ? { category_id: categoryId } : {}),
-    });
-    return apiJson<ArticlePageResp>(`/api/articles?${qs}`, { signal });
-  }, []);
+  const fetchPage = useCallback(
+    async (categoryId: number, page: number, signal?: AbortSignal) => {
+      const qs = buildQuery({
+        page,
+        // 受控标签模式走 tag_id，忽略分类维度
+        ...(controlledTagId !== undefined
+          ? { tag_id: controlledTagId }
+          : categoryId !== ALL_CATEGORY_ID
+            ? { category_id: categoryId }
+            : {}),
+      });
+      return apiJson<ArticlePageResp>(`/api/articles?${qs}`, { signal });
+    },
+    [controlledTagId],
+  );
 
   const applyFirstPage = useCallback((data: ArticlePageResp) => {
     setArticles(data.list);
@@ -156,7 +187,7 @@ export function useArticleList({ initialPage, controlledCategoryId }: UseArticle
         setLastArticleListCategoryId(id);
       }
 
-      const cached = getArticleListCache(id);
+      const cached = getArticleListCache(toArticleListCacheKey(id));
       if (cached) {
         setArticles(cached.articles);
         setPageData(cached.pageData);

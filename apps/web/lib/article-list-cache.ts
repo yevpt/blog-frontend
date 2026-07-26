@@ -7,7 +7,7 @@ export interface ArticleListCacheEntry {
   endReached: boolean;
 }
 
-const cache = new Map<number, ArticleListCacheEntry>();
+const cache = new Map<string, ArticleListCacheEntry>();
 /** 与 use-article-list 的 ALL_CATEGORY_ID 对齐 */
 let lastCategoryId = 0;
 
@@ -19,12 +19,17 @@ export function setLastArticleListCategoryId(categoryId: number): void {
   lastCategoryId = categoryId;
 }
 
-export function getArticleListCache(categoryId: number): ArticleListCacheEntry | undefined {
-  return cache.get(categoryId);
+/** 缓存 key 带维度前缀，避免分类 id 与标签 id 撞 key */
+export function toArticleListCacheKey(categoryId: number, tagId?: number): string {
+  return tagId !== undefined ? `tag:${tagId}` : `cat:${categoryId}`;
 }
 
-export function setArticleListCache(categoryId: number, entry: ArticleListCacheEntry): void {
-  cache.set(categoryId, entry);
+export function getArticleListCache(key: string): ArticleListCacheEntry | undefined {
+  return cache.get(key);
+}
+
+export function setArticleListCache(key: string, entry: ArticleListCacheEntry): void {
+  cache.set(key, entry);
 }
 
 export function shouldRestoreArticleListCache(

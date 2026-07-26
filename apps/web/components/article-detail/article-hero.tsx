@@ -98,7 +98,7 @@ export function ArticleHero({ article }: ArticleHeroProps) {
         <ArticleDateCategory
           dateTime={article.created_at}
           formattedDate={formattedDate}
-          category={article.category?.name}
+          category={article.category}
         />
         <span aria-hidden>·</span>
         <span>{readingMin} 分钟阅读</span>
