@@ -71,6 +71,24 @@ describe("SiteFooter", () => {
     expect(text.indexOf("RSS")).toBeLessThan(text.indexOf("鲁公网安备"));
   });
 
+  it("提供归档入口，指向 /archive 且在当前窗口打开", () => {
+    render(<SiteFooter />);
+
+    const archiveLink = screen.getByText("归档").closest("a");
+    expect(archiveLink).toHaveAttribute("href", "/archive");
+    expect(archiveLink).not.toHaveAttribute("target");
+  });
+
+  it("归档排在版权与 RSS 之间", () => {
+    render(<SiteFooter />);
+
+    const nav = screen.getByRole("navigation", { name: "站点信息" });
+    const text = nav.textContent ?? "";
+
+    expect(text.indexOf("yevpt.com")).toBeLessThan(text.indexOf("归档"));
+    expect(text.indexOf("归档")).toBeLessThan(text.indexOf("RSS"));
+  });
+
   it("外链在新窗口打开", () => {
     render(<SiteFooter />);
 

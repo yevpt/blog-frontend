@@ -99,6 +99,12 @@ describe("sitemap metadata route", () => {
         priority: 1,
       },
       {
+        url: "https://example.com/archive",
+        lastModified: expect.any(Date),
+        changeFrequency: "weekly",
+        priority: 0.6,
+      },
+      {
         url: "https://example.com/moments",
         lastModified: expect.any(Date),
         changeFrequency: "daily",

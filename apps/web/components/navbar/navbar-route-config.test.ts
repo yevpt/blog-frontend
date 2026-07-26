@@ -37,6 +37,13 @@ describe("matchNavbarRoute", () => {
     });
   });
 
+  it("archive 命中 default，标题为归档", () => {
+    expect(matchNavbarRoute("/archive")).toEqual({
+      mobileVariant: "default",
+      title: "归档",
+    });
+  });
+
   it("guestbook、friend-links、circle 命中 default", () => {
     expect(matchNavbarRoute("/guestbook")).toEqual({
       mobileVariant: "default",

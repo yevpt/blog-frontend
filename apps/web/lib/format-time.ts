@@ -70,6 +70,19 @@ export function formatDateTime(date: Date | string): string {
   return `${year}-${monthStr}-${dayStr} ${hour}:${minute}`;
 }
 
+/** 将日期格式化为紧凑的 MM-DD（Asia/Shanghai），用于归档行内日期 */
+export function formatMonthDay(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  const { month, day } = getZonedParts(d);
+  return `${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/** 取展示时区（Asia/Shanghai）下的年份，用于归档按年分组 */
+export function getDisplayYear(date: Date | string): number {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return Number(getZonedParts(d).year);
+}
+
 /**
  * 将日期转换为相对时间字符串（中文）
  * 例如：刚刚、5 分钟前、2 小时前、3 天前、1 个月前、2 年前

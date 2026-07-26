@@ -6,6 +6,7 @@ export interface NavbarRouteMatch {
 }
 
 const DEFAULT_ROUTE_TITLES: Record<string, string> = {
+  "/archive": "归档",
   "/moments": "碎语",
   "/guestbook": "留言",
   "/friend-links": "友邻",

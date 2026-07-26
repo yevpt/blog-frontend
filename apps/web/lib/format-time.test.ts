@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { formatDate, formatDateTime, formatRelativeTime } from "./format-time";
+import {
+  formatDate,
+  formatDateTime,
+  formatMonthDay,
+  getDisplayYear,
+  formatRelativeTime,
+} from "./format-time";
 
 describe("formatDate", () => {
   it("中文格式：六月 24, 2021", () => {
@@ -35,6 +41,38 @@ describe("formatDateTime", () => {
 
   it("接受字符串类型的日期", () => {
     expect(formatDateTime("2020-04-17T07:54:00Z")).toBe("2020-04-17 15:54");
+  });
+});
+
+describe("formatMonthDay", () => {
+  it("格式化为 MM-DD（Asia/Shanghai），单位数补零", () => {
+    expect(formatMonthDay("2020-04-07T07:54:00Z")).toBe("04-07");
+  });
+
+  it("跨时区日期按展示时区换算", () => {
+    // UTC 2024-01-01 00:30 对应北京时间 08:30，仍为 01-01
+    expect(formatMonthDay("2024-01-01T00:30:00Z")).toBe("01-01");
+    // UTC 2024-06-30 16:30 对应北京时间 07-01 00:30
+    expect(formatMonthDay("2024-06-30T16:30:00Z")).toBe("07-01");
+  });
+
+  it("接受 Date 对象", () => {
+    expect(formatMonthDay(new Date("2021-12-24T00:00:00Z"))).toBe("12-24");
+  });
+});
+
+describe("getDisplayYear", () => {
+  it("返回展示时区下的年份", () => {
+    expect(getDisplayYear("2024-06-24T00:00:00Z")).toBe(2024);
+  });
+
+  it("UTC 年末最后几小时换算到北京时已跨年", () => {
+    // UTC 2023-12-31 16:30 → 北京 2024-01-01 00:30
+    expect(getDisplayYear("2023-12-31T16:30:00Z")).toBe(2024);
+  });
+
+  it("接受 Date 对象", () => {
+    expect(getDisplayYear(new Date("2021-06-24T00:00:00Z"))).toBe(2021);
   });
 });
 

@@ -75,10 +75,19 @@ function RssLink() {
   );
 }
 
+/** 归档：站内文章索引，与 RSS（订阅索引）并列，当前窗口打开 */
+function ArchiveLink() {
+  return <FooterAnchor href="/archive">归档</FooterAnchor>;
+}
+
 function SiteIdentityLinks() {
   return (
     <span className="inline-flex w-full sm:w-auto justify-center items-center gap-x-2">
       <FooterAnchor href="https://www.yevpt.com">© 2026 yevpt.com</FooterAnchor>
+      <span className="text-muted-foreground/25 select-none hidden sm:inline" aria-hidden>
+        ·
+      </span>
+      <ArchiveLink />
       <span className="text-muted-foreground/25 select-none hidden sm:inline" aria-hidden>
         ·
       </span>
