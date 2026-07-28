@@ -19,7 +19,7 @@ export function AdminPageHeader({ title, description, action, className }: Admin
       )}
     >
       <div className="min-w-0 pr-14 sm:pr-0">
-        <h1 className="text-xl font-semibold leading-8 tracking-normal text-foreground sm:text-2xl">
+        <h1 className="text-xl font-semibold leading-8 tracking-tight text-foreground sm:text-2xl">
           {title}
         </h1>
         {description ? (

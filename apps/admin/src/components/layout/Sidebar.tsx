@@ -16,7 +16,7 @@ export function Sidebar({ isCollapsed, onToggleCollapsed, onNavigate, className 
   return (
     <aside
       className={cn(
-        "relative flex h-full flex-col border-r border-border bg-card/95 text-card-foreground shadow-card backdrop-blur",
+        "relative flex h-full flex-col border-r border-border bg-card/80 text-card-foreground shadow-card backdrop-blur-xl",
         className,
       )}
     >
@@ -29,7 +29,7 @@ export function Sidebar({ isCollapsed, onToggleCollapsed, onNavigate, className 
       >
         <span
           className={cn(
-            "flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-[opacity,scale] duration-200",
+            "flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft ring-1 ring-primary/15 transition-[opacity,scale] duration-200",
             isCollapsed && "opacity-0 scale-95",
           )}
         >
@@ -55,7 +55,7 @@ export function Sidebar({ isCollapsed, onToggleCollapsed, onNavigate, className 
           className={cn(
             "hidden h-9 w-9 rounded-lg p-0 transition-[background-color,color,opacity] lg:inline-flex",
             isCollapsed
-              ? "absolute left-1/2 -translate-x-1/2 bg-primary/10 text-foreground hover:bg-primary/15"
+              ? "absolute left-1/2 -translate-x-1/2 bg-primary-soft text-foreground hover:bg-primary-soft/80"
               : "ml-auto text-muted-foreground hover:bg-accent hover:text-foreground",
           )}
         >

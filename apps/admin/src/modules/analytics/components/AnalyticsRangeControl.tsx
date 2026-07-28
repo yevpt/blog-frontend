@@ -29,7 +29,9 @@ export function AnalyticsRangeControl({ range, className }: AnalyticsRangeContro
             aria-pressed={range.preset === preset.id}
             className={cn(
               "h-7 border-0 px-2.5 shadow-none",
-              range.preset === preset.id ? "bg-surface-2 text-text-primary" : "text-text-secondary",
+              range.preset === preset.id
+                ? "bg-card text-foreground shadow-sm"
+                : "text-foreground/70",
             )}
             onPress={() => range.setPreset(preset.id)}
           >
@@ -38,7 +40,7 @@ export function AnalyticsRangeControl({ range, className }: AnalyticsRangeContro
         ))}
       </div>
       {range.preset === "custom" ? (
-        <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span>起始日期</span>
           <DatePicker
             aria-label="起始日期"

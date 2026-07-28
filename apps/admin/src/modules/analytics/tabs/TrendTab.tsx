@@ -45,11 +45,11 @@ export function TrendTab({ range }: TrendTabProps) {
       <Card>
         <CardContent className="pt-5">
           {loading ? (
-            <div className="flex h-[300px] items-center justify-center text-sm text-muted">
+            <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
               加载中…
             </div>
           ) : data.length === 0 ? (
-            <div className="flex h-[300px] items-center justify-center text-sm text-muted">
+            <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
               暂无数据
             </div>
           ) : (

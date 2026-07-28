@@ -19,14 +19,14 @@ export function FriendsTab({ range }: FriendsTabProps) {
     <Card>
       <CardContent className="pt-5">
         {loading ? (
-          <div className="py-10 text-center text-sm text-muted">加载中…</div>
+          <div className="py-10 text-center text-sm text-muted-foreground">加载中…</div>
         ) : data.length === 0 ? (
-          <div className="py-10 text-center text-sm text-muted">
+          <div className="py-10 text-center text-sm text-muted-foreground">
             暂无友链入站数据（友链需配置且有访客经其跳入）
           </div>
         ) : (
           <div>
-            <div className="flex items-center justify-between border-b border-border pb-2 text-xs text-text-muted">
+            <div className="flex items-center justify-between border-b border-border pb-2 text-xs text-muted-foreground">
               <span>友链</span>
               <span className="flex shrink-0 gap-6 pl-3">
                 <span className="w-12 text-right">浏览量</span>
@@ -40,10 +40,10 @@ export function FriendsTab({ range }: FriendsTabProps) {
                 className="flex items-center justify-between border-b border-border py-2.5 text-sm last:border-0"
               >
                 <span className="min-w-0 truncate pr-3">
-                  <span className="text-text-primary">{link.friend_name}</span>
-                  <span className="ml-2 text-text-muted">{link.site_host}</span>
+                  <span className="text-foreground">{link.friend_name}</span>
+                  <span className="ml-2 text-muted-foreground">{link.site_host}</span>
                 </span>
-                <span className="flex shrink-0 gap-6 text-text-secondary">
+                <span className="flex shrink-0 gap-6 text-foreground/70">
                   <span className="w-12 text-right">{link.pv.toLocaleString()}</span>
                   <span className="w-12 text-right">{link.uv.toLocaleString()}</span>
                   <span className="w-16 text-right">{(link.inbound_rate * 100).toFixed(1)}%</span>

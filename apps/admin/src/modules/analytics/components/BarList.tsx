@@ -14,7 +14,7 @@ interface BarListProps {
 /** 横向条形占比列表：精致克制风格，最大值占满，其余按比例。 */
 export function BarList({ items, emptyText = "暂无数据" }: BarListProps) {
   if (items.length === 0) {
-    return <div className="py-10 text-center text-sm text-muted">{emptyText}</div>;
+    return <div className="py-10 text-center text-sm text-muted-foreground">{emptyText}</div>;
   }
   const max = Math.max(...items.map((i) => i.value), 1);
   return (
@@ -22,13 +22,13 @@ export function BarList({ items, emptyText = "暂无数据" }: BarListProps) {
       {items.map((item, idx) => (
         <div key={`${item.label}-${idx}`}>
           <div className="mb-1.5 flex items-center justify-between text-sm">
-            <span className="truncate text-text-primary">{item.label}</span>
-            <span className="shrink-0 pl-3 text-text-muted">
+            <span className="truncate text-foreground">{item.label}</span>
+            <span className="shrink-0 pl-3 text-muted-foreground">
               {item.value.toLocaleString()}
               {item.hint ? <span className="ml-2">{item.hint}</span> : null}
             </span>
           </div>
-          <div className="h-1 rounded-full bg-surface-0">
+          <div className="h-1 rounded-full bg-muted">
             <div
               className="h-1 rounded-full bg-primary"
               style={{ width: `${Math.round((item.value / max) * 100)}%` }}

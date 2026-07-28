@@ -4,6 +4,27 @@
 @theme {
   --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Source Serif 4", ui-serif, Georgia, serif;
+
+  /* @repo/ui FadeInUp 依赖的动画 token（此前仅 apps/web 定义，admin 缺失导致组件无动画） */
+  --animate-fade-in-up: fadeInUp 0.4s ease both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up {
+    animation: none;
+  }
 }
 
 body {
@@ -12,4 +33,27 @@ body {
   font-family: var(--font-sans);
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
+}
+
+/*
+  admin 专属氛围背景：极淡品牌紫径向晕染。
+  固定在视口、置于内容层之下；深色模式下 primary 变亮，晕染自然适配。
+*/
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(
+      56rem 30rem at 88% -12%,
+      color-mix(in srgb, var(--color-primary) 8%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      44rem 26rem at -10% 110%,
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      transparent 62%
+    );
 }

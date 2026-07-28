@@ -74,6 +74,8 @@ describe("DashboardPage", () => {
     await waitFor(() => expect(screen.getByText("1,284")).toBeInTheDocument());
     expect(screen.getByText("直接访问")).toBeInTheDocument();
     expect(screen.getByText("页面A")).toBeInTheDocument();
+    // 趋势 100 → 120，涨跌幅徽标显示 +20.0%
+    expect(screen.getByText("20.0%")).toBeInTheDocument();
     expect(mockState.getTrend).toHaveBeenCalledWith({
       metric: "pv",
       from: "2026-06-20",

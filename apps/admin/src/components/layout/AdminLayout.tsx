@@ -1,11 +1,12 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { SvgIcon } from "@repo/icons";
-import { Button, cn } from "@repo/ui";
+import { Button, cn, FadeInUp } from "@repo/ui";
 import { Sidebar } from "./Sidebar";
 import { useSidebar } from "./useSidebar";
 
 export function AdminLayout() {
   const sidebar = useSidebar();
+  const location = useLocation();
   const isMobileSidebarVisible = sidebar.isMobileOpen || sidebar.isMobileVisible;
 
   return (
@@ -59,7 +60,10 @@ export function AdminLayout() {
         )}
       >
         <main className="mx-auto min-h-dvh w-full max-w-[1500px] px-3 py-5 sm:px-5 sm:py-6 lg:px-8 lg:py-7">
-          <Outlet />
+          {/* 以 pathname 为 key 强制重挂载，实现路由级入场过渡 */}
+          <FadeInUp key={location.pathname} duration={300}>
+            <Outlet />
+          </FadeInUp>
         </main>
       </div>
     </div>

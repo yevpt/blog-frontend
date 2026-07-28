@@ -30,11 +30,11 @@ export function SidebarNav({ isCollapsed, onNavigate }: SidebarNavProps) {
       )}
     >
       {navGroups.map((group) => (
-        <div key={group.group ?? "overview"} className="grid gap-1.5">
+        <div key={group.group ?? "overview"} className="grid gap-1">
           {group.group && (
             <p
               className={cn(
-                "px-3 text-xs font-medium text-muted-foreground",
+                "px-3 pb-0.5 text-[11px] font-semibold tracking-widest text-muted-foreground/70",
                 isCollapsed && "sr-only",
               )}
             >
@@ -52,9 +52,9 @@ export function SidebarNav({ isCollapsed, onNavigate }: SidebarNavProps) {
                 onClick={onNavigate}
                 className={({ isActive }) =>
                   cn(
-                    "group relative flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring",
+                    "group relative flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted-foreground outline-none transition-[background-color,color,box-shadow] hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring",
                     isActive &&
-                      "bg-foreground text-background shadow-sm hover:bg-foreground hover:text-background",
+                      "bg-primary text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary hover:text-primary-foreground",
                     isCollapsed && "justify-center px-0",
                   )
                 }

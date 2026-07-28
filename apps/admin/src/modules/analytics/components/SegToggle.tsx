@@ -9,7 +9,7 @@ interface SegToggleProps<T extends string> {
 /** 轻量分段切换：用于 metric/segment/维度等少量互斥选项。 */
 export function SegToggle<T extends string>({ options, value, onChange }: SegToggleProps<T>) {
   return (
-    <div className="inline-flex rounded-lg border border-border p-0.5">
+    <div className="inline-flex rounded-lg border border-border bg-muted/60 p-0.5">
       {options.map((opt) => (
         <button
           key={opt.id}
@@ -18,8 +18,8 @@ export function SegToggle<T extends string>({ options, value, onChange }: SegTog
           className={cn(
             "rounded-md px-3 py-1 text-sm transition-colors",
             value === opt.id
-              ? "bg-surface-2 text-text-primary"
-              : "text-text-secondary hover:text-text-primary",
+              ? "bg-card text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           {opt.label}

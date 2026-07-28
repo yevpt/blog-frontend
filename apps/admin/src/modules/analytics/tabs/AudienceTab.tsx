@@ -52,7 +52,7 @@ export function AudienceTab({ range }: AudienceTabProps) {
       <Card>
         <CardContent className="pt-5">
           {loading ? (
-            <div className="py-10 text-center text-sm text-muted">加载中…</div>
+            <div className="py-10 text-center text-sm text-muted-foreground">加载中…</div>
           ) : (
             <BarList items={items} />
           )}

@@ -16,12 +16,12 @@ export function PagesTab({ range }: PagesTabProps) {
     <Card>
       <CardContent className="pt-5">
         {loading ? (
-          <div className="py-10 text-center text-sm text-muted">加载中…</div>
+          <div className="py-10 text-center text-sm text-muted-foreground">加载中…</div>
         ) : data.length === 0 ? (
-          <div className="py-10 text-center text-sm text-muted">暂无数据</div>
+          <div className="py-10 text-center text-sm text-muted-foreground">暂无数据</div>
         ) : (
           <div className="overflow-hidden">
-            <div className="flex items-center justify-between border-b border-border pb-2 text-xs text-text-muted">
+            <div className="flex items-center justify-between border-b border-border pb-2 text-xs text-muted-foreground">
               <span>页面</span>
               <span className="flex shrink-0 gap-8 pl-3">
                 <span className="w-14 text-right">浏览量</span>
@@ -34,10 +34,10 @@ export function PagesTab({ range }: PagesTabProps) {
                 className="flex items-center justify-between border-b border-border py-2.5 text-sm last:border-0"
               >
                 <span className="min-w-0 truncate pr-3">
-                  <span className="text-text-primary">{page.title || page.path}</span>
-                  <span className="ml-2 text-text-muted">{page.path}</span>
+                  <span className="text-foreground">{page.title || page.path}</span>
+                  <span className="ml-2 text-muted-foreground">{page.path}</span>
                 </span>
-                <span className="flex shrink-0 gap-8 text-text-secondary">
+                <span className="flex shrink-0 gap-8 text-foreground/70">
                   <span className="w-14 text-right">{page.pv.toLocaleString()}</span>
                   <span className="w-14 text-right">{page.uv.toLocaleString()}</span>
                 </span>
