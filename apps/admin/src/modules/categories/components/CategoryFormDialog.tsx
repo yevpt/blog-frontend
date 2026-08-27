@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "@repo/api";
-import { Modal, Button, Input, Label, cn } from "@repo/ui";
+import { SvgIcon } from "@repo/icons";
+import { Modal, Button, ButtonUtility, Input, Label } from "@repo/ui";
+import {
+  AdminDialogBody,
+  AdminDialogFooter,
+  AdminDialogFrame,
+  AdminDialogHeader,
+  adminDialogTextareaClassName,
+} from "../../../components/AdminDialog";
 import { CategoryAssetFileInputs, CategoryVisualAssetsEditor } from "./CategoryVisualAssetsEditor";
 import { useCategoryAssetUpload } from "../hooks/use-category-asset-upload";
 import {
@@ -26,15 +34,6 @@ interface CategoryFormDialogProps {
     categoryId?: string,
   ) => Promise<void>;
 }
-
-/** 区块水平内边距：放在内容层，不放在滚动容器上，避免 w-full 溢出 */
-const contentInsetClassName = "px-4 sm:px-5";
-
-const textareaClassName = cn(
-  "box-border min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2",
-  "text-sm leading-6 text-foreground outline-none",
-  "placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring",
-);
 
 export function CategoryFormDialog({
   mode,
@@ -136,113 +135,104 @@ export function CategoryFormDialog({
       aria-label={mode === "create" ? "新建分类" : "编辑分类"}
       dialogClassName="min-h-0 min-w-0 flex-1 overflow-x-hidden"
     >
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden">
-        <div
-          className={cn(
-            "shrink-0 border-b border-border/70",
-            contentInsetClassName,
-            "py-4 max-md:pt-[max(1rem,env(safe-area-inset-top))]",
-          )}
-        >
-          <h2 className="text-lg font-semibold text-foreground">
-            {mode === "create" ? "新建分类" : "编辑分类"}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            分类会显示在首页 Tab 与文章筛选中，排序值越小越靠前。
-          </p>
-        </div>
+      <AdminDialogFrame>
+        <AdminDialogHeader
+          eyebrow="内容组织"
+          title={mode === "create" ? "新建分类" : "编辑分类"}
+          description="分类会显示在首页 Tab 与文章筛选中，排序值越小越靠前。"
+          className="max-md:pt-[max(1rem,env(safe-area-inset-top))]"
+          action={
+            <ButtonUtility
+              tooltip="关闭分类表单"
+              color="tertiary"
+              icon={<SvgIcon name="close" />}
+              isDisabled={isBusy}
+              onClick={onClose}
+            />
+          }
+        />
 
-        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain">
-          <div className={cn(contentInsetClassName, "py-5")}>
-            <div className="grid min-w-0 gap-5">
-              <div className="grid min-w-0 gap-4 md:grid-cols-2">
-                <Input
-                  label="分类名称"
-                  value={values.name}
-                  onChange={(value) => updateField("name", value)}
-                  isRequired
-                  isInvalid={Boolean(errors.name)}
-                  hint={errors.name}
-                  placeholder="例如：编程"
-                  className="min-w-0"
-                />
-                <Input
-                  label="URL 别名"
-                  value={values.url}
-                  onChange={(value) => updateField("url", value)}
-                  hint="可选，用于前台路由"
-                  placeholder="programming"
-                  className="min-w-0"
-                />
-              </div>
-
-              <Input
-                label="排序"
-                value={values.seq}
-                onChange={(value) => updateField("seq", value)}
-                isRequired
-                isInvalid={Boolean(errors.seq)}
-                hint={errors.seq ?? "越小越靠前，0 是有效值"}
-                inputMode="numeric"
-                className="min-w-0"
-              />
-
-              <CategoryVisualAssetsEditor
-                icon={values.icon}
-                cover={values.coverImgUrl}
-                isIconUploading={isIconUploading}
-                isCoverUploading={isCoverUploading}
-                uploadError={uploadError}
-                onIconPick={openIconPicker}
-                onCoverPick={openCoverPicker}
-                onIconRemove={() => markIconDirty(EMPTY_CATEGORY_ASSET)}
-                onCoverRemove={() => markCoverDirty(EMPTY_CATEGORY_ASSET)}
-              />
-
-              <CategoryAssetFileInputs
-                iconInputRef={iconInputRef}
-                coverInputRef={coverInputRef}
-                onIconChange={(event) => {
-                  void handleIconFileChange(event, markIconDirty);
-                }}
-                onCoverChange={(event) => {
-                  void handleCoverFileChange(event, markCoverDirty);
-                }}
-              />
-
-              <div className="grid min-w-0 gap-2">
-                <Label className="text-xs font-medium text-muted-foreground">描述</Label>
-                <textarea
-                  aria-label="分类描述"
-                  value={values.description}
-                  onChange={(event) => {
-                    const description = event.target.value;
-                    setValues((current) => ({
-                      ...current,
-                      description,
-                      dirty: { ...current.dirty, description: true },
-                    }));
-                  }}
-                  placeholder="简要说明该分类包含的内容（可选）"
-                  className={textareaClassName}
-                />
-                {errors.description ? (
-                  <p className="text-sm text-destructive">{errors.description}</p>
-                ) : null}
-              </div>
-
-              {submitError ? <p className="text-sm text-destructive">{submitError}</p> : null}
-            </div>
+        <AdminDialogBody contentClassName="grid min-w-0 gap-5">
+          <div className="grid min-w-0 gap-4 md:grid-cols-2">
+            <Input
+              label="分类名称"
+              value={values.name}
+              onChange={(value) => updateField("name", value)}
+              isRequired
+              isInvalid={Boolean(errors.name)}
+              hint={errors.name}
+              placeholder="例如：编程"
+              className="min-w-0"
+            />
+            <Input
+              label="URL 别名"
+              value={values.url}
+              onChange={(value) => updateField("url", value)}
+              hint="可选，用于前台路由"
+              placeholder="programming"
+              className="min-w-0"
+            />
           </div>
-        </div>
 
-        <div
-          className={cn(
-            "flex shrink-0 items-center justify-end gap-2 border-t border-border/70 bg-card",
-            contentInsetClassName,
-            "py-4 max-md:pb-[max(1rem,env(safe-area-inset-bottom))]",
-          )}
-        >
+          <Input
+            label="排序"
+            value={values.seq}
+            onChange={(value) => updateField("seq", value)}
+            isRequired
+            isInvalid={Boolean(errors.seq)}
+            hint={errors.seq ?? "越小越靠前，0 是有效值"}
+            inputMode="numeric"
+            className="min-w-0"
+          />
+
+          <CategoryVisualAssetsEditor
+            icon={values.icon}
+            cover={values.coverImgUrl}
+            isIconUploading={isIconUploading}
+            isCoverUploading={isCoverUploading}
+            uploadError={uploadError}
+            onIconPick={openIconPicker}
+            onCoverPick={openCoverPicker}
+            onIconRemove={() => markIconDirty(EMPTY_CATEGORY_ASSET)}
+            onCoverRemove={() => markCoverDirty(EMPTY_CATEGORY_ASSET)}
+          />
+
+          <CategoryAssetFileInputs
+            iconInputRef={iconInputRef}
+            coverInputRef={coverInputRef}
+            onIconChange={(event) => {
+              void handleIconFileChange(event, markIconDirty);
+            }}
+            onCoverChange={(event) => {
+              void handleCoverFileChange(event, markCoverDirty);
+            }}
+          />
+
+          <div className="grid min-w-0 gap-2">
+            <Label className="text-xs font-medium text-muted-foreground">描述</Label>
+            <textarea
+              aria-label="分类描述"
+              value={values.description}
+              onChange={(event) => {
+                const description = event.target.value;
+                setValues((current) => ({
+                  ...current,
+                  description,
+                  dirty: { ...current.dirty, description: true },
+                }));
+              }}
+              placeholder="简要说明该分类包含的内容（可选）"
+              className={`${adminDialogTextareaClassName} min-h-24`}
+            />
+            {errors.description ? (
+              <p className="text-sm text-destructive">{errors.description}</p>
+            ) : null}
+          </div>
+
+          {submitError ? <p className="text-sm text-destructive">{submitError}</p> : null}
+        </AdminDialogBody>
+
+        <AdminDialogFooter className="max-md:pb-[max(1rem,env(safe-area-inset-bottom))]">
           <Button variant="outline" onPress={onClose} isDisabled={isBusy}>
             取消
           </Button>
@@ -256,8 +246,8 @@ export function CategoryFormDialog({
           >
             {mode === "create" ? "创建" : "保存"}
           </Button>
-        </div>
-      </div>
+        </AdminDialogFooter>
+      </AdminDialogFrame>
     </Modal>
   );
 }

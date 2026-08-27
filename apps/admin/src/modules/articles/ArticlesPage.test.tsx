@@ -138,6 +138,10 @@ describe("ArticlesPage", () => {
 
     const table = screen.getByRole("grid", { name: "文章列表" });
     expect(within(table).getByRole("columnheader", { name: /创建时间/ })).toBeInTheDocument();
+    expect(within(table).getByRole("columnheader", { name: "操作" })).toHaveClass("text-right");
+    expect(within(table).getAllByRole("button", { name: "删除文章" })[0]).toHaveClass(
+      "text-destructive/80",
+    );
     expect(within(table).queryByRole("button", { name: "展开搜索" })).not.toBeInTheDocument();
     expect(within(table).getByRole("button", { name: "筛选分类" })).toBeInTheDocument();
     expect(within(table).queryByRole("button", { name: "筛选推荐" })).not.toBeInTheDocument();

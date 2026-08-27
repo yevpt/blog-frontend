@@ -1,5 +1,6 @@
 import { SvgIcon } from "@repo/icons";
-import { Button, cn, type DataTableEmptyState } from "@repo/ui";
+import { cn, type DataTableEmptyState } from "@repo/ui";
+import { AdminRowAction, AdminRowActions } from "../../../components/AdminRowAction";
 import { CategoryNameCell } from "./CategoryNameCell";
 import { CategoryDeleteButton } from "./CategoryDeleteButton";
 import type { CategoryRow } from "../model";
@@ -96,32 +97,24 @@ export function CategoryMobileList({
             </div>
           </div>
 
-          <div className="mt-2.5 flex items-center justify-end gap-0.5 pl-8">
-            <Button
+          <AdminRowActions className="mt-2.5 pl-8">
+            <AdminRowAction
               type="button"
-              size="sm"
-              variant="ghost"
-              className="h-8 px-2 text-xs"
+              className="h-8"
               onPress={() => onManageArticles(category)}
             >
               管理文章
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-8 px-2 text-xs"
-              onPress={() => onEdit(category)}
-            >
+            </AdminRowAction>
+            <AdminRowAction type="button" className="h-8" onPress={() => onEdit(category)}>
               编辑
-            </Button>
+            </AdminRowAction>
             <CategoryDeleteButton
               category={category}
               isDeleting={deletingCategoryId === category.id}
               onConfirm={onConfirmDelete}
-              className="h-8 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+              className="h-8"
             />
-          </div>
+          </AdminRowActions>
         </li>
       ))}
     </ul>

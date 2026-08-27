@@ -22,11 +22,7 @@ describe("ArticleMobileList", () => {
   it("渲染文章行与元信息", () => {
     render(
       <MemoryRouter>
-        <ArticleMobileList
-          items={mockRows}
-          deletingArticleId={null}
-          onConfirmDelete={vi.fn()}
-        />
+        <ArticleMobileList items={mockRows} deletingArticleId={null} onConfirmDelete={vi.fn()} />
       </MemoryRouter>,
     );
 
@@ -58,14 +54,11 @@ describe("ArticleMobileList", () => {
 
     render(
       <MemoryRouter>
-        <ArticleMobileList
-          items={mockRows}
-          deletingArticleId={null}
-          onConfirmDelete={vi.fn()}
-        />
+        <ArticleMobileList items={mockRows} deletingArticleId={null} onConfirmDelete={vi.fn()} />
       </MemoryRouter>,
     );
 
+    expect(screen.getByRole("button", { name: "删除文章" })).toHaveClass("text-destructive/80");
     await user.click(screen.getByRole("button", { name: "删除文章" }));
 
     expect(

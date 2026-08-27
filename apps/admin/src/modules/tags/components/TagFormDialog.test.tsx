@@ -23,6 +23,11 @@ describe("TagFormDialog", () => {
 
     expect(screen.getByText("开发中")).toBeInTheDocument();
     expect(screen.getByText(/图标、封面与描述尚未开放配置/)).toBeInTheDocument();
+    expect(screen.getByText("内容组织")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "关闭标签表单" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "创建" }).closest("footer")).toHaveClass(
+      "bg-muted/15",
+    );
   });
 
   it("展开后展示占位内容", async () => {

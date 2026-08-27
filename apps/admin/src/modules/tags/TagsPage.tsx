@@ -5,6 +5,7 @@ import { Button, DataTable, type DataTableColumn, type DataTableEmptyState } fro
 import { AdminPageHeader } from "../../components/AdminPageHeader";
 import { AdminListCard } from "../../components/AdminListCard";
 import { AdminListSummary } from "../../components/AdminListSummary";
+import { AdminRowAction, AdminRowActions } from "../../components/AdminRowAction";
 import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
 import { useClientTableQuery } from "../../lib/admin-list-query";
 import { TagDeleteButton } from "./components/TagDeleteButton";
@@ -156,25 +157,19 @@ export function TagsPage() {
         header: "操作",
         width: "26%",
         minWidth: 112,
-        className: "text-center",
-        headerClassName: "text-center [&>div]:justify-center",
+        className: "text-right",
+        headerClassName: "text-right [&>div]:justify-end",
         cell: (tag) => (
-          <div className="flex items-center justify-center gap-0.5">
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2 text-xs"
-              onPress={() => openEditDialog(tag)}
-            >
+          <AdminRowActions>
+            <AdminRowAction type="button" onPress={() => openEditDialog(tag)}>
               编辑
-            </Button>
+            </AdminRowAction>
             <TagDeleteButton
               tag={tag}
               isDeleting={deletingTagId === tag.id}
               onConfirm={handleDeleteTag}
             />
-          </div>
+          </AdminRowActions>
         ),
       },
     ],

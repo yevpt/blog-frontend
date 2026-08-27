@@ -30,12 +30,12 @@ export function ArticleDeleteButton({
         size="sm"
         color="tertiary"
         icon={
-          <span className="text-destructive">
+          <span className="text-destructive/80">
             <SvgIcon name="trash" size={18} />
           </span>
         }
         onClick={(event) => event.stopPropagation()}
-        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+        className="text-destructive/80 hover:bg-destructive/10 hover:text-destructive"
       />
     </AdminConfirmPopover>
   );

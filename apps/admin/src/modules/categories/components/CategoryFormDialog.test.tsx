@@ -72,6 +72,11 @@ describe("CategoryFormDialog", () => {
     );
 
     expect(screen.getByDisplayValue("3")).toBeInTheDocument();
+    expect(screen.getByText("内容组织")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "关闭分类表单" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "创建" }).closest("footer")).toHaveClass(
+      "bg-muted/15",
+    );
   });
 
   it("三项全空且填写名称后仍可创建", async () => {

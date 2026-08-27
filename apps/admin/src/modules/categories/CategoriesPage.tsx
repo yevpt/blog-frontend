@@ -5,6 +5,7 @@ import { Button, DataTable, type DataTableColumn, type DataTableEmptyState } fro
 import { AdminPageHeader } from "../../components/AdminPageHeader";
 import { AdminListCard } from "../../components/AdminListCard";
 import { AdminListSummary } from "../../components/AdminListSummary";
+import { AdminRowAction, AdminRowActions } from "../../components/AdminRowAction";
 import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
 import { useClientTableQuery } from "../../lib/admin-list-query";
 import { apiClient } from "../../lib/api";
@@ -166,34 +167,22 @@ export function CategoriesPage() {
         header: "操作",
         width: "18%",
         minWidth: 168,
-        className: "text-center",
-        headerClassName: "text-center [&>div]:justify-center",
+        className: "text-right",
+        headerClassName: "text-right [&>div]:justify-end",
         cell: (category) => (
-          <div className="flex items-center justify-center gap-0.5">
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2 text-xs"
-              onPress={() => setArticlesCategory(category)}
-            >
+          <AdminRowActions>
+            <AdminRowAction type="button" onPress={() => setArticlesCategory(category)}>
               管理文章
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2 text-xs"
-              onPress={() => openEditDialog(category)}
-            >
+            </AdminRowAction>
+            <AdminRowAction type="button" onPress={() => openEditDialog(category)}>
               编辑
-            </Button>
+            </AdminRowAction>
             <CategoryDeleteButton
               category={category}
               isDeleting={deletingCategoryId === category.id}
               onConfirm={handleDelete}
             />
-          </div>
+          </AdminRowActions>
         ),
       },
     ],

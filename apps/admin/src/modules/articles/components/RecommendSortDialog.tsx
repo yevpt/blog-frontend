@@ -18,7 +18,13 @@ import { restrictToFirstScrollableAncestor, restrictToVerticalAxis } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import { ApiError, type AdminRecommendItemResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
-import { Button, Modal, cn, CdnResponsiveImage } from "@repo/ui";
+import { Button, ButtonUtility, Modal, cn, CdnResponsiveImage } from "@repo/ui";
+import {
+  AdminDialogBody,
+  AdminDialogFooter,
+  AdminDialogFrame,
+  AdminDialogHeader,
+} from "../../../components/AdminDialog";
 import { apiClient } from "../../../lib/api";
 import { ArticleStatusBadge } from "./ArticleStatusBadge";
 import { moveItem } from "../move-item";
@@ -29,8 +35,6 @@ interface RecommendSortDialogProps {
   onClose: () => void;
   onSaved?: () => void;
 }
-
-const contentInsetClassName = "px-4 sm:px-5";
 
 function mapRecommendStatus(status: number): ArticleStatus {
   switch (status) {
@@ -186,71 +190,66 @@ export function RecommendSortDialog({ open, onClose, onSaved }: RecommendSortDia
       aria-label="推荐文章排序"
       dialogClassName="min-h-0 min-w-0 flex-1 overflow-x-hidden"
     >
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden">
-        <div
-          className={cn(
-            "shrink-0 border-b border-border/70",
-            contentInsetClassName,
-            "py-4 max-md:pt-[max(1rem,env(safe-area-inset-top))]",
-          )}
-        >
-          <h2 className="text-lg font-semibold text-foreground">推荐排序</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            拖拽调整首页推荐文章顺序，越靠前越优先展示。
-          </p>
-        </div>
+      <AdminDialogFrame>
+        <AdminDialogHeader
+          eyebrow="首页推荐"
+          title="推荐排序"
+          description="拖拽调整首页推荐文章顺序，越靠前越优先展示。"
+          className="max-md:pt-[max(1rem,env(safe-area-inset-top))]"
+          action={
+            <ButtonUtility
+              tooltip="关闭推荐排序"
+              color="tertiary"
+              icon={<SvgIcon name="close" />}
+              isDisabled={isBusy}
+              onClick={onClose}
+            />
+          }
+        />
 
-        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain">
-          <div className={cn(contentInsetClassName, "py-5")}>
-            {loadError ? (
-              <p role="alert" className="text-sm text-destructive">
-                {loadError}
+        <AdminDialogBody>
+          {loadError ? (
+            <p role="alert" className="text-sm text-destructive">
+              {loadError}
+            </p>
+          ) : null}
+
+          {isLoading ? <p className="text-sm text-muted-foreground">正在加载推荐文章…</p> : null}
+
+          {!isLoading && !loadError && items.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border/80 px-4 py-8 text-center">
+              <p className="text-sm font-medium text-foreground">还没有推荐文章</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                在文章编辑页开启「推荐到首页」后，可在这里调整顺序。
               </p>
-            ) : null}
+            </div>
+          ) : null}
 
-            {isLoading ? <p className="text-sm text-muted-foreground">正在加载推荐文章…</p> : null}
+          {!isLoading && !loadError && items.length > 0 ? (
+            <DndContext
+              sensors={sensors}
+              modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor]}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={currentIds} strategy={verticalListSortingStrategy}>
+                <ul className="grid gap-2" aria-label="推荐文章列表">
+                  {items.map((item, index) => (
+                    <SortableRecommendRow key={item.id} item={item} index={index} />
+                  ))}
+                </ul>
+              </SortableContext>
+            </DndContext>
+          ) : null}
 
-            {!isLoading && !loadError && items.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-border/80 px-4 py-8 text-center">
-                <p className="text-sm font-medium text-foreground">还没有推荐文章</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  在文章编辑页开启「推荐到首页」后，可在这里调整顺序。
-                </p>
-              </div>
-            ) : null}
+          {saveError ? (
+            <p role="alert" className="mt-4 text-sm text-destructive">
+              {saveError}
+            </p>
+          ) : null}
+        </AdminDialogBody>
 
-            {!isLoading && !loadError && items.length > 0 ? (
-              <DndContext
-                sensors={sensors}
-                modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor]}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext items={currentIds} strategy={verticalListSortingStrategy}>
-                  <ul className="grid gap-2" aria-label="推荐文章列表">
-                    {items.map((item, index) => (
-                      <SortableRecommendRow key={item.id} item={item} index={index} />
-                    ))}
-                  </ul>
-                </SortableContext>
-              </DndContext>
-            ) : null}
-
-            {saveError ? (
-              <p role="alert" className="mt-4 text-sm text-destructive">
-                {saveError}
-              </p>
-            ) : null}
-          </div>
-        </div>
-
-        <div
-          className={cn(
-            "flex shrink-0 flex-col-reverse gap-2 border-t border-border/70 sm:flex-row sm:justify-end",
-            contentInsetClassName,
-            "py-4 max-md:pb-[max(1rem,env(safe-area-inset-bottom))]",
-          )}
-        >
+        <AdminDialogFooter className="max-md:pb-[max(1rem,env(safe-area-inset-bottom))]">
           <Button variant="outline" onPress={onClose} isDisabled={isBusy}>
             取消
           </Button>
@@ -260,8 +259,8 @@ export function RecommendSortDialog({ open, onClose, onSaved }: RecommendSortDia
           >
             {isSaving ? "保存中…" : "保存排序"}
           </Button>
-        </div>
-      </div>
+        </AdminDialogFooter>
+      </AdminDialogFrame>
     </Modal>
   );
 }

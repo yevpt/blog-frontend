@@ -57,12 +57,7 @@ vi.mock("@repo/icons", () => ({
 function renderDrawer(props: Partial<ComponentProps<typeof CategoryArticlesDrawer>> = {}) {
   return render(
     <MemoryRouter>
-      <CategoryArticlesDrawer
-        category={category}
-        isOpen
-        onClose={vi.fn()}
-        {...props}
-      />
+      <CategoryArticlesDrawer category={category} isOpen onClose={vi.fn()} {...props} />
       <ToastRegion queue={toastQueue} />
     </MemoryRouter>,
   );
@@ -81,6 +76,11 @@ describe("CategoryArticlesDrawer", () => {
     expect(screen.getByRole("dialog", { name: "管理文章 · 编程" })).toBeInTheDocument();
     expect(screen.getByText("Go 入门")).toBeInTheDocument();
     expect(screen.getByText("共 1 篇文章")).toBeInTheDocument();
+    expect(screen.getByText("分类文章")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "关闭文章管理" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "关闭" }).closest("footer")).toHaveClass(
+      "bg-muted/15",
+    );
   });
 
   it("点击添加文章进入添加视图", async () => {
@@ -112,9 +112,7 @@ describe("CategoryArticlesDrawer", () => {
     vi.mocked(useCategoryArticles).mockReturnValue({
       ...mockHookReturn,
       isAddViewOpen: true,
-      pickerRows: [
-        { id: "11", title: "React 技巧", excerpt: "摘要", otherCategory: "前端" },
-      ],
+      pickerRows: [{ id: "11", title: "React 技巧", excerpt: "摘要", otherCategory: "前端" }],
       selectedArticleIds: ["11"],
     });
 

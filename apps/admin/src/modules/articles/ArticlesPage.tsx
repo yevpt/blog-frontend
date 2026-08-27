@@ -185,10 +185,10 @@ export function ArticlesPage() {
         header: "操作",
         width: "10%",
         minWidth: 80,
-        className: "text-center",
-        headerClassName: "text-center [&>div]:justify-center",
+        className: "text-right",
+        headerClassName: "text-right [&>div]:justify-end",
         cell: (article) => (
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-end">
             <ArticleDeleteButton
               article={article}
               isDeleting={deletingArticleId === article.id}
