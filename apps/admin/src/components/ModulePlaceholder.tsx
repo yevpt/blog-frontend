@@ -1,5 +1,6 @@
 import { SvgIcon, type IconName } from "@repo/icons";
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui";
+import { AdminPageHeader } from "./AdminPageHeader";
+import { AdminPanel } from "./AdminPanel";
 
 interface ModulePlaceholderProps {
   title: string;
@@ -9,38 +10,24 @@ interface ModulePlaceholderProps {
 
 export function ModulePlaceholder({ title, icon, description }: ModulePlaceholderProps) {
   return (
-    <div className="grid gap-6">
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="mb-3 flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <SvgIcon name={icon} size={22} />
-          </div>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>
-        </div>
-        <Button type="button" onPress={() => undefined} className="w-full sm:w-auto">
-          <SvgIcon name="plus" size={18} />
-          新建
-        </Button>
-      </section>
+    <div className="flex min-w-0 max-w-full flex-col gap-4">
+      <AdminPageHeader title={title} description={description} />
 
-      <Card className="border-border/80 shadow-sm">
-        <CardHeader>
-          <CardTitle>功能建设中</CardTitle>
-          <CardDescription>这里会承载{title}的列表、筛选、表单与批量操作。</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex min-h-[260px] flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/35 px-6 py-12 text-center">
-            <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <SvgIcon name={icon} size={26} />
-            </div>
-            <p className="text-base font-medium text-foreground">等待接入真实管理能力</p>
-            <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-              本期先固定后台框架、导航路径与页面结构，后续接入接口后再补充完整 CRUD。
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <AdminPanel
+        title="功能建设中"
+        description={`已为${title}保留页面结构，业务能力接入后可继续扩展。`}
+        contentClassName="p-0 sm:p-0"
+      >
+        <div className="flex min-h-72 flex-col items-center justify-center px-6 py-12 text-center">
+          <span className="mb-4 grid size-10 place-items-center rounded-lg bg-primary-soft text-primary ring-1 ring-inset ring-primary/10">
+            <SvgIcon name={icon} size={19} />
+          </span>
+          <p className="text-sm font-semibold tracking-tight text-foreground">等待接入管理能力</p>
+          <p className="mt-1.5 max-w-sm text-xs leading-5 text-muted-foreground">
+            当前暂无可操作内容；接口与工作流准备完成后，这里会承载列表、筛选与批量操作。
+          </p>
+        </div>
+      </AdminPanel>
     </div>
   );
 }

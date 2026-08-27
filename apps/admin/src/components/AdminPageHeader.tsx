@@ -14,11 +14,11 @@ export function AdminPageHeader({ title, description, action, className }: Admin
     <header
       aria-label={`${title}页头`}
       className={cn(
-        "grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:justify-between",
+        "grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start xl:justify-between",
         className,
       )}
     >
-      <div className="min-w-0 pr-14 sm:pr-0">
+      <div className="min-w-0 pr-14 lg:pr-0">
         <h1 className="text-xl font-semibold leading-8 tracking-tight text-foreground sm:text-2xl">
           {title}
         </h1>
@@ -28,7 +28,7 @@ export function AdminPageHeader({ title, description, action, className }: Admin
           </p>
         ) : null}
       </div>
-      {action ? <div className="flex min-w-0 sm:justify-end">{action}</div> : null}
+      {action ? <div className="flex min-w-0 xl:justify-end">{action}</div> : null}
     </header>
   );
 }

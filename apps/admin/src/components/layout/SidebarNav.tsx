@@ -54,7 +54,7 @@ export function SidebarNav({ isCollapsed, onNavigate }: SidebarNavProps) {
                   cn(
                     "group relative flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted-foreground outline-none transition-[background-color,color,box-shadow] hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring",
                     isActive &&
-                      "bg-primary text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary hover:text-primary-foreground",
+                      "bg-primary-soft text-primary ring-1 ring-inset ring-primary/15 hover:bg-primary-soft hover:text-primary",
                     isCollapsed && "justify-center px-0",
                   )
                 }

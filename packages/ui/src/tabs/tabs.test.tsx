@@ -86,6 +86,25 @@ describe("Tabs", () => {
     expect(tab.className).toContain("rounded-full");
   });
 
+  it("segmented variant 使用中性容器与紧凑选项", () => {
+    render(
+      <Tabs defaultSelectedKey="a">
+        <TabsList variant="segmented">
+          <TabsItem id="a" variant="segmented">
+            A
+          </TabsItem>
+          <TabsItem id="b" variant="segmented">
+            B
+          </TabsItem>
+        </TabsList>
+      </Tabs>,
+    );
+
+    expect(screen.getByRole("tablist")).toHaveClass("rounded-lg", "border-border/70");
+    expect(screen.getByRole("tab", { name: "A" })).toHaveClass("text-xs", "rounded-md");
+    expect(screen.getByRole("tab", { name: "A" })).toHaveAttribute("aria-selected", "true");
+  });
+
   it("underline variant tablist 含 border-b 样式", () => {
     render(
       <Tabs defaultSelectedKey="a">

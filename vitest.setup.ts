@@ -3,6 +3,12 @@ import "@testing-library/jest-dom/vitest";
 // 告知 React 测试环境支持 act()，消除 "not configured to support act" 警告
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
+// React Aria 的 SelectionIndicator 会查询共享元素动画；happy-dom 未实现 Web Animations API。
+// 放在全局 setup，避免每个消费 Tabs 的页面测试重复打桩。
+if (typeof Element !== "undefined" && !Element.prototype.getAnimations) {
+  Element.prototype.getAnimations = () => [];
+}
+
 // jsdom 不实现 IntersectionObserver；为依赖它做入场动画的组件（如友链列表）提供无操作 polyfill，
 // 避免渲染即抛 ReferenceError。仅在缺失时安装，不覆盖真实实现。
 if (typeof globalThis.IntersectionObserver === "undefined") {

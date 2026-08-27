@@ -17,4 +17,13 @@ describe("DatePicker", () => {
     render(<DatePicker />);
     expect(screen.getByRole("button")).toBeTruthy();
   });
+
+  it("默认使用克制边框，仅在聚焦时显示品牌焦点环", () => {
+    const { container } = render(<DatePicker aria-label="选择日期" />);
+    const trigger = container.firstElementChild?.firstElementChild;
+
+    expect(trigger).toHaveClass("border", "border-input", "shadow-sm");
+    expect(trigger).toHaveClass("focus-within:ring-2", "focus-within:ring-ring/20");
+    expect(trigger).not.toHaveClass("shadow-[0_0_0_2px]", "shadow-primary");
+  });
 });

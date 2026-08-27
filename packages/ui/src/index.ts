@@ -6,7 +6,7 @@ export {
   type BreadcrumbsProps,
   type BreadcrumbItemProps,
 } from "./breadcrumbs";
-export { Button, type ButtonProps } from "./button";
+export { Button, type ButtonAsButton, type ButtonProps } from "./button";
 export {
   Card,
   CardContent,

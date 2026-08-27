@@ -11,7 +11,7 @@ describe("ModulePlaceholder", () => {
     expect(screen.getByRole("heading", { name: "分类管理" })).toBeInTheDocument();
     expect(screen.getByText("维护内容分类与展示顺序。")).toBeInTheDocument();
     expect(screen.getByText("功能建设中")).toBeInTheDocument();
-    expect(screen.getByText("等待接入真实管理能力")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /新建/ })).toBeInTheDocument();
+    expect(screen.getByText("等待接入管理能力")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /新建/ })).not.toBeInTheDocument();
   });
 });

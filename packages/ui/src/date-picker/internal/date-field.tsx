@@ -15,7 +15,11 @@ export const DateField = ({ ref, triggerClassName }: DateFieldProps) => (
   <div
     ref={ref}
     className={cn(
-      "flex h-8 items-center rounded-lg bg-background pl-2.5 pr-1 shadow-[0_0_0_2px] shadow-primary",
+      [
+        "flex h-8 items-center rounded-lg border border-input bg-background/80 pl-2.5 pr-1 shadow-sm",
+        "transition-[border-color,box-shadow,background-color]",
+        "focus-within:border-ring focus-within:bg-background focus-within:ring-2 focus-within:ring-ring/20",
+      ],
       triggerClassName,
     )}
   >

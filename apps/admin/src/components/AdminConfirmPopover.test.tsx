@@ -1,8 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Button } from "@repo/ui";
 import { AdminConfirmPopover } from "./AdminConfirmPopover";
+
+vi.mock("@repo/icons", () => ({
+  SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
+}));
 
 describe("AdminConfirmPopover", () => {
   const onConfirm = vi.fn().mockResolvedValue(undefined);
@@ -26,8 +30,15 @@ describe("AdminConfirmPopover", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "删除" }));
-    expect(screen.getByRole("dialog", { name: "确认删除测试项" })).toBeInTheDocument();
+    const dialog = screen.getByRole("dialog", { name: "确认删除测试项" });
+    expect(dialog).toBeInTheDocument();
     expect(screen.getByText("确定删除吗？")).toBeInTheDocument();
+    expect(screen.getByTestId("icon-alert-circle")).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "删除" })).toHaveClass("bg-destructive");
+    expect(within(dialog).getByRole("button", { name: "取消" }).parentElement).toHaveClass(
+      "border-t",
+      "bg-muted/20",
+    );
   });
 
   it("确认后调用 onConfirm 并关闭浮层", async () => {
