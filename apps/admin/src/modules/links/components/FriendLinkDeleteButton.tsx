@@ -1,5 +1,5 @@
-import { Button } from "@repo/ui";
 import { AdminConfirmPopover } from "../../../components/AdminConfirmPopover";
+import { AdminRowAction } from "../../../components/AdminRowAction";
 import type { FriendLinkRow } from "../model";
 
 interface FriendLinkDeleteButtonProps {
@@ -25,18 +25,14 @@ export function FriendLinkDeleteButton({
       destructive
       onConfirm={() => onConfirm(link.id)}
     >
-      <Button
+      <AdminRowAction
         type="button"
-        size="sm"
-        variant="ghost"
-        className={
-          className ??
-          "h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-        }
+        tone="destructive"
+        className={className}
         onClick={(event) => event.stopPropagation()}
       >
         删除
-      </Button>
+      </AdminRowAction>
     </AdminConfirmPopover>
   );
 }

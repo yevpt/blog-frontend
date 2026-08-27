@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { ApiError } from "@repo/api";
-import { Modal, Button, Input, Select, cn } from "@repo/ui";
+import { SvgIcon } from "@repo/icons";
+import { Modal, Button, ButtonUtility, Input, Select } from "@repo/ui";
+import {
+  AdminDialogBody,
+  AdminDialogFooter,
+  AdminDialogFrame,
+  AdminDialogHeader,
+  adminDialogTextareaClassName,
+} from "../../../components/AdminDialog";
 import { FriendLinkLogoPicker } from "./FriendLinkLogoPicker";
 import {
   createEmptyFriendLinkForm,
@@ -28,14 +36,6 @@ interface FriendLinkFormDialogProps {
     linkId?: string,
   ) => Promise<void>;
 }
-
-const contentInsetClassName = "px-4 sm:px-5";
-
-const textareaClassName = cn(
-  "box-border min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2",
-  "text-sm leading-6 text-foreground outline-none",
-  "placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring",
-);
 
 function revokeBlobPreview(url: string | undefined) {
   if (url?.startsWith("blob:")) {
@@ -107,122 +107,114 @@ export function FriendLinkFormDialog({
       aria-label={mode === "create" ? "新建友链" : "编辑友链"}
       dialogClassName="min-h-0 min-w-0 flex-1 overflow-x-hidden"
     >
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden">
-        <div
-          className={cn(
-            "shrink-0 border-b border-border/70",
-            contentInsetClassName,
-            "py-4 max-md:pt-[max(1rem,env(safe-area-inset-top))]",
-          )}
-        >
-          <h2 className="text-lg font-semibold text-foreground">
-            {mode === "create" ? "新建友链" : "编辑友链"}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            管理友情链接展示信息；排序值越小越靠前。
-          </p>
-        </div>
+      <AdminDialogFrame>
+        <AdminDialogHeader
+          eyebrow="站点关系"
+          title={mode === "create" ? "新建友链" : "编辑友链"}
+          description="管理友情链接展示信息；排序值越小越靠前。"
+          className="max-md:pt-[max(1rem,env(safe-area-inset-top))]"
+          action={
+            <ButtonUtility
+              tooltip="关闭友链表单"
+              color="tertiary"
+              icon={<SvgIcon name="close" />}
+              isDisabled={isSubmitting}
+              onClick={onClose}
+            />
+          }
+        />
 
-        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain">
-          <div className={cn(contentInsetClassName, "py-5")}>
-            <div className="grid min-w-0 gap-5">
-              <FriendLinkLogoPicker
-                value={logo}
-                onChange={handleLogoChange}
-                disabled={isSubmitting}
-                error={errors.logo}
-              />
+        <AdminDialogBody contentClassName="grid min-w-0 gap-5">
+          <FriendLinkLogoPicker
+            value={logo}
+            onChange={handleLogoChange}
+            disabled={isSubmitting}
+            error={errors.logo}
+          />
 
-              <div className="grid min-w-0 gap-4 md:grid-cols-2">
-                <Input
-                  label="网站名称"
-                  value={values.name}
-                  onChange={(value) => updateField("name", value)}
-                  isRequired
-                  isInvalid={Boolean(errors.name)}
-                  hint={errors.name}
-                  placeholder="例如：VPT"
-                  className="min-w-0"
-                />
-                <Input
-                  label="网站地址"
-                  value={values.site}
-                  onChange={(value) => updateField("site", value)}
-                  isRequired
-                  isInvalid={Boolean(errors.site)}
-                  hint={errors.site}
-                  placeholder="https://example.com"
-                  className="min-w-0"
-                />
-              </div>
+          <div className="grid min-w-0 gap-4 md:grid-cols-2">
+            <Input
+              label="网站名称"
+              value={values.name}
+              onChange={(value) => updateField("name", value)}
+              isRequired
+              isInvalid={Boolean(errors.name)}
+              hint={errors.name}
+              placeholder="例如：VPT"
+              className="min-w-0"
+            />
+            <Input
+              label="网站地址"
+              value={values.site}
+              onChange={(value) => updateField("site", value)}
+              isRequired
+              isInvalid={Boolean(errors.site)}
+              hint={errors.site}
+              placeholder="https://example.com"
+              className="min-w-0"
+            />
+          </div>
 
-              <div className="grid min-w-0 gap-4 md:grid-cols-2">
-                <Input
-                  label="排序"
-                  value={values.seq}
-                  onChange={(value) => updateField("seq", value)}
-                  isRequired
-                  isInvalid={Boolean(errors.seq)}
-                  hint={errors.seq ?? "越小越靠前，0 是有效值"}
-                  inputMode="numeric"
-                  className="min-w-0"
-                />
-                <div className="min-w-0">
-                  <Select
-                    label="展示状态"
-                    selectedKey={values.status}
-                    onSelectionChange={(key) => updateField("status", String(key))}
-                    isInvalid={Boolean(errors.status)}
-                  >
-                    <Select.Item id="1" label="显示" />
-                    <Select.Item id="0" label="隐藏" />
-                    <Select.Item id="2" label="失联" />
-                  </Select>
-                  {errors.status ? (
-                    <p className="mt-1 text-sm text-destructive">{errors.status}</p>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="grid min-w-0 gap-2">
-                <p className="text-sm font-medium text-foreground">网站描述</p>
-                <textarea
-                  value={values.description}
-                  onChange={(event) => updateField("description", event.target.value)}
-                  placeholder="可选，一句话介绍站点"
-                  className={textareaClassName}
-                />
-              </div>
-
-              <div className="grid min-w-0 gap-4 md:grid-cols-2">
-                <Input
-                  label="站长邮箱"
-                  value={values.email}
-                  onChange={(value) => updateField("email", value)}
-                  placeholder="hello@example.com"
-                  className="min-w-0"
-                />
-                <Input
-                  label="联系电话"
-                  value={values.phone}
-                  onChange={(value) => updateField("phone", value)}
-                  placeholder="可选"
-                  className="min-w-0"
-                />
-              </div>
-
-              {submitError ? <p className="text-sm text-destructive">{submitError}</p> : null}
+          <div className="grid min-w-0 gap-4 md:grid-cols-2">
+            <Input
+              label="排序"
+              value={values.seq}
+              onChange={(value) => updateField("seq", value)}
+              isRequired
+              isInvalid={Boolean(errors.seq)}
+              hint={errors.seq ?? "越小越靠前，0 是有效值"}
+              inputMode="numeric"
+              className="min-w-0"
+            />
+            <div className="min-w-0">
+              <Select
+                label="展示状态"
+                selectedKey={values.status}
+                onSelectionChange={(key) => updateField("status", String(key))}
+                isInvalid={Boolean(errors.status)}
+              >
+                <Select.Item id="1" label="显示" />
+                <Select.Item id="0" label="隐藏" />
+                <Select.Item id="2" label="失联" />
+              </Select>
+              {errors.status ? (
+                <p className="mt-1 text-sm text-destructive">{errors.status}</p>
+              ) : null}
             </div>
           </div>
-        </div>
 
-        <div
-          className={cn(
-            "flex shrink-0 items-center justify-end gap-2 border-t border-border/70 bg-card",
-            contentInsetClassName,
-            "py-4 max-md:pb-[max(1rem,env(safe-area-inset-bottom))]",
-          )}
-        >
+          <div className="grid min-w-0 gap-2">
+            <p className="text-sm font-medium text-foreground">网站描述</p>
+            <textarea
+              value={values.description}
+              onChange={(event) => updateField("description", event.target.value)}
+              placeholder="可选，一句话介绍站点"
+              className={`${adminDialogTextareaClassName} min-h-24`}
+              aria-label="网站描述"
+            />
+          </div>
+
+          <div className="grid min-w-0 gap-4 md:grid-cols-2">
+            <Input
+              label="站长邮箱"
+              value={values.email}
+              onChange={(value) => updateField("email", value)}
+              placeholder="hello@example.com"
+              className="min-w-0"
+            />
+            <Input
+              label="联系电话"
+              value={values.phone}
+              onChange={(value) => updateField("phone", value)}
+              placeholder="可选"
+              className="min-w-0"
+            />
+          </div>
+
+          {submitError ? <p className="text-sm text-destructive">{submitError}</p> : null}
+        </AdminDialogBody>
+
+        <AdminDialogFooter className="max-md:pb-[max(1rem,env(safe-area-inset-bottom))]">
           <Button variant="outline" onPress={onClose} isDisabled={isSubmitting}>
             取消
           </Button>
@@ -235,8 +227,8 @@ export function FriendLinkFormDialog({
           >
             {mode === "create" ? "创建" : "保存"}
           </Button>
-        </div>
-      </div>
+        </AdminDialogFooter>
+      </AdminDialogFrame>
     </Modal>
   );
 }

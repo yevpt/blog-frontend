@@ -11,6 +11,7 @@ import {
 import { AdminListCard } from "../../components/AdminListCard";
 import { AdminListSummary } from "../../components/AdminListSummary";
 import { AdminPageHeader } from "../../components/AdminPageHeader";
+import { AdminRowActions } from "../../components/AdminRowAction";
 import { apiClient } from "../../lib/api";
 import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
 import { addToast } from "../../lib/toast";
@@ -100,14 +101,16 @@ export function GuestbookPage() {
         header: "操作",
         width: "8%",
         minWidth: 88,
-        className: "text-center",
-        headerClassName: "text-center [&>div]:justify-center",
+        className: "text-right",
+        headerClassName: "text-right [&>div]:justify-end",
         cell: (message) => (
-          <GuestbookDeleteButton
-            message={message}
-            isDeleting={deletingMessageId === message.id}
-            onConfirm={handleDeleteMessage}
-          />
+          <AdminRowActions>
+            <GuestbookDeleteButton
+              message={message}
+              isDeleting={deletingMessageId === message.id}
+              onConfirm={handleDeleteMessage}
+            />
+          </AdminRowActions>
         ),
       },
     ],

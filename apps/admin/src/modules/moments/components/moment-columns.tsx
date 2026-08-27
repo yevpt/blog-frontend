@@ -1,4 +1,5 @@
-import { Badge, Button, type DataTableColumn } from "@repo/ui";
+import { Badge, type DataTableColumn } from "@repo/ui";
+import { AdminRowAction, AdminRowActions } from "../../../components/AdminRowAction";
 import { MomentDeleteButton } from "./MomentDeleteButton";
 import type { MomentRow } from "../model";
 
@@ -80,35 +81,26 @@ export function createMomentColumns({
       header: "操作",
       width: "18%",
       minWidth: 200,
-      className: "text-center",
-      headerClassName: "text-center [&>div]:justify-center",
+      className: "text-right",
+      headerClassName: "text-right [&>div]:justify-end",
       cell: (moment) => (
-        <div className="flex items-center justify-center gap-0.5">
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2 text-xs"
-            onPress={() => onEdit(moment)}
-          >
+        <AdminRowActions>
+          <AdminRowAction type="button" onPress={() => onEdit(moment)}>
             编辑
-          </Button>
-          <Button
+          </AdminRowAction>
+          <AdminRowAction
             type="button"
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2 text-xs"
             isLoading={togglingTopId === moment.id}
             onPress={() => onToggleTop(moment)}
           >
             {moment.isTop ? "取消置顶" : "置顶"}
-          </Button>
+          </AdminRowAction>
           <MomentDeleteButton
             moment={moment}
             isDeleting={deletingMomentId === moment.id}
             onConfirm={onConfirmDelete}
           />
-        </div>
+        </AdminRowActions>
       ),
     },
   ];

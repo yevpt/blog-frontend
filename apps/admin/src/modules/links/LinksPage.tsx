@@ -5,6 +5,7 @@ import { Button, DataTable, type DataTableColumn, type DataTableEmptyState } fro
 import { AdminPageHeader } from "../../components/AdminPageHeader";
 import { AdminListCard } from "../../components/AdminListCard";
 import { AdminListSummary } from "../../components/AdminListSummary";
+import { AdminRowAction, AdminRowActions } from "../../components/AdminRowAction";
 import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
 import { useClientTableQuery } from "../../lib/admin-list-query";
 import { apiClient } from "../../lib/api";
@@ -195,25 +196,19 @@ export function LinksPage() {
         header: "操作",
         width: "16%",
         minWidth: 112,
-        className: "text-center",
-        headerClassName: "text-center [&>div]:justify-center",
+        className: "text-right",
+        headerClassName: "text-right [&>div]:justify-end",
         cell: (link) => (
-          <div className="flex items-center justify-center gap-0.5">
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2 text-xs"
-              onPress={() => openEditDialog(link)}
-            >
+          <AdminRowActions>
+            <AdminRowAction type="button" onPress={() => openEditDialog(link)}>
               编辑
-            </Button>
+            </AdminRowAction>
             <FriendLinkDeleteButton
               link={link}
               isDeleting={deletingLinkId === link.id}
               onConfirm={handleDeleteLink}
             />
-          </div>
+          </AdminRowActions>
         ),
       },
     ],

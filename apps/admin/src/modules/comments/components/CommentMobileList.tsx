@@ -56,7 +56,7 @@ export function CommentMobileList({
               comment={comment}
               isDeleting={deletingCommentKey === commentRowKey(comment)}
               onConfirm={onConfirmDelete}
-              className="h-7 shrink-0 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+              className="shrink-0"
             />
           </div>
           <p className="mt-2 line-clamp-3 text-sm leading-6 text-foreground">{comment.content}</p>

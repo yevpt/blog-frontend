@@ -1,4 +1,5 @@
-import { Badge, Button, type DataTableEmptyState } from "@repo/ui";
+import { Badge, type DataTableEmptyState } from "@repo/ui";
+import { AdminRowAction, AdminRowActions } from "../../../components/AdminRowAction";
 import { MomentDeleteButton } from "./MomentDeleteButton";
 import type { MomentRow } from "../model";
 
@@ -63,29 +64,17 @@ export function MomentMobileList({
               {moment.readCount} 读 · {moment.likeCount} 赞 · {moment.commentCount} 评
             </span>
           </div>
-          <div className="mt-3 flex items-center justify-end gap-1">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2 text-xs"
-              onPress={() => onEdit(moment)}
-            >
-              编辑
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2 text-xs"
-              onPress={() => onToggleTop(moment)}
-            >
+          <AdminRowActions className="mt-3 gap-1">
+            <AdminRowAction onPress={() => onEdit(moment)}>编辑</AdminRowAction>
+            <AdminRowAction onPress={() => onToggleTop(moment)}>
               {moment.isTop ? "取消置顶" : "置顶"}
-            </Button>
+            </AdminRowAction>
             <MomentDeleteButton
               moment={moment}
               isDeleting={deletingMomentId === moment.id}
               onConfirm={onConfirmDelete}
             />
-          </div>
+          </AdminRowActions>
         </article>
       ))}
     </div>

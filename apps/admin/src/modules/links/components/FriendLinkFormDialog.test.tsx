@@ -71,5 +71,8 @@ describe("FriendLinkFormDialog", () => {
 
     expect(onSubmit).not.toHaveBeenCalled();
     expect(screen.getByText("请上传友链 Logo")).toBeInTheDocument();
+    expect(screen.getByText("站点关系")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "关闭友链表单" })).toBeInTheDocument();
+    expect(screen.getByLabelText("网站描述")).toHaveClass("shadow-xs");
   });
 });

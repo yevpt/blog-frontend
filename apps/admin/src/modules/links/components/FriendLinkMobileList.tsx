@@ -1,5 +1,6 @@
 import { SvgIcon } from "@repo/icons";
-import { Button, type DataTableEmptyState } from "@repo/ui";
+import { type DataTableEmptyState } from "@repo/ui";
+import { AdminRowAction, AdminRowActions } from "../../../components/AdminRowAction";
 import { FriendLinkDeleteButton } from "./FriendLinkDeleteButton";
 import { FriendLinkNameCell } from "./FriendLinkNameCell";
 import { FriendLinkStatusBadge } from "./FriendLinkStatusBadge";
@@ -84,23 +85,17 @@ export function FriendLinkMobileList({
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-0.5">
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-8 px-2 text-xs"
-              onPress={() => onEdit(link)}
-            >
+          <AdminRowActions className="shrink-0">
+            <AdminRowAction type="button" className="h-8" onPress={() => onEdit(link)}>
               编辑
-            </Button>
+            </AdminRowAction>
             <FriendLinkDeleteButton
               link={link}
               isDeleting={deletingLinkId === link.id}
               onConfirm={onConfirmDelete}
-              className="h-8 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+              className="h-8"
             />
-          </div>
+          </AdminRowActions>
         </li>
       ))}
     </ul>
