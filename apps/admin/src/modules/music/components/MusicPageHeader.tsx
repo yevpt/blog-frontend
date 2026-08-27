@@ -1,5 +1,5 @@
 import { SvgIcon } from "@repo/icons";
-import { Button } from "@repo/ui";
+import { Button, Tabs, TabsItem, TabsList } from "@repo/ui";
 import { AdminPageHeader } from "../../../components/AdminPageHeader";
 import type { MusicCatalogTab } from "../model";
 
@@ -43,24 +43,29 @@ export function MusicPageHeader({
         }
       />
 
-      <nav
-        className="flex min-w-0 max-w-full gap-1 overflow-x-auto rounded-lg border border-border bg-card p-1"
-        aria-label="音乐管理分组"
+      <Tabs
+        selectedKey={activeTab}
+        onSelectionChange={(key) => {
+          const nextTab = tabOptions.find((tab) => tab.id === String(key));
+          if (nextTab) onTabChange(nextTab.id);
+        }}
+        className="min-w-0 max-w-full"
       >
-        {tabOptions.map((tab) => (
-          <Button
-            key={tab.id}
-            type="button"
-            variant={activeTab === tab.id ? "default" : "ghost"}
-            size="sm"
-            className="shrink-0"
-            onPress={() => onTabChange(tab.id)}
-          >
-            <SvgIcon name={tab.icon} size={14} />
-            {tab.label}
-          </Button>
-        ))}
-      </nav>
+        <TabsList
+          variant="underline"
+          aria-label="音乐管理分组"
+          className="w-full gap-6 border-border/70 px-1"
+        >
+          {tabOptions.map((tab) => (
+            <TabsItem key={tab.id} id={tab.id} variant="underline">
+              <span className="inline-flex items-center gap-1.5">
+                <SvgIcon name={tab.icon} size={14} />
+                {tab.label}
+              </span>
+            </TabsItem>
+          ))}
+        </TabsList>
+      </Tabs>
     </>
   );
 }

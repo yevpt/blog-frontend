@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import type { MusicAlbumResp, MusicArtistResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
-import { Button, Modal, SearchField, cn } from "@repo/ui";
+import { Button, ButtonUtility, Modal, SearchField, cn } from "@repo/ui";
+import {
+  AdminDialogBody,
+  AdminDialogFooter,
+  AdminDialogFrame,
+  AdminDialogHeader,
+} from "../../../components/AdminDialog";
+import { AdminRowAction, AdminRowActions } from "../../../components/AdminRowAction";
 import { MusicArtwork } from "./MusicArtwork";
 import { MusicDeleteButton } from "./MusicDeleteButton";
 import { formatDuration, type MusicCatalogTab, type MusicRow } from "../model";
@@ -255,27 +262,14 @@ function MiniActions({
   onConfirmDelete?: () => Promise<void>;
 }) {
   return (
-    <div className="flex shrink-0 items-center gap-0.5">
-      <Button
-        type="button"
-        size="sm"
-        variant="ghost"
-        className="h-8 px-2 text-xs"
-        aria-label={detailLabel}
-        onPress={onDetail}
-      >
+    <AdminRowActions className="shrink-0">
+      <AdminRowAction type="button" className="h-8" aria-label={detailLabel} onPress={onDetail}>
         详情
-      </Button>
+      </AdminRowAction>
       {onEdit ? (
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          className="h-8 px-2 text-xs"
-          onPress={onEdit}
-        >
+        <AdminRowAction type="button" className="h-8" onPress={onEdit}>
           编辑
-        </Button>
+        </AdminRowAction>
       ) : null}
       {onConfirmDelete && deleteAriaLabel && deleteMessage ? (
         <MusicDeleteButton
@@ -283,10 +277,10 @@ function MiniActions({
           message={deleteMessage}
           isDeleting={isDeleting ?? false}
           onConfirm={onConfirmDelete}
-          className="h-8 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+          className="h-8"
         />
       ) : null}
-    </div>
+    </AdminRowActions>
   );
 }
 
@@ -339,23 +333,35 @@ function CatalogDetailDialog({
       dialogClassName="min-h-0 min-w-0 flex-1 overflow-hidden"
     >
       {target ? (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="flex items-center gap-3 border-b border-border/70 px-4 py-4 sm:px-5">
-            <MusicArtwork
-              src={target.kind === "artist" ? target.item.avatarUrl : target.item.coverUrl}
-              alt={target.item.name}
-              className={cn(target.kind === "artist" && "rounded-full")}
-            />
-            <div className="min-w-0 flex-1">
-              <h2 className="truncate text-lg font-semibold text-foreground">{target.item.name}</h2>
-              <p className="mt-1 truncate text-sm text-muted-foreground">
-                {target.kind === "artist"
-                  ? target.item.description || "暂无简介"
-                  : `${target.item.artistName || "未设置主歌手"}${target.item.releaseDate ? ` · ${target.item.releaseDate}` : ""}`}
-              </p>
-            </div>
-          </div>
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+        <AdminDialogFrame>
+          <AdminDialogHeader
+            eyebrow={target.kind === "artist" ? "歌手详情" : "专辑详情"}
+            title={
+              <span className="flex min-w-0 items-center gap-3">
+                <MusicArtwork
+                  src={target.kind === "artist" ? target.item.avatarUrl : target.item.coverUrl}
+                  alt={target.item.name}
+                  className={cn(target.kind === "artist" && "rounded-full")}
+                />
+                <span className="truncate">{target.item.name}</span>
+              </span>
+            }
+            description={
+              target.kind === "artist"
+                ? target.item.description || "暂无简介"
+                : `${target.item.artistName || "未设置主歌手"}${target.item.releaseDate ? ` · ${target.item.releaseDate}` : ""}`
+            }
+            className="max-md:pt-[max(1rem,env(safe-area-inset-top))]"
+            action={
+              <ButtonUtility
+                tooltip="关闭音乐详情"
+                color="tertiary"
+                icon={<SvgIcon name="close" />}
+                onClick={onClose}
+              />
+            }
+          />
+          <AdminDialogBody contentClassName="py-5">
             <h3 className="text-sm font-semibold text-foreground">关联歌曲</h3>
             {target.item.songs.length > 0 ? (
               <ul className="mt-3 divide-y divide-border/60 rounded-lg border border-border">
@@ -377,13 +383,13 @@ function CatalogDetailDialog({
                 暂无关联歌曲
               </p>
             )}
-          </div>
-          <div className="flex justify-end border-t border-border/70 px-4 py-4 sm:px-5">
+          </AdminDialogBody>
+          <AdminDialogFooter className="max-md:pb-[max(1rem,env(safe-area-inset-bottom))]">
             <Button variant="outline" onPress={onClose}>
               关闭
             </Button>
-          </div>
-        </div>
+          </AdminDialogFooter>
+        </AdminDialogFrame>
       ) : null}
     </Modal>
   );

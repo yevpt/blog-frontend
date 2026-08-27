@@ -146,10 +146,7 @@ describe("MusicPage", () => {
     renderMusicPage();
 
     expect(screen.getByRole("region", { name: "音乐资料库" })).toHaveClass("min-w-0", "max-w-full");
-    expect(screen.getByRole("navigation", { name: "音乐管理分组" })).toHaveClass(
-      "min-w-0",
-      "max-w-full",
-    );
+    expect(screen.getByRole("tablist", { name: "音乐管理分组" })).toHaveClass("w-full");
   });
 
   it("空列表时显示音乐空态", () => {
@@ -181,7 +178,7 @@ describe("MusicPage", () => {
     const user = userEvent.setup();
     renderMusicPage();
 
-    await user.click(screen.getByRole("button", { name: "歌手" }));
+    await user.click(screen.getByRole("tab", { name: "歌手" }));
     expect(screen.getByText("Aimer")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /新建歌手/i }));
 
@@ -192,7 +189,7 @@ describe("MusicPage", () => {
     const user = userEvent.setup();
     renderMusicPage();
 
-    await user.click(screen.getByRole("button", { name: "专辑" }));
+    await user.click(screen.getByRole("tab", { name: "专辑" }));
     expect(screen.getByText("Sleepless Nights")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /新建专辑/i }));
 
@@ -203,7 +200,7 @@ describe("MusicPage", () => {
     const user = userEvent.setup();
     renderMusicPage();
 
-    await user.click(screen.getByRole("button", { name: "歌手" }));
+    await user.click(screen.getByRole("tab", { name: "歌手" }));
     await user.type(screen.getByRole("searchbox", { name: "搜索歌手" }), "milet");
     expect(screen.getByText("milet")).toBeInTheDocument();
     expect(screen.queryByText("Aimer")).not.toBeInTheDocument();
@@ -211,7 +208,7 @@ describe("MusicPage", () => {
     expect(await screen.findByRole("dialog", { name: "歌手详情" })).toHaveTextContent("Midnight");
 
     await user.keyboard("{Escape}");
-    await user.click(screen.getByRole("button", { name: "专辑" }));
+    await user.click(screen.getByRole("tab", { name: "专辑" }));
     await user.type(screen.getByRole("searchbox", { name: "搜索专辑" }), "eyes");
     expect(screen.getByText("eyes")).toBeInTheDocument();
     expect(screen.queryByText("Sleepless Nights")).not.toBeInTheDocument();
@@ -283,10 +280,10 @@ describe("MusicPage", () => {
 
     renderMusicPage();
 
-    await user.click(screen.getByRole("button", { name: "歌手" }));
+    await user.click(screen.getByRole("tab", { name: "歌手" }));
     expect(screen.getByText("Supper Moment")).toBeInTheDocument();
     expect(screen.getByText(/1\s*首歌曲/)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "专辑" }));
+    await user.click(screen.getByRole("tab", { name: "专辑" }));
     expect(screen.getByText("Legacy")).toBeInTheDocument();
   });
 

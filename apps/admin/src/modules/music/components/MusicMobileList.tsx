@@ -1,5 +1,6 @@
 import { SvgIcon } from "@repo/icons";
-import { Button, type DataTableEmptyState } from "@repo/ui";
+import { type DataTableEmptyState } from "@repo/ui";
+import { AdminRowAction, AdminRowActions } from "../../../components/AdminRowAction";
 import { MusicArtwork } from "./MusicArtwork";
 import { MusicDeleteButton } from "./MusicDeleteButton";
 import { MusicPreviewButton } from "./MusicPreviewButton";
@@ -79,25 +80,19 @@ export function MusicMobileList({
               ) : null}
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-0.5">
+          <AdminRowActions className="shrink-0">
             <MusicPreviewButton title={row.name} url={row.audioUrl} />
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-8 px-2 text-xs"
-              onPress={() => onEdit(row)}
-            >
+            <AdminRowAction type="button" className="h-8" onPress={() => onEdit(row)}>
               编辑
-            </Button>
+            </AdminRowAction>
             <MusicDeleteButton
               ariaLabel={`确认删除「${row.name}」`}
               message={`确定删除「${row.name}」？删除后不会再出现在音乐资料库中。`}
               isDeleting={deletingKey === `song-${row.id}`}
               onConfirm={() => onConfirmDeleteSong(row)}
-              className="h-8 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+              className="h-8"
             />
-          </div>
+          </AdminRowActions>
         </li>
       ))}
     </ul>

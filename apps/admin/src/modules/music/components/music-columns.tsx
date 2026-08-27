@@ -1,5 +1,5 @@
 import type { DataTableColumn } from "@repo/ui";
-import { Button } from "@repo/ui";
+import { AdminRowAction, AdminRowActions } from "../../../components/AdminRowAction";
 import { MusicArtwork } from "./MusicArtwork";
 import { MusicDeleteButton } from "./MusicDeleteButton";
 import { MusicPreviewButton } from "./MusicPreviewButton";
@@ -70,27 +70,21 @@ export function createMusicColumns(
       header: "操作",
       width: "24%",
       minWidth: 150,
-      className: "text-center",
-      headerClassName: "text-center [&>div]:justify-center",
+      className: "text-right",
+      headerClassName: "text-right [&>div]:justify-end",
       cell: (row) => (
-        <div className="flex items-center justify-center gap-0.5">
+        <AdminRowActions>
           <MusicPreviewButton title={row.name} url={row.audioUrl} />
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2 text-xs"
-            onPress={() => onEdit(row)}
-          >
+          <AdminRowAction type="button" onPress={() => onEdit(row)}>
             编辑
-          </Button>
+          </AdminRowAction>
           <MusicDeleteButton
             ariaLabel={`确认删除「${row.name}」`}
             message={`确定删除「${row.name}」？删除后不会再出现在音乐资料库中。`}
             isDeleting={deletingKey === `song-${row.id}`}
             onConfirm={() => onConfirmDeleteSong(row)}
           />
-        </div>
+        </AdminRowActions>
       ),
     },
   ];

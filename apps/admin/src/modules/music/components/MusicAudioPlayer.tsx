@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SvgIcon } from "@repo/icons";
 import { Button, Slider, cn } from "@repo/ui";
+import { adminRowActionClassName } from "../../../components/AdminRowAction";
 import { formatFileSize } from "../model";
 
 interface MusicAudioPlayerProps {
@@ -97,7 +98,7 @@ export function MusicAudioPlayer({
       type="button"
       size="sm"
       variant="ghost"
-      className={cn(variant === "compact" ? "h-7 px-2 text-xs" : "size-9 shrink-0 p-0")}
+      className={cn(variant === "compact" ? adminRowActionClassName : "size-9 shrink-0 p-0")}
       aria-label={isPlaying ? `暂停 ${title}` : `播放 ${title}`}
       isDisabled={!url}
       isLoading={isLoading}
@@ -130,9 +131,7 @@ export function MusicAudioPlayer({
           <SvgIcon name="music" size={18} />
         </span>
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-foreground">
-            {fileName ?? "已上传音频"}
-          </p>
+          <p className="truncate text-sm font-medium text-foreground">{fileName ?? "已上传音频"}</p>
           {metadata ? <p className="mt-0.5 text-xs text-muted-foreground">{metadata}</p> : null}
         </div>
       </div>
