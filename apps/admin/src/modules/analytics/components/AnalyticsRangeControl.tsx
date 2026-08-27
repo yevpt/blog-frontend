@@ -1,5 +1,6 @@
-import { Button, cn, DatePicker, parseDate } from "@repo/ui";
+import { cn, DatePicker, parseDate } from "@repo/ui";
 import type { DateValue } from "@repo/ui";
+import { AdminSegmentedControl } from "../../../components/AdminSegmentedControl";
 import type { AnalyticsRangePreset, AnalyticsRangeState } from "../hooks/use-analytics-range";
 
 const PRESETS: { id: AnalyticsRangePreset; label: string }[] = [
@@ -19,29 +20,19 @@ function formatDateValue(value: DateValue | null) {
 
 export function AnalyticsRangeControl({ range, className }: AnalyticsRangeControlProps) {
   return (
-    <div className={cn("flex flex-wrap items-center gap-2", className)}>
-      <div className="inline-flex rounded-lg border border-border bg-background p-0.5">
-        {PRESETS.map((preset) => (
-          <Button
-            key={preset.id}
-            variant={range.preset === preset.id ? "outline" : "ghost"}
-            size="sm"
-            aria-pressed={range.preset === preset.id}
-            className={cn(
-              "h-7 border-0 px-2.5 shadow-none",
-              range.preset === preset.id
-                ? "bg-card text-foreground shadow-sm"
-                : "text-foreground/70",
-            )}
-            onPress={() => range.setPreset(preset.id)}
-          >
-            {preset.label}
-          </Button>
-        ))}
-      </div>
+    <div className={cn("flex flex-wrap items-center justify-end gap-2", className)}>
+      <AdminSegmentedControl
+        ariaLabel="统计日期范围"
+        options={PRESETS}
+        value={range.preset}
+        onChange={range.setPreset}
+      />
       {range.preset === "custom" ? (
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span>起始日期</span>
+        <div
+          role="group"
+          aria-label="自定义日期范围"
+          className="flex flex-wrap items-center gap-1.5 rounded-lg border border-border/70 bg-card/70 p-1 shadow-sm"
+        >
           <DatePicker
             aria-label="起始日期"
             value={parseDate(range.customFrom)}
@@ -49,9 +40,11 @@ export function AnalyticsRangeControl({ range, className }: AnalyticsRangeContro
               const next = formatDateValue(value);
               if (next !== undefined) range.setCustomFrom(next);
             }}
-            triggerClassName="h-8 min-w-[9.5rem] rounded-md"
+            triggerClassName="h-7 min-w-[8.75rem] border-0 bg-transparent shadow-none focus-within:ring-0"
           />
-          <span>结束日期</span>
+          <span aria-hidden="true" className="px-0.5 text-xs text-muted-foreground">
+            至
+          </span>
           <DatePicker
             aria-label="结束日期"
             value={parseDate(range.customTo)}
@@ -59,7 +52,7 @@ export function AnalyticsRangeControl({ range, className }: AnalyticsRangeContro
               const next = formatDateValue(value);
               if (next !== undefined) range.setCustomTo(next);
             }}
-            triggerClassName="h-8 min-w-[9.5rem] rounded-md"
+            triggerClassName="h-7 min-w-[8.75rem] border-0 bg-transparent shadow-none focus-within:ring-0"
           />
         </div>
       ) : null}

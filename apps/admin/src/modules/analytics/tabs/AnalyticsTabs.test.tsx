@@ -81,7 +81,7 @@ describe("analytics tabs", () => {
     );
     expect(await screen.findByTestId("trend-chart")).toHaveTextContent("趋势点 1");
 
-    await user.click(screen.getByRole("button", { name: "访客" }));
+    await user.click(screen.getByRole("tab", { name: "访客" }));
 
     await waitFor(() =>
       expect(apiClient.analytics.getTrend).toHaveBeenLastCalledWith({
@@ -102,7 +102,7 @@ describe("analytics tabs", () => {
     expect(await screen.findByText("直接访问")).toBeInTheDocument();
     expect(screen.getByText("15")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "设备" }));
+    await user.click(screen.getByRole("tab", { name: "设备" }));
 
     await waitFor(() =>
       expect(apiClient.analytics.getDimensions).toHaveBeenLastCalledWith("device", range),

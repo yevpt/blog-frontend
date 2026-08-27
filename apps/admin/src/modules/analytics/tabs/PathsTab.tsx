@@ -1,7 +1,8 @@
 import { useCallback, useState } from "react";
 import { ApiError } from "@repo/api";
 import type { AnalyticsFunnelStep } from "@repo/api";
-import { Button, Card, CardContent } from "@repo/ui";
+import { Button } from "@repo/ui";
+import { AdminPanel } from "../../../components/AdminPanel";
 import { apiClient } from "../../../lib/api";
 import { addToast } from "../../../lib/toast";
 import { useAnalyticsData } from "../hooks/use-analytics-data";
@@ -42,67 +43,61 @@ export function PathsTab({ range }: PathsTabProps) {
 
   return (
     <div className="grid gap-4">
-      <Card>
-        <CardContent className="pt-5">
-          <div className="mb-3 text-sm font-medium">热门访问路径</div>
-          {loading ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">加载中…</div>
-          ) : paths.length === 0 ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">暂无路径数据</div>
-          ) : (
-            <div className="grid gap-2.5">
-              {paths.map((p, idx) => (
-                <div key={idx} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="min-w-0 truncate text-foreground">{p.sequence.join(" → ")}</span>
-                  <span className="shrink-0 text-muted-foreground">{p.sessions} 会话</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="pt-5">
-          <div className="mb-3 text-sm font-medium">自定义漏斗</div>
-          <p className="mb-2 text-xs text-muted-foreground">
-            每行一个路径，按顺序作为漏斗步骤（如 / 然后 /articles）。
-          </p>
-          <textarea
-            value={stepsText}
-            onChange={(e) => setStepsText(e.target.value)}
-            rows={3}
-            className="w-full rounded-lg border border-border bg-muted/50 p-2 text-sm"
-          />
-          <div className="mt-2">
-            <Button onPress={runFunnel} isDisabled={running}>
-              {running ? "计算中…" : "计算漏斗"}
-            </Button>
+      <AdminPanel title="热门访问路径" description="访客在站点内最常见的浏览序列">
+        {loading ? (
+          <div className="py-8 text-center text-sm text-muted-foreground">加载中…</div>
+        ) : paths.length === 0 ? (
+          <div className="py-8 text-center text-sm text-muted-foreground">暂无路径数据</div>
+        ) : (
+          <div className="grid gap-2.5">
+            {paths.map((p, idx) => (
+              <div key={idx} className="flex items-center justify-between gap-3 text-sm">
+                <span className="min-w-0 truncate text-foreground">{p.sequence.join(" → ")}</span>
+                <span className="shrink-0 text-muted-foreground">{p.sessions} 会话</span>
+              </div>
+            ))}
           </div>
-          {funnel.length > 0 ? (
-            <div className="mt-4 grid gap-3">
-              {funnel.map((step, idx) => (
-                <div key={idx}>
-                  <div className="mb-1.5 flex justify-between text-sm">
-                    <span className="truncate pr-3 text-foreground">{step.step}</span>
-                    <span className="shrink-0 text-muted-foreground">
-                      {step.sessions} 会话 · {(step.conversion_rate * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-muted">
-                    <div
-                      className="h-1.5 rounded-full bg-primary"
-                      style={{
-                        width: `${funnelTop > 0 ? Math.round((step.sessions / funnelTop) * 100) : 0}%`,
-                      }}
-                    />
-                  </div>
+        )}
+      </AdminPanel>
+
+      <AdminPanel title="自定义漏斗" description="按顺序输入路径，分析逐步转化">
+        <p className="mb-2 text-xs text-muted-foreground">
+          每行一个路径，按顺序作为漏斗步骤（如 / 然后 /articles）。
+        </p>
+        <textarea
+          value={stepsText}
+          onChange={(e) => setStepsText(e.target.value)}
+          rows={3}
+          className="w-full rounded-lg border border-border bg-muted/50 p-2 text-sm"
+        />
+        <div className="mt-2">
+          <Button onPress={runFunnel} isDisabled={running}>
+            {running ? "计算中…" : "计算漏斗"}
+          </Button>
+        </div>
+        {funnel.length > 0 ? (
+          <div className="mt-4 grid gap-3">
+            {funnel.map((step, idx) => (
+              <div key={idx}>
+                <div className="mb-1.5 flex justify-between text-sm">
+                  <span className="truncate pr-3 text-foreground">{step.step}</span>
+                  <span className="shrink-0 text-muted-foreground">
+                    {step.sessions} 会话 · {(step.conversion_rate * 100).toFixed(1)}%
+                  </span>
                 </div>
-              ))}
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
+                <div className="h-1.5 rounded-full bg-muted">
+                  <div
+                    className="h-1.5 rounded-full bg-primary"
+                    style={{
+                      width: `${funnelTop > 0 ? Math.round((step.sessions / funnelTop) * 100) : 0}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </AdminPanel>
     </div>
   );
 }

@@ -25,11 +25,12 @@ describe("AnalyticsRangeControl", () => {
 
     render(<AnalyticsRangeControl range={createRange({ setPreset })} />);
 
-    expect(screen.getByRole("button", { name: "近 7 天" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: "近 30 天" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "自定义" })).toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "统计日期范围" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "近 7 天" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "近 30 天" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "自定义" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "近 30 天" }));
+    await user.click(screen.getByRole("tab", { name: "近 30 天" }));
 
     expect(setPreset).toHaveBeenCalledWith("30d");
   });
@@ -37,7 +38,8 @@ describe("AnalyticsRangeControl", () => {
   it("自定义范围时显示起止日期选择", () => {
     render(<AnalyticsRangeControl range={createRange({ preset: "custom" })} />);
 
-    expect(screen.getByText("起始日期")).toBeInTheDocument();
-    expect(screen.getByText("结束日期")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "自定义日期范围" })).toBeInTheDocument();
+    expect(screen.getAllByRole("spinbutton", { name: /起始日期/ })).toHaveLength(3);
+    expect(screen.getAllByRole("spinbutton", { name: /结束日期/ })).toHaveLength(3);
   });
 });

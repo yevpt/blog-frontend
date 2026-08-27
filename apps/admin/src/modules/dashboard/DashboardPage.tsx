@@ -10,6 +10,8 @@ import { useAnalyticsRange } from "../analytics/hooks/use-analytics-range";
 import { AnalyticsRangeControl } from "../analytics/components/AnalyticsRangeControl";
 import { TrendChart } from "../analytics/components/TrendChart";
 import { BarList, type BarListItem } from "../analytics/components/BarList";
+import { AdminPageHeader } from "../../components/AdminPageHeader";
+import { AdminPanel } from "../../components/AdminPanel";
 
 const EMPTY_OVERVIEW: AnalyticsOverviewResp = {
   today_pv: 0,
@@ -55,7 +57,7 @@ interface StatCardProps {
 
 function StatCard({ icon, label, value, hint, tone = "primary" }: StatCardProps) {
   return (
-    <Card interactive className="p-5">
+    <Card interactive className="border border-border/70 bg-card/90 p-5 backdrop-blur-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-sm text-muted-foreground">{label}</div>
@@ -67,8 +69,10 @@ function StatCard({ icon, label, value, hint, tone = "primary" }: StatCardProps)
         <span
           aria-hidden="true"
           className={cn(
-            "flex size-10 shrink-0 items-center justify-center rounded-lg",
-            tone === "success" ? "bg-success-soft text-success" : "bg-primary-soft text-primary",
+            "flex size-9 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset",
+            tone === "success"
+              ? "bg-success-soft text-success ring-success/10"
+              : "bg-primary-soft text-primary ring-primary/10",
           )}
         >
           <SvgIcon name={icon} size={20} />
@@ -78,18 +82,18 @@ function StatCard({ icon, label, value, hint, tone = "primary" }: StatCardProps)
   );
 }
 
-/** 卡片区块标题：柔紫图标 + 标题，统一各数据卡片的视觉锚点。 */
-function SectionHeader({ icon, title }: { icon: IconName; title: string }) {
+/** 面板标题：低饱和图标负责定位，文字保持克制。 */
+function PanelTitle({ icon, title }: { icon: IconName; title: string }) {
   return (
-    <div className="mb-4 flex items-center gap-2.5">
+    <span className="flex items-center gap-2.5">
       <span
         aria-hidden="true"
-        className="flex size-7 items-center justify-center rounded-md bg-primary-soft text-primary"
+        className="flex size-7 items-center justify-center rounded-md bg-primary-soft text-primary ring-1 ring-inset ring-primary/10"
       >
         <SvgIcon name={icon} size={15} />
       </span>
-      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-    </div>
+      <span>{title}</span>
+    </span>
   );
 }
 
@@ -171,24 +175,24 @@ export function DashboardPage() {
   }, [dims]);
 
   return (
-    <div className="grid gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">你好，{displayName}</h1>
-          <div className="mt-0.5 text-sm text-muted-foreground">趋势与排行范围：{range.label}</div>
-        </div>
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          <AnalyticsRangeControl range={range} />
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm text-foreground/80 shadow-card">
-            {/* 在线脉冲点：ping 动画外圈 + 实心芯 */}
-            <span className="relative flex size-2">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-60" />
-              <span className="relative inline-flex size-2 rounded-full bg-success" />
+    <div className="grid gap-6">
+      <AdminPageHeader
+        title={`你好，${displayName}`}
+        description={`这里是站点今天的关键动态，趋势与排行范围为${range.label}。`}
+        action={
+          <div className="flex min-w-0 flex-wrap items-center gap-2.5">
+            <AnalyticsRangeControl range={range} />
+            <span className="inline-flex items-center gap-2 rounded-lg border border-border/70 bg-card/80 px-3 py-1.5 text-sm text-foreground/80">
+              {/* 在线脉冲点：ping 动画外圈 + 实心芯 */}
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-60" />
+                <span className="relative inline-flex size-2 rounded-full bg-success" />
+              </span>
+              <span className="tabular-nums">{overview.online}</span> 人在线
             </span>
-            <span className="tabular-nums">{overview.online}</span> 人在线
-          </span>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard
@@ -238,28 +242,39 @@ export function DashboardPage() {
         />
       </div>
 
-      <Card>
-        <div className="p-5 pb-0 sm:p-6 sm:pb-0">
-          <SectionHeader icon="arrow-up-right" title="访问趋势" />
-        </div>
-        <div className="px-3 pb-4 sm:px-4">
-          {trend.length === 0 ? (
-            <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
-              暂无数据
-            </div>
-          ) : (
-            <TrendChart data={trend} />
-          )}
-        </div>
-      </Card>
+      <AdminPanel
+        role="region"
+        aria-label="访问趋势面板"
+        title={<PanelTitle icon="arrow-up-right" title="访问趋势" />}
+        description={`${range.label}的页面浏览量变化`}
+        contentClassName="px-3 pb-4 pt-2 sm:px-4 sm:pb-4"
+      >
+        {trend.length === 0 ? (
+          <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
+            暂无数据
+          </div>
+        ) : (
+          <TrendChart data={trend} />
+        )}
+      </AdminPanel>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="p-5 sm:p-6">
-          <SectionHeader icon="link" title="访问来源" />
+        <AdminPanel
+          role="region"
+          aria-label="访问来源面板"
+          title={<PanelTitle icon="link" title="访问来源" />}
+          description="访客进入站点的主要渠道"
+          contentClassName="min-h-40"
+        >
           <BarList items={sources} />
-        </Card>
-        <Card className="p-5 sm:p-6">
-          <SectionHeader icon="eye" title="热门页面" />
+        </AdminPanel>
+        <AdminPanel
+          role="region"
+          aria-label="热门页面面板"
+          title={<PanelTitle icon="eye" title="热门页面" />}
+          description="当前范围内浏览量最高的内容"
+          contentClassName="min-h-40"
+        >
           {pages.length === 0 ? (
             <div className="py-10 text-center text-sm text-muted-foreground">暂无数据</div>
           ) : (
@@ -285,11 +300,15 @@ export function DashboardPage() {
               ))}
             </ol>
           )}
-        </Card>
+        </AdminPanel>
       </div>
 
-      <Card className="p-5 sm:p-6">
-        <SectionHeader icon="home" title="站点概况" />
+      <AdminPanel
+        role="region"
+        aria-label="站点概况面板"
+        title={<PanelTitle icon="home" title="站点概况" />}
+        description="内容资产与最近七天的互动摘要"
+      >
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
           {CONTENT_OVERVIEW_LINKS.map((item) => (
             <Link
@@ -350,7 +369,7 @@ export function DashboardPage() {
             · 活跃 <span className="tabular-nums">{summary.users.today_active}</span>
           </Link>
         </div>
-      </Card>
+      </AdminPanel>
     </div>
   );
 }

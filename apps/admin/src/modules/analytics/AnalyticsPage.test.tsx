@@ -44,7 +44,12 @@ describe("AnalyticsPage", () => {
 
     render(<AnalyticsPage />);
 
-    expect(screen.getByRole("button", { name: "近 7 天" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "近 7 天" })).toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "数据统计分类" })).toHaveClass(
+      "w-full",
+      "border-border/70",
+    );
+    expect(screen.getByRole("region", { name: "数据维护" })).toBeInTheDocument();
 
     await waitFor(() =>
       expect(mockState.getTrend).toHaveBeenCalledWith({
@@ -92,7 +97,7 @@ describe("AnalyticsPage", () => {
 
     render(<AnalyticsPage />);
 
-    await user.click(screen.getByRole("button", { name: "近 30 天" }));
+    await user.click(screen.getByRole("tab", { name: "近 30 天" }));
 
     await waitFor(() =>
       expect(mockState.getTrend).toHaveBeenLastCalledWith({

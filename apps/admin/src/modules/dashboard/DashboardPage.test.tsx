@@ -69,7 +69,11 @@ describe("DashboardPage", () => {
     expect(screen.getByText("今日访问")).toBeInTheDocument();
     expect(screen.getByText("访问趋势")).toBeInTheDocument();
     expect(screen.getByText("站点概况")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "近 7 天" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "近 7 天" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "访问趋势面板" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "访问来源面板" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "热门页面面板" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "站点概况面板" })).toBeInTheDocument();
 
     await waitFor(() => expect(screen.getByText("1,284")).toBeInTheDocument());
     expect(screen.getByText("直接访问")).toBeInTheDocument();
@@ -101,7 +105,7 @@ describe("DashboardPage", () => {
       </MemoryRouter>,
     );
 
-    await user.click(screen.getByRole("button", { name: "近 30 天" }));
+    await user.click(screen.getByRole("tab", { name: "近 30 天" }));
 
     await waitFor(() =>
       expect(mockState.getTrend).toHaveBeenLastCalledWith({

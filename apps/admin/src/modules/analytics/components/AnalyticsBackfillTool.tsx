@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError, type AnalyticsBackfillResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
-import { Button, Card, CardContent, DatePicker, parseDate, type DateValue } from "@repo/ui";
+import { Button, DatePicker, parseDate, type DateValue } from "@repo/ui";
+import { AdminPanel } from "../../../components/AdminPanel";
 import { apiClient } from "../../../lib/api";
 import { addToast } from "../../../lib/toast";
 import type { AnalyticsDateRange } from "../hooks/use-analytics-range";
@@ -72,19 +73,26 @@ export function AnalyticsBackfillTool({ range }: AnalyticsBackfillToolProps) {
   }, [inclusiveDays, normalizedRange]);
 
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-4 py-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-            <SvgIcon name="refresh-cw" size={15} />
-            <span>回填日聚合</span>
-          </div>
-          <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            适用于统计规则调整或补漏天，单次最多 {MAX_BACKFILL_DAYS} 天。
-          </p>
-        </div>
-
-        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+    <AdminPanel
+      title={
+        <span className="flex items-center gap-2">
+          <span className="grid size-7 place-items-center rounded-lg bg-primary-soft text-primary">
+            <SvgIcon name="refresh-cw" size={14} />
+          </span>
+          回填日聚合
+        </span>
+      }
+      description={`用于统计规则调整或补漏天，单次最多 ${MAX_BACKFILL_DAYS} 天。`}
+      action={
+        <span className="inline-flex rounded-full bg-muted/60 px-2.5 py-1 text-xs tabular-nums text-muted-foreground">
+          {normalizedRange.from} 至 {normalizedRange.to}
+        </span>
+      }
+      className="shadow-none"
+    >
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,11rem)_minmax(0,11rem)_auto_1fr] lg:items-end">
+        <div className="grid min-w-0 gap-1.5 text-xs font-medium text-muted-foreground">
+          <span>起始日期</span>
           <DatePicker
             aria-label="回填起始日期"
             value={parseDate(from)}
@@ -92,8 +100,11 @@ export function AnalyticsBackfillTool({ range }: AnalyticsBackfillToolProps) {
               const next = formatDateValue(value);
               if (next !== undefined) setFrom(next);
             }}
-            triggerClassName="h-8 min-w-[9.5rem] rounded-md"
+            triggerClassName="h-9 w-full rounded-lg"
           />
+        </div>
+        <div className="grid min-w-0 gap-1.5 text-xs font-medium text-muted-foreground">
+          <span>结束日期</span>
           <DatePicker
             aria-label="回填结束日期"
             value={parseDate(to)}
@@ -101,20 +112,19 @@ export function AnalyticsBackfillTool({ range }: AnalyticsBackfillToolProps) {
               const next = formatDateValue(value);
               if (next !== undefined) setTo(next);
             }}
-            triggerClassName="h-8 min-w-[9.5rem] rounded-md"
+            triggerClassName="h-9 w-full rounded-lg"
           />
-          <Button
-            type="button"
-            size="sm"
-            className="shrink-0"
-            isLoading={isSubmitting}
-            onPress={() => void handleSubmit().catch(() => undefined)}
-          >
-            执行回填
-          </Button>
         </div>
-
-        <div className="text-sm text-muted-foreground lg:min-w-48 lg:text-right">
+        <Button
+          type="button"
+          size="sm"
+          className="h-9 shrink-0 px-4"
+          isLoading={isSubmitting}
+          onPress={() => void handleSubmit().catch(() => undefined)}
+        >
+          执行回填
+        </Button>
+        <div className="min-h-5 text-xs leading-5 text-muted-foreground lg:text-right">
           {error ? (
             <span role="alert" className="text-destructive">
               {error}
@@ -125,13 +135,8 @@ export function AnalyticsBackfillTool({ range }: AnalyticsBackfillToolProps) {
               已完成 {result.days} 天：{result.from} 至 {result.to}
             </span>
           ) : null}
-          {!error && !result ? (
-            <span>
-              {normalizedRange.from} 至 {normalizedRange.to}
-            </span>
-          ) : null}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </AdminPanel>
   );
 }

@@ -1,9 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
 import type { AnalyticsDimension } from "@repo/api";
-import { Card, CardContent } from "@repo/ui";
+import { AdminPanel } from "../../../components/AdminPanel";
+import { AdminSegmentedControl } from "../../../components/AdminSegmentedControl";
 import { apiClient } from "../../../lib/api";
 import { useAnalyticsData } from "../hooks/use-analytics-data";
-import { SegToggle } from "../components/SegToggle";
 import { BarList, type BarListItem } from "../components/BarList";
 import type { AnalyticsDateRange } from "../hooks/use-analytics-range";
 
@@ -47,17 +47,18 @@ export function AudienceTab({ range }: AudienceTabProps) {
   }, [data, dim]);
 
   return (
-    <div className="grid gap-4">
-      <SegToggle options={DIMS} value={dim} onChange={setDim} />
-      <Card>
-        <CardContent className="pt-5">
-          {loading ? (
-            <div className="py-10 text-center text-sm text-muted-foreground">加载中…</div>
-          ) : (
-            <BarList items={items} />
-          )}
-        </CardContent>
-      </Card>
-    </div>
+    <AdminPanel
+      title="受众构成"
+      description="查看访问来源与终端环境分布"
+      action={
+        <AdminSegmentedControl ariaLabel="受众维度" options={DIMS} value={dim} onChange={setDim} />
+      }
+    >
+      {loading ? (
+        <div className="py-10 text-center text-sm text-muted-foreground">加载中…</div>
+      ) : (
+        <BarList items={items} />
+      )}
+    </AdminPanel>
   );
 }
