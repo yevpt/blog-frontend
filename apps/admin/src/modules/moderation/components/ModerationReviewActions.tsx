@@ -1,5 +1,6 @@
-import { Button, cn } from "@repo/ui";
+import { Button } from "@repo/ui";
 import type { ModerationContentType } from "@repo/api";
+import { adminDialogTextareaClassName } from "../../../components/AdminDialog";
 import { moderationContentMaxLength } from "../moderation-content";
 import { ModerationCorrectContentEditor } from "./ModerationCorrectContentEditor";
 
@@ -23,12 +24,6 @@ interface ModerationReviewActionsProps {
   onSubmit: () => void;
 }
 
-const textareaClass = cn(
-  "box-border min-h-32 w-full rounded-lg border border-border bg-background px-3 py-2",
-  "text-sm leading-6 text-foreground outline-none",
-  "placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring",
-);
-
 export function ModerationReviewActions(props: ModerationReviewActionsProps) {
   const modes: Array<{ id: ReviewMode; label: string }> = [
     ...(props.canReview
@@ -47,7 +42,7 @@ export function ModerationReviewActions(props: ModerationReviewActionsProps) {
     props.correctContent.length > moderationContentMaxLength(props.contentType);
 
   return (
-    <div className="shrink-0 border-t border-border/70 bg-card px-4 py-4 sm:px-5 max-md:pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div className="shrink-0 border-t border-border/70 bg-muted/15 px-4 py-4 sm:px-6 max-md:pb-[max(1rem,env(safe-area-inset-bottom))]">
       {modes.length > 0 ? (
         <div className="grid gap-1.5">
           <span className="text-xs font-medium text-muted-foreground">选择操作</span>
@@ -59,6 +54,11 @@ export function ModerationReviewActions(props: ModerationReviewActionsProps) {
                 variant={activeMode === item.id ? "default" : "outline"}
                 aria-pressed={activeMode === item.id}
                 isDisabled={props.isSaving}
+                className={
+                  activeMode === item.id && isDestructiveMode(item.id)
+                    ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    : undefined
+                }
                 onPress={() => props.onModeChange(item.id)}
               >
                 {item.label}
@@ -120,7 +120,11 @@ export function ModerationReviewActions(props: ModerationReviewActionsProps) {
             isLoading={props.isSaving}
             loadingText="提交中…"
             isDisabled={correctOverLimit}
-            className="w-full md:w-auto"
+            className={
+              isDestructiveMode(activeMode)
+                ? "w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 md:w-auto"
+                : "w-full md:w-auto"
+            }
           >
             {actionLabel(activeMode)}
           </Button>
@@ -128,6 +132,10 @@ export function ModerationReviewActions(props: ModerationReviewActionsProps) {
       </div>
     </div>
   );
+}
+
+function isDestructiveMode(mode: ReviewMode): boolean {
+  return mode === "reject" || mode === "hide";
 }
 
 function TextAreaField({
@@ -154,7 +162,7 @@ function TextAreaField({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className={textareaClass}
+        className={`${adminDialogTextareaClassName} min-h-28`}
       />
     </div>
   );

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { SvgIcon } from "@repo/icons";
 import { ButtonUtility, Modal, Tabs, TabsList, TabsItem, TabsPanels, TabsPanel } from "@repo/ui";
+import { AdminDialogFrame, AdminDialogHeader } from "../../../components/AdminDialog";
 import type { ModerationRow } from "../model";
 import { ModerationReviewActions, type ReviewMode } from "./ModerationReviewActions";
 import { ModerationReviewDetails } from "./ModerationReviewDetails";
@@ -75,39 +76,39 @@ export function ModerationReviewDialog(props: ModerationReviewDialogProps) {
       modalClassName="max-md:top-0 max-md:h-dvh max-md:max-h-dvh md:max-w-[min(calc(100vw-2rem),64rem)] md:w-full"
       dialogClassName="min-h-0 min-w-0 flex-1 overflow-x-hidden"
     >
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden">
-        <header className="shrink-0 border-b border-border/70 px-4 py-4 sm:px-5 max-md:pt-[max(1rem,env(safe-area-inset-top))]">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <h2 className="text-lg font-semibold text-foreground">
-                审核 #{item.itemId} · {item.contentTypeLabel}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                作者 ID：{item.authorId} · 提交版本 v{item.revisionVersion} · 创建 {item.createdAt}
-              </p>
-            </div>
+      <AdminDialogFrame>
+        <AdminDialogHeader
+          eyebrow="内容治理"
+          title={`审核 #${item.itemId} · ${item.contentTypeLabel}`}
+          description={`作者 ID：${item.authorId} · 提交版本 v${item.revisionVersion} · 创建 ${item.createdAt}`}
+          className="max-md:pt-[max(1rem,env(safe-area-inset-top))]"
+          action={
             <ButtonUtility
-              tooltip="关闭"
-              icon={<SvgIcon name="close" size={16} />}
+              tooltip="关闭审核详情"
+              color="tertiary"
+              icon={<SvgIcon name="close" />}
               isDisabled={props.isSaving}
               onClick={props.onClose}
-              className="shrink-0 md:hidden"
             />
-          </div>
-        </header>
+          }
+        />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <Tabs
             selectedKey={activeTab}
             onSelectionChange={(key) => setActiveTab(key as ModerationDetailsTab)}
             className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="shrink-0 border-b border-border/70 px-4 sm:px-5">
-              <TabsList aria-label="审核详情页签" className="border-b-0">
-                <TabsItem id="current">当前内容</TabsItem>
-                <TabsItem id="history">审计历史</TabsItem>
+            <div className="shrink-0 border-b border-border/70 px-4 sm:px-6">
+              <TabsList variant="underline" aria-label="审核详情页签" className="gap-5 border-b-0">
+                <TabsItem id="current" variant="underline">
+                  当前内容
+                </TabsItem>
+                <TabsItem id="history" variant="underline">
+                  审计历史
+                </TabsItem>
               </TabsList>
             </div>
-            <TabsPanels className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 py-5 sm:px-5">
+            <TabsPanels className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 py-5 sm:px-6 sm:py-6">
               <TabsPanel id="current" className="h-full">
                 <ModerationReviewDetails item={item} open={props.open} />
               </TabsPanel>
@@ -139,7 +140,7 @@ export function ModerationReviewDialog(props: ModerationReviewDialogProps) {
             onSubmit={() => void submit()}
           />
         )}
-      </div>
+      </AdminDialogFrame>
     </Modal>
   );
 }

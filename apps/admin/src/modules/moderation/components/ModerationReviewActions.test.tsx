@@ -48,4 +48,14 @@ describe("ModerationReviewActions", () => {
     expect(submitButton.className).toContain("w-full");
     expect(submitButton.className).toContain("md:w-auto");
   });
+
+  it("驳回和紧急隐藏使用危险操作色", () => {
+    const { rerender } = render(<ModerationReviewActions {...baseProps} mode="reject" />);
+
+    expect(screen.getByRole("button", { name: "驳回" })).toHaveClass("bg-destructive");
+    expect(screen.getByRole("button", { name: "确认驳回" })).toHaveClass("bg-destructive");
+
+    rerender(<ModerationReviewActions {...baseProps} mode="hide" canReview={false} canHide />);
+    expect(screen.getByRole("button", { name: "执行隐藏" })).toHaveClass("bg-destructive");
+  });
 });

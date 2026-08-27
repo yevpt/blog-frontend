@@ -1,16 +1,18 @@
-import { Button } from "@repo/ui";
 import { AdminConfirmPopover } from "../../../../components/AdminConfirmPopover";
+import { AdminRowAction } from "../../../../components/AdminRowAction";
 import type { RuleRow } from "../model";
 
 interface RuleToggleActiveButtonProps {
   row: RuleRow;
   isSubmitting: boolean;
+  className?: string;
   onConfirm: (row: RuleRow) => Promise<void>;
 }
 
 export function RuleToggleActiveButton({
   row,
   isSubmitting,
+  className,
   onConfirm,
 }: RuleToggleActiveButtonProps) {
   const action = row.active ? "停用" : "启用";
@@ -26,9 +28,14 @@ export function RuleToggleActiveButton({
       popoverClassName="w-72"
       onConfirm={() => onConfirm(row)}
     >
-      <Button type="button" size="sm" variant="ghost" onClick={(event) => event.stopPropagation()}>
+      <AdminRowAction
+        type="button"
+        tone={row.active ? "destructive" : "neutral"}
+        className={className}
+        onClick={(event) => event.stopPropagation()}
+      >
         {action}
-      </Button>
+      </AdminRowAction>
     </AdminConfirmPopover>
   );
 }

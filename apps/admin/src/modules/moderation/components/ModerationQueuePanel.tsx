@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { SvgIcon } from "@repo/icons";
 import {
   Badge,
-  Button,
+  Checkbox,
   DataTable,
   Pagination,
   type DataTableColumn,
@@ -11,6 +11,7 @@ import {
 } from "@repo/ui";
 import { AdminListCard } from "../../../components/AdminListCard";
 import { AdminListSummary } from "../../../components/AdminListSummary";
+import { AdminRowAction, AdminRowActions } from "../../../components/AdminRowAction";
 import { adminFlushDataTableClassNames } from "../../../lib/data-table-flush";
 import {
   canBatchReviewRow,
@@ -156,24 +157,24 @@ function useQueueColumns(
       {
         id: "select",
         header: (
-          <input
-            type="checkbox"
+          <Checkbox
+            slot="selection"
             aria-label="全选当前页可批量审核项"
-            checked={selection.allSelectableSelected ?? false}
-            disabled={selection.selectableCount === 0}
-            onChange={(event) => selection.onToggleSelectAll(event.target.checked)}
+            isSelected={selection.allSelectableSelected ?? false}
+            isDisabled={selection.selectableCount === 0}
+            onChange={selection.onToggleSelectAll}
           />
         ),
         minWidth: 44,
         cell: (row) => {
           const selectable = canBatchReviewRow(row);
           return (
-            <input
-              type="checkbox"
+            <Checkbox
+              slot="selection"
               aria-label={`选择审核项 ${row.itemId}`}
-              checked={selection.selectedRowIds.has(row.rowId)}
-              disabled={!selectable}
-              onChange={(event) => selection.onToggleSelect(row.rowId, event.target.checked)}
+              isSelected={selection.selectedRowIds.has(row.rowId)}
+              isDisabled={!selectable}
+              onChange={(checked) => selection.onToggleSelect(row.rowId, checked)}
             />
           );
         },
@@ -241,11 +242,14 @@ function useQueueColumns(
         id: "actions",
         header: "操作",
         minWidth: 88,
-        className: "text-center",
+        className: "text-right",
+        headerClassName: "text-right [&>div]:justify-end",
         cell: (row) => (
-          <Button size="sm" variant="outline" onPress={() => onReview(row)}>
-            审核
-          </Button>
+          <AdminRowActions>
+            <AdminRowAction type="button" onPress={() => onReview(row)}>
+              审核
+            </AdminRowAction>
+          </AdminRowActions>
         ),
       },
     ],
@@ -301,15 +305,13 @@ function ModerationMobileList({
               </span>
             </div>
             {canBatchReviewRow(row) ? (
-              <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
-                <input
-                  type="checkbox"
-                  aria-label={`选择审核项 ${row.itemId}`}
-                  checked={selection.selectedRowIds.has(row.rowId)}
-                  onChange={(event) => selection.onToggleSelect(row.rowId, event.target.checked)}
-                />
-                选择
-              </label>
+              <Checkbox
+                aria-label={`选择审核项 ${row.itemId}`}
+                label="选择"
+                isSelected={selection.selectedRowIds.has(row.rowId)}
+                onChange={(checked) => selection.onToggleSelect(row.rowId, checked)}
+                className="shrink-0 [&_p]:text-xs [&_p]:font-normal [&_p]:text-muted-foreground"
+              />
             ) : null}
           </div>
           <p className="mt-2 line-clamp-3 text-sm leading-6">{row.summary}</p>
@@ -317,9 +319,9 @@ function ModerationMobileList({
             <span className="text-xs text-muted-foreground">
               {row.policyLabel} · {row.createdAt}
             </span>
-            <Button size="sm" variant="outline" onPress={() => onReview(row)}>
+            <AdminRowAction className="h-8" type="button" onPress={() => onReview(row)}>
               审核
-            </Button>
+            </AdminRowAction>
           </div>
         </article>
       ))}

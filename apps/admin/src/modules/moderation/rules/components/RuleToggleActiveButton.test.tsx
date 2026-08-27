@@ -35,6 +35,7 @@ describe("RuleToggleActiveButton", () => {
     const user = userEvent.setup();
     render(<RuleToggleActiveButton row={row} isSubmitting={false} onConfirm={onConfirm} />);
 
+    expect(screen.getByRole("button", { name: "停用" })).toHaveClass("text-destructive/80");
     await user.click(screen.getByRole("button", { name: "停用" }));
     expect(screen.getByRole("dialog", { name: "确认停用规则 #12" })).toBeInTheDocument();
     expect(screen.getByText(/确定停用规则 #12/)).toBeInTheDocument();

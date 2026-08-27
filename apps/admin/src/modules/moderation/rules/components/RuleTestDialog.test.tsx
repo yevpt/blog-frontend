@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RuleTestDialog } from "./RuleTestDialog";
 import { apiClient } from "../../../../lib/api";
@@ -61,6 +61,14 @@ describe("RuleTestDialog", () => {
     });
     const user = userEvent.setup();
     render(<RuleTestDialog open status={readyCandidateStatus()} onClose={vi.fn()} />);
+    const dialog = screen.getByRole("dialog", { name: "审核规则文本试跑" });
+    expect(within(dialog).getByRole("heading", { name: "文本试跑" }).closest("header")).toHaveClass(
+      "px-4",
+      "sm:px-6",
+      "border-b",
+    );
+    expect(within(dialog).getByLabelText("测试文本")).toHaveClass("min-h-40", "shadow-xs");
+    expect(dialog.querySelector("footer")).toHaveClass("border-t", "bg-muted/15");
     await user.type(screen.getByLabelText("测试文本"), "测试内容");
     await user.click(screen.getByRole("button", { name: "开始测试" }));
     expect(await screen.findByText("还有命中未展示")).toBeInTheDocument();

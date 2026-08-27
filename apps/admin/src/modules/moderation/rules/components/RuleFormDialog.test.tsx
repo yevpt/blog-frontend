@@ -60,5 +60,10 @@ describe("RuleFormDialog", () => {
     await user.click(screen.getByRole("button", { name: "提交" }));
     await waitFor(() => expect(screen.getByText("请输入匹配内容")).toBeInTheDocument());
     expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText("规则维护")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "关闭规则表单" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "提交" }).closest("footer")).toHaveClass(
+      "bg-muted/15",
+    );
   });
 });

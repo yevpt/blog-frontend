@@ -54,10 +54,20 @@ export function ModerationPage() {
           activeTabRef.current = tab;
         }}
       >
-        <TabsList className="mb-4">
-          <TabsItem id="queue">审核队列</TabsItem>
-          <TabsItem id="control">全站控制</TabsItem>
-          <TabsItem id="rules">规则管理</TabsItem>
+        <TabsList
+          variant="underline"
+          aria-label="内容审核分类"
+          className="mb-4 w-full gap-6 border-border/70 px-1"
+        >
+          <TabsItem id="queue" variant="underline">
+            审核队列
+          </TabsItem>
+          <TabsItem id="control" variant="underline">
+            全站控制
+          </TabsItem>
+          <TabsItem id="rules" variant="underline">
+            规则管理
+          </TabsItem>
         </TabsList>
         <TabsPanels className="h-full min-h-0 flex-1 overflow-hidden">
           <TabsPanel id="queue" className="min-h-0 h-full flex flex-col overflow-hidden">

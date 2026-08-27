@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Button, Modal } from "@repo/ui";
+import { SvgIcon } from "@repo/icons";
+import { Button, ButtonUtility, Label, Modal, cn } from "@repo/ui";
+import {
+  AdminDialogBody,
+  AdminDialogFooter,
+  AdminDialogFrame,
+  AdminDialogHeader,
+  adminDialogTextareaClassName,
+} from "../../../components/AdminDialog";
 
 interface ModerationBatchRejectDialogProps {
   open: boolean;
@@ -45,39 +53,62 @@ export function ModerationBatchRejectDialog({
       size="md"
       aria-label="批量驳回"
     >
-      <div className="p-5">
-        <h2 className="text-lg font-semibold text-foreground">批量驳回</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          将为所选 {selectedCount} 条待审内容填写统一驳回理由。
-        </p>
-        <label className="mt-4 grid gap-1.5 text-sm">
-          <span className="font-medium text-foreground">驳回理由</span>
+      <AdminDialogFrame>
+        <AdminDialogHeader
+          eyebrow="批量审核"
+          title="批量驳回"
+          description={`将为所选 ${selectedCount} 条待审内容应用同一条驳回理由。`}
+          action={
+            <ButtonUtility
+              tooltip="关闭批量驳回"
+              color="tertiary"
+              icon={<SvgIcon name="close" />}
+              isDisabled={isSaving}
+              onClick={onClose}
+            />
+          }
+        />
+
+        <AdminDialogBody contentClassName="grid gap-2">
+          <div className="flex items-center justify-between gap-3">
+            <Label htmlFor="batch-reject-reason">驳回理由</Label>
+            <span className="text-xs tabular-nums text-muted-foreground">
+              {reason.length.toLocaleString()} 字
+            </span>
+          </div>
           <textarea
+            id="batch-reject-reason"
             aria-label="批量驳回理由"
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            className="min-h-28 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm leading-6 outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            placeholder="说明驳回原因，将应用于全部选中项"
+            className={cn(adminDialogTextareaClassName, "min-h-32")}
+            placeholder="清楚说明驳回原因；该内容会写入每条审核记录…"
           />
-        </label>
-        {validationError ? (
-          <p role="alert" className="mt-2 text-sm text-destructive">
-            {validationError}
-          </p>
-        ) : null}
-        <div className="mt-5 flex justify-end gap-2">
+          {validationError ? (
+            <p role="alert" className="text-sm text-destructive">
+              {validationError}
+            </p>
+          ) : (
+            <p className="text-xs leading-5 text-muted-foreground">
+              建议写明命中的规则或需要修改的内容，方便作者理解。
+            </p>
+          )}
+        </AdminDialogBody>
+
+        <AdminDialogFooter>
           <Button variant="outline" onPress={onClose} isDisabled={isSaving}>
             取消
           </Button>
           <Button
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90"
             onPress={() => void handleSubmit()}
-            isDisabled={isSaving}
+            isLoading={isSaving}
+            loadingText="提交中…"
           >
-            {isSaving ? "提交中…" : "确认驳回"}
+            确认驳回
           </Button>
-        </div>
-      </div>
+        </AdminDialogFooter>
+      </AdminDialogFrame>
     </Modal>
   );
 }

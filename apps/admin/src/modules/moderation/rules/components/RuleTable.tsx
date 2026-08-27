@@ -1,5 +1,6 @@
-import { Badge, Button, DataTable, type DataTableColumn } from "@repo/ui";
+import { Badge, Checkbox, DataTable, type DataTableColumn } from "@repo/ui";
 import { useMemo } from "react";
+import { AdminRowAction, AdminRowActions } from "../../../../components/AdminRowAction";
 import { adminFlushDataTableClassNames } from "../../../../lib/data-table-flush";
 import { riskLevelVariant } from "../../model";
 import type { RuleRow } from "../model";
@@ -35,20 +36,20 @@ export function RuleTable({
       {
         id: "select",
         header: (
-          <input
-            type="checkbox"
+          <Checkbox
+            slot="selection"
             aria-label="全选当前批"
-            checked={allSelected}
-            onChange={(event) => onToggleSelectAll(event.target.checked)}
+            isSelected={allSelected}
+            onChange={onToggleSelectAll}
           />
         ),
         minWidth: 44,
         cell: (row) => (
-          <input
-            type="checkbox"
+          <Checkbox
+            slot="selection"
             aria-label={`选择规则 ${row.id}`}
-            checked={selectedIds.has(row.id)}
-            onChange={(event) => onToggleSelect(row.id, event.target.checked)}
+            isSelected={selectedIds.has(row.id)}
+            onChange={(checked) => onToggleSelect(row.id, checked)}
           />
         ),
       },
@@ -113,18 +114,19 @@ export function RuleTable({
         id: "actions",
         header: "操作",
         minWidth: 140,
-        className: "text-center",
+        className: "text-right",
+        headerClassName: "text-right [&>div]:justify-end",
         cell: (row) => (
-          <div className="flex gap-2">
-            <Button type="button" size="sm" variant="outline" onPress={() => onEdit(row)}>
+          <AdminRowActions>
+            <AdminRowAction type="button" onPress={() => onEdit(row)}>
               修改
-            </Button>
+            </AdminRowAction>
             <RuleToggleActiveButton
               row={row}
               isSubmitting={isSubmitting && togglingRuleId === row.id}
               onConfirm={onConfirmToggleActive}
             />
-          </div>
+          </AdminRowActions>
         ),
       },
     ],

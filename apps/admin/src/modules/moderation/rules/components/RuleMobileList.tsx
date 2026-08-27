@@ -1,5 +1,6 @@
 import { SvgIcon } from "@repo/icons";
-import { Badge, Button } from "@repo/ui";
+import { Badge, Checkbox } from "@repo/ui";
+import { AdminRowAction, AdminRowActions } from "../../../../components/AdminRowAction";
 import { riskLevelVariant } from "../../model";
 import type { RuleRow } from "../model";
 import { RuleToggleActiveButton } from "./RuleToggleActiveButton";
@@ -52,30 +53,29 @@ export function RuleMobileList({
               {row.name ? <p className="mt-1 text-xs text-muted-foreground">{row.name}</p> : null}
               <p className="mt-2 break-all text-sm leading-6">{row.pattern}</p>
             </div>
-            <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
-              <input
-                type="checkbox"
-                aria-label={`选择规则 ${row.id}`}
-                checked={selectedIds.has(row.id)}
-                onChange={(event) => onToggleSelect(row.id, event.target.checked)}
-              />
-              选择
-            </label>
+            <Checkbox
+              aria-label={`选择规则 ${row.id}`}
+              label="选择"
+              isSelected={selectedIds.has(row.id)}
+              onChange={(checked) => onToggleSelect(row.id, checked)}
+              className="shrink-0 [&_p]:text-xs [&_p]:font-normal [&_p]:text-muted-foreground"
+            />
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
             {row.categoryLabel} · {row.sourceLabel} · {row.ruleTypeLabel} · {row.effectLabel} ·
             优先级 {row.priority}
           </p>
-          <div className="mt-3 flex justify-end gap-2">
-            <Button type="button" size="sm" variant="outline" onPress={() => onEdit(row)}>
+          <AdminRowActions className="mt-3 gap-1">
+            <AdminRowAction className="h-8" type="button" onPress={() => onEdit(row)}>
               修改
-            </Button>
+            </AdminRowAction>
             <RuleToggleActiveButton
+              className="h-8"
               row={row}
               isSubmitting={isSubmitting && togglingRuleId === row.id}
               onConfirm={onConfirmToggleActive}
             />
-          </div>
+          </AdminRowActions>
         </article>
       ))}
     </div>

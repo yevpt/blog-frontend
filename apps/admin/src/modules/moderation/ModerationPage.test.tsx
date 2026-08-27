@@ -257,6 +257,7 @@ describe("ModerationPage", () => {
     renderPage();
 
     expect(screen.getByRole("heading", { name: "内容审核" })).toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "内容审核分类" })).toHaveClass("border-b", "w-full");
     expect(screen.getByRole("tab", { name: "审核队列" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "全站控制" })).toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "用户治理" })).not.toBeInTheDocument();
@@ -265,6 +266,12 @@ describe("ModerationPage", () => {
     expect(
       within(screen.getByRole("grid", { name: "审核队列" })).getByText("碎语"),
     ).toBeInTheDocument();
+    const queue = screen.getByRole("grid", { name: "审核队列" });
+    expect(within(queue).getByRole("columnheader", { name: "操作" })).toHaveClass("text-right");
+    expect(within(queue).getAllByRole("button", { name: "审核" })[0]).toHaveClass(
+      "text-muted-foreground",
+      "h-7",
+    );
   });
 
   it("加载失败时展示错误提示", () => {
@@ -311,6 +318,7 @@ describe("ModerationPage", () => {
     await user.click(within(table).getAllByRole("button", { name: "审核" })[0]);
 
     const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByRole("tablist", { name: "审核详情页签" })).toHaveClass("border-b-0");
     expect(within(dialog).getByText("原始提交")).toBeInTheDocument();
     expect(within(dialog).getByText("新提交内容")).toBeInTheDocument();
     expect(within(dialog).getByText("当前公开版本")).toBeInTheDocument();

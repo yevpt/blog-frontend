@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import type { AdminModerationImportResp } from "@repo/api";
 import userEvent from "@testing-library/user-event";
 import { RuleImportDialog } from "./RuleImportDialog";
@@ -40,7 +40,11 @@ describe("RuleImportDialog", () => {
         onDownloadErrors={mockDownloadErrors}
       />,
     );
-    expect(screen.getByText("批量导入规则")).toBeInTheDocument();
+    const dialog = screen.getByRole("dialog", { name: "批量导入规则" });
+    expect(within(dialog).getByRole("heading", { name: "批量导入规则" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "选择文件" })).toBeInTheDocument();
+    expect(within(dialog).getByLabelText("规则文件")).toHaveClass("sr-only");
+    expect(dialog.querySelector("footer")).toHaveClass("border-t", "bg-muted/15");
     expect(screen.getByText("暂无导入历史")).toBeInTheDocument();
   });
 
