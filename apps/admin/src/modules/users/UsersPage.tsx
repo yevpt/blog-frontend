@@ -12,17 +12,14 @@ import {
 import { AdminListCard } from "../../components/AdminListCard";
 import { AdminListSummary } from "../../components/AdminListSummary";
 import { AdminPageHeader } from "../../components/AdminPageHeader";
+import { AdminRowAction, AdminRowActions } from "../../components/AdminRowAction";
 import { adminFlushDataTableClassNames } from "../../lib/data-table-flush";
 import { useIsMdScreen } from "../tags/hooks/use-is-md-screen";
 import { UserListToolbar } from "./components/UserListToolbar";
 import { UserDetailModal } from "./components/UserDetailModal";
 import { UserMobileList } from "./components/UserMobileList";
 import { useAdminUserList } from "./hooks/use-admin-user-list";
-import {
-  getAccountStatusBadge,
-  getSanctionBadge,
-  type UserRow,
-} from "./model";
+import { getAccountStatusBadge, getSanctionBadge, type UserRow } from "./model";
 
 export function UsersPage() {
   const {
@@ -122,18 +119,14 @@ export function UsersPage() {
         header: "操作",
         width: "16%",
         minWidth: 96,
-        className: "text-center",
-        headerClassName: "text-center [&>div]:justify-center",
+        className: "text-right",
+        headerClassName: "text-right [&>div]:justify-end",
         cell: (user) => (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-7 px-2 text-xs"
-            onPress={() => handleViewDetail(user)}
-          >
-            查看详情
-          </Button>
+          <AdminRowActions>
+            <AdminRowAction type="button" onPress={() => handleViewDetail(user)}>
+              查看详情
+            </AdminRowAction>
+          </AdminRowActions>
         ),
       },
     ],
@@ -163,11 +156,11 @@ export function UsersPage() {
         title="用户管理"
         description="查看注册用户状态、角色权限与内容治理情况。"
         action={
-          <div className="flex w-full gap-2 sm:w-auto">
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row">
             <Button
               size="sm"
               variant="ghost"
-              className="shrink-0"
+              className="w-full shrink-0 sm:w-auto"
               onPress={() => navigate("/users/tools")}
             >
               <SvgIcon name="image" size={15} />

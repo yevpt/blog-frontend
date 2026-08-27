@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { SvgIcon } from "@repo/icons";
 import { Button } from "@repo/ui";
-import { AdminListCard } from "../../components/AdminListCard";
 import { AdminPageHeader } from "../../components/AdminPageHeader";
 import { AllUsersAvatarTool } from "./components/AvatarNormalizeTool";
 
@@ -20,9 +19,7 @@ export function UserToolsPage() {
           </Button>
         }
       />
-      <AdminListCard className="p-4">
-        <AllUsersAvatarTool />
-      </AdminListCard>
+      <AllUsersAvatarTool />
     </div>
   );
 }

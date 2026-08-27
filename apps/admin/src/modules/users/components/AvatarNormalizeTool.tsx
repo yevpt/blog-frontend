@@ -1,7 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
 import { ApiError, type NormalizeAvatarItem, type NormalizeAvatarsResp } from "@repo/api";
 import { SvgIcon } from "@repo/icons";
-import { Button, Card, CardContent, Checkbox, Input } from "@repo/ui";
+import { Button, Checkbox, Input } from "@repo/ui";
+import { AdminPanel } from "../../../components/AdminPanel";
+import { AdminRowAction, AdminRowActions } from "../../../components/AdminRowAction";
 import { apiClient } from "../../../lib/api";
 import { addToast } from "../../../lib/toast";
 
@@ -204,130 +206,128 @@ export function AllUsersAvatarTool() {
   }, []);
 
   return (
-    <Card className="shrink-0">
-      <CardContent className="flex flex-col gap-4 py-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+    <AdminPanel
+      className="shrink-0"
+      title={
+        <span className="flex items-center gap-2">
+          <span className="grid size-7 place-items-center rounded-md bg-primary-soft text-primary ring-1 ring-inset ring-primary/10">
             <SvgIcon name="image" size={15} />
-            <span>头像归一化</span>
-          </div>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
-            检查本站托管头像是否符合 240px、20KB 规范；已合规的 JPG/PNG/WebP
-            原样保留，不合规则压缩为 WebP 并替换（含 GIF 转 WebP）。无法处理的文件会列出完整
-            key，可单独清除。
-          </p>
-        </div>
+          </span>
+          头像归一化
+        </span>
+      }
+      description="检查本站托管头像是否符合 240px、20KB 规范；已合规图片原样保留，不合规则压缩为 WebP 并替换，无法处理的文件可单独清除。"
+      contentClassName="flex flex-col gap-4"
+    >
+      <div className="flex flex-col gap-3 rounded-lg border border-border/70 bg-muted/15 p-3 lg:flex-row lg:items-end lg:justify-between">
+        <Input
+          label="用户 ID"
+          size="sm"
+          placeholder="留空则处理全部"
+          value={userId}
+          onChange={setUserId}
+          isDisabled={isBusy}
+          className="w-full lg:max-w-[10rem]"
+          inputClassName="h-8"
+        />
 
-        <div className="flex flex-col gap-3 rounded-lg border border-border/70 bg-muted/15 p-3 lg:flex-row lg:items-end lg:justify-between">
-          <Input
-            label="用户 ID"
+        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+          <Button
+            type="button"
             size="sm"
-            placeholder="留空则处理全部"
-            value={userId}
-            onChange={setUserId}
-            isDisabled={isBusy}
-            className="w-full lg:max-w-[10rem]"
-            inputClassName="h-8"
-          />
-
-          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              isLoading={submittingMode === "single"}
-              isDisabled={isBusy && submittingMode !== "single"}
-              onPress={() => void handleSubmit("single")}
-            >
-              处理该用户
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              isLoading={submittingMode === "all"}
-              isDisabled={isBusy && submittingMode !== "all"}
-              onPress={() => void handleSubmit("all")}
-            >
-              处理全部
-            </Button>
-          </div>
-
-          <Checkbox
-            isSelected={clearInvalid}
-            onChange={setClearInvalid}
-            isDisabled={isBusy}
-            label="无法处理时自动清除"
-            className="lg:pb-1"
-          />
+            variant="outline"
+            isLoading={submittingMode === "single"}
+            isDisabled={isBusy && submittingMode !== "single"}
+            onPress={() => void handleSubmit("single")}
+          >
+            处理该用户
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            isLoading={submittingMode === "all"}
+            isDisabled={isBusy && submittingMode !== "all"}
+            onPress={() => void handleSubmit("all")}
+          >
+            处理全部
+          </Button>
         </div>
 
-        <div className="text-sm text-muted-foreground">
-          {error ? (
-            <span role="alert" className="text-destructive">
-              {error}
-            </span>
-          ) : null}
-          {!error && result ? <span>{buildSummary(result)}</span> : null}
-          {!error && !result ? <span>一般只需执行一次「处理全部」。</span> : null}
-        </div>
+        <Checkbox
+          isSelected={clearInvalid}
+          onChange={setClearInvalid}
+          isDisabled={isBusy}
+          label="无法处理时自动清除"
+          className="lg:pb-1"
+        />
+      </div>
 
-        {actionableItems.length > 0 ? (
-          <div className="min-w-0">
-            <p className="mb-2 text-xs text-muted-foreground">
-              需关注 {actionableItems.length} 条（表格区域可滚动）
-            </p>
-            <div className="max-h-48 overflow-auto rounded-md border border-border">
-              <table className="min-w-full text-left text-sm">
-                <thead className="sticky top-0 z-10 bg-muted/90 text-xs text-muted-foreground backdrop-blur-sm">
-                  <tr>
-                    <th className="px-3 py-2 font-medium">用户</th>
-                    <th className="px-3 py-2 font-medium">状态</th>
-                    <th className="px-3 py-2 font-medium">文件</th>
-                    <th className="px-3 py-2 font-medium">说明</th>
-                    <th className="px-3 py-2 font-medium">操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {actionableItems.map((item) => (
-                    <tr key={item.user_id} className="border-t border-border">
-                      <td className="whitespace-nowrap px-3 py-2 tabular-nums">#{item.user_id}</td>
-                      <td className="whitespace-nowrap px-3 py-2">
-                        {STATUS_LABELS[item.status] ?? item.status}
-                      </td>
-                      <td
-                        className="max-w-[12rem] truncate px-3 py-2 font-mono text-xs text-foreground"
-                        title={item.old_key}
-                      >
-                        {item.old_key ?? "—"}
-                      </td>
-                      <td className="min-w-[10rem] px-3 py-2 text-muted-foreground">
-                        {item.message ?? (item.new_key ? `已替换为 ${item.new_key}` : "—")}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2">
-                        {item.status === "failed" ? (
-                          <Button
+      <div className="text-sm text-muted-foreground">
+        {error ? (
+          <span role="alert" className="text-destructive">
+            {error}
+          </span>
+        ) : null}
+        {!error && result ? <span>{buildSummary(result)}</span> : null}
+        {!error && !result ? <span>一般只需执行一次「处理全部」。</span> : null}
+      </div>
+
+      {actionableItems.length > 0 ? (
+        <div className="min-w-0">
+          <p className="mb-2 text-xs text-muted-foreground">
+            需关注 {actionableItems.length} 条（表格区域可滚动）
+          </p>
+          <div className="max-h-48 overflow-auto rounded-md border border-border">
+            <table className="min-w-full text-left text-sm">
+              <thead className="sticky top-0 z-10 bg-muted/90 text-xs text-muted-foreground backdrop-blur-sm">
+                <tr>
+                  <th className="px-3 py-2 font-medium">用户</th>
+                  <th className="px-3 py-2 font-medium">状态</th>
+                  <th className="px-3 py-2 font-medium">文件</th>
+                  <th className="px-3 py-2 font-medium">说明</th>
+                  <th className="px-3 py-2 text-right font-medium">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {actionableItems.map((item) => (
+                  <tr key={item.user_id} className="border-t border-border">
+                    <td className="whitespace-nowrap px-3 py-2 tabular-nums">#{item.user_id}</td>
+                    <td className="whitespace-nowrap px-3 py-2">
+                      {STATUS_LABELS[item.status] ?? item.status}
+                    </td>
+                    <td
+                      className="max-w-[12rem] truncate px-3 py-2 font-mono text-xs text-foreground"
+                      title={item.old_key}
+                    >
+                      {item.old_key ?? "—"}
+                    </td>
+                    <td className="min-w-[10rem] px-3 py-2 text-muted-foreground">
+                      {item.message ?? (item.new_key ? `已替换为 ${item.new_key}` : "—")}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2 text-right">
+                      {item.status === "failed" ? (
+                        <AdminRowActions>
+                          <AdminRowAction
                             type="button"
-                            size="sm"
-                            variant="outline"
-                            className="h-7 px-2 text-xs"
+                            tone="destructive"
                             isLoading={clearingUserId === item.user_id}
                             isDisabled={clearingUserId !== null && clearingUserId !== item.user_id}
                             onPress={() => void handleClearAvatar(item)}
                           >
                             清除头像
-                          </Button>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                          </AdminRowAction>
+                        </AdminRowActions>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ) : null}
-      </CardContent>
-    </Card>
+        </div>
+      ) : null}
+    </AdminPanel>
   );
 }

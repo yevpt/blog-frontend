@@ -56,8 +56,23 @@ describe("UserDetailModal", () => {
 
   it("加载成功后显示基本信息", async () => {
     render(<UserDetailModal userId={7} onClose={vi.fn()} />);
-    expect(await screen.findByText("用户名：vpt")).toBeInTheDocument();
-    expect(screen.getByText(/vpt@example.com/)).toBeInTheDocument();
+    expect(await screen.findByText("用户名")).toBeInTheDocument();
+    expect(screen.getAllByText("vpt").length).toBeGreaterThan(0);
+    expect(screen.getByText("vpt@example.com")).toBeInTheDocument();
+    expect(screen.getByText("已验证")).toBeInTheDocument();
+    expect(screen.getByRole("tablist", { name: "用户详情页签" })).toHaveClass("border-b");
+    expect(screen.getByText("用户档案 · #7")).toBeInTheDocument();
+    expect(screen.getByText("VPT").closest("header")).toHaveClass("sm:px-6", "bg-card/95");
+  });
+
+  it("可从页头关闭详情", async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    render(<UserDetailModal userId={7} onClose={onClose} />);
+
+    await user.click(await screen.findByRole("button", { name: "关闭用户详情" }));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("可授予 VIP 并通知列表刷新", async () => {

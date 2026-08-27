@@ -1,4 +1,5 @@
-import { Badge, Button, type DataTableEmptyState } from "@repo/ui";
+import { Badge, type DataTableEmptyState } from "@repo/ui";
+import { AdminRowAction } from "../../../components/AdminRowAction";
 import { getAccountStatusBadge, getSanctionBadge, type UserRow } from "../model";
 
 interface UserMobileListProps {
@@ -46,14 +47,9 @@ export function UserMobileList({
                 {user.mark ? ` · ${user.mark}` : ""}
               </p>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 shrink-0 px-2 text-xs"
-              onPress={() => onViewDetail(user)}
-            >
+            <AdminRowAction className="shrink-0" onPress={() => onViewDetail(user)}>
               查看详情
-            </Button>
+            </AdminRowAction>
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
@@ -66,9 +62,7 @@ export function UserMobileList({
             <Badge variant={getAccountStatusBadge(user).variant}>
               {getAccountStatusBadge(user).label}
             </Badge>
-            <Badge variant={getSanctionBadge(user).variant}>
-              {getSanctionBadge(user).label}
-            </Badge>
+            <Badge variant={getSanctionBadge(user).variant}>{getSanctionBadge(user).label}</Badge>
           </div>
 
           <p className="mt-3 text-xs text-muted-foreground">最近活跃：{user.lastActiveAt}</p>

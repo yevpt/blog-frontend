@@ -90,6 +90,9 @@ describe("UsersPage", () => {
     const region = screen.getByRole("region", { name: "用户列表" });
     expect(region).toHaveClass("min-w-0");
     expect(region.parentElement).toHaveClass("max-w-full");
+    const toolsButton = screen.getByRole("button", { name: "工具" });
+    expect(toolsButton.parentElement).toHaveClass("min-w-0", "flex-col", "sm:flex-row");
+    expect(toolsButton).toHaveClass("w-full", "sm:w-auto");
   });
 
   it("显示账号、内容列与工具入口，并移除常驻头像工具", () => {

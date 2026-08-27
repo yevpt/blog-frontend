@@ -63,8 +63,10 @@ describe("头像归一化工具", () => {
     await waitFor(() => {
       expect(apiClient.users.normalizeAvatars).toHaveBeenCalledWith({ clear_invalid: true });
     });
+    expect(screen.getByRole("heading", { name: "头像归一化" })).toBeInTheDocument();
     expect(screen.getByText("avatar/user/broken.bin")).toBeInTheDocument();
     expect(screen.getByText("avatar/user/broken.bin：无法解码为有效图片")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "清除头像" })).toHaveClass("text-destructive/80");
   });
 
   it("失败项可单独清除头像", async () => {
