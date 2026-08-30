@@ -1,6 +1,12 @@
+import { lazy } from "react";
 import type { AdminModule } from "../../config/module-types";
-import { UsersPage } from "./UsersPage";
-import { UserToolsPage } from "./UserToolsPage";
+
+const UsersPage = lazy(() =>
+  import("./UsersPage").then(({ UsersPage }) => ({ default: UsersPage })),
+);
+const UserToolsPage = lazy(() =>
+  import("./UserToolsPage").then(({ UserToolsPage }) => ({ default: UserToolsPage })),
+);
 
 export const usersModule: AdminModule = {
   id: "users",

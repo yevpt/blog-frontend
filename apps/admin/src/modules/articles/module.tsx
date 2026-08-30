@@ -1,7 +1,17 @@
+import { lazy } from "react";
 import type { AdminModule } from "../../config/module-types";
-import { ArticlesPage } from "./ArticlesPage";
-import { ArticleEditorPage } from "./ArticleEditorPage";
-import { PinnedArticlesPage } from "./PinnedArticlesPage";
+
+const ArticlesPage = lazy(() =>
+  import("./ArticlesPage").then(({ ArticlesPage }) => ({ default: ArticlesPage })),
+);
+const ArticleEditorPage = lazy(() =>
+  import("./ArticleEditorPage").then(({ ArticleEditorPage }) => ({ default: ArticleEditorPage })),
+);
+const PinnedArticlesPage = lazy(() =>
+  import("./PinnedArticlesPage").then(({ PinnedArticlesPage }) => ({
+    default: PinnedArticlesPage,
+  })),
+);
 
 export const articlesModule: AdminModule = {
   id: "articles",

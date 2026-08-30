@@ -1,5 +1,9 @@
+import { lazy } from "react";
 import type { AdminModule } from "../../config/module-types";
-import { AnalyticsPage } from "./AnalyticsPage";
+
+const AnalyticsPage = lazy(() =>
+  import("./AnalyticsPage").then(({ AnalyticsPage }) => ({ default: AnalyticsPage })),
+);
 
 export const analyticsModule: AdminModule = {
   id: "analytics",

@@ -1,5 +1,7 @@
+import { lazy } from "react";
 import type { AdminModule } from "../../config/module-types";
-import { TagsPage } from "./TagsPage";
+
+const TagsPage = lazy(() => import("./TagsPage").then(({ TagsPage }) => ({ default: TagsPage })));
 
 export const tagsModule: AdminModule = {
   id: "tags",

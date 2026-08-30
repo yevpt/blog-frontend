@@ -1,5 +1,9 @@
+import { lazy } from "react";
 import type { AdminModule } from "../../config/module-types";
-import { ModerationPage } from "./ModerationPage";
+
+const ModerationPage = lazy(() =>
+  import("./ModerationPage").then(({ ModerationPage }) => ({ default: ModerationPage })),
+);
 
 export const moderationModule: AdminModule = {
   id: "moderation",

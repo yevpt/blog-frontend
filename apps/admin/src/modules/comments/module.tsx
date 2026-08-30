@@ -1,5 +1,9 @@
+import { lazy } from "react";
 import type { AdminModule } from "../../config/module-types";
-import { CommentsPage } from "./CommentsPage";
+
+const CommentsPage = lazy(() =>
+  import("./CommentsPage").then(({ CommentsPage }) => ({ default: CommentsPage })),
+);
 
 export const commentsModule: AdminModule = {
   id: "comments",

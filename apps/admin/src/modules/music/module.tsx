@@ -1,5 +1,9 @@
+import { lazy } from "react";
 import type { AdminModule } from "../../config/module-types";
-import { MusicPage } from "./MusicPage";
+
+const MusicPage = lazy(() =>
+  import("./MusicPage").then(({ MusicPage }) => ({ default: MusicPage })),
+);
 
 export const musicModule: AdminModule = {
   id: "music",

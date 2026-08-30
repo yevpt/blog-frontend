@@ -1,5 +1,9 @@
+import { lazy } from "react";
 import type { AdminModule } from "../../config/module-types";
-import { LinksPage } from "./LinksPage";
+
+const LinksPage = lazy(() =>
+  import("./LinksPage").then(({ LinksPage }) => ({ default: LinksPage })),
+);
 
 export const linksModule: AdminModule = {
   id: "links",

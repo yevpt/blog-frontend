@@ -1,5 +1,9 @@
+import { lazy } from "react";
 import type { AdminModule } from "../../config/module-types";
-import { GuestbookPage } from "./GuestbookPage";
+
+const GuestbookPage = lazy(() =>
+  import("./GuestbookPage").then(({ GuestbookPage }) => ({ default: GuestbookPage })),
+);
 
 export const guestbookModule: AdminModule = {
   id: "guestbook",
