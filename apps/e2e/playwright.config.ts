@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
 const dir = dirname(fileURLToPath(import.meta.url));
-loadEnv({ path: resolve(dir, ".env") });
+loadEnv({ path: resolve(dir, ".env"), quiet: true });
 
 const backend = process.env.E2E_BACKEND_API ?? "http://localhost:8080";
 const webBaseURL = process.env.E2E_WEB_BASE_URL ?? "http://localhost:3000";

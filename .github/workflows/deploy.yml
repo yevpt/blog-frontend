@@ -42,7 +42,7 @@ jobs:
     steps:
       # 拉取仓库代码，Docker build 需要读取 Dockerfile、apps/web 和 workspace 依赖。
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # 提前检查镜像仓库相关变量/密钥，避免 build 到一半才因为空值失败。
       - name: Validate registry variables
@@ -55,11 +55,11 @@ jobs:
 
       # 启用 Docker Buildx，用于跨平台构建、缓存和推送镜像。
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # 登录容器镜像仓库，后续 docker/build-push-action 才能 push 镜像。
       - name: Login to Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY_HOST }}
           username: ${{ env.REGISTRY_USERNAME }}
@@ -67,7 +67,7 @@ jobs:
 
       # 使用 docker/web/Dockerfile 构建 Web 镜像，并推送 latest 与当前 commit sha 两个 tag。
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/web/Dockerfile
@@ -86,15 +86,15 @@ jobs:
     steps:
       # 拉取仓库代码，admin build 需要读取 apps/admin 和 workspace 依赖。
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # 安装 pnpm，版本来自仓库的 packageManager 配置。
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       # 安装 Node.js 24，并开启 pnpm 依赖缓存。
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm
@@ -118,7 +118,7 @@ jobs:
 
       # 上传 artifact，让 deploy job 可以下载同一份 admin-dist.tar.gz。
       - name: Upload admin artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: admin-dist
           path: admin-dist.tar.gz
@@ -153,11 +153,11 @@ jobs:
     steps:
       # 拉取仓库代码，deploy job 需要把 docker/web/docker-compose.yml 同步到远端。
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # 下载 admin-artifact job 上传的 admin-dist.tar.gz，准备 scp 到服务器。
       - name: Download admin artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: admin-dist
 
