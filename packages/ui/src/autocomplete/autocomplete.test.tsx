@@ -42,7 +42,8 @@ describe("Autocomplete", () => {
     expect(screen.queryByRole("menuitem", { name: "React" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("menuitem", { name: "TypeScript" }));
 
-    expect(onAction).toHaveBeenCalledWith("typescript");
+    expect(onAction).toHaveBeenCalledTimes(1);
+    expect(onAction.mock.calls[0]?.[0]).toBe("typescript");
   });
 
   it("无匹配项时展示 empty state", async () => {

@@ -286,7 +286,7 @@ function rehypeExternalLinks(rel: string) {
         if (node.tagName !== "a") return;
         const href = node.properties?.href;
         if (!isExternalHttpHref(href)) return;
-        node.properties = { ...node.properties, rel, target: "_blank" };
+        node.properties = { ...node.properties, rel: rel.split(" "), target: "_blank" };
       });
     };
   };

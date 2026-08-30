@@ -65,7 +65,8 @@ describe("Dropdown", () => {
     );
     await user.click(screen.getByRole("button", { name: "打开菜单" }));
     await user.click(await screen.findByText("选项一"));
-    expect(onAction).toHaveBeenCalledWith("action-1");
+    expect(onAction).toHaveBeenCalledTimes(1);
+    expect(onAction.mock.calls[0]?.[0]).toBe("action-1");
   });
 
   it("Dropdown.DotsButton 渲染三点图标", () => {
