@@ -78,11 +78,11 @@
 
 三个圆形图标，垂直排列，`bottom-6 right-6`，`z-50`：
 
-| 图标 | 功能 | 状态说明 |
-|------|------|---------|
-| 音乐（♪） | 背景音乐播放器 | 文章无音乐时隐藏；有音乐时展示，点击展开迷你播放器（曲名 + 进度 + 播放/暂停） |
-| 点赞（♥） | 文章点赞 | 未登录点击 → 唤起登录 Modal；已登录 → 调 `POST /api/articles/[id]/like`；已点赞态显示 filled 样式 |
-| 回顶（↑） | 滚动回顶 | 滚动超过 Hero 高度后出现（`opacity` 过渡） |
+| 图标      | 功能           | 状态说明                                                                                          |
+| --------- | -------------- | ------------------------------------------------------------------------------------------------- |
+| 音乐（♪） | 背景音乐播放器 | 文章无音乐时隐藏；有音乐时展示，点击展开迷你播放器（曲名 + 进度 + 播放/暂停）                     |
+| 点赞（♥） | 文章点赞       | 未登录点击 → 唤起登录 Modal；已登录 → 调 `POST /api/articles/[id]/like`；已点赞态显示 filled 样式 |
+| 回顶（↑） | 滚动回顶       | 滚动超过 Hero 高度后出现（`opacity` 过渡）                                                        |
 
 ### 2.5 背景音乐播放器
 
@@ -113,7 +113,7 @@ export interface ArticleDetailResp {
   id: number;
   title: string;
   cover_img_url?: string;
-  content: string;           // Markdown 原文（服务端渲染）
+  content: string; // Markdown 原文（服务端渲染）
   short_content?: string;
   user_id: number;
   status: number;
@@ -121,7 +121,7 @@ export interface ArticleDetailResp {
   read_count: number;
   like_count: number;
   comment_count: number;
-  is_liked?: boolean;        // 需登录态才有值
+  is_liked?: boolean; // 需登录态才有值
   is_recommended: boolean;
   music_url?: string;
   music_name?: string;
@@ -157,29 +157,29 @@ page.tsx (Server Component)
 
 ## 4. 新文件清单
 
-| 路径 | 类型 | 说明 |
-|------|------|------|
-| `apps/web/app/articles/[id]/page.tsx` | Server Component | 页面入口，SSR 数据获取 |
-| `apps/web/app/articles/[id]/page.test.tsx` | 测试 | 页面渲染测试 |
-| `apps/web/components/article-detail/article-hero.tsx` | Client/Server | Hero 封面区 |
-| `apps/web/components/article-detail/article-content.tsx` | Client Component | Markdown HTML 渲染 + 进度条 |
-| `apps/web/components/article-detail/article-toc.tsx` | Client Component | 目录（桌面 sticky / 移动折叠） |
-| `apps/web/components/article-detail/article-float-actions.tsx` | Client Component | 右下角浮动操作组 |
-| `apps/web/components/article-detail/music-player.tsx` | Client Component | 背景音乐迷你播放器 |
-| `apps/web/components/article-detail/index.ts` | 导出 | barrel export |
-| `apps/web/hooks/use-scroll-progress.ts` | Hook | 阅读进度 0~1 |
-| `apps/web/hooks/use-active-heading.ts` | Hook | TOC 当前章节追踪 |
-| `packages/api/src/types/article.ts` | 类型补充 | 新增 `ArticleDetailResp` |
-| `packages/api/src/client.ts` | 方法补充 | 新增 `getDetail` / `like` / `view` |
+| 路径                                                           | 类型             | 说明                               |
+| -------------------------------------------------------------- | ---------------- | ---------------------------------- |
+| `apps/web/app/articles/[id]/page.tsx`                          | Server Component | 页面入口，SSR 数据获取             |
+| `apps/web/app/articles/[id]/page.test.tsx`                     | 测试             | 页面渲染测试                       |
+| `apps/web/components/article-detail/article-hero.tsx`          | Client/Server    | Hero 封面区                        |
+| `apps/web/components/article-detail/article-content.tsx`       | Client Component | Markdown HTML 渲染 + 进度条        |
+| `apps/web/components/article-detail/article-toc.tsx`           | Client Component | 目录（桌面 sticky / 移动折叠）     |
+| `apps/web/components/article-detail/article-float-actions.tsx` | Client Component | 右下角浮动操作组                   |
+| `apps/web/components/article-detail/music-player.tsx`          | Client Component | 背景音乐迷你播放器                 |
+| `apps/web/components/article-detail/index.ts`                  | 导出             | barrel export                      |
+| `apps/web/hooks/use-scroll-progress.ts`                        | Hook             | 阅读进度 0~1                       |
+| `apps/web/hooks/use-active-heading.ts`                         | Hook             | TOC 当前章节追踪                   |
+| `packages/api/src/types/article.ts`                            | 类型补充         | 新增 `ArticleDetailResp`           |
+| `packages/api/src/client.ts`                                   | 方法补充         | 新增 `getDetail` / `like` / `view` |
 
 ---
 
 ## 5. 响应式行为
 
-| 断点 | 正文宽度 | TOC | 浮动操作 |
-|------|---------|-----|---------|
-| `< xl` (< 1280px) | 全宽 `px-5`，最大 720px | 顶部折叠手风琴 | 保留，`bottom-4 right-4` |
-| `xl` (≥ 1280px) | max-w-720px（1fr 列内居中） | sticky 右侧 200px 列 | 保留 |
+| 断点              | 正文宽度                    | TOC                  | 浮动操作                 |
+| ----------------- | --------------------------- | -------------------- | ------------------------ |
+| `< xl` (< 1280px) | 全宽 `px-5`，最大 720px     | 顶部折叠手风琴       | 保留，`bottom-4 right-4` |
+| `xl` (≥ 1280px)   | max-w-720px（1fr 列内居中） | sticky 右侧 200px 列 | 保留                     |
 
 ---
 

@@ -27,6 +27,7 @@
 ## File Structure
 
 New package `packages/tracker` (`@repo/tracker`):
+
 - `package.json` — package manifest, mirrors `@repo/hooks`.
 - `tsconfig.json` — extends `@repo/typescript-config/react`.
 - `vitest.config.ts` — `@vitejs/plugin-react`, `environment: "happy-dom"`, `name: "tracker"`.
@@ -42,6 +43,7 @@ New package `packages/tracker` (`@repo/tracker`):
 - `src/*.test.ts(x)` — colocated vitest tests per module.
 
 Web app changes:
+
 - Create `apps/web/app/api/collect/route.ts` — thin BFF proxy + `apps/web/app/api/collect/route.test.ts`.
 - Modify `apps/web/package.json` — add `"@repo/tracker": "workspace:*"`.
 - Modify `apps/web/next.config.mjs` — add `@repo/tracker` to `transpilePackages`.
@@ -52,6 +54,7 @@ Web app changes:
 ## Task 1: Scaffold `@repo/tracker` package + shared types
 
 **Files:**
+
 - Create: `packages/tracker/package.json`
 - Create: `packages/tracker/tsconfig.json`
 - Create: `packages/tracker/vitest.config.ts`
@@ -61,6 +64,7 @@ Web app changes:
 - Test: `packages/tracker/src/types.test.ts`
 
 **Interfaces:**
+
 - Produces: `AnalyticsEventType = "page_view" | "heartbeat"`; `CollectPayload` (snake_case fields); `TrackerOptions { endpoint?: string; heartbeatMs?: number; sessionTimeoutMs?: number }`. Later tasks import these from `./types`.
 
 - [ ] **Step 1: Create the package manifest**
@@ -232,11 +236,13 @@ git commit -m "feat(analytics): 新增 tracker 包骨架与上报类型"
 ## Task 2: Session id (sessionStorage, 30-min reset)
 
 **Files:**
+
 - Create: `packages/tracker/src/session.ts`
 - Test: `packages/tracker/src/session.test.ts`
 - Modify: `packages/tracker/src/index.ts`
 
 **Interfaces:**
+
 - Consumes: `TrackerOptions` (for `sessionTimeoutMs`).
 - Produces: `getSessionId(now?: number, timeoutMs?: number): string` — returns the current session id, creating a new one when none exists or when `now - lastActivity > timeoutMs`; always refreshes the stored last-activity timestamp; returns `""` when `sessionStorage` is unavailable (SSR).
 
@@ -346,6 +352,7 @@ git commit -m "feat(analytics): 新增 tracker 会话 id 管理"
 ## Task 3: Payload builder + transport
 
 **Files:**
+
 - Create: `packages/tracker/src/payload.ts`
 - Create: `packages/tracker/src/transport.ts`
 - Test: `packages/tracker/src/payload.test.ts`
@@ -353,6 +360,7 @@ git commit -m "feat(analytics): 新增 tracker 会话 id 管理"
 - Modify: `packages/tracker/src/index.ts`
 
 **Interfaces:**
+
 - Consumes: `AnalyticsEventType`, `CollectPayload`.
 - Produces:
   - `buildPayload(eventType: AnalyticsEventType, path: string, sessionId: string): CollectPayload` — fills `title`/`referer`/`screen` from `document`/`window`, SSR-safe (empty strings).
@@ -514,11 +522,13 @@ git commit -m "feat(analytics): 新增 tracker 载荷组装与上报传输"
 ## Task 4: Tracker controller (`createTracker`)
 
 **Files:**
+
 - Create: `packages/tracker/src/tracker.ts`
 - Test: `packages/tracker/src/tracker.test.ts`
 - Modify: `packages/tracker/src/index.ts`
 
 **Interfaces:**
+
 - Consumes: `CollectPayload`, `TrackerOptions`.
 - Produces:
   - `TrackerDeps` — injectable seam: `{ now(): number; send(p: CollectPayload): void; getSession(now: number): string; buildPayload(type, path, sid): CollectPayload; setInterval(cb, ms): number; clearInterval(id): void; isVisible(): boolean; onVisibilityChange(cb): () => void; onPageHide(cb): () => void }`.
@@ -802,12 +812,14 @@ git commit -m "feat(analytics): 新增 tracker 控制器（PV/心跳/可见性�
 ## Task 5: Browser deps + React `AnalyticsTracker` component
 
 **Files:**
+
 - Create: `packages/tracker/src/browser.ts`
 - Create: `packages/tracker/src/react.tsx`
 - Test: `packages/tracker/src/react.test.tsx`
 - Modify: `packages/tracker/src/index.ts`
 
 **Interfaces:**
+
 - Consumes: `createTracker`, `TrackerDeps`, `getSessionId`, `buildPayload`, `sendEvent`, `TrackerOptions`.
 - Produces:
   - `createBrowserTracker(options?: TrackerOptions): Tracker` — wires real browser deps (Date.now, sendEvent with endpoint, getSessionId with sessionTimeout, window.setInterval/clearInterval, `document.visibilityState`, `visibilitychange` + `pagehide` listeners).
@@ -975,10 +987,12 @@ git commit -m "feat(analytics): 新增 tracker 浏览器装配与 React 组件"
 ## Task 6: BFF proxy route `/api/collect`
 
 **Files:**
+
 - Create: `apps/web/app/api/collect/route.ts`
 - Test: `apps/web/app/api/collect/route.test.ts`
 
 **Interfaces:**
+
 - Consumes: `ACCESS_TOKEN_COOKIE` from `@/lib/auth-refresh`; `process.env.API_BASE_URL`.
 - Produces: `POST(req: NextRequest): Promise<NextResponse>` — a thin proxy that returns 204, converting the `access_token` cookie to `Authorization: Bearer` (anonymous omits it), forwarding `Cookie` / `Origin` / `X-Forwarded-For` / `X-Real-IP`, and relaying the backend's `Set-Cookie`.
 
@@ -1130,11 +1144,13 @@ git commit -m "feat(analytics): 新增 web BFF /api/collect 上报代理"
 ## Task 7: Wire `AnalyticsTracker` into the web app
 
 **Files:**
+
 - Modify: `apps/web/package.json` (add dependency)
 - Modify: `apps/web/next.config.mjs` (transpilePackages)
 - Modify: `apps/web/app/layout.tsx` (render the component)
 
 **Interfaces:**
+
 - Consumes: `AnalyticsTracker` from `@repo/tracker/react`.
 - Produces: live tracking on every web page; no new exported API.
 
@@ -1175,9 +1191,7 @@ And render it inside the body tree (it returns `null`, so position is not visual
 ```tsx
 <body>
   <AnalyticsTracker />
-  <ThemeProvider>
-    {/* ...existing tree... */}
-  </ThemeProvider>
+  <ThemeProvider>{/* ...existing tree... */}</ThemeProvider>
 </body>
 ```
 
@@ -1194,6 +1208,7 @@ Expected: all green.
 - [ ] **Step 5: Manual verification (record results in the report; cannot be unit-tested)**
 
 With the Go backend running locally (`API_BASE_URL=http://localhost:8080`, `ANALYTICS_ALLOWED_ORIGINS` empty or including `http://localhost:3000`) and the web app via `pnpm --filter web dev`:
+
 1. Open the site, watch the Network tab → exactly one `POST /api/collect` with `event_type:"page_view"` on first load (status 204).
 2. Navigate via an in-app `<Link>` → exactly one new `page_view` per destination; hovering links (prefetch) produces NO `page_view`.
 3. Idle on a visible page → a `heartbeat` roughly every 15s.
@@ -1212,6 +1227,7 @@ git commit -m "feat(analytics): web 前台接入 tracker 上报"
 ## Self-Review
 
 **Spec coverage (handoff §5):**
+
 - tracker SDK: PV on real navigation + visible, not on mount → Task 4 (dedup + visibility gate) + Task 5 (usePathname binding). ✔
 - heartbeat ~15s, stop on hidden, final beat on hidden/pagehide → Task 4. ✔
 - session_id in sessionStorage, 30-min new session, no user_id → Task 2 + Global Constraints. ✔

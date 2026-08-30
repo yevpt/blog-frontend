@@ -69,7 +69,13 @@
         background: var(--background);
         color: var(--foreground);
         font-family:
-          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
         -webkit-font-smoothing: antialiased;
       }
 
@@ -757,10 +763,21 @@
       <!-- 侧栏 -->
       <aside class="sidebar">
         <div class="sidebar-head">
-          <svg class="brand-logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <svg
+            class="brand-logo"
+            viewBox="0 0 512 512"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
             <g transform="translate(256, 256) rotate(-45)">
-              <path class="primary" d="M 20 -180 A 180 180 0 0 1 20 180 C -120 180 160 -180 20 -180 Z" />
-              <path class="secondary" d="M -20 180 A 180 180 0 0 1 -20 -180 C 120 -180 -160 180 -20 180 Z" />
+              <path
+                class="primary"
+                d="M 20 -180 A 180 180 0 0 1 20 180 C -120 180 160 -180 20 -180 Z"
+              />
+              <path
+                class="secondary"
+                d="M -20 180 A 180 180 0 0 1 -20 -180 C 120 -180 -160 180 -20 180 Z"
+              />
             </g>
           </svg>
           <div class="brand-text">
@@ -771,31 +788,51 @@
 
         <nav class="nav">
           <button class="nav-item active">
-            <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5" /><path d="M5 10v9h14v-9" /></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M3 11.5 12 4l9 7.5" />
+              <path d="M5 10v9h14v-9" />
+            </svg>
             概览
           </button>
 
           <div class="nav-group-label">内容</div>
           <button class="nav-item">
-            <svg viewBox="0 0 24 24"><path d="M5 19h14" /><path d="M14.5 4.5l4 4L8 19l-4.5 1 1-4.5Z" /></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 19h14" />
+              <path d="M14.5 4.5l4 4L8 19l-4.5 1 1-4.5Z" />
+            </svg>
             文章<span class="badge">128</span>
           </button>
           <button class="nav-item">
-            <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h6a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /></svg>
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M3 7a2 2 0 0 1 2-2h4l2 2.5h6a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"
+              />
+            </svg>
             分类<span class="badge">9</span>
           </button>
           <button class="nav-item">
-            <svg viewBox="0 0 24 24"><path d="M4 4h7l9 9-7 7-9-9Z" /><circle cx="8.5" cy="8.5" r="1.5" /></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M4 4h7l9 9-7 7-9-9Z" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+            </svg>
             标签<span class="badge">42</span>
           </button>
 
           <div class="nav-group-label">站点</div>
           <button class="nav-item">
-            <svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="17" cy="16" r="3" /></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M9 18V5l11-2v13" />
+              <circle cx="6" cy="18" r="3" />
+              <circle cx="17" cy="16" r="3" />
+            </svg>
             音乐<span class="badge">23</span>
           </button>
           <button class="nav-item">
-            <svg viewBox="0 0 24 24"><path d="M10 13a4 4 0 0 0 5.66 0l3-3A4 4 0 1 0 13 4.34l-1.5 1.5" /><path d="M14 11a4 4 0 0 0-5.66 0l-3 3A4 4 0 1 0 11 19.66l1.5-1.5" /></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M10 13a4 4 0 0 0 5.66 0l3-3A4 4 0 1 0 13 4.34l-1.5 1.5" />
+              <path d="M14 11a4 4 0 0 0-5.66 0l-3 3A4 4 0 1 0 11 19.66l1.5-1.5" />
+            </svg>
             友链<span class="badge">16</span>
           </button>
         </nav>
@@ -807,17 +844,24 @@
           </button>
 
           <div class="user-area">
-            <div class="menu user-menu" id="userMenu" style="display: none;">
+            <div class="menu user-menu" id="userMenu" style="display: none">
               <div class="menu-head">
                 <div class="menu-name">Yevpt</div>
                 <div class="menu-mail">admin@yevpt.com</div>
               </div>
               <button class="menu-item">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 4-6 8-6s8 2 8 6" /></svg>
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+                </svg>
                 个人设置
               </button>
               <button class="menu-item danger">
-                <svg viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" /><path d="M10 17l-5-5 5-5" /><path d="M5 12h12" /></svg>
+                <svg viewBox="0 0 24 24">
+                  <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
+                  <path d="M10 17l-5-5 5-5" />
+                  <path d="M5 12h12" />
+                </svg>
                 退出登录
               </button>
             </div>
@@ -828,7 +872,12 @@
                 <b>Yevpt</b>
                 <span>admin@yevpt.com</span>
               </span>
-              <span class="more"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4" /><circle cx="12" cy="12" r="1.4" /><circle cx="12" cy="19" r="1.4" /></svg></span>
+              <span class="more"
+                ><svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="5" r="1.4" />
+                  <circle cx="12" cy="12" r="1.4" />
+                  <circle cx="12" cy="19" r="1.4" /></svg
+              ></span>
             </button>
           </div>
         </div>
@@ -838,7 +887,11 @@
       <div class="main">
         <header class="topbar">
           <button class="icon-btn hamburger" id="hamburger" aria-label="打开菜单">
-            <svg viewBox="0 0 24 24"><path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" /></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M4 6h16" />
+              <path d="M4 12h16" />
+              <path d="M4 18h16" />
+            </svg>
           </button>
           <span class="page-title">概览</span>
           <div class="topbar-spacer"></div>
@@ -846,8 +899,14 @@
           <button class="icon-btn" id="themeToggle" aria-label="切换主题">
             <svg class="theme-sun" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="4" />
-              <path d="M12 2.5v2" /><path d="M12 19.5v2" /><path d="M4.5 4.5l1.4 1.4" /><path d="M18.1 18.1l1.4 1.4" />
-              <path d="M2.5 12h2" /><path d="M19.5 12h2" /><path d="M4.5 19.5l1.4-1.4" /><path d="M18.1 5.9l1.4-1.4" />
+              <path d="M12 2.5v2" />
+              <path d="M12 19.5v2" />
+              <path d="M4.5 4.5l1.4 1.4" />
+              <path d="M18.1 18.1l1.4 1.4" />
+              <path d="M2.5 12h2" />
+              <path d="M19.5 12h2" />
+              <path d="M4.5 19.5l1.4-1.4" />
+              <path d="M18.1 5.9l1.4-1.4" />
             </svg>
             <svg class="theme-moon" viewBox="0 0 24 24">
               <path d="M20.2 14.5A7.8 7.8 0 0 1 9.5 3.8 8.7 8.7 0 1 0 20.2 14.5Z" />
@@ -862,7 +921,10 @@
               <p>这是你的博客后台概览，今天也辛苦啦。</p>
             </div>
             <button class="btn-primary">
-              <svg viewBox="0 0 24 24"><path d="M12 5v14" /><path d="M5 12h14" /></svg>
+              <svg viewBox="0 0 24 24">
+                <path d="M12 5v14" />
+                <path d="M5 12h14" />
+              </svg>
               写文章
             </button>
           </div>
@@ -871,7 +933,11 @@
           <section class="stats">
             <div class="stat">
               <div class="stat-top">
-                <span class="stat-icon"><svg viewBox="0 0 24 24"><path d="M5 19h14" /><path d="M14.5 4.5l4 4L8 19l-4.5 1 1-4.5Z" /></svg></span>
+                <span class="stat-icon"
+                  ><svg viewBox="0 0 24 24">
+                    <path d="M5 19h14" />
+                    <path d="M14.5 4.5l4 4L8 19l-4.5 1 1-4.5Z" /></svg
+                ></span>
                 <span class="stat-trend">+6 本周</span>
               </div>
               <div class="stat-num">128</div>
@@ -879,21 +945,35 @@
             </div>
             <div class="stat">
               <div class="stat-top">
-                <span class="stat-icon"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h6a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /></svg></span>
+                <span class="stat-icon"
+                  ><svg viewBox="0 0 24 24">
+                    <path
+                      d="M3 7a2 2 0 0 1 2-2h4l2 2.5h6a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"
+                    /></svg
+                ></span>
               </div>
               <div class="stat-num">9</div>
               <div class="stat-label">分类</div>
             </div>
             <div class="stat">
               <div class="stat-top">
-                <span class="stat-icon"><svg viewBox="0 0 24 24"><path d="M4 4h7l9 9-7 7-9-9Z" /><circle cx="8.5" cy="8.5" r="1.5" /></svg></span>
+                <span class="stat-icon"
+                  ><svg viewBox="0 0 24 24">
+                    <path d="M4 4h7l9 9-7 7-9-9Z" />
+                    <circle cx="8.5" cy="8.5" r="1.5" /></svg
+                ></span>
               </div>
               <div class="stat-num">42</div>
               <div class="stat-label">标签</div>
             </div>
             <div class="stat">
               <div class="stat-top">
-                <span class="stat-icon"><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="17" cy="16" r="3" /></svg></span>
+                <span class="stat-icon"
+                  ><svg viewBox="0 0 24 24">
+                    <path d="M9 18V5l11-2v13" />
+                    <circle cx="6" cy="18" r="3" />
+                    <circle cx="17" cy="16" r="3" /></svg
+                ></span>
                 <span class="stat-trend">+2 本周</span>
               </div>
               <div class="stat-num">23</div>
@@ -911,7 +991,12 @@
               <div class="table-wrap">
                 <table>
                   <thead>
-                    <tr><th>标题</th><th>状态</th><th>分类</th><th>更新时间</th></tr>
+                    <tr>
+                      <th>标题</th>
+                      <th>状态</th>
+                      <th>分类</th>
+                      <th>更新时间</th>
+                    </tr>
                   </thead>
                   <tbody>
                     <tr>
@@ -947,24 +1032,50 @@
               <div class="card-head"><span class="card-title">快捷入口</span></div>
               <div class="quick">
                 <button class="quick-item">
-                  <span class="quick-ic"><svg viewBox="0 0 24 24"><path d="M5 19h14" /><path d="M14.5 4.5l4 4L8 19l-4.5 1 1-4.5Z" /></svg></span>
+                  <span class="quick-ic"
+                    ><svg viewBox="0 0 24 24">
+                      <path d="M5 19h14" />
+                      <path d="M14.5 4.5l4 4L8 19l-4.5 1 1-4.5Z" /></svg
+                  ></span>
                   <span class="quick-tx"><b>文章管理</b><span>撰写、编辑与发布</span></span>
-                  <span class="quick-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg></span>
+                  <span class="quick-arrow"
+                    ><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg
+                  ></span>
                 </button>
                 <button class="quick-item">
-                  <span class="quick-ic"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h6a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /></svg></span>
+                  <span class="quick-ic"
+                    ><svg viewBox="0 0 24 24">
+                      <path
+                        d="M3 7a2 2 0 0 1 2-2h4l2 2.5h6a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"
+                      /></svg
+                  ></span>
                   <span class="quick-tx"><b>分类与标签</b><span>整理内容结构</span></span>
-                  <span class="quick-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg></span>
+                  <span class="quick-arrow"
+                    ><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg
+                  ></span>
                 </button>
                 <button class="quick-item">
-                  <span class="quick-ic"><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="17" cy="16" r="3" /></svg></span>
+                  <span class="quick-ic"
+                    ><svg viewBox="0 0 24 24">
+                      <path d="M9 18V5l11-2v13" />
+                      <circle cx="6" cy="18" r="3" />
+                      <circle cx="17" cy="16" r="3" /></svg
+                  ></span>
                   <span class="quick-tx"><b>音乐</b><span>管理播放列表</span></span>
-                  <span class="quick-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg></span>
+                  <span class="quick-arrow"
+                    ><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg
+                  ></span>
                 </button>
                 <button class="quick-item">
-                  <span class="quick-ic"><svg viewBox="0 0 24 24"><path d="M10 13a4 4 0 0 0 5.66 0l3-3A4 4 0 1 0 13 4.34l-1.5 1.5" /><path d="M14 11a4 4 0 0 0-5.66 0l-3 3A4 4 0 1 0 11 19.66l1.5-1.5" /></svg></span>
+                  <span class="quick-ic"
+                    ><svg viewBox="0 0 24 24">
+                      <path d="M10 13a4 4 0 0 0 5.66 0l3-3A4 4 0 1 0 13 4.34l-1.5 1.5" />
+                      <path d="M14 11a4 4 0 0 0-5.66 0l-3 3A4 4 0 1 0 11 19.66l1.5-1.5" /></svg
+                  ></span>
                   <span class="quick-tx"><b>友链</b><span>审核与维护</span></span>
-                  <span class="quick-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg></span>
+                  <span class="quick-arrow"
+                    ><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg
+                  ></span>
                 </button>
               </div>
             </div>
@@ -982,8 +1093,12 @@
       });
 
       const body = document.body;
-      document.getElementById("hamburger").addEventListener("click", () => body.classList.add("nav-open"));
-      document.getElementById("scrim").addEventListener("click", () => body.classList.remove("nav-open"));
+      document
+        .getElementById("hamburger")
+        .addEventListener("click", () => body.classList.add("nav-open"));
+      document
+        .getElementById("scrim")
+        .addEventListener("click", () => body.classList.remove("nav-open"));
 
       const menu = document.getElementById("userMenu");
       document.getElementById("avatarBtn").addEventListener("click", (e) => {

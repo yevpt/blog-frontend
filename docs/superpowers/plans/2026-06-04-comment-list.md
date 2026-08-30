@@ -12,40 +12,41 @@
 
 ## 文件结构
 
-| 动作 | 路径 | 职责 |
-|------|------|------|
-| Create | `packages/api/src/types/comment.ts` | 对应后端 DTO 的 TS 类型 |
-| Modify | `packages/api/src/client.ts` | 新增 comments 方法组 |
-| Modify | `packages/api/src/index.ts` | 导出 comment 类型 |
-| Create | `apps/web/app/api/comments/route.ts` | GET（列表）+ POST（新建）代理 |
-| Create | `apps/web/app/api/comments/route.test.ts` | 路由测试 |
-| Create | `apps/web/app/api/comments/[id]/replies/route.ts` | POST（回复）代理 |
-| Create | `apps/web/app/api/comments/[id]/replies/route.test.ts` | 路由测试 |
-| Create | `apps/web/store/use-login-modal.ts` | 全局登录弹窗 Zustand store |
-| Create | `apps/web/components/auth/login-modal.tsx` | 占位登录弹窗 |
-| Create | `apps/web/app/providers/global-modals.tsx` | 把 LoginModal 挂到客户端树 |
-| Modify | `apps/web/app/layout.tsx` | 渲染 GlobalModals |
-| Create | `apps/web/hooks/use-comment-list.ts` | 列表取数 + 分页 + 本地追加 |
-| Create | `apps/web/hooks/use-comment-list.test.ts` | Hook 测试 |
-| Create | `apps/web/hooks/use-comment-submit.ts` | 发布评论 + 回复 |
-| Create | `apps/web/hooks/use-comment-submit.test.ts` | Hook 测试 |
-| Modify | `apps/web/components/comments/comment-item.tsx` | 接受 CommentItemResp，支持 onReply |
-| Create | `apps/web/components/comments/comment-item.test.tsx` | 组件测试 |
-| Modify | `apps/web/components/comments/comment-input.tsx` | 登录门控，受控输入，回复上下文 |
-| Modify | `apps/web/components/comments/comment-input.test.tsx` | 补充测试（新建） |
-| Create | `apps/web/components/comments/comment-section.tsx` | 核心可复用评论区 |
-| Create | `apps/web/components/comments/comment-section.test.tsx` | 组件测试 |
-| Modify | `apps/web/components/comments/comment-modal.tsx` | thin wrapper |
-| Modify | `apps/web/components/comments/comment-modal.test.tsx` | 更新测试 |
-| Modify | `apps/web/components/comments/index.ts` | 导出 CommentSection |
-| Modify | `apps/web/components/articles/article-section.tsx` | ActiveComment 加 articleId |
-| Modify | `apps/web/components/articles/article-section.test.tsx` | 更新测试断言 |
+| 动作   | 路径                                                    | 职责                               |
+| ------ | ------------------------------------------------------- | ---------------------------------- |
+| Create | `packages/api/src/types/comment.ts`                     | 对应后端 DTO 的 TS 类型            |
+| Modify | `packages/api/src/client.ts`                            | 新增 comments 方法组               |
+| Modify | `packages/api/src/index.ts`                             | 导出 comment 类型                  |
+| Create | `apps/web/app/api/comments/route.ts`                    | GET（列表）+ POST（新建）代理      |
+| Create | `apps/web/app/api/comments/route.test.ts`               | 路由测试                           |
+| Create | `apps/web/app/api/comments/[id]/replies/route.ts`       | POST（回复）代理                   |
+| Create | `apps/web/app/api/comments/[id]/replies/route.test.ts`  | 路由测试                           |
+| Create | `apps/web/store/use-login-modal.ts`                     | 全局登录弹窗 Zustand store         |
+| Create | `apps/web/components/auth/login-modal.tsx`              | 占位登录弹窗                       |
+| Create | `apps/web/app/providers/global-modals.tsx`              | 把 LoginModal 挂到客户端树         |
+| Modify | `apps/web/app/layout.tsx`                               | 渲染 GlobalModals                  |
+| Create | `apps/web/hooks/use-comment-list.ts`                    | 列表取数 + 分页 + 本地追加         |
+| Create | `apps/web/hooks/use-comment-list.test.ts`               | Hook 测试                          |
+| Create | `apps/web/hooks/use-comment-submit.ts`                  | 发布评论 + 回复                    |
+| Create | `apps/web/hooks/use-comment-submit.test.ts`             | Hook 测试                          |
+| Modify | `apps/web/components/comments/comment-item.tsx`         | 接受 CommentItemResp，支持 onReply |
+| Create | `apps/web/components/comments/comment-item.test.tsx`    | 组件测试                           |
+| Modify | `apps/web/components/comments/comment-input.tsx`        | 登录门控，受控输入，回复上下文     |
+| Modify | `apps/web/components/comments/comment-input.test.tsx`   | 补充测试（新建）                   |
+| Create | `apps/web/components/comments/comment-section.tsx`      | 核心可复用评论区                   |
+| Create | `apps/web/components/comments/comment-section.test.tsx` | 组件测试                           |
+| Modify | `apps/web/components/comments/comment-modal.tsx`        | thin wrapper                       |
+| Modify | `apps/web/components/comments/comment-modal.test.tsx`   | 更新测试                           |
+| Modify | `apps/web/components/comments/index.ts`                 | 导出 CommentSection                |
+| Modify | `apps/web/components/articles/article-section.tsx`      | ActiveComment 加 articleId         |
+| Modify | `apps/web/components/articles/article-section.test.tsx` | 更新测试断言                       |
 
 ---
 
 ## Task 1: Comment TypeScript 类型
 
 **Files:**
+
 - Create: `packages/api/src/types/comment.ts`
 - Modify: `packages/api/src/index.ts`
 
@@ -153,6 +154,7 @@ git commit -m "feat(api): 新增评论相关 TypeScript 类型"
 ## Task 2: API Client 新增 comments 方法组
 
 **Files:**
+
 - Modify: `packages/api/src/client.ts`
 - Test: `packages/api/src/client.test.ts`
 
@@ -187,7 +189,16 @@ describe("comments", () => {
       mockResponse({
         code: 0,
         message: "ok",
-        data: { id: 1, target_type: "article", target_id: 5, user_id: 1, content: "hi", replies: [], created_at: "", updated_at: "" },
+        data: {
+          id: 1,
+          target_type: "article",
+          target_id: 5,
+          user_id: 1,
+          content: "hi",
+          replies: [],
+          created_at: "",
+          updated_at: "",
+        },
       }),
     );
     const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => "token123" });
@@ -210,9 +221,15 @@ describe("comments", () => {
         code: 0,
         message: "ok",
         data: {
-          id: 2, target_type: "article", comment_id: 1, from_user_id: 2,
-          to_user_id: 1, parent_reply_id: 0, content: "ok",
-          created_at: "", updated_at: "",
+          id: 2,
+          target_type: "article",
+          comment_id: 1,
+          from_user_id: 2,
+          to_user_id: 1,
+          parent_reply_id: 0,
+          content: "ok",
+          created_at: "",
+          updated_at: "",
         },
       }),
     );
@@ -299,6 +316,7 @@ git commit -m "feat(api): 新增 comments 方法组（listPublic / create / repl
 ## Task 3: GET + POST /api/comments 代理路由
 
 **Files:**
+
 - Create: `apps/web/app/api/comments/route.ts`
 - Create: `apps/web/app/api/comments/route.test.ts`
 
@@ -344,9 +362,7 @@ describe("/api/comments", () => {
         json: () => Promise.resolve({ code: 400, message: "目标不存在" }),
       } as Response);
 
-      const req = new NextRequest(
-        "http://localhost/api/comments?target_type=article&target_id=0",
-      );
+      const req = new NextRequest("http://localhost/api/comments?target_type=article&target_id=0");
       const res = await GET(req);
 
       expect(res.status).toBe(400);
@@ -356,8 +372,15 @@ describe("/api/comments", () => {
   describe("POST", () => {
     it("转发 access_token cookie 并返回新评论", async () => {
       const newComment = {
-        id: 1, target_type: "article", target_id: 5, user_id: 1,
-        content: "写得好", user: null, replies: [], created_at: "", updated_at: "",
+        id: 1,
+        target_type: "article",
+        target_id: 5,
+        user_id: 1,
+        content: "写得好",
+        user: null,
+        replies: [],
+        created_at: "",
+        updated_at: "",
       };
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
@@ -477,6 +500,7 @@ git commit -m "feat(web): 新增 /api/comments 代理路由（GET 列表 + POST 
 ## Task 4: POST /api/comments/[id]/replies 代理路由
 
 **Files:**
+
 - Create: `apps/web/app/api/comments/[id]/replies/route.ts`
 - Create: `apps/web/app/api/comments/[id]/replies/route.test.ts`
 
@@ -497,9 +521,15 @@ describe("POST /api/comments/[id]/replies", () => {
 
   it("转发到 /comments/{id}/replies 并返回回复数据", async () => {
     const newReply = {
-      id: 3, target_type: "article", comment_id: 1, from_user_id: 2,
-      to_user_id: 1, parent_reply_id: 0, content: "回复内容",
-      created_at: "", updated_at: "",
+      id: 3,
+      target_type: "article",
+      comment_id: 1,
+      from_user_id: 2,
+      to_user_id: 1,
+      parent_reply_id: 0,
+      content: "回复内容",
+      created_at: "",
+      updated_at: "",
     };
     vi.mocked(global.fetch).mockResolvedValue({
       ok: true,
@@ -567,10 +597,7 @@ Expected: FAIL（文件不存在）。
 // apps/web/app/api/comments/[id]/replies/route.ts
 import { type NextRequest, NextResponse } from "next/server";
 
-export async function POST(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> },
-) {
+export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
     const commentId = Number(id);
@@ -621,6 +648,7 @@ git commit -m "feat(web): 新增 /api/comments/[id]/replies 代理路由"
 ## Task 5: useLoginModal store + LoginModal + GlobalModals
 
 **Files:**
+
 - Create: `apps/web/store/use-login-modal.ts`
 - Create: `apps/web/components/auth/login-modal.tsx`
 - Create: `apps/web/app/providers/global-modals.tsx`
@@ -742,6 +770,7 @@ git commit -m "feat(web): 新增 useLoginModal store、占位 LoginModal 及 Glo
 ## Task 6: useCommentList Hook
 
 **Files:**
+
 - Create: `apps/web/hooks/use-comment-list.ts`
 - Create: `apps/web/hooks/use-comment-list.test.ts`
 
@@ -831,7 +860,9 @@ describe("useCommentList", () => {
     const { result } = renderHook(() => useCommentList("article", 1));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    act(() => { result.current.loadMore(); });
+    act(() => {
+      result.current.loadMore();
+    });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.comments).toHaveLength(2);
@@ -849,7 +880,9 @@ describe("useCommentList", () => {
     const { result } = renderHook(() => useCommentList("article", 1));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    act(() => { result.current.addComment(makeComment(99)); });
+    act(() => {
+      result.current.addComment(makeComment(99));
+    });
 
     expect(result.current.comments).toHaveLength(2);
     expect(result.current.comments[1].id).toBe(99);
@@ -864,7 +897,9 @@ describe("useCommentList", () => {
     const { result } = renderHook(() => useCommentList("article", 1));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    act(() => { result.current.addReply(1, makeReply(10, 1)); });
+    act(() => {
+      result.current.addReply(1, makeReply(10, 1));
+    });
 
     expect(result.current.comments[0].replies).toHaveLength(1);
     expect(result.current.comments[0].replies[0].id).toBe(10);
@@ -955,9 +990,7 @@ export function useCommentList(targetType: string, targetId: number) {
 
   const addReply = useCallback((commentId: number, reply: CommentReplyResp) => {
     setComments((prev) =>
-      prev.map((c) =>
-        c.id === commentId ? { ...c, replies: [...c.replies, reply] } : c,
-      ),
+      prev.map((c) => (c.id === commentId ? { ...c, replies: [...c.replies, reply] } : c)),
     );
   }, []);
 
@@ -985,6 +1018,7 @@ git commit -m "feat(web): 新增 useCommentList Hook（列表取数 + 分页 + �
 ## Task 7: useCommentSubmit Hook
 
 **Files:**
+
 - Create: `apps/web/hooks/use-comment-submit.ts`
 - Create: `apps/web/hooks/use-comment-submit.test.ts`
 
@@ -1005,11 +1039,18 @@ describe("useCommentSubmit", () => {
   describe("submitComment", () => {
     it("成功时返回新评论数据", async () => {
       const created = {
-        id: 1, target_type: "article", target_id: 5, user_id: 1,
-        content: "内容", replies: [], created_at: "", updated_at: "",
+        id: 1,
+        target_type: "article",
+        target_id: 5,
+        user_id: 1,
+        content: "内容",
+        replies: [],
+        created_at: "",
+        updated_at: "",
       };
       vi.mocked(global.fetch).mockResolvedValue({
-        ok: true, status: 200,
+        ok: true,
+        status: 200,
         json: () => Promise.resolve(created),
       } as Response);
 
@@ -1025,7 +1066,8 @@ describe("useCommentSubmit", () => {
 
     it("401 时设置 error 并返回 null", async () => {
       vi.mocked(global.fetch).mockResolvedValue({
-        ok: false, status: 401,
+        ok: false,
+        status: 401,
         json: () => Promise.resolve({ error: "Unauthorized" }),
       } as Response);
 
@@ -1042,14 +1084,18 @@ describe("useCommentSubmit", () => {
     it("isSubmitting 期间重复调用返回 null 且不发请求", async () => {
       let resolveFetch!: (v: unknown) => void;
       vi.mocked(global.fetch).mockReturnValue(
-        new Promise((r) => { resolveFetch = r; }) as Promise<Response>,
+        new Promise((r) => {
+          resolveFetch = r;
+        }) as Promise<Response>,
       );
 
       const { result } = renderHook(() => useCommentSubmit("article", 5));
 
       // 第一次调用但不 await
       let p1: Promise<unknown>;
-      act(() => { p1 = result.current.submitComment("内容"); });
+      act(() => {
+        p1 = result.current.submitComment("内容");
+      });
 
       // isSubmitting 应为 true
       expect(result.current.isSubmitting).toBe(true);
@@ -1064,22 +1110,32 @@ describe("useCommentSubmit", () => {
 
       // 结束第一次请求
       resolveFetch({
-        ok: true, status: 200,
+        ok: true,
+        status: 200,
         json: () => Promise.resolve({ id: 1, replies: [], created_at: "", updated_at: "" }),
       });
-      await act(async () => { await p1; });
+      await act(async () => {
+        await p1;
+      });
     });
   });
 
   describe("submitReply", () => {
     it("成功时返回新回复数据", async () => {
       const created = {
-        id: 5, target_type: "article", comment_id: 1, from_user_id: 2,
-        to_user_id: 1, parent_reply_id: 0, content: "回复",
-        created_at: "", updated_at: "",
+        id: 5,
+        target_type: "article",
+        comment_id: 1,
+        from_user_id: 2,
+        to_user_id: 1,
+        parent_reply_id: 0,
+        content: "回复",
+        created_at: "",
+        updated_at: "",
       };
       vi.mocked(global.fetch).mockResolvedValue({
-        ok: true, status: 200,
+        ok: true,
+        status: 200,
         json: () => Promise.resolve(created),
       } as Response);
 
@@ -1206,6 +1262,7 @@ git commit -m "feat(web): 新增 useCommentSubmit Hook（发布评论 + 回复 +
 ## Task 8: 更新 CommentItem 接受真实 API 类型
 
 **Files:**
+
 - Modify: `apps/web/components/comments/comment-item.tsx`
 - Create: `apps/web/components/comments/comment-item.test.tsx`
 
@@ -1341,9 +1398,7 @@ function getDisplayName(user: { username: string; nickname?: string } | undefine
 
 function Avatar({ url, name, size }: { url?: string; name: string; size: "sm" | "md" }) {
   const cls =
-    size === "md"
-      ? "h-7 w-7 shrink-0 rounded-full"
-      : "h-[22px] w-[22px] shrink-0 rounded-full";
+    size === "md" ? "h-7 w-7 shrink-0 rounded-full" : "h-[22px] w-[22px] shrink-0 rounded-full";
   const textCls = size === "md" ? "text-xs" : "text-[10px]";
 
   if (url) return <img src={url} alt={name} className={cls} />;
@@ -1376,16 +1431,12 @@ function ReplyItem({ reply, commentId, onReply }: ReplyItemProps) {
           <span className="text-[11px] text-(--fg3)">{time}</span>
         </div>
         <p className="text-[13px] leading-[1.65] text-(--fg2)">
-          {toName && (
-            <span className="mr-1 text-[11px] font-semibold text-primary">@{toName}</span>
-          )}
+          {toName && <span className="mr-1 text-[11px] font-semibold text-primary">@{toName}</span>}
           {reply.content}
         </p>
         <button
           type="button"
-          onClick={() =>
-            onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName })
-          }
+          onClick={() => onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName })}
           className="mt-1 cursor-pointer rounded-md px-2 py-1 text-[11px] font-medium text-(--fg3) transition-colors hover:bg-primary/10 hover:text-primary"
         >
           回复
@@ -1419,12 +1470,7 @@ export function CommentItem({ comment, onReply }: CommentItemProps) {
           {comment.replies.length > 0 && (
             <div className="mt-3 flex flex-col gap-3 border-l-2 border-border pl-3.5">
               {comment.replies.map((reply) => (
-                <ReplyItem
-                  key={reply.id}
-                  reply={reply}
-                  commentId={comment.id}
-                  onReply={onReply}
-                />
+                <ReplyItem key={reply.id} reply={reply} commentId={comment.id} onReply={onReply} />
               ))}
             </div>
           )}
@@ -1455,6 +1501,7 @@ git commit -m "refactor(web): CommentItem 接入真实 API 类型，支持 onRep
 ## Task 9: 更新 CommentInput（登录门控 + 受控 + 回复上下文）
 
 **Files:**
+
 - Modify: `apps/web/components/comments/comment-input.tsx`
 - Create: `apps/web/components/comments/comment-input.test.tsx`
 
@@ -1497,25 +1544,13 @@ vi.mock("@/store/use-login-modal", () => ({
 
 describe("CommentInput（已登录）", () => {
   it("渲染文本框和发布按钮", () => {
-    render(
-      <CommentInput
-        value=""
-        onChange={vi.fn()}
-        onSubmit={vi.fn()}
-      />,
-    );
+    render(<CommentInput value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
     expect(screen.getByPlaceholderText("写下你的评论...")).toBeTruthy();
     expect(screen.getByText("发布")).toBeTruthy();
   });
 
   it("value 为空时发布按钮禁用", () => {
-    render(
-      <CommentInput
-        value=""
-        onChange={vi.fn()}
-        onSubmit={vi.fn()}
-      />,
-    );
+    render(<CommentInput value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
     const btn = screen.getByText("发布").closest("button");
     expect(btn).toBeTruthy();
     expect(btn!.disabled).toBe(true);
@@ -1524,13 +1559,7 @@ describe("CommentInput（已登录）", () => {
   it("value 非空时发布按钮可用，点击触发 onSubmit", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-    render(
-      <CommentInput
-        value="有内容"
-        onChange={vi.fn()}
-        onSubmit={onSubmit}
-      />,
-    );
+    render(<CommentInput value="有内容" onChange={vi.fn()} onSubmit={onSubmit} />);
     await user.click(screen.getByText("发布"));
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
@@ -1693,6 +1722,7 @@ git commit -m "refactor(web): CommentInput 改为受控组件，增加登录门�
 ## Task 10: 创建 CommentSection
 
 **Files:**
+
 - Create: `apps/web/components/comments/comment-section.tsx`
 - Create: `apps/web/components/comments/comment-section.test.tsx`
 - Modify: `apps/web/components/comments/index.ts`
@@ -1782,9 +1812,7 @@ describe("CommentSection", () => {
     } as Response);
 
     render(<CommentSection targetType="article" targetId={1} />);
-    await waitFor(() =>
-      expect(screen.getByText("暂无评论，来发表第一条吧")).toBeTruthy(),
-    );
+    await waitFor(() => expect(screen.getByText("暂无评论，来发表第一条吧")).toBeTruthy());
   });
 
   it("hasMore 时显示「查看更多评论」按钮", async () => {
@@ -1794,9 +1822,7 @@ describe("CommentSection", () => {
     } as Response);
 
     render(<CommentSection targetType="article" targetId={1} />);
-    await waitFor(() =>
-      expect(screen.getByText("查看更多评论")).toBeTruthy(),
-    );
+    await waitFor(() => expect(screen.getByText("查看更多评论")).toBeTruthy());
   });
 
   it("无更多时不显示「查看更多评论」", async () => {
@@ -1855,19 +1881,29 @@ interface CommentSectionProps {
 }
 
 export function CommentSection({ targetType, targetId }: CommentSectionProps) {
-  const { comments, isLoading, hasMore, error, loadMore, addComment, addReply } =
-    useCommentList(targetType, targetId);
-  const { isSubmitting, error: submitError, clearError, submitComment, submitReply } =
-    useCommentSubmit(targetType, targetId);
+  const { comments, isLoading, hasMore, error, loadMore, addComment, addReply } = useCommentList(
+    targetType,
+    targetId,
+  );
+  const {
+    isSubmitting,
+    error: submitError,
+    clearError,
+    submitComment,
+    submitReply,
+  } = useCommentSubmit(targetType, targetId);
 
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
   const [content, setContent] = useState("");
 
-  const handleReply = useCallback((target: ReplyTarget) => {
-    setReplyTarget(target);
-    setContent("");
-    clearError();
-  }, [clearError]);
+  const handleReply = useCallback(
+    (target: ReplyTarget) => {
+      setReplyTarget(target);
+      setContent("");
+      clearError();
+    },
+    [clearError],
+  );
 
   const handleCancelReply = useCallback(() => {
     setReplyTarget(null);
@@ -1879,11 +1915,7 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
     if (!content.trim()) return;
 
     if (replyTarget) {
-      const reply = await submitReply(
-        replyTarget.commentId,
-        content,
-        replyTarget.parentReplyId,
-      );
+      const reply = await submitReply(replyTarget.commentId, content, replyTarget.parentReplyId);
       if (reply) {
         addReply(replyTarget.commentId, reply);
         setReplyTarget(null);
@@ -1971,6 +2003,7 @@ git commit -m "feat(web): 新增 CommentSection 可复用评论区组件"
 ## Task 11: 改造 CommentModal 为 thin wrapper
 
 **Files:**
+
 - Modify: `apps/web/components/comments/comment-modal.tsx`
 - Modify: `apps/web/components/comments/comment-modal.test.tsx`
 
@@ -2021,18 +2054,14 @@ describe("CommentModal", () => {
   });
 
   it("打开时显示文章类型和标题", () => {
-    render(
-      <CommentModal open title="测试文章" type="技术" targetId={5} onClose={vi.fn()} />,
-    );
+    render(<CommentModal open title="测试文章" type="技术" targetId={5} onClose={vi.fn()} />);
     expect(screen.getByRole("dialog", { name: "评论" })).toBeTruthy();
     expect(screen.getByText("技术 · 评论")).toBeTruthy();
     expect(screen.getByText("测试文章")).toBeTruthy();
   });
 
   it("将正确的 targetType 和 targetId 传给 CommentSection", () => {
-    render(
-      <CommentModal open title="测试文章" type="技术" targetId={42} onClose={vi.fn()} />,
-    );
+    render(<CommentModal open title="测试文章" type="技术" targetId={42} onClose={vi.fn()} />);
     const section = screen.getByTestId("comment-section");
     expect(section.dataset.targetType).toBe("article");
     expect(section.dataset.targetId).toBe("42");
@@ -2144,6 +2173,7 @@ git commit -m "refactor(web): CommentModal 改造为 thin wrapper，接入 Comme
 ## Task 12: ArticleSection 补全 articleId
 
 **Files:**
+
 - Modify: `apps/web/components/articles/article-section.tsx`
 - Modify: `apps/web/components/articles/article-section.test.tsx`
 
@@ -2152,6 +2182,7 @@ git commit -m "refactor(web): CommentModal 改造为 thin wrapper，接入 Comme
 在 `apps/web/components/articles/article-section.tsx` 中：
 
 将：
+
 ```typescript
 interface ActiveComment {
   title: string;
@@ -2160,6 +2191,7 @@ interface ActiveComment {
 ```
 
 改为：
+
 ```typescript
 interface ActiveComment {
   articleId: number;
@@ -2169,6 +2201,7 @@ interface ActiveComment {
 ```
 
 将 `openComment` 函数改为：
+
 ```typescript
 const openComment = (article: ArticleListItemResp) => {
   setActiveComment({
@@ -2180,6 +2213,7 @@ const openComment = (article: ArticleListItemResp) => {
 ```
 
 将 `<CommentModal ...>` 改为：
+
 ```tsx
 <CommentModal
   open={activeComment !== null}

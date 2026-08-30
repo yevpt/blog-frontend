@@ -88,11 +88,11 @@ A+ 的残留边界：通过「前进链接」回到与落地页完全相同的�
 
 ## 模块边界
 
-| 单元 | 职责 | 依赖 |
-| --- | --- | --- |
-| `useBackNavigation` | 判断可返回性并执行返回/兜底，封装分层决策 | `next/navigation`（`useRouter`/`usePathname`）、`window.navigation` |
-| `navbar-route-config` | 路由 → variant/title 映射（纯函数） | 无 |
-| `NavbarMobileHeader` | 渲染移动端头部，消费 `goBack` | `useBackNavigation`、route-config |
+| 单元                  | 职责                                      | 依赖                                                                |
+| --------------------- | ----------------------------------------- | ------------------------------------------------------------------- |
+| `useBackNavigation`   | 判断可返回性并执行返回/兜底，封装分层决策 | `next/navigation`（`useRouter`/`usePathname`）、`window.navigation` |
+| `navbar-route-config` | 路由 → variant/title 映射（纯函数）       | 无                                                                  |
+| `NavbarMobileHeader`  | 渲染移动端头部，消费 `goBack`             | `useBackNavigation`、route-config                                   |
 
 `useBackNavigation` 的内部记账（模块级标志、entryPath）对消费者不可见，仅暴露 `goBack`；后续若 Navigation API 支持面扩大，可删 A+ 分支而不影响调用方。
 

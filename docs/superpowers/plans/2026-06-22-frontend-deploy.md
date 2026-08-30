@@ -13,6 +13,7 @@
 ### Task 1: Admin API Default
 
 **Files:**
+
 - Create: `apps/admin/src/lib/api-base-url.ts`
 - Create: `apps/admin/src/lib/api-base-url.test.ts`
 - Modify: `apps/admin/src/lib/api.ts`
@@ -26,6 +27,7 @@
 ### Task 2: Web Container
 
 **Files:**
+
 - Create: `.dockerignore`
 - Create: `docker/web/Dockerfile`
 - Create: `docker/web/docker-compose.yml`
@@ -39,6 +41,7 @@
 ### Task 3: GitHub Actions Deploy
 
 **Files:**
+
 - Create: `.github/workflows/deploy.yml`
 
 - [ ] Add test job matching existing CI checks.
@@ -50,6 +53,7 @@
 ### Task 4: Verification
 
 **Files:**
+
 - All changed files.
 
 - [ ] Run `pnpm --filter admin test src/lib/api-base-url.test.ts`.

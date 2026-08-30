@@ -12,24 +12,25 @@
 
 ## 文件变更一览
 
-| 文件 | 操作 |
-|------|------|
-| `apps/web/hooks/use-comment-like.ts` | 修改：`toggleReplyLike` 新增 `"guestbook"` 分支 |
-| `apps/web/hooks/use-comment-like.test.ts` | 修改：新增 guestbook 测试用例 |
-| `apps/web/components/comments/comment-replies.tsx` | 修改：扩展 TargetType、URL 逻辑、re-export ReplyTarget、统一样式、删除死代码 |
-| `apps/web/components/comments/comment-replies.test.tsx` | 修改：新增 guestbook targetType 测试 |
-| `apps/web/components/guestbook/guestbook-item.tsx` | 修改：换用 `CommentReplies`，`GuestbookReplyTarget` 换成 `ReplyTarget` |
-| `apps/web/components/guestbook/guestbook-item.test.tsx` | 修改：`guestbookId` → `commentId` |
-| `apps/web/components/guestbook/guestbook-page.tsx` | 修改：`replyTarget.guestbookId` → `replyTarget.commentId` |
-| `apps/web/components/guestbook/guestbook-input-bar.tsx` | 修改：import 换成 `ReplyTarget` |
-| `apps/web/components/guestbook/guestbook-replies.tsx` | **删除** |
-| `apps/web/components/guestbook/guestbook-replies.test.tsx` | **删除** |
+| 文件                                                       | 操作                                                                         |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `apps/web/hooks/use-comment-like.ts`                       | 修改：`toggleReplyLike` 新增 `"guestbook"` 分支                              |
+| `apps/web/hooks/use-comment-like.test.ts`                  | 修改：新增 guestbook 测试用例                                                |
+| `apps/web/components/comments/comment-replies.tsx`         | 修改：扩展 TargetType、URL 逻辑、re-export ReplyTarget、统一样式、删除死代码 |
+| `apps/web/components/comments/comment-replies.test.tsx`    | 修改：新增 guestbook targetType 测试                                         |
+| `apps/web/components/guestbook/guestbook-item.tsx`         | 修改：换用 `CommentReplies`，`GuestbookReplyTarget` 换成 `ReplyTarget`       |
+| `apps/web/components/guestbook/guestbook-item.test.tsx`    | 修改：`guestbookId` → `commentId`                                            |
+| `apps/web/components/guestbook/guestbook-page.tsx`         | 修改：`replyTarget.guestbookId` → `replyTarget.commentId`                    |
+| `apps/web/components/guestbook/guestbook-input-bar.tsx`    | 修改：import 换成 `ReplyTarget`                                              |
+| `apps/web/components/guestbook/guestbook-replies.tsx`      | **删除**                                                                     |
+| `apps/web/components/guestbook/guestbook-replies.test.tsx` | **删除**                                                                     |
 
 ---
 
 ## Task 1：扩展 useCommentLike 支持 guestbook
 
 **Files:**
+
 - Modify: `apps/web/hooks/use-comment-like.ts`
 - Modify: `apps/web/hooks/use-comment-like.test.ts`
 
@@ -131,6 +132,7 @@ git commit -m "feat(comment-like): toggleReplyLike 支持 guestbook 目标类型
 ## Task 2：扩展 CommentReplies 支持 guestbook，统一样式
 
 **Files:**
+
 - Modify: `apps/web/components/comments/comment-replies.tsx`
 - Modify: `apps/web/components/comments/comment-replies.test.tsx`
 
@@ -457,6 +459,7 @@ export function CommentReplies({
 ```
 
 > **注意样式变化（对齐 guestbook 样式审查结论）：**
+>
 > - 未点赞颜色：`text-black/54 dark:text-(--fg3)` → `text-foreground/40`（更语义化）
 > - "回复"按钮：新增 `hover:text-foreground`
 > - 删除 `ReplyItemSkeleton` 组件（已无用：展开前按钮承担 loading 态）
@@ -483,6 +486,7 @@ git commit -m "feat(comment-replies): 扩展 TargetType 支持 guestbook，统�
 ## Task 3：更新 guestbook-item.tsx，换用 CommentReplies
 
 **Files:**
+
 - Modify: `apps/web/components/guestbook/guestbook-item.tsx`
 - Modify: `apps/web/components/guestbook/guestbook-item.test.tsx`
 
@@ -642,6 +646,7 @@ git commit -m "refactor(guestbook-item): 换用统一 CommentReplies 组件，Re
 ## Task 4：更新 guestbook-page.tsx 和 guestbook-input-bar.tsx
 
 **Files:**
+
 - Modify: `apps/web/components/guestbook/guestbook-page.tsx`
 - Modify: `apps/web/components/guestbook/guestbook-input-bar.tsx`
 
@@ -711,6 +716,7 @@ git commit -m "refactor(guestbook): 统一 ReplyTarget 类型，移除 Guestbook
 ## Task 5：删除 guestbook-replies.tsx 和其测试文件
 
 **Files:**
+
 - Delete: `apps/web/components/guestbook/guestbook-replies.tsx`
 - Delete: `apps/web/components/guestbook/guestbook-replies.test.tsx`
 

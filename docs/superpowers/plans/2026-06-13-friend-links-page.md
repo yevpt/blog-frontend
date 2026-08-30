@@ -12,35 +12,36 @@
 
 ## 文件清单
 
-| 操作 | 路径 | 说明 |
-|------|------|------|
-| 修改 | `blog-backend/internal/model/friend_link.go` | Status comment tag 加 `2=失联` |
-| 修改 | `blog-backend/internal/dto/friendlink.go` | Status 字段注释加 `2=失联` |
-| 修改 | `blog-backend/internal/service/friendlink.go` | 新增 `friendLinkStatusDisconnected` 常量，更新校验 |
-| 修改 | `blog-backend/internal/repository/friendlink.go` | ListPublic 查询包含 status=1 和 status=2 |
-| 新增 | `packages/api/src/types/friend-link.ts` | 前端 API 响应类型 |
-| 修改 | `packages/api/src/client.ts` | 新增 `friendLinks.listPublic` |
-| 修改 | `packages/api/src/index.ts` | 导出新类型 |
-| 修改 | `apps/web/app/globals.css` | 新增 `@keyframes fadeInUp` + `.animate-fade-in-up` |
-| 新增 | `packages/ui/src/fade-in-up.tsx` | 公共入场动效组件 |
-| 新增 | `packages/ui/src/fade-in-up.test.tsx` | FadeInUp 测试 |
-| 修改 | `packages/ui/src/index.ts` | 导出 `FadeInUp` |
-| 新增 | `apps/web/components/friend-links/friend-link-card.tsx` | 单张友链卡片 |
-| 新增 | `apps/web/components/friend-links/friend-link-card.test.tsx` | 卡片测试 |
-| 新增 | `apps/web/components/friend-links/friend-links-rules-card.tsx` | 申请规则可折叠卡片 |
-| 新增 | `apps/web/components/friend-links/friend-links-rules-card.test.tsx` | 规则卡片测试 |
-| 新增 | `apps/web/components/friend-links/friend-links-list.tsx` | 友链列表网格 |
-| 新增 | `apps/web/components/friend-links/friend-links-list.test.tsx` | 列表测试 |
-| 新增 | `apps/web/components/friend-links/friend-links-page.tsx` | 页面主体组件 |
-| 新增 | `apps/web/components/friend-links/index.ts` | 组件入口导出 |
-| 新增 | `apps/web/app/friend-links/page.tsx` | 路由页面（Server Component） |
-| 新增 | `apps/web/app/friend-links/page.test.tsx` | 路由页面测试 |
+| 操作 | 路径                                                                | 说明                                               |
+| ---- | ------------------------------------------------------------------- | -------------------------------------------------- |
+| 修改 | `blog-backend/internal/model/friend_link.go`                        | Status comment tag 加 `2=失联`                     |
+| 修改 | `blog-backend/internal/dto/friendlink.go`                           | Status 字段注释加 `2=失联`                         |
+| 修改 | `blog-backend/internal/service/friendlink.go`                       | 新增 `friendLinkStatusDisconnected` 常量，更新校验 |
+| 修改 | `blog-backend/internal/repository/friendlink.go`                    | ListPublic 查询包含 status=1 和 status=2           |
+| 新增 | `packages/api/src/types/friend-link.ts`                             | 前端 API 响应类型                                  |
+| 修改 | `packages/api/src/client.ts`                                        | 新增 `friendLinks.listPublic`                      |
+| 修改 | `packages/api/src/index.ts`                                         | 导出新类型                                         |
+| 修改 | `apps/web/app/globals.css`                                          | 新增 `@keyframes fadeInUp` + `.animate-fade-in-up` |
+| 新增 | `packages/ui/src/fade-in-up.tsx`                                    | 公共入场动效组件                                   |
+| 新增 | `packages/ui/src/fade-in-up.test.tsx`                               | FadeInUp 测试                                      |
+| 修改 | `packages/ui/src/index.ts`                                          | 导出 `FadeInUp`                                    |
+| 新增 | `apps/web/components/friend-links/friend-link-card.tsx`             | 单张友链卡片                                       |
+| 新增 | `apps/web/components/friend-links/friend-link-card.test.tsx`        | 卡片测试                                           |
+| 新增 | `apps/web/components/friend-links/friend-links-rules-card.tsx`      | 申请规则可折叠卡片                                 |
+| 新增 | `apps/web/components/friend-links/friend-links-rules-card.test.tsx` | 规则卡片测试                                       |
+| 新增 | `apps/web/components/friend-links/friend-links-list.tsx`            | 友链列表网格                                       |
+| 新增 | `apps/web/components/friend-links/friend-links-list.test.tsx`       | 列表测试                                           |
+| 新增 | `apps/web/components/friend-links/friend-links-page.tsx`            | 页面主体组件                                       |
+| 新增 | `apps/web/components/friend-links/index.ts`                         | 组件入口导出                                       |
+| 新增 | `apps/web/app/friend-links/page.tsx`                                | 路由页面（Server Component）                       |
+| 新增 | `apps/web/app/friend-links/page.test.tsx`                           | 路由页面测试                                       |
 
 ---
 
 ## Task 1: 后端 status=2 支持
 
 **Files:**
+
 - Modify: `blog-backend/internal/model/friend_link.go`
 - Modify: `blog-backend/internal/dto/friendlink.go`
 - Modify: `blog-backend/internal/service/friendlink.go`
@@ -49,10 +50,13 @@
 - [ ] **Step 1: 更新 model comment tag**
 
 `blog-backend/internal/model/friend_link.go` 第 12 行，将：
+
 ```go
 Status uint8 `gorm:"type:tinyint;default:1;comment:状态 0=隐藏 1=显示" json:"status"`
 ```
+
 改为：
+
 ```go
 Status uint8 `gorm:"type:tinyint;default:1;comment:状态 0=隐藏 1=显示 2=失联" json:"status"`
 ```
@@ -60,20 +64,24 @@ Status uint8 `gorm:"type:tinyint;default:1;comment:状态 0=隐藏 1=显示 2=�
 - [ ] **Step 2: 更新 DTO 注释**
 
 `blog-backend/internal/dto/friendlink.go`，在 `FriendLinkCreateReq`、`FriendLinkUpdateReq`、`FriendLinkItemResp` 中找到 Status 字段的注释，改为包含 `2=失联`。例如 `FriendLinkItemResp` 中：
+
 ```go
 // Status 状态：0 隐藏，1 显示，2 失联。
 Status uint8 `json:"status" example:"1"`
 ```
+
 `FriendLinkCreateReq` 和 `FriendLinkUpdateReq` 中同样补充 `2=失联` 的说明。
 
 - [ ] **Step 3: service 新增常量并更新校验**
 
 `blog-backend/internal/service/friendlink.go`，在 `const` 块里新增：
+
 ```go
 friendLinkStatusDisconnected uint8 = 2
 ```
 
 将 `validateFriendLinkStatus` 函数改为：
+
 ```go
 func validateFriendLinkStatus(status uint8) error {
     if status != friendLinkStatusHidden &&
@@ -90,6 +98,7 @@ func validateFriendLinkStatus(status uint8) error {
 `blog-backend/internal/repository/friendlink.go`：
 
 在文件顶部常量块里新增（或修改已有常量）：
+
 ```go
 const (
     friendLinkVisibleStatus      uint8 = 1
@@ -98,10 +107,13 @@ const (
 ```
 
 将 `ListPublic` 里的 query 条件从：
+
 ```go
 query := r.db.Model(&model.FriendLink{}).Where("status = ?", friendLinkVisibleStatus)
 ```
+
 改为：
+
 ```go
 query := r.db.Model(&model.FriendLink{}).Where("status IN ?", []uint8{friendLinkVisibleStatus, friendLinkDisconnectedStatus})
 ```
@@ -112,6 +124,7 @@ query := r.db.Model(&model.FriendLink{}).Where("status IN ?", []uint8{friendLink
 cd /Volumes/External/SynologyDrive/Codes/Blog/blog-backend
 go build ./...
 ```
+
 预期：无编译错误。
 
 - [ ] **Step 6: Commit**
@@ -128,6 +141,7 @@ git commit -m "feat(friend-link): 新增 status=2 失联状态，ListPublic 返�
 ## Task 2: API 类型 + client
 
 **Files:**
+
 - Create: `packages/api/src/types/friend-link.ts`
 - Modify: `packages/api/src/client.ts`
 - Modify: `packages/api/src/index.ts`
@@ -172,6 +186,7 @@ export interface FriendLinkListReq {
 `packages/api/src/client.ts`：
 
 在文件顶部 import 块最后一个 `import type` 后面添加：
+
 ```typescript
 import type {
   FriendLinkItemResp,
@@ -181,6 +196,7 @@ import type {
 ```
 
 在 `createApiClient` return 对象（`guestbook: { ... },` 后面）添加：
+
 ```typescript
     friendLinks: {
       /** 查询公开友情链接（含显示和失联状态） */
@@ -199,6 +215,7 @@ import type {
 - [ ] **Step 3: 在 index.ts 导出新类型**
 
 `packages/api/src/index.ts`，在文件末尾追加：
+
 ```typescript
 export type {
   FriendLinkItemResp,
@@ -213,6 +230,7 @@ export type {
 cd /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend
 pnpm --filter @repo/api check-types
 ```
+
 预期：无错误。
 
 - [ ] **Step 5: Commit**
@@ -227,6 +245,7 @@ git commit -m "feat(api): 新增 friendLinks.listPublic 及 FriendLink 类型"
 ## Task 3: FadeInUp 公共动效组件
 
 **Files:**
+
 - Modify: `apps/web/app/globals.css`
 - Create: `packages/ui/src/fade-in-up.tsx`
 - Create: `packages/ui/src/fade-in-up.test.tsx`
@@ -305,6 +324,7 @@ describe("FadeInUp", () => {
 cd /Volumes/External/SynologyDrive/Codes/Blog/blog-frontend
 pnpm test:run -- packages/ui/src/fade-in-up.test.tsx
 ```
+
 预期：FAIL，提示模块不存在。
 
 - [ ] **Step 4: 实现 FadeInUp 组件**
@@ -343,11 +363,13 @@ export function FadeInUp({ children, delay = 0, duration = 400, className }: Fad
 ```bash
 pnpm test:run -- packages/ui/src/fade-in-up.test.tsx
 ```
+
 预期：5 tests passed。
 
 - [ ] **Step 6: 在 packages/ui/src/index.ts 导出**
 
 在文件末尾追加：
+
 ```typescript
 export { FadeInUp } from "./fade-in-up";
 ```
@@ -357,6 +379,7 @@ export { FadeInUp } from "./fade-in-up";
 ```bash
 pnpm --filter @repo/ui check-types
 ```
+
 预期：无错误。
 
 - [ ] **Step 8: Commit**
@@ -372,6 +395,7 @@ git commit -m "feat(ui): 新增 FadeInUp 入场动效公共组件"
 ## Task 4: FriendLinkCard 卡片组件
 
 **Files:**
+
 - Create: `apps/web/components/friend-links/friend-link-card.tsx`
 - Create: `apps/web/components/friend-links/friend-link-card.test.tsx`
 
@@ -439,6 +463,7 @@ describe("FriendLinkCard", () => {
 ```bash
 pnpm test:run -- apps/web/components/friend-links/friend-link-card.test.tsx
 ```
+
 预期：FAIL，模块不存在。
 
 - [ ] **Step 3: 实现 FriendLinkCard**
@@ -541,6 +566,7 @@ export function FriendLinkCard({ link }: FriendLinkCardProps) {
 ```bash
 pnpm test:run -- apps/web/components/friend-links/friend-link-card.test.tsx
 ```
+
 预期：6 tests passed。
 
 - [ ] **Step 5: Commit**
@@ -556,6 +582,7 @@ git commit -m "feat(friend-links): 新增 FriendLinkCard 组件，支持失联�
 ## Task 5: FriendLinksRulesCard 申请规则卡片
 
 **Files:**
+
 - Create: `apps/web/components/friend-links/friend-links-rules-card.tsx`
 - Create: `apps/web/components/friend-links/friend-links-rules-card.test.tsx`
 
@@ -600,6 +627,7 @@ describe("FriendLinksRulesCard", () => {
 ```bash
 pnpm test:run -- apps/web/components/friend-links/friend-links-rules-card.test.tsx
 ```
+
 预期：FAIL，模块不存在。
 
 - [ ] **Step 3: 实现 FriendLinksRulesCard**
@@ -678,6 +706,7 @@ export function FriendLinksRulesCard() {
 ```bash
 pnpm test:run -- apps/web/components/friend-links/friend-links-rules-card.test.tsx
 ```
+
 预期：3 tests passed。
 
 - [ ] **Step 5: Commit**
@@ -693,6 +722,7 @@ git commit -m "feat(friend-links): 新增 FriendLinksRulesCard 可折叠规则�
 ## Task 6: FriendLinksList + FriendLinksPage 组件
 
 **Files:**
+
 - Create: `apps/web/components/friend-links/friend-links-list.tsx`
 - Create: `apps/web/components/friend-links/friend-links-list.test.tsx`
 - Create: `apps/web/components/friend-links/friend-links-page.tsx`
@@ -742,6 +772,7 @@ describe("FriendLinksList", () => {
 ```bash
 pnpm test:run -- apps/web/components/friend-links/friend-links-list.test.tsx
 ```
+
 预期：FAIL，模块不存在。
 
 - [ ] **Step 3: 实现 FriendLinksList**
@@ -777,6 +808,7 @@ export function FriendLinksList({ links }: FriendLinksListProps) {
 ```bash
 pnpm test:run -- apps/web/components/friend-links/friend-links-list.test.tsx
 ```
+
 预期：3 tests passed。
 
 - [ ] **Step 5: 实现 FriendLinksPage**
@@ -821,6 +853,7 @@ export function FriendLinksPage({ links }: FriendLinksPageProps) {
 ```bash
 pnpm --filter web check-types
 ```
+
 预期：无错误。
 
 - [ ] **Step 7: Commit**
@@ -837,6 +870,7 @@ git commit -m "feat(friend-links): 新增 FriendLinksList 和 FriendLinksPage �
 ## Task 7: 路由页面 + 组件入口
 
 **Files:**
+
 - Create: `apps/web/components/friend-links/index.ts`
 - Create: `apps/web/app/friend-links/page.tsx`
 - Create: `apps/web/app/friend-links/page.test.tsx`
@@ -909,6 +943,7 @@ describe("FriendLinksPageRoute", () => {
 ```bash
 pnpm test:run -- apps/web/app/friend-links/page.test.tsx
 ```
+
 预期：FAIL，模块不存在。
 
 - [ ] **Step 3: 创建组件入口**
@@ -956,6 +991,7 @@ export default async function FriendLinksPageRoute() {
 ```bash
 pnpm test:run -- apps/web/app/friend-links/page.test.tsx
 ```
+
 预期：2 tests passed。
 
 - [ ] **Step 6: 运行全量测试，无回归**
@@ -963,6 +999,7 @@ pnpm test:run -- apps/web/app/friend-links/page.test.tsx
 ```bash
 pnpm test:run
 ```
+
 预期：所有测试通过，无新增失败。
 
 - [ ] **Step 7: 类型检查**
@@ -970,6 +1007,7 @@ pnpm test:run
 ```bash
 pnpm check-types
 ```
+
 预期：无错误。
 
 - [ ] **Step 8: Commit**

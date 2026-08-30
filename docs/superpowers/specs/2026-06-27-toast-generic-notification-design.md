@@ -7,6 +7,7 @@
 把 `apps/web/components/notifications/notification-provider.tsx`（轮询拉取未读通知、有新消息时弹卡片提醒）的弹窗渲染从一套独立手写的 `useState`+`setTimeout` 状态机，迁移到 `@repo/ui` 的 `ToastRegion`/`ToastQueue` 引擎上，复用计时器/堆叠/可访问性能力，同时保持视觉语言与 [2026-06-26 toast 重设计](./2026-06-26-toast-notification-redesign.md) 一致。
 
 不在本期范围：
+
 - 通知的轮询/去重/可见性感知重试逻辑（`syncLatestUnread`/`seedUnreadSnapshot` 等）——这部分跟"怎么展示"完全正交，本次不动。
 - `/notifications` 列表页（`notification-card.tsx`）——独立组件，不受影响。
 - 简单消息 toast（`addToast`）自身的视觉/交互——保持 2026-06-26 那次改版后的样子，零回归。
@@ -95,7 +96,12 @@ export interface ToastRegionProps<T = ToastContent> {
       const quote = getNotificationQuote(item);
       return (
         <>
-          <UserAvatar src={item.actor_user?.avatar_url} name={actorName} size="md" className="mt-0.5" />
+          <UserAvatar
+            src={item.actor_user?.avatar_url}
+            name={actorName}
+            size="md"
+            className="mt-0.5"
+          />
           <button
             type="button"
             className="min-w-0 flex-1 cursor-pointer text-left"

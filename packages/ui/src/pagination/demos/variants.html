@@ -168,7 +168,9 @@
       }
 
       .pg-btn:focus-visible {
-        box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+        box-shadow:
+          0 0 0 2px var(--background),
+          0 0 0 4px var(--ring);
       }
 
       .pg-btn:disabled {
@@ -495,7 +497,9 @@
       <header>
         <div>
           <h1>Pagination 样式方案</h1>
-          <p class="subtitle">点击页码或箭头切换，右上角可切换明暗主题。颜色令牌对齐 @repo/styles。</p>
+          <p class="subtitle">
+            点击页码或箭头切换，右上角可切换明暗主题。颜色令牌对齐 @repo/styles。
+          </p>
         </div>
         <button type="button" class="theme-toggle" id="themeToggle" aria-label="切换主题">
           <span id="themeIcon">🌙</span>
@@ -506,7 +510,9 @@
       <!-- 对照：当前实现 -->
       <section class="demo-card">
         <h2>当前实现 <span class="badge">对照组</span></h2>
-        <p class="desc">Untitled UI Page default：prev/next 带边框，页码 ghost + 选中实心 primary，顶部 border-t。</p>
+        <p class="desc">
+          Untitled UI Page default：prev/next 带边框，页码 ghost + 选中实心 primary，顶部 border-t。
+        </p>
         <div class="demo-area">
           <nav class="variant-current" data-pagination="current" aria-label="分页导航"></nav>
         </div>
@@ -515,7 +521,9 @@
       <!-- A: Pill -->
       <section class="demo-card">
         <h2>方案 A · Segmented Pill <span class="badge">推荐 admin</span></h2>
-        <p class="desc">单一圆角容器包裹全部控件，选中项浮起（background + shadow），视觉语言统一。</p>
+        <p class="desc">
+          单一圆角容器包裹全部控件，选中项浮起（background + shadow），视觉语言统一。
+        </p>
         <div class="demo-area">
           <nav class="variant-pill" data-pagination="pill" aria-label="分页导航"></nav>
         </div>
@@ -640,7 +648,9 @@
       function renderBar(el, page) {
         const pages = getPages(TOTAL, page);
         const inlinePages = pages
-          .map((item) => (item.type === "page" ? pageBtn(item.value, page) : '<span class="ellipsis">…</span>'))
+          .map((item) =>
+            item.type === "page" ? pageBtn(item.value, page) : '<span class="ellipsis">…</span>',
+          )
           .join("");
 
         el.innerHTML = `
@@ -705,7 +715,10 @@
       }
 
       const saved = localStorage.getItem("pagination-demo-theme");
-      if (saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      if (
+        saved === "dark" ||
+        (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
         applyTheme(true);
       }
 

@@ -115,7 +115,10 @@ describe("useMomentDetail", () => {
       await result.current.toggleLike(makeMoment());
     });
 
-    expect(fetch).toHaveBeenCalledWith("/api/moments/1/like", expect.objectContaining({ method: "POST" }));
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/moments/1/like",
+      expect.objectContaining({ method: "POST" }),
+    );
     expect(result.current.moment.is_liked).toBe(true);
     expect(result.current.moment.like_count).toBe(3);
   });
@@ -177,7 +180,10 @@ describe("useMomentDetail", () => {
       await result.current.toggleTop(makeMoment());
     });
 
-    expect(fetch).toHaveBeenCalledWith("/api/moments/1/top", expect.objectContaining({ method: "POST" }));
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/moments/1/top",
+      expect.objectContaining({ method: "POST" }),
+    );
     expect(result.current.moment.is_top).toBe(true);
 
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ id: 1, is_top: false }));
@@ -185,7 +191,10 @@ describe("useMomentDetail", () => {
       await result.current.toggleTop(makeMoment({ is_top: true }));
     });
 
-    expect(fetch).toHaveBeenCalledWith("/api/moments/1/top", expect.objectContaining({ method: "DELETE" }));
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/moments/1/top",
+      expect.objectContaining({ method: "DELETE" }),
+    );
     expect(result.current.moment.is_top).toBe(false);
   });
 
@@ -208,7 +217,10 @@ describe("useMomentDetail", () => {
       await result.current.deleteMoment(makeMoment());
     });
 
-    expect(fetch).toHaveBeenCalledWith("/api/moments/1", expect.objectContaining({ method: "DELETE" }));
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/moments/1",
+      expect.objectContaining({ method: "DELETE" }),
+    );
     expect(mockAddToast).toHaveBeenCalledWith("碎语已删除", "success");
     expect(mockRouterPush).toHaveBeenCalledWith("/moments");
   });

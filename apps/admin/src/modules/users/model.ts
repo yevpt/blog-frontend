@@ -110,17 +110,19 @@ function formatAdminDateTime(value?: string) {
   });
 }
 
-export function getAccountStatusBadge(
-  row: UserRow,
-): { label: string; variant: "secondary" | "error" } {
+export function getAccountStatusBadge(row: UserRow): {
+  label: string;
+  variant: "secondary" | "error";
+} {
   return row.accountStatus === "active"
     ? { label: "正常", variant: "secondary" }
     : { label: "已禁用", variant: "error" };
 }
 
-export function getSanctionBadge(
-  row: UserRow,
-): { label: string; variant: "secondary" | "warning" | "error" } {
+export function getSanctionBadge(row: UserRow): {
+  label: string;
+  variant: "secondary" | "warning" | "error";
+} {
   switch (row.sanctionState) {
     case "muted":
       return { label: "禁言", variant: "warning" };

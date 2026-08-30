@@ -14,22 +14,29 @@ See the [drag and drop guide](dnd.md) to learn more.
 This example shows how to make a simple draggable element that provides data as plain text. In order to support keyboard and screen reader drag interactions, the element must be focusable and have an ARIA role (in this case, `button`). While it is being dragged, it is displayed with a dimmed appearance by applying an additional CSS class.
 
 ```tsx
-import {useDrag} from 'react-aria/useDrag';
-import {DropTarget} from './DropTarget';
-import './useDragExample.css';
-import 'vanilla-starter/theme.css';
+import { useDrag } from "react-aria/useDrag";
+import { DropTarget } from "./DropTarget";
+import "./useDragExample.css";
+import "vanilla-starter/theme.css";
 
 function Draggable() {
-  let {dragProps, isDragging} = useDrag({
+  let { dragProps, isDragging } = useDrag({
     getItems() {
-      return [{
-        'text/plain': 'hello world'
-      }];
-    }
+      return [
+        {
+          "text/plain": "hello world",
+        },
+      ];
+    },
   });
 
   return (
-    <div {...dragProps} role="button" tabIndex={0} className={`draggable ${isDragging ? 'dragging' : ''}`}>
+    <div
+      {...dragProps}
+      role="button"
+      tabIndex={0}
+      className={`draggable ${isDragging ? "dragging" : ""}`}
+    >
       Drag me
     </div>
   );
@@ -38,7 +45,7 @@ function Draggable() {
 <div>
   <Draggable />
   <DropTarget />
-</div>
+</div>;
 ```
 
 ## Drag data
@@ -49,31 +56,39 @@ In addition to providing items in multiple formats, you can also return multiple
 This example drags two items, each of which contains representations as plain text, HTML, and a custom app-specific data format. Dropping on the drop targets in this page will use the custom data format to render formatted items. If you drop in an external application supporting rich text, the HTML representation will be used. Dropping in a text editor will use the plain text format.
 
 ```tsx
-import {useDrag} from 'react-aria/useDrag';
-import {DropTarget} from './DropTarget';
+import { useDrag } from "react-aria/useDrag";
+import { DropTarget } from "./DropTarget";
 
 function Draggable() {
-  let {dragProps, isDragging} = useDrag({
+  let { dragProps, isDragging } = useDrag({
     getItems() {
-      return [{
-        'text/plain': 'hello world',
-        'text/html': '<strong>hello world</strong>',
-        'my-app-custom-type': JSON.stringify({
-          message: 'hello world',
-          style: 'bold'
-        })
-      }, {
-        'text/plain': 'foo bar',
-        'text/html': '<em>foo bar</em>',
-        'my-app-custom-type': JSON.stringify({
-          message: 'foo bar',
-          style: 'italic'
-        })
-      }];
-    }
+      return [
+        {
+          "text/plain": "hello world",
+          "text/html": "<strong>hello world</strong>",
+          "my-app-custom-type": JSON.stringify({
+            message: "hello world",
+            style: "bold",
+          }),
+        },
+        {
+          "text/plain": "foo bar",
+          "text/html": "<em>foo bar</em>",
+          "my-app-custom-type": JSON.stringify({
+            message: "foo bar",
+            style: "italic",
+          }),
+        },
+      ];
+    },
   });
   return (
-    <div {...dragProps} role="button" tabIndex={0} className={`draggable ${isDragging ? 'dragging' : ''}`}>
+    <div
+      {...dragProps}
+      role="button"
+      tabIndex={0}
+      className={`draggable ${isDragging ? "dragging" : ""}`}
+    >
       Drag me
     </div>
   );
@@ -81,7 +96,7 @@ function Draggable() {
 <div>
   <Draggable />
   <DropTarget />
-</div>
+</div>;
 ```
 
 ## Drag previews
@@ -90,28 +105,37 @@ By default, the drag preview shown under the user's pointer or finger is a copy 
 This example renders a custom drag preview which shows the text of the first drag item.
 
 ```tsx
-import React from 'react';
-import {useDrag, DragPreview} from 'react-aria/useDrag';
-import {DropTarget} from './DropTarget';
+import React from "react";
+import { useDrag, DragPreview } from "react-aria/useDrag";
+import { DropTarget } from "./DropTarget";
 
 function Draggable() {
   let preview = React.useRef(null);
-  let {dragProps, isDragging} = useDrag({
+  let { dragProps, isDragging } = useDrag({
     preview,
     getItems() {
-      return [{
-        'text/plain': 'hello world'
-      }];
-    }
+      return [
+        {
+          "text/plain": "hello world",
+        },
+      ];
+    },
   });
   return (
     <>
-      <div {...dragProps} role="button" tabIndex={0} className={`draggable ${isDragging ? 'dragging' : ''}`}>
+      <div
+        {...dragProps}
+        role="button"
+        tabIndex={0}
+        className={`draggable ${isDragging ? "dragging" : ""}`}
+      >
         Drag me
       </div>
       {/*- begin highlight -*/}
       <DragPreview ref={preview}>
-        {items => <div style={{background: 'green', color: 'white'}}>{items[0]['text/plain']}</div>}
+        {(items) => (
+          <div style={{ background: "green", color: "white" }}>{items[0]["text/plain"]}</div>
+        )}
       </DragPreview>
       {/*- end highlight -*/}
     </>
@@ -120,7 +144,7 @@ function Draggable() {
 <div>
   <Draggable />
   <DropTarget />
-</div>
+</div>;
 ```
 
 ## Drop operations
@@ -137,25 +161,27 @@ The `onDragEnd` event allows the drag source to respond when a drag that it init
 This example removes the draggable element from the UI when a move operation is completed. Try holding the <Keyboard>Option</Keyboard> or <Keyboard>Alt</Keyboard> keys to change the operation to copy, and see how the behavior changes.
 
 ```tsx
-"use client"
-import React from 'react';
-import {useDrag} from 'react-aria/useDrag';
-import {DropTarget} from './DropTarget';
+"use client";
+import React from "react";
+import { useDrag } from "react-aria/useDrag";
+import { DropTarget } from "./DropTarget";
 
 function Draggable() {
   let [moved, setMoved] = React.useState(false);
-  let {dragProps, isDragging} = useDrag({
+  let { dragProps, isDragging } = useDrag({
     getItems() {
-      return [{
-        'text/plain': 'hello world'
-      }];
+      return [
+        {
+          "text/plain": "hello world",
+        },
+      ];
     },
     /*- begin highlight -*/
     onDragEnd(e) {
-      if (e.dropOperation === 'move') {
+      if (e.dropOperation === "move") {
         setMoved(true);
       }
-    }
+    },
     /*- end highlight -*/
   });
   if (moved) {
@@ -163,7 +189,12 @@ function Draggable() {
   }
   // ...
   return (
-    <div {...dragProps} role="button" tabIndex={0} className={`draggable ${isDragging ? 'dragging' : ''}`}>
+    <div
+      {...dragProps}
+      role="button"
+      tabIndex={0}
+      className={`draggable ${isDragging ? "dragging" : ""}`}
+    >
       Drag me
     </div>
   );
@@ -171,31 +202,33 @@ function Draggable() {
 <div>
   <Draggable />
   <DropTarget />
-</div>
+</div>;
 ```
 
 The drag source can also control which drop operations are allowed for the data. For example, if moving data is not allowed, and only copying is supported, the `getAllowedDropOperations` function could be implemented to indicate this. When you drag the element below, the cursor now shows the copy affordance by default, and pressing a modifier to switch drop operations results in the drop being canceled.
 
 ```tsx
-import {useDrag} from 'react-aria/useDrag';
-import {DropTarget} from './DropTarget';
+import { useDrag } from "react-aria/useDrag";
+import { DropTarget } from "./DropTarget";
 
 function Draggable() {
-  let {dragProps, isDragging} = useDrag({
+  let { dragProps, isDragging } = useDrag({
     getItems() {
-      return [{
-        'text/plain': 'hello world'
-      }];
+      return [
+        {
+          "text/plain": "hello world",
+        },
+      ];
     },
     /*- begin highlight -*/
     getAllowedDropOperations() {
-      return ['copy'];
-    }
+      return ["copy"];
+    },
     /*- end highlight -*/
   });
   // ...
   return (
-    <div {...dragProps} className={`draggable ${isDragging ? 'dragging' : ''}`}>
+    <div {...dragProps} className={`draggable ${isDragging ? "dragging" : ""}`}>
       Drag me
     </div>
   );
@@ -203,7 +236,7 @@ function Draggable() {
 <div>
   <Draggable />
   <DropTarget />
-</div>
+</div>;
 ```
 
 ## Drag button
@@ -212,33 +245,41 @@ In cases where a draggable element has other interactions that conflict with acc
 When the `hasDragButton` option is enabled, the keyboard interactions are moved from the returned `dragProps` to the `dragButtonProps` so that they can be applied to a separate element, while the mouse and touch dragging interactions remain in `dragProps`.
 
 ```tsx
-import React from 'react';
-import {useDrag} from 'react-aria/useDrag';
-import {useButton} from '@react-aria/button';
-import {DropTarget} from './DropTarget';
+import React from "react";
+import { useDrag } from "react-aria/useDrag";
+import { useButton } from "@react-aria/button";
+import { DropTarget } from "./DropTarget";
 
 function Draggable() {
-  let {dragProps, dragButtonProps, isDragging} = useDrag({
+  let { dragProps, dragButtonProps, isDragging } = useDrag({
     /*- begin highlight -*/
     hasDragButton: true,
     /*- end highlight -*/
     getItems() {
-      return [{
-        'text/plain': 'hello world'
-      }];
-    }
+      return [
+        {
+          "text/plain": "hello world",
+        },
+      ];
+    },
   });
   /*- begin highlight -*/
   let ref = React.useRef(null);
-  let {buttonProps} = useButton({...dragButtonProps, elementType: 'div'}, ref);
+  let { buttonProps } = useButton({ ...dragButtonProps, elementType: "div" }, ref);
   /*- end highlight -*/
   return (
-    <div {...dragProps} className={`draggable ${isDragging ? 'dragging' : ''}`} style={{display: 'inline-flex', alignItems: 'center', gap: 5}}>
+    <div
+      {...dragProps}
+      className={`draggable ${isDragging ? "dragging" : ""}`}
+      style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
+    >
       {/*- begin highlight -*/}
-      <span {...buttonProps} aria-label="Drag" ref={ref} style={{fontSize: 18}}>≡</span>
+      <span {...buttonProps} aria-label="Drag" ref={ref} style={{ fontSize: 18 }}>
+        ≡
+      </span>
       {/*- end highlight -*/}
       <span>Some text</span>
-      <button onClick={() => alert('action')}>Action</button>
+      <button onClick={() => alert("action")}>Action</button>
     </div>
   );
 }
@@ -246,7 +287,7 @@ function Draggable() {
 <div>
   <Draggable />
   <DropTarget />
-</div>
+</div>;
 ```
 
 ## Disabling dragging
@@ -254,26 +295,33 @@ function Draggable() {
 If you need to temporarily disable dragging, you can pass the `isDisabled` option to `useDrag`. This will prevent dragging an element until it is re-enabled.
 
 ```tsx
-import {useDrag} from 'react-aria/useDrag';
+import { useDrag } from "react-aria/useDrag";
 
 function Draggable() {
-  let {dragProps, isDragging} = useDrag({
+  let { dragProps, isDragging } = useDrag({
     getItems() {
-      return [{
-        'text/plain': 'hello world'
-      }];
+      return [
+        {
+          "text/plain": "hello world",
+        },
+      ];
     },
     /*- begin highlight -*/
-    isDisabled: true
+    isDisabled: true,
     /*- end highlight -*/
   });
   return (
-    <div {...dragProps} role="button" tabIndex={0} className={`draggable ${isDragging ? 'dragging' : ''}`}>
+    <div
+      {...dragProps}
+      role="button"
+      tabIndex={0}
+      className={`draggable ${isDragging ? "dragging" : ""}`}
+    >
       Drag me
     </div>
   );
 }
-<Draggable />
+<Draggable />;
 ```
 
 ## API
@@ -287,15 +335,15 @@ function Draggable() {
 
 ### Properties
 
-| Name | Type | Description |
-|------|------|-------------|
-| `getAllowedDropOperations` | `(() => DropOperation[]) | undefined` | Function that returns the drop operations that are allowed for the dragged items. If not provided, all drop operations are allowed. |
-| `hasDragButton` | `boolean | undefined` | Whether the item has an explicit focusable drag affordance to initiate accessible drag and drop mode. If true, the dragProps will omit these event handlers, and they will be applied to dragButtonProps instead. |
-| `isDisabled` | `boolean | undefined` | Whether the drag operation is disabled. If true, the element will not be draggable. |
-| `onDragEnd` | `((e: DragEndEvent) => void) | undefined` | Handler that is called when the drag operation is ended, either as a result of a drop or a cancellation. |
-| `onDragMove` | `((e: DragMoveEvent) => void) | undefined` | Handler that is called when the drag is moved. |
-| `onDragStart` | `((e: DragStartEvent) => void) | undefined` | Handler that is called when a drag operation is started. |
-| `preview` | `RefObject<DragPreviewRenderer | null> | undefined` | The ref of the element that will be rendered as the drag preview while dragging. |
+| Name                       | Type                           | Description |
+| -------------------------- | ------------------------------ | ----------- |
+| `getAllowedDropOperations` | `(() => DropOperation[])       | undefined`  | Function that returns the drop operations that are allowed for the dragged items. If not provided, all drop operations are allowed.                                                                               |
+| `hasDragButton`            | `boolean                       | undefined`  | Whether the item has an explicit focusable drag affordance to initiate accessible drag and drop mode. If true, the dragProps will omit these event handlers, and they will be applied to dragButtonProps instead. |
+| `isDisabled`               | `boolean                       | undefined`  | Whether the drag operation is disabled. If true, the element will not be draggable.                                                                                                                               |
+| `onDragEnd`                | `((e: DragEndEvent) => void)   | undefined`  | Handler that is called when the drag operation is ended, either as a result of a drop or a cancellation.                                                                                                          |
+| `onDragMove`               | `((e: DragMoveEvent) => void)  | undefined`  | Handler that is called when the drag is moved.                                                                                                                                                                    |
+| `onDragStart`              | `((e: DragStartEvent) => void) | undefined`  | Handler that is called when a drag operation is started.                                                                                                                                                          |
+| `preview`                  | `RefObject<DragPreviewRenderer | null>       | undefined`                                                                                                                                                                                                        | The ref of the element that will be rendered as the drag preview while dragging. |
 
 ### Methods
 
@@ -305,11 +353,11 @@ A function that returns the items being dragged.
 
 ### DragResult
 
-| Name | Type | Description |
-|------|------|-------------|
-| `dragButtonProps` \* | `AriaButtonProps<"button">` | Props for the explicit drag button affordance, if any. |
-| `dragProps` \* | `HTMLAttributes<HTMLElement>` | Props for the draggable element. |
-| `isDragging` \* | `boolean` | Whether the element is currently being dragged. |
+| Name                 | Type                          | Description                                            |
+| -------------------- | ----------------------------- | ------------------------------------------------------ |
+| `dragButtonProps` \* | `AriaButtonProps<"button">`   | Props for the explicit drag button affordance, if any. |
+| `dragProps` \*       | `HTMLAttributes<HTMLElement>` | Props for the draggable element.                       |
+| `isDragging` \*      | `boolean`                     | Whether the element is currently being dragged.        |
 
 ## Related Types
 

@@ -12,34 +12,35 @@
 
 ## File Map
 
-| Action | Path | Purpose |
-|--------|------|---------|
-| Create | `packages/icons/svg/github.svg` | GitHub brand icon |
-| Create | `packages/icons/svg/google.svg` | Google brand icon |
-| Create | `packages/icons/svg/wechat.svg` | WeChat brand icon |
-| Create | `packages/icons/svg/qq.svg` | QQ brand icon |
-| Create | `packages/icons/svg/weibo.svg` | Weibo brand icon |
-| Create | `packages/icons/svg/gitee.svg` | Gitee brand icon |
-| Create | `packages/icons/svg/baidu.svg` | Baidu brand icon |
-| Modify | `packages/icons/src/generated/sprite.ts` | Rebuilt by build script |
-| Modify | `packages/icons/src/generated/types.ts` | Rebuilt — adds 7 new names |
-| Modify | `apps/web/app/globals.css` | Add `modalPulse` + `viewEnter` keyframes |
-| Modify | `apps/web/store/use-login-modal.ts` | Add `view`, `setView`, update `open` |
-| Create | `apps/web/store/use-login-modal.test.ts` | Store unit tests |
-| Create | `apps/web/components/auth/oauth-grid.tsx` | Expandable OAuth icon row |
-| Create | `apps/web/components/auth/oauth-grid.test.tsx` | |
-| Create | `apps/web/components/auth/login-view.tsx` | Login form (fields + CTA + OAuth) |
-| Create | `apps/web/components/auth/login-view.test.tsx` | |
-| Create | `apps/web/components/auth/register-view.tsx` | Register form |
-| Create | `apps/web/components/auth/register-view.test.tsx` | |
-| Rewrite | `apps/web/components/auth/login-modal.tsx` | Modal shell |
-| Update | `apps/web/components/auth/login-modal.test.tsx` | |
+| Action  | Path                                              | Purpose                                  |
+| ------- | ------------------------------------------------- | ---------------------------------------- |
+| Create  | `packages/icons/svg/github.svg`                   | GitHub brand icon                        |
+| Create  | `packages/icons/svg/google.svg`                   | Google brand icon                        |
+| Create  | `packages/icons/svg/wechat.svg`                   | WeChat brand icon                        |
+| Create  | `packages/icons/svg/qq.svg`                       | QQ brand icon                            |
+| Create  | `packages/icons/svg/weibo.svg`                    | Weibo brand icon                         |
+| Create  | `packages/icons/svg/gitee.svg`                    | Gitee brand icon                         |
+| Create  | `packages/icons/svg/baidu.svg`                    | Baidu brand icon                         |
+| Modify  | `packages/icons/src/generated/sprite.ts`          | Rebuilt by build script                  |
+| Modify  | `packages/icons/src/generated/types.ts`           | Rebuilt — adds 7 new names               |
+| Modify  | `apps/web/app/globals.css`                        | Add `modalPulse` + `viewEnter` keyframes |
+| Modify  | `apps/web/store/use-login-modal.ts`               | Add `view`, `setView`, update `open`     |
+| Create  | `apps/web/store/use-login-modal.test.ts`          | Store unit tests                         |
+| Create  | `apps/web/components/auth/oauth-grid.tsx`         | Expandable OAuth icon row                |
+| Create  | `apps/web/components/auth/oauth-grid.test.tsx`    |                                          |
+| Create  | `apps/web/components/auth/login-view.tsx`         | Login form (fields + CTA + OAuth)        |
+| Create  | `apps/web/components/auth/login-view.test.tsx`    |                                          |
+| Create  | `apps/web/components/auth/register-view.tsx`      | Register form                            |
+| Create  | `apps/web/components/auth/register-view.test.tsx` |                                          |
+| Rewrite | `apps/web/components/auth/login-modal.tsx`        | Modal shell                              |
+| Update  | `apps/web/components/auth/login-modal.test.tsx`   |                                          |
 
 ---
 
 ## Task 1: Add animation keyframes
 
 **Files:**
+
 - Modify: `apps/web/app/globals.css`
 
 - [ ] **Step 1: Add keyframes to globals.css**
@@ -89,6 +90,7 @@ git commit -m "style(web): 新增弹窗 pulse 和视图入场 keyframes"
 ## Task 2: Add brand SVG icons
 
 **Files:**
+
 - Create: `packages/icons/svg/{github,google,wechat,qq,weibo,gitee,baidu}.svg`
 - Modify (auto): `packages/icons/src/generated/sprite.ts`, `types.ts`
 
@@ -125,6 +127,7 @@ curl -L https://simpleicons.org/icons/baidu.svg -o packages/icons/svg/baidu.svg
 ```
 
 Then open each downloaded file and verify:
+
 1. The root element is `<svg>` with `viewBox="0 0 24 24"`
 2. There is at least one `<path>` element
 
@@ -137,6 +140,7 @@ pnpm --filter @repo/icons build
 ```
 
 Expected output (order may vary):
+
 ```
 ✓ 生成雪碧图：33 个图标 [arrow-up-right, baidu, check, ..., wechat, weibo]
 ```
@@ -155,6 +159,7 @@ git commit -m "feat(icons): 新增 GitHub、Google、WeChat 等 7 个品牌图�
 ## Task 3: Extend useLoginModal store
 
 **Files:**
+
 - Modify: `apps/web/store/use-login-modal.ts`
 - Create: `apps/web/store/use-login-modal.test.ts`
 
@@ -163,47 +168,47 @@ git commit -m "feat(icons): 新增 GitHub、Google、WeChat 等 7 个品牌图�
 Create `apps/web/store/use-login-modal.test.ts`:
 
 ```ts
-import { describe, it, expect, beforeEach } from 'vitest';
-import { useLoginModal } from './use-login-modal';
+import { describe, it, expect, beforeEach } from "vitest";
+import { useLoginModal } from "./use-login-modal";
 
 beforeEach(() => {
-  useLoginModal.setState({ isOpen: false, view: 'login' });
+  useLoginModal.setState({ isOpen: false, view: "login" });
 });
 
-describe('useLoginModal', () => {
-  it('初始状态：关闭，登录视图', () => {
+describe("useLoginModal", () => {
+  it("初始状态：关闭，登录视图", () => {
     const state = useLoginModal.getState();
     expect(state.isOpen).toBe(false);
-    expect(state.view).toBe('login');
+    expect(state.view).toBe("login");
   });
 
-  it('open() 默认打开登录视图', () => {
+  it("open() 默认打开登录视图", () => {
     useLoginModal.getState().open();
     const state = useLoginModal.getState();
     expect(state.isOpen).toBe(true);
-    expect(state.view).toBe('login');
+    expect(state.view).toBe("login");
   });
 
   it('open("register") 打开注册视图', () => {
-    useLoginModal.getState().open('register');
+    useLoginModal.getState().open("register");
     const state = useLoginModal.getState();
     expect(state.isOpen).toBe(true);
-    expect(state.view).toBe('register');
+    expect(state.view).toBe("register");
   });
 
-  it('close() 关闭并重置视图为登录', () => {
-    useLoginModal.getState().open('register');
+  it("close() 关闭并重置视图为登录", () => {
+    useLoginModal.getState().open("register");
     useLoginModal.getState().close();
     const state = useLoginModal.getState();
     expect(state.isOpen).toBe(false);
-    expect(state.view).toBe('login');
+    expect(state.view).toBe("login");
   });
 
-  it('setView() 切换当前视图', () => {
-    useLoginModal.getState().setView('register');
-    expect(useLoginModal.getState().view).toBe('register');
-    useLoginModal.getState().setView('login');
-    expect(useLoginModal.getState().view).toBe('login');
+  it("setView() 切换当前视图", () => {
+    useLoginModal.getState().setView("register");
+    expect(useLoginModal.getState().view).toBe("register");
+    useLoginModal.getState().setView("login");
+    expect(useLoginModal.getState().view).toBe("login");
   });
 });
 ```
@@ -221,9 +226,9 @@ Expected: 4 failures (setView/view not defined, open signature mismatch).
 Replace the entire content of `apps/web/store/use-login-modal.ts`:
 
 ```ts
-import { create } from 'zustand';
+import { create } from "zustand";
 
-type ModalView = 'login' | 'register';
+type ModalView = "login" | "register";
 
 interface LoginModalStore {
   isOpen: boolean;
@@ -235,9 +240,9 @@ interface LoginModalStore {
 
 export const useLoginModal = create<LoginModalStore>((set) => ({
   isOpen: false,
-  view: 'login',
-  open: (view = 'login') => set({ isOpen: true, view }),
-  close: () => set({ isOpen: false, view: 'login' }),
+  view: "login",
+  open: (view = "login") => set({ isOpen: true, view }),
+  close: () => set({ isOpen: false, view: "login" }),
   setView: (view) => set({ view }),
 }));
 ```
@@ -262,6 +267,7 @@ git commit -m "feat(web): useLoginModal 新增 view 状态与 setView/open 重�
 ## Task 4: OAuthGrid component
 
 **Files:**
+
 - Create: `apps/web/components/auth/oauth-grid.tsx`
 - Create: `apps/web/components/auth/oauth-grid.test.tsx`
 
@@ -270,30 +276,30 @@ git commit -m "feat(web): useLoginModal 新增 view 状态与 setView/open 重�
 Create `apps/web/components/auth/oauth-grid.test.tsx`:
 
 ```tsx
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { OAuthGrid } from './oauth-grid';
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { OAuthGrid } from "./oauth-grid";
 
-describe('OAuthGrid', () => {
-  it('渲染 4 个主要 provider + 展开按钮', () => {
+describe("OAuthGrid", () => {
+  it("渲染 4 个主要 provider + 展开按钮", () => {
     render(<OAuthGrid />);
-    expect(screen.getByTitle('微信')).toBeInTheDocument();
-    expect(screen.getByTitle('QQ')).toBeInTheDocument();
-    expect(screen.getByTitle('GitHub')).toBeInTheDocument();
-    expect(screen.getByTitle('Google')).toBeInTheDocument();
-    expect(screen.getByLabelText('展开更多登录方式')).toBeInTheDocument();
-    expect(screen.queryByTitle('微博')).not.toBeInTheDocument();
+    expect(screen.getByTitle("微信")).toBeInTheDocument();
+    expect(screen.getByTitle("QQ")).toBeInTheDocument();
+    expect(screen.getByTitle("GitHub")).toBeInTheDocument();
+    expect(screen.getByTitle("Google")).toBeInTheDocument();
+    expect(screen.getByLabelText("展开更多登录方式")).toBeInTheDocument();
+    expect(screen.queryByTitle("微博")).not.toBeInTheDocument();
   });
 
-  it('点击展开按钮后显示全部 7 个 provider', async () => {
+  it("点击展开按钮后显示全部 7 个 provider", async () => {
     const user = userEvent.setup();
     render(<OAuthGrid />);
-    await user.click(screen.getByLabelText('展开更多登录方式'));
-    expect(screen.getByTitle('微博')).toBeInTheDocument();
-    expect(screen.getByTitle('Gitee')).toBeInTheDocument();
-    expect(screen.getByTitle('百度')).toBeInTheDocument();
-    expect(screen.queryByLabelText('展开更多登录方式')).not.toBeInTheDocument();
+    await user.click(screen.getByLabelText("展开更多登录方式"));
+    expect(screen.getByTitle("微博")).toBeInTheDocument();
+    expect(screen.getByTitle("Gitee")).toBeInTheDocument();
+    expect(screen.getByTitle("百度")).toBeInTheDocument();
+    expect(screen.queryByLabelText("展开更多登录方式")).not.toBeInTheDocument();
   });
 });
 ```
@@ -311,23 +317,23 @@ Expected: cannot find module `./oauth-grid`.
 Create `apps/web/components/auth/oauth-grid.tsx`:
 
 ```tsx
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { SvgIcon } from '@repo/icons';
-import { cn } from '@repo/ui';
+import { useState } from "react";
+import { SvgIcon } from "@repo/icons";
+import { cn } from "@repo/ui";
 
 const PRIMARY_PROVIDERS = [
-  { id: 'wechat', label: '微信', icon: 'wechat' },
-  { id: 'qq', label: 'QQ', icon: 'qq' },
-  { id: 'github', label: 'GitHub', icon: 'github' },
-  { id: 'google', label: 'Google', icon: 'google' },
+  { id: "wechat", label: "微信", icon: "wechat" },
+  { id: "qq", label: "QQ", icon: "qq" },
+  { id: "github", label: "GitHub", icon: "github" },
+  { id: "google", label: "Google", icon: "google" },
 ] as const;
 
 const EXTRA_PROVIDERS = [
-  { id: 'weibo', label: '微博', icon: 'weibo' },
-  { id: 'gitee', label: 'Gitee', icon: 'gitee' },
-  { id: 'baidu', label: '百度', icon: 'baidu' },
+  { id: "weibo", label: "微博", icon: "weibo" },
+  { id: "gitee", label: "Gitee", icon: "gitee" },
+  { id: "baidu", label: "百度", icon: "baidu" },
 ] as const;
 
 interface OAuthGridProps {
@@ -337,12 +343,10 @@ interface OAuthGridProps {
 export function OAuthGrid({ className }: OAuthGridProps) {
   const [expanded, setExpanded] = useState(false);
 
-  const providers = expanded
-    ? [...PRIMARY_PROVIDERS, ...EXTRA_PROVIDERS]
-    : PRIMARY_PROVIDERS;
+  const providers = expanded ? [...PRIMARY_PROVIDERS, ...EXTRA_PROVIDERS] : PRIMARY_PROVIDERS;
 
   return (
-    <div className={cn('flex justify-center gap-2 flex-wrap', className)}>
+    <div className={cn("flex justify-center gap-2 flex-wrap", className)}>
       {providers.map(({ id, label, icon }) => (
         <button
           key={id}
@@ -388,6 +392,7 @@ git commit -m "feat(web): 新增 OAuthGrid 组件（4 主要 + 3 折叠展开）
 ## Task 5: LoginView component
 
 **Files:**
+
 - Create: `apps/web/components/auth/login-view.tsx`
 - Create: `apps/web/components/auth/login-view.test.tsx`
 
@@ -396,47 +401,47 @@ git commit -m "feat(web): 新增 OAuthGrid 组件（4 主要 + 3 折叠展开）
 Create `apps/web/components/auth/login-view.test.tsx`:
 
 ```tsx
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { LoginView } from './login-view';
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { LoginView } from "./login-view";
 
-describe('LoginView', () => {
+describe("LoginView", () => {
   const mockSwitch = vi.fn();
 
-  it('渲染账号、密码输入框和继续按钮', () => {
+  it("渲染账号、密码输入框和继续按钮", () => {
     render(<LoginView onSwitchToRegister={mockSwitch} />);
-    expect(screen.getByPlaceholderText('账号 / 邮箱 / 手机号')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('密码')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /继续/ })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("账号 / 邮箱 / 手机号")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("密码")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /继续/ })).toBeInTheDocument();
   });
 
-  it('密码输入框默认为 password 类型', () => {
+  it("密码输入框默认为 password 类型", () => {
     render(<LoginView onSwitchToRegister={mockSwitch} />);
-    expect(screen.getByPlaceholderText('密码')).toHaveAttribute('type', 'password');
+    expect(screen.getByPlaceholderText("密码")).toHaveAttribute("type", "password");
   });
 
-  it('点击眼睛按钮切换密码可见性', async () => {
+  it("点击眼睛按钮切换密码可见性", async () => {
     const user = userEvent.setup();
     render(<LoginView onSwitchToRegister={mockSwitch} />);
-    const input = screen.getByPlaceholderText('密码');
-    await user.click(screen.getByLabelText('显示密码'));
-    expect(input).toHaveAttribute('type', 'text');
-    await user.click(screen.getByLabelText('隐藏密码'));
-    expect(input).toHaveAttribute('type', 'password');
+    const input = screen.getByPlaceholderText("密码");
+    await user.click(screen.getByLabelText("显示密码"));
+    expect(input).toHaveAttribute("type", "text");
+    await user.click(screen.getByLabelText("隐藏密码"));
+    expect(input).toHaveAttribute("type", "password");
   });
 
-  it('点击注册标签调用 onSwitchToRegister', async () => {
+  it("点击注册标签调用 onSwitchToRegister", async () => {
     const user = userEvent.setup();
     render(<LoginView onSwitchToRegister={mockSwitch} />);
-    await user.click(screen.getByRole('button', { name: /注册/ }));
+    await user.click(screen.getByRole("button", { name: /注册/ }));
     expect(mockSwitch).toHaveBeenCalledOnce();
   });
 
-  it('渲染其他方式登录分割线和 OAuthGrid', () => {
+  it("渲染其他方式登录分割线和 OAuthGrid", () => {
     render(<LoginView onSwitchToRegister={mockSwitch} />);
-    expect(screen.getByText('其他方式登录')).toBeInTheDocument();
-    expect(screen.getByTitle('微信')).toBeInTheDocument();
+    expect(screen.getByText("其他方式登录")).toBeInTheDocument();
+    expect(screen.getByTitle("微信")).toBeInTheDocument();
   });
 });
 ```
@@ -454,15 +459,15 @@ Expected: cannot find module `./login-view`.
 Create `apps/web/components/auth/login-view.tsx`:
 
 ```tsx
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { SvgIcon } from '@repo/icons';
-import { Button } from '@repo/ui';
-import { OAuthGrid } from './oauth-grid';
+import { useState } from "react";
+import { SvgIcon } from "@repo/icons";
+import { Button } from "@repo/ui";
+import { OAuthGrid } from "./oauth-grid";
 
 const inputCls =
-  'w-full px-4 py-[13px] text-sm rounded-xl bg-foreground/5 border border-border placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 focus:bg-primary/[0.06] transition-colors';
+  "w-full px-4 py-[13px] text-sm rounded-xl bg-foreground/5 border border-border placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 focus:bg-primary/[0.06] transition-colors";
 
 interface LoginViewProps {
   onSwitchToRegister: () => void;
@@ -476,9 +481,7 @@ export function LoginView({ onSwitchToRegister }: LoginViewProps) {
       {/* 标题行 */}
       <div className="mb-6">
         <div className="flex items-center justify-between gap-3 mb-[5px]">
-          <h2 className="text-[22px] font-extrabold tracking-tight text-foreground">
-            欢迎回来
-          </h2>
+          <h2 className="text-[22px] font-extrabold tracking-tight text-foreground">欢迎回来</h2>
           <button
             type="button"
             onClick={onSwitchToRegister}
@@ -501,7 +504,7 @@ export function LoginView({ onSwitchToRegister }: LoginViewProps) {
         />
         <div className="relative">
           <input
-            type={showPassword ? 'text' : 'password'}
+            type={showPassword ? "text" : "password"}
             placeholder="密码"
             autoComplete="current-password"
             className={`${inputCls} pr-[46px]`}
@@ -509,10 +512,10 @@ export function LoginView({ onSwitchToRegister }: LoginViewProps) {
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            aria-label={showPassword ? '隐藏密码' : '显示密码'}
+            aria-label={showPassword ? "隐藏密码" : "显示密码"}
             className="absolute right-[10px] top-1/2 -translate-y-1/2 w-[30px] h-[30px] rounded-lg flex items-center justify-center text-muted-foreground/60 transition-colors hover:bg-foreground/7 hover:text-muted-foreground"
           >
-            <SvgIcon name={showPassword ? 'eye-off' : 'eye'} size={15} />
+            <SvgIcon name={showPassword ? "eye-off" : "eye"} size={15} />
           </button>
         </div>
         <div className="text-right">
@@ -526,10 +529,7 @@ export function LoginView({ onSwitchToRegister }: LoginViewProps) {
       </div>
 
       {/* 继续按钮 */}
-      <Button
-        variant="default"
-        className="w-full mt-5 h-[46px] rounded-xl text-[14.5px] gap-1.5"
-      >
+      <Button variant="default" className="w-full mt-5 h-[46px] rounded-xl text-[14.5px] gap-1.5">
         继续
         <SvgIcon name="chevron-right" size={16} />
       </Button>
@@ -568,6 +568,7 @@ git commit -m "feat(web): 新增 LoginView 组件（账号密码、密码可见�
 ## Task 6: RegisterView component
 
 **Files:**
+
 - Create: `apps/web/components/auth/register-view.tsx`
 - Create: `apps/web/components/auth/register-view.test.tsx`
 
@@ -576,51 +577,51 @@ git commit -m "feat(web): 新增 LoginView 组件（账号密码、密码可见�
 Create `apps/web/components/auth/register-view.test.tsx`:
 
 ```tsx
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { RegisterView } from './register-view';
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { RegisterView } from "./register-view";
 
-describe('RegisterView', () => {
+describe("RegisterView", () => {
   const mockSwitch = vi.fn();
 
-  it('渲染注册所有必填和可选字段', () => {
+  it("渲染注册所有必填和可选字段", () => {
     render(<RegisterView onSwitchToLogin={mockSwitch} />);
-    expect(screen.getByPlaceholderText('邮箱地址')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('验证码')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('设置密码')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('昵称（可选）')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('个人网站（可选）')).toBeInTheDocument();
-    expect(screen.getByText('上传头像')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("邮箱地址")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("验证码")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("设置密码")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("昵称（可选）")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("个人网站（可选）")).toBeInTheDocument();
+    expect(screen.getByText("上传头像")).toBeInTheDocument();
   });
 
-  it('密码字段默认为 password 类型', () => {
+  it("密码字段默认为 password 类型", () => {
     render(<RegisterView onSwitchToLogin={mockSwitch} />);
-    expect(screen.getByPlaceholderText('设置密码')).toHaveAttribute('type', 'password');
+    expect(screen.getByPlaceholderText("设置密码")).toHaveAttribute("type", "password");
   });
 
-  it('点击眼睛按钮切换密码可见性', async () => {
+  it("点击眼睛按钮切换密码可见性", async () => {
     const user = userEvent.setup();
     render(<RegisterView onSwitchToLogin={mockSwitch} />);
-    const input = screen.getByPlaceholderText('设置密码');
-    await user.click(screen.getByLabelText('显示密码'));
-    expect(input).toHaveAttribute('type', 'text');
+    const input = screen.getByPlaceholderText("设置密码");
+    await user.click(screen.getByLabelText("显示密码"));
+    expect(input).toHaveAttribute("type", "text");
   });
 
-  it('点击登录标签调用 onSwitchToLogin', async () => {
+  it("点击登录标签调用 onSwitchToLogin", async () => {
     const user = userEvent.setup();
     render(<RegisterView onSwitchToLogin={mockSwitch} />);
-    await user.click(screen.getByRole('button', { name: /登录/ }));
+    await user.click(screen.getByRole("button", { name: /登录/ }));
     expect(mockSwitch).toHaveBeenCalledOnce();
   });
 
-  it('渲染其他方式注册分割线和 OAuthGrid', () => {
+  it("渲染其他方式注册分割线和 OAuthGrid", () => {
     render(<RegisterView onSwitchToLogin={mockSwitch} />);
-    expect(screen.getByText('其他方式注册')).toBeInTheDocument();
-    expect(screen.getByTitle('微信')).toBeInTheDocument();
+    expect(screen.getByText("其他方式注册")).toBeInTheDocument();
+    expect(screen.getByTitle("微信")).toBeInTheDocument();
   });
 
-  it('渲染协议提示文字', () => {
+  it("渲染协议提示文字", () => {
     render(<RegisterView onSwitchToLogin={mockSwitch} />);
     expect(screen.getByText(/注册即表示同意/)).toBeInTheDocument();
   });
@@ -640,15 +641,15 @@ Expected: cannot find module `./register-view`.
 Create `apps/web/components/auth/register-view.tsx`:
 
 ```tsx
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { SvgIcon } from '@repo/icons';
-import { Button } from '@repo/ui';
-import { OAuthGrid } from './oauth-grid';
+import { useState } from "react";
+import { SvgIcon } from "@repo/icons";
+import { Button } from "@repo/ui";
+import { OAuthGrid } from "./oauth-grid";
 
 const inputCls =
-  'w-full px-4 py-[13px] text-sm rounded-xl bg-foreground/5 border border-border placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 focus:bg-primary/[0.06] transition-colors';
+  "w-full px-4 py-[13px] text-sm rounded-xl bg-foreground/5 border border-border placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 focus:bg-primary/[0.06] transition-colors";
 
 interface RegisterViewProps {
   onSwitchToLogin: () => void;
@@ -670,9 +671,7 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
       {/* 标题行 */}
       <div className="mb-6">
         <div className="flex items-center justify-between gap-3 mb-[5px]">
-          <h2 className="text-[22px] font-extrabold tracking-tight text-foreground">
-            创建账号
-          </h2>
+          <h2 className="text-[22px] font-extrabold tracking-tight text-foreground">创建账号</h2>
           <button
             type="button"
             onClick={onSwitchToLogin}
@@ -687,12 +686,7 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
 
       {/* 表单字段 */}
       <div className="flex flex-col gap-[10px]">
-        <input
-          type="email"
-          placeholder="邮箱地址"
-          autoComplete="email"
-          className={inputCls}
-        />
+        <input type="email" placeholder="邮箱地址" autoComplete="email" className={inputCls} />
 
         {/* 验证码行 */}
         <div className="flex gap-2">
@@ -714,7 +708,7 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
         {/* 密码 */}
         <div className="relative">
           <input
-            type={showPassword ? 'text' : 'password'}
+            type={showPassword ? "text" : "password"}
             placeholder="设置密码"
             autoComplete="new-password"
             className={`${inputCls} pr-[46px]`}
@@ -722,10 +716,10 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            aria-label={showPassword ? '隐藏密码' : '显示密码'}
+            aria-label={showPassword ? "隐藏密码" : "显示密码"}
             className="absolute right-[10px] top-1/2 -translate-y-1/2 w-[30px] h-[30px] rounded-lg flex items-center justify-center text-muted-foreground/60 transition-colors hover:bg-foreground/7 hover:text-muted-foreground"
           >
-            <SvgIcon name={showPassword ? 'eye-off' : 'eye'} size={15} />
+            <SvgIcon name={showPassword ? "eye-off" : "eye"} size={15} />
           </button>
         </div>
 
@@ -736,12 +730,7 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
           className={inputCls}
         />
 
-        <input
-          type="url"
-          placeholder="个人网站（可选）"
-          autoComplete="url"
-          className={inputCls}
-        />
+        <input type="url" placeholder="个人网站（可选）" autoComplete="url" className={inputCls} />
 
         {/* 头像上传 */}
         <label className="flex items-center gap-[14px] p-[12px_16px] rounded-xl bg-foreground/[0.03] border-[1.5px] border-dashed border-foreground/[0.09] cursor-pointer transition-colors hover:bg-primary/5 hover:border-primary/25">
@@ -772,10 +761,7 @@ export function RegisterView({ onSwitchToLogin }: RegisterViewProps) {
       </div>
 
       {/* 创建账号按钮 */}
-      <Button
-        variant="default"
-        className="w-full mt-5 h-[46px] rounded-xl text-[14.5px] gap-1.5"
-      >
+      <Button variant="default" className="w-full mt-5 h-[46px] rounded-xl text-[14.5px] gap-1.5">
         创建账号
         <SvgIcon name="chevron-right" size={16} />
       </Button>
@@ -819,6 +805,7 @@ git commit -m "feat(web): 新增 RegisterView 组件（邮箱验证码、头像�
 ## Task 7: Rewrite LoginModal shell
 
 **Files:**
+
 - Rewrite: `apps/web/components/auth/login-modal.tsx`
 - Update: `apps/web/components/auth/login-modal.test.tsx`
 
@@ -827,65 +814,65 @@ git commit -m "feat(web): 新增 RegisterView 组件（邮箱验证码、头像�
 Replace the entire content of `apps/web/components/auth/login-modal.test.tsx`:
 
 ```tsx
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { LoginModal } from './login-modal';
-import { useLoginModal } from '@/store/use-login-modal';
+import { describe, it, expect, beforeEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { LoginModal } from "./login-modal";
+import { useLoginModal } from "@/store/use-login-modal";
 
 beforeEach(() => {
-  useLoginModal.setState({ isOpen: false, view: 'login' });
+  useLoginModal.setState({ isOpen: false, view: "login" });
 });
 
-describe('LoginModal', () => {
-  it('isOpen=false 时不渲染 dialog', () => {
+describe("LoginModal", () => {
+  it("isOpen=false 时不渲染 dialog", () => {
     render(<LoginModal />);
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it('isOpen=true 时渲染弹窗并显示登录视图', () => {
-    useLoginModal.setState({ isOpen: true, view: 'login' });
+  it("isOpen=true 时渲染弹窗并显示登录视图", () => {
+    useLoginModal.setState({ isOpen: true, view: "login" });
     render(<LoginModal />);
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText('欢迎回来')).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText("欢迎回来")).toBeInTheDocument();
   });
 
-  it('isOpen=true, view=register 时显示注册视图', () => {
-    useLoginModal.setState({ isOpen: true, view: 'register' });
+  it("isOpen=true, view=register 时显示注册视图", () => {
+    useLoginModal.setState({ isOpen: true, view: "register" });
     render(<LoginModal />);
-    expect(screen.getByText('创建账号')).toBeInTheDocument();
+    expect(screen.getByText("创建账号")).toBeInTheDocument();
   });
 
-  it('登录视图：返回按钮点击关闭弹窗', async () => {
+  it("登录视图：返回按钮点击关闭弹窗", async () => {
     const user = userEvent.setup();
-    useLoginModal.setState({ isOpen: true, view: 'login' });
+    useLoginModal.setState({ isOpen: true, view: "login" });
     render(<LoginModal />);
-    await user.click(screen.getByLabelText('关闭登录弹窗'));
+    await user.click(screen.getByLabelText("关闭登录弹窗"));
     expect(useLoginModal.getState().isOpen).toBe(false);
   });
 
-  it('注册视图：返回按钮点击切回登录视图', async () => {
+  it("注册视图：返回按钮点击切回登录视图", async () => {
     const user = userEvent.setup();
-    useLoginModal.setState({ isOpen: true, view: 'register' });
+    useLoginModal.setState({ isOpen: true, view: "register" });
     render(<LoginModal />);
-    await user.click(screen.getByLabelText('返回登录视图'));
-    expect(useLoginModal.getState().view).toBe('login');
+    await user.click(screen.getByLabelText("返回登录视图"));
+    expect(useLoginModal.getState().view).toBe("login");
     expect(useLoginModal.getState().isOpen).toBe(true);
   });
 
-  it('点击遮罩不关闭弹窗', () => {
-    useLoginModal.setState({ isOpen: true, view: 'login' });
+  it("点击遮罩不关闭弹窗", () => {
+    useLoginModal.setState({ isOpen: true, view: "login" });
     const { container } = render(<LoginModal />);
     fireEvent.click(container.firstChild as HTMLElement);
     expect(useLoginModal.getState().isOpen).toBe(true);
   });
 
-  it('点击「注册」标签切换到注册视图', async () => {
+  it("点击「注册」标签切换到注册视图", async () => {
     const user = userEvent.setup();
-    useLoginModal.setState({ isOpen: true, view: 'login' });
+    useLoginModal.setState({ isOpen: true, view: "login" });
     render(<LoginModal />);
-    await user.click(screen.getByRole('button', { name: /注册/ }));
-    expect(useLoginModal.getState().view).toBe('register');
+    await user.click(screen.getByRole("button", { name: /注册/ }));
+    expect(useLoginModal.getState().view).toBe("register");
   });
 });
 ```
@@ -903,14 +890,14 @@ Expected: most tests fail because the current `login-modal.tsx` is a placeholder
 Replace the entire content of `apps/web/components/auth/login-modal.tsx`:
 
 ```tsx
-'use client';
+"use client";
 
-import { useRef } from 'react';
-import { SvgIcon } from '@repo/icons';
-import { cn } from '@repo/ui';
-import { useLoginModal } from '@/store/use-login-modal';
-import { LoginView } from './login-view';
-import { RegisterView } from './register-view';
+import { useRef } from "react";
+import { SvgIcon } from "@repo/icons";
+import { cn } from "@repo/ui";
+import { useLoginModal } from "@/store/use-login-modal";
+import { LoginView } from "./login-view";
+import { RegisterView } from "./register-view";
 
 export function LoginModal() {
   const { isOpen, view, close, setView } = useLoginModal();
@@ -922,18 +909,18 @@ export function LoginModal() {
     if (e.target !== e.currentTarget) return;
     const el = modalRef.current;
     if (!el) return;
-    el.classList.remove('animate-modal-pulse');
+    el.classList.remove("animate-modal-pulse");
     // reflow 强制重新触发动画
     void el.offsetWidth;
-    el.classList.add('animate-modal-pulse');
-    el.addEventListener('animationend', () => el.classList.remove('animate-modal-pulse'), {
+    el.classList.add("animate-modal-pulse");
+    el.addEventListener("animationend", () => el.classList.remove("animate-modal-pulse"), {
       once: true,
     });
   }
 
   function handleBack() {
-    if (view === 'register') {
-      setView('login');
+    if (view === "register") {
+      setView("login");
     } else {
       close();
     }
@@ -949,13 +936,13 @@ export function LoginModal() {
         ref={modalRef}
         role="dialog"
         aria-modal="true"
-        aria-label={view === 'login' ? '登录' : '注册'}
+        aria-label={view === "login" ? "登录" : "注册"}
         className={cn(
-          'relative flex flex-col w-full bg-card border-t border-border shadow-2xl',
+          "relative flex flex-col w-full bg-card border-t border-border shadow-2xl",
           // 移动端：铺满全屏，无圆角
-          'max-md:h-dvh max-md:rounded-none max-md:overflow-y-auto max-md:border-x-0 max-md:border-b-0',
+          "max-md:h-dvh max-md:rounded-none max-md:overflow-y-auto max-md:border-x-0 max-md:border-b-0",
           // 桌面端：最大宽度，圆角，最大高度可滚动
-          'md:max-w-[400px] md:rounded-2xl md:border md:max-h-[90vh] md:overflow-y-auto',
+          "md:max-w-[400px] md:rounded-2xl md:border md:max-h-[90vh] md:overflow-y-auto",
         )}
       >
         {/* 返回/关闭按钮 — sticky 吸顶，遮住滚动内容 */}
@@ -963,7 +950,7 @@ export function LoginModal() {
           <button
             type="button"
             onClick={handleBack}
-            aria-label={view === 'register' ? '返回登录视图' : '关闭登录弹窗'}
+            aria-label={view === "register" ? "返回登录视图" : "关闭登录弹窗"}
             className="w-9 h-9 rounded-[11px] bg-foreground/5 border border-border flex items-center justify-center text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
           >
             <SvgIcon name="chevron-left" size={16} />
@@ -972,10 +959,10 @@ export function LoginModal() {
 
         {/* 视图内容 — key 变化时 React 重新挂载触发入场动画 */}
         <div key={view} className="px-8 pb-8 pt-2 animate-view-enter">
-          {view === 'login' ? (
-            <LoginView onSwitchToRegister={() => setView('register')} />
+          {view === "login" ? (
+            <LoginView onSwitchToRegister={() => setView("register")} />
           ) : (
-            <RegisterView onSwitchToLogin={() => setView('login')} />
+            <RegisterView onSwitchToLogin={() => setView("login")} />
           )}
         </div>
       </div>
@@ -1012,6 +999,7 @@ git commit -m "feat(web): 重写 LoginModal（返回按钮吸顶、视图切换�
 ## Self-Review
 
 **Spec coverage:**
+
 - [x] 左上角返回按钮，36×36，chevron-left — Task 7
 - [x] 标题行右侧极简切换标签 — Task 5 (LoginView) / Task 6 (RegisterView)
 - [x] 账号密码输入、眼睛切换 — Task 5

@@ -12,38 +12,39 @@
 
 ## 文件索引
 
-| 操作 | 文件 |
-|---|---|
-| 新增 SVG | `packages/icons/svg/{eye-off,help-circle,info-circle,check,chevron-down,dots-vertical}.svg` |
-| 修改 | `packages/ui/src/lib/utils.ts` |
-| 新增 | `packages/ui/src/lib/is-react-component.ts` |
-| 新增 | `packages/ui/src/lib/use-resize-observer.ts` |
-| 修改 | `packages/ui/package.json` |
-| 新增 | `packages/ui/src/tooltip/tooltip.tsx` + `tooltip.test.tsx` |
-| 新增 | `packages/ui/src/toggle/toggle.tsx` + `toggle.test.tsx` |
-| 新增 | `packages/ui/src/input/{label,hint-text,input,index}.tsx` + `input.test.tsx` |
-| 删除 | `packages/ui/src/input.tsx` + `packages/ui/src/input.test.tsx` |
-| 新增 | `packages/ui/src/button-utility/button-utility.tsx` + `button-utility.test.tsx` |
-| 新增 | `packages/ui/src/avatar/base-components/{avatar-online-indicator,verified-tick,avatar-count,avatar-add-button,avatar-company-icon}.tsx` + `index.ts` |
-| 新增 | `packages/ui/src/avatar/avatar.tsx` + `avatar.test.tsx` |
-| 新增 | `packages/ui/src/checkbox/checkbox.tsx` + `checkbox.test.tsx` |
-| 新增 | `packages/ui/src/radio-buttons/radio-buttons.tsx` + `radio-buttons.test.tsx` |
-| 新增 | `packages/ui/src/dropdown/dropdown.tsx` + `dropdown.test.tsx` |
-| 新增 | `packages/ui/src/select/{select-shared,popover,select-item,combobox,select}.tsx` + `select.test.tsx` |
-| 新增 | `packages/ui/src/carousel/carousel-base.tsx` + `carousel-base.test.tsx` |
-| 替换 | `packages/ui/src/pagination/pagination-base.tsx` |
-| 更新 | `packages/ui/src/pagination/pagination.test.tsx` |
-| 修改 | `packages/ui/src/index.ts` |
-| 改写 | `apps/web/components/featured/featured-carousel.tsx` |
-| 修改 | `apps/web/components/featured/featured-carousel-slide.tsx` |
-| 删除 | `apps/web/components/featured/featured-carousel-indicators.tsx` |
-| 更新 | `apps/web/components/featured/featured-carousel.test.tsx` |
+| 操作     | 文件                                                                                                                                                 |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 新增 SVG | `packages/icons/svg/{eye-off,help-circle,info-circle,check,chevron-down,dots-vertical}.svg`                                                          |
+| 修改     | `packages/ui/src/lib/utils.ts`                                                                                                                       |
+| 新增     | `packages/ui/src/lib/is-react-component.ts`                                                                                                          |
+| 新增     | `packages/ui/src/lib/use-resize-observer.ts`                                                                                                         |
+| 修改     | `packages/ui/package.json`                                                                                                                           |
+| 新增     | `packages/ui/src/tooltip/tooltip.tsx` + `tooltip.test.tsx`                                                                                           |
+| 新增     | `packages/ui/src/toggle/toggle.tsx` + `toggle.test.tsx`                                                                                              |
+| 新增     | `packages/ui/src/input/{label,hint-text,input,index}.tsx` + `input.test.tsx`                                                                         |
+| 删除     | `packages/ui/src/input.tsx` + `packages/ui/src/input.test.tsx`                                                                                       |
+| 新增     | `packages/ui/src/button-utility/button-utility.tsx` + `button-utility.test.tsx`                                                                      |
+| 新增     | `packages/ui/src/avatar/base-components/{avatar-online-indicator,verified-tick,avatar-count,avatar-add-button,avatar-company-icon}.tsx` + `index.ts` |
+| 新增     | `packages/ui/src/avatar/avatar.tsx` + `avatar.test.tsx`                                                                                              |
+| 新增     | `packages/ui/src/checkbox/checkbox.tsx` + `checkbox.test.tsx`                                                                                        |
+| 新增     | `packages/ui/src/radio-buttons/radio-buttons.tsx` + `radio-buttons.test.tsx`                                                                         |
+| 新增     | `packages/ui/src/dropdown/dropdown.tsx` + `dropdown.test.tsx`                                                                                        |
+| 新增     | `packages/ui/src/select/{select-shared,popover,select-item,combobox,select}.tsx` + `select.test.tsx`                                                 |
+| 新增     | `packages/ui/src/carousel/carousel-base.tsx` + `carousel-base.test.tsx`                                                                              |
+| 替换     | `packages/ui/src/pagination/pagination-base.tsx`                                                                                                     |
+| 更新     | `packages/ui/src/pagination/pagination.test.tsx`                                                                                                     |
+| 修改     | `packages/ui/src/index.ts`                                                                                                                           |
+| 改写     | `apps/web/components/featured/featured-carousel.tsx`                                                                                                 |
+| 修改     | `apps/web/components/featured/featured-carousel-slide.tsx`                                                                                           |
+| 删除     | `apps/web/components/featured/featured-carousel-indicators.tsx`                                                                                      |
+| 更新     | `apps/web/components/featured/featured-carousel.test.tsx`                                                                                            |
 
 ---
 
 ## Task 1: 新增 6 个 SVG 图标
 
 **Files:**
+
 - Create: `packages/icons/svg/eye-off.svg`
 - Create: `packages/icons/svg/help-circle.svg`
 - Create: `packages/icons/svg/info-circle.svg`
@@ -54,6 +55,7 @@
 - [ ] **Step 1: 写入 6 个 SVG 文件**（统一 stroke-width="2" feather 风格）
 
 `packages/icons/svg/eye-off.svg`:
+
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
@@ -62,6 +64,7 @@
 ```
 
 `packages/icons/svg/help-circle.svg`:
+
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="12" cy="12" r="10"/>
@@ -71,6 +74,7 @@
 ```
 
 `packages/icons/svg/info-circle.svg`:
+
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="12" cy="12" r="10"/>
@@ -80,6 +84,7 @@
 ```
 
 `packages/icons/svg/check.svg`:
+
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <polyline points="20 6 9 17 4 12"/>
@@ -87,6 +92,7 @@
 ```
 
 `packages/icons/svg/chevron-down.svg`:
+
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <polyline points="6 9 12 15 18 9"/>
@@ -94,6 +100,7 @@
 ```
 
 `packages/icons/svg/dots-vertical.svg`:
+
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="12" cy="5" r="1" fill="currentColor" stroke="none"/>
@@ -131,6 +138,7 @@ git commit -m "feat(icons): 新增 eye-off、help-circle、info-circle、check�
 ## Task 2: 新增 lib 工具文件
 
 **Files:**
+
 - Modify: `packages/ui/src/lib/utils.ts`
 - Create: `packages/ui/src/lib/is-react-component.ts`
 - Create: `packages/ui/src/lib/use-resize-observer.ts`
@@ -138,6 +146,7 @@ git commit -m "feat(icons): 新增 eye-off、help-circle、info-circle、check�
 - [ ] **Step 1: 在 utils.ts 末尾追加 sortCx**
 
 `packages/ui/src/lib/utils.ts` 末尾新增：
+
 ```ts
 /**
  * no-op：供 Tailwind IntelliSense 对样式对象排序，不影响运行时。
@@ -150,6 +159,7 @@ export function sortCx<T>(classes: T): T {
 - [ ] **Step 2: 新建 is-react-component.ts**
 
 `packages/ui/src/lib/is-react-component.ts`:
+
 ```ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type React from "react";
@@ -172,14 +182,13 @@ export const isForwardRefComponent = (
   component.$$typeof?.toString() === "Symbol(react.forward_ref)";
 
 export const isReactComponent = (component: any): component is ReactComponent =>
-  isFunctionComponent(component) ||
-  isForwardRefComponent(component) ||
-  isClassComponent(component);
+  isFunctionComponent(component) || isForwardRefComponent(component) || isClassComponent(component);
 ```
 
 - [ ] **Step 3: 新建 use-resize-observer.ts**
 
 `packages/ui/src/lib/use-resize-observer.ts`:
+
 ```ts
 import { useEffect, type RefObject } from "react";
 
@@ -189,9 +198,7 @@ type UseResizeObserverOptions<T> = {
   onResize: () => void;
 };
 
-export function useResizeObserver<T extends Element>(
-  options: UseResizeObserverOptions<T>,
-) {
+export function useResizeObserver<T extends Element>(options: UseResizeObserverOptions<T>) {
   const { ref, box, onResize } = options;
 
   useEffect(() => {
@@ -232,6 +239,7 @@ git commit -m "feat(ui): 新增 sortCx、isReactComponent、useResizeObserver �
 ## Task 3: 添加 embla-carousel-react 依赖
 
 **Files:**
+
 - Modify: `packages/ui/package.json`
 
 - [ ] **Step 1: 安装依赖**
@@ -260,12 +268,14 @@ git commit -m "chore(ui): 添加 embla-carousel-react 依赖"
 ## Task 4: Tooltip 组件
 
 **Files:**
+
 - Create: `packages/ui/src/tooltip/tooltip.tsx`
 - Create: `packages/ui/src/tooltip/tooltip.test.tsx`
 
 - [ ] **Step 1: 写测试（先让它失败）**
 
 `packages/ui/src/tooltip/tooltip.test.tsx`:
+
 ```tsx
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -317,6 +327,7 @@ pnpm --filter @repo/ui exec vitest run src/tooltip/tooltip.test.tsx
 - [ ] **Step 3: 实现 tooltip.tsx**
 
 `packages/ui/src/tooltip/tooltip.tsx`:
+
 ```tsx
 "use client";
 
@@ -335,8 +346,7 @@ import {
 import { cn } from "../lib/utils";
 
 interface TooltipProps
-  extends AriaTooltipTriggerComponentProps,
-    Omit<AriaTooltipProps, "children"> {
+  extends AriaTooltipTriggerComponentProps, Omit<AriaTooltipProps, "children"> {
   title: ReactNode;
   description?: ReactNode;
   arrow?: boolean;
@@ -451,12 +461,14 @@ git commit -m "feat(ui): 新增 Tooltip 组件（Untitled UI 适配版）"
 ## Task 5: Toggle 组件
 
 **Files:**
+
 - Create: `packages/ui/src/toggle/toggle.tsx`
 - Create: `packages/ui/src/toggle/toggle.test.tsx`
 
 - [ ] **Step 1: 写测试**
 
 `packages/ui/src/toggle/toggle.test.tsx`:
+
 ```tsx
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -513,6 +525,7 @@ pnpm --filter @repo/ui exec vitest run src/toggle/toggle.test.tsx
 - [ ] **Step 3: 实现 toggle.tsx**
 
 `packages/ui/src/toggle/toggle.tsx`:
+
 ```tsx
 "use client";
 
@@ -586,7 +599,14 @@ interface ToggleProps extends AriaSwitchProps {
   slim?: boolean;
 }
 
-export const Toggle = ({ label, hint, className, size = "sm", slim, ...ariaSwitchProps }: ToggleProps) => (
+export const Toggle = ({
+  label,
+  hint,
+  className,
+  size = "sm",
+  slim,
+  ...ariaSwitchProps
+}: ToggleProps) => (
   <AriaSwitch
     {...ariaSwitchProps}
     className={(state) =>
@@ -650,6 +670,7 @@ git commit -m "feat(ui): 新增 Toggle 组件（含 ToggleBase）"
 ## Task 6: Input 组件（label + hint-text + input + index）
 
 **Files:**
+
 - Create: `packages/ui/src/input/label.tsx`
 - Create: `packages/ui/src/input/hint-text.tsx`
 - Create: `packages/ui/src/input/input.tsx`
@@ -661,6 +682,7 @@ git commit -m "feat(ui): 新增 Toggle 组件（含 ToggleBase）"
 - [ ] **Step 1: 写测试**
 
 `packages/ui/src/input/input.test.tsx`:
+
 ```tsx
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -729,6 +751,7 @@ pnpm --filter @repo/ui exec vitest run src/input/input.test.tsx
 - [ ] **Step 3: 实现 label.tsx**
 
 `packages/ui/src/input/label.tsx`:
+
 ```tsx
 "use client";
 
@@ -759,7 +782,10 @@ export const Label = ({
   <AriaLabel
     data-label="true"
     {...props}
-    className={cn("flex cursor-default items-center gap-0.5 text-sm font-medium text-gray-700", className)}
+    className={cn(
+      "flex cursor-default items-center gap-0.5 text-sm font-medium text-gray-700",
+      className,
+    )}
   >
     {props.children}
     <span
@@ -775,7 +801,10 @@ export const Label = ({
     </span>
     {tooltip && (
       <Tooltip title={tooltip} description={tooltipDescription} placement="top">
-        <TooltipTrigger isDisabled={false} className="cursor-pointer text-gray-400 hover:text-gray-500">
+        <TooltipTrigger
+          isDisabled={false}
+          className="cursor-pointer text-gray-400 hover:text-gray-500"
+        >
           <SvgIcon name="help-circle" size={16} />
         </TooltipTrigger>
       </Tooltip>
@@ -789,6 +818,7 @@ Label.displayName = "Label";
 - [ ] **Step 4: 实现 hint-text.tsx**
 
 `packages/ui/src/input/hint-text.tsx`:
+
 ```tsx
 "use client";
 
@@ -824,12 +854,29 @@ HintText.displayName = "HintText";
 - [ ] **Step 5: 实现 input.tsx**
 
 `packages/ui/src/input/input.tsx`:
+
 ```tsx
 "use client";
 
-import { type ComponentType, type HTMLAttributes, type ReactNode, type Ref, createContext, useContext, useState } from "react";
-import type { InputProps as AriaInputProps, TextFieldProps as AriaTextFieldProps } from "react-aria-components";
-import { Button as AriaButton, Group as AriaGroup, Input as AriaInput, TextField as AriaTextField } from "react-aria-components";
+import {
+  type ComponentType,
+  type HTMLAttributes,
+  type ReactNode,
+  type Ref,
+  createContext,
+  useContext,
+  useState,
+} from "react";
+import type {
+  InputProps as AriaInputProps,
+  TextFieldProps as AriaTextFieldProps,
+} from "react-aria-components";
+import {
+  Button as AriaButton,
+  Group as AriaGroup,
+  Input as AriaInput,
+  TextField as AriaTextField,
+} from "react-aria-components";
 import { SvgIcon } from "@repo/icons";
 import { HintText } from "./hint-text";
 import { Label } from "./label";
@@ -885,13 +932,21 @@ export const Input = ({
       {...rest}
       type={resolvedType}
       className={(state) =>
-        cn("group flex flex-col gap-1.5", typeof className === "function" ? className(state) : className)
+        cn(
+          "group flex flex-col gap-1.5",
+          typeof className === "function" ? className(state) : className,
+        )
       }
     >
       {({ isRequired, isInvalid }) => (
         <>
           {label && (
-            <Label isRequired={isRequired} isInvalid={isInvalid} tooltip={tooltip} tooltipDescription={tooltipDescription}>
+            <Label
+              isRequired={isRequired}
+              isInvalid={isInvalid}
+              tooltip={tooltip}
+              tooltipDescription={tooltipDescription}
+            >
               {label}
             </Label>
           )}
@@ -906,7 +961,9 @@ export const Input = ({
           >
             {LeadingIcon && typeof LeadingIcon === "function" ? (
               <LeadingIcon className={cn("shrink-0 text-gray-400", sizes[size].icon)} />
-            ) : LeadingIcon}
+            ) : (
+              LeadingIcon
+            )}
             <AriaInput
               placeholder={placeholder}
               className={cn(
@@ -927,11 +984,13 @@ export const Input = ({
                 )}
               </AriaButton>
             )}
-            {TrailingIcon && !isPassword && (
-              typeof TrailingIcon === "function" ? (
+            {TrailingIcon &&
+              !isPassword &&
+              (typeof TrailingIcon === "function" ? (
                 <TrailingIcon className={cn("shrink-0 text-gray-400", sizes[size].icon)} />
-              ) : TrailingIcon
-            )}
+              ) : (
+                TrailingIcon
+              ))}
           </AriaGroup>
           {hint && <HintText size={size === "sm" ? "sm" : "md"}>{hint}</HintText>}
         </>
@@ -944,6 +1003,7 @@ export const Input = ({
 - [ ] **Step 6: 实现 index.ts**
 
 `packages/ui/src/input/index.ts`:
+
 ```ts
 export { Input, type InputProps } from "./input";
 export { Label } from "./label";
@@ -979,18 +1039,19 @@ git add packages/ui/src/input/ && git rm packages/ui/src/input.tsx packages/ui/s
 git commit -m "feat(ui): Input 升级为多文件目录（新增 label、hint-text、密码切换）"
 ```
 
-
 ---
 
 ## Task 7: ButtonUtility 组件
 
 **Files:**
+
 - Create: `packages/ui/src/button-utility/button-utility.tsx`
 - Create: `packages/ui/src/button-utility/button-utility.test.tsx`
 
 - [ ] **Step 1: 写测试**
 
 `packages/ui/src/button-utility/button-utility.test.tsx`:
+
 ```tsx
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -1045,6 +1106,7 @@ pnpm --filter @repo/ui exec vitest run src/button-utility/button-utility.test.ts
 - [ ] **Step 3: 实现 button-utility.tsx**
 
 `packages/ui/src/button-utility/button-utility.tsx`:
+
 ```tsx
 "use client";
 
@@ -1082,7 +1144,8 @@ export interface CommonProps {
 }
 
 export interface ButtonProps
-  extends CommonProps,
+  extends
+    CommonProps,
     DetailedHTMLProps<
       Omit<ButtonHTMLAttributes<HTMLButtonElement>, "color" | "slot">,
       HTMLButtonElement
@@ -1091,11 +1154,9 @@ export interface ButtonProps
 }
 
 interface LinkProps
-  extends CommonProps,
-    DetailedHTMLProps<
-      Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "color">,
-      HTMLAnchorElement
-    > {
+  extends
+    CommonProps,
+    DetailedHTMLProps<Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "color">, HTMLAnchorElement> {
   routerOptions?: AriaLinkProps["routerOptions"];
 }
 
@@ -1140,7 +1201,12 @@ export const ButtonUtility = ({
 
   if (tooltip) {
     return (
-      <Tooltip title={tooltip} placement={tooltipPlacement} isDisabled={isDisabled} offset={size === "xs" ? 4 : 6}>
+      <Tooltip
+        title={tooltip}
+        placement={tooltipPlacement}
+        isDisabled={isDisabled}
+        offset={size === "xs" ? 4 : 6}
+      >
         {content}
       </Tooltip>
     );
@@ -1170,6 +1236,7 @@ git commit -m "feat(ui): 新增 ButtonUtility 组件"
 ## Task 8: Avatar 组件（含 base-components）
 
 **Files:**
+
 - Create: `packages/ui/src/avatar/base-components/avatar-online-indicator.tsx`
 - Create: `packages/ui/src/avatar/base-components/verified-tick.tsx`
 - Create: `packages/ui/src/avatar/base-components/avatar-count.tsx`
@@ -1182,6 +1249,7 @@ git commit -m "feat(ui): 新增 ButtonUtility 组件"
 - [ ] **Step 1: 写测试**
 
 `packages/ui/src/avatar/avatar.test.tsx`:
+
 ```tsx
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -1244,13 +1312,18 @@ pnpm --filter @repo/ui exec vitest run src/avatar/avatar.test.tsx
 - [ ] **Step 3: 实现 base-components 子文件**
 
 `packages/ui/src/avatar/base-components/avatar-online-indicator.tsx`:
+
 ```tsx
 "use client";
 import { cn } from "../../lib/utils";
 
 const sizes = {
-  xs: "size-1.5", sm: "size-2", md: "size-2.5",
-  lg: "size-3", xl: "size-3.5", "2xl": "size-4",
+  xs: "size-1.5",
+  sm: "size-2",
+  md: "size-2.5",
+  lg: "size-3",
+  xl: "size-3.5",
+  "2xl": "size-4",
 };
 
 interface AvatarOnlineIndicatorProps {
@@ -1272,13 +1345,18 @@ export const AvatarOnlineIndicator = ({ size, status, className }: AvatarOnlineI
 ```
 
 `packages/ui/src/avatar/base-components/verified-tick.tsx`:
+
 ```tsx
 "use client";
 import { cn } from "../../lib/utils";
 
 const sizes = {
-  xs: "size-2.5", sm: "size-3", md: "size-3.5",
-  lg: "size-4", xl: "size-4.5", "2xl": "size-5",
+  xs: "size-2.5",
+  sm: "size-3",
+  md: "size-3.5",
+  lg: "size-4",
+  xl: "size-4.5",
+  "2xl": "size-5",
 };
 
 interface VerifiedTickProps {
@@ -1303,6 +1381,7 @@ export const VerifiedTick = ({ size, className }: VerifiedTickProps) => (
 ```
 
 `packages/ui/src/avatar/base-components/avatar-count.tsx`:
+
 ```tsx
 "use client";
 import { cn } from "../../lib/utils";
@@ -1322,6 +1401,7 @@ export const AvatarCount = ({ count, className }: AvatarCountProps) => (
 ```
 
 `packages/ui/src/avatar/base-components/avatar-add-button.tsx`:
+
 ```tsx
 "use client";
 import type { ButtonProps as AriaButtonProps } from "react-aria-components";
@@ -1341,7 +1421,12 @@ interface AvatarAddButtonProps extends AriaButtonProps {
   className?: string;
 }
 
-export const AvatarAddButton = ({ size, className, title = "Add user", ...props }: AvatarAddButtonProps) => (
+export const AvatarAddButton = ({
+  size,
+  className,
+  title = "Add user",
+  ...props
+}: AvatarAddButtonProps) => (
   <Tooltip title={title}>
     <TooltipTrigger
       {...props}
@@ -1359,13 +1444,18 @@ export const AvatarAddButton = ({ size, className, title = "Add user", ...props 
 ```
 
 `packages/ui/src/avatar/base-components/avatar-company-icon.tsx`:
+
 ```tsx
 "use client";
 import { cn } from "../../lib/utils";
 
 const sizes = {
-  xs: "size-2", sm: "size-3", md: "size-3.5",
-  lg: "size-4", xl: "size-4.5", "2xl": "size-5",
+  xs: "size-2",
+  sm: "size-3",
+  md: "size-3.5",
+  lg: "size-4",
+  xl: "size-4.5",
+  "2xl": "size-5",
 };
 
 interface AvatarCompanyIconProps {
@@ -1387,6 +1477,7 @@ export const AvatarCompanyIcon = ({ size, src, alt }: AvatarCompanyIconProps) =>
 ```
 
 `packages/ui/src/avatar/base-components/index.ts`:
+
 ```ts
 export { AvatarOnlineIndicator } from "./avatar-online-indicator";
 export { VerifiedTick } from "./verified-tick";
@@ -1398,6 +1489,7 @@ export { AvatarCompanyIcon } from "./avatar-company-icon";
 - [ ] **Step 4: 实现 avatar.tsx**
 
 `packages/ui/src/avatar/avatar.tsx`:
+
 ```tsx
 "use client";
 
@@ -1427,12 +1519,42 @@ export interface AvatarProps {
 }
 
 const styles = {
-  xs: { root: "size-6", rootWithBorder: "p-px", initials: "text-xs font-semibold", iconSize: 16 as const },
-  sm: { root: "size-8", rootWithBorder: "p-px", initials: "text-sm font-semibold", iconSize: 20 as const },
-  md: { root: "size-10", rootWithBorder: "p-px", initials: "text-base font-semibold", iconSize: 24 as const },
-  lg: { root: "size-12", rootWithBorder: "p-[1.5px]", initials: "text-lg font-semibold", iconSize: 28 as const },
-  xl: { root: "size-14", rootWithBorder: "p-0.5", initials: "text-xl font-semibold", iconSize: 32 as const },
-  "2xl": { root: "size-16", rootWithBorder: "p-0.5", initials: "text-2xl font-semibold", iconSize: 32 as const },
+  xs: {
+    root: "size-6",
+    rootWithBorder: "p-px",
+    initials: "text-xs font-semibold",
+    iconSize: 16 as const,
+  },
+  sm: {
+    root: "size-8",
+    rootWithBorder: "p-px",
+    initials: "text-sm font-semibold",
+    iconSize: 20 as const,
+  },
+  md: {
+    root: "size-10",
+    rootWithBorder: "p-px",
+    initials: "text-base font-semibold",
+    iconSize: 24 as const,
+  },
+  lg: {
+    root: "size-12",
+    rootWithBorder: "p-[1.5px]",
+    initials: "text-lg font-semibold",
+    iconSize: 28 as const,
+  },
+  xl: {
+    root: "size-14",
+    rootWithBorder: "p-0.5",
+    initials: "text-xl font-semibold",
+    iconSize: 32 as const,
+  },
+  "2xl": {
+    root: "size-16",
+    rootWithBorder: "p-0.5",
+    initials: "text-2xl font-semibold",
+    iconSize: 32 as const,
+  },
 };
 
 export const Avatar = ({
@@ -1469,7 +1591,9 @@ export const Avatar = ({
     if (initials)
       return <span className={cn("text-gray-500", styles[size].initials)}>{initials}</span>;
     if (PlaceholderIcon)
-      return <PlaceholderIcon className={cn("text-gray-400", `size-${styles[size].iconSize / 4}`)} />;
+      return (
+        <PlaceholderIcon className={cn("text-gray-400", `size-${styles[size].iconSize / 4}`)} />
+      );
     return placeholder || <SvgIcon name="user" size={styles[size].iconSize} />;
   };
 
@@ -1535,12 +1659,14 @@ git commit -m "feat(ui): 新增 Avatar 组件（含 base-components）"
 ## Task 9: Checkbox 组件
 
 **Files:**
+
 - Create: `packages/ui/src/checkbox/checkbox.tsx`
 - Create: `packages/ui/src/checkbox/checkbox.test.tsx`
 
 - [ ] **Step 1: 写测试**
 
 `packages/ui/src/checkbox/checkbox.test.tsx`:
+
 ```tsx
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -1602,11 +1728,15 @@ pnpm --filter @repo/ui exec vitest run src/checkbox/checkbox.test.tsx
 - [ ] **Step 3: 实现 checkbox.tsx**
 
 `packages/ui/src/checkbox/checkbox.tsx`:
+
 ```tsx
 "use client";
 
 import type { ReactNode, Ref } from "react";
-import { Checkbox as AriaCheckbox, type CheckboxProps as AriaCheckboxProps } from "react-aria-components";
+import {
+  Checkbox as AriaCheckbox,
+  type CheckboxProps as AriaCheckboxProps,
+} from "react-aria-components";
 import { cn } from "../lib/utils";
 
 export interface CheckboxBaseProps {
@@ -1648,7 +1778,13 @@ export const CheckboxBase = ({
         isIndeterminate && "opacity-100",
       )}
     >
-      <path d="M2.91675 7H11.0834" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M2.91675 7H11.0834"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
     {/* Check */}
     <svg
@@ -1661,7 +1797,13 @@ export const CheckboxBase = ({
         isSelected && !isIndeterminate && "opacity-100",
       )}
     >
-      <path d="M11.6666 3.5L5.24992 9.91667L2.33325 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M11.6666 3.5L5.24992 9.91667L2.33325 7"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   </div>
 );
@@ -1679,7 +1821,13 @@ const sizeStyles = {
   md: { root: "gap-3", textWrapper: "gap-0.5", label: "text-base font-medium", hint: "text-base" },
 };
 
-export const Checkbox = ({ label, hint, size = "sm", className, ...ariaCheckboxProps }: CheckboxProps) => (
+export const Checkbox = ({
+  label,
+  hint,
+  size = "sm",
+  className,
+  ...ariaCheckboxProps
+}: CheckboxProps) => (
   <AriaCheckbox
     {...ariaCheckboxProps}
     className={(state) =>
@@ -1703,9 +1851,14 @@ export const Checkbox = ({ label, hint, size = "sm", className, ...ariaCheckboxP
         />
         {(label || hint) && (
           <div className={cn("inline-flex flex-col", sizeStyles[size].textWrapper)}>
-            {label && <p className={cn("text-gray-700 select-none", sizeStyles[size].label)}>{label}</p>}
+            {label && (
+              <p className={cn("text-gray-700 select-none", sizeStyles[size].label)}>{label}</p>
+            )}
             {hint && (
-              <span className={cn("text-gray-500", sizeStyles[size].hint)} onClick={(e) => e.stopPropagation()}>
+              <span
+                className={cn("text-gray-500", sizeStyles[size].hint)}
+                onClick={(e) => e.stopPropagation()}
+              >
                 {hint}
               </span>
             )}
@@ -1738,12 +1891,14 @@ git commit -m "feat(ui): 新增 Checkbox 组件（含 CheckboxBase）"
 ## Task 10: RadioButtons 组件
 
 **Files:**
+
 - Create: `packages/ui/src/radio-buttons/radio-buttons.tsx`
 - Create: `packages/ui/src/radio-buttons/radio-buttons.test.tsx`
 
 - [ ] **Step 1: 写测试**
 
 `packages/ui/src/radio-buttons/radio-buttons.test.tsx`:
+
 ```tsx
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -1816,6 +1971,7 @@ pnpm --filter @repo/ui exec vitest run src/radio-buttons/radio-buttons.test.tsx
 - [ ] **Step 3: 实现 radio-buttons.tsx**
 
 `packages/ui/src/radio-buttons/radio-buttons.tsx`:
+
 ```tsx
 "use client";
 
@@ -1828,7 +1984,9 @@ import {
 } from "react-aria-components";
 import { cn } from "../lib/utils";
 
-export interface RadioGroupContextType { size?: "sm" | "md" }
+export interface RadioGroupContextType {
+  size?: "sm" | "md";
+}
 const RadioGroupContext = createContext<RadioGroupContextType | null>(null);
 
 export interface RadioButtonBaseProps {
@@ -1840,7 +1998,11 @@ export interface RadioButtonBaseProps {
 }
 
 export const RadioButtonBase = ({
-  className, isFocusVisible, isSelected, isDisabled, size = "sm",
+  className,
+  isFocusVisible,
+  isSelected,
+  isDisabled,
+  size = "sm",
 }: RadioButtonBaseProps) => (
   <div
     className={cn(
@@ -1876,7 +2038,13 @@ interface RadioButtonProps extends AriaRadioProps {
   ref?: Ref<HTMLLabelElement>;
 }
 
-export const RadioButton = ({ label, hint, className, size = "sm", ...ariaRadioProps }: RadioButtonProps) => {
+export const RadioButton = ({
+  label,
+  hint,
+  className,
+  size = "sm",
+  ...ariaRadioProps
+}: RadioButtonProps) => {
   const context = useContext(RadioGroupContext);
   const resolvedSize = context?.size ?? size;
 
@@ -1903,9 +2071,16 @@ export const RadioButton = ({ label, hint, className, size = "sm", ...ariaRadioP
           />
           {(label || hint) && (
             <div className={cn("inline-flex flex-col", sizeStyles[resolvedSize].textWrapper)}>
-              {label && <p className={cn("text-gray-700 select-none", sizeStyles[resolvedSize].label)}>{label}</p>}
+              {label && (
+                <p className={cn("text-gray-700 select-none", sizeStyles[resolvedSize].label)}>
+                  {label}
+                </p>
+              )}
               {hint && (
-                <span className={cn("text-gray-500", sizeStyles[resolvedSize].hint)} onClick={(e) => e.stopPropagation()}>
+                <span
+                  className={cn("text-gray-500", sizeStyles[resolvedSize].hint)}
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {hint}
                 </span>
               )}
@@ -1952,12 +2127,14 @@ git commit -m "feat(ui): 新增 RadioButton / RadioGroup 组件"
 ## Task 11: Dropdown 组件
 
 **Files:**
+
 - Create: `packages/ui/src/dropdown/dropdown.tsx`
 - Create: `packages/ui/src/dropdown/dropdown.test.tsx`
 
 - [ ] **Step 1: 写测试**
 
 `packages/ui/src/dropdown/dropdown.test.tsx`:
+
 ```tsx
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -2046,6 +2223,7 @@ pnpm --filter @repo/ui exec vitest run src/dropdown/dropdown.test.tsx
 - [ ] **Step 3: 实现 dropdown.tsx**
 
 `packages/ui/src/dropdown/dropdown.tsx`:
+
 ```tsx
 "use client";
 
@@ -2114,9 +2292,21 @@ const DropdownItem = ({
           />
         );
       if (selectionIndicator === "radio")
-        return <RadioButtonBase isSelected={state.isSelected} className={cn("shrink-0", state.className)} />;
+        return (
+          <RadioButtonBase
+            isSelected={state.isSelected}
+            className={cn("shrink-0", state.className)}
+          />
+        );
       if (selectionIndicator === "toggle")
-        return <ToggleBase slim size="sm" isSelected={state.isSelected} className={cn("shrink-0", state.className)} />;
+        return (
+          <ToggleBase
+            slim
+            size="sm"
+            isSelected={state.isSelected}
+            className={cn("shrink-0", state.className)}
+          />
+        );
       return null;
     },
     [selectionIndicator],
@@ -2153,10 +2343,17 @@ const DropdownItem = ({
             </div>
           )}
           {Icon && <Icon aria-hidden="true" className="mr-2 size-4 shrink-0 text-gray-400" />}
-          <span className={cn("grow truncate text-sm font-semibold text-gray-700", state.isFocused && "text-gray-900")}>
+          <span
+            className={cn(
+              "grow truncate text-sm font-semibold text-gray-700",
+              state.isFocused && "text-gray-900",
+            )}
+          >
             {label || (typeof children === "function" ? children(state) : children)}
           </span>
-          {addon && <span className="ml-1 shrink-0 pr-1 text-xs font-medium text-gray-400">{addon}</span>}
+          {addon && (
+            <span className="ml-1 shrink-0 pr-1 text-xs font-medium text-gray-400">{addon}</span>
+          )}
           {state.selectionMode !== "none" && (avatarUrl || Icon) && (
             <SelectionIndicator {...state} className="ml-1" />
           )}
@@ -2190,8 +2387,10 @@ const DropdownPopover = (props: AriaPopoverProps) => (
     className={(state) =>
       cn(
         "w-62 overflow-auto rounded-lg bg-white shadow-lg ring-1 ring-gray-200",
-        state.isEntering && "duration-150 ease-out animate-in fade-in placement-bottom:slide-in-from-top-0.5",
-        state.isExiting && "duration-100 ease-in animate-out fade-out placement-bottom:slide-out-to-top-0.5",
+        state.isEntering &&
+          "duration-150 ease-out animate-in fade-in placement-bottom:slide-in-from-top-0.5",
+        state.isExiting &&
+          "duration-100 ease-in animate-out fade-out placement-bottom:slide-out-to-top-0.5",
         typeof props.className === "function" ? props.className(state) : props.className,
       )
     }
@@ -2253,6 +2452,7 @@ git commit -m "feat(ui): 新增 Dropdown 组件"
 ## Task 12: Select 组件（含子文件）
 
 **Files:**
+
 - Create: `packages/ui/src/select/select-shared.ts`
 - Create: `packages/ui/src/select/popover.tsx`
 - Create: `packages/ui/src/select/select-item.tsx`
@@ -2263,6 +2463,7 @@ git commit -m "feat(ui): 新增 Dropdown 组件"
 - [ ] **Step 1: 写测试**
 
 `packages/ui/src/select/select.test.tsx`:
+
 ```tsx
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -2347,6 +2548,7 @@ pnpm --filter @repo/ui exec vitest run src/select/select.test.tsx
 - [ ] **Step 3: 实现 select-shared.ts**
 
 `packages/ui/src/select/select-shared.ts`:
+
 ```ts
 "use client";
 
@@ -2383,6 +2585,7 @@ export const SelectContext = createContext<{ size: "sm" | "md" | "lg" }>({ size:
 - [ ] **Step 4: 实现 popover.tsx**
 
 `packages/ui/src/select/popover.tsx`:
+
 ```tsx
 "use client";
 
@@ -2404,8 +2607,10 @@ export const Popover = (props: PopoverProps) => (
     className={(state) =>
       cn(
         "w-(--trigger-width) overflow-x-hidden overflow-y-auto rounded-lg bg-white py-1 shadow-lg ring-1 ring-gray-200 outline-hidden",
-        state.isEntering && "duration-150 ease-out animate-in fade-in placement-bottom:slide-in-from-top-0.5",
-        state.isExiting && "duration-100 ease-in animate-out fade-out placement-bottom:slide-out-to-top-0.5",
+        state.isEntering &&
+          "duration-150 ease-out animate-in fade-in placement-bottom:slide-in-from-top-0.5",
+        state.isExiting &&
+          "duration-100 ease-in animate-out fade-out placement-bottom:slide-out-to-top-0.5",
         props.size === "sm" && "max-h-56",
         props.size === "md" && "max-h-64",
         props.size === "lg" && "max-h-80",
@@ -2419,6 +2624,7 @@ export const Popover = (props: PopoverProps) => (
 - [ ] **Step 5: 实现 select-item.tsx**
 
 `packages/ui/src/select/select-item.tsx`:
+
 ```tsx
 "use client";
 
@@ -2434,9 +2640,24 @@ import type { SelectItemType } from "./select-shared";
 import { SelectContext } from "./select-shared";
 
 const itemSizes = {
-  sm: { root: "p-2 pr-2.5 gap-2", text: "text-sm", textContainer: "gap-x-1.5", checkbox: "sm" as const },
-  md: { root: "p-2 pr-2.5 gap-2", text: "text-base", textContainer: "gap-x-2", checkbox: "sm" as const },
-  lg: { root: "p-2.5 pl-2 gap-2", text: "text-base", textContainer: "gap-x-2", checkbox: "md" as const },
+  sm: {
+    root: "p-2 pr-2.5 gap-2",
+    text: "text-sm",
+    textContainer: "gap-x-1.5",
+    checkbox: "sm" as const,
+  },
+  md: {
+    root: "p-2 pr-2.5 gap-2",
+    text: "text-base",
+    textContainer: "gap-x-2",
+    checkbox: "sm" as const,
+  },
+  lg: {
+    root: "p-2.5 pl-2 gap-2",
+    text: "text-base",
+    textContainer: "gap-x-2",
+    checkbox: "md" as const,
+  },
 };
 
 interface SelectItemProps extends Omit<AriaListBoxItemProps<SelectItemType>, "id">, SelectItemType {
@@ -2467,7 +2688,9 @@ export const SelectItem = ({
   return (
     <AriaListBoxItem
       id={id}
-      value={value ?? { id, label: labelOrChildren, avatarUrl, supportingText, isDisabled, icon: Icon }}
+      value={
+        value ?? { id, label: labelOrChildren, avatarUrl, supportingText, isDisabled, icon: Icon }
+      }
       textValue={textValue}
       isDisabled={isDisabled}
       {...props}
@@ -2483,25 +2706,40 @@ export const SelectItem = ({
         <div
           className={cn(
             "flex cursor-pointer items-center rounded-md outline-hidden select-none",
-            (state.isFocused || state.isHovered || (state.isSelected && selectionIndicator !== "checkbox")) && "bg-gray-50",
+            (state.isFocused ||
+              state.isHovered ||
+              (state.isSelected && selectionIndicator !== "checkbox")) &&
+              "bg-gray-50",
             state.isDisabled && "cursor-not-allowed opacity-50",
             s.root,
           )}
         >
           {isLeft && selectionIndicator === "checkbox" && (
-            <CheckboxBase size={s.checkbox} isSelected={state.isSelected} isDisabled={state.isDisabled} />
+            <CheckboxBase
+              size={s.checkbox}
+              isSelected={state.isSelected}
+              isDisabled={state.isDisabled}
+            />
           )}
           {avatarUrl ? (
             <Avatar aria-hidden="true" size="xs" src={avatarUrl} alt={label} />
           ) : isReactComponent(Icon) ? (
             <Icon aria-hidden="true" />
-          ) : isValidElement(Icon) ? Icon : null}
+          ) : isValidElement(Icon) ? (
+            Icon
+          ) : null}
           <div className={cn("flex w-full min-w-0 flex-1 flex-wrap", s.textContainer)}>
-            <AriaText slot="label" className={cn("truncate font-medium whitespace-nowrap text-gray-900", s.text)}>
+            <AriaText
+              slot="label"
+              className={cn("truncate font-medium whitespace-nowrap text-gray-900", s.text)}
+            >
               {label || (typeof children === "function" ? children(state) : children)}
             </AriaText>
             {supportingText && (
-              <AriaText slot="description" className={cn("whitespace-nowrap text-gray-500", s.text)}>
+              <AriaText
+                slot="description"
+                className={cn("whitespace-nowrap text-gray-500", s.text)}
+              >
                 {supportingText}
               </AriaText>
             )}
@@ -2510,7 +2748,12 @@ export const SelectItem = ({
             <SvgIcon name="check" size={16} className="ml-auto text-blue-600" />
           )}
           {!isLeft && selectionIndicator === "checkbox" && (
-            <CheckboxBase size={s.checkbox} isSelected={state.isSelected} isDisabled={state.isDisabled} className="ml-auto" />
+            <CheckboxBase
+              size={s.checkbox}
+              isSelected={state.isSelected}
+              isDisabled={state.isDisabled}
+              className="ml-auto"
+            />
           )}
         </div>
       )}
@@ -2522,13 +2765,30 @@ export const SelectItem = ({
 - [ ] **Step 6: 实现 combobox.tsx**
 
 `packages/ui/src/select/combobox.tsx`:
+
 ```tsx
 "use client";
 
-import type { FC, FocusEventHandler, PointerEventHandler, ReactNode, Ref, RefAttributes } from "react";
+import type {
+  FC,
+  FocusEventHandler,
+  PointerEventHandler,
+  ReactNode,
+  Ref,
+  RefAttributes,
+} from "react";
 import { isValidElement, useCallback, useContext, useRef, useState } from "react";
-import type { ComboBoxProps as AriaComboBoxProps, ListBoxProps as AriaListBoxProps } from "react-aria-components";
-import { ComboBox as AriaComboBox, Group as AriaGroup, Input as AriaInput, ListBox as AriaListBox, ComboBoxStateContext } from "react-aria-components";
+import type {
+  ComboBoxProps as AriaComboBoxProps,
+  ListBoxProps as AriaListBoxProps,
+} from "react-aria-components";
+import {
+  ComboBox as AriaComboBox,
+  Group as AriaGroup,
+  Input as AriaInput,
+  ListBox as AriaListBox,
+  ComboBoxStateContext,
+} from "react-aria-components";
 import { SvgIcon } from "@repo/icons";
 import { HintText } from "../input/hint-text";
 import { Label } from "../input/label";
@@ -2539,7 +2799,8 @@ import { cn } from "../lib/utils";
 import { isReactComponent } from "../lib/is-react-component";
 
 interface ComboBoxProps
-  extends Omit<AriaComboBoxProps<SelectItemType>, "children" | "items">,
+  extends
+    Omit<AriaComboBoxProps<SelectItemType>, "children" | "items">,
     RefAttributes<HTMLDivElement>,
     CommonProps {
   shortcut?: boolean;
@@ -2562,7 +2823,13 @@ interface ComboBoxValueProps {
 }
 
 const ComboBoxValue = ({
-  size, shortcut, placeholder, shortcutClassName, icon: IconProp, ref, ...otherProps
+  size,
+  shortcut,
+  placeholder,
+  shortcutClassName,
+  icon: IconProp,
+  ref,
+  ...otherProps
 }: ComboBoxValueProps) => {
   const state = useContext(ComboBoxStateContext);
 
@@ -2581,7 +2848,9 @@ const ComboBoxValue = ({
     >
       {isReactComponent(IconProp) ? (
         <IconProp aria-hidden="true" />
-      ) : isValidElement(IconProp) ? IconProp : null}
+      ) : isValidElement(IconProp) ? (
+        IconProp
+      ) : null}
       <div className="relative flex flex-1 items-center overflow-hidden">
         <AriaInput
           placeholder={placeholder}
@@ -2623,7 +2892,10 @@ export const ComboBox = ({
         {(state) => (
           <div className="flex flex-col gap-1.5">
             {otherProps.label && (
-              <Label isRequired={hideRequiredIndicator ? false : state.isRequired} tooltip={otherProps.tooltip}>
+              <Label
+                isRequired={hideRequiredIndicator ? false : state.isRequired}
+                tooltip={otherProps.tooltip}
+              >
                 {otherProps.label}
               </Label>
             )}
@@ -2637,7 +2909,12 @@ export const ComboBox = ({
               onFocus={onResize}
               onPointerEnter={onResize}
             />
-            <Popover size={size} triggerRef={placeholderRef} style={{ width: popoverWidth }} className={otherProps.popoverClassName}>
+            <Popover
+              size={size}
+              triggerRef={placeholderRef}
+              style={{ width: popoverWidth }}
+              className={otherProps.popoverClassName}
+            >
               <AriaListBox items={items} className="size-full outline-hidden">
                 {children}
               </AriaListBox>
@@ -2658,13 +2935,19 @@ export const ComboBox = ({
 - [ ] **Step 7: 实现 select.tsx**
 
 `packages/ui/src/select/select.tsx`:
+
 ```tsx
 "use client";
 
 import type { FC, ReactNode, Ref, RefAttributes } from "react";
 import { isValidElement } from "react";
 import type { SelectProps as AriaSelectProps } from "react-aria-components";
-import { Button as AriaButton, ListBox as AriaListBox, Select as AriaSelect, SelectValue as AriaSelectValue } from "react-aria-components";
+import {
+  Button as AriaButton,
+  ListBox as AriaListBox,
+  Select as AriaSelect,
+  SelectValue as AriaSelectValue,
+} from "react-aria-components";
 import { SvgIcon } from "@repo/icons";
 import { Avatar } from "../avatar/avatar";
 import { HintText } from "../input/hint-text";
@@ -2679,7 +2962,8 @@ import { type CommonProps, SelectContext, type SelectItemType, sizes } from "./s
 export { SelectContext, sizes, type CommonProps, type SelectItemType } from "./select-shared";
 
 export interface SelectProps
-  extends Omit<AriaSelectProps<SelectItemType>, "children" | "items">,
+  extends
+    Omit<AriaSelectProps<SelectItemType>, "children" | "items">,
     RefAttributes<HTMLDivElement>,
     CommonProps {
   items?: SelectItemType[];
@@ -2698,7 +2982,15 @@ interface SelectValueProps {
   icon?: FC | ReactNode;
 }
 
-const SelectValue = ({ isOpen, isFocused, isDisabled, size, placeholder, icon, ref }: SelectValueProps) => (
+const SelectValue = ({
+  isOpen,
+  isFocused,
+  isDisabled,
+  size,
+  placeholder,
+  icon,
+  ref,
+}: SelectValueProps) => (
   <AriaButton
     ref={ref}
     className={cn(
@@ -2709,7 +3001,10 @@ const SelectValue = ({ isOpen, isFocused, isDisabled, size, placeholder, icon, r
   >
     <AriaSelectValue<SelectItemType>
       className={(state) =>
-        cn("flex h-max w-full items-center justify-start truncate text-left align-middle", sizes[size].root)
+        cn(
+          "flex h-max w-full items-center justify-start truncate text-left align-middle",
+          sizes[size].root,
+        )
       }
     >
       {(state) => {
@@ -2721,18 +3016,28 @@ const SelectValue = ({ isOpen, isFocused, isDisabled, size, placeholder, icon, r
               <Avatar size="xs" src={selectedItem.avatarUrl} alt={selectedItem.label} />
             ) : isReactComponent(Icon) ? (
               <Icon aria-hidden="true" />
-            ) : isValidElement(Icon) ? Icon : null}
+            ) : isValidElement(Icon) ? (
+              Icon
+            ) : null}
             {selectedItem ? (
               <section className={cn("flex w-full truncate", sizes[size].textContainer)}>
-                <p className={cn("truncate font-medium text-gray-900", sizes[size].text)}>{selectedItem.label}</p>
+                <p className={cn("truncate font-medium text-gray-900", sizes[size].text)}>
+                  {selectedItem.label}
+                </p>
                 {selectedItem.supportingText && (
-                  <p className={cn("text-gray-500", sizes[size].text)}>{selectedItem.supportingText}</p>
+                  <p className={cn("text-gray-500", sizes[size].text)}>
+                    {selectedItem.supportingText}
+                  </p>
                 )}
               </section>
             ) : (
               <p className={cn("text-gray-400", sizes[size].text)}>{placeholder}</p>
             )}
-            <SvgIcon name="chevron-down" size={size === "lg" ? 20 : 16} className="ml-auto shrink-0 text-gray-400" />
+            <SvgIcon
+              name="chevron-down"
+              size={size === "lg" ? 20 : 16}
+              className="ml-auto shrink-0 text-gray-400"
+            />
           </>
         );
       }}
@@ -2756,7 +3061,9 @@ const SelectComponent = ({
   <SelectContext.Provider value={{ size }}>
     <AriaSelect
       {...rest}
-      className={(state) => cn("flex flex-col gap-1.5", typeof className === "function" ? className(state) : className)}
+      className={(state) =>
+        cn("flex flex-col gap-1.5", typeof className === "function" ? className(state) : className)
+      }
     >
       {(state) => (
         <>
@@ -2808,12 +3115,14 @@ git commit -m "feat(ui): 新增 Select 组件（含 ComboBox、SelectItem、Popo
 ## Task 13: CarouselBase 组件
 
 **Files:**
+
 - Create: `packages/ui/src/carousel/carousel-base.tsx`
 - Create: `packages/ui/src/carousel/carousel-base.test.tsx`
 
 - [ ] **Step 1: 写测试**
 
 `packages/ui/src/carousel/carousel-base.test.tsx`:
+
 ```tsx
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -2941,11 +3250,27 @@ pnpm --filter @repo/ui exec vitest run src/carousel/carousel-base.test.tsx
 - [ ] **Step 3: 实现 carousel-base.tsx**（从 Untitled UI 复制，仅将 `cx` 替换为 `cn`）
 
 `packages/ui/src/carousel/carousel-base.tsx`:
+
 ```tsx
 "use client";
 
-import type { CSSProperties, ComponentPropsWithRef, HTMLAttributes, KeyboardEvent, ReactNode, Ref } from "react";
-import { cloneElement, createContext, isValidElement, useCallback, useContext, useEffect, useState } from "react";
+import type {
+  CSSProperties,
+  ComponentPropsWithRef,
+  HTMLAttributes,
+  KeyboardEvent,
+  ReactNode,
+  Ref,
+} from "react";
+import {
+  cloneElement,
+  createContext,
+  isValidElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import useEmblaCarousel, { type UseEmblaCarouselType } from "embla-carousel-react";
 import { cn } from "../lib/utils";
 
@@ -3015,8 +3340,13 @@ const CarouselRoot = ({
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === "ArrowLeft") { event.preventDefault(); scrollPrev(); }
-      else if (event.key === "ArrowRight") { event.preventDefault(); scrollNext(); }
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        scrollPrev();
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        scrollNext();
+      }
     },
     [scrollPrev, scrollNext],
   );
@@ -3033,15 +3363,24 @@ const CarouselRoot = ({
     api.on("reInit", onInit);
     api.on("reInit", onSelect);
     api.on("select", onSelect);
-    return () => { api?.off("select", onSelect); };
+    return () => {
+      api?.off("select", onSelect);
+    };
   }, [api, onInit, onSelect]);
 
   return (
     <CarouselContext.Provider
       value={{
-        carouselRef, api, opts,
+        carouselRef,
+        api,
+        opts,
         orientation: orientation || (opts?.axis === "y" ? "vertical" : "horizontal"),
-        scrollPrev, scrollNext, canScrollPrev, canScrollNext, selectedIndex, scrollSnaps,
+        scrollPrev,
+        scrollNext,
+        canScrollPrev,
+        canScrollNext,
+        selectedIndex,
+        scrollSnaps,
       }}
     >
       <div
@@ -3082,7 +3421,10 @@ const CarouselItem = ({ className, ...props }: ComponentPropsWithRef<"div">) => 
   />
 );
 
-interface TriggerRenderProps { isDisabled: boolean; onClick: () => void; }
+interface TriggerRenderProps {
+  isDisabled: boolean;
+  onClick: () => void;
+}
 interface TriggerProps {
   ref?: Ref<HTMLButtonElement>;
   asChild?: boolean;
@@ -3095,29 +3437,49 @@ interface TriggerProps {
 const Trigger = ({ className, children, asChild, direction, style, ...props }: TriggerProps) => {
   const { scrollPrev, canScrollNext, scrollNext, canScrollPrev } = useCarousel();
   const isDisabled = direction === "prev" ? !canScrollPrev : !canScrollNext;
-  const handleClick = () => { if (!isDisabled) direction === "prev" ? scrollPrev() : scrollNext(); };
+  const handleClick = () => {
+    if (!isDisabled) direction === "prev" ? scrollPrev() : scrollNext();
+  };
   const computedClassName = typeof className === "function" ? className({ isDisabled }) : className;
   const defaultAriaLabel = direction === "prev" ? "Previous slide" : "Next slide";
 
   if (typeof children === "function") return <>{children({ isDisabled, onClick: handleClick })}</>;
   if (asChild && isValidElement(children)) {
     return cloneElement(children, {
-      onClick: handleClick, disabled: isDisabled, "aria-label": defaultAriaLabel,
+      onClick: handleClick,
+      disabled: isDisabled,
+      "aria-label": defaultAriaLabel,
       style: { ...(children.props as HTMLAttributes<HTMLElement>).style, ...style },
-      className: [computedClassName, (children.props as HTMLAttributes<HTMLElement>).className].filter(Boolean).join(" ") || undefined,
+      className:
+        [computedClassName, (children.props as HTMLAttributes<HTMLElement>).className]
+          .filter(Boolean)
+          .join(" ") || undefined,
     } as HTMLAttributes<HTMLElement>);
   }
   return (
-    <button aria-label={defaultAriaLabel} disabled={isDisabled} className={computedClassName} onClick={handleClick} {...props}>
+    <button
+      aria-label={defaultAriaLabel}
+      disabled={isDisabled}
+      className={computedClassName}
+      onClick={handleClick}
+      {...props}
+    >
       {children}
     </button>
   );
 };
 
-const CarouselPrevTrigger = (props: Omit<TriggerProps, "direction">) => <Trigger {...props} direction="prev" />;
-const CarouselNextTrigger = (props: Omit<TriggerProps, "direction">) => <Trigger {...props} direction="next" />;
+const CarouselPrevTrigger = (props: Omit<TriggerProps, "direction">) => (
+  <Trigger {...props} direction="prev" />
+);
+const CarouselNextTrigger = (props: Omit<TriggerProps, "direction">) => (
+  <Trigger {...props} direction="next" />
+);
 
-interface CarouselIndicatorRenderProps { isSelected: boolean; onClick: () => void; }
+interface CarouselIndicatorRenderProps {
+  isSelected: boolean;
+  onClick: () => void;
+}
 interface CarouselIndicatorProps {
   index: number;
   asChild?: boolean;
@@ -3127,7 +3489,14 @@ interface CarouselIndicatorProps {
   className?: string | ((args: { isSelected: boolean }) => string);
 }
 
-const CarouselIndicator = ({ index, isSelected = false, children, asChild, className, style }: CarouselIndicatorProps) => {
+const CarouselIndicator = ({
+  index,
+  isSelected = false,
+  children,
+  asChild,
+  className,
+  style,
+}: CarouselIndicatorProps) => {
   const { api, selectedIndex } = useCarousel();
   isSelected = isSelected || selectedIndex === index;
   const handleClick = () => api?.scrollTo(index);
@@ -3137,14 +3506,23 @@ const CarouselIndicator = ({ index, isSelected = false, children, asChild, class
   if (typeof children === "function") return <>{children({ isSelected, onClick: handleClick })}</>;
   if (asChild && isValidElement(children)) {
     return cloneElement(children, {
-      onClick: handleClick, "aria-label": defaultAriaLabel,
+      onClick: handleClick,
+      "aria-label": defaultAriaLabel,
       "aria-current": isSelected ? ("true" as const) : undefined,
       style: { ...(children.props as HTMLAttributes<HTMLElement>).style, ...style },
-      className: [computedClassName, (children.props as HTMLAttributes<HTMLElement>).className].filter(Boolean).join(" ") || undefined,
+      className:
+        [computedClassName, (children.props as HTMLAttributes<HTMLElement>).className]
+          .filter(Boolean)
+          .join(" ") || undefined,
     } as HTMLAttributes<HTMLElement>);
   }
   return (
-    <button aria-label={defaultAriaLabel} aria-current={isSelected ? "true" : undefined} className={computedClassName} onClick={handleClick}>
+    <button
+      aria-label={defaultAriaLabel}
+      aria-current={isSelected ? "true" : undefined}
+      className={computedClassName}
+      onClick={handleClick}
+    >
       {children}
     </button>
   );
@@ -3157,7 +3535,13 @@ interface CarouselIndicatorGroupProps extends Omit<HTMLAttributes<HTMLDivElement
 const CarouselIndicatorGroup = ({ children, ...props }: CarouselIndicatorGroupProps) => {
   const { scrollSnaps } = useCarousel();
   if (typeof children === "function") {
-    return <nav {...props}>{scrollSnaps.map((_, index) => (children as (props: { index: number }) => ReactNode)({ index }))}</nav>;
+    return (
+      <nav {...props}>
+        {scrollSnaps.map((_, index) =>
+          (children as (props: { index: number }) => ReactNode)({ index }),
+        )}
+      </nav>
+    );
   }
   return <nav {...props}>{children}</nav>;
 };
@@ -3193,6 +3577,7 @@ git commit -m "feat(ui): 新增 CarouselBase（Embla 基础层）"
 ## Task 14: 替换 PaginationBase
 
 **Files:**
+
 - Modify: `packages/ui/src/pagination/pagination-base.tsx`
 - Modify: `packages/ui/src/pagination/pagination.test.tsx`
 
@@ -3209,6 +3594,7 @@ pnpm --filter @repo/ui exec vitest run src/pagination/pagination.test.tsx
 官方版本结构 + `useMemo` 替代 `useState + useEffect`：
 
 `packages/ui/src/pagination/pagination-base.tsx`:
+
 ```tsx
 "use client";
 
@@ -3249,7 +3635,13 @@ const range = (start: number, end: number): number[] =>
   Array.from({ length: end - start + 1 }, (_, i) => i + start);
 
 const PaginationRoot = ({
-  total, siblingCount = 1, page, onPageChange, children, style, className,
+  total,
+  siblingCount = 1,
+  page,
+  onPageChange,
+  children,
+  style,
+  className,
 }: PaginationRootProps) => {
   const createPaginationItems = useCallback((): PaginationItemType[] => {
     const items: PaginationItemType[] = [];
@@ -3305,7 +3697,10 @@ const PaginationRoot = ({
   );
 };
 
-interface TriggerRenderProps { isDisabled: boolean; onClick: () => void }
+interface TriggerRenderProps {
+  isDisabled: boolean;
+  onClick: () => void;
+}
 interface TriggerProps {
   children: ReactNode | ((props: TriggerRenderProps) => ReactNode);
   style?: CSSProperties;
@@ -3315,7 +3710,14 @@ interface TriggerProps {
   ariaLabel?: string;
 }
 
-const Trigger: FC<TriggerProps> = ({ children, style, className, asChild = false, direction, ariaLabel }) => {
+const Trigger: FC<TriggerProps> = ({
+  children,
+  style,
+  className,
+  asChild = false,
+  direction,
+  ariaLabel,
+}) => {
   const context = useContext(PaginationContext);
   if (!context) throw new Error("Pagination components must be within Pagination.Root");
   const { currentPage, total, onPageChange } = context;
@@ -3330,33 +3732,64 @@ const Trigger: FC<TriggerProps> = ({ children, style, className, asChild = false
   if (typeof children === "function") return <>{children({ isDisabled, onClick: handleClick })}</>;
   if (asChild && isValidElement(children)) {
     return cloneElement(children, {
-      onClick: handleClick, disabled: isDisabled, isDisabled,
+      onClick: handleClick,
+      disabled: isDisabled,
+      isDisabled,
       "aria-label": ariaLabel || defaultAriaLabel,
       style: { ...(children.props as HTMLAttributes<HTMLElement>).style, ...style },
-      className: [computedClassName, (children.props as HTMLAttributes<HTMLElement>).className].filter(Boolean).join(" ") || undefined,
+      className:
+        [computedClassName, (children.props as HTMLAttributes<HTMLElement>).className]
+          .filter(Boolean)
+          .join(" ") || undefined,
     } as HTMLAttributes<HTMLElement>);
   }
   return (
-    <button aria-label={ariaLabel || defaultAriaLabel} onClick={handleClick} disabled={isDisabled} style={style} className={computedClassName}>
+    <button
+      aria-label={ariaLabel || defaultAriaLabel}
+      onClick={handleClick}
+      disabled={isDisabled}
+      style={style}
+      className={computedClassName}
+    >
       {children}
     </button>
   );
 };
 
-const PaginationPrevTrigger: FC<Omit<TriggerProps, "direction">> = (props) => <Trigger {...props} direction="prev" />;
-const PaginationNextTrigger: FC<Omit<TriggerProps, "direction">> = (props) => <Trigger {...props} direction="next" />;
+const PaginationPrevTrigger: FC<Omit<TriggerProps, "direction">> = (props) => (
+  <Trigger {...props} direction="prev" />
+);
+const PaginationNextTrigger: FC<Omit<TriggerProps, "direction">> = (props) => (
+  <Trigger {...props} direction="next" />
+);
 
 export interface PaginationItemProps {
   value: number;
   isCurrent: boolean;
-  children?: ReactNode | ((props: { isSelected: boolean; onClick: () => void; value: number; "aria-current"?: "page"; "aria-label"?: string }) => ReactNode);
+  children?:
+    | ReactNode
+    | ((props: {
+        isSelected: boolean;
+        onClick: () => void;
+        value: number;
+        "aria-current"?: "page";
+        "aria-label"?: string;
+      }) => ReactNode);
   style?: CSSProperties;
   className?: string | ((args: { isSelected: boolean }) => string);
   ariaLabel?: string;
   asChild?: boolean;
 }
 
-const PaginationItem = ({ value, isCurrent, children, style, className, ariaLabel, asChild = false }: PaginationItemProps) => {
+const PaginationItem = ({
+  value,
+  isCurrent,
+  children,
+  style,
+  className,
+  ariaLabel,
+  asChild = false,
+}: PaginationItemProps) => {
   const context = useContext(PaginationContext);
   if (!context) throw new Error("Pagination components must be within Pagination.Root");
   const { onPageChange } = context;
@@ -3365,19 +3798,39 @@ const PaginationItem = ({ value, isCurrent, children, style, className, ariaLabe
   const computedClassName = typeof className === "function" ? className({ isSelected }) : className;
 
   if (typeof children === "function") {
-    return <>{children({ isSelected, onClick: handleClick, value, "aria-current": isCurrent ? "page" : undefined, "aria-label": ariaLabel || `Page ${value}` })}</>;
+    return (
+      <>
+        {children({
+          isSelected,
+          onClick: handleClick,
+          value,
+          "aria-current": isCurrent ? "page" : undefined,
+          "aria-label": ariaLabel || `Page ${value}`,
+        })}
+      </>
+    );
   }
   if (asChild && isValidElement(children)) {
     return cloneElement(children, {
-      onClick: handleClick, "aria-current": isCurrent ? "page" : undefined,
+      onClick: handleClick,
+      "aria-current": isCurrent ? "page" : undefined,
       "aria-label": ariaLabel || `Page ${value}`,
       style: { ...(children.props as HTMLAttributes<HTMLElement>).style, ...style },
-      className: [computedClassName, (children.props as HTMLAttributes<HTMLElement>).className].filter(Boolean).join(" ") || undefined,
+      className:
+        [computedClassName, (children.props as HTMLAttributes<HTMLElement>).className]
+          .filter(Boolean)
+          .join(" ") || undefined,
     } as HTMLAttributes<HTMLElement>);
   }
   return (
-    <button onClick={handleClick} style={style} className={computedClassName}
-      aria-current={isCurrent ? "page" : undefined} aria-label={ariaLabel || `Page ${value}`} role="listitem">
+    <button
+      onClick={handleClick}
+      style={style}
+      className={computedClassName}
+      aria-current={isCurrent ? "page" : undefined}
+      aria-label={ariaLabel || `Page ${value}`}
+      role="listitem"
+    >
       {children ?? value}
     </button>
   );
@@ -3392,7 +3845,11 @@ interface PaginationEllipsisProps {
 
 const PaginationEllipsis: FC<PaginationEllipsisProps> = ({ children, style, className }) => {
   const computedClassName = typeof className === "function" ? className() : className;
-  return <span style={style} className={computedClassName} aria-hidden="true">{children}</span>;
+  return (
+    <span style={style} className={computedClassName} aria-hidden="true">
+      {children}
+    </span>
+  );
 };
 
 interface PaginationContextComponentProps {
@@ -3435,11 +3892,13 @@ git commit -m "refactor(ui): 替换 PaginationBase 为 Untitled UI 版本（保�
 ## Task 15: 更新 packages/ui/src/index.ts
 
 **Files:**
+
 - Modify: `packages/ui/src/index.ts`
 
 - [ ] **Step 1: 更新 index.ts**
 
 `packages/ui/src/index.ts` 完整内容：
+
 ```ts
 export { Badge, type BadgeProps } from "./badge";
 export { Button, type ButtonProps } from "./button";
@@ -3459,7 +3918,10 @@ export { Select, SelectContext, type SelectItemType, type CommonProps } from "./
 export { Tooltip, TooltipTrigger } from "./tooltip/tooltip";
 
 // ButtonUtility
-export { ButtonUtility, type ButtonProps as ButtonUtilityProps } from "./button-utility/button-utility";
+export {
+  ButtonUtility,
+  type ButtonProps as ButtonUtilityProps,
+} from "./button-utility/button-utility";
 
 // Toggle
 export { Toggle, ToggleBase } from "./toggle/toggle";
@@ -3478,7 +3940,12 @@ export {
 export { Checkbox, CheckboxBase, type CheckboxBaseProps } from "./checkbox/checkbox";
 
 // RadioButtons
-export { RadioButton, RadioGroup, RadioButtonBase, type RadioButtonBaseProps } from "./radio-buttons/radio-buttons";
+export {
+  RadioButton,
+  RadioGroup,
+  RadioButtonBase,
+  type RadioButtonBaseProps,
+} from "./radio-buttons/radio-buttons";
 
 // Input (path updated: single file → directory)
 export { Input, type InputProps, Label, HintText } from "./input";
@@ -3488,16 +3955,30 @@ export { Pagination, PaginationBase, type PaginationProps } from "./pagination";
 
 // Tabs
 export {
-  Tabs, TabsList, TabsItem, TabsPanels, TabsPanel,
-  type TabsProps, type TabsListProps, type TabsItemProps,
-  type TabsPanelsProps, type TabsPanelProps, type TabsVariant,
+  Tabs,
+  TabsList,
+  TabsItem,
+  TabsPanels,
+  TabsPanel,
+  type TabsProps,
+  type TabsListProps,
+  type TabsItemProps,
+  type TabsPanelsProps,
+  type TabsPanelProps,
+  type TabsVariant,
 } from "./tabs";
 
 // SearchField
 export { SearchField, type SearchFieldProps } from "./search-field";
 
 // TagGroup
-export { TagGroup, TagList, TagItem, type TagGroupWrapperProps, type TagItemProps } from "./tag-group";
+export {
+  TagGroup,
+  TagList,
+  TagItem,
+  type TagGroupWrapperProps,
+  type TagItemProps,
+} from "./tag-group";
 ```
 
 - [ ] **Step 2: type-check 整个 monorepo**
@@ -3528,12 +4009,14 @@ git commit -m "feat(ui): 更新 index.ts，导出全部新增组件"
 ## Task 16: 重写 FeaturedCarousel
 
 **Files:**
+
 - Modify: `apps/web/components/featured/featured-carousel.tsx`
 - Modify: `apps/web/components/featured/featured-carousel-slide.tsx`
 - Delete: `apps/web/components/featured/featured-carousel-indicators.tsx`
 - Modify: `apps/web/components/featured/featured-carousel.test.tsx`
 
 **架构说明：**
+
 - `currentIndex` 本地 state 驱动指示器 `aria-current` 和移动端文字 cross-fade
 - Embla `api.on("select", ...)` 负责同步 `currentIndex`（自动轮播时 Embla 滚动 → select 事件 → 更新 currentIndex）
 - 无 Embla API 时（jsdom）自动轮播 fallback 直接 `setCurrentIndex`，保证测试可用
@@ -3549,6 +4032,7 @@ rm apps/web/components/featured/featured-carousel-indicators.tsx
 `apps/web/components/featured/featured-carousel.test.tsx` 重写：
 
 核心变化：
+
 1. mock `embla-carousel-react` 以在 jsdom 中正常工作
 2. 现有断言大部分保持：aria-current、region、指示器数量、auto-play
 
@@ -3564,40 +4048,106 @@ import type { FeaturedPost } from "../../app/_mock/types";
 let _snap = 0;
 const _cbs: Record<string, ((api: unknown) => void)[]> = {};
 const mockApi = {
-  scrollNext: vi.fn(() => { _snap = (_snap + 1) % 3; _cbs["select"]?.forEach((cb) => cb(mockApi)); }),
-  scrollPrev: vi.fn(() => { _snap = Math.max(0, _snap - 1); _cbs["select"]?.forEach((cb) => cb(mockApi)); }),
-  scrollTo: vi.fn((i: number) => { _snap = i; _cbs["select"]?.forEach((cb) => cb(mockApi)); }),
+  scrollNext: vi.fn(() => {
+    _snap = (_snap + 1) % 3;
+    _cbs["select"]?.forEach((cb) => cb(mockApi));
+  }),
+  scrollPrev: vi.fn(() => {
+    _snap = Math.max(0, _snap - 1);
+    _cbs["select"]?.forEach((cb) => cb(mockApi));
+  }),
+  scrollTo: vi.fn((i: number) => {
+    _snap = i;
+    _cbs["select"]?.forEach((cb) => cb(mockApi));
+  }),
   canScrollPrev: vi.fn(() => _snap > 0),
   canScrollNext: vi.fn(() => true),
   selectedScrollSnap: vi.fn(() => _snap),
   scrollSnapList: vi.fn(() => [0, 1, 2]),
-  on: vi.fn((e: string, cb: (api: unknown) => void) => { (_cbs[e] ??= []).push(cb); }),
-  off: vi.fn((e: string, cb: (api: unknown) => void) => { _cbs[e] = (_cbs[e] ?? []).filter((c) => c !== cb); }),
+  on: vi.fn((e: string, cb: (api: unknown) => void) => {
+    (_cbs[e] ??= []).push(cb);
+  }),
+  off: vi.fn((e: string, cb: (api: unknown) => void) => {
+    _cbs[e] = (_cbs[e] ?? []).filter((c) => c !== cb);
+  }),
 };
 vi.mock("embla-carousel-react", () => ({ default: vi.fn(() => [vi.fn(), mockApi]) }));
 
 // --- Other mocks ---
 vi.mock("next/image", () => ({
-  default: ({ src, alt, className }: { src: string; alt: string; fill?: boolean; priority?: boolean; className?: string }) =>
-    <img src={src} alt={alt} className={className} />,
+  default: ({
+    src,
+    alt,
+    className,
+  }: {
+    src: string;
+    alt: string;
+    fill?: boolean;
+    priority?: boolean;
+    className?: string;
+  }) => <img src={src} alt={alt} className={className} />,
 }));
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: { href: string; children: ReactNode; [k: string]: unknown }) =>
-    <a href={href} {...props}>{children}</a>,
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: ReactNode;
+    [k: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }));
 vi.mock("@repo/icons", () => ({
-  SvgIcon: ({ name, size }: { name: string; size?: number }) =>
-    <span data-testid={`icon-${name}`} data-size={size} />,
+  SvgIcon: ({ name, size }: { name: string; size?: number }) => (
+    <span data-testid={`icon-${name}`} data-size={size} />
+  ),
 }));
 vi.mock("@repo/ui", () => ({
-  Button: ({ href, children, tabIndex, className }: { href?: string; children: ReactNode; tabIndex?: number; className?: string; variant?: string; size?: string }) =>
-    href ? <a href={href} tabIndex={tabIndex} className={className}>{children}</a>
-         : <button type="button" tabIndex={tabIndex} className={className}>{children}</button>,
+  Button: ({
+    href,
+    children,
+    tabIndex,
+    className,
+  }: {
+    href?: string;
+    children: ReactNode;
+    tabIndex?: number;
+    className?: string;
+    variant?: string;
+    size?: string;
+  }) =>
+    href ? (
+      <a href={href} tabIndex={tabIndex} className={className}>
+        {children}
+      </a>
+    ) : (
+      <button type="button" tabIndex={tabIndex} className={className}>
+        {children}
+      </button>
+    ),
   Carousel: {
-    Root: ({ children, setApi, ...props }: { children: ReactNode; setApi?: (api: unknown) => void; opts?: unknown; [k: string]: unknown }) => {
+    Root: ({
+      children,
+      setApi,
+      ...props
+    }: {
+      children: ReactNode;
+      setApi?: (api: unknown) => void;
+      opts?: unknown;
+      [k: string]: unknown;
+    }) => {
       // Call setApi with the mock so FeaturedCarousel wires up Embla events
       if (setApi) setApi(mockApi);
-      return <div role="region" {...props}>{children}</div>;
+      return (
+        <div role="region" {...props}>
+          {children}
+        </div>
+      );
     },
     Content: ({ children }: { children: ReactNode }) => <div>{children}</div>,
     Item: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -3605,13 +4155,40 @@ vi.mock("@repo/ui", () => ({
 }));
 
 const mockPosts: FeaturedPost[] = [
-  { id: "1", title: "第一篇文章标题", excerpt: "摘要1", coverImage: "https://example.com/1.jpg", category: "编程", href: "/articles/first" },
-  { id: "2", title: "第二篇文章标题", excerpt: "摘要2", coverImage: "https://example.com/2.jpg", category: "工具", href: "/articles/second" },
-  { id: "3", title: "第三篇文章标题", excerpt: "摘要3", coverImage: "https://example.com/3.jpg", category: "文学", href: "/articles/third" },
+  {
+    id: "1",
+    title: "第一篇文章标题",
+    excerpt: "摘要1",
+    coverImage: "https://example.com/1.jpg",
+    category: "编程",
+    href: "/articles/first",
+  },
+  {
+    id: "2",
+    title: "第二篇文章标题",
+    excerpt: "摘要2",
+    coverImage: "https://example.com/2.jpg",
+    category: "工具",
+    href: "/articles/second",
+  },
+  {
+    id: "3",
+    title: "第三篇文章标题",
+    excerpt: "摘要3",
+    coverImage: "https://example.com/3.jpg",
+    category: "文学",
+    href: "/articles/third",
+  },
 ];
 
-beforeEach(() => { _snap = 0; Object.keys(_cbs).forEach((k) => delete _cbs[k]); vi.clearAllMocks(); });
-afterEach(() => { vi.useRealTimers(); });
+beforeEach(() => {
+  _snap = 0;
+  Object.keys(_cbs).forEach((k) => delete _cbs[k]);
+  vi.clearAllMocks();
+});
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("FeaturedCarousel", () => {
   it("渲染不崩溃，DOM 中存在第一张幻灯片标题", () => {
@@ -3657,7 +4234,9 @@ describe("FeaturedCarousel", () => {
   it("点击第二个指示器切换到第二张幻灯片", async () => {
     const user = userEvent.setup();
     render(<FeaturedCarousel posts={mockPosts} />);
-    await act(async () => { await user.click(screen.getByLabelText("第 2 张，共 3 张")); });
+    await act(async () => {
+      await user.click(screen.getByLabelText("第 2 张，共 3 张"));
+    });
     expect(screen.getByLabelText("第 2 张，共 3 张")).toHaveAttribute("aria-current", "true");
     expect(screen.getByLabelText("第 1 张，共 3 张")).not.toHaveAttribute("aria-current");
   });
@@ -3667,22 +4246,30 @@ describe("FeaturedCarousel 自动轮播", () => {
   it("自动轮播：4 秒后切换到第二张", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
-    act(() => { vi.advanceTimersByTime(4000); });
+    act(() => {
+      vi.advanceTimersByTime(4000);
+    });
     expect(screen.getByLabelText("第 2 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 
   it("自动轮播：8 秒后切换到第三张", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
-    act(() => { vi.advanceTimersByTime(8000); });
+    act(() => {
+      vi.advanceTimersByTime(8000);
+    });
     expect(screen.getByLabelText("第 3 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 
   it("悬停时暂停自动轮播", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
-    act(() => { fireEvent.mouseEnter(screen.getByRole("region", { name: "推荐文章" })); });
-    act(() => { vi.advanceTimersByTime(4000); });
+    act(() => {
+      fireEvent.mouseEnter(screen.getByRole("region", { name: "推荐文章" }));
+    });
+    act(() => {
+      vi.advanceTimersByTime(4000);
+    });
     expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 
@@ -3690,11 +4277,19 @@ describe("FeaturedCarousel 自动轮播", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
     const carousel = screen.getByRole("region", { name: "推荐文章" });
-    act(() => { fireEvent.mouseEnter(carousel); });
-    act(() => { vi.advanceTimersByTime(5000); });
+    act(() => {
+      fireEvent.mouseEnter(carousel);
+    });
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
     expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
-    act(() => { fireEvent.mouseLeave(carousel); });
-    act(() => { vi.advanceTimersByTime(4000); });
+    act(() => {
+      fireEvent.mouseLeave(carousel);
+    });
+    act(() => {
+      vi.advanceTimersByTime(4000);
+    });
     expect(screen.getByLabelText("第 2 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 });
@@ -3710,6 +4305,7 @@ pnpm --filter @repo/web exec vitest run components/featured/featured-carousel.te
 - [ ] **Step 4: 改写 featured-carousel-slide.tsx**（移除 `isActive` prop）
 
 `apps/web/components/featured/featured-carousel-slide.tsx`:
+
 ```tsx
 import Image from "next/image";
 import Link from "next/link";
@@ -3723,7 +4319,10 @@ interface FeaturedCarouselSlideProps {
   isLcpCandidate?: boolean;
 }
 
-export function FeaturedCarouselSlide({ post, isLcpCandidate = false }: FeaturedCarouselSlideProps) {
+export function FeaturedCarouselSlide({
+  post,
+  isLcpCandidate = false,
+}: FeaturedCarouselSlideProps) {
   return (
     <div className="relative w-full h-full aspect-video">
       <Image
@@ -3746,7 +4345,9 @@ export function FeaturedCarouselSlide({ post, isLcpCandidate = false }: Featured
         <span className="inline-block mb-3 px-3 py-1 text-xs font-medium text-white bg-white/20 rounded-full backdrop-blur-sm">
           {post.category}
         </span>
-        <h2 className="text-2xl lg:text-3xl font-bold text-white mb-2 line-clamp-2">{post.title}</h2>
+        <h2 className="text-2xl lg:text-3xl font-bold text-white mb-2 line-clamp-2">
+          {post.title}
+        </h2>
         <p className="text-sm lg:text-base text-white/80 mb-4 line-clamp-2">{post.excerpt}</p>
         <Button
           href={post.href}
@@ -3765,6 +4366,7 @@ export function FeaturedCarouselSlide({ post, isLcpCandidate = false }: Featured
 - [ ] **Step 5: 改写 featured-carousel.tsx**
 
 `apps/web/components/featured/featured-carousel.tsx`:
+
 ```tsx
 "use client";
 
@@ -3793,13 +4395,18 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
     if (!api) return;
     const onSelect = () => setCurrentIndex(api.selectedScrollSnap());
     api.on("select", onSelect);
-    return () => { api.off("select", onSelect); };
+    return () => {
+      api.off("select", onSelect);
+    };
   }, [api]);
 
   // 自動再生：Embla API がある場合は scrollNext、なければ state fallback（jsdom テスト用）
   useEffect(() => {
     if (isHovered) {
-      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
       return;
     }
     intervalRef.current = setInterval(() => {
@@ -3809,7 +4416,12 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
         setCurrentIndex((prev) => (prev + 1) % posts.length);
       }
     }, 4000);
-    return () => { if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; } };
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
   }, [api, isHovered, posts.length]);
 
   const handleIndicatorClick = useCallback(
@@ -3872,7 +4484,9 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
             aria-hidden={index !== currentIndex}
           >
             <div className="flex items-start gap-2">
-              <h2 className="flex-1 text-lg font-bold text-foreground line-clamp-2">{post.title}</h2>
+              <h2 className="flex-1 text-lg font-bold text-foreground line-clamp-2">
+                {post.title}
+              </h2>
               <Link
                 href={post.href}
                 aria-label="阅读文章"
@@ -3927,23 +4541,23 @@ git commit -m "feat(web): 用 Embla CarouselBase 重写 FeaturedCarousel，删�
 
 ## 自审：Spec 覆盖检查
 
-| Spec 要求 | 对应 Task |
-|---|---|
-| 6 个 SVG 图标 | Task 1 ✓ |
-| sortCx / isReactComponent / useResizeObserver 工具 | Task 2 ✓ |
-| embla-carousel-react 依赖 | Task 3 ✓ |
-| Tooltip 组件 | Task 4 ✓ |
-| Toggle 组件（含 ToggleBase） | Task 5 ✓ |
-| Input 多文件目录（label/hint-text/input） | Task 6 ✓ |
-| ButtonUtility 组件 | Task 7 ✓ |
-| Avatar 完整迁移（含 base-components） | Task 8 ✓ |
-| Checkbox / CheckboxBase | Task 9 ✓ |
-| RadioButton / RadioGroup / RadioButtonBase | Task 10 ✓ |
-| Dropdown 组件 | Task 11 ✓ |
-| Select / SelectItem / ComboBox / Popover | Task 12 ✓ |
-| CarouselBase（Embla） | Task 13 ✓ |
-| PaginationBase 替换（useMemo 保留） | Task 14 ✓ |
-| packages/ui index.ts 更新 | Task 15 ✓ |
+| Spec 要求                                            | 对应 Task |
+| ---------------------------------------------------- | --------- |
+| 6 个 SVG 图标                                        | Task 1 ✓  |
+| sortCx / isReactComponent / useResizeObserver 工具   | Task 2 ✓  |
+| embla-carousel-react 依赖                            | Task 3 ✓  |
+| Tooltip 组件                                         | Task 4 ✓  |
+| Toggle 组件（含 ToggleBase）                         | Task 5 ✓  |
+| Input 多文件目录（label/hint-text/input）            | Task 6 ✓  |
+| ButtonUtility 组件                                   | Task 7 ✓  |
+| Avatar 完整迁移（含 base-components）                | Task 8 ✓  |
+| Checkbox / CheckboxBase                              | Task 9 ✓  |
+| RadioButton / RadioGroup / RadioButtonBase           | Task 10 ✓ |
+| Dropdown 组件                                        | Task 11 ✓ |
+| Select / SelectItem / ComboBox / Popover             | Task 12 ✓ |
+| CarouselBase（Embla）                                | Task 13 ✓ |
+| PaginationBase 替换（useMemo 保留）                  | Task 14 ✓ |
+| packages/ui index.ts 更新                            | Task 15 ✓ |
 | FeaturedCarousel 重写 + slide 更新 + indicators 删除 | Task 16 ✓ |
 
 所有 spec 要求均有对应实现 task。

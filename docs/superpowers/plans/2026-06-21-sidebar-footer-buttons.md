@@ -39,6 +39,7 @@
 ## Task 1: 共享组件 `SidebarSectionFooter` + `SidebarFooterButton`
 
 **Files:**
+
 - Create: `apps/web/components/sidebar/sidebar-section-footer.tsx`
 - Test: `apps/web/components/sidebar/sidebar-section-footer.test.tsx`
 
@@ -180,7 +181,8 @@ type SidebarFooterButtonProps = Omit<ButtonProps, "variant" | "size"> & {
 };
 
 const TONE_CLASSES: Record<SidebarFooterButtonProps["tone"], string> = {
-  primary: "border border-primary/20 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
+  primary:
+    "border border-primary/20 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
   ghost: "border border-border text-(--fg2) hover:bg-accent hover:text-foreground",
 };
 
@@ -221,6 +223,7 @@ git commit -m "feat(web): 新增侧栏底部 CTA 共享组件 SidebarSectionFoot
 ## Task 2: 从 sidebar index 导出
 
 **Files:**
+
 - Modify: `apps/web/components/sidebar/index.ts`
 
 - [ ] **Step 1: 追加导出**
@@ -248,6 +251,7 @@ git commit -m "feat(web): 导出 SidebarSectionFooter 与 SidebarFooterButton"
 ## Task 3: 碎语模块底部改用新组件
 
 **Files:**
+
 - Modify: `apps/web/components/snippets/snippets-section.tsx`（底部按钮行，原 93-108 行）
 - Test: `apps/web/components/snippets/snippets-section.test.tsx`
 
@@ -256,14 +260,14 @@ git commit -m "feat(web): 导出 SidebarSectionFooter 与 SidebarFooterButton"
 在 `snippets-section.test.tsx` 的 `vi.mock("@repo/ui", ...)` 中确保 `Button` 透传 `className`（当前 mock 已 `{...props}` 透传，无需改）。新增/替换底部相关用例——把原「发表碎语和查看更多按钮存在」用例（约 218-222 行）替换为：
 
 ```tsx
-  it("底部渲染发表碎语（主操作）与查看更多（次操作）", () => {
-    render(<SnippetsSection snippets={mockMoments} />);
-    expect(screen.getByRole("button", { name: /发表碎语/ })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /查看更多/ })).toBeTruthy();
-    // 主操作前置 plus 图标、查看更多后置 arrow-forward 图标
-    expect(screen.getByTestId("icon-plus")).toBeTruthy();
-    expect(screen.getByTestId("icon-arrow-forward")).toBeTruthy();
-  });
+it("底部渲染发表碎语（主操作）与查看更多（次操作）", () => {
+  render(<SnippetsSection snippets={mockMoments} />);
+  expect(screen.getByRole("button", { name: /发表碎语/ })).toBeTruthy();
+  expect(screen.getByRole("button", { name: /查看更多/ })).toBeTruthy();
+  // 主操作前置 plus 图标、查看更多后置 arrow-forward 图标
+  expect(screen.getByTestId("icon-plus")).toBeTruthy();
+  expect(screen.getByTestId("icon-arrow-forward")).toBeTruthy();
+});
 ```
 
 > 说明：现有 `@repo/icons` mock 把 `SvgIcon` 渲染成 `data-testid={`icon-${name}`}`，故按钮内图标会被并入按钮可访问名，`name: /发表碎语/` 用正则匹配。
@@ -291,16 +295,16 @@ import {
 3b. 把原底部按钮行（`<div className="flex gap-2 border-t border-border/40 px-4 py-3">...</div>` 整块，含两个 `<Button>`）替换为：
 
 ```tsx
-        <SidebarSectionFooter>
-          <SidebarFooterButton tone="primary">
-            <SvgIcon name="plus" size={12} />
-            {t("snippet.postNew")}
-          </SidebarFooterButton>
-          <SidebarFooterButton tone="ghost">
-            {t("snippet.viewMore")}
-            <SvgIcon name="arrow-forward" size={12} />
-          </SidebarFooterButton>
-        </SidebarSectionFooter>
+<SidebarSectionFooter>
+  <SidebarFooterButton tone="primary">
+    <SvgIcon name="plus" size={12} />
+    {t("snippet.postNew")}
+  </SidebarFooterButton>
+  <SidebarFooterButton tone="ghost">
+    {t("snippet.viewMore")}
+    <SvgIcon name="arrow-forward" size={12} />
+  </SidebarFooterButton>
+</SidebarSectionFooter>
 ```
 
 3c. 若 `Button` 在文件内已无其它用处，从 `@repo/ui` 的 import 中移除 `Button`（保留其它仍被使用的导入）。检查全文件确认无残留 `<Button` 后再删。
@@ -322,6 +326,7 @@ git commit -m "refactor(web): 碎语底部改用 SidebarSectionFooter 双等宽�
 ## Task 4: 最近来访模块底部改用新组件
 
 **Files:**
+
 - Modify: `apps/web/components/sidebar/recent-visitors.tsx`（底部按钮行，原 37-44 行）
 - Test: `apps/web/components/sidebar/sidebar.test.tsx`（`RecentVisitors` 的底部用例）
 
@@ -330,13 +335,13 @@ git commit -m "refactor(web): 碎语底部改用 SidebarSectionFooter 双等宽�
 在 `sidebar.test.tsx` 的 `@repo/ui` mock 中，`Button` 已透传 `{...props}`（含 `className`），无需改。把原「两个底部按钮（入驻 QQ 群 / 查看更多）存在」用例（约 139-143 行）替换为：
 
 ```tsx
-  it("底部渲染入驻 QQ 群（主操作）与查看更多（次操作）", () => {
-    render(<RecentVisitors visitors={mockVisitors} />);
-    expect(screen.getByRole("button", { name: /入驻 QQ 群/ })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /查看更多/ })).toBeTruthy();
-    expect(screen.getByTestId("icon-qq")).toBeTruthy();
-    expect(screen.getByTestId("icon-arrow-forward")).toBeTruthy();
-  });
+it("底部渲染入驻 QQ 群（主操作）与查看更多（次操作）", () => {
+  render(<RecentVisitors visitors={mockVisitors} />);
+  expect(screen.getByRole("button", { name: /入驻 QQ 群/ })).toBeTruthy();
+  expect(screen.getByRole("button", { name: /查看更多/ })).toBeTruthy();
+  expect(screen.getByTestId("icon-qq")).toBeTruthy();
+  expect(screen.getByTestId("icon-arrow-forward")).toBeTruthy();
+});
 ```
 
 > 说明：`sidebar.test.tsx` 已 mock `@repo/icons` 的 `SvgIcon` 为 `data-testid={`icon-${name}`}`（约 26-30 行），可直接断言图标。
@@ -364,16 +369,16 @@ import {
 3b. 把原底部行（`<div className="flex gap-2 px-4 pb-[15px]">...</div>`，含两个 `<Button>`）替换为：
 
 ```tsx
-      <SidebarSectionFooter>
-        <SidebarFooterButton tone="primary">
-          <SvgIcon name="qq" size={12} />
-          {t("sidebar.joinQQ")}
-        </SidebarFooterButton>
-        <SidebarFooterButton tone="ghost">
-          {t("sidebar.viewMore")}
-          <SvgIcon name="arrow-forward" size={12} />
-        </SidebarFooterButton>
-      </SidebarSectionFooter>
+<SidebarSectionFooter>
+  <SidebarFooterButton tone="primary">
+    <SvgIcon name="qq" size={12} />
+    {t("sidebar.joinQQ")}
+  </SidebarFooterButton>
+  <SidebarFooterButton tone="ghost">
+    {t("sidebar.viewMore")}
+    <SvgIcon name="arrow-forward" size={12} />
+  </SidebarFooterButton>
+</SidebarSectionFooter>
 ```
 
 3c. 从 `@repo/ui` import 中移除不再使用的 `Button`（确认全文件无 `<Button` 残留）。
@@ -417,4 +422,7 @@ Expected: 全部 Done，无 error
 - **Spec coverage：** 共享组件（Task 1）、导出（Task 2）、碎语底部（Task 3）、来访底部（Task 4）、图标复用（Task 3/4 用 plus/qq/arrow-forward）、i18n 复用现有 key（Task 3/4）、测试（各 Task + Task 5）——spec 各节均有对应任务。范围外项（不动卡片主体、不改 @repo/ui Button）在实现步骤中未触碰。
 - **Placeholder 扫描：** 无 TBD/TODO，所有代码步骤含完整代码与命令。
 - **类型一致性：** `SidebarFooterButton` 的 `tone: "primary" | "ghost"`、`SidebarSectionFooter` 的 children-only props 在 Task 1 定义后，Task 3/4 调用方式与之一致；图标名 `plus`/`qq`/`arrow-forward` 全程一致。
+
+```
+
 ```

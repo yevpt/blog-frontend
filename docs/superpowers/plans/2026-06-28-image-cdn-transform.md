@@ -23,34 +23,34 @@
 
 ### blog-backend（`../blog-backend`）
 
-| 文件 | 职责 |
-|------|------|
-| `pkg/config/config.go` | 新增 `ImageConfig` |
-| `pkg/config/config_test.go` | 配置加载测试 |
-| `config/config.yaml` | 默认 `image` 段 |
-| `config/config.local.yaml.example` | 示例密钥占位 |
-| `pkg/imagecdn/path.go` | CDN path → object key |
-| `pkg/imagecdn/params.go` | 解析/校验 `w`、`q` |
-| `pkg/imagecdn/path_test.go` / `params_test.go` | 纯函数测试 |
-| `internal/middleware/origin_auth.go` | 回源鉴权中间件 |
-| `internal/middleware/origin_auth_test.go` | 中间件测试 |
-| `internal/service/imagecdn/service.go` | 读 S3、变换、响应头 |
-| `internal/service/imagecdn/service_test.go` | 服务单测 |
-| `internal/handler/imagecdn/handler.go` | Gin handler |
-| `internal/handler/imagecdn/handler_test.go` | HTTP 集成测试 |
-| `internal/router/router.go` | 注册 `GET /{bucket}/*filepath` |
+| 文件                                           | 职责                           |
+| ---------------------------------------------- | ------------------------------ |
+| `pkg/config/config.go`                         | 新增 `ImageConfig`             |
+| `pkg/config/config_test.go`                    | 配置加载测试                   |
+| `config/config.yaml`                           | 默认 `image` 段                |
+| `config/config.local.yaml.example`             | 示例密钥占位                   |
+| `pkg/imagecdn/path.go`                         | CDN path → object key          |
+| `pkg/imagecdn/params.go`                       | 解析/校验 `w`、`q`             |
+| `pkg/imagecdn/path_test.go` / `params_test.go` | 纯函数测试                     |
+| `internal/middleware/origin_auth.go`           | 回源鉴权中间件                 |
+| `internal/middleware/origin_auth_test.go`      | 中间件测试                     |
+| `internal/service/imagecdn/service.go`         | 读 S3、变换、响应头            |
+| `internal/service/imagecdn/service_test.go`    | 服务单测                       |
+| `internal/handler/imagecdn/handler.go`         | Gin handler                    |
+| `internal/handler/imagecdn/handler_test.go`    | HTTP 集成测试                  |
+| `internal/router/router.go`                    | 注册 `GET /{bucket}/*filepath` |
 
 ### blog-frontend（本仓库）
 
-| 文件 | 职责 |
-|------|------|
-| `apps/web/lib/blog-image-url.ts` | 拼 CDN 变换 URL、剥离 `w`/`q`、GIF 判断（loader 与 markdown 共用） |
-| `apps/web/lib/blog-image-url.test.ts` | 纯函数测试 |
-| `apps/web/lib/blog-image-loader.ts` | Next custom loader 入口 |
-| `apps/web/next.config.mjs` | `loader: "custom"`，移除 Next 优化器配置 |
-| `apps/web/lib/markdown-image-optimizer.ts` | 改用 `blog-image-url` |
-| `apps/web/lib/markdown-image-optimizer.test.ts` | 更新断言 |
-| `apps/web/components/common/loading-image.tsx` | 失败回退改为去掉 `w`/`q` 的原 URL |
+| 文件                                            | 职责                                                               |
+| ----------------------------------------------- | ------------------------------------------------------------------ |
+| `apps/web/lib/blog-image-url.ts`                | 拼 CDN 变换 URL、剥离 `w`/`q`、GIF 判断（loader 与 markdown 共用） |
+| `apps/web/lib/blog-image-url.test.ts`           | 纯函数测试                                                         |
+| `apps/web/lib/blog-image-loader.ts`             | Next custom loader 入口                                            |
+| `apps/web/next.config.mjs`                      | `loader: "custom"`，移除 Next 优化器配置                           |
+| `apps/web/lib/markdown-image-optimizer.ts`      | 改用 `blog-image-url`                                              |
+| `apps/web/lib/markdown-image-optimizer.test.ts` | 更新断言                                                           |
+| `apps/web/components/common/loading-image.tsx`  | 失败回退改为去掉 `w`/`q` 的原 URL                                  |
 
 ---
 
@@ -59,12 +59,14 @@
 **Repo:** `blog-backend`
 
 **Files:**
+
 - Modify: `pkg/config/config.go`
 - Modify: `pkg/config/config_test.go`
 - Modify: `config/config.yaml`
 - Modify: `config/config.local.yaml.example`
 
 **Interfaces:**
+
 - Produces: `config.ImageConfig` with fields `OriginAuthSecret string`, `ResponseCacheMaxAge int`, `DefaultQuality int`, `MaxWidth int`
 
 - [ ] **Step 1: 写失败测试**
@@ -134,12 +136,14 @@ git commit -m "feat(image): 新增图片 CDN 源站配置项"
 **Repo:** `blog-backend`
 
 **Files:**
+
 - Create: `pkg/imagecdn/path.go`
 - Create: `pkg/imagecdn/params.go`
 - Create: `pkg/imagecdn/path_test.go`
 - Create: `pkg/imagecdn/params_test.go`
 
 **Interfaces:**
+
 - Produces: `func ObjectKeyFromCDNPath(bucket, requestPath string) (string, error)`
 - Produces: `func ParseTransformParams(raw url.Values, cfg config.ImageConfig) (width int, quality int, transform bool)`
 
@@ -210,10 +214,12 @@ git commit -m "feat(image): 新增 CDN path 与变换参数解析"
 **Repo:** `blog-backend`
 
 **Files:**
+
 - Create: `internal/middleware/origin_auth.go`
 - Create: `internal/middleware/origin_auth_test.go`
 
 **Interfaces:**
+
 - Produces: `func OriginAuth(secret string) gin.HandlerFunc`
 
 - [ ] **Step 1: 写失败测试**
@@ -268,10 +274,12 @@ git commit -m "feat(image): 新增 CDN 回源鉴权中间件"
 **Repo:** `blog-backend`
 
 **Files:**
+
 - Create: `internal/service/imagecdn/service.go`
 - Create: `internal/service/imagecdn/service_test.go`
 
 **Interfaces:**
+
 - Consumes: `storage.ObjectStore`（`GetObject`）、`config.ImageConfig`、`pkg/imagecdn` 解析函数、`pkg/imageutil.Process`
 - Produces: `type Service struct { ... }` with `func (s *Service) ServeObject(w http.ResponseWriter, r *http.Request, objectKey string, width, quality int, transform bool) error`
 
@@ -304,6 +312,7 @@ go test ./internal/service/imagecdn -count=1
 - [ ] **Step 3: 实现**
 
 要点：
+
 - `transform=true`：`GetObject` → `imageutil.Process`（`MaxWidth: width`, `JPEGQuality: quality`）→ 写 body
 - `transform=false`：直接写 S3 bytes，`Content-Type` 用 `http.DetectContentType` 或固定从 key 推断
 - 响应头：`Cache-Control: public, max-age={cfg.ResponseCacheMaxAge}, immutable`；`ETag: "{md5}"`
@@ -329,11 +338,13 @@ git commit -m "feat(image): 实现 CDN 源站图片变换服务"
 **Repo:** `blog-backend`
 
 **Files:**
+
 - Create: `internal/handler/imagecdn/handler.go`
 - Create: `internal/handler/imagecdn/handler_test.go`
 - Modify: `internal/router/router.go`
 
 **Interfaces:**
+
 - Consumes: `Service.ServeObject`, `ObjectKeyFromCDNPath`, `ParseTransformParams`, `OriginAuth`
 - Produces: route `GET /{bucket}/*filepath`（`bucket` 取自 `cfg.Garage.Bucket`）
 
@@ -360,6 +371,7 @@ go test ./internal/handler/imagecdn -count=1
 - [ ] **Step 3: 实现 handler**
 
 Handler 流程：
+
 1. `ObjectKeyFromCDNPath(bucket, c.Request.URL.Path)`
 2. `ParseTransformParams(c.Request.URL.Query(), cfg.Image)`
 3. 调用 `svc.ServeObject`
@@ -399,10 +411,12 @@ git commit -m "feat(image): 注册 CDN 回源图片路由"
 **Repo:** `blog-frontend`
 
 **Files:**
+
 - Create: `apps/web/lib/blog-image-url.ts`
 - Create: `apps/web/lib/blog-image-url.test.ts`
 
 **Interfaces:**
+
 - Produces: `buildCdnImageUrl(src: string, width: number, quality?: number): string`
 - Produces: `stripTransformParams(src: string): string`
 - Re-export or share `isGifImageUrl`（从 `markdown-image-optimizer` 抽到本文件）
@@ -446,7 +460,9 @@ pnpm --filter web exec vitest run apps/web/lib/blog-image-url.test.ts
 - [ ] **Step 3: 实现**
 
 ```ts
-export function isGifImageUrl(src: string): boolean { /* 从 markdown-image-optimizer 迁移 */ }
+export function isGifImageUrl(src: string): boolean {
+  /* 从 markdown-image-optimizer 迁移 */
+}
 
 export function buildCdnImageUrl(src: string, width: number, quality = 75): string {
   if (isGifImageUrl(src)) return src;
@@ -481,6 +497,7 @@ git commit -m "feat(web): 新增 CDN 图片 URL 拼接工具"
 **Repo:** `blog-frontend`
 
 **Files:**
+
 - Create: `apps/web/lib/blog-image-loader.ts`
 - Modify: `apps/web/next.config.mjs`
 
@@ -534,6 +551,7 @@ git commit -m "feat(web): 切换 next/image 为 CDN custom loader"
 **Repo:** `blog-frontend`
 
 **Files:**
+
 - Modify: `apps/web/lib/markdown-image-optimizer.ts`
 - Modify: `apps/web/lib/markdown-image-optimizer.test.ts`
 
@@ -573,6 +591,7 @@ git commit -m "refactor(web): Markdown 图片改用 CDN 变换 URL"
 **Repo:** `blog-frontend`
 
 **Files:**
+
 - Modify: `apps/web/components/common/loading-image.tsx`
 - Modify: `apps/web/components/common/loading-image.test.tsx`
 
@@ -583,6 +602,7 @@ git commit -m "refactor(web): Markdown 图片改用 CDN 变换 URL"
 - [ ] **Step 2: 实现**
 
 `handleImageFailure` 在重试耗尽后：
+
 ```ts
 setUnoptimized(true);
 // 若 src 含 w/q，改用 stripTransformParams(resolveSrcString(src))
@@ -640,18 +660,18 @@ pnpm --filter web lint && pnpm --filter web check-types
 
 ## Spec 覆盖自检
 
-| Spec 要求 | Task |
-|-----------|------|
-| Go 唯一源站 | Task 5 + Task 11 |
-| X-Origin-Auth | Task 3, 5 |
-| 不复验 TypeD | Task 4（无 sign 校验代码） |
-| w/q 参数、maxWidth | Task 2, 4 |
-| responseCacheMaxAge 可配置 | Task 1, 4 |
-| Redis 不存图片 | 无相关 Task |
-| custom loader | Task 7 |
-| GIF 直链 | Task 6, 8 |
-| 预览用原 URL | Task 6 `stripTransformParams` + markdown `data-original-src` 不变 |
-| 失败回退 | Task 9 + `packages/markdown/src/image-retry.ts`（已用 `data-original-src`，无需改） |
+| Spec 要求                  | Task                                                                                |
+| -------------------------- | ----------------------------------------------------------------------------------- |
+| Go 唯一源站                | Task 5 + Task 11                                                                    |
+| X-Origin-Auth              | Task 3, 5                                                                           |
+| 不复验 TypeD               | Task 4（无 sign 校验代码）                                                          |
+| w/q 参数、maxWidth         | Task 2, 4                                                                           |
+| responseCacheMaxAge 可配置 | Task 1, 4                                                                           |
+| Redis 不存图片             | 无相关 Task                                                                         |
+| custom loader              | Task 7                                                                              |
+| GIF 直链                   | Task 6, 8                                                                           |
+| 预览用原 URL               | Task 6 `stripTransformParams` + markdown `data-original-src` 不变                   |
+| 失败回退                   | Task 9 + `packages/markdown/src/image-retry.ts`（已用 `data-original-src`，无需改） |
 
 ## 风险提醒
 

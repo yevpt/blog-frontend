@@ -61,9 +61,9 @@ packages/markdown/
 
 ```tsx
 interface MarkdownContentProps {
-  html: string           // 必填：已由 markdownToHtml 生成的 HTML 字符串
-  variant?: "article" | "comment"  // 默认 "article"
-  className?: string     // 追加自定义类名
+  html: string; // 必填：已由 markdownToHtml 生成的 HTML 字符串
+  variant?: "article" | "comment"; // 默认 "article"
+  className?: string; // 追加自定义类名
 }
 ```
 
@@ -91,10 +91,10 @@ prose-blockquote:my-1 prose-pre:my-1 prose-code:text-xs
 
 ```ts
 function useMarkdown(content: string): {
-  html: string | null      // 渲染后的 HTML，初始为 null
-  isLoading: boolean       // 渲染进行中
-  error: string | null     // 渲染失败时的错误信息
-}
+  html: string | null; // 渲染后的 HTML，初始为 null
+  isLoading: boolean; // 渲染进行中
+  error: string | null; // 渲染失败时的错误信息
+};
 ```
 
 - 内部通过 Server Action `renderMarkdown` 调用 `markdownToHtml`
@@ -117,13 +117,13 @@ sanitize 配置保留现有的 `<u>` 标签和 `id` 属性白名单。
 
 ## 迁移影响
 
-| 文件 | 变化 |
-|------|------|
-| `packages/markdown/` | **新建** |
-| `apps/web/lib/markdown.ts` | 保留 `extractTocFromHtml`；`markdownToHtml` 改为从 `@repo/markdown/server` re-export |
-| `apps/web/app/actions/markdown.ts` | Server Action 改从 `@repo/markdown/server` 导入 `markdownToHtml` |
-| `apps/web/components/comments/markdown-text.tsx` | **删除**，调用方改用 `useMarkdown` + `<MarkdownContent variant="comment">` |
-| `apps/web/components/article-detail/article-content.tsx` | 改用 `<MarkdownContent variant="article" html={contentHtml} />` |
+| 文件                                                     | 变化                                                                                 |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `packages/markdown/`                                     | **新建**                                                                             |
+| `apps/web/lib/markdown.ts`                               | 保留 `extractTocFromHtml`；`markdownToHtml` 改为从 `@repo/markdown/server` re-export |
+| `apps/web/app/actions/markdown.ts`                       | Server Action 改从 `@repo/markdown/server` 导入 `markdownToHtml`                     |
+| `apps/web/components/comments/markdown-text.tsx`         | **删除**，调用方改用 `useMarkdown` + `<MarkdownContent variant="comment">`           |
+| `apps/web/components/article-detail/article-content.tsx` | 改用 `<MarkdownContent variant="article" html={contentHtml} />`                      |
 
 ---
 
@@ -138,6 +138,7 @@ sanitize 配置保留现有的 `<u>` 标签和 `id` 属性白名单。
 ## 注释规范
 
 所有封装代码写中文注释，说明：
+
 - 每个 variant 的设计意图
 - sanitize 白名单的来由（`<u>` 由 RichEditor 生成，`id` 由 rehype-slug 注入）
 - `isMounted` 竞态保护的原因

@@ -12,6 +12,7 @@ license: "MIT"
 ## 第一原则：复用优先
 
 落每个 UI 元素前先问：`@repo/*` 是否已有它？
+
 - 有 → 直接 import，用 `className` 透传微调，不写平行实现。
 - 不确定 → 读包入口确认（`packages/ui/src/index.ts`、`packages/hooks/src/index.ts`、`packages/api/src/index.ts`），别凭印象。
 - 确实没有 → 是「基础通用 UI」就在 `packages/ui` 新建并导出再用；是业务组件才写进 app 的 `components/`。
@@ -38,25 +39,25 @@ license: "MIT"
 
 全部从 `@repo/ui` 具名导入。清单以 `packages/ui/src/index.ts` 实际导出为准；组件 Props 有 TS 约束，类型报错即用法提示。
 
-| 你想写的 | 用现成的 |
-| --- | --- |
-| 按钮 / 链接按钮 | `Button`，图标按钮 `ButtonUtility` |
-| 输入框 / 表单字段 | `Input` + `Label` + `HintText` |
-| 搜索框 | `SearchField` |
-| 下拉选择 / combobox | `Select`、`Dropdown` |
-| 复选 / 单选 / 开关 | `Checkbox`、`RadioGroup`+`RadioButton`、`Toggle` |
-| 日期选择 | `DatePicker`（配 `parseDate`/`DateValue`） |
-| 卡片 | `Card`(+`CardHeader`/`CardTitle`/`CardDescription`/`CardContent`) |
-| 标签 / 徽标 | `Badge`；可交互标签组 `TagGroup`+`TagList`+`TagItem` |
-| 头像 | `Avatar` |
-| 选项卡 | `Tabs`(+`TabsList`/`TabsItem`/`TabsPanels`/`TabsPanel`) |
-| 分页 | `Pagination` |
-| 弹窗 / 对话框 | `Modal` |
-| 提示气泡 | `Tooltip`+`TooltipTrigger` |
-| 轮播 | `Carousel`（`useCarousel`） |
-| Toast 通知 | `ToastRegion`+`ToastQueue` |
-| 入场动画 | `FadeInUp` |
-| 合并 className | `cn`（tailwind-merge，别手拼字符串） |
+| 你想写的            | 用现成的                                                          |
+| ------------------- | ----------------------------------------------------------------- |
+| 按钮 / 链接按钮     | `Button`，图标按钮 `ButtonUtility`                                |
+| 输入框 / 表单字段   | `Input` + `Label` + `HintText`                                    |
+| 搜索框              | `SearchField`                                                     |
+| 下拉选择 / combobox | `Select`、`Dropdown`                                              |
+| 复选 / 单选 / 开关  | `Checkbox`、`RadioGroup`+`RadioButton`、`Toggle`                  |
+| 日期选择            | `DatePicker`（配 `parseDate`/`DateValue`）                        |
+| 卡片                | `Card`(+`CardHeader`/`CardTitle`/`CardDescription`/`CardContent`) |
+| 标签 / 徽标         | `Badge`；可交互标签组 `TagGroup`+`TagList`+`TagItem`              |
+| 头像                | `Avatar`                                                          |
+| 选项卡              | `Tabs`(+`TabsList`/`TabsItem`/`TabsPanels`/`TabsPanel`)           |
+| 分页                | `Pagination`                                                      |
+| 弹窗 / 对话框       | `Modal`                                                           |
+| 提示气泡            | `Tooltip`+`TooltipTrigger`                                        |
+| 轮播                | `Carousel`（`useCarousel`）                                       |
+| Toast 通知          | `ToastRegion`+`ToastQueue`                                        |
+| 入场动画            | `FadeInUp`                                                        |
+| 合并 className      | `cn`（tailwind-merge，别手拼字符串）                              |
 
 通用 Hook 同理：媒体查询、locale 等先查 `@repo/hooks`；新写的通用 hook 放 `packages/hooks/src/` 并导出，绑业务接口的才留 app 内。
 

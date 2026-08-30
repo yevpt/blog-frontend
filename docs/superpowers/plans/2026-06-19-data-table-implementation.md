@@ -25,6 +25,7 @@
 ## Task 1: DataTable Public Behavior Tests
 
 **Files:**
+
 - Modify: `packages/ui/src/table/table.test.tsx`
 
 - [ ] **Step 1: Replace primitive table tests with DataTable behavior tests**
@@ -68,6 +69,7 @@ Expected: fails because `DataTable` and the new exports do not exist yet.
 ## Task 2: DataTable Core Implementation
 
 **Files:**
+
 - Create: `packages/ui/src/table/types.ts`
 - Create: `packages/ui/src/table/table-state.ts`
 - Create: `packages/ui/src/table/table-header-cell.tsx`
@@ -152,6 +154,7 @@ Expected: passes.
 ## Task 3: Admin Articles Migration
 
 **Files:**
+
 - Modify: `apps/admin/src/pages/ArticlesPage.tsx`
 - Modify: `apps/admin/src/pages/ArticlesPage.test.tsx`
 - Delete: `apps/admin/src/pages/ArticleTableHeaderControls.tsx`
@@ -211,6 +214,7 @@ Expected: passes.
 ## Task 4: Final Verification
 
 **Files:**
+
 - Verify all modified files.
 
 - [ ] **Step 1: Run targeted UI tests**

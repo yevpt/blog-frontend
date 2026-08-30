@@ -12,40 +12,41 @@
 
 ## 文件结构总览
 
-| 操作 | 文件 |
-|------|------|
-| Modify | `packages/ui/package.json` |
-| Replace | `packages/ui/src/button.tsx` |
-| Create | `packages/ui/src/button.test.tsx` |
-| Replace | `packages/ui/src/badge.tsx` |
-| Create | `packages/ui/src/badge.test.tsx` |
-| Create | `packages/ui/src/tabs.tsx` |
-| Create | `packages/ui/src/tabs.test.tsx` |
-| Create | `packages/ui/src/input.tsx` |
-| Create | `packages/ui/src/input.test.tsx` |
-| Create | `packages/ui/src/tag-group.tsx` |
-| Create | `packages/ui/src/tag-group.test.tsx` |
-| Replace | `packages/ui/src/pagination.tsx` |
-| Modify | `packages/ui/src/index.ts` |
-| Modify | `apps/web/app/providers/locale-provider.tsx` |
-| Modify | `apps/web/app/providers/locale-provider.test.tsx` |
-| Modify | `apps/web/components/navbar/site-navbar.tsx` |
-| Modify | `apps/web/components/navbar/site-navbar.test.tsx` |
-| Modify | `apps/web/components/navbar/navbar-actions.tsx` |
-| Modify | `apps/web/components/navbar/navbar-mobile-drawer.tsx` |
-| Modify | `apps/web/components/articles/article-list-header.tsx` |
-| Modify | `apps/web/components/articles/article-section.test.tsx` |
-| Modify | `apps/web/components/sidebar/tags-cloud.tsx` |
-| Modify | `apps/web/components/sidebar/recent-visitors.tsx` |
-| Modify | `apps/web/components/featured/featured-carousel-slide.tsx` |
-| Modify | `apps/web/components/snippets/snippets-section.tsx` |
-| Modify | `apps/web/app/page.tsx` |
+| 操作    | 文件                                                       |
+| ------- | ---------------------------------------------------------- |
+| Modify  | `packages/ui/package.json`                                 |
+| Replace | `packages/ui/src/button.tsx`                               |
+| Create  | `packages/ui/src/button.test.tsx`                          |
+| Replace | `packages/ui/src/badge.tsx`                                |
+| Create  | `packages/ui/src/badge.test.tsx`                           |
+| Create  | `packages/ui/src/tabs.tsx`                                 |
+| Create  | `packages/ui/src/tabs.test.tsx`                            |
+| Create  | `packages/ui/src/input.tsx`                                |
+| Create  | `packages/ui/src/input.test.tsx`                           |
+| Create  | `packages/ui/src/tag-group.tsx`                            |
+| Create  | `packages/ui/src/tag-group.test.tsx`                       |
+| Replace | `packages/ui/src/pagination.tsx`                           |
+| Modify  | `packages/ui/src/index.ts`                                 |
+| Modify  | `apps/web/app/providers/locale-provider.tsx`               |
+| Modify  | `apps/web/app/providers/locale-provider.test.tsx`          |
+| Modify  | `apps/web/components/navbar/site-navbar.tsx`               |
+| Modify  | `apps/web/components/navbar/site-navbar.test.tsx`          |
+| Modify  | `apps/web/components/navbar/navbar-actions.tsx`            |
+| Modify  | `apps/web/components/navbar/navbar-mobile-drawer.tsx`      |
+| Modify  | `apps/web/components/articles/article-list-header.tsx`     |
+| Modify  | `apps/web/components/articles/article-section.test.tsx`    |
+| Modify  | `apps/web/components/sidebar/tags-cloud.tsx`               |
+| Modify  | `apps/web/components/sidebar/recent-visitors.tsx`          |
+| Modify  | `apps/web/components/featured/featured-carousel-slide.tsx` |
+| Modify  | `apps/web/components/snippets/snippets-section.tsx`        |
+| Modify  | `apps/web/app/page.tsx`                                    |
 
 ---
 
 ## Task 1: 安装 react-aria-components
 
 **Files:**
+
 - Modify: `packages/ui/package.json`
 
 - [ ] **Step 1: 安装依赖**
@@ -77,6 +78,7 @@ git commit -m "chore(ui): 安装 react-aria-components"
 **背景：** 用 React Aria 的 `Button`（按钮语义）+ `Link`（导航语义）替换现有 CVA 实现。支持 `href` prop 自动切换为 `Link`。同时加 `cursor-pointer`（原有遗漏）。
 
 **Files:**
+
 - Replace: `packages/ui/src/button.tsx`
 
 - [ ] **Step 1: 写新 button.tsx**
@@ -127,8 +129,7 @@ const buttonVariants = cva(
 type ButtonBaseProps = VariantProps<typeof buttonVariants> & { className?: string };
 
 /** 带 href：渲染为 React Aria Link（锚点语义，键盘可导航） */
-type ButtonAsLink = ButtonBaseProps &
-  Omit<AriaLinkProps, "className" | "style"> & { href: string };
+type ButtonAsLink = ButtonBaseProps & Omit<AriaLinkProps, "className" | "style"> & { href: string };
 
 /** 不带 href：渲染为 React Aria Button（按钮语义） */
 type ButtonAsButton = ButtonBaseProps &
@@ -168,6 +169,7 @@ git commit -m "feat(ui): Button 改用 react-aria-components 原语，加 cursor
 ## Task 3: 创建 button.test.tsx
 
 **Files:**
+
 - Create: `packages/ui/src/button.test.tsx`
 
 - [ ] **Step 1: 写测试文件**
@@ -219,7 +221,11 @@ describe("Button", () => {
   it("isDisabled 时不触发 onPress", async () => {
     const user = userEvent.setup();
     const handlePress = vi.fn();
-    render(<Button isDisabled onPress={handlePress}>禁用</Button>);
+    render(
+      <Button isDisabled onPress={handlePress}>
+        禁用
+      </Button>,
+    );
     await user.click(screen.getByRole("button", { name: "禁用" }));
     expect(handlePress).not.toHaveBeenCalled();
   });
@@ -231,7 +237,11 @@ describe("Button", () => {
   });
 
   it("className 透传，rounded-full 覆盖 rounded-md", () => {
-    const { container } = render(<Button size="sm" className="rounded-full">圆</Button>);
+    const { container } = render(
+      <Button size="sm" className="rounded-full">
+        圆
+      </Button>,
+    );
     const cls = container.querySelector("button")?.className ?? "";
     expect(cls).toContain("rounded-full");
     expect(cls).not.toContain("rounded-md");
@@ -261,6 +271,7 @@ git commit -m "test(ui): 新增 Button 组件测试"
 **背景：** Badge 是纯展示组件，不需要 React Aria 交互语义。保留 CVA 实现，但更新 variant 名称使其与设计系统一致，并加 `badge.test.tsx`。
 
 **Files:**
+
 - Replace: `packages/ui/src/badge.tsx`
 - Create: `packages/ui/src/badge.test.tsx`
 
@@ -290,8 +301,7 @@ const badgeVariants = cva(
   },
 );
 
-export type BadgeProps = React.HTMLAttributes<HTMLSpanElement> &
-  VariantProps<typeof badgeVariants>;
+export type BadgeProps = React.HTMLAttributes<HTMLSpanElement> & VariantProps<typeof badgeVariants>;
 
 export function Badge({ className, variant, ...props }: BadgeProps) {
   return <span className={cn(badgeVariants({ variant, className }))} {...props} />;
@@ -348,6 +358,7 @@ git commit -m "feat(ui): Badge 更新 variant，加 brand/success/warning/error"
 **背景：** React Aria Tabs 提供完整键盘导航（← → 切换 Tab）和 ARIA 属性。包含 "button-brand-horizontal" 变体，即用户要求的主色胶囊 Tab 风格。
 
 **Files:**
+
 - Create: `packages/ui/src/tabs.tsx`
 - Create: `packages/ui/src/tabs.test.tsx`
 
@@ -382,7 +393,7 @@ export function Tabs({ className, ...props }: TabsProps) {
 
 const tabListStyles = {
   "button-brand-horizontal": "flex gap-1 flex-wrap",
-  "underline": "flex gap-4 border-b border-border",
+  underline: "flex gap-4 border-b border-border",
 } as const;
 
 export type TabsVariant = keyof typeof tabListStyles;
@@ -392,13 +403,12 @@ export interface TabsListProps extends Omit<TabListProps<object>, "className" | 
   className?: string;
 }
 
-export function TabsList({ variant = "button-brand-horizontal", className, ...props }: TabsListProps) {
-  return (
-    <AriaTabList
-      className={cn(tabListStyles[variant], className)}
-      {...props}
-    />
-  );
+export function TabsList({
+  variant = "button-brand-horizontal",
+  className,
+  ...props
+}: TabsListProps) {
+  return <AriaTabList className={cn(tabListStyles[variant], className)} {...props} />;
 }
 
 // ─── Tabs.Item ───────────────────────────────────────────────────────────────
@@ -413,7 +423,7 @@ const tabItemStyles: Record<TabsVariant, { base: string; selected: string; unsel
     selected: "bg-primary text-primary-foreground",
     unselected: "text-muted-foreground hover:text-foreground hover:bg-accent",
   },
-  "underline": {
+  underline: {
     base: [
       "pb-3 text-sm font-medium transition-colors cursor-pointer select-none",
       "border-b-2 -mb-px outline-none",
@@ -429,7 +439,11 @@ export interface TabsItemProps extends Omit<TabProps, "className" | "style"> {
   className?: string;
 }
 
-export function TabsItem({ variant = "button-brand-horizontal", className, ...props }: TabsItemProps) {
+export function TabsItem({
+  variant = "button-brand-horizontal",
+  className,
+  ...props
+}: TabsItemProps) {
   const s = tabItemStyles[variant];
   return (
     <AriaTab
@@ -458,11 +472,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Tabs, TabsList, TabsItem, TabsPanel } from "./tabs";
 
-function TestTabs({
-  onSelectionChange,
-}: {
-  onSelectionChange?: (key: string) => void;
-}) {
+function TestTabs({ onSelectionChange }: { onSelectionChange?: (key: string) => void }) {
   return (
     <Tabs defaultSelectedKey="all" onSelectionChange={(k) => onSelectionChange?.(String(k))}>
       <TabsList variant="button-brand-horizontal">
@@ -521,7 +531,9 @@ describe("Tabs", () => {
     render(
       <Tabs defaultSelectedKey="a">
         <TabsList variant="underline">
-          <TabsItem id="a" variant="underline">A</TabsItem>
+          <TabsItem id="a" variant="underline">
+            A
+          </TabsItem>
         </TabsList>
       </Tabs>,
     );
@@ -553,6 +565,7 @@ git commit -m "feat(ui): 新增 Tabs 组件（react-aria-components，button-bra
 **背景：** React Aria 的 `TextField` 提供关联 `label`、`FieldError`、`description` 的无障碍表单组。支持 `iconName` 左侧图标（使用 `@repo/icons`），`onChange` 返回 string（非 ChangeEvent），与 debounce 逻辑配合。
 
 **Files:**
+
 - Create: `packages/ui/src/input.tsx`
 - Create: `packages/ui/src/input.test.tsx`
 
@@ -600,10 +613,12 @@ export function Input({
   ...props
 }: InputProps) {
   return (
-    <TextField className={cn("flex flex-col gap-1.5 w-full", className)} isInvalid={isInvalid} {...props}>
-      {label ? (
-        <Label className="text-sm font-medium text-foreground">{label}</Label>
-      ) : null}
+    <TextField
+      className={cn("flex flex-col gap-1.5 w-full", className)}
+      isInvalid={isInvalid}
+      {...props}
+    >
+      {label ? <Label className="text-sm font-medium text-foreground">{label}</Label> : null}
 
       <div className="relative flex items-center">
         {iconName && (
@@ -719,6 +734,7 @@ git commit -m "feat(ui): 新增 Input 组件（react-aria-components TextField�
 **背景：** `TagGroup` + `Tag` 替换现有 tags-cloud 中的原始 `<button>` 方案。React Aria `TagGroup` 提供选择语义和键盘导航；标签云场景使用 `selectionMode="multiple"` 或纯展示（`selectionMode="none"`）。
 
 **Files:**
+
 - Create: `packages/ui/src/tag-group.tsx`
 - Create: `packages/ui/src/tag-group.test.tsx`
 
@@ -741,7 +757,10 @@ import { cn } from "./lib/utils";
 
 // ─── TagGroup（容器） ─────────────────────────────────────────────────────────
 
-export interface TagGroupProps_<T extends object> extends Omit<TagGroupProps<T>, "className" | "style"> {
+export interface TagGroupProps_<T extends object> extends Omit<
+  TagGroupProps<T>,
+  "className" | "style"
+> {
   label?: string;
   hint?: string;
   className?: string;
@@ -768,14 +787,15 @@ export function TagGroup<T extends object>({
 
 // ─── TagList（列表容器） ──────────────────────────────────────────────────────
 
-export interface TagListProps_<T extends object> extends Omit<TagListProps<T>, "className" | "style"> {
+export interface TagListProps_<T extends object> extends Omit<
+  TagListProps<T>,
+  "className" | "style"
+> {
   className?: string;
 }
 
 export function TagList<T extends object>({ className, ...props }: TagListProps_<T>) {
-  return (
-    <AriaTagList className={cn("flex flex-wrap gap-2", className)} {...props} />
-  );
+  return <AriaTagList className={cn("flex flex-wrap gap-2", className)} {...props} />;
 }
 
 // ─── Tag（单个标签） ──────────────────────────────────────────────────────────
@@ -802,9 +822,7 @@ export function TagItem({ count, className, children, ...props }: TagItemProps) 
       {...props}
     >
       {children}
-      {count !== undefined && (
-        <span className="opacity-60">{count}</span>
-      )}
+      {count !== undefined && <span className="opacity-60">{count}</span>}
     </AriaTag>
   );
 }
@@ -826,7 +844,9 @@ function TestTags({ onSelectionChange }: { onSelectionChange?: (keys: Set<string
     >
       <TagList>
         <TagItem id="ts">TypeScript</TagItem>
-        <TagItem id="react" count={5}>React</TagItem>
+        <TagItem id="react" count={5}>
+          React
+        </TagItem>
         <TagItem id="css">CSS</TagItem>
       </TagList>
     </TagGroup>
@@ -896,6 +916,7 @@ git commit -m "feat(ui): 新增 TagGroup/TagList/TagItem 组件（react-aria-com
 **背景：** Pagination 依赖 Button，Button 的 `variant`/`onClick`/`disabled` API 已变化（`variant` 保留后向兼容，`disabled` 改为 `isDisabled`，`onClick` 改为 `onPress`）。同步更新 Pagination。
 
 **Files:**
+
 - Replace: `packages/ui/src/pagination.tsx`
 
 - [ ] **Step 1: 更新 pagination.tsx**
@@ -954,7 +975,10 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
 
       {pageNumbers.map((page, index) =>
         page === "..." ? (
-          <span key={`ellipsis-${index}`} className="px-2 text-sm text-muted-foreground select-none">
+          <span
+            key={`ellipsis-${index}`}
+            className="px-2 text-sm text-muted-foreground select-none"
+          >
             …
           </span>
         ) : (
@@ -1005,6 +1029,7 @@ git commit -m "feat(ui): Pagination 更新为使用 react-aria Button（onPress 
 ## Task 9: 更新 packages/ui/src/index.ts 统一导出
 
 **Files:**
+
 - Modify: `packages/ui/src/index.ts`
 
 - [ ] **Step 1: 更新 index.ts**
@@ -1017,7 +1042,17 @@ export { Button, type ButtonProps } from "./button";
 export { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./card";
 export { cn } from "./lib/utils";
 export { Pagination, type PaginationProps } from "./pagination";
-export { Tabs, TabsList, TabsItem, TabsPanel, type TabsProps, type TabsListProps, type TabsItemProps, type TabsPanelProps, type TabsVariant } from "./tabs";
+export {
+  Tabs,
+  TabsList,
+  TabsItem,
+  TabsPanel,
+  type TabsProps,
+  type TabsListProps,
+  type TabsItemProps,
+  type TabsPanelProps,
+  type TabsVariant,
+} from "./tabs";
 export { Input, type InputProps } from "./input";
 export { TagGroup, TagList, TagItem, type TagItemProps } from "./tag-group";
 ```
@@ -1044,6 +1079,7 @@ git commit -m "feat(ui): 统一导出所有 react-aria 组件"
 **背景：** `LocaleProvider` 初始 `messages=null`，`t(key)` 在异步加载完成前返回 key 名（"article.searchPlaceholder"、"sidebar.joinQQ" 等显示为原始字符串）。
 
 **Files:**
+
 - Modify: `apps/web/app/providers/locale-provider.tsx`
 - Modify: `apps/web/app/providers/locale-provider.test.tsx`
 
@@ -1125,19 +1161,27 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 找到（约 156-167 行）：
 
 ```tsx
-  it("messages 未加载完成时 t() 降级返回 key 本身", () => {
-    render(<LocaleProvider><LocaleDisplay /></LocaleProvider>);
-    expect(screen.getByTestId("nav-home").textContent).toBe("nav.home");
-  });
+it("messages 未加载完成时 t() 降级返回 key 本身", () => {
+  render(
+    <LocaleProvider>
+      <LocaleDisplay />
+    </LocaleProvider>,
+  );
+  expect(screen.getByTestId("nav-home").textContent).toBe("nav.home");
+});
 ```
 
 替换为：
 
 ```tsx
-  it("默认 zh locale 时，t() 同步返回中文（无需等待异步加载）", () => {
-    render(<LocaleProvider><LocaleDisplay /></LocaleProvider>);
-    expect(screen.getByTestId("nav-home").textContent).toBe("首页");
-  });
+it("默认 zh locale 时，t() 同步返回中文（无需等待异步加载）", () => {
+  render(
+    <LocaleProvider>
+      <LocaleDisplay />
+    </LocaleProvider>,
+  );
+  expect(screen.getByTestId("nav-home").textContent).toBe("首页");
+});
 ```
 
 - [ ] **Step 3: 运行测试**
@@ -1162,6 +1206,7 @@ git commit -m "fix(web): LocaleProvider 静态导入 zh.json，修复首屏国�
 **背景：** `mounted` 初始 `false` 使 navbar 有 `-translate-y-full opacity-0`；若 hydration 出错（如 i18n mismatch），navbar 永久不可见。
 
 **Files:**
+
 - Modify: `apps/web/components/navbar/site-navbar.tsx`
 - Modify: `apps/web/components/navbar/site-navbar.test.tsx`
 
@@ -1214,12 +1259,12 @@ export function SiteNavbar() {
 在第一个 `it` 后插入：
 
 ```tsx
-  it("初始渲染无 -translate-y-full 和 opacity-0（始终可见）", () => {
-    render(<SiteNavbar />);
-    const header = document.querySelector("header");
-    expect(header?.className).not.toContain("-translate-y-full");
-    expect(header?.className).not.toContain("opacity-0");
-  });
+it("初始渲染无 -translate-y-full 和 opacity-0（始终可见）", () => {
+  render(<SiteNavbar />);
+  const header = document.querySelector("header");
+  expect(header?.className).not.toContain("-translate-y-full");
+  expect(header?.className).not.toContain("opacity-0");
+});
 ```
 
 - [ ] **Step 3: 运行测试**
@@ -1242,6 +1287,7 @@ git commit -m "fix(web): 移除 SiteNavbar mounted 动画依赖，导航栏始�
 **背景：** React Aria Button 用 `onPress` 替代 `onClick`，用 `isDisabled` 替代 `disabled`。
 
 **Files:**
+
 - Modify: `apps/web/components/navbar/navbar-actions.tsx`
 
 - [ ] **Step 1: 修改 navbar-actions.tsx**
@@ -1320,6 +1366,7 @@ git commit -m "feat(web): Navbar 使用 react-aria Button（onPress / isDisabled
 **Background:** 分类 Tab 改用 `Tabs` / `TabsList` / `TabsItem`（button-brand-horizontal 变体）。搜索框改用 `Input`（`iconName="search"` 自动显示左侧图标，`onChange` 返回 string）。防抖逻辑用 `useEffect` 保留。
 
 **Files:**
+
 - Modify: `apps/web/components/articles/article-list-header.tsx`
 - Modify: `apps/web/components/articles/article-section.test.tsx`
 
@@ -1410,19 +1457,51 @@ vi.mock("@repo/ui", () => ({
     className?: string;
   }) => (
     <nav aria-label="分页导航" className={className}>
-      <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage <= 1} aria-label="上一页">上一页</button>
-      <span data-testid="pagination-info">{currentPage}/{totalPages}</span>
-      <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage >= totalPages} aria-label="下一页">下一页</button>
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage <= 1}
+        aria-label="上一页"
+      >
+        上一页
+      </button>
+      <span data-testid="pagination-info">
+        {currentPage}/{totalPages}
+      </span>
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage >= totalPages}
+        aria-label="下一页"
+      >
+        下一页
+      </button>
     </nav>
   ),
-  Tabs: ({ children, selectedKey, onSelectionChange }: {
+  Tabs: ({
+    children,
+    selectedKey,
+    onSelectionChange,
+  }: {
     children: React.ReactNode;
     selectedKey?: string;
     onSelectionChange?: (key: string) => void;
-  }) => <div data-selected-key={selectedKey} onClick={() => onSelectionChange?.("")}>{children}</div>,
+  }) => (
+    <div data-selected-key={selectedKey} onClick={() => onSelectionChange?.("")}>
+      {children}
+    </div>
+  ),
   TabsList: ({ children }: { children: React.ReactNode }) => <div role="tablist">{children}</div>,
-  TabsItem: ({ children, id, onClick }: { children: React.ReactNode; id?: string; onClick?: () => void }) => (
-    <button role="tab" data-id={id} onClick={onClick}>{children}</button>
+  TabsItem: ({
+    children,
+    id,
+    onClick,
+  }: {
+    children: React.ReactNode;
+    id?: string;
+    onClick?: () => void;
+  }) => (
+    <button role="tab" data-id={id} onClick={onClick}>
+      {children}
+    </button>
   ),
   Input: ({
     placeholder,
@@ -1472,6 +1551,7 @@ git commit -m "feat(web): ArticleListHeader 使用 Tabs (button-brand-horizontal
 ## Task 14: 更新 TagsCloud — 使用 TagGroup + TagItem
 
 **Files:**
+
 - Modify: `apps/web/components/sidebar/tags-cloud.tsx`
 
 - [ ] **Step 1: 修改 tags-cloud.tsx**
@@ -1518,6 +1598,7 @@ git commit -m "feat(web): TagsCloud 使用 TagGroup/TagItem（react-aria）"
 ## Task 15: 更新 RecentVisitors + SnippetsSection — 新 Button API
 
 **Files:**
+
 - Modify: `apps/web/components/sidebar/recent-visitors.tsx`
 - Modify: `apps/web/components/snippets/snippets-section.tsx`
 
@@ -1551,6 +1632,7 @@ git commit -m "feat(web): RecentVisitors / SnippetsSection 使用新 Button onPr
 **背景：** 不活跃幻灯片 `pointer-events` 默认为 auto，拦截指示器按钮点击事件。
 
 **Files:**
+
 - Modify: `apps/web/components/featured/featured-carousel-slide.tsx`
 
 - [ ] **Step 1: 修改 featured-carousel-slide.tsx**
@@ -1591,6 +1673,7 @@ git commit -m "fix(web): 不活跃幻灯片加 pointer-events-none，修复指�
 ## Task 17: 碎语迁至右侧栏，单列显示
 
 **Files:**
+
 - Modify: `apps/web/app/page.tsx`
 - Modify: `apps/web/components/snippets/snippets-section.tsx`
 
@@ -1679,6 +1762,7 @@ pnpm test
 ```
 
 Expected: 所有包测试 PASS。若失败，优先检查：
+
 1. `@repo/ui` mock 是否覆盖新增的 `Tabs`、`Input`、`TagGroup`
 2. React Aria Button 的 `isDisabled` / `data-disabled` 断言方式
 
@@ -1688,29 +1772,33 @@ Expected: 所有包测试 PASS。若失败，优先检查：
 pnpm --filter @repo/web dev
 ```
 
-| 检查项 | 预期 |
-|--------|------|
-| 导航栏 | 立即可见（无闪烁），滚动后毛玻璃效果正常 |
-| 主题切换 | 点击循环切换 system/light/dark |
+| 检查项   | 预期                                      |
+| -------- | ----------------------------------------- |
+| 导航栏   | 立即可见（无闪烁），滚动后毛玻璃效果正常  |
+| 主题切换 | 点击循环切换 system/light/dark            |
 | 分类 Tab | 主色胶囊样式，活跃项白字，键盘 ← → 可切换 |
-| 搜索框 | 左侧显示搜索图标，focus 时展宽 |
-| 轮播图 | 点击底部水滴可切换幻灯片 |
-| 国际化 | 全部显示中文（无 key 名） |
-| 右侧栏 | 最近来访 → 标签云 → 碎语（单列） |
-| 所有按钮 | hover 显示 cursor-pointer |
+| 搜索框   | 左侧显示搜索图标，focus 时展宽            |
+| 轮播图   | 点击底部水滴可切换幻灯片                  |
+| 国际化   | 全部显示中文（无 key 名）                 |
+| 右侧栏   | 最近来访 → 标签云 → 碎语（单列）          |
+| 所有按钮 | hover 显示 cursor-pointer                 |
 
 ---
 
 ## 注意事项
 
 ### Pagination.test.tsx 中的 disabled 断言
+
 React Aria 的 `Button` 被禁用时，DOM 上是 `data-disabled="true"` 而非原生 `disabled` attribute。若 `pagination.test.tsx` 中有 `.toBeDisabled()` 断言，需改为：
+
 ```tsx
 expect(prevBtn).toHaveAttribute("data-disabled");
 ```
 
 ### ArticleSection 测试中的 Tabs 点击
+
 Mock 中 `TabsItem` 是独立的 `<button role="tab">`，不会自动调用 Tabs 的 `onSelectionChange`。如果分类过滤测试失败，用以下方式重写：通过 `fireEvent.click` 直接点击 tab 后验证组件状态，或在 mock 的 `TabsItem` 中通过回调 prop 传递 `onSelectionChange`。
 
 ### Tag 的 id prop
+
 `TagItem` 使用 React Aria 的 `id` prop 作为唯一标识（非 HTML attribute）。测试中找 tag 用 `screen.getByText("TypeScript")` 即可。

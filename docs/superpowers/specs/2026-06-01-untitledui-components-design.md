@@ -8,6 +8,7 @@
 ## 背景
 
 将以下 Untitled UI React 免费开源组件集成到 blog-frontend monorepo：
+
 - 新增：Dropdown、Select、Tooltip、ButtonUtility、Toggle、Input（升级现有实现）
 - 替换：Carousel（现有手写滑动）、Pagination（现有手写 Base）
 
@@ -99,14 +100,14 @@ components/featured/
 
 从 Heroicons outline 取，与现有图标笔触风格一致：
 
-| 文件名 | 对应 @untitledui/icons | 使用组件 |
-|---|---|---|
-| `eye-off.svg` | `EyeOff` | Input 密码隐藏 |
-| `help-circle.svg` | `HelpCircle` | Input tooltip 触发 |
-| `info-circle.svg` | `InfoCircle` | Input hint |
-| `check.svg` | `Check` | Dropdown 选中状态 |
-| `chevron-down.svg` | `ChevronDown` | Select 下拉箭头 |
-| `dots-vertical.svg` | `DotsVertical` | Dropdown 操作菜单 |
+| 文件名              | 对应 @untitledui/icons | 使用组件           |
+| ------------------- | ---------------------- | ------------------ |
+| `eye-off.svg`       | `EyeOff`               | Input 密码隐藏     |
+| `help-circle.svg`   | `HelpCircle`           | Input tooltip 触发 |
+| `info-circle.svg`   | `InfoCircle`           | Input hint         |
+| `check.svg`         | `Check`                | Dropdown 选中状态  |
+| `chevron-down.svg`  | `ChevronDown`          | Select 下拉箭头    |
+| `dots-vertical.svg` | `DotsVertical`         | Dropdown 操作菜单  |
 
 添加后运行 `pnpm --filter @repo/icons build`。
 
@@ -114,17 +115,17 @@ components/featured/
 
 组件源码中所有 `from '@untitledui/icons'` 导入直接替换为 `<SvgIcon name="..." size={16} />` 调用，**不引入任何适配包装层**：
 
-| @untitledui/icons | 替换为 |
-|---|---|
-| `<Eye className="size-4 ...">` | `<SvgIcon name="eye" size={16} />` |
-| `<EyeOff className="size-4 ...">` | `<SvgIcon name="eye-off" size={16} />` |
-| `<HelpCircle className="size-4 ...">` | `<SvgIcon name="help-circle" size={16} />` |
-| `<InfoCircle ...>` | `<SvgIcon name="info-circle" size={16} />` |
-| `<Check className="size-4 ...">` | `<SvgIcon name="check" size={16} />` |
-| `<ChevronDown className="size-4 ...">` | `<SvgIcon name="chevron-down" size={16} />` |
-| `<ChevronRight className="size-4 ...">` | `<SvgIcon name="chevron-right" size={16} />` |
-| `<DotsVertical className="size-4 ...">` | `<SvgIcon name="dots-vertical" size={16} />` |
-| `<User01 className="...">` | `<SvgIcon name="user" size={16} />`（已存在，Avatar fallback） |
+| @untitledui/icons                       | 替换为                                                         |
+| --------------------------------------- | -------------------------------------------------------------- |
+| `<Eye className="size-4 ...">`          | `<SvgIcon name="eye" size={16} />`                             |
+| `<EyeOff className="size-4 ...">`       | `<SvgIcon name="eye-off" size={16} />`                         |
+| `<HelpCircle className="size-4 ...">`   | `<SvgIcon name="help-circle" size={16} />`                     |
+| `<InfoCircle ...>`                      | `<SvgIcon name="info-circle" size={16} />`                     |
+| `<Check className="size-4 ...">`        | `<SvgIcon name="check" size={16} />`                           |
+| `<ChevronDown className="size-4 ...">`  | `<SvgIcon name="chevron-down" size={16} />`                    |
+| `<ChevronRight className="size-4 ...">` | `<SvgIcon name="chevron-right" size={16} />`                   |
+| `<DotsVertical className="size-4 ...">` | `<SvgIcon name="dots-vertical" size={16} />`                   |
+| `<User01 className="...">`              | `<SvgIcon name="user" size={16} />`（已存在，Avatar fallback） |
 
 ### 图标作为 Props 的公开 API
 
@@ -136,24 +137,26 @@ components/featured/
 
 复制 Untitled UI 源码时按下表替换所有路径：
 
-| 原始路径 | 适配后路径 |
-|---|---|
-| `@/utils/cx` | `../lib/utils`（使用 `cn` 代替 `cx`） |
-| `@/utils/is-react-component` | `../lib/is-react-component` |
-| `@/components/base/tooltip/tooltip` | `../tooltip/tooltip` |
-| `@/components/base/input/hint-text` | `./hint-text`（在 input/ 内）/ `../input/hint-text`（在其他目录） |
-| `@/components/base/input/label` | `./label`（在 input/ 内）/ `../input/label`（在其他目录） |
-| `@/components/base/avatar/avatar` | `../avatar/avatar` |
-| `@/components/base/checkbox/checkbox` | `../checkbox/checkbox` |
-| `@/components/base/radio-buttons/radio-buttons` | `../radio-buttons/radio-buttons` |
-| `@/components/base/toggle/toggle` | `../toggle/toggle` |
+| 原始路径                                        | 适配后路径                                                        |
+| ----------------------------------------------- | ----------------------------------------------------------------- |
+| `@/utils/cx`                                    | `../lib/utils`（使用 `cn` 代替 `cx`）                             |
+| `@/utils/is-react-component`                    | `../lib/is-react-component`                                       |
+| `@/components/base/tooltip/tooltip`             | `../tooltip/tooltip`                                              |
+| `@/components/base/input/hint-text`             | `./hint-text`（在 input/ 内）/ `../input/hint-text`（在其他目录） |
+| `@/components/base/input/label`                 | `./label`（在 input/ 内）/ `../input/label`（在其他目录）         |
+| `@/components/base/avatar/avatar`               | `../avatar/avatar`                                                |
+| `@/components/base/checkbox/checkbox`           | `../checkbox/checkbox`                                            |
+| `@/components/base/radio-buttons/radio-buttons` | `../radio-buttons/radio-buttons`                                  |
+| `@/components/base/toggle/toggle`               | `../toggle/toggle`                                                |
 
 ### 工具函数扩展
 
 `packages/ui/src/lib/utils.ts` 新增 no-op：
 
 ```ts
-export function sortCx<T>(classes: T): T { return classes; }
+export function sortCx<T>(classes: T): T {
+  return classes;
+}
 ```
 
 新建 `packages/ui/src/lib/is-react-component.ts`（从 Untitled UI utils 复制，无需修改）。
@@ -164,12 +167,12 @@ export function sortCx<T>(classes: T): T { return classes; }
 
 ### 视觉行为变化
 
-| | 旧实现 | 新实现 |
-|---|---|---|
-| 切换动画 | opacity fade（绝对定位叠层） | Embla CSS transform 横向滑动 |
-| 自动播放 | `setInterval` + useState index | `setInterval` + `api.scrollNext()` |
-| 指示器 | 独立组件手动同步 | `Carousel.IndicatorGroup` + context |
-| 键盘导航 | 无 | `Carousel.Root` 内置 ArrowLeft/Right |
+|          | 旧实现                         | 新实现                               |
+| -------- | ------------------------------ | ------------------------------------ |
+| 切换动画 | opacity fade（绝对定位叠层）   | Embla CSS transform 横向滑动         |
+| 自动播放 | `setInterval` + useState index | `setInterval` + `api.scrollNext()`   |
+| 指示器   | 独立组件手动同步               | `Carousel.IndicatorGroup` + context  |
+| 键盘导航 | 无                             | `Carousel.Root` 内置 ArrowLeft/Right |
 
 ### FeaturedCarousel 重写要点
 
@@ -190,6 +193,7 @@ export function sortCx<T>(classes: T): T { return classes; }
 ### 新增依赖
 
 `packages/ui/package.json` 新增：
+
 ```json
 "embla-carousel-react": "^8.0.0"
 ```
@@ -209,7 +213,9 @@ export function sortCx<T>(classes: T): T { return classes; }
 ```ts
 // 官方版本（有问题）
 const [pages, setPages] = useState([]);
-useEffect(() => { setPages(createPaginationItems()); }, [createPaginationItems]);
+useEffect(() => {
+  setPages(createPaginationItems());
+}, [createPaginationItems]);
 
 // 替换为（同步计算）
 const pages = useMemo(() => createPaginationItems(), [createPaginationItems]);
@@ -224,42 +230,46 @@ const pages = useMemo(() => createPaginationItems(), [createPaginationItems]);
 ```ts
 // 新增
 export { Carousel, CarouselContext, useCarousel } from "./carousel/carousel-base";
-export { Dropdown }                               from "./dropdown/dropdown";
-export { Select }                                 from "./select/select";
-export { Tooltip, TooltipTrigger }               from "./tooltip/tooltip";
-export { ButtonUtility }                          from "./button-utility/button-utility";
-export { Toggle }                                 from "./toggle/toggle";
+export { Dropdown } from "./dropdown/dropdown";
+export { Select } from "./select/select";
+export { Tooltip, TooltipTrigger } from "./tooltip/tooltip";
+export { ButtonUtility } from "./button-utility/button-utility";
+export { Toggle } from "./toggle/toggle";
 
 // 更新（路径调整，API 不变）
-export { Input, type InputProps }                from "./input";
+export { Input, type InputProps } from "./input";
 export { Pagination, PaginationBase, type PaginationProps } from "./pagination";
 ```
 
 ```ts
 // 完整迁移，对外导出
-export { Avatar, type AvatarProps }                           from "./avatar/avatar";
-export { CheckboxBase, type CheckboxBaseProps }               from "./checkbox/checkbox";
-export { RadioButtonBase, RadioGroupBase, type RadioButtonBaseProps } from "./radio-buttons/radio-buttons";
+export { Avatar, type AvatarProps } from "./avatar/avatar";
+export { CheckboxBase, type CheckboxBaseProps } from "./checkbox/checkbox";
+export {
+  RadioButtonBase,
+  RadioGroupBase,
+  type RadioButtonBaseProps,
+} from "./radio-buttons/radio-buttons";
 ```
 
 ---
 
 ## Section 6：测试文件清单
 
-| 文件 | 操作 | 最低覆盖要点 |
-|---|---|---|
-| `packages/ui/src/carousel/carousel-base.test.tsx` | 新建 | 渲染不崩溃；指示器数=幻灯片数；首张 Prev 禁用 |
-| `packages/ui/src/input/input.test.tsx` | 替换 | 渲染；label/placeholder；密码可见性切换；错误状态 |
-| `packages/ui/src/dropdown/dropdown.test.tsx` | 新建 | 渲染触发器；点击打开；选项可交互 |
-| `packages/ui/src/select/select.test.tsx` | 新建 | 渲染 placeholder；打开列表；选中更新 |
-| `packages/ui/src/tooltip/tooltip.test.tsx` | 新建 | 渲染 children；hover 显示提示文字 |
-| `packages/ui/src/button-utility/button-utility.test.tsx` | 新建 | 渲染；点击回调 |
-| `packages/ui/src/toggle/toggle.test.tsx` | 新建 | 渲染；onChange 触发；受控状态 |
-| `packages/ui/src/avatar/avatar.test.tsx` | 新建 | 渲染不崩溃；alt 文字；fallback 显示；size 变体 |
-| `packages/ui/src/checkbox/checkbox.test.tsx` | 新建 | 渲染；选中/取消；disabled 状态；indeterminate 状态 |
-| `packages/ui/src/radio-buttons/radio-buttons.test.tsx` | 新建 | 渲染；选项切换；disabled 选项 |
-| `packages/ui/src/pagination/pagination.test.tsx` | 更新 | 原有测试通过；验证 useMemo 同步更新 |
-| `apps/web/components/featured/featured-carousel.test.tsx` | 更新 | 渲染全部幻灯片；指示器数量；auto-play mock |
+| 文件                                                      | 操作 | 最低覆盖要点                                       |
+| --------------------------------------------------------- | ---- | -------------------------------------------------- |
+| `packages/ui/src/carousel/carousel-base.test.tsx`         | 新建 | 渲染不崩溃；指示器数=幻灯片数；首张 Prev 禁用      |
+| `packages/ui/src/input/input.test.tsx`                    | 替换 | 渲染；label/placeholder；密码可见性切换；错误状态  |
+| `packages/ui/src/dropdown/dropdown.test.tsx`              | 新建 | 渲染触发器；点击打开；选项可交互                   |
+| `packages/ui/src/select/select.test.tsx`                  | 新建 | 渲染 placeholder；打开列表；选中更新               |
+| `packages/ui/src/tooltip/tooltip.test.tsx`                | 新建 | 渲染 children；hover 显示提示文字                  |
+| `packages/ui/src/button-utility/button-utility.test.tsx`  | 新建 | 渲染；点击回调                                     |
+| `packages/ui/src/toggle/toggle.test.tsx`                  | 新建 | 渲染；onChange 触发；受控状态                      |
+| `packages/ui/src/avatar/avatar.test.tsx`                  | 新建 | 渲染不崩溃；alt 文字；fallback 显示；size 变体     |
+| `packages/ui/src/checkbox/checkbox.test.tsx`              | 新建 | 渲染；选中/取消；disabled 状态；indeterminate 状态 |
+| `packages/ui/src/radio-buttons/radio-buttons.test.tsx`    | 新建 | 渲染；选项切换；disabled 选项                      |
+| `packages/ui/src/pagination/pagination.test.tsx`          | 更新 | 原有测试通过；验证 useMemo 同步更新                |
+| `apps/web/components/featured/featured-carousel.test.tsx` | 更新 | 渲染全部幻灯片；指示器数量；auto-play mock         |
 
 ---
 

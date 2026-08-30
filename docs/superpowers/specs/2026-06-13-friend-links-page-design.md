@@ -17,11 +17,11 @@
 
 现有 `status` 字段只有 `0=隐藏 / 1=显示`，需新增 `2=失联`：
 
-| 值 | 含义 |
-|----|------|
-| 0 | 隐藏（不在公开列表出现） |
-| 1 | 显示（正常） |
-| 2 | 失联（出现在列表，带「失联」标识，禁止点击） |
+| 值  | 含义                                         |
+| --- | -------------------------------------------- |
+| 0   | 隐藏（不在公开列表出现）                     |
+| 1   | 显示（正常）                                 |
+| 2   | 失联（出现在列表，带「失联」标识，禁止点击） |
 
 #### 1. GORM model — `internal/model/friend_link.go`
 
@@ -66,7 +66,7 @@ export interface FriendLinkItemResp {
   site: string;
   avatar_url?: string;
   seq: number;
-  status: 0 | 1 | 2;  // 2 = 失联
+  status: 0 | 1 | 2; // 2 = 失联
   created_at: string;
   updated_at: string;
 }
@@ -146,8 +146,8 @@ grid grid-cols-1 sm:grid-cols-2 gap-2.5
 ```tsx
 interface FadeInUpProps {
   children: ReactNode;
-  delay?: number;      // ms，默认 0
-  duration?: number;   // ms，默认 400
+  delay?: number; // ms，默认 0
+  duration?: number; // ms，默认 400
   className?: string;
 }
 ```
@@ -195,19 +195,20 @@ page.tsx (Server)
 
 ## 测试要求
 
-| 文件 | 测试内容 |
-|------|----------|
-| `friend-links-rules-card.test.tsx` | ① 默认展开渲染内容 ② 点击收起后内容隐藏 |
-| `friend-link-card.test.tsx` | ① 正常卡片渲染 name/description ② status=2 显示失联 badge、不可点击 ③ 无 avatar 降级首字母 |
-| `friend-links-list.test.tsx` | ① 渲染所有卡片 ② 空列表不崩溃 |
-| `app/friend-links/page.test.tsx` | ① 核心内容渲染 ② loading 降级（mock API 失败） |
-| `fade-in-up.test.tsx`（packages/ui） | ① 渲染 children ② delay prop 注入到 style |
+| 文件                                 | 测试内容                                                                                   |
+| ------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `friend-links-rules-card.test.tsx`   | ① 默认展开渲染内容 ② 点击收起后内容隐藏                                                    |
+| `friend-link-card.test.tsx`          | ① 正常卡片渲染 name/description ② status=2 显示失联 badge、不可点击 ③ 无 avatar 降级首字母 |
+| `friend-links-list.test.tsx`         | ① 渲染所有卡片 ② 空列表不崩溃                                                              |
+| `app/friend-links/page.test.tsx`     | ① 核心内容渲染 ② loading 降级（mock API 失败）                                             |
+| `fade-in-up.test.tsx`（packages/ui） | ① 渲染 children ② delay prop 注入到 style                                                  |
 
 ---
 
 ## 文件清单
 
 **新增**
+
 - `apps/web/app/friend-links/page.tsx`
 - `apps/web/app/friend-links/page.test.tsx`
 - `apps/web/components/friend-links/index.ts`
@@ -223,6 +224,7 @@ page.tsx (Server)
 - `packages/ui/src/fade-in-up.test.tsx`
 
 **修改**
+
 - `packages/api/src/client.ts` — 新增 `friendLinks.listPublic`
 - `packages/api/src/index.ts` — 导出新类型
 - `packages/ui/src/index.ts` — 导出 `FadeInUp`

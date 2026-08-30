@@ -26,12 +26,14 @@
 ## File Structure
 
 **`packages/api/src`**
+
 - `types/user.ts`（改）：修正 `OAuthBindingResp`；新增 `UpdateEmailReq`/`SendAccountEmailCodeReq`/`SetInitialPasswordReq`。
 - `types/auth.ts`（改）：新增 `PasswordResetCodeReq`/`PasswordResetReq`。
 - `client.ts`（改）：`users` 命名空间补方法 + 新增 `oauth` 命名空间；`auth` 补 password-reset。
 - `index.ts`（改）：导出新类型。
 
 **`apps/web/app/api`（新增代理路由）**
+
 - `users/me/email/code/route.ts`（POST）
 - `users/me/email/route.ts`（PATCH）
 - `users/me/password/initial/route.ts`（PATCH）
@@ -40,10 +42,12 @@
 - `auth/password-reset/route.ts`（POST）
 
 **`apps/web/hooks`**
+
 - `use-captcha-token.tsx`（新）：可复用图形验证码 hook。
 - `use-register-form.tsx`（改）：改用 `useCaptchaToken`。
 
 **`apps/web/app/users/[id]/_components/security-tab/`**
+
 - `security-tab.tsx`（改）：数据容器。
 - `use-account-security.tsx`（新）：取数 + 刷新 hook。
 - `security-list.tsx`（新）：纯展示列表。
@@ -61,6 +65,7 @@
 ## Task 1: `@repo/api` 类型修正与方法补全
 
 **Files:**
+
 - Modify: `packages/api/src/types/user.ts`
 - Modify: `packages/api/src/types/auth.ts`
 - Modify: `packages/api/src/client.ts`
@@ -68,6 +73,7 @@
 - Test: `packages/api/src/client.test.ts`
 
 **Interfaces:**
+
 - Produces（client 新方法，供 web 调用）：
   - `users.getProviders(): Promise<string[]>`
   - `users.getOAuthBindings(): Promise<OAuthBindingResp[]>`（`OAuthBindingResp = { source: string; social_user_id: number }`）
@@ -224,6 +230,7 @@ git commit -m "feat(api): 补全账号安全相关接口方法与类型"
 ## Task 2: 新增 web 代理路由
 
 **Files:**
+
 - Create: `apps/web/app/api/users/me/email/code/route.ts`
 - Create: `apps/web/app/api/users/me/email/route.ts`
 - Create: `apps/web/app/api/users/me/password/initial/route.ts`
@@ -232,6 +239,7 @@ git commit -m "feat(api): 补全账号安全相关接口方法与类型"
 - Create: `apps/web/app/api/auth/password-reset/route.ts`
 
 **Interfaces:**
+
 - Consumes：`lib/backend-proxy` 的 `proxyPost`/`proxyPatch`/`proxyDelete`。
 - Produces：`/api/**` 端点，被 `@repo/api` 客户端调用。
 
@@ -324,10 +332,12 @@ git commit -m "feat(web): 新增账号安全相关后端代理路由"
 ## Task 3: 第三方平台展示映射
 
 **Files:**
+
 - Create: `apps/web/app/users/[id]/_components/security-tab/oauth-providers.ts`
 - Test: `apps/web/app/users/[id]/_components/security-tab/oauth-providers.test.ts`
 
 **Interfaces:**
+
 - Produces：`getProviderMeta(source: string): { label: string; short: string; color: string }`；未知 source 兜底 `{ label: source, short: source.slice(0,2).toUpperCase(), color: "#555" }`。
 
 - [ ] **Step 1: 写失败测试**
@@ -398,11 +408,13 @@ git commit -m "feat(security): 新增第三方平台展示映射"
 ## Task 4: 提取可复用图形验证码 hook
 
 **Files:**
+
 - Create: `apps/web/hooks/use-captcha-token.tsx`
 - Modify: `apps/web/hooks/use-register-form.tsx`
 - Test: `apps/web/hooks/use-captcha-token.test.tsx`
 
 **Interfaces:**
+
 - Produces：
   ```typescript
   interface UseCaptchaTokenResult {
@@ -412,7 +424,7 @@ git commit -m "feat(security): 新增第三方平台展示映射"
     captchaLoading: boolean;
     setCaptchaX: (x: number) => void;
     setCaptchaOpen: (open: boolean) => void;
-    openCaptcha: () => Promise<void>;   // 拉挑战并打开
+    openCaptcha: () => Promise<void>; // 拉挑战并打开
     handleVerify: (x: number) => Promise<void>; // 校验→成功调 onToken→失败重拉挑战；429 调 onRateLimited
     closeCaptcha: () => void;
   }
@@ -440,7 +452,9 @@ it("openCaptcha 拉挑战并打开", async () => {
     new Response(JSON.stringify({ challenge_id: "c1", tile_x: 10, tile_y: 20 })),
   );
   const { result } = renderHook(() => useCaptchaToken({ onToken: async () => {} }));
-  await act(async () => { await result.current.openCaptcha(); });
+  await act(async () => {
+    await result.current.openCaptcha();
+  });
   expect(result.current.captchaOpen).toBe(true);
   expect(result.current.captchaChallenge?.challenge_id).toBe("c1");
 });
@@ -448,11 +462,17 @@ it("openCaptcha 拉挑战并打开", async () => {
 it("handleVerify 成功后用拿到的 token 调 onToken", async () => {
   const onToken = vi.fn().mockResolvedValue(undefined);
   vi.spyOn(global, "fetch")
-    .mockResolvedValueOnce(new Response(JSON.stringify({ challenge_id: "c1", tile_x: 10, tile_y: 20 })))
+    .mockResolvedValueOnce(
+      new Response(JSON.stringify({ challenge_id: "c1", tile_x: 10, tile_y: 20 })),
+    )
     .mockResolvedValueOnce(new Response(JSON.stringify({ captcha_token: "tok123" })));
   const { result } = renderHook(() => useCaptchaToken({ onToken }));
-  await act(async () => { await result.current.openCaptcha(); });
-  await act(async () => { await result.current.handleVerify(15); });
+  await act(async () => {
+    await result.current.openCaptcha();
+  });
+  await act(async () => {
+    await result.current.handleVerify(15);
+  });
   expect(onToken).toHaveBeenCalledWith("tok123");
 });
 ```
@@ -478,7 +498,11 @@ async function postJson<T>(url: string, body?: unknown): Promise<T> {
     headers: body ? { "Content-Type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
-  const data = (await res.json().catch(() => ({}))) as { code?: number; message?: string; data?: T };
+  const data = (await res.json().catch(() => ({}))) as {
+    code?: number;
+    message?: string;
+    data?: T;
+  };
   if (!res.ok || (data.code != null && data.code !== 0)) {
     const err = new Error(data.message ?? "请求失败") as Error & { status?: number };
     err.status = res.status;
@@ -545,8 +569,15 @@ export function useCaptchaToken(opts: {
   );
 
   return {
-    captchaOpen, captchaChallenge, captchaX, captchaLoading,
-    setCaptchaX, setCaptchaOpen, openCaptcha, handleVerify, closeCaptcha,
+    captchaOpen,
+    captchaChallenge,
+    captchaX,
+    captchaLoading,
+    setCaptchaX,
+    setCaptchaOpen,
+    openCaptcha,
+    handleVerify,
+    closeCaptcha,
   };
 }
 ```
@@ -572,6 +603,7 @@ git commit -m "refactor(captcha): 提取可复用 useCaptchaToken 并接入注�
 ## Task 5: 数据容器 + 纯展示列表
 
 **Files:**
+
 - Create: `apps/web/app/users/[id]/_components/security-tab/use-account-security.tsx`
 - Create: `apps/web/app/users/[id]/_components/security-tab/security-list.tsx`
 - Modify: `apps/web/app/users/[id]/_components/security-tab/security-tab.tsx`
@@ -579,6 +611,7 @@ git commit -m "refactor(captcha): 提取可复用 useCaptchaToken 并接入注�
 - Test: `apps/web/app/users/[id]/_components/security-tab/security-list.test.tsx`
 
 **Interfaces:**
+
 - Produces：
   ```typescript
   interface SecurityData {
@@ -586,7 +619,7 @@ git commit -m "refactor(captcha): 提取可复用 useCaptchaToken 并接入注�
     passwordSet: boolean;
     mainEmail: string | null;
     subEmail: string | null;
-    mailShow: number;            // setting.mail_show
+    mailShow: number; // setting.mail_show
     providers: { source: string; bound: boolean }[];
   }
   function useAccountSecurity(): {
@@ -651,6 +684,7 @@ Expected: FAIL。
 `use-account-security.tsx`：挂载时 `Promise.all([getMe(), getProviders(), getOAuthBindings()])`，映射为 `SecurityData`（`mainEmail = me.email ?? null`、`subEmail = me.meta?.sub_email ?? null`、`mailShow = me.setting?.mail_show ?? 0`、`providers = providers.map(s => ({ source: s, bound: bindings.some(b => b.source === s) }))`），暴露 `reload`。失败 set `error`。
 
 `security-list.tsx`：用现有 `SecuritySection`/`SecurityItem` 行结构（从当前 `security-tab.tsx` 抽出复用），按 spec §3 渲染三组：
+
 - 用户名行：值 `data.username`，按钮「修改」→ `onAction({type:"username"})`。
 - 密码行：`data.passwordSet` → 徽标「已设置」+「修改」/ 徽标「未设置」+「设置」，按钮 → `onAction({type:"password"})`。
 - 主邮箱：`data.mainEmail ?? "未绑定"`，按钮「换绑/绑定」→ `onAction({type:"email",target:"main"})`。
@@ -677,11 +711,13 @@ git commit -m "feat(security): 账号安全列表对接真实数据"
 ## Task 6: 用户名修改 Sheet
 
 **Files:**
+
 - Create: `apps/web/app/users/[id]/_components/security-tab/username-sheet.tsx`
 - Modify: `security-tab.tsx`（接 `username` action）
 - Test: `username-sheet.test.tsx`
 
 **Interfaces:**
+
 - Consumes：`apiClient.users.updateUsername`、`@repo/ui` `Modal`/`Input`/`Button`/`useToast`。
 - Produces：`<UsernameSheet open currentUsername onClose onSuccess />`；`onSuccess` 由容器触发登出流程。
 
@@ -727,11 +763,13 @@ git commit -m "feat(security): 用户名修改 Sheet"
 ## Task 7: 邮箱换绑/添加 Sheet
 
 **Files:**
+
 - Create: `apps/web/app/users/[id]/_components/security-tab/email-sheet.tsx`
 - Modify: `security-tab.tsx`（接 `email` action）
 - Test: `email-sheet.test.tsx`
 
 **Interfaces:**
+
 - Consumes：`useCaptchaToken`、`RegisterCaptcha`（复用 `components/auth/register-captcha.tsx`）、`apiClient.users.sendAccountEmailCode`、`apiClient.users.updateEmail`。
 - Produces：`<EmailSheet open target currentEmail onClose onSuccess />`，`target: "main"|"sub"`。
 
@@ -781,10 +819,12 @@ git commit -m "feat(security): 邮箱换绑与添加 Sheet"
 ## Task 8: 对外展示邮箱下拉
 
 **Files:**
+
 - Create: `apps/web/app/users/[id]/_components/security-tab/email-display-select.tsx`
 - Test: `email-display-select.test.tsx`
 
 **Interfaces:**
+
 - Consumes：`@repo/ui` `Select`、`apiClient.users.updateEmailDisplay`。
 - Produces：`<EmailDisplaySelect value subEmailExists onChanged />`；`value: "main"|"sub"|"none"`（由 `mailShow` 数值映射，见实现）。
 
@@ -826,12 +866,14 @@ git commit -m "feat(security): 对外展示邮箱下拉对接"
 ## Task 9: 密码 Sheet（修改 / 设初始 / 找回）
 
 **Files:**
+
 - Create: `apps/web/app/users/[id]/_components/security-tab/password-recovery-form.tsx`
 - Create: `apps/web/app/users/[id]/_components/security-tab/password-sheet.tsx`
 - Modify: `security-tab.tsx`（接 `password` action）
 - Test: `password-recovery-form.test.tsx`、`password-sheet.test.tsx`
 
 **Interfaces:**
+
 - `PasswordRecoveryForm`（可复用，登录页后续复用）：
   `<PasswordRecoveryForm email onDone />`；内部：`useCaptchaToken({ onToken: t => apiClient.auth.passwordResetCode({ email, captcha_token: t }) })` + 验证码 + 新密码 → `apiClient.auth.passwordReset({ email, code, new_password })`。
 - `PasswordSheet`：`<PasswordSheet open passwordSet mainEmail onClose onSuccess />`；
@@ -898,11 +940,13 @@ git commit -m "feat(security): 密码修改/设初始/找回 Sheet"
 ## Task 10: 第三方绑定跳转与解绑确认
 
 **Files:**
+
 - Create: `apps/web/app/users/[id]/_components/security-tab/unbind-confirm.tsx`
 - Modify: `security-tab.tsx`（接 `bind`/`unbind` action）
 - Test: `unbind-confirm.test.tsx`
 
 **Interfaces:**
+
 - `UnbindConfirm`：`<UnbindConfirm open source onClose onSuccess />`；确认 → `apiClient.users.unbindOAuth(source)`；`ApiError` → toast 后端文案（含「最后登录方式」），不关；成功 toast +`onSuccess()`。
 - 绑定：容器 `onAction({type:"bind",source})` → `const { authorize_url } = await apiClient.users.authorizeOAuthBind(source, redirectUri); window.location.href = authorize_url;`，`redirectUri = ${location.origin}/users/${userId}?tab=security`。
 
@@ -946,6 +990,7 @@ git commit -m "feat(security): 第三方绑定跳转与解绑确认"
 ## Task 11: 回跳定位与全量校验
 
 **Files:**
+
 - Modify: `apps/web/app/users/[id]/_components/user-profile-tabs.tsx`（支持 `?tab=security` 初始选中）
 - Test: `user-profile-tabs.test.tsx`（已存在，补用例）
 

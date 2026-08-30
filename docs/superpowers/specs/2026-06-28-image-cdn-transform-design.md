@@ -34,12 +34,12 @@ Garage S3 原图
 
 ### 职责
 
-| 组件 | 负责 | 不负责 |
-|------|------|--------|
-| Next `next/image` | `srcset`/`sizes`/lazy/placeholder；loader 拼 `w`、`q` | sharp 转码、拉图 |
-| CDN | 验签、防盗链、缓存响应（含变换结果） | 图片编解码 |
-| Go 图片服务 | 回源鉴权、读 S3、`imageutil` 变换、设置可配置缓存头 | 签发 TypeD（仍由 `ObjectURL`） |
-| Redis | `cdn:{objectKey}` → 鉴权 URL | 衍生图 bytes |
+| 组件              | 负责                                                  | 不负责                         |
+| ----------------- | ----------------------------------------------------- | ------------------------------ |
+| Next `next/image` | `srcset`/`sizes`/lazy/placeholder；loader 拼 `w`、`q` | sharp 转码、拉图               |
+| CDN               | 验签、防盗链、缓存响应（含变换结果）                  | 图片编解码                     |
+| Go 图片服务       | 回源鉴权、读 S3、`imageutil` 变换、设置可配置缓存头   | 签发 TypeD（仍由 `ObjectURL`） |
+| Redis             | `cdn:{objectKey}` → 鉴权 URL                          | 衍生图 bytes                   |
 
 ## URL 约定
 
@@ -65,13 +65,13 @@ https://blog-oss.example.com/blog/articles/abc.jpg?sign=...&t=...
 
 ### 参数规则（对齐 Next 行为）
 
-| 场景 | 行为 |
-|------|------|
-| 静态 JPEG/PNG/WebP | loader 加 `w`、`q`（默认 q=75） |
-| URL 路径以 `.gif` 结尾 | `unoptimized`，直链原 URL |
-| 非白名单外链 | 不改造 |
-| `w` 上限 | 配置项 `maxWidth`，默认 3840；超出 clamp 或 400 |
-| `q` 范围 | 1–100，默认 75 |
+| 场景                   | 行为                                            |
+| ---------------------- | ----------------------------------------------- |
+| 静态 JPEG/PNG/WebP     | loader 加 `w`、`q`（默认 q=75）                 |
+| URL 路径以 `.gif` 结尾 | `unoptimized`，直链原 URL                       |
+| 非白名单外链           | 不改造                                          |
+| `w` 上限               | 配置项 `maxWidth`，默认 3840；超出 clamp 或 400 |
+| `q` 范围               | 1–100，默认 75                                  |
 
 ## CDN 配置（腾讯云）
 
@@ -135,8 +135,8 @@ ETag: "{md5}"
 
 ```yaml
 image:
-  originAuthSecret: ""           # 必填；与 CDN 回源请求头一致
-  responseCacheMaxAge: 604800    # 秒；Cache-Control max-age，默认 7 天
+  originAuthSecret: "" # 必填；与 CDN 回源请求头一致
+  responseCacheMaxAge: 604800 # 秒；Cache-Control max-age，默认 7 天
   defaultQuality: 75
   maxWidth: 3840
 ```
@@ -145,10 +145,10 @@ image:
 
 ## Redis
 
-| Key | 用途 | 变更时失效 |
-|-----|------|------------|
+| Key               | 用途                  | 变更时失效           |
+| ----------------- | --------------------- | -------------------- |
 | `cdn:{objectKey}` | 鉴权 URL 缓存（已有） | Put/Move/Delete 对象 |
-| — | **不存**衍生图 | — |
+| —                 | **不存**衍生图        | —                    |
 
 ## 前端改造（`apps/web`）
 
@@ -170,12 +170,12 @@ images: {
 
 ### 改造清单
 
-| 位置 | 改动 |
-|------|------|
-| `markdown-image-optimizer.ts` | 用 loader 替代 `/_next/image?url=...` |
-| `LoadingImage` | 依赖 custom loader；保留 GIF `unoptimized` 与失败回退原图 |
-| `UserAvatar`、`MomentImageGrid` 等 | 确认无手写 `/_next/image` |
-| 预览 / `data-original-src` | 始终使用无 `w` 的 API 原 URL |
+| 位置                               | 改动                                                      |
+| ---------------------------------- | --------------------------------------------------------- |
+| `markdown-image-optimizer.ts`      | 用 loader 替代 `/_next/image?url=...`                     |
+| `LoadingImage`                     | 依赖 custom loader；保留 GIF `unoptimized` 与失败回退原图 |
+| `UserAvatar`、`MomentImageGrid` 等 | 确认无手写 `/_next/image`                                 |
+| 预览 / `data-original-src`         | 始终使用无 `w` 的 API 原 URL                              |
 
 ### 失败兜底
 
@@ -205,12 +205,12 @@ images: {
 
 ## 风险
 
-| 风险 | 缓解 |
-|------|------|
-| 原图预览也经 Go 回源 | CDN 缓存原图 URL；Go 直传零 CPU |
+| 风险                      | 缓解                                         |
+| ------------------------- | -------------------------------------------- |
+| 原图预览也经 Go 回源      | CDN 缓存原图 URL；Go 直传零 CPU              |
 | CDN 集体 miss 打满 Go CPU | singleflight；CDN 缓存键含 w,q；监控回源带宽 |
-| TypeD URL 过期 | 与现网一致；API 侧重签；衍生不依赖 sign 内容 |
-| 腾讯云缓存键未含 w,q | 上线前在控制台验收多宽度不串图 |
+| TypeD URL 过期            | 与现网一致；API 侧重签；衍生不依赖 sign 内容 |
+| 腾讯云缓存键未含 w,q      | 上线前在控制台验收多宽度不串图               |
 
 ## 迁移步骤
 

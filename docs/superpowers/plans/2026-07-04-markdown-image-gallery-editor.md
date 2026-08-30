@@ -24,10 +24,12 @@
 ### Task 1: 提取图片 markdown 序列化纯函数
 
 **Files:**
+
 - Modify: `packages/editor/src/extensions/image.ts`
 - Test: `packages/editor/src/__tests__/image-render-markdown.test.ts`(新建)
 
 **Interfaces:**
+
 - Produces: `renderImageMarkdown(node: JSONContent): string` — 从 `extensions/image.ts` 导出;上传中/占位图返回 `""`;Task 2 的 gallery `renderMarkdown` 复用。
 
 - [ ] **Step 1: 写失败测试**
@@ -122,10 +124,12 @@ git commit -m "refactor(editor): 提取图片节点 markdown 序列化纯函数"
 ### Task 2: imageGallery 节点 + 相邻图片自动归一化
 
 **Files:**
+
 - Create: `packages/editor/src/extensions/image-gallery.ts`
 - Test: `packages/editor/src/__tests__/image-gallery.test.ts`(新建)
 
 **Interfaces:**
+
 - Consumes: Task 1 的 `renderImageMarkdown`。
 - Produces:
   - `ImageGalleryExtension`(Tiptap Node 扩展,name `"imageGallery"`,`content: "image+"`);
@@ -134,6 +138,7 @@ git commit -m "refactor(editor): 提取图片节点 markdown 序列化纯函数"
   - 归一化行为:相邻的顶层/同容器内 `image`/`imageGallery` 兄弟节点自动合并为一个 gallery;仅剩 1 张图的 gallery 解散为普通 image。
 
 **注意事项(实现前必读):**
+
 - NodeView 在 Task 4 才加;本 task 的扩展先不写 `addNodeView`,便于用 `@tiptap/core` 的 `Editor` 纯逻辑测试。
 - normalize 采用「每次事务只修复第一处违规」策略:`appendTransaction` 返回的事务会再次触发 `appendTransaction`,ProseMirror 会循环直到返回 null,天然收敛且无 index 错位风险。
 - 初始加载(`content` + `contentType: "markdown"`)不产生事务,需在 `onCreate` 里补一次 normalize。
@@ -187,7 +192,9 @@ function topLevelTypes(editor: Editor): string[] {
   return types;
 }
 
-function findGallery(editor: Editor): { node: import("@tiptap/pm/model").Node; pos: number } | null {
+function findGallery(
+  editor: Editor,
+): { node: import("@tiptap/pm/model").Node; pos: number } | null {
   let found: { node: import("@tiptap/pm/model").Node; pos: number } | null = null;
   editor.state.doc.descendants((node, pos) => {
     if (node.type.name === "imageGallery" && !found) {
@@ -227,7 +234,9 @@ describe("imageGallery 归一化", () => {
   });
 
   it("图片间的 nbsp 段落阻断合并（拆组契约）", () => {
-    const editor = createEditor("![一](https://e.com/1.png)\n\n\u00a0\n\n![二](https://e.com/2.png)");
+    const editor = createEditor(
+      "![一](https://e.com/1.png)\n\n\u00a0\n\n![二](https://e.com/2.png)",
+    );
     expect(findGallery(editor)).toBeNull();
   });
 
@@ -275,9 +284,7 @@ describe("imageGallery 归一化", () => {
     });
     expect(findGallery(editor)?.node.childCount).toBe(3);
     // 占位图不参与序列化
-    expect(editor.getMarkdown()).toBe(
-      "![一](https://e.com/1.png)\n\n![二](https://e.com/2.png)",
-    );
+    expect(editor.getMarkdown()).toBe("![一](https://e.com/1.png)\n\n![二](https://e.com/2.png)");
     editor.commands.resolveImagePlaceholder({ uploadId: "u-1", src: "https://e.com/3.png" });
     expect(editor.getMarkdown()).toContain("https://e.com/3.png");
   });
@@ -331,7 +338,11 @@ function flattenRunImages(run: PMNode[]): PMNode[] {
  * 在 parent 的 children 中找第一处需要归一化的相邻 image/imageGallery run。
  * contentStart 为 parent 内容区起始的绝对位置（doc 为 0，其余为 pos + 1）。
  */
-function findRewriteInParent(parent: PMNode, contentStart: number, state: EditorState): Rewrite | null {
+function findRewriteInParent(
+  parent: PMNode,
+  contentStart: number,
+  state: EditorState,
+): Rewrite | null {
   const galleryType = state.schema.nodes[GALLERY_TYPE];
   let run: Array<{ node: PMNode; from: number; to: number }> = [];
 
@@ -347,8 +358,7 @@ function findRewriteInParent(parent: PMNode, contentStart: number, state: Editor
     if (!needsRewrite) return null;
 
     const images = flattenRunImages(run.map((item) => item.node));
-    const nodes =
-      totalImages >= 2 ? [galleryType.create(null, images)] : images.slice(0, 1);
+    const nodes = totalImages >= 2 ? [galleryType.create(null, images)] : images.slice(0, 1);
     return { from: run[0].from, to: run[run.length - 1].to, nodes };
   };
 
@@ -410,9 +420,7 @@ export const ImageGalleryExtension = Node.create({
 
   renderMarkdown(node: JSONContent, _helpers: MarkdownRendererHelpers, _ctx: RenderContext) {
     // 契约：序列化为相邻纯图片段落，前台 rehype 插件按同一规则重新成组
-    const parts = (node.content ?? [])
-      .map((child) => renderImageMarkdown(child))
-      .filter(Boolean);
+    const parts = (node.content ?? []).map((child) => renderImageMarkdown(child)).filter(Boolean);
     return parts.join("\n\n");
   },
 
@@ -444,6 +452,7 @@ Run: `pnpm --filter @repo/editor test src/__tests__/image-gallery.test.ts`
 Expected: PASS。
 
 常见失败排查:
+
 - 「加载后未合并」:确认 `onCreate` 在 view 就绪后执行(Tiptap `onCreate` 是 view 创建后的钩子,可直接 dispatch);若 `this.editor.view` 未就绪报错,改用 `queueMicrotask(() => …)` 包裹并在报告中说明。
 - 「round-trip 尾部多空行」:比对 `getMarkdown()` 实际输出,若差异仅是首尾空白,断言改为 `.trim()` 后比较,并在报告中说明。
 - 「resolveImagePlaceholder 找不到 gallery 内占位图」:检查 `findImagePositionByUploadId`(image.ts)用的是 `doc.descendants`,应能进入 gallery;若它对 `imageGallery` 提前 `return false`,修正该函数。
@@ -465,10 +474,12 @@ git commit -m "feat(editor): 新增 imageGallery 节点与相邻图片自动归�
 ### Task 3: 回车拆组(splitImageGallery 命令)
 
 **Files:**
+
 - Modify: `packages/editor/src/extensions/image-gallery.ts`
 - Test: `packages/editor/src/__tests__/image-gallery.test.ts`(追加用例)
 
 **Interfaces:**
+
 - Produces: 命令 `splitImageGallery()`;键位:gallery 内图片处于 NodeSelection 时按 Enter 触发。
 - 行为:以选中图片为界拆分 —— `[界前图片(含选中)] + 含 nbsp(\u00a0) 的分隔段落 + [界后图片]`;两侧不足 2 张自动落为普通 image(由 wrap 逻辑直接生成,不依赖 normalize);光标落入分隔段落。
 
@@ -628,11 +639,13 @@ git commit -m "feat(editor): 轮播 gallery 支持回车拆组"
 ### Task 4: 所见即所得 NodeView(scroll-snap 滑道 + chrome)
 
 **Files:**
+
 - Create: `packages/editor/src/nodes/image-gallery-node-view.tsx`
 - Modify: `packages/editor/src/extensions/image-gallery.ts`(挂 `addNodeView`)
 - Test: `packages/editor/src/__tests__/image-gallery-node-view.test.tsx`(新建;通过 RichEditor 挂载验证,mock 方式参照既有 `RichEditor.test.tsx` 与 `__tests__/setup.ts`)
 
 **Interfaces:**
+
 - Consumes: Task 2 的 `ImageGalleryStorage`(读 `editor.storage.imageGallery.requestImageInsert`)、`ImageInsertHandlers`(types.ts)、`IMAGE_UPLOAD_PLACEHOLDER_SRC`。
 - 结构:NodeViewWrapper > 相对定位容器 > NodeViewContent(横向 scroll-snap 滑道,ProseMirror 托管子 image NodeView)+ 不可编辑 chrome(prev/next/dots/计数/添加图片)。
 - 依赖 Task 5 注入 storage 后「添加图片」按钮才可见;未注入时按钮不渲染。
@@ -673,7 +686,12 @@ describe("ImageGalleryNodeView", () => {
 
   it("注入 onInsertImage 后显示添加图片按钮", async () => {
     render(
-      <RichEditor value={TWO_IMAGES} onChange={vi.fn()} enableImageGallery onInsertImage={vi.fn()} />,
+      <RichEditor
+        value={TWO_IMAGES}
+        onChange={vi.fn()}
+        enableImageGallery
+        onInsertImage={vi.fn()}
+      />,
     );
     await waitFor(() => {
       expect(screen.getByLabelText("添加图片")).toBeTruthy();
@@ -708,7 +726,17 @@ const NAV_BUTTON_CLASSES = cn(
 
 function ChevronIcon({ direction }: { direction: "left" | "right" }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <polyline points={direction === "left" ? "10 4 6 8 10 12" : "6 4 10 8 6 12"} />
     </svg>
   );
@@ -792,7 +820,10 @@ export function ImageGalleryNodeView({ node, editor, getPos, selected }: NodeVie
   return (
     <NodeViewWrapper
       as="div"
-      className={cn("my-6", selected && "rounded-2xl outline outline-2 outline-primary -outline-offset-2")}
+      className={cn(
+        "my-6",
+        selected && "rounded-2xl outline outline-2 outline-primary -outline-offset-2",
+      )}
     >
       <div ref={wrapperRef} className="group relative">
         <TypedNodeViewContent
@@ -886,12 +917,14 @@ git commit -m "feat(editor): 轮播 gallery 所见即所得 NodeView"
 ### Task 5: RichEditor 开关 + storage 注入
 
 **Files:**
+
 - Modify: `packages/editor/src/hooks/use-rich-editor.ts`
 - Modify: `packages/editor/src/RichEditor.tsx`
 - Modify: `packages/editor/src/types.ts`
 - Test: Task 4 的 `image-gallery-node-view.test.tsx` 在本 task 完成后跑绿
 
 **Interfaces:**
+
 - Produces: `RichEditorProps.enableImageGallery?: boolean`(默认 false;评论场景不受影响);启用时注册 `ImageGalleryExtension` 并把 `onInsertImage` 注入 `editor.storage.imageGallery.requestImageInsert`。
 
 - [ ] **Step 1: types.ts 增加 prop**
@@ -922,16 +955,16 @@ deps 数组追加 `enableImageGallery`。顶部 import `ImageGalleryExtension`�
 props 解构处加 `enableImageGallery = false`,传给 `useRichEditor({ ... , enableImageGallery })`。在既有「外部 value 同步」useEffect 附近追加:
 
 ```ts
-  // gallery NodeView 的「添加图片」按钮借用工具栏的选图流程（storage 注入而非 props 层层透传）
-  useEffect(() => {
-    if (!editor || !enableImageGallery) return;
-    const storage = editor.storage.imageGallery as ImageGalleryStorage | undefined;
-    if (!storage) return;
-    storage.requestImageInsert = onInsertImage ?? null;
-    return () => {
-      storage.requestImageInsert = null;
-    };
-  }, [editor, enableImageGallery, onInsertImage]);
+// gallery NodeView 的「添加图片」按钮借用工具栏的选图流程（storage 注入而非 props 层层透传）
+useEffect(() => {
+  if (!editor || !enableImageGallery) return;
+  const storage = editor.storage.imageGallery as ImageGalleryStorage | undefined;
+  if (!storage) return;
+  storage.requestImageInsert = onInsertImage ?? null;
+  return () => {
+    storage.requestImageInsert = null;
+  };
+}, [editor, enableImageGallery, onInsertImage]);
 ```
 
 顶部 import type `ImageGalleryStorage`(自 `./extensions/image-gallery`)。
@@ -953,10 +986,12 @@ git commit -m "feat(editor): RichEditor 开放 enableImageGallery 开关"
 ### Task 6: 插图上传支持多选批量
 
 **Files:**
+
 - Modify: `packages/hooks/src/use-editor-image-upload.ts`
 - Test: `packages/hooks/src/use-editor-image-upload.test.ts`(追加用例;先读现有用例的 mock 方式并保持一致)
 
 **Interfaces:**
+
 - 行为变更:`handleFileChange` 处理 `event.target.files` 的全部文件 —— 先为每个文件依次插入占位(保证相邻 → 自动成组),再逐个上传替换;单个文件失败只移除自己的占位并报错,不影响其余。
 
 - [ ] **Step 1: 写失败测试**
@@ -965,7 +1000,10 @@ git commit -m "feat(editor): RichEditor 开放 enableImageGallery 开关"
 
 ```ts
 it("多选文件：全部先插占位再依次上传替换", async () => {
-  const upload = vi.fn().mockResolvedValueOnce("https://e.com/1.png").mockResolvedValueOnce("https://e.com/2.png");
+  const upload = vi
+    .fn()
+    .mockResolvedValueOnce("https://e.com/1.png")
+    .mockResolvedValueOnce("https://e.com/2.png");
   const { result } = renderHook(() => useEditorImageUpload({ scene: "article", upload }));
   const handlers = {
     insert: vi.fn(),
@@ -1006,7 +1044,10 @@ it("多选中单个文件上传失败：只移除该文件占位，其余正常"
   await act(async () => {
     await result.current.handleFileChange({
       target: {
-        files: [new File(["a"], "a.png", { type: "image/png" }), new File(["b"], "b.png", { type: "image/png" })],
+        files: [
+          new File(["a"], "a.png", { type: "image/png" }),
+          new File(["b"], "b.png", { type: "image/png" }),
+        ],
         value: "",
       },
     } as unknown as ChangeEvent<HTMLInputElement>);
@@ -1028,55 +1069,55 @@ Expected: 新用例 FAIL(第二个文件被忽略)。
 `handleFileChange` 改为:
 
 ```ts
-  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files ?? []);
-    event.target.value = "";
-    if (files.length === 0) return;
+const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+  const files = Array.from(event.target.files ?? []);
+  event.target.value = "";
+  if (files.length === 0) return;
 
-    const handlers = handlersRef.current;
-    if (!handlers) return;
+  const handlers = handlersRef.current;
+  if (!handlers) return;
 
-    setIsUploading(true);
-    try {
-      // 先为所有文件插入相邻占位（文章场景下相邻图片会自动成组为轮播），再逐个上传
-      const pending: Array<{ file: File; uploadId: string }> = [];
-      for (const file of files) {
-        const uploadId = createUploadId();
-        let aspectRatio = 16 / 9;
-        try {
-          aspectRatio = await readImageAspectRatio(file);
-        } catch {
-          aspectRatio = 16 / 9;
-        }
-        handlers.insertLoading({ uploadId, aspectRatio, alt: file.name });
-        pending.push({ file, uploadId });
+  setIsUploading(true);
+  try {
+    // 先为所有文件插入相邻占位（文章场景下相邻图片会自动成组为轮播），再逐个上传
+    const pending: Array<{ file: File; uploadId: string }> = [];
+    for (const file of files) {
+      const uploadId = createUploadId();
+      let aspectRatio = 16 / 9;
+      try {
+        aspectRatio = await readImageAspectRatio(file);
+      } catch {
+        aspectRatio = 16 / 9;
       }
-
-      for (const { file, uploadId } of pending) {
-        try {
-          logUploadFileSize(`${scene}:select`, file);
-          const prepared = await prepareImageForUpload(
-            file,
-            scene === "comment" ? "comment" : "article",
-          );
-          logUploadFileSize(`${scene}:upload`, prepared, {
-            originalBytes: file.size,
-            originalLabel: formatUploadFileSize(file.size),
-            ...(await readUploadDimensions(prepared)),
-          });
-          const url = await upload(prepared);
-          handlers.resolveLoading(uploadId, url, prepared.name);
-        } catch (err) {
-          // 单文件失败只回收自己的占位，不影响批次内其他文件
-          handlers.removeLoading(uploadId);
-          onError?.(getImageUploadErrorMessage(err));
-        }
-      }
-    } finally {
-      setIsUploading(false);
-      handlersRef.current = null;
+      handlers.insertLoading({ uploadId, aspectRatio, alt: file.name });
+      pending.push({ file, uploadId });
     }
-  };
+
+    for (const { file, uploadId } of pending) {
+      try {
+        logUploadFileSize(`${scene}:select`, file);
+        const prepared = await prepareImageForUpload(
+          file,
+          scene === "comment" ? "comment" : "article",
+        );
+        logUploadFileSize(`${scene}:upload`, prepared, {
+          originalBytes: file.size,
+          originalLabel: formatUploadFileSize(file.size),
+          ...(await readUploadDimensions(prepared)),
+        });
+        const url = await upload(prepared);
+        handlers.resolveLoading(uploadId, url, prepared.name);
+      } catch (err) {
+        // 单文件失败只回收自己的占位，不影响批次内其他文件
+        handlers.removeLoading(uploadId);
+        onError?.(getImageUploadErrorMessage(err));
+      }
+    }
+  } finally {
+    setIsUploading(false);
+    handlersRef.current = null;
+  }
+};
 ```
 
 - [ ] **Step 4: 跑 hooks 包全部测试**
@@ -1096,10 +1137,12 @@ git commit -m "feat(hooks): 编辑器插图支持多选批量上传"
 ### Task 7: admin 文章编辑器启用
 
 **Files:**
+
 - Modify: `apps/admin/src/modules/articles/components/ArticleEditorWritingPanel.tsx`(RichEditor 加 `enableImageGallery`;`contentImageInputRef` 的 `<input type="file">` 加 `multiple`)
 - Test: `apps/admin/src/modules/articles/components/ArticleEditorWritingPanel.test.tsx`(追加断言;先读该文件现有 mock 结构并保持一致)
 
 **Interfaces:**
+
 - Consumes: Task 5 的 `enableImageGallery`、Task 6 的多文件 `handleFileChange`。
 - 范围:仅文章编辑器;`ModerationCorrectContentEditor` 等其他 RichEditor 用法不改。
 
@@ -1144,6 +1187,7 @@ Expected: 新用例 FAIL。
 - [ ] **Step 3: 实现**
 
 `ArticleEditorWritingPanel.tsx`:
+
 - `<RichEditor …>` 增加 `enableImageGallery`;
 - `contentImageInputRef` 对应的 `<input type="file" accept="image/*" …>` 增加 `multiple`。
 
@@ -1176,6 +1220,7 @@ Expected: 无错误。
 - [ ] **Step 3: 按 AGENTS.md 输出控制汇报**
 
 报告:做了什么、改了哪些文件、验证了什么(测试命令与结果)、风险。已知需人工验证项(报告中必须列出):
+
 - contentDOM 作为横向滚动容器时,ProseMirror 光标/NodeSelection 在真实浏览器中的表现(spec 风险项);
 - 拖拽图片进出 gallery 的体验;
 - `&nbsp;` 分隔段落在编辑器中显示为一个空白行是否可接受。

@@ -48,7 +48,12 @@ describe("tags model", () => {
   });
 
   it("suggestNextSeq 取最大 seq + 1", () => {
-    expect(suggestNextSeq([{ ...sample, seq: 0 }, { ...sample, id: 2, seq: 3 }])).toBe(4);
+    expect(
+      suggestNextSeq([
+        { ...sample, seq: 0 },
+        { ...sample, id: 2, seq: 3 },
+      ]),
+    ).toBe(4);
     expect(suggestNextSeq([])).toBe(0);
   });
 

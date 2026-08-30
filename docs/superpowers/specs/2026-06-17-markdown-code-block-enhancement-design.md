@@ -8,6 +8,7 @@
 ## 目标
 
 为博客所有 Markdown 渲染场景（文章正文 + 评论 + 留言板）的代码块添加：
+
 1. 语法高亮（`.hljs-*` 类名配色）
 2. 顶部工具栏（语言标签 + 复制按钮）
 3. 无语言时：无工具栏，复制按钮绝对定位于右上角
@@ -73,14 +74,17 @@ Markdown 字符串
 ### 1. `packages/markdown/package.json`
 
 新增依赖：
+
 - `rehype-highlight`（wraps lowlight，提供 `.hljs-*` 类名）
 
 ### 2. `packages/markdown/src/render.ts`
 
 **rehypeHighlight 配置：**
+
 ```typescript
 .use(rehypeHighlight, { detect: false, ignoreMissing: true })
 ```
+
 - `detect: false`：**不**自动猜测语言；只高亮用户在围栏上明确声明了语言的代码块（如 ` ```typescript `），避免无语言代码块被误分类影响工具栏判断逻辑
 - `ignoreMissing: true`：遇到未知语言名称不报错
 
@@ -92,6 +96,7 @@ Markdown 字符串
 - **无语言**：仍包一层 `div.md-code-wrapper`（供 `position: relative` 定位），但不输出 toolbar div；复制按钮作为 `pre` 的兄弟节点绝对定位插入 wrapper 内
 
 **sanitize schema 扩展：**
+
 ```typescript
 tagNames: [...defaultSchema.tagNames, "u", "button", "svg", "path", "polyline", "rect"],
 attributes: {
@@ -120,34 +125,50 @@ attributes: {
 新增 CSS：
 
 **布局类：**
+
 ```css
 /* 有语言：wrapper + toolbar */
-.md-code-wrapper { position: relative; }
+.md-code-wrapper {
+  position: relative;
+}
 .md-code-toolbar {
-  display: flex; align-items: center;
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   padding: 7px 12px 5px;
 }
 .md-code-lang {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 11px; font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
   color: var(--editor-hl-meta);
   font-family: ui-monospace, monospace;
 }
 
 /* 无语言：复制按钮绝对定位 */
 .md-code-wrapper .md-copy-btn-abs {
-  position: absolute; top: 7px; right: 8px; z-index: 1;
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  z-index: 1;
 }
 
 /* 复制按钮通用 */
 .md-copy-btn {
-  background: none; border: none; cursor: pointer;
+  background: none;
+  border: none;
+  cursor: pointer;
   color: var(--editor-hl-meta);
   transition: color 0.15s;
 }
-.md-copy-btn:hover { color: var(--editor-code-fg); }
-.md-copy-btn.copied { color: #16a34a; }
+.md-copy-btn:hover {
+  color: var(--editor-code-fg);
+}
+.md-copy-btn.copied {
+  color: #16a34a;
+}
 
 /* prose pre：有 toolbar 时移除顶部 padding */
 .md-code-wrapper:has(.md-code-toolbar) pre {
@@ -156,9 +177,14 @@ attributes: {
 ```
 
 **hljs 配色（复用现有 CSS 变量）：**
+
 ```css
-.md-code-wrapper .hljs-keyword { color: var(--editor-hl-keyword); }
-.md-code-wrapper .hljs-string  { color: var(--editor-hl-string); }
+.md-code-wrapper .hljs-keyword {
+  color: var(--editor-hl-keyword);
+}
+.md-code-wrapper .hljs-string {
+  color: var(--editor-hl-string);
+}
 /* …（与 editor 现有规则对称） */
 ```
 
@@ -167,11 +193,13 @@ attributes: {
 ## 测试计划
 
 ### `render.test.ts` 新增
+
 - 有语言代码围栏 → 输出包含 `.md-code-toolbar` 和 `.md-code-lang`
 - 无语言代码围栏 → 输出包含 `.md-copy-btn` 但无 `.md-code-toolbar`
 - 语法高亮 → 输出包含 `.hljs-keyword` 等类名
 
 ### `markdown-content.test.tsx` 新增
+
 - 点击 `.md-copy-btn` → `navigator.clipboard.writeText` 被调用
 - 复制成功后 `.copied` 类被加到按钮
 
@@ -179,14 +207,14 @@ attributes: {
 
 ## 影响范围
 
-| 组件 | 变化 |
-|------|------|
-| `ArticleContent` | 无需改动（透传 html 给 MarkdownContent） |
-| `CommentItem` / `CommentReplies` | 无需改动 |
-| `GuestbookItem` | 无需改动 |
-| `MarkdownContent` | 加 `'use client'`、ref、useEffect |
-| `render.ts` | 加两个 rehype 插件、更新 sanitize |
-| `base.css` | 新增约 60 行 CSS |
+| 组件                             | 变化                                     |
+| -------------------------------- | ---------------------------------------- |
+| `ArticleContent`                 | 无需改动（透传 html 给 MarkdownContent） |
+| `CommentItem` / `CommentReplies` | 无需改动                                 |
+| `GuestbookItem`                  | 无需改动                                 |
+| `MarkdownContent`                | 加 `'use client'`、ref、useEffect        |
+| `render.ts`                      | 加两个 rehype 插件、更新 sanitize        |
+| `base.css`                       | 新增约 60 行 CSS                         |
 
 现有 prose 样式（`variant="article"` / `"comment"`）保持不变，只在代码块外层追加 wrapper。
 

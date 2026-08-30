@@ -12,18 +12,18 @@
 
 ## 文件变更清单
 
-| 操作 | 路径 | 职责 |
-|---|---|---|
-| 新建 | `packages/ui/src/__mocks__/client-only.ts` | 测试环境 client-only mock |
-| 修改 | `packages/ui/vitest.config.ts` | 添加 client-only alias |
-| 新建 | `packages/ui/src/toast/toast.tsx` | ToastRegion UI 组件 |
-| 新建 | `packages/ui/src/toast/toast.test.tsx` | Toast 组件测试 |
-| 修改 | `packages/ui/src/index.ts` | 导出 ToastRegion、ToastContent、ToastType |
-| 新建 | `apps/web/lib/toast.ts` | 全局 toastQueue 实例 + addToast helper |
-| 修改 | `apps/web/app/providers/global-modals.tsx` | 挂载 `<ToastRegion>` |
-| 修改 | `apps/web/components/auth/login-view.tsx` | 表单状态、校验、API 调用、onSuccess prop |
-| 修改 | `apps/web/components/auth/login-view.test.tsx` | 更新全部现有测试 + 新增 5 个 |
-| 修改 | `apps/web/components/auth/login-modal.tsx` | 添加 handleLoginSuccess |
+| 操作 | 路径                                           | 职责                                      |
+| ---- | ---------------------------------------------- | ----------------------------------------- |
+| 新建 | `packages/ui/src/__mocks__/client-only.ts`     | 测试环境 client-only mock                 |
+| 修改 | `packages/ui/vitest.config.ts`                 | 添加 client-only alias                    |
+| 新建 | `packages/ui/src/toast/toast.tsx`              | ToastRegion UI 组件                       |
+| 新建 | `packages/ui/src/toast/toast.test.tsx`         | Toast 组件测试                            |
+| 修改 | `packages/ui/src/index.ts`                     | 导出 ToastRegion、ToastContent、ToastType |
+| 新建 | `apps/web/lib/toast.ts`                        | 全局 toastQueue 实例 + addToast helper    |
+| 修改 | `apps/web/app/providers/global-modals.tsx`     | 挂载 `<ToastRegion>`                      |
+| 修改 | `apps/web/components/auth/login-view.tsx`      | 表单状态、校验、API 调用、onSuccess prop  |
+| 修改 | `apps/web/components/auth/login-view.test.tsx` | 更新全部现有测试 + 新增 5 个              |
+| 修改 | `apps/web/components/auth/login-modal.tsx`     | 添加 handleLoginSuccess                   |
 
 ---
 
@@ -32,6 +32,7 @@
 `react-aria-components/Toast` 在编译产物顶部 `import 'client-only'`，该包在非 RSC 环境会直接 throw。测试运行前必须用空模块替换。
 
 **Files:**
+
 - Create: `packages/ui/src/__mocks__/client-only.ts`
 - Modify: `packages/ui/vitest.config.ts`
 
@@ -89,6 +90,7 @@ git commit -m "test(ui): 添加 client-only mock 修复 React Aria Toast 测试�
 ## Task 2：Toast UI 组件（packages/ui）
 
 **Files:**
+
 - Create: `packages/ui/src/toast/toast.test.tsx`
 - Create: `packages/ui/src/toast/toast.tsx`
 - Modify: `packages/ui/src/index.ts`
@@ -101,9 +103,7 @@ git commit -m "test(ui): 添加 client-only mock 修复 React Aria Toast 测试�
 import { describe, it, expect } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import {
-  UNSTABLE_ToastQueue as ToastQueue,
-} from "react-aria-components/Toast";
+import { UNSTABLE_ToastQueue as ToastQueue } from "react-aria-components/Toast";
 import { ToastRegion, type ToastContent } from "./toast";
 
 function makeQueue(...items: ToastContent[]) {
@@ -175,8 +175,7 @@ export interface ToastContent {
 }
 
 const typeStyles: Record<ToastType, string> = {
-  success:
-    "bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-400",
+  success: "bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-400",
   error: "bg-destructive/10 border-destructive/25 text-destructive",
   info: "bg-primary/10 border-primary/25 text-primary",
 };
@@ -255,6 +254,7 @@ git commit -m "feat(ui): 新增 ToastRegion 组件（React Aria Toast）"
 ## Task 3：全局 Toast 队列（apps/web）
 
 **Files:**
+
 - Create: `apps/web/lib/toast.ts`
 - Modify: `apps/web/app/providers/global-modals.tsx`
 
@@ -314,6 +314,7 @@ git commit -m "feat(web): 初始化全局 Toast 队列并挂载 ToastRegion"
 ## Task 4：LoginView 表单实现（TDD）
 
 **Files:**
+
 - Modify: `apps/web/components/auth/login-view.test.tsx`
 - Modify: `apps/web/components/auth/login-view.tsx`
 
@@ -511,9 +512,7 @@ export function LoginView({ onSwitchToRegister, onSuccess }: LoginViewProps) {
       {/* 标题行 */}
       <div className="mb-6">
         <div className="flex items-center justify-between gap-3 mb-[5px]">
-          <h2 className="text-[22px] font-extrabold tracking-tight text-foreground">
-            欢迎回来
-          </h2>
+          <h2 className="text-[22px] font-extrabold tracking-tight text-foreground">欢迎回来</h2>
           <button
             type="button"
             onClick={onSwitchToRegister}
@@ -630,6 +629,7 @@ git commit -m "feat(web): 实现登录表单接口对接与校验逻辑"
 ## Task 5：LoginModal 成功处理
 
 **Files:**
+
 - Modify: `apps/web/components/auth/login-modal.tsx`
 
 - [ ] **Step 1：更新 login-modal.tsx**

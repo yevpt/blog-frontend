@@ -1,9 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type {
-  AdminModerationEmergencyBatchResp,
-  AdminModerationProfileResp,
-} from "@repo/api";
+import type { AdminModerationEmergencyBatchResp, AdminModerationProfileResp } from "@repo/api";
 import { apiClient } from "../../../lib/api";
 import { useUserModeration } from "./use-user-moderation";
 

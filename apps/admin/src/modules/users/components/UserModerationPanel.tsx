@@ -128,7 +128,10 @@ export function UserModerationPanel({ userId }: UserModerationPanelProps) {
             <div className="grid gap-3 rounded-lg border border-border/70 p-3">
               <p className="text-sm font-medium text-foreground">处罚操作</p>
               <div className="grid min-w-0 gap-1.5">
-                <label htmlFor="user-moderation-sanction-reason" className="text-sm text-foreground">
+                <label
+                  htmlFor="user-moderation-sanction-reason"
+                  className="text-sm text-foreground"
+                >
                   理由（禁言/封禁必填）
                 </label>
                 <textarea

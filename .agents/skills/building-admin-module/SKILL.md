@@ -27,12 +27,12 @@ src/modules/<id>/
 ```ts
 interface AdminModule {
   id: string;
-  nav?: AdminNavItem;        // 进侧边栏的模块给 nav；纯子路由不给
-  routes: AdminRoute[];      // { path?; index?; element }
+  nav?: AdminNavItem; // 进侧边栏的模块给 nav；纯子路由不给
+  routes: AdminRoute[]; // { path?; index?; element }
 }
 interface AdminNavItem {
   label: string;
-  icon: IconName;            // 来自 @repo/icons
+  icon: IconName; // 来自 @repo/icons
   path: string;
   group?: string;
   description: string;

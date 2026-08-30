@@ -28,6 +28,7 @@ comments/
 ## Task 1: 展示组件归入 parts/
 
 **Files:**
+
 - Move: `comment-item.tsx`(+`.test.tsx`)、`thread-comment-item.tsx`(+`.test.tsx`)、`comment-replies.tsx`(+`.test.tsx`)、`comment-skeleton.tsx`(+`.test.tsx`) → `components/comments/parts/`
 - Move+Rename: `comment-list-view.tsx` → `components/comments/parts/comment-list.tsx`
 - Modify 引用：`index.ts`、`comment-section.tsx`、`comment-section.test.tsx`、`hooks/use-comment-section-state.ts`、`hooks/use-comment-section-state.test.ts`、guestbook 5 处
@@ -64,9 +65,10 @@ export { CommentItemSkeleton, CommentListSkeleton } from "./parts/comment-skelet
 - [ ] **Step 5: 更新 comment-section.tsx 临时引用**
 
 ```ts
-import { CommentListView } from "./comment-list-view";   // 删除
-import { CommentList } from "./parts/comment-list";       // 新增
+import { CommentListView } from "./comment-list-view"; // 删除
+import { CommentList } from "./parts/comment-list"; // 新增
 ```
+
 并把 JSX 中 `<CommentListView ... />` 改为 `<CommentList ... />`。（comment-section 将在 Task 4 删除，此处仅为保持绿灯。）
 
 - [ ] **Step 6: 更新 comment-section.test.tsx 的 mock 路径**
@@ -98,6 +100,7 @@ git commit -m "refactor(comments): 展示组件归入 parts 目录"
 ## Task 2: 输入组件归入 inputs/，抽出 ReplyBanner
 
 **Files:**
+
 - Move+Rename: `comment-input.tsx`(+`.test.tsx`) → `inputs/pill-comment-input.tsx`（导出名 `PillCommentInput`）
 - Move: `rich-comment-input.tsx`(+`.test.tsx`) → `inputs/`
 - Create: `inputs/reply-banner.tsx`、`inputs/reply-banner.test.tsx`
@@ -115,7 +118,9 @@ import { ReplyBanner } from "./reply-banner";
 
 vi.mock("@repo/ui", () => ({
   Button: ({ children, onPress }: { children: React.ReactNode; onPress?: () => void }) => (
-    <button type="button" onClick={onPress}>{children}</button>
+    <button type="button" onClick={onPress}>
+      {children}
+    </button>
   ),
 }));
 
@@ -186,6 +191,7 @@ git mv comment-input.tsx inputs/pill-comment-input.tsx
 git mv comment-input.test.tsx inputs/pill-comment-input.test.tsx
 git mv rich-comment-input.tsx rich-comment-input.test.tsx inputs/
 ```
+
 （注：Step 1/3 已直接在 `inputs/` 下创建 reply-banner，则上面首行的容错 mv 无操作。）
 
 - [ ] **Step 6: 改造 pill-comment-input.tsx**
@@ -196,7 +202,9 @@ git mv rich-comment-input.tsx rich-comment-input.test.tsx inputs/
 - 用 `ReplyBanner` 替换内联回复提示块（原 `replyTarget && (<div className="flex items-center gap-2 text-xs">...取消...</div>)`）：
 
 ```tsx
-{replyTarget && <ReplyBanner toUsername={replyTarget.toUsername} onCancel={onCancelReply} />}
+{
+  replyTarget && <ReplyBanner toUsername={replyTarget.toUsername} onCancel={onCancelReply} />;
+}
 ```
 
 - 删除不再使用的 `import { Button } from "@repo/ui";`（pill 内发送/登录按钮均为原生 `<button>`，Button 仅曾用于回复提示）。
@@ -208,11 +216,12 @@ git mv rich-comment-input.tsx rich-comment-input.test.tsx inputs/
 - [ ] **Step 8: 更新 comment-section.tsx 临时引用**
 
 ```ts
-import { CommentInput } from "./comment-input";          // 删除
+import { CommentInput } from "./comment-input"; // 删除
 import { RichCommentInput } from "./rich-comment-input"; // 删除
-import { PillCommentInput } from "./inputs/pill-comment-input";  // 新增
-import { RichCommentInput } from "./inputs/rich-comment-input";  // 新增
+import { PillCommentInput } from "./inputs/pill-comment-input"; // 新增
+import { RichCommentInput } from "./inputs/rich-comment-input"; // 新增
 ```
+
 将 JSX 中 `<CommentInput ... />` 改为 `<PillCommentInput ... />`。
 
 - [ ] **Step 9: 更新 comment-section.test.tsx 与 guestbook**
@@ -238,6 +247,7 @@ git commit -m "refactor(comments): 输入组件归入 inputs 并抽出 ReplyBann
 ## Task 3: 逻辑 hook 归入 hooks/，抽出 useCommentScroll
 
 **Files:**
+
 - Move: `apps/web/hooks/use-comment-section-state.ts`(+`.test.ts`) → `components/comments/hooks/`
 - Create: `hooks/use-comment-scroll.ts`、`hooks/use-comment-scroll.test.ts`
 - Modify: `comment-section.tsx`（改引用 + 移除内联滚动逻辑，改用 hook）
@@ -250,6 +260,7 @@ cd ../../..   # 回到 apps/web
 git mv apps/web/hooks/use-comment-section-state.ts apps/web/components/comments/hooks/use-comment-section-state.ts
 git mv apps/web/hooks/use-comment-section-state.test.ts apps/web/components/comments/hooks/use-comment-section-state.test.ts
 ```
+
 该 hook 内部均为 `@/` 绝对引用（`@/hooks/use-comment-list` 等）与 `@/components/comments/parts/comment-item`，移动后无需改动；其测试 `./use-comment-section-state` 相对引用保持有效。
 
 - [ ] **Step 2: 为 useCommentScroll 写失败测试**
@@ -285,7 +296,9 @@ describe("useCommentScroll", () => {
     vi.stubGlobal(
       "ResizeObserver",
       class {
-        constructor(cb: () => void) { trigger = cb; }
+        constructor(cb: () => void) {
+          trigger = cb;
+        }
         observe = observe;
         disconnect = disconnect;
       },
@@ -384,6 +397,7 @@ const { scrollRef, scrollToListTop, scrollToComment } = useCommentScroll({
   onContentResize,
 });
 ```
+
 - modal 分支容器 `ref={mergeRef}` → `ref={scrollRef}`。
 - `useCommentSectionState` 仍接 `onScrollToListTop: scrollToListTop, onScrollToComment: scrollToComment`。
 
@@ -404,6 +418,7 @@ git commit -m "refactor(comments): 逻辑 hook 归入 hooks 并抽出 useComment
 ## Task 4: 拆出 InlineComments / ModalComments，删除 comment-section
 
 **Files:**
+
 - Create: `views/inline-comments.tsx`(+`.test.tsx`)、`views/modal-comments.tsx`(+`.test.tsx`)
 - Move: `comment-modal.tsx`(+`.test.tsx`) → `views/`
 - Delete: `comment-section.tsx`、`comment-section.test.tsx`
@@ -591,6 +606,7 @@ cd apps/web/components/comments && mkdir -p views
 git mv comment-modal.tsx comment-modal.test.tsx views/
 git mv views/inline-comments.tsx views/modal-comments.tsx views/ 2>/dev/null || true
 ```
+
 （前两个新文件 Step 1/2 已写在 `views/` 下，则末行容错 mv 无操作。）
 
 `views/comment-modal.tsx`：`import { CommentSection } from "./comment-section";` → `import { ModalComments } from "./modal-comments";`。文件内两处 `<CommentSection ... layout="modal" ... />` → `<ModalComments ... />`（删除 `layout` 属性，其余 props 不变：`targetType`/`targetId`/`onCommentAdded`，CommentSheet 额外保留 `scrollRef`，CommentDialog 额外保留 `onContentResize`）。

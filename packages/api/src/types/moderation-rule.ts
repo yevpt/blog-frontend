@@ -15,18 +15,9 @@ export type ModerationRuleCategory =
   | "minors"
   | "other";
 export type ModerationRulesetStatus =
-  | "building"
-  | "ready"
-  | "publishing"
-  | "published"
-  | "failed"
-  | "superseded";
+  "building" | "ready" | "publishing" | "published" | "failed" | "superseded";
 export type ModerationImportValidationStatus =
-  | "queued"
-  | "validating"
-  | "valid"
-  | "invalid"
-  | "canceled";
+  "queued" | "validating" | "valid" | "invalid" | "canceled";
 export type ModerationImportFormat = "csv" | "txt";
 export type ModerationRuleSearchMode = "exact" | "prefix";
 

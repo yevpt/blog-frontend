@@ -13,6 +13,7 @@
 ## 预备知识
 
 ### Untitled UI CLI 用法
+
 ```bash
 # 在 packages/ui 目录内运行，输出到 src/
 cd packages/ui
@@ -20,17 +21,19 @@ npx untitledui@latest add <component> --path src --yes
 ```
 
 组件名清单（本计划涉及的）：
-| 网站名称 | CLI 名称 | 依赖 |
-|---------|---------|-----|
-| Tabs | `tabs` | react-aria-components |
-| Buttons | `button` | react-aria-components |
-| Inputs | `input` | react-aria-components |
-| Badges | `badges` | — |
-| Carousels | `carousel-base` | embla-carousel-react |
+
+| 网站名称  | CLI 名称        | 依赖                  |
+| --------- | --------------- | --------------------- |
+| Tabs      | `tabs`          | react-aria-components |
+| Buttons   | `button`        | react-aria-components |
+| Inputs    | `input`         | react-aria-components |
+| Badges    | `badges`        | —                     |
+| Carousels | `carousel-base` | embla-carousel-react  |
 
 ### 组件 API 关键差异（旧 → 新）
 
 **Button:**
+
 - `variant="default"` → `color="primary"`
 - `variant="outline"` → `color="secondary"`
 - `variant="ghost"` → `color="tertiary"`
@@ -38,49 +41,52 @@ npx untitledui@latest add <component> --path src --yes
 - `size="default"` → `size="md"`
 
 **Tabs:**
+
 - 由 `<Tabs>` + `<Tabs.List>` + `<Tabs.Item>` + `<Tabs.Panel>` 组成
 - `selectedKey` / `onSelectionChange` 控制选中项
 - 变体名：`button-brand-horizontal`（这就是用户要求的"Button brand horizontal"风格）
 
 **Input:**
+
 - `label`, `hint`, `isInvalid`, `icon` props
 - 搜索框用 `icon` prop 传入搜索图标（自动左侧定位）
 
 ### 暗色模式适配
+
 - 当前项目：`documentElement.classList.add("dark")`
-- Untitled UI：`.dark-mode` class  
+- Untitled UI：`.dark-mode` class
 - **修复**：在 `applyTheme` 函数中同时操作两个 class，并在 CSS 中添加双 variant
 
 ---
 
 ## 文件结构总览
 
-| 操作 | 文件 |
-|------|------|
-| Modify | `packages/ui/package.json` |
-| Create | `packages/ui/src/utils/cx.ts` |
-| Modify | `packages/styles/src/base.css` |
-| Modify | `apps/web/app/providers/theme-provider.tsx` |
-| Create | `packages/ui/src/tabs.tsx` (via CLI) |
-| Replace | `packages/ui/src/button.tsx` (via CLI) |
-| Create | `packages/ui/src/input.tsx` (via CLI) |
-| Replace | `packages/ui/src/badge.tsx` (via CLI) |
-| Create | `packages/ui/src/carousel.tsx` (via CLI) |
-| Modify | `packages/ui/src/index.ts` |
-| Modify | `apps/web/app/providers/locale-provider.tsx` |
-| Modify | `apps/web/components/navbar/site-navbar.tsx` |
-| Modify | `apps/web/components/navbar/navbar-actions.tsx` |
-| Modify | `apps/web/components/navbar/navbar-mobile-drawer.tsx` |
-| Modify | `apps/web/components/articles/article-list-header.tsx` |
-| Modify | `apps/web/components/sidebar/tags-cloud.tsx` |
-| Modify | `apps/web/components/sidebar/recent-visitors.tsx` |
-| Modify | `apps/web/components/featured/featured-carousel.tsx` |
-| Modify | `apps/web/components/featured/featured-carousel-slide.tsx` |
-| Modify | `apps/web/components/snippets/snippets-section.tsx` |
-| Modify | `apps/web/app/page.tsx` |
-| Modify (tests) | `apps/web/components/navbar/site-navbar.test.tsx` |
-| Modify (tests) | `apps/web/app/providers/locale-provider.test.tsx` |
-| Modify (tests) | `apps/web/components/articles/article-section.test.tsx` |
+| 操作           | 文件                                                       |
+| -------------- | ---------------------------------------------------------- |
+| Modify         | `packages/ui/package.json`                                 |
+| Create         | `packages/ui/src/utils/cx.ts`                              |
+| Modify         | `packages/styles/src/base.css`                             |
+| Modify         | `apps/web/app/providers/theme-provider.tsx`                |
+| Create         | `packages/ui/src/tabs.tsx` (via CLI)                       |
+| Replace        | `packages/ui/src/button.tsx` (via CLI)                     |
+| Create         | `packages/ui/src/input.tsx` (via CLI)                      |
+| Replace        | `packages/ui/src/badge.tsx` (via CLI)                      |
+| Create         | `packages/ui/src/carousel.tsx` (via CLI)                   |
+| Modify         | `packages/ui/src/index.ts`                                 |
+| Modify         | `apps/web/app/providers/locale-provider.tsx`               |
+| Modify         | `apps/web/components/navbar/site-navbar.tsx`               |
+| Modify         | `apps/web/components/navbar/navbar-actions.tsx`            |
+| Modify         | `apps/web/components/navbar/navbar-mobile-drawer.tsx`      |
+| Modify         | `apps/web/components/articles/article-list-header.tsx`     |
+| Modify         | `apps/web/components/sidebar/tags-cloud.tsx`               |
+| Modify         | `apps/web/components/sidebar/recent-visitors.tsx`          |
+| Modify         | `apps/web/components/featured/featured-carousel.tsx`       |
+| Modify         | `apps/web/components/featured/featured-carousel-slide.tsx` |
+| Modify         | `apps/web/components/snippets/snippets-section.tsx`        |
+| Modify         | `apps/web/app/page.tsx`                                    |
+| Modify (tests) | `apps/web/components/navbar/site-navbar.test.tsx`          |
+| Modify (tests) | `apps/web/app/providers/locale-provider.test.tsx`          |
+| Modify (tests) | `apps/web/components/articles/article-section.test.tsx`    |
 
 ---
 
@@ -89,6 +95,7 @@ npx untitledui@latest add <component> --path src --yes
 **目标：** 在 `packages/ui` 安装所有 Untitled UI 运行时依赖。
 
 **Files:**
+
 - Modify: `packages/ui/package.json`
 
 - [ ] **Step 1: 安装依赖**
@@ -120,6 +127,7 @@ git commit -m "chore(ui): 安装 Untitled UI React 运行时依赖"
 **目标：** Untitled UI 使用扩展版 tailwind-merge 处理其自定义字体大小 class（`text-display-*`）。
 
 **Files:**
+
 - Create: `packages/ui/src/utils/cx.ts`
 
 - [ ] **Step 1: 创建文件**
@@ -142,7 +150,10 @@ export const cx = twMerge;
  * 辅助函数：对 style 对象内的 class 排序（Tailwind IntelliSense 不直接支持对象内排序）
  */
 export function sortCx<
-  T extends Record<string, string | number | Record<string, string | number | Record<string, string | number>>>,
+  T extends Record<
+    string,
+    string | number | Record<string, string | number | Record<string, string | number>>
+  >,
 >(classes: T): T {
   return classes;
 }
@@ -166,12 +177,14 @@ git commit -m "chore(ui): 新增 Untitled UI 专用 cx 工具函数"
 ## Task 3: 更新共享 CSS — 添加 Untitled UI 设计 token 和插件
 
 **背景：** Untitled UI 需要：
+
 1. `tailwindcss-animate` 插件
 2. `tailwindcss-react-aria-components` 插件
 3. `@custom-variant dark` 同时支持 `.dark` 和 `.dark-mode`（双 class 适配）
 4. Untitled UI 的完整设计 token（颜色、字体、阴影等）
 
 **Files:**
+
 - Modify: `packages/styles/src/base.css`
 
 - [ ] **Step 1: 获取 Untitled UI 完整 theme.css 内容**
@@ -179,9 +192,11 @@ git commit -m "chore(ui): 新增 Untitled UI 专用 cx 工具函数"
 访问 https://www.untitledui.com/react/docs/installation 页面的 Step 2，完整复制 `theme.css` 内容（约 300 行 CSS 变量）。这些内容定义了 Untitled UI 的所有设计 token（颜色、字体、间距、阴影等）。
 
 > **注意**：如果在其他 AI 工具中执行，可以运行：
+>
 > ```bash
 > npx untitledui@latest add --type foundations --path packages/styles/src --yes
 > ```
+>
 > CLI 会自动输出 theme.css，但需要确认输出位置正确。
 
 - [ ] **Step 2: 在 `packages/styles/src/base.css` 文件末尾添加以下内容**
@@ -299,8 +314,12 @@ git commit -m "chore(ui): 新增 Untitled UI 专用 cx 工具函数"
   --shadow-xs: 0px 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-sm: 0px 1px 3px rgba(0, 0, 0, 0.1), 0px 1px 2px -1px rgba(0, 0, 0, 0.1);
   --shadow-md: 0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -2px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0px 12px 16px -4px rgba(0, 0, 0, 0.08), 0px 4px 6px -2px rgba(0, 0, 0, 0.03), 0px 2px 2px -1px rgba(0, 0, 0, 0.04);
-  --shadow-xl: 0px 20px 24px -4px rgba(0, 0, 0, 0.08), 0px 8px 8px -4px rgba(0, 0, 0, 0.03), 0px 3px 3px -1.5px rgba(0, 0, 0, 0.04);
+  --shadow-lg:
+    0px 12px 16px -4px rgba(0, 0, 0, 0.08), 0px 4px 6px -2px rgba(0, 0, 0, 0.03),
+    0px 2px 2px -1px rgba(0, 0, 0, 0.04);
+  --shadow-xl:
+    0px 20px 24px -4px rgba(0, 0, 0, 0.08), 0px 8px 8px -4px rgba(0, 0, 0, 0.03),
+    0px 3px 3px -1.5px rgba(0, 0, 0, 0.04);
 
   /* Font */
   --font-body: "Inter", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
@@ -323,7 +342,8 @@ git commit -m "chore(ui): 新增 Untitled UI 专用 cx 工具函数"
 }
 
 /* 暗色 token 覆盖（适配 Untitled UI dark-mode 变量） */
-.dark-mode, .dark {
+.dark-mode,
+.dark {
   --color-text-primary: var(--color-neutral-50);
   --color-text-secondary: var(--color-neutral-300);
   --color-text-tertiary: var(--color-neutral-400);
@@ -373,6 +393,7 @@ git commit -m "feat(styles): 集成 Untitled UI 设计 token 和插件配置"
 **背景：** 项目当前 ThemeProvider 只切换 `.dark` class，但 Untitled UI 组件的暗色样式监听 `.dark-mode`。需同时维护两个 class。
 
 **Files:**
+
 - Modify: `apps/web/app/providers/theme-provider.tsx`
 
 - [ ] **Step 1: 修改 `applyTheme` 函数**
@@ -433,6 +454,7 @@ git commit -m "fix(web): ThemeProvider 同时维护 .dark 和 .dark-mode，兼�
 **背景：** 用 Untitled UI 官方 Button 替换现有 CVA 实现。CLI 在 `packages/ui/src/` 输出 `button.tsx`（及可能的子文件）。
 
 **Files:**
+
 - Replace: `packages/ui/src/button.tsx` (CLI generated)
 
 - [ ] **Step 1: 运行 CLI**
@@ -481,6 +503,7 @@ git commit -m "feat(ui): 用 Untitled UI 官方 Button 组件替换自定义实�
 ## Task 6: 通过 CLI 安装 Tabs 组件
 
 **Files:**
+
 - Create: `packages/ui/src/tabs.tsx` (CLI generated)
 
 - [ ] **Step 1: 运行 CLI**
@@ -521,6 +544,7 @@ git commit -m "feat(ui): 新增 Untitled UI Tabs 组件"
 ## Task 7: 通过 CLI 安装 Input 组件
 
 **Files:**
+
 - Create: `packages/ui/src/input.tsx` (CLI generated)
 
 - [ ] **Step 1: 运行 CLI**
@@ -539,18 +563,19 @@ grep "interface\|type.*Props\|export" packages/ui/src/input.tsx | head -20
 Expected: Input 组件 props 包含 `label`, `hint`, `isInvalid`, `icon`, `placeholder`, `value`, `onChange`, `size`。
 
 搜索框用法示例：
+
 ```tsx
 import { SearchLg } from "@untitledui/icons";
 // 或用 @repo/icons 的 SvgIcon
 
 <Input
-  label=""        // 搜索框不需要 label
+  label="" // 搜索框不需要 label
   placeholder={t("article.searchPlaceholder")}
-  icon={SearchLg}  // 左侧搜索图标
+  icon={SearchLg} // 左侧搜索图标
   value={localQuery}
   onChange={(value) => setLocalQuery(value)}
   size="sm"
-/>
+/>;
 ```
 
 - [ ] **Step 3: Commit**
@@ -565,6 +590,7 @@ git commit -m "feat(ui): 新增 Untitled UI Input 组件"
 ## Task 8: 通过 CLI 安装 Badge 组件
 
 **Files:**
+
 - Replace: `packages/ui/src/badge.tsx` (CLI generated)
 
 - [ ] **Step 1: 运行 CLI**
@@ -583,8 +609,11 @@ grep "interface\|export\|color\|size" packages/ui/src/badge.tsx | head -20
 Expected: Badge props 包含 `color` (brand/gray/error/success/warning), `size` (sm/md/lg), `dot` (boolean)。
 
 标签云用法示例：
+
 ```tsx
-<Badge color="brand" size="sm">TypeScript</Badge>
+<Badge color="brand" size="sm">
+  TypeScript
+</Badge>
 ```
 
 - [ ] **Step 3: Commit**
@@ -601,6 +630,7 @@ git commit -m "feat(ui): 用 Untitled UI Badge 替换自定义实现"
 **背景：** Untitled UI Carousel 基于 Embla Carousel，替换现有自定义轮播实现。
 
 **Files:**
+
 - Create: `packages/ui/src/carousel.tsx` (CLI generated)
 
 - [ ] **Step 1: 运行 CLI**
@@ -628,6 +658,7 @@ git commit -m "feat(ui): 新增 Untitled UI Carousel 组件（基于 Embla）"
 ## Task 10: 更新 packages/ui/src/index.ts 导出
 
 **Files:**
+
 - Modify: `packages/ui/src/index.ts`
 
 - [ ] **Step 1: 读取当前 index.ts**
@@ -642,10 +673,10 @@ cat packages/ui/src/index.ts
 
 ```ts
 export { Tabs } from "./tabs";
-export type { ButtonProps } from "./button";  // 根据 CLI 生成的实际导出名调整
+export type { ButtonProps } from "./button"; // 根据 CLI 生成的实际导出名调整
 export { Input } from "./input";
 export { Badge } from "./badge";
-export { Carousel } from "./carousel";  // 根据实际生成的导出名调整
+export { Carousel } from "./carousel"; // 根据实际生成的导出名调整
 export { cx, sortCx } from "./utils/cx";
 ```
 
@@ -671,6 +702,7 @@ git commit -m "feat(ui): 更新 @repo/ui 导出，包含所有 Untitled UI 组�
 **背景：** `LocaleProvider` 初始 `messages=null`，`t(key)` 在异步 JSON 加载完成前返回 key 名（显示 "article.searchPlaceholder"、"sidebar.joinQQ" 等）。
 
 **Files:**
+
 - Modify: `apps/web/app/providers/locale-provider.tsx`
 - Modify: `apps/web/app/providers/locale-provider.test.tsx`
 
@@ -753,7 +785,11 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
 ```tsx
 it("messages 未加载完成时 t() 降级返回 key 本身", () => {
-  render(<LocaleProvider><LocaleDisplay /></LocaleProvider>);
+  render(
+    <LocaleProvider>
+      <LocaleDisplay />
+    </LocaleProvider>,
+  );
   expect(screen.getByTestId("nav-home").textContent).toBe("nav.home");
 });
 ```
@@ -762,7 +798,11 @@ it("messages 未加载完成时 t() 降级返回 key 本身", () => {
 
 ```tsx
 it("默认 zh locale 时，t() 同步返回中文值（无需等待异步加载）", () => {
-  render(<LocaleProvider><LocaleDisplay /></LocaleProvider>);
+  render(
+    <LocaleProvider>
+      <LocaleDisplay />
+    </LocaleProvider>,
+  );
   expect(screen.getByTestId("nav-home").textContent).toBe("首页");
 });
 ```
@@ -789,6 +829,7 @@ git commit -m "fix(web): LocaleProvider 静态导入 zh.json，修复首屏国�
 **背景：** `mounted` 初始为 `false` 使 navbar `-translate-y-full opacity-0`，若 hydration 出错则永久不可见。
 
 **Files:**
+
 - Modify: `apps/web/components/navbar/site-navbar.tsx`
 - Modify: `apps/web/components/navbar/site-navbar.test.tsx`
 
@@ -845,12 +886,12 @@ export function SiteNavbar() {
 在第一个 `it` 之后插入：
 
 ```tsx
-  it("初始渲染时 header 无 -translate-y-full 和 opacity-0（始终可见）", () => {
-    render(<SiteNavbar />);
-    const header = document.querySelector("header");
-    expect(header?.className).not.toContain("-translate-y-full");
-    expect(header?.className).not.toContain("opacity-0");
-  });
+it("初始渲染时 header 无 -translate-y-full 和 opacity-0（始终可见）", () => {
+  render(<SiteNavbar />);
+  const header = document.querySelector("header");
+  expect(header?.className).not.toContain("-translate-y-full");
+  expect(header?.className).not.toContain("opacity-0");
+});
 ```
 
 - [ ] **Step 3: 运行测试**
@@ -873,6 +914,7 @@ git commit -m "fix(web): 移除 SiteNavbar mounted 动画，导航栏始终可�
 **背景：** 将分类 Tab 改为 Untitled UI Tabs（"button-brand-horizontal" 变体），搜索框改为 Untitled UI Input（左侧自动显示搜索图标）。
 
 **Files:**
+
 - Modify: `apps/web/components/articles/article-list-header.tsx`
 - Modify: `apps/web/components/articles/article-section.test.tsx`
 
@@ -1018,6 +1060,7 @@ git commit -m "feat(web): ArticleListHeader 使用 Untitled UI Tabs (button-bran
 ## Task 14: 更新 TagsCloud — 使用 Untitled UI Badge
 
 **Files:**
+
 - Modify: `apps/web/components/sidebar/tags-cloud.tsx`
 
 - [ ] **Step 1: 修改 tags-cloud.tsx**
@@ -1072,6 +1115,7 @@ git commit -m "feat(web): TagsCloud 使用 Untitled UI Badge 组件"
 **背景：** 将旧 `variant` prop 改为 Untitled UI Button 的 `color` prop。
 
 **Files:**
+
 - Modify: `apps/web/components/navbar/navbar-actions.tsx`
 - Modify: `apps/web/components/navbar/navbar-mobile-drawer.tsx`
 
@@ -1177,6 +1221,7 @@ git commit -m "feat(web): 更新所有 Button 用法，适配 Untitled UI color 
 **背景：** 不活跃幻灯片拦截指针事件导致指示器点击无效。先用快速 fix（pointer-events-none），可选地再用 Untitled UI Carousel 替换。
 
 **Files:**
+
 - Modify: `apps/web/components/featured/featured-carousel-slide.tsx`
 - Optional: Modify `apps/web/components/featured/featured-carousel.tsx`
 
@@ -1222,6 +1267,7 @@ git commit -m "fix(web): 不活跃幻灯片加 pointer-events-none，修复指�
 ## Task 17: 碎语模块迁至右侧栏，改单列显示
 
 **Files:**
+
 - Modify: `apps/web/app/page.tsx`
 - Modify: `apps/web/components/snippets/snippets-section.tsx`
 
@@ -1322,31 +1368,35 @@ pnpm --filter @repo/web dev
 
 在浏览器中验证：
 
-| 检查项 | 预期结果 |
-|--------|---------|
-| 导航栏 | 立即可见，无闪烁，滚动后毛玻璃效果 |
-| 主题切换 | 点击切换暗色，Untitled UI 组件跟随暗色 token |
+| 检查项       | 预期结果                                               |
+| ------------ | ------------------------------------------------------ |
+| 导航栏       | 立即可见，无闪烁，滚动后毛玻璃效果                     |
+| 主题切换     | 点击切换暗色，Untitled UI 组件跟随暗色 token           |
 | 文章分类 Tab | Untitled UI button-brand-horizontal 样式，活跃项品牌色 |
-| 搜索框 | Untitled UI Input，左侧自动显示搜索图标 |
-| 轮播图 | 点击底部水滴指示器可正常切换 |
-| 国际化 | 所有文字正常（无 key 名如 "sidebar.joinQQ"） |
-| 右侧栏 | 碎语在右侧，单列，最近来访和标签云在上方 |
-| 所有按钮 | hover 时显示 cursor-pointer |
+| 搜索框       | Untitled UI Input，左侧自动显示搜索图标                |
+| 轮播图       | 点击底部水滴指示器可正常切换                           |
+| 国际化       | 所有文字正常（无 key 名如 "sidebar.joinQQ"）           |
+| 右侧栏       | 碎语在右侧，单列，最近来访和标签云在上方               |
+| 所有按钮     | hover 时显示 cursor-pointer                            |
 
 ---
 
 ## 已知注意事项
 
 ### CLI 输出路径
+
 如果 CLI 将组件输出到 `src/components/` 子目录而非 `src/` 根目录，需手动移动文件并更新内部 import 路径。
 
 ### Untitled UI Button 图标 API
+
 Untitled UI Button 使用 `iconLeading` prop，接受 React 元素需加 `data-icon` 属性，或接受函数组件。实际 API 以 CLI 生成代码为准，适当调整 `NavbarActions` 中图标按钮的写法。
 
 ### Tabs API 变体名
+
 "button-brand-horizontal" 是 Untitled UI 文档中的变体名称，CLI 生成的代码中可能用 `variant="button-brand-horizontal"` 或其他 prop 形式。以生成代码为准。
 
 ### 防抖逻辑
+
 Untitled UI Input 的 `onChange` 直接返回 `string` 值（不是 `React.ChangeEvent`）。原有 300ms 防抖逻辑需在 `ArticleListHeader` 的 `useEffect` 中重新实现：
 
 ```tsx
@@ -1357,7 +1407,9 @@ useEffect(() => {
 ```
 
 ### 暗色模式 token 完整性
+
 Task 3 中的暗色 token 覆盖仅包含核心部分。若 Untitled UI 组件在暗色模式下显示异常，从 https://www.untitledui.com/react/docs/installation 获取完整暗色 token 并补充到 `base.css` 的 `.dark-mode, .dark { ... }` 块。
 
 ### components.json
+
 Untitled UI CLI 可能在运行目录生成 `components.json` 配置文件。若在 `packages/ui` 目录运行，该文件会出现在 `packages/ui/components.json`，可以保留（记录了使用的组件版本）。

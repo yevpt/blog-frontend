@@ -4,9 +4,7 @@ import { AdminListSummary } from "./AdminListSummary";
 
 describe("AdminListSummary", () => {
   it("渲染条数与次要统计", () => {
-    render(
-      <AdminListSummary visibleCount={12} secondary="关联 32 篇公开文章" />,
-    );
+    render(<AdminListSummary visibleCount={12} secondary="关联 32 篇公开文章" />);
 
     expect(screen.getByText("共 12 条")).toBeInTheDocument();
     expect(screen.getByText("关联 32 篇公开文章")).toBeInTheDocument();

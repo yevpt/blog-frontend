@@ -59,14 +59,17 @@
 ## Task 1：安装依赖
 
 **Files:**
+
 - Modify: `apps/web/package.json`
 
 - [ ] **Step 1: 安装运行时依赖**
 
 Run（在仓库根目录）:
+
 ```bash
 pnpm --filter web add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities browser-image-compression
 ```
+
 Expected: `apps/web/package.json` 的 dependencies 出现这四个包，`pnpm-lock.yaml` 更新。
 
 - [ ] **Step 2: 验证类型可解析**
@@ -86,6 +89,7 @@ git commit --no-verify -m "build(web): 新增碎语图片所需依赖 dnd-kit �
 ## Task 2：图片压缩工具 `compress-image.ts`
 
 **Files:**
+
 - Create: `apps/web/lib/compress-image.ts`
 - Test: `apps/web/lib/__tests__/compress-image.test.ts`
 
@@ -95,7 +99,9 @@ git commit --no-verify -m "build(web): 新增碎语图片所需依赖 dnd-kit �
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const compressMock = vi.fn();
-vi.mock("browser-image-compression", () => ({ default: (...args: unknown[]) => compressMock(...args) }));
+vi.mock("browser-image-compression", () => ({
+  default: (...args: unknown[]) => compressMock(...args),
+}));
 
 import { compressImage, MAX_IMAGE_BYTES } from "../compress-image";
 
@@ -184,6 +190,7 @@ git commit --no-verify -m "feat(web): 新增碎语图片压缩工具"
 ## Task 3：创建碎语的 Next 路由（POST /api/moments）
 
 **Files:**
+
 - Modify: `apps/web/app/api/moments/route.ts`（现仅有 GET）
 - Test: `apps/web/app/api/moments/route.test.ts`
 
@@ -200,7 +207,7 @@ import { POST } from "./route";
 describe("POST /api/moments", () => {
   it("委托给 proxyPostForm 转发到 /moments", async () => {
     proxyPostForm.mockResolvedValue(new Response(null, { status: 200 }));
-    const req = { } as unknown as Parameters<typeof POST>[0];
+    const req = {} as unknown as Parameters<typeof POST>[0];
     await POST(req);
     expect(proxyPostForm).toHaveBeenCalledWith(req, "/moments");
   });
@@ -215,16 +222,20 @@ Expected: FAIL（`route` 未导出 `POST`）。
 - [ ] **Step 3: 实现（在文件顶部 import 增加 proxyPostForm，文件末尾新增 POST）**
 
 在 `apps/web/app/api/moments/route.ts` 顶部已有 import 处增加：
+
 ```ts
 import { proxyPostForm } from "@/lib/backend-proxy";
 ```
+
 在文件末尾追加：
+
 ```ts
 /** 新增碎语：转发 multipart/form-data 到后端，需登录 */
 export async function POST(request: NextRequest) {
   return proxyPostForm(request, "/moments");
 }
 ```
+
 （`NextRequest` 已在该文件 import；若未 import 则补 `import { type NextRequest } from "next/server";`）
 
 - [ ] **Step 4: 运行测试确认通过**
@@ -246,6 +257,7 @@ git commit --no-verify -m "feat(web): 新增创建碎语的 multipart 代理路�
 拖拽排序的真实手势在 jsdom 不便测试；把重排逻辑抽成纯函数单测，组件里 dnd-kit 的 `onDragEnd` 调它。
 
 **Files:**
+
 - Create: `apps/web/components/snippets/move-item.ts`
 - Test: `apps/web/components/snippets/move-item.test.ts`
 
@@ -307,14 +319,16 @@ git commit --no-verify -m "feat(web): 新增图片重排纯函数 moveItem"
 固定 80px、3 列左对齐；末位虚线「添加」格；选图即压缩入列（≤9）；缩略图右上角**正圆**删除键（白底+深色 X）；点击缩略图用 `ImageViewer` 预览；`@dnd-kit/sortable` 拖拽排序（`onDragEnd` 调 `moveItem`）。父组件持有 `items` 状态，本组件受控。
 
 **Files:**
+
 - Create: `apps/web/components/snippets/snippet-image-uploader.tsx`
 - Test: `apps/web/components/snippets/snippet-image-uploader.test.tsx`
 
 数据类型（在本文件 export，供 snippet-modal 复用）：
+
 ```ts
 export interface SnippetImageItem {
-  id: string;        // crypto.randomUUID()
-  file: File;        // 已压缩
+  id: string; // crypto.randomUUID()
+  file: File; // 已压缩
   previewUrl: string; // URL.createObjectURL(file)
 }
 ```
@@ -327,13 +341,18 @@ import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const compressImage = vi.fn();
-vi.mock("@/lib/compress-image", () => ({ compressImage: (f: File) => compressImage(f), MAX_IMAGE_BYTES: 1048576 }));
+vi.mock("@/lib/compress-image", () => ({
+  compressImage: (f: File) => compressImage(f),
+  MAX_IMAGE_BYTES: 1048576,
+}));
 const addToast = vi.fn();
 vi.mock("@/lib/toast", () => ({ addToast: (...a: unknown[]) => addToast(...a) }));
 
 import { SnippetImageUploader, type SnippetImageItem } from "./snippet-image-uploader";
 
-function img(name = "a.png"): File { return new File([new Uint8Array(10)], name, { type: "image/png" }); }
+function img(name = "a.png"): File {
+  return new File([new Uint8Array(10)], name, { type: "image/png" });
+}
 
 function Harness({ initial = [] as SnippetImageItem[] }) {
   const [items, setItems] = (globalThis as any).React?.useState?.(initial) ?? [initial, () => {}];
@@ -353,7 +372,9 @@ describe("SnippetImageUploader", () => {
     const user = userEvent.setup();
     compressImage.mockImplementation(async (f: File) => f);
     let items: SnippetImageItem[] = [];
-    const onChange = vi.fn((next: SnippetImageItem[]) => { items = next; });
+    const onChange = vi.fn((next: SnippetImageItem[]) => {
+      items = next;
+    });
     const { rerender } = render(<SnippetImageUploader items={items} onChange={onChange} />);
 
     const input = screen.getByTestId("snippet-image-input") as HTMLInputElement;
@@ -364,7 +385,11 @@ describe("SnippetImageUploader", () => {
   });
 
   it("已有 9 张时不再渲染「添加」格", () => {
-    const nine: SnippetImageItem[] = Array.from({ length: 9 }, (_, i) => ({ id: String(i), file: img(), previewUrl: "blob:" + i }));
+    const nine: SnippetImageItem[] = Array.from({ length: 9 }, (_, i) => ({
+      id: String(i),
+      file: img(),
+      previewUrl: "blob:" + i,
+    }));
     render(<SnippetImageUploader items={nine} onChange={() => {}} />);
     expect(screen.queryByRole("button", { name: "添加图片" })).not.toBeInTheDocument();
   });
@@ -372,7 +397,9 @@ describe("SnippetImageUploader", () => {
   it("点击删除键移除该图并 revoke 预览 URL", async () => {
     const user = userEvent.setup();
     let items: SnippetImageItem[] = [{ id: "1", file: img(), previewUrl: "blob:1" }];
-    const onChange = vi.fn((next: SnippetImageItem[]) => { items = next; });
+    const onChange = vi.fn((next: SnippetImageItem[]) => {
+      items = next;
+    });
     render(<SnippetImageUploader items={items} onChange={onChange} />);
     await user.click(screen.getByRole("button", { name: "删除图片" }));
     expect(onChange).toHaveBeenCalledWith([]);
@@ -411,12 +438,7 @@ import {
   closestCenter,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import {
-  SortableContext,
-  rectSortingStrategy,
-  useSortable,
-  arrayMove,
-} from "@dnd-kit/sortable";
+import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { SvgIcon } from "@repo/icons";
 import { ImageViewer } from "@repo/ui";
@@ -570,6 +592,7 @@ function SortableThumb({
   );
 }
 ```
+
 说明：删除键 `h-5 w-5 rounded-full`（20×20 正圆，等宽高），白底深色 X，常驻显示（移动端可点）。`arrayMove` 已 import 备用，可不使用（重排走 `moveItem` 纯函数以便单测）；如 lint 报未使用则删除该 import。
 
 - [ ] **Step 4: 运行确认通过**
@@ -593,10 +616,12 @@ git commit --no-verify -m "feat(web): 新增碎语图片插入区（压缩/预�
 实现直接移植 `comment-modal.tsx` 既有逻辑：`useAnimatedClose`、`useAnimatedPanelHeight`、`useSheetGesture`、`matchMedia("(min-width: 768px)")` 锁定桌面/移动、`Modal placement="center"|"sheet"`、grab handle 与 header。
 
 **Files:**
+
 - Create: `apps/web/components/modal-shell/responsive-modal.tsx`
 - Test: `apps/web/components/modal-shell/responsive-modal.test.tsx`
 
 对外接口：
+
 ```ts
 interface ResponsiveModalShellProps {
   isOpen: boolean;
@@ -625,8 +650,13 @@ import { ResponsiveModalShell } from "./responsive-modal";
 function mockMatch(isDesktop: boolean) {
   window.matchMedia = vi.fn().mockImplementation((q: string) => ({
     matches: q.includes("min-width: 768px") ? isDesktop : false,
-    media: q, addEventListener: vi.fn(), removeEventListener: vi.fn(),
-    addListener: vi.fn(), removeListener: vi.fn(), onchange: null, dispatchEvent: vi.fn(),
+    media: q,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    onchange: null,
+    dispatchEvent: vi.fn(),
   }));
 }
 
@@ -666,6 +696,7 @@ Expected: FAIL（模块不存在）。
 - [ ] **Step 3: 实现**
 
 把 `apps/web/components/comments/views/comment-modal.tsx` 第 19-251 行的结构整体移植为通用外壳：
+
 - 保留 `useAnimatedClose`、`DESKTOP_HEIGHT_SPRING`、`getDesktopModalMaxHeight`、`prefersReducedMotion`、`measurePanelNaturalHeight`、`useAnimatedPanelHeight`、`SPRING`、`COLLAPSED_HEIGHT`、`EXPANDED_HEIGHT` 等私有助手。
 - `CommentDialog`/`CommentSheet` 改名 `DesktopDialog`/`MobileSheet`，把 `<ModalComments .../>` 替换为 `props.children({ scrollRef, requestClose, onContentResize })`，header 标题用 `props.title`、关闭键 `aria-label="关闭"`，并在 dialog/sheet 的 dialog 容器末尾渲染 `props.footer`（`shrink-0`，置于滚动区之外，sheet 全屏时固定可见）。
 - 桌面用 `onContentResize = measurePanelHeight`；移动端 `onContentResize` 传 `() => {}`（sheet 高度由手势/dvh 控制）。
@@ -673,8 +704,16 @@ Expected: FAIL（模块不存在）。
 - `desktopMaxWidthClassName` 默认 `"max-w-[520px]"`，拼进桌面 `modalClassName`。
 
 关键骨架（桌面分支，移动分支同 comment-modal 的 sheet 实现，仅替换内容/标题/footer）：
+
 ```tsx
-function DesktopDialog({ isOpen, title, onClose, children, footer, desktopMaxWidthClassName }: InnerProps) {
+function DesktopDialog({
+  isOpen,
+  title,
+  onClose,
+  children,
+  footer,
+  desktopMaxWidthClassName,
+}: InnerProps) {
   const { isOpen: open, requestClose } = useAnimatedClose(onClose);
   const panelRef = useRef<HTMLDivElement>(null);
   const { modalStyle, measurePanelHeight } = useAnimatedPanelHeight(panelRef);
@@ -682,27 +721,38 @@ function DesktopDialog({ isOpen, title, onClose, children, footer, desktopMaxWid
     <Modal
       isOpen={isOpen && open}
       isDismissable
-      onOpenChange={(o) => { if (!o) requestClose(); }}
+      onOpenChange={(o) => {
+        if (!o) requestClose();
+      }}
       aria-label={typeof title === "string" ? title : "弹窗"}
       placement="center"
       size="lg"
       overlayClassName="z-[300] bg-black/50"
       modalRef={panelRef}
       modalStyle={modalStyle}
-      modalClassName={cn(desktopMaxWidthClassName ?? "max-w-[520px]", "rounded-[20px] shadow-[0_8px_40px_rgba(0,0,0,0.18)]")}
+      modalClassName={cn(
+        desktopMaxWidthClassName ?? "max-w-[520px]",
+        "rounded-[20px] shadow-[0_8px_40px_rgba(0,0,0,0.18)]",
+      )}
       dialogClassName="flex h-full min-h-0 flex-col overflow-hidden"
     >
       {() => (
         <>
           <header className="relative flex shrink-0 items-center justify-center border-b border-border px-[18px] py-3">
             <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-            <button type="button" onClick={requestClose} aria-label="关闭"
-              className="absolute right-[18px] flex h-7 w-7 items-center justify-center rounded-lg bg-border text-(--fg2) hover:bg-primary/10 hover:text-primary">
+            <button
+              type="button"
+              onClick={requestClose}
+              aria-label="关闭"
+              className="absolute right-[18px] flex h-7 w-7 items-center justify-center rounded-lg bg-border text-(--fg2) hover:bg-primary/10 hover:text-primary"
+            >
               <SvgIcon name="close" size={16} />
             </button>
           </header>
           <ShellScrollBody>
-            {(scrollRef) => children({ scrollRef, requestClose, onContentResize: measurePanelHeight })}
+            {(scrollRef) =>
+              children({ scrollRef, requestClose, onContentResize: measurePanelHeight })
+            }
           </ShellScrollBody>
           {footer && <div className="shrink-0 border-t border-border">{footer}</div>}
         </>
@@ -711,6 +761,7 @@ function DesktopDialog({ isOpen, title, onClose, children, footer, desktopMaxWid
   );
 }
 ```
+
 其中 `ShellScrollBody` 是一个 `min-h-0 flex-1 overflow-y-auto` 的容器，向 children 暴露其 `ref`（桌面 `scrollRef` 仅占位，移动端用于手势判定）。移动端分支照搬 comment-modal 的 `MobileSheet`（grab handle + `useSheetGesture(sheetRef, scrollRef, { onDismiss: requestClose })`），同样把内容换成 `children(...)`、追加 `footer`。
 
 - [ ] **Step 4: 运行确认通过**
@@ -732,10 +783,12 @@ git commit --no-verify -m "feat(web): 抽出响应式弹窗外壳 ResponsiveModa
 组装：`ResponsiveModalShell` + `RichEditor`（Markdown、隐藏图片按钮、保留链接/代码）+ `SnippetImageUploader` + footer（添加图片入口、`x/800` 计数、发布）。发布构造 `FormData` POST `/api/moments`。
 
 **Files:**
+
 - Rewrite: `apps/web/components/snippets/snippet-modal.tsx`
 - Rewrite: `apps/web/components/snippets/snippet-modal.test.tsx`
 
 提交载荷（FormData）：
+
 - `content` = 编辑器 Markdown 值
 - `status` = `"1"`，`comment_status` = `"1"`
 - 对每个 `items[i]`：`formData.append("images", item.file, item.file.name)` 且 `formData.append("image_order", "file:" + i)`
@@ -757,16 +810,25 @@ vi.mock("@/app/providers/session-provider", () => ({
 // RichEditor 在测试中替身：暴露一个 textarea 驱动 onChange
 vi.mock("@repo/editor", () => ({
   RichEditor: ({ value, onChange, placeholder }: any) => (
-    <textarea aria-label="编辑器" placeholder={placeholder} value={value}
-      onChange={(e) => onChange(e.target.value)} />
+    <textarea
+      aria-label="编辑器"
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    />
   ),
 }));
 
 function mockDesktop() {
   window.matchMedia = vi.fn().mockImplementation((q: string) => ({
-    matches: q.includes("min-width: 768px"), media: q,
-    addEventListener: vi.fn(), removeEventListener: vi.fn(),
-    addListener: vi.fn(), removeListener: vi.fn(), onchange: null, dispatchEvent: vi.fn(),
+    matches: q.includes("min-width: 768px"),
+    media: q,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    onchange: null,
+    dispatchEvent: vi.fn(),
   }));
 }
 
@@ -788,9 +850,9 @@ describe("SnippetModal", () => {
 
   it("填写正文后发布：以 multipart 提交到 /api/moments 并关闭", async () => {
     const user = userEvent.setup();
-    const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ id: 1 }), { status: 200 }),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify({ id: 1 }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
 
     render(<SnippetModal />);
@@ -885,7 +947,12 @@ export function SnippetModal() {
     }
   }
 
-  if (!isOpen) return <ResponsiveModalShell isOpen={false} title="写碎语" onClose={handleClose}>{() => null}</ResponsiveModalShell>;
+  if (!isOpen)
+    return (
+      <ResponsiveModalShell isOpen={false} title="写碎语" onClose={handleClose}>
+        {() => null}
+      </ResponsiveModalShell>
+    );
 
   return (
     <ResponsiveModalShell
@@ -923,7 +990,9 @@ export function SnippetModal() {
   );
 }
 ```
+
 说明：
+
 - 不传 `onInsertImage` → 隐藏工具栏图片按钮（满足需求）。`onInsertLink`/`onInsertCode` 保留链接/代码按钮；其插入对话框接线可在后续完善（此处占位插入，不影响碎语主流程）。若希望严格按设计仅 B/I/U，可一并不传这两个 handler——按需取舍，默认保留链接/代码。
 - 发布按钮 `isDisabled={!canSubmit}`（正文必填、≤800、非提交中）。
 - `crypto.randomUUID` 测试环境兜底同 Task 5。
@@ -960,6 +1029,7 @@ git commit --no-verify -m "feat(web): 重写碎语弹窗，接入富文本/图�
 此项独立于碎语主功能，作为带移动端手动验证的单独 PR 推进。下方步骤为未来实施时的参考骨架（当前不执行）：
 
 **Files:**
+
 - Modify: `apps/web/components/comments/views/comment-modal.tsx`
 - Guard: `apps/web/components/comments/views/comment-modal.test.tsx`（不改预期，全绿即通过）
 
@@ -971,6 +1041,7 @@ Expected: PASS（迁移前的基线）。
 - [ ] **Step 2: 用外壳重写 comment-modal**
 
 把 `CommentModal` 改为：
+
 ```tsx
 export function CommentModal({ targetType, targetId, onClose, onCommentAdded }: CommentModalProps) {
   return (
@@ -988,6 +1059,7 @@ export function CommentModal({ targetType, targetId, onClose, onCommentAdded }: 
   );
 }
 ```
+
 删除已迁入外壳的本地助手（`useAnimatedClose` 等），保留对 `ModalComments` 的 props 适配。
 
 - [ ] **Step 3: 跑既有测试确认仍绿**

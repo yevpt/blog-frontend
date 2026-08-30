@@ -7,12 +7,7 @@ export type ToastType = "success" | "error" | "info";
 
 /** Toast 弹出位置，默认 "bottom-right"。 */
 export type ToastPosition =
-  | "top-left"
-  | "top-center"
-  | "top-right"
-  | "bottom-left"
-  | "bottom-center"
-  | "bottom-right";
+  "top-left" | "top-center" | "top-right" | "bottom-left" | "bottom-center" | "bottom-right";
 
 /** 单条 toast 的内容。 */
 export interface ToastContent {

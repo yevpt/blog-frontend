@@ -92,7 +92,7 @@ sendEmailCode → requestJSON → 后端返回 {code:429}
 interface UserAvatarProps {
   src?: string;
   name: string;
-  size?: "xs" | "sm" | "md";   // 20px | 26px | 28px
+  size?: "xs" | "sm" | "md"; // 20px | 26px | 28px
   className?: string;
 }
 ```
@@ -123,6 +123,7 @@ interface SnippetModalState {
 **头像按钮：** `UserAvatar size="sm"` 包裹在 `<button>` 中，点击切换 `open` 状态。
 
 **下拉浮层：**
+
 ```
 position: absolute top-[calc(100%+8px)] right-0
 min-w-[160px] rounded-xl border border-border bg-card shadow-xl
@@ -131,13 +132,13 @@ transition: scale + opacity（tailwind animate）
 
 **菜单项：**
 
-| 图标 | 文字 | 行为 |
-|------|------|------|
-| user | 我的账号 | `router.push("/profile")` + close |
-| pencil / edit | 发表碎语 | `openSnippetModal()` + close |
-| bell | 消息 | `router.push("/messages")` + close |
-| — | 分隔线 | — |
-| log-out | 退出登录 | `POST /api/auth/logout` → `router.refresh()` + close，文字 `text-destructive/80` |
+| 图标          | 文字     | 行为                                                                             |
+| ------------- | -------- | -------------------------------------------------------------------------------- |
+| user          | 我的账号 | `router.push("/profile")` + close                                                |
+| pencil / edit | 发表碎语 | `openSnippetModal()` + close                                                     |
+| bell          | 消息     | `router.push("/messages")` + close                                               |
+| —             | 分隔线   | —                                                                                |
+| log-out       | 退出登录 | `POST /api/auth/logout` → `router.refresh()` + close，文字 `text-destructive/80` |
 
 **关闭逻辑：** `useRef` 挂 container，`useEffect` 注册 `mousedown` document listener，点击外部自动关闭。
 
@@ -149,7 +150,9 @@ transition: scale + opacity（tailwind animate）
 const { user } = useSession();
 
 // 已登录
-{user ? <NavbarUserMenu user={user} isGlass={isGlass} /> : <Button>{t("auth.login")}</Button>}
+{
+  user ? <NavbarUserMenu user={user} isGlass={isGlass} /> : <Button>{t("auth.login")}</Button>;
+}
 ```
 
 #### `navbar-mobile-menu.tsx`
@@ -157,11 +160,13 @@ const { user } = useSession();
 底部操作区根据登录态分支：
 
 **未登录（不变）：**
+
 ```
 [深色模式 toggle]            [登录按钮]
 ```
 
 **已登录（新增）：**
+
 ```
 Row 1:
   [UserAvatar xs][昵称/用户名]   [消息 icon][退出 icon]
@@ -182,14 +187,14 @@ Row 2（不变）:
 
 按 CLAUDE.md 要求，以下文件需同步新增或更新测试：
 
-| 文件 | 测试文件 | 覆盖点 |
-|------|----------|--------|
-| `user-avatar.tsx` | `user-avatar.test.tsx` | 渲染图片 / 渲染首字母 / size 映射 |
-| `navbar-user-menu.tsx` | `navbar-user-menu.test.tsx` | 渲染头像 / 开关下拉 / logout 调用 |
-| `use-snippet-modal.ts` | `use-snippet-modal.test.ts` | 初始状态 / open / close |
-| `navbar-actions.tsx` | `navbar-actions.test.tsx` | 未登录显示登录按钮 / 已登录显示头像 |
-| `navbar-mobile-menu.tsx` | `navbar-mobile-menu.test.tsx` | 已登录布局 / 未登录布局 |
-| `register-view.tsx` | `register-view.test.tsx` | 429 触发 toast 而非重试拼图 |
+| 文件                     | 测试文件                      | 覆盖点                              |
+| ------------------------ | ----------------------------- | ----------------------------------- |
+| `user-avatar.tsx`        | `user-avatar.test.tsx`        | 渲染图片 / 渲染首字母 / size 映射   |
+| `navbar-user-menu.tsx`   | `navbar-user-menu.test.tsx`   | 渲染头像 / 开关下拉 / logout 调用   |
+| `use-snippet-modal.ts`   | `use-snippet-modal.test.ts`   | 初始状态 / open / close             |
+| `navbar-actions.tsx`     | `navbar-actions.test.tsx`     | 未登录显示登录按钮 / 已登录显示头像 |
+| `navbar-mobile-menu.tsx` | `navbar-mobile-menu.test.tsx` | 已登录布局 / 未登录布局             |
+| `register-view.tsx`      | `register-view.test.tsx`      | 429 触发 toast 而非重试拼图         |
 
 ---
 

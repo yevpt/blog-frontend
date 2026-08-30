@@ -18,13 +18,13 @@
 
 ## 2. 技术选型
 
-| 项目 | 选择 | 理由 |
-|------|------|------|
-| 编辑器内核 | **Tiptap v3.26.0** | ProseMirror 生态，扩展体系成熟，官方 React 封装 |
-| Markdown 序列化 | **@tiptap/markdown 3.26.0** | Tiptap 官方包（MIT），双向 Markdown ↔ Tiptap JSON；序列化用 `editor.storage.markdown.getMarkdown()` |
-| 下划线 | StarterKit v3 内置，在 `extensions/underline.ts` 中封装重导出 | MD 无原生下划线，存为 `<u>text</u>`；封装层使实现可追溯 |
-| @提及 | `@tiptap/extension-mention`（stub 候选列表） | 需后端用户搜索 API，UI 预留，结果暂时为空 |
-| 代码块 | StarterKit v3 内置 CodeBlock，通过对话框触发插入 | 支持语言选择，序列化为 ```lang 围栏 |
+| 项目            | 选择                                                          | 理由                                                                                                |
+| --------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| 编辑器内核      | **Tiptap v3.26.0**                                            | ProseMirror 生态，扩展体系成熟，官方 React 封装                                                     |
+| Markdown 序列化 | **@tiptap/markdown 3.26.0**                                   | Tiptap 官方包（MIT），双向 Markdown ↔ Tiptap JSON；序列化用 `editor.storage.markdown.getMarkdown()` |
+| 下划线          | StarterKit v3 内置，在 `extensions/underline.ts` 中封装重导出 | MD 无原生下划线，存为 `<u>text</u>`；封装层使实现可追溯                                             |
+| @提及           | `@tiptap/extension-mention`（stub 候选列表）                  | 需后端用户搜索 API，UI 预留，结果暂时为空                                                           |
+| 代码块          | StarterKit v3 内置 CodeBlock，通过对话框触发插入              | 支持语言选择，序列化为 ```lang 围栏                                                                 |
 
 ### v3 重要说明
 
@@ -85,8 +85,8 @@ packages/editor/
  */
 export interface InsertHandlers {
   onInsertImage?: (insert: (url: string, alt?: string) => void) => void;
-  onInsertLink?:  (insert: (url: string, title?: string) => void) => void;
-  onInsertCode?:  (insert: (code: string, lang: string) => void) => void;
+  onInsertLink?: (insert: (url: string, title?: string) => void) => void;
+  onInsertCode?: (insert: (code: string, lang: string) => void) => void;
 }
 ```
 
@@ -95,8 +95,8 @@ export interface InsertHandlers {
 ```typescript
 /** @提及候选项，调用方提供；后端 API 就绪后替换数据源 */
 export interface MentionItem {
-  id: string;       // 唯一标识（用户 id 或 slug）
-  label: string;    // 显示名称（下拉列表中展示）
+  id: string; // 唯一标识（用户 id 或 slug）
+  label: string; // 显示名称（下拉列表中展示）
 }
 ```
 
@@ -104,13 +104,13 @@ export interface MentionItem {
 
 ```typescript
 export interface RichEditorProps extends InsertHandlers {
-  value: string;                        // Markdown 字符串（受控）
+  value: string; // Markdown 字符串（受控）
   onChange: (markdown: string) => void;
   placeholder?: string;
   disabled?: boolean;
-  maxLength?: number;                   // 字符数限制（可选）
-  mentionSuggestions?: MentionItem[];   // 候选列表，默认 []
-  onSubmit?: () => void;               // 工具栏发送按钮
+  maxLength?: number; // 字符数限制（可选）
+  mentionSuggestions?: MentionItem[]; // 候选列表，默认 []
+  onSubmit?: () => void; // 工具栏发送按钮
   isSubmitting?: boolean;
   className?: string;
 }
@@ -135,17 +135,18 @@ export interface RichEditorProps extends InsertHandlers {
 ```
 
 **响应式**：
+
 - `sm` 以上：工具栏单行展示，按钮间距 `gap-1`
 - `sm` 以下（手机）：工具栏可横向滚动（`overflow-x-auto scrollbar-none`），防止挤压
 - 发送按钮始终固定在右侧，不参与滚动区域
 
 ### 5.3 对话框（调用方实现，在 apps/web）
 
-| 对话框 | 字段 | 触发来源 |
-|--------|------|---------|
-| `ImageDialog` | URL（必填）+ 图片描述（选填） | 工具栏图片按钮 → `onInsertImage` |
-| `LinkDialog` | URL（必填）+ 链接文字（选填） | 工具栏链接按钮 → `onInsertLink` |
-| `CodeDialog` | 代码内容（必填）+ 语言选择器（选填，默认 plain） | 工具栏代码按钮 → `onInsertCode` |
+| 对话框        | 字段                                             | 触发来源                         |
+| ------------- | ------------------------------------------------ | -------------------------------- |
+| `ImageDialog` | URL（必填）+ 图片描述（选填）                    | 工具栏图片按钮 → `onInsertImage` |
+| `LinkDialog`  | URL（必填）+ 链接文字（选填）                    | 工具栏链接按钮 → `onInsertLink`  |
+| `CodeDialog`  | 代码内容（必填）+ 语言选择器（选填，默认 plain） | 工具栏代码按钮 → `onInsertCode`  |
 
 对话框均使用 `@repo/ui` 的 Dialog 组件，移动端居中显示，宽度 `w-[min(90vw,400px)]`。
 
@@ -161,36 +162,39 @@ export interface RichEditorProps extends InsertHandlers {
 
 ## 6. Markdown 序列化约定
 
-| 格式 | Tiptap 扩展 | Markdown 输出 |
-|------|------------|--------------|
-| 粗体 | StarterKit.Bold | `**text**` |
-| 斜体 | StarterKit.Italic | `_text_` |
-| 下划线 | 自定义 Underline | `<u>text</u>` |
-| 删除线 | StarterKit.Strike | `~~text~~` |
-| 内联代码 | StarterKit.Code | `` `code` `` |
-| 代码块 | MarkdownCodeBlock | ```` ```lang\ncode\n``` ```` |
-| 链接 | Extension.Link | `[title](url)` |
-| 图片 | Extension.Image | `![alt](url)` |
-| H1/H2 | StarterKit.Heading | `# ` / `## ` |
-| @提及 | Extension.Mention | `@username` |
+| 格式     | Tiptap 扩展        | Markdown 输出          |
+| -------- | ------------------ | ---------------------- |
+| 粗体     | StarterKit.Bold    | `**text**`             |
+| 斜体     | StarterKit.Italic  | `_text_`               |
+| 下划线   | 自定义 Underline   | `<u>text</u>`          |
+| 删除线   | StarterKit.Strike  | `~~text~~`             |
+| 内联代码 | StarterKit.Code    | `` `code` ``           |
+| 代码块   | MarkdownCodeBlock  | ` ```lang\ncode\n``` ` |
+| 链接     | Extension.Link     | `[title](url)`         |
+| 图片     | Extension.Image    | `![alt](url)`          |
+| H1/H2    | StarterKit.Heading | `# ` / `## `           |
+| @提及    | Extension.Mention  | `@username`            |
 
 ---
 
 ## 7. 文件影响范围
 
 ### 新建
+
 - `packages/editor/` — 完整新包
 - `apps/web/components/comments/dialogs/image-dialog.tsx`
 - `apps/web/components/comments/dialogs/link-dialog.tsx`
 - `apps/web/components/comments/dialogs/code-dialog.tsx`
 
 ### 修改
+
 - `apps/web/components/comments/comment-input.tsx` — 替换为 `RichEditor` + 三个对话框组合
 - `apps/web/package.json` — 添加 `@repo/editor: workspace:*`
 - `packages/editor/package.json` — 新包配置（name, exports, peerDeps）
 - `pnpm-workspace.yaml` — 确认 packages/editor 在 workspace 内（通常已覆盖）
 
 ### 测试（必须同步）
+
 - `packages/editor/src/RichEditor.test.tsx`
 - `packages/editor/src/extensions/underline.test.ts`
 - `apps/web/components/comments/dialogs/*.test.tsx`
@@ -200,11 +204,11 @@ export interface RichEditorProps extends InsertHandlers {
 
 ## 8. 响应式策略汇总
 
-| 断点 | 编辑区 | 工具栏 | 对话框 |
-|------|--------|--------|--------|
-| `< sm`（手机） | 全宽，min-h 60px | 横向可滚动，发送按钮固定右 | 底部 Sheet |
-| `sm – md`（平板） | 全宽 | 单行展示，gap-1 | 居中 Modal |
-| `md +`（桌面） | max-w-[720px] 内展示 | 单行展示，gap-1.5 | 居中 Modal |
+| 断点              | 编辑区               | 工具栏                     | 对话框     |
+| ----------------- | -------------------- | -------------------------- | ---------- |
+| `< sm`（手机）    | 全宽，min-h 60px     | 横向可滚动，发送按钮固定右 | 底部 Sheet |
+| `sm – md`（平板） | 全宽                 | 单行展示，gap-1            | 居中 Modal |
+| `md +`（桌面）    | max-w-[720px] 内展示 | 单行展示，gap-1.5          | 居中 Modal |
 
 ---
 

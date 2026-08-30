@@ -40,8 +40,15 @@
         background: var(--background);
         color: var(--foreground);
         font-family:
-          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-          "PingFang SC", "Microsoft YaHei", sans-serif;
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
         -webkit-font-smoothing: antialiased;
       }
 
@@ -329,7 +336,9 @@
         place-items: center;
         border-radius: 8px;
         color: var(--muted-foreground);
-        transition: background 120ms ease, color 120ms ease;
+        transition:
+          background 120ms ease,
+          color 120ms ease;
       }
 
       .icon-btn:hover {
@@ -426,7 +435,8 @@
       <div class="page-head">
         <h1>背景音乐试听 · 极简版</h1>
         <p>
-          高度固定 64px。去掉唱片环、主色光晕、thumb 圆点；播放态仅切换 ▶/⏸ 与 2px 进度条，卡片边框与背景全程不变。
+          高度固定 64px。去掉唱片环、主色光晕、thumb 圆点；播放态仅切换 ▶/⏸ 与 2px
+          进度条，卡片边框与背景全程不变。
         </p>
       </div>
 
@@ -478,15 +488,34 @@
 
             <div class="actions">
               <button type="button" class="icon-btn" aria-label="更换音乐" title="更换音乐">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                >
                   <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
                   <path d="M21 3v5h-5" />
                   <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
                   <path d="M3 21v-5h5" />
                 </svg>
               </button>
-              <button type="button" class="icon-btn destructive" aria-label="移除背景音乐" title="移除背景音乐">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+              <button
+                type="button"
+                class="icon-btn destructive"
+                aria-label="移除背景音乐"
+                title="移除背景音乐"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                >
                   <path d="M3 6h18" />
                   <path d="M8 6V4h8v2" />
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
@@ -512,37 +541,56 @@
         <p class="compare-label">State reference</p>
         <div class="music-row" aria-hidden="true">
           <button type="button" class="play-btn" tabindex="-1">
-            <svg class="icon-play" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9-5.5-9-5.5z" /></svg>
+            <svg class="icon-play" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M4 2.5v11l9-5.5-9-5.5z" />
+            </svg>
           </button>
           <div class="music-info">
             <p class="music-title">Idle · 未播放</p>
-            <div class="meta-slot"><div class="meta-idle" style="opacity:1">Luma · 03:42</div></div>
+            <div class="meta-slot">
+              <div class="meta-idle" style="opacity: 1">Luma · 03:42</div>
+            </div>
           </div>
         </div>
         <div class="music-row is-playing" aria-hidden="true">
           <button type="button" class="play-btn" tabindex="-1">
-            <svg class="icon-pause" viewBox="0 0 16 16" fill="currentColor" style="opacity:1;position:static"><path d="M3.5 2h3v12h-3V2zm6 0h3v12h-3V2z" /></svg>
+            <svg
+              class="icon-pause"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              style="opacity: 1; position: static"
+            >
+              <path d="M3.5 2h3v12h-3V2zm6 0h3v12h-3V2z" />
+            </svg>
           </button>
           <div class="music-info">
             <p class="music-title">Playing · 播放中</p>
             <div class="meta-slot">
-              <div class="meta-progress" style="opacity:1;position:static">
+              <div class="meta-progress" style="opacity: 1; position: static">
                 <span class="progress-time">1:24 / 3:42</span>
-                <div class="seek"><div class="seek-track"><div class="seek-fill" style="width:38%"></div></div></div>
+                <div class="seek">
+                  <div class="seek-track"><div class="seek-fill" style="width: 38%"></div></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
         <div class="music-row is-paused" aria-hidden="true">
           <button type="button" class="play-btn" tabindex="-1">
-            <svg class="icon-play" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9-5.5-9-5.5z" /></svg>
+            <svg class="icon-play" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M4 2.5v11l9-5.5-9-5.5z" />
+            </svg>
           </button>
           <div class="music-info">
             <p class="music-title">Paused · 已暂停</p>
             <div class="meta-slot">
-              <div class="meta-progress" style="opacity:1;position:static">
+              <div class="meta-progress" style="opacity: 1; position: static">
                 <span class="progress-time">1:24 / 3:42</span>
-                <div class="seek"><div class="seek-track"><div class="seek-fill" style="width:38%;opacity:0.35"></div></div></div>
+                <div class="seek">
+                  <div class="seek-track">
+                    <div class="seek-fill" style="width: 38%; opacity: 0.35"></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -557,11 +605,16 @@
       </div>
 
       <p class="note">
-        设计原则：中性色、无动效装饰；播放与暂停按钮样式相同，仅图标在 ▶ / ⏸ 间切换；进度条 2px、无 thumb；暂停时进度条 opacity 略降以示冻结。点击上方卡片可实际试听。
+        设计原则：中性色、无动效装饰；播放与暂停按钮样式相同，仅图标在 ▶ / ⏸ 间切换；进度条 2px、无
+        thumb；暂停时进度条 opacity 略降以示冻结。点击上方卡片可实际试听。
       </p>
     </div>
 
-    <audio id="audio" preload="metadata" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+    <audio
+      id="audio"
+      preload="metadata"
+      src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    ></audio>
 
     <script>
       const row = document.querySelector("#musicRow");
@@ -575,10 +628,25 @@
       const chips = document.querySelectorAll(".chip[data-scenario]");
 
       const tracks = {
-        normal: { title: "Midnight Drafts", artist: "Luma", durationLabel: "3:42", durationSec: 222 },
-        loading: { title: "Quiet Rain", artist: "Paperroom", durationLabel: "4:18", durationSec: 258 },
+        normal: {
+          title: "Midnight Drafts",
+          artist: "Luma",
+          durationLabel: "3:42",
+          durationSec: 222,
+        },
+        loading: {
+          title: "Quiet Rain",
+          artist: "Paperroom",
+          durationLabel: "4:18",
+          durationSec: 258,
+        },
         paused: { title: "City Windows", artist: "Taro", durationLabel: "2:57", durationSec: 177 },
-        ended: { title: "Midnight Drafts", artist: "Luma", durationLabel: "3:42", durationSec: 222 },
+        ended: {
+          title: "Midnight Drafts",
+          artist: "Luma",
+          durationLabel: "3:42",
+          durationSec: 222,
+        },
       };
 
       let scenario = "normal";

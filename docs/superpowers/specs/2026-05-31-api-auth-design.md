@@ -11,6 +11,7 @@
 博客前端（Monorepo）需要与 Go 后端建立 API 通信层。后端已实现认证模块（`/auth/*`），采用双 Token 机制（access token + refresh token rotation）。
 
 目标：
+
 1. 在 `packages/api` 封装框架无关的 HTTP 工厂函数，供 `web` 和 `admin` 共用
 2. `admin`（Vite SPA）实现客户端 JWT 认证流程
 3. `web`（Next.js App Router）实现基于 httpOnly Cookie 的服务端安全认证流程
@@ -23,19 +24,22 @@
 基础 URL：`http://localhost:8080`（本地开发）
 
 所有接口返回统一格式：
+
 ```json
 { "code": 0, "message": "ok", "data": { ... } }
 ```
+
 `code` 为 `0` 表示成功，非 `0` 为业务错误（400/401/403/429/500）。HTTP 状态码与 `code` 对齐。
 
-| 方法 | 路径 | 说明 | 限流 |
-|------|------|------|------|
-| POST | `/auth/send-code` | 发送邮箱验证码 | 严格限流 |
-| POST | `/auth/register` | 邮箱注册（消耗验证码） | 严格限流 |
-| POST | `/auth/login` | 登录（返回双 Token + 用户信息） | 普通限流 |
-| POST | `/auth/refresh` | 用 refresh token 换新双 Token | 无限流 |
+| 方法 | 路径              | 说明                            | 限流     |
+| ---- | ----------------- | ------------------------------- | -------- |
+| POST | `/auth/send-code` | 发送邮箱验证码                  | 严格限流 |
+| POST | `/auth/register`  | 邮箱注册（消耗验证码）          | 严格限流 |
+| POST | `/auth/login`     | 登录（返回双 Token + 用户信息） | 普通限流 |
+| POST | `/auth/refresh`   | 用 refresh token 换新双 Token   | 无限流   |
 
 登录成功响应 `data` 结构：
+
 ```json
 {
   "access_token": "...",
@@ -78,14 +82,41 @@ packages/api/
 与后端 `internal/dto/auth.go` 一一对应：
 
 ```typescript
-export interface SendCodeReq { email: string }
-export interface RegisterReq { email: string; password: string; code: string; nickname?: string }
-export interface LoginReq { identifier: string; password: string }
-export interface RefreshReq { refresh_token: string }
+export interface SendCodeReq {
+  email: string;
+}
+export interface RegisterReq {
+  email: string;
+  password: string;
+  code: string;
+  nickname?: string;
+}
+export interface LoginReq {
+  identifier: string;
+  password: string;
+}
+export interface RefreshReq {
+  refresh_token: string;
+}
 
-export interface UserResp { id: number; username: string; email?: string; nickname?: string; roles?: string[] }
-export interface LoginResp { access_token: string; refresh_token: string; expires_in: number; user: UserResp }
-export interface TokenResp { access_token: string; refresh_token: string; expires_in: number }
+export interface UserResp {
+  id: number;
+  username: string;
+  email?: string;
+  nickname?: string;
+  roles?: string[];
+}
+export interface LoginResp {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  user: UserResp;
+}
+export interface TokenResp {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+}
 ```
 
 ### 统一错误类（`src/errors.ts`）
@@ -93,9 +124,11 @@ export interface TokenResp { access_token: string; refresh_token: string; expire
 ```typescript
 export class ApiError extends Error {
   constructor(
-    public readonly code: number,   // 后端业务错误码（400/401/403/429/500）
-    public readonly message: string
-  ) { super(message) }
+    public readonly code: number, // 后端业务错误码（400/401/403/429/500）
+    public readonly message: string,
+  ) {
+    super(message);
+  }
 }
 ```
 
@@ -152,6 +185,7 @@ createApiClient(config) → {
 ### 测试覆盖要求
 
 `packages/api/src/client.test.ts`：
+
 - `sendCode` / `register` / `login` / `refresh` 正常调用
 - `code !== 0` 时抛出 `ApiError`
 - HTTP 401 触发自动刷新并重试
@@ -165,10 +199,10 @@ Admin 是纯客户端 Vite SPA，无服务端，直连 Go 后端。
 
 ### Token 存储策略
 
-| Token | 存储位置 | 原因 |
-|---|---|---|
-| `access_token` | Zustand 内存状态 | 短期有效（2h），不需持久化；内存存储防止 XSS 直接读取 |
-| `refresh_token` | `localStorage` | 长期有效，需跨页面刷新持久化，用于静默续期 |
+| Token           | 存储位置         | 原因                                                  |
+| --------------- | ---------------- | ----------------------------------------------------- |
+| `access_token`  | Zustand 内存状态 | 短期有效（2h），不需持久化；内存存储防止 XSS 直接读取 |
+| `refresh_token` | `localStorage`   | 长期有效，需跨页面刷新持久化，用于静默续期            |
 
 ### 前置依赖
 
@@ -206,29 +240,29 @@ AuthGuard 检查 Zustand 中 accessToken 是否存在，决定是否放行路由
 
 ```typescript
 // apps/admin/src/lib/api.ts
-import { createApiClient } from '@repo/api'
-import { useAuthStore } from '../store/auth'
+import { createApiClient } from "@repo/api";
+import { useAuthStore } from "../store/auth";
 
 export const apiClient = createApiClient({
   baseUrl: import.meta.env.VITE_API_BASE_URL,
 
   // 从 Zustand store 读取（在组件树外可用，无需 hook）
   getAccessToken: () => useAuthStore.getState().accessToken,
-  getRefreshToken: () => localStorage.getItem('refresh_token'),
+  getRefreshToken: () => localStorage.getItem("refresh_token"),
 
   // 刷新成功：更新 Zustand 状态和 localStorage
   onTokenRefreshed: (tokens) => {
-    useAuthStore.getState().setAccessToken(tokens.access_token)
-    localStorage.setItem('refresh_token', tokens.refresh_token)
+    useAuthStore.getState().setAccessToken(tokens.access_token);
+    localStorage.setItem("refresh_token", tokens.refresh_token);
   },
 
   // 刷新失败：清除所有认证状态，跳转登录页
   onRefreshFailed: () => {
-    useAuthStore.getState().logout()
-    localStorage.removeItem('refresh_token')
-    window.location.href = '/login'
+    useAuthStore.getState().logout();
+    localStorage.removeItem("refresh_token");
+    window.location.href = "/login";
   },
-})
+});
 ```
 
 ### 测试覆盖要求
@@ -244,13 +278,14 @@ Web 是 Next.js App Router 应用，安全要求更高。核心原则：**JS 永
 
 ### Token 存储策略
 
-| Token | 存储位置 | 谁能读取 |
-|---|---|---|
-| `access_token` | httpOnly Cookie | Server Component、Middleware、Route Handler |
-| `refresh_token` | httpOnly Cookie | 同上 |
-| 当前用户信息 | React Context（内存） | Client Component（从 Server 传入，不含 token） |
+| Token           | 存储位置              | 谁能读取                                       |
+| --------------- | --------------------- | ---------------------------------------------- |
+| `access_token`  | httpOnly Cookie       | Server Component、Middleware、Route Handler    |
+| `refresh_token` | httpOnly Cookie       | 同上                                           |
+| 当前用户信息    | React Context（内存） | Client Component（从 Server 传入，不含 token） |
 
 选择 React Context 而非 Zustand 的原因：
+
 - 用户信息由 Server Component 读 cookie 后作为 props 注入 `SessionProvider`，契合 Context 单向传递模型
 - 登录/退出均会整页刷新，Context 随之重建，无需 Zustand 的细粒度更新
 - Zustand 在 Next.js App Router 中需要"store per request"模式防止跨请求状态污染，复杂度等同于 Context
@@ -280,6 +315,7 @@ apps/web/
 ### 三种认证调用路径
 
 **路径 ①：Server Component 直接读数据**
+
 ```
 Server Component
   → createServerApiClient()（从 cookies() 读 access_token）
@@ -287,6 +323,7 @@ Server Component
 ```
 
 **路径 ②：Client Component 需要认证操作（如评论、收藏）**
+
 ```
 Client Component
   → fetch('/api/auth/xxx') 或业务 Route Handler
@@ -295,6 +332,7 @@ Client Component
 ```
 
 **路径 ③：当前用户信息流向 Client Component**
+
 ```
 layout.tsx（Server Component）
   → getSession() 读 cookie → 解析 user 信息
@@ -323,12 +361,12 @@ Next.js Middleware 运行在 **Edge Runtime**（非 Node.js），不能使用 `j
 ```typescript
 // apps/web/lib/server-api.ts
 // 只能在 Server Component / Server Action / Route Handler 中调用（依赖 next/headers）
-import { cookies } from 'next/headers'
-import { createApiClient } from '@repo/api'
+import { cookies } from "next/headers";
+import { createApiClient } from "@repo/api";
 
 export async function createServerApiClient() {
-  const cookieStore = await cookies()
-  const accessToken = cookieStore.get('access_token')?.value ?? null
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("access_token")?.value ?? null;
 
   return createApiClient({
     baseUrl: process.env.API_BASE_URL!,
@@ -336,7 +374,7 @@ export async function createServerApiClient() {
     // 服务端不做自动刷新：middleware 已在请求到达页面前完成刷新
     // 若到这里还 401，说明用户真的未登录，直接报错即可
     onRefreshFailed: () => {},
-  })
+  });
 }
 ```
 
@@ -353,11 +391,13 @@ export async function createServerApiClient() {
 Go 后端 `router.go` 目前没有 CORS 中间件，浏览器发起的跨域请求会被拦截。需要在实现阶段补充。
 
 **允许 `*` 的原因分析：**
+
 - `web` 的认证请求经由 Next.js Route Handler 转发（服务器间通信），CORS 规则不适用
 - `admin` 直接请求 Go，使用 `Authorization: Bearer` header，不使用 `credentials: 'include'`（Cookie 模式），`*` 无浏览器限制
 - 生产环境由 Nginx 在前，Go 层的 `*` 不直接对外暴露
 
 **配置方式：**
+
 - 允许来源：通过环境变量 `CORS_ALLOWED_ORIGINS` 控制，默认值 `*`
 - 允许方法：`GET, POST, PUT, DELETE, OPTIONS`
 - 允许 Headers：`Content-Type, Authorization`
@@ -373,6 +413,7 @@ Go 后端 `router.go` 目前没有 CORS 中间件，浏览器发起的跨域请�
 - `/Volumes/External/SynologyDrive/Codes/Blog/blog-frontend/.cursorrules`
 
 补充内容：
+
 - HTTP 请求统一通过 `@repo/api` 的 `createApiClient()` 初始化，禁止在 `apps/*` 手写 fetch 封装
 - `packages/api` 只含类型和框架无关工厂，不含 token 存储和框架特定代码
 - 新增 API 接口：先在 `packages/api/src/types/` 补充类型，再添加调用方法

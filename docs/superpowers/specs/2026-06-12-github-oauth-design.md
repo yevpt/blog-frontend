@@ -33,6 +33,7 @@
 ### 1. 类型定义（`packages/api/src/types/auth.ts`）
 
 新增：
+
 - `OAuthAuthorizeResp` — `{ authorize_url: string }`
 - `OAuthCallbackResp` — `{ action: string; login?: LoginResp }`
 - 同步导出至 `packages/api/src/index.ts`
@@ -40,11 +41,13 @@
 ### 2. Next.js API 代理路由
 
 **`GET /api/oauth/[source]/authorize`**
+
 - 从 query 接收 `redirect_uri`
 - 服务端转发至 `{API_BASE_URL}/oauth/:source/authorize?action=login&redirect_uri=...`
 - 直接透传后端响应（`{ authorize_url }`）给客户端
 
 **`GET /api/oauth/[source]/callback`**
+
 - 从 query 接收 `code`、`state`
 - 服务端转发至 `{API_BASE_URL}/oauth/:source/callback?code=...&state=...`
 - 成功时（`login` 字段存在）：写入 `access_token` / `refresh_token` httpOnly Cookie（与 `/api/auth/login` 一致）
@@ -63,6 +66,7 @@
 新增 `onSuccess?: (user: UserResp) => void` prop。
 
 GitHub 按钮点击逻辑：
+
 1. 调用 `/api/oauth/github/authorize?action=login&redirect_uri=<origin>/oauth/github/callback`
 2. `window.open(authorize_url, '_blank', 'width=600,height=700')`
 3. `window.addEventListener('message', handler)` 监听回调结果
@@ -78,12 +82,12 @@ GitHub 按钮点击逻辑：
 
 ## 错误处理
 
-| 场景 | 处理方式 |
-|------|---------|
-| 后端返回 `code != 0` | 回调页显示错误信息，3 秒后关闭 |
-| popup 被浏览器拦截 | OAuthGrid 捕获异常，显示 toast 提示"请允许弹出窗口" |
-| 用户关闭 popup | 超时或监听 `storage` 事件清理，父窗口静默 |
-| state 校验失败（后端返回 400） | 同"后端 code != 0"处理 |
+| 场景                           | 处理方式                                            |
+| ------------------------------ | --------------------------------------------------- |
+| 后端返回 `code != 0`           | 回调页显示错误信息，3 秒后关闭                      |
+| popup 被浏览器拦截             | OAuthGrid 捕获异常，显示 toast 提示"请允许弹出窗口" |
+| 用户关闭 popup                 | 超时或监听 `storage` 事件清理，父窗口静默           |
+| state 校验失败（后端返回 400） | 同"后端 code != 0"处理                              |
 
 ---
 

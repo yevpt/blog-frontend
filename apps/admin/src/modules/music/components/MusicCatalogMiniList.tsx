@@ -47,8 +47,7 @@ type AlbumListItem = {
 };
 
 type DetailTarget =
-  | { kind: "artist"; item: ArtistListItem }
-  | { kind: "album"; item: AlbumListItem };
+  { kind: "artist"; item: ArtistListItem } | { kind: "album"; item: AlbumListItem };
 
 export function MusicCatalogMiniList({
   tab,

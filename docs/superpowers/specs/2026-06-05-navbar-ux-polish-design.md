@@ -72,6 +72,7 @@ Toggle 是纯视觉元素，点击整行触发 `setTheme(nextTheme)`，不需要
 ```
 
 **变化摘要：**
+
 - 移除顶部渐变卡片（`m-1.5 flex w-[calc(100%-12px)]...`）
 - 昵称行：无头像，昵称 `text-[13px] font-bold`，副标题 `text-[11px] text-primary/70 font-medium`
 - 「消息」改名为「我的消息」，图标从 `message-circle` 改为 `bell`
@@ -81,11 +82,11 @@ Toggle 是纯视觉元素，点击整行触发 `setTheme(nextTheme)`，不需要
 
 `NavbarUserMenu` 接收可选 prop：`unreadCount?: number`（默认 0，后续从 session/store 接入）。
 
-| unreadCount | 显示 |
-|---|---|
-| 0 | 不显示 |
-| 1–99 | 显示数字 |
-| > 99 | 显示 `99+` |
+| unreadCount | 显示       |
+| ----------- | ---------- |
+| 0           | 不显示     |
+| 1–99        | 显示数字   |
+| > 99        | 显示 `99+` |
 
 徽标样式：`bg-destructive text-white text-[10px] font-bold rounded-full px-1.5 min-w-[18px] h-[18px] flex items-center justify-center`
 
@@ -96,6 +97,7 @@ Toggle 是纯视觉元素，点击整行触发 `setTheme(nextTheme)`，不需要
 **问题**：点击反馈不明显，需要更清晰的 hover 状态。
 
 **修复**（在新结构中实现）：
+
 - `cursor-pointer`（button 已隐含，但需确认）
 - `transition-colors duration-150`
 - 默认：`text-destructive/80`

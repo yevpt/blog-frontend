@@ -38,8 +38,7 @@ export function DataTable<T extends object>({
     search,
     isLoading,
   });
-  const hasToolbar =
-    showToolbar && (Boolean(search) || Boolean(actions) || showTotal);
+  const hasToolbar = showToolbar && (Boolean(search) || Boolean(actions) || showTotal);
 
   return (
     <div

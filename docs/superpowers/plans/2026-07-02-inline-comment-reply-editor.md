@@ -40,10 +40,12 @@ Task 8 (全量验证收尾：依赖以上全部)
 ### Task 1: 修复 `useCommentSubmit` 的全局并发提交锁
 
 **Files:**
+
 - Modify: `apps/web/hooks/use-comment-submit.ts`
 - Test: `apps/web/hooks/use-comment-submit.test.ts`
 
 **Interfaces:**
+
 - Consumes: 无（纯内部实现改动，`submitComment`/`submitReply` 的函数签名和返回类型不变）
 - Produces: `submitComment`/`submitReply` 现在允许「不同 target 并发调用互不阻塞」；「同一 target 并发重复调用」仍然被拒绝（返回 `null`），供 Task 6 的内联编辑器复用同一份 hook 时安全并发调用。
 
@@ -52,53 +54,53 @@ Task 8 (全量验证收尾：依赖以上全部)
 在 `apps/web/hooks/use-comment-submit.test.ts` 文件末尾、`describe("useCommentSubmit", ...)` 的最后一个 `describe` 块之后（即整个文件最外层 `describe` 结束 `}` 之前）新增：
 
 ```ts
-  describe("并发提交", () => {
-    it("同一评论并发重复提交回复时第二次调用短路返回 null", async () => {
-      const resolvers: Array<(response: Response) => void> = [];
-      vi.mocked(global.fetch).mockImplementation(
-        () => new Promise<Response>((resolve) => resolvers.push(resolve)),
-      );
-      const { result } = renderHook(() => useCommentSubmit("article", 5));
+describe("并发提交", () => {
+  it("同一评论并发重复提交回复时第二次调用短路返回 null", async () => {
+    const resolvers: Array<(response: Response) => void> = [];
+    vi.mocked(global.fetch).mockImplementation(
+      () => new Promise<Response>((resolve) => resolvers.push(resolve)),
+    );
+    const { result } = renderHook(() => useCommentSubmit("article", 5));
 
-      const first = result.current.submitReply(1, "hello", 0);
-      const duplicate = result.current.submitReply(1, "hello", 0);
-      resolvers.forEach((resolve) => resolve(jsonResponse(makeReplyResp())));
+    const first = result.current.submitReply(1, "hello", 0);
+    const duplicate = result.current.submitReply(1, "hello", 0);
+    resolvers.forEach((resolve) => resolve(jsonResponse(makeReplyResp())));
 
-      let duplicateResult: unknown = "sentinel";
-      await act(async () => {
-        await first;
-        duplicateResult = await duplicate;
-      });
-
-      expect(duplicateResult).toBeNull();
-      expect(global.fetch).toHaveBeenCalledTimes(1);
+    let duplicateResult: unknown = "sentinel";
+    await act(async () => {
+      await first;
+      duplicateResult = await duplicate;
     });
 
-    it("不同评论并发提交回复互不阻塞，均能成功返回", async () => {
-      const resolvers: Array<(response: Response) => void> = [];
-      vi.mocked(global.fetch).mockImplementation(
-        () => new Promise<Response>((resolve) => resolvers.push(resolve)),
-      );
-      const { result } = renderHook(() => useCommentSubmit("article", 5));
-
-      const forCommentA = result.current.submitReply(1, "回复A", 0);
-      const forCommentB = result.current.submitReply(2, "回复B", 0);
-      resolvers.forEach((resolve, index) =>
-        resolve(jsonResponse(makeReplyResp({ id: index === 0 ? 10 : 11 }))),
-      );
-
-      let resultA: unknown;
-      let resultB: unknown;
-      await act(async () => {
-        resultA = await forCommentA;
-        resultB = await forCommentB;
-      });
-
-      expect(resultA).not.toBeNull();
-      expect(resultB).not.toBeNull();
-      expect(global.fetch).toHaveBeenCalledTimes(2);
-    });
+    expect(duplicateResult).toBeNull();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
   });
+
+  it("不同评论并发提交回复互不阻塞，均能成功返回", async () => {
+    const resolvers: Array<(response: Response) => void> = [];
+    vi.mocked(global.fetch).mockImplementation(
+      () => new Promise<Response>((resolve) => resolvers.push(resolve)),
+    );
+    const { result } = renderHook(() => useCommentSubmit("article", 5));
+
+    const forCommentA = result.current.submitReply(1, "回复A", 0);
+    const forCommentB = result.current.submitReply(2, "回复B", 0);
+    resolvers.forEach((resolve, index) =>
+      resolve(jsonResponse(makeReplyResp({ id: index === 0 ? 10 : 11 }))),
+    );
+
+    let resultA: unknown;
+    let resultB: unknown;
+    await act(async () => {
+      resultA = await forCommentA;
+      resultB = await forCommentB;
+    });
+
+    expect(resultA).not.toBeNull();
+    expect(resultB).not.toBeNull();
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+});
 ```
 
 - [ ] **Step 2: 运行测试确认新用例失败**
@@ -224,10 +226,12 @@ EOF
 ### Task 2: 修复 `useCommentEdit` 的全局并发提交锁
 
 **Files:**
+
 - Modify: `apps/web/hooks/use-comment-edit.ts`
 - Test: `apps/web/hooks/use-comment-edit.test.ts`
 
 **Interfaces:**
+
 - Consumes: 无
 - Produces: `editComment`/`editReply` 签名不变；不同 target 并发调用互不阻塞，同一 target 并发重复调用仍返回 `null`（保留现有「编辑请求进行中时忽略重复提交」用例的行为）。
 
@@ -236,28 +240,28 @@ EOF
 在 `apps/web/hooks/use-comment-edit.test.ts` 的 `describe("幂等键复用规则", ...)` 块内，紧跟在「编辑请求进行中时忽略重复提交」这个 `it` 之后新增：
 
 ```ts
-    it("不同评论并发编辑互不阻塞，均能成功返回", async () => {
-      const resolvers: Array<(response: Response) => void> = [];
-      vi.mocked(global.fetch).mockImplementation(
-        () => new Promise<Response>((resolve) => resolvers.push(resolve)),
-      );
-      const { result } = renderHook(() => useCommentEdit("article"));
+it("不同评论并发编辑互不阻塞，均能成功返回", async () => {
+  const resolvers: Array<(response: Response) => void> = [];
+  vi.mocked(global.fetch).mockImplementation(
+    () => new Promise<Response>((resolve) => resolvers.push(resolve)),
+  );
+  const { result } = renderHook(() => useCommentEdit("article"));
 
-      const forCommentA = result.current.editComment(7, "编辑A");
-      const forCommentB = result.current.editComment(9, "编辑B");
-      resolvers.forEach((resolve) => resolve(jsonResponse(makeCommentResp())));
+  const forCommentA = result.current.editComment(7, "编辑A");
+  const forCommentB = result.current.editComment(9, "编辑B");
+  resolvers.forEach((resolve) => resolve(jsonResponse(makeCommentResp())));
 
-      let resultA: unknown;
-      let resultB: unknown;
-      await act(async () => {
-        resultA = await forCommentA;
-        resultB = await forCommentB;
-      });
+  let resultA: unknown;
+  let resultB: unknown;
+  await act(async () => {
+    resultA = await forCommentA;
+    resultB = await forCommentB;
+  });
 
-      expect(resultA).not.toBeNull();
-      expect(resultB).not.toBeNull();
-      expect(global.fetch).toHaveBeenCalledTimes(2);
-    });
+  expect(resultA).not.toBeNull();
+  expect(resultB).not.toBeNull();
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+});
 ```
 
 - [ ] **Step 2: 运行测试确认新用例失败**
@@ -373,10 +377,12 @@ EOF
 ### Task 3: 修复 `useGuestbookSubmit` 的全局并发提交锁
 
 **Files:**
+
 - Modify: `apps/web/hooks/use-guestbook-submit.ts`
 - Test: `apps/web/hooks/use-guestbook-submit.test.ts`
 
 **Interfaces:**
+
 - Consumes: 无
 - Produces: `submitEntry`/`submitReply`/`editEntry` 签名不变；不同 target 并发调用互不阻塞。
 
@@ -385,54 +391,53 @@ EOF
 在 `apps/web/hooks/use-guestbook-submit.test.ts` 文件末尾、最外层 `describe("useGuestbookSubmit", ...)` 结束 `}` 之前新增：
 
 ```ts
+describe("并发提交", () => {
+  it("不同留言并发提交回复互不阻塞，均能成功返回", async () => {
+    const resolvers: Array<(response: Response) => void> = [];
+    vi.mocked(fetch).mockImplementation(
+      () => new Promise<Response>((resolve) => resolvers.push(resolve)),
+    );
+    const { result } = renderHook(() => useGuestbookSubmit());
 
-  describe("并发提交", () => {
-    it("不同留言并发提交回复互不阻塞，均能成功返回", async () => {
-      const resolvers: Array<(response: Response) => void> = [];
-      vi.mocked(fetch).mockImplementation(
-        () => new Promise<Response>((resolve) => resolvers.push(resolve)),
-      );
-      const { result } = renderHook(() => useGuestbookSubmit());
+    const forEntryA = result.current.submitReply(1, "回复A");
+    const forEntryB = result.current.submitReply(2, "回复B");
+    resolvers.forEach((resolve, index) =>
+      resolve(jsonResponse({ ...mockReply, id: index === 0 ? 10 : 11 })),
+    );
 
-      const forEntryA = result.current.submitReply(1, "回复A");
-      const forEntryB = result.current.submitReply(2, "回复B");
-      resolvers.forEach((resolve, index) =>
-        resolve(jsonResponse({ ...mockReply, id: index === 0 ? 10 : 11 })),
-      );
-
-      let resultA: unknown;
-      let resultB: unknown;
-      await act(async () => {
-        resultA = await forEntryA;
-        resultB = await forEntryB;
-      });
-
-      expect(resultA).not.toBeNull();
-      expect(resultB).not.toBeNull();
-      expect(vi.mocked(fetch)).toHaveBeenCalledTimes(2);
+    let resultA: unknown;
+    let resultB: unknown;
+    await act(async () => {
+      resultA = await forEntryA;
+      resultB = await forEntryB;
     });
 
-    it("同一留言并发重复提交回复时第二次调用短路返回 null", async () => {
-      const resolvers: Array<(response: Response) => void> = [];
-      vi.mocked(fetch).mockImplementation(
-        () => new Promise<Response>((resolve) => resolvers.push(resolve)),
-      );
-      const { result } = renderHook(() => useGuestbookSubmit());
-
-      const first = result.current.submitReply(1, "回复A", 0);
-      const duplicate = result.current.submitReply(1, "回复A", 0);
-      resolvers.forEach((resolve) => resolve(jsonResponse(mockReply)));
-
-      let duplicateResult: unknown = "sentinel";
-      await act(async () => {
-        await first;
-        duplicateResult = await duplicate;
-      });
-
-      expect(duplicateResult).toBeNull();
-      expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1);
-    });
+    expect(resultA).not.toBeNull();
+    expect(resultB).not.toBeNull();
+    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(2);
   });
+
+  it("同一留言并发重复提交回复时第二次调用短路返回 null", async () => {
+    const resolvers: Array<(response: Response) => void> = [];
+    vi.mocked(fetch).mockImplementation(
+      () => new Promise<Response>((resolve) => resolvers.push(resolve)),
+    );
+    const { result } = renderHook(() => useGuestbookSubmit());
+
+    const first = result.current.submitReply(1, "回复A", 0);
+    const duplicate = result.current.submitReply(1, "回复A", 0);
+    resolvers.forEach((resolve) => resolve(jsonResponse(mockReply)));
+
+    let duplicateResult: unknown = "sentinel";
+    await act(async () => {
+      await first;
+      duplicateResult = await duplicate;
+    });
+
+    expect(duplicateResult).toBeNull();
+    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1);
+  });
+});
 ```
 
 - [ ] **Step 2: 运行测试确认「不同留言并发提交」用例失败**
@@ -585,10 +590,12 @@ EOF
 ### Task 4: `useCommentSectionState` 新增细粒度提交函数
 
 **Files:**
+
 - Modify: `apps/web/components/comments/hooks/use-comment-section-state.ts`
 - Test: `apps/web/components/comments/hooks/use-comment-section-state.test.ts`
 
 **Interfaces:**
+
 - Consumes: 该 hook 内部已有的 `submitReply`/`editComment`/`editReply`/`incrementReplyCount`/`setPendingReplies`/`updateComment`/`setEditedReplies`/`userId`/`profile`/`enrichReplyFromAuthor`/`enrichCommentAuthor`（均已在文件中定义/导入，无需新增依赖）。
 - Produces（供 Task 6 使用）：
   - `handleReplySubmit(commentId: number, parentReplyId: number | undefined, content: string): Promise<boolean>`
@@ -601,117 +608,116 @@ EOF
 在 `apps/web/components/comments/hooks/use-comment-section-state.test.ts` 的最后一个 `describe("编辑", ...)` 块**之后**（即最外层 `describe("useCommentSectionState", ...)` 结束 `}` 之前）新增：
 
 ```ts
+describe("细粒度提交函数（内联编辑器用）", () => {
+  it("handleReplySubmit 成功时增加回复计数、写入 pendingReplies 并返回 true", async () => {
+    const { result } = renderHook(() =>
+      useCommentSectionState({ targetType: "article", targetId: 1 }),
+    );
 
-  describe("细粒度提交函数（内联编辑器用）", () => {
-    it("handleReplySubmit 成功时增加回复计数、写入 pendingReplies 并返回 true", async () => {
-      const { result } = renderHook(() =>
-        useCommentSectionState({ targetType: "article", targetId: 1 }),
-      );
-
-      let ok = false;
-      await act(async () => {
-        ok = await result.current.handleReplySubmit(1, undefined, "回复一下");
-      });
-
-      expect(ok).toBe(true);
-      expect(mockSubmitReply).toHaveBeenCalledWith(1, "回复一下", undefined);
-      expect(mockIncrementReplyCount).toHaveBeenCalledWith(1);
-      expect(result.current.pendingReplies[1]).toEqual({
-        ...makeReply(10),
-        from_user: {
-          id: 1,
-          username: "alice@example.com",
-          nickname: "Alice",
-          roles: ["user"],
-        },
-      });
+    let ok = false;
+    await act(async () => {
+      ok = await result.current.handleReplySubmit(1, undefined, "回复一下");
     });
 
-    it("handleReplySubmit 内容为空白时不发起请求并返回 false", async () => {
-      const { result } = renderHook(() =>
-        useCommentSectionState({ targetType: "article", targetId: 1 }),
-      );
-
-      let ok = true;
-      await act(async () => {
-        ok = await result.current.handleReplySubmit(1, undefined, "   ");
-      });
-
-      expect(ok).toBe(false);
-      expect(mockSubmitReply).not.toHaveBeenCalled();
-    });
-
-    it("handleReplySubmit 失败（submitReply 返回 null）时返回 false 且不增加计数", async () => {
-      mockSubmitReply.mockResolvedValueOnce(null);
-      const { result } = renderHook(() =>
-        useCommentSectionState({ targetType: "article", targetId: 1 }),
-      );
-
-      let ok = true;
-      await act(async () => {
-        ok = await result.current.handleReplySubmit(1, undefined, "回复一下");
-      });
-
-      expect(ok).toBe(false);
-      expect(mockIncrementReplyCount).not.toHaveBeenCalled();
-    });
-
-    it("handleEditCommentSubmit 成功时调用 updateComment 原位替换并返回 true", async () => {
-      const updated = { ...makeComment(1), content: "编辑后内容" };
-      mockEditComment.mockResolvedValueOnce(updated);
-      const { result } = renderHook(() =>
-        useCommentSectionState({ targetType: "article", targetId: 1 }),
-      );
-
-      let ok = false;
-      await act(async () => {
-        ok = await result.current.handleEditCommentSubmit(1, "编辑后内容");
-      });
-
-      expect(ok).toBe(true);
-      expect(mockEditComment).toHaveBeenCalledWith(1, "编辑后内容");
-      expect(mockUpdateComment).toHaveBeenCalledWith(updated);
-    });
-
-    it("handleEditReplySubmit 成功时写入 editedReplies 并返回 true", async () => {
-      const updatedReply = { ...makeReply(10), content: "编辑后回复" };
-      mockEditReply.mockResolvedValueOnce(updatedReply);
-      const { result } = renderHook(() =>
-        useCommentSectionState({ targetType: "article", targetId: 1 }),
-      );
-
-      let ok = false;
-      await act(async () => {
-        ok = await result.current.handleEditReplySubmit(10, 0, 1, "编辑后回复");
-      });
-
-      expect(ok).toBe(true);
-      expect(mockEditReply).toHaveBeenCalledWith(10, 0, "编辑后回复");
-      expect(result.current.editedReplies[1]).toEqual({
-        ...updatedReply,
-        from_user: {
-          id: 1,
-          username: "alice@example.com",
-          nickname: "Alice",
-          roles: ["user"],
-        },
-      });
-    });
-
-    it("handleEditReplySubmit 失败时返回 false", async () => {
-      mockEditReply.mockResolvedValueOnce(null);
-      const { result } = renderHook(() =>
-        useCommentSectionState({ targetType: "article", targetId: 1 }),
-      );
-
-      let ok = true;
-      await act(async () => {
-        ok = await result.current.handleEditReplySubmit(10, 0, 1, "编辑后回复");
-      });
-
-      expect(ok).toBe(false);
+    expect(ok).toBe(true);
+    expect(mockSubmitReply).toHaveBeenCalledWith(1, "回复一下", undefined);
+    expect(mockIncrementReplyCount).toHaveBeenCalledWith(1);
+    expect(result.current.pendingReplies[1]).toEqual({
+      ...makeReply(10),
+      from_user: {
+        id: 1,
+        username: "alice@example.com",
+        nickname: "Alice",
+        roles: ["user"],
+      },
     });
   });
+
+  it("handleReplySubmit 内容为空白时不发起请求并返回 false", async () => {
+    const { result } = renderHook(() =>
+      useCommentSectionState({ targetType: "article", targetId: 1 }),
+    );
+
+    let ok = true;
+    await act(async () => {
+      ok = await result.current.handleReplySubmit(1, undefined, "   ");
+    });
+
+    expect(ok).toBe(false);
+    expect(mockSubmitReply).not.toHaveBeenCalled();
+  });
+
+  it("handleReplySubmit 失败（submitReply 返回 null）时返回 false 且不增加计数", async () => {
+    mockSubmitReply.mockResolvedValueOnce(null);
+    const { result } = renderHook(() =>
+      useCommentSectionState({ targetType: "article", targetId: 1 }),
+    );
+
+    let ok = true;
+    await act(async () => {
+      ok = await result.current.handleReplySubmit(1, undefined, "回复一下");
+    });
+
+    expect(ok).toBe(false);
+    expect(mockIncrementReplyCount).not.toHaveBeenCalled();
+  });
+
+  it("handleEditCommentSubmit 成功时调用 updateComment 原位替换并返回 true", async () => {
+    const updated = { ...makeComment(1), content: "编辑后内容" };
+    mockEditComment.mockResolvedValueOnce(updated);
+    const { result } = renderHook(() =>
+      useCommentSectionState({ targetType: "article", targetId: 1 }),
+    );
+
+    let ok = false;
+    await act(async () => {
+      ok = await result.current.handleEditCommentSubmit(1, "编辑后内容");
+    });
+
+    expect(ok).toBe(true);
+    expect(mockEditComment).toHaveBeenCalledWith(1, "编辑后内容");
+    expect(mockUpdateComment).toHaveBeenCalledWith(updated);
+  });
+
+  it("handleEditReplySubmit 成功时写入 editedReplies 并返回 true", async () => {
+    const updatedReply = { ...makeReply(10), content: "编辑后回复" };
+    mockEditReply.mockResolvedValueOnce(updatedReply);
+    const { result } = renderHook(() =>
+      useCommentSectionState({ targetType: "article", targetId: 1 }),
+    );
+
+    let ok = false;
+    await act(async () => {
+      ok = await result.current.handleEditReplySubmit(10, 0, 1, "编辑后回复");
+    });
+
+    expect(ok).toBe(true);
+    expect(mockEditReply).toHaveBeenCalledWith(10, 0, "编辑后回复");
+    expect(result.current.editedReplies[1]).toEqual({
+      ...updatedReply,
+      from_user: {
+        id: 1,
+        username: "alice@example.com",
+        nickname: "Alice",
+        roles: ["user"],
+      },
+    });
+  });
+
+  it("handleEditReplySubmit 失败时返回 false", async () => {
+    mockEditReply.mockResolvedValueOnce(null);
+    const { result } = renderHook(() =>
+      useCommentSectionState({ targetType: "article", targetId: 1 }),
+    );
+
+    let ok = true;
+    await act(async () => {
+      ok = await result.current.handleEditReplySubmit(10, 0, 1, "编辑后回复");
+    });
+
+    expect(ok).toBe(false);
+  });
+});
 ```
 
 - [ ] **Step 2: 运行测试确认失败**
@@ -724,58 +730,58 @@ Expected: FAIL — `result.current.handleReplySubmit` 等是 `undefined`，因�
 打开 `apps/web/components/comments/hooks/use-comment-section-state.ts`，在 `handleChange` 定义之后（`return {` 之前）插入：
 
 ```ts
-  // 内联编辑器专用：不经过 replyTarget/editTarget，直接提交并处理副作用，返回是否成功。
-  const handleReplySubmit = useCallback(
-    async (
-      commentId: number,
-      parentReplyId: number | undefined,
-      content: string,
-    ): Promise<boolean> => {
-      const trimmed = content.trim();
-      if (!trimmed) return false;
-      const reply = await submitReply(commentId, trimmed, parentReplyId);
-      if (!reply) return false;
-      incrementReplyCount(commentId);
-      setPendingReplies((current) => ({
-        ...current,
-        [commentId]: enrichReplyFromAuthor(reply, userId, profile),
-      }));
-      return true;
-    },
-    [incrementReplyCount, profile, submitReply, userId],
-  );
+// 内联编辑器专用：不经过 replyTarget/editTarget，直接提交并处理副作用，返回是否成功。
+const handleReplySubmit = useCallback(
+  async (
+    commentId: number,
+    parentReplyId: number | undefined,
+    content: string,
+  ): Promise<boolean> => {
+    const trimmed = content.trim();
+    if (!trimmed) return false;
+    const reply = await submitReply(commentId, trimmed, parentReplyId);
+    if (!reply) return false;
+    incrementReplyCount(commentId);
+    setPendingReplies((current) => ({
+      ...current,
+      [commentId]: enrichReplyFromAuthor(reply, userId, profile),
+    }));
+    return true;
+  },
+  [incrementReplyCount, profile, submitReply, userId],
+);
 
-  const handleEditCommentSubmit = useCallback(
-    async (commentId: number, content: string): Promise<boolean> => {
-      const trimmed = content.trim();
-      if (!trimmed) return false;
-      const updated = await editComment(commentId, trimmed);
-      if (!updated) return false;
-      updateComment(enrichCommentAuthor(updated, userId, profile));
-      return true;
-    },
-    [editComment, profile, updateComment, userId],
-  );
+const handleEditCommentSubmit = useCallback(
+  async (commentId: number, content: string): Promise<boolean> => {
+    const trimmed = content.trim();
+    if (!trimmed) return false;
+    const updated = await editComment(commentId, trimmed);
+    if (!updated) return false;
+    updateComment(enrichCommentAuthor(updated, userId, profile));
+    return true;
+  },
+  [editComment, profile, updateComment, userId],
+);
 
-  const handleEditReplySubmit = useCallback(
-    async (
-      replyId: number,
-      parentReplyId: number,
-      commentId: number,
-      content: string,
-    ): Promise<boolean> => {
-      const trimmed = content.trim();
-      if (!trimmed) return false;
-      const updated = await editReply(replyId, parentReplyId, trimmed);
-      if (!updated) return false;
-      setEditedReplies((current) => ({
-        ...current,
-        [commentId]: enrichReplyFromAuthor(updated, userId, profile),
-      }));
-      return true;
-    },
-    [editReply, profile, userId],
-  );
+const handleEditReplySubmit = useCallback(
+  async (
+    replyId: number,
+    parentReplyId: number,
+    commentId: number,
+    content: string,
+  ): Promise<boolean> => {
+    const trimmed = content.trim();
+    if (!trimmed) return false;
+    const updated = await editReply(replyId, parentReplyId, trimmed);
+    if (!updated) return false;
+    setEditedReplies((current) => ({
+      ...current,
+      [commentId]: enrichReplyFromAuthor(updated, userId, profile),
+    }));
+    return true;
+  },
+  [editReply, profile, userId],
+);
 ```
 
 然后在文件末尾的 `return { ... }` 对象里，紧跟 `handleChange,` 之后新增三行：
@@ -810,10 +816,12 @@ EOF
 ### Task 5: 新增共享组件 `InlineReplyEditor`
 
 **Files:**
+
 - Create: `apps/web/components/comments/inputs/inline-reply-editor.tsx`
 - Test: `apps/web/components/comments/inputs/inline-reply-editor.test.tsx`
 
 **Interfaces:**
+
 - Produces（供 Task 6、Task 7 使用）：
 
 ```ts
@@ -862,11 +870,7 @@ vi.mock("./rich-comment-input", () => ({
     <div data-testid="rich-input">
       {header}
       <span data-testid="placeholder">{placeholder}</span>
-      <textarea
-        data-testid="textarea"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
+      <textarea data-testid="textarea" value={value} onChange={(e) => onChange(e.target.value)} />
       <button type="button" disabled={isSubmitting} onClick={onSubmit}>
         发送
       </button>
@@ -927,9 +931,7 @@ describe("InlineReplyEditor", () => {
   it("提交进行中 RichCommentInput 收到 isSubmitting=true", async () => {
     const user = userEvent.setup();
     let resolveSubmit!: (v: boolean) => void;
-    const onSubmit = vi.fn(
-      () => new Promise<boolean>((resolve) => (resolveSubmit = resolve)),
-    );
+    const onSubmit = vi.fn(() => new Promise<boolean>((resolve) => (resolveSubmit = resolve)));
     render(<InlineReplyEditor placeholder="写点什么" onSubmit={onSubmit} />);
 
     await user.type(screen.getByTestId("textarea"), "hello");
@@ -1031,19 +1033,27 @@ EOF
 > **⚠️ 执行期修正（双模式契约）**：原始 Step 3/7/9 的设计（下方仍保留，作为「新增内联提交路径」的实现基础）错误地假设可以直接把 `onReply`/`onEditComment`/`onEditReply`（目标态回调）整体替换成 `onSubmitReply`/`onSubmitEditComment`/`onSubmitEditReply`（内联提交回调）。但 `CommentList`/`CommentItem`/`CommentReplies` 同时被 `InlineComments`（本任务）和 `ModalComments`（明确不改动的弹窗场景，仍然只会传 `onReply`/`onEditComment`/`onEditReply`）共用——完全替换会导致 `modal-comments.tsx` 编译失败。
 >
 > 实际落地时改为**双模式共存**：三个组件的 props 里目标态回调（`onReply?`/`onEditComment?`/`onEditReply?`，全部可选，类型不变）和内联提交回调（`onSubmitReply?`/`onSubmitEditComment?`/`onSubmitEditReply?`，均改为可选）**同时存在**；每处入口按「内联回调优先，否则回退到目标态回调」解析：
+>
 > ```ts
 > const canReply = Boolean(onSubmitReply || onReply);
 > const handleReply = () => {
->   if (!userId) { openLoginModal(); return; }
->   if (onSubmitReply) { /* 内联模式：本地 isReplying=true */ return; }
+>   if (!userId) {
+>     openLoginModal();
+>     return;
+>   }
+>   if (onSubmitReply) {
+>     /* 内联模式：本地 isReplying=true */ return;
+>   }
 >   onReply?.(target); // 目标态模式：原样转发，行为与改造前逐字一致
 > };
 > ```
+>
 > `onEditComment`/`onEditReply` 同理。`InlineComments` 全程只传 `onSubmit*` 三个新回调；`modal-comments.tsx` 完全不用改一行代码——它继续传 `onReply`/`onEditComment`/`onEditReply`，自动落入目标态分支，行为零变化。`CommentItem`/`CommentReplies` 之间不再用 `NOOP_SUBMIT_REPLY` 兜底转发（会让 `canReply` 误判为真），而是把两组回调原样透传下去，由更内层的组件做同样的「优先取内联」判断。
 >
 > 下面 Step 1/3/5/7/9 里的代码块是「新增内联路径」这一半的设计基础，实现时需要按上面这条规则，把目标态回调（`onReply?`/`onEditComment?`/`onEditReply?`，及 `comment-item.tsx` 里已导出的 `ReplyTarget`/`EditTarget`/`ReplyEditTarget` 类型）加回各 Props 接口，而不是删除它们。
 
 **Files:**
+
 - Modify: `apps/web/components/comments/parts/comment-replies.tsx`
 - Modify: `apps/web/components/comments/parts/comment-replies.test.tsx`
 - Modify: `apps/web/components/comments/parts/comment-item.tsx`
@@ -1055,6 +1065,7 @@ EOF
 - Delete: `apps/web/components/comments/views/inline-comments.composition.test.tsx`（整份测试的前提——`InlineComments` 靠 `replyTarget` 驱动顶部编辑器 header——不再成立）
 
 **Interfaces:**
+
 - Consumes: Task 4 的 `handleReplySubmit`/`handleEditCommentSubmit`/`handleEditReplySubmit`；Task 5 的 `InlineReplyEditor`；`comment-item.tsx` 里已导出、不变的 `ReplyTarget`/`EditTarget`/`ReplyEditTarget` 类型（继续给 `ModalComments`/`use-comment-section-state.ts` 用，本任务不删除这几个类型声明，且要在 `CommentRepliesProps`/`CommentItemProps`/`CommentListProps` 里重新作为可选字段引用，见上方「执行期修正」）。
 - Produces（供 Task 7 复用）：`CommentReplies` 最终双模式契约（`onSubmitReply`/`onSubmitEditReply` 均为可选，与 `onReply`/`onEditReply` 并存）：
 
@@ -1066,12 +1077,21 @@ export interface CommentRepliesProps {
   pendingReply?: CommentReplyResp | null;
   editedReply?: CommentReplyResp | null;
   onReply?: (target: ReplyTarget) => void;
-  onSubmitReply?: (commentId: number, parentReplyId: number | undefined, content: string) => Promise<boolean>;
+  onSubmitReply?: (
+    commentId: number,
+    parentReplyId: number | undefined,
+    content: string,
+  ) => Promise<boolean>;
   currentUserId?: number | null;
   onDeleteReply?: (replyId: number) => Promise<boolean>;
   onReplyDeleted?: (replyId: number) => void;
   onEditReply?: (target: ReplyEditTarget) => void;
-  onSubmitEditReply?: (replyId: number, parentReplyId: number, commentId: number, content: string) => Promise<boolean>;
+  onSubmitEditReply?: (
+    replyId: number,
+    parentReplyId: number,
+    commentId: number,
+    content: string,
+  ) => Promise<boolean>;
   onOpenChange?: (open: boolean) => void;
   linkProfile?: boolean;
 }
@@ -1083,7 +1103,7 @@ Task 7（`GuestbookItem`）只会传 `onSubmitReply`/`onSubmitEditReply`（新�
 
 打开 `apps/web/components/comments/parts/comment-replies.test.tsx`：
 
-0) `InlineReplyEditor` 内部渲染的是 `RichCommentInput`→`@repo/editor` 的 `RichEditor`（Tiptap contenteditable，`placeholder` 是 CSS `data-placeholder` 伪元素而非真实 DOM 属性，也没有 `value` 表单控件），所以**不能**像对普通 `<textarea>` 那样用 `getByPlaceholderText`/`getByDisplayValue`/`user.type` 去查询和交互。在顶部 mock 区（紧挨着其它 `vi.mock(...)` 调用之后）新增对 `InlineReplyEditor` 的 mock，和 `comment-item.test.tsx`（本任务 Step 5）、`guestbook-item.test.tsx`（Task 7）用的是同一套 mock 形状：
+0. `InlineReplyEditor` 内部渲染的是 `RichCommentInput`→`@repo/editor` 的 `RichEditor`（Tiptap contenteditable，`placeholder` 是 CSS `data-placeholder` 伪元素而非真实 DOM 属性，也没有 `value` 表单控件），所以**不能**像对普通 `<textarea>` 那样用 `getByPlaceholderText`/`getByDisplayValue`/`user.type` 去查询和交互。在顶部 mock 区（紧挨着其它 `vi.mock(...)` 调用之后）新增对 `InlineReplyEditor` 的 mock，和 `comment-item.test.tsx`（本任务 Step 5）、`guestbook-item.test.tsx`（Task 7）用的是同一套 mock 形状：
 
 ```tsx
 vi.mock("../inputs/inline-reply-editor", () => ({
@@ -1110,9 +1130,9 @@ vi.mock("../inputs/inline-reply-editor", () => ({
 }));
 ```
 
-1) 顶部所有 `onReply={vi.fn()}` 的地方，保留原样但把 prop 名从 `onReply` 换成 `onSubmitReply`，并让传入的 mock 是 `vi.fn().mockResolvedValue(true)`（因为新签名返回 `Promise<boolean>`）。**这一步是纯改名，不改测试意图**——用编辑器的多光标/批量替换：把整份文件里的 `onReply={vi.fn()}` 全部替换为 `onSubmitReply={vi.fn().mockResolvedValue(true)}`，把 `onReply={onReply}`（有名字变量的那处）保留变量名但改成 `onSubmitReply={onReply}`（后面 Step 会把变量本身也重命名，见下）。
+1. 顶部所有 `onReply={vi.fn()}` 的地方，保留原样但把 prop 名从 `onReply` 换成 `onSubmitReply`，并让传入的 mock 是 `vi.fn().mockResolvedValue(true)`（因为新签名返回 `Promise<boolean>`）。**这一步是纯改名，不改测试意图**——用编辑器的多光标/批量替换：把整份文件里的 `onReply={vi.fn()}` 全部替换为 `onSubmitReply={vi.fn().mockResolvedValue(true)}`，把 `onReply={onReply}`（有名字变量的那处）保留变量名但改成 `onSubmitReply={onReply}`（后面 Step 会把变量本身也重命名，见下）。
 
-2) 把「点击回复内的回复按钮触发 onReply」这个 `it` 替换为（用上面新增的 mock，断言 `data-testid`/`onSubmit` 回调，而不是查询真实富文本编辑器）：
+2. 把「点击回复内的回复按钮触发 onReply」这个 `it` 替换为（用上面新增的 mock，断言 `data-testid`/`onSubmit` 回调，而不是查询真实富文本编辑器）：
 
 ```ts
   it("点击回复内的回复按钮展开内联回复框，提交时调用 onSubmitReply", async () => {
@@ -1161,7 +1181,7 @@ vi.mock("../inputs/inline-reply-editor", () => ({
   });
 ```
 
-3) 把「作者编辑入口」`describe` 块里的三个 `it`（「作者点击编辑按钮触发 onEditReply」「编辑 pending_content 时初始内容为待审版本」「非作者不显示编辑按钮」「未提供 onEditReply 时不显示编辑按钮」）整体替换为：
+3. 把「作者编辑入口」`describe` 块里的三个 `it`（「作者点击编辑按钮触发 onEditReply」「编辑 pending_content 时初始内容为待审版本」「非作者不显示编辑按钮」「未提供 onEditReply 时不显示编辑按钮」）整体替换为：
 
 ```ts
   describe("作者编辑入口", () => {
@@ -1272,7 +1292,7 @@ vi.mock("../inputs/inline-reply-editor", () => ({
   });
 ```
 
-4) 「targetType=guestbook 时点击回复按钮触发 onReply」这个 `it` 替换为：
+4. 「targetType=guestbook 时点击回复按钮触发 onReply」这个 `it` 替换为：
 
 ```ts
   it("targetType=guestbook 时点击回复按钮展开内联回复框", async () => {
@@ -1295,7 +1315,7 @@ vi.mock("../inputs/inline-reply-editor", () => ({
   });
 ```
 
-5) 文件顶部所有其余 `onReply={vi.fn()}`（在 replyCount=0、可见性、点赞、删除、加载、审核展示等与回复/编辑无关的用例里）批量重命名为 `onSubmitReply={vi.fn().mockResolvedValue(true)}`；对应地把函数签名 `onReply={onReply}` (line ~123 `replyCount=0` 那条 和其它保留局部变量名的地方) 一并改名成 `onSubmitReply`。
+5. 文件顶部所有其余 `onReply={vi.fn()}`（在 replyCount=0、可见性、点赞、删除、加载、审核展示等与回复/编辑无关的用例里）批量重命名为 `onSubmitReply={vi.fn().mockResolvedValue(true)}`；对应地把函数签名 `onReply={onReply}` (line ~123 `replyCount=0` 那条 和其它保留局部变量名的地方) 一并改名成 `onSubmitReply`。
 
 - [ ] **Step 2: 运行测试确认失败**
 
@@ -1700,7 +1720,9 @@ describe("CommentItem", () => {
   it("内联回复框提交成功后调用 onSubmitReply 并收起", async () => {
     const user = userEvent.setup();
     const onSubmitReply = vi.fn().mockResolvedValue(true);
-    render(<CommentItem comment={baseComment} targetType="article" onSubmitReply={onSubmitReply} />);
+    render(
+      <CommentItem comment={baseComment} targetType="article" onSubmitReply={onSubmitReply} />,
+    );
 
     await user.click(screen.getByText("回复"));
     await user.click(screen.getByText("提交"));
@@ -1812,7 +1834,9 @@ describe("CommentItem", () => {
   it("转发 onSubmitReply 到 CommentReplies", async () => {
     const user = userEvent.setup();
     const onSubmitReply = vi.fn().mockResolvedValue(true);
-    render(<CommentItem comment={baseComment} targetType="article" onSubmitReply={onSubmitReply} />);
+    render(
+      <CommentItem comment={baseComment} targetType="article" onSubmitReply={onSubmitReply} />,
+    );
 
     await user.click(screen.getByText("回复子评论"));
     expect(onSubmitReply).toHaveBeenCalledWith(1, 2, "子回复内容");
@@ -2170,22 +2194,24 @@ export function CommentList({
 ……在 JSX 里：
 
 ```tsx
-        {comments.map((comment) => (
-          <CommentItem
-            key={comment.id}
-            comment={comment}
-            targetType={targetType}
-            onSubmitReply={onSubmitReply}
-            onLike={onLike}
-            currentUserId={currentUserId}
-            onDelete={onDelete}
-            onDeleteReply={onDeleteReply}
-            onSubmitEditComment={onSubmitEditComment}
-            onSubmitEditReply={onSubmitEditReply}
-            pendingReply={pendingReplies[comment.id] ?? null}
-            editedReply={editedReplies?.[comment.id] ?? null}
-          />
-        ))}
+{
+  comments.map((comment) => (
+    <CommentItem
+      key={comment.id}
+      comment={comment}
+      targetType={targetType}
+      onSubmitReply={onSubmitReply}
+      onLike={onLike}
+      currentUserId={currentUserId}
+      onDelete={onDelete}
+      onDeleteReply={onDeleteReply}
+      onSubmitEditComment={onSubmitEditComment}
+      onSubmitEditReply={onSubmitEditReply}
+      pendingReply={pendingReplies[comment.id] ?? null}
+      editedReply={editedReplies?.[comment.id] ?? null}
+    />
+  ));
+}
 ```
 
 在 `apps/web/components/comments/parts/comment-list.test.tsx` 中，把顶部 import 里的 `import type { ReplyTarget } from "./comment-item";` 删除，把 `defaultProps` 里：
@@ -2334,17 +2360,17 @@ vi.mock("../parts/comment-item", () => ({
 在保留的「评论列表渲染」用例之后新增一个用例，验证新回调被正确透传（替代被删掉的滚动用例）：
 
 ```tsx
-  it("点击评论项的回复按钮转发到 CommentList 的 onSubmitReply", async () => {
-    const user = userEvent.setup();
-    render(<InlineComments targetType="article" targetId={1} />);
-    await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
+it("点击评论项的回复按钮转发到 CommentList 的 onSubmitReply", async () => {
+  const user = userEvent.setup();
+  render(<InlineComments targetType="article" targetId={1} />);
+  await waitFor(() => expect(screen.getByText("评论内容 1")).toBeTruthy());
 
-    // mock 的 CommentItem 在点击时会调用 onSubmitReply(commentId, undefined, "内容")，
-    // 不应抛出异常（真实场景下会触发 use-comment-section-state 的 handleReplySubmit）。
-    await expect(
-      user.click(screen.getAllByRole("button", { name: "回复" })[0]!),
-    ).resolves.not.toThrow();
-  });
+  // mock 的 CommentItem 在点击时会调用 onSubmitReply(commentId, undefined, "内容")，
+  // 不应抛出异常（真实场景下会触发 use-comment-section-state 的 handleReplySubmit）。
+  await expect(
+    user.click(screen.getAllByRole("button", { name: "回复" })[0]!),
+  ).resolves.not.toThrow();
+});
 ```
 
 （`vi.useFakeTimers`/`scrollTo`/`navbar` 相关的 setup 代码只在被删除的那个用例里使用，一并删除；若删除后该文件不再需要 `vi.useFakeTimers`/`vi.spyOn(window, "scrollTo")`，确认没有其它用例依赖后直接移除这些引用。）
@@ -2388,6 +2414,7 @@ EOF
 ### Task 7: 留言板内联化 — `GuestbookPage` + `GuestbookInputBar` + `GuestbookItem` + `GuestbookList`
 
 **Files:**
+
 - Modify: `apps/web/components/guestbook/guestbook-page.tsx`
 - Modify: `apps/web/components/guestbook/guestbook-page.test.tsx`
 - Modify: `apps/web/components/guestbook/guestbook-input-bar.tsx`
@@ -2398,6 +2425,7 @@ EOF
 - Modify: `apps/web/components/guestbook/guestbook-list.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 6 改造后的 `CommentReplies`（`onSubmitReply`/`onSubmitEditReply` 契约）；Task 5 的 `InlineReplyEditor`。
 - Produces: 无对外接口（`GuestbookPage` 是页面级组件，本任务是本 feature 的最后一段调用链）。
 
@@ -2593,7 +2621,7 @@ vi.mock("@/components/comments/inputs/inline-reply-editor", () => ({
 在「作者编辑」`describe` 块里，把「中风险留言：公开显示旧正文，编辑器初始正文为 pending_content」和「无 pending_content 时编辑器初始正文回退到正文」这两个 `it` 里的 `data-testid="inline-editor-value"` 断言目标保持不变（因为新 mock 用的也是同一个 `data-testid`），只需要把点击「保存」后的断言从
 
 ```ts
-      expect(onEdit).toHaveBeenCalledWith(1, "待审新版本");
+expect(onEdit).toHaveBeenCalledWith(1, "待审新版本");
 ```
 
 改为（这条不需要改，`onEdit` 签名本身没变）——**该 describe 块内容整体保持不变，无需修改**，因为 `onEdit` 的调用契约（`(id, content) => Promise<boolean>`）没有变化，只是内部渲染从旧的 `GuestbookInlineEditor`（本地组件）换成了共享的 `InlineReplyEditor`，测试用的 `data-testid` 保持一致（`inline-editor-value`）。
@@ -2868,19 +2896,19 @@ export function GuestbookList({
 ```
 
 ```tsx
-              <GuestbookItem
-                key={item.id}
-                item={item}
-                onSubmitReply={onSubmitReply}
-                onLike={onLike}
-                currentUserId={currentUserId}
-                onDelete={onDelete}
-                onDeleteReply={onDeleteReply}
-                onEdit={onEdit}
-                onSubmitEditReply={onSubmitEditReply}
-                pendingReply={pendingReplies[item.id] ?? null}
-                editedReply={editedReplies?.[item.id] ?? null}
-              />
+<GuestbookItem
+  key={item.id}
+  item={item}
+  onSubmitReply={onSubmitReply}
+  onLike={onLike}
+  currentUserId={currentUserId}
+  onDelete={onDelete}
+  onDeleteReply={onDeleteReply}
+  onEdit={onEdit}
+  onSubmitEditReply={onSubmitEditReply}
+  pendingReply={pendingReplies[item.id] ?? null}
+  editedReply={editedReplies?.[item.id] ?? null}
+/>
 ```
 
 在 `apps/web/components/guestbook/guestbook-list.test.tsx` 中，把 `defaultProps`（或等价对象）里的 `onReply: vi.fn()` 改为 `onSubmitReply: vi.fn().mockResolvedValue(true)`。
@@ -2928,10 +2956,7 @@ vi.mock("./guestbook-list", () => ({
       <button type="button" onClick={() => onPageChange(2)}>
         下一页
       </button>
-      <button
-        type="button"
-        onClick={() => void onSubmitEditReply?.(9, 0, 1, "修正后的回复")}
-      >
+      <button type="button" onClick={() => void onSubmitEditReply?.(9, 0, 1, "修正后的回复")}>
         编辑回复
       </button>
       <span data-testid="edited-reply">{editedReplies?.[1]?.content}</span>
@@ -2957,28 +2982,28 @@ vi.mock("./guestbook-input-bar", () => ({
 删掉「点击回复时滚动到编辑器」这个 `it`；把「留言回复编辑成功后按所属留言原位替换」这个 `it` 替换为：
 
 ```tsx
-  it("点击回复按钮提交后调用 submitReply 并增加回复计数", async () => {
-    const user = userEvent.setup();
-    render(<GuestbookPage initialPage={filledPage} />);
+it("点击回复按钮提交后调用 submitReply 并增加回复计数", async () => {
+  const user = userEvent.setup();
+  render(<GuestbookPage initialPage={filledPage} />);
 
-    await user.click(screen.getByRole("button", { name: "回复" }));
+  await user.click(screen.getByRole("button", { name: "回复" }));
 
-    // mock 的 useGuestbookSubmit().submitReply 默认返回 null（见 mock 定义），
-    // 这里只验证调用链路不抛异常、且没有对不存在的 replyTarget 状态产生依赖。
-    expect(screen.getByTestId("guestbook-list")).toBeTruthy();
+  // mock 的 useGuestbookSubmit().submitReply 默认返回 null（见 mock 定义），
+  // 这里只验证调用链路不抛异常、且没有对不存在的 replyTarget 状态产生依赖。
+  expect(screen.getByTestId("guestbook-list")).toBeTruthy();
+});
+
+it("留言回复编辑成功后按所属留言原位替换", async () => {
+  const user = userEvent.setup();
+  render(<GuestbookPage initialPage={filledPage} />);
+
+  await user.click(screen.getByRole("button", { name: "编辑回复" }));
+
+  await waitFor(() => {
+    expect(mockEditReply).toHaveBeenCalledWith(9, 0, "修正后的回复");
+    expect(screen.getByTestId("edited-reply")).toHaveTextContent("修正后的回复");
   });
-
-  it("留言回复编辑成功后按所属留言原位替换", async () => {
-    const user = userEvent.setup();
-    render(<GuestbookPage initialPage={filledPage} />);
-
-    await user.click(screen.getByRole("button", { name: "编辑回复" }));
-
-    await waitFor(() => {
-      expect(mockEditReply).toHaveBeenCalledWith(9, 0, "修正后的回复");
-      expect(screen.getByTestId("edited-reply")).toHaveTextContent("修正后的回复");
-    });
-  });
+});
 ```
 
 （`mockScrollIntoViewBelowFixedHeader`/`mockRunAfterSmoothScroll` 相关的 mock 与 import 继续保留——「分页切换加载完成后滚动到留言列表顶部」这个用例仍然需要它们，那部分逻辑属于分页滚动，与回复编辑器无关，本任务不改动。）

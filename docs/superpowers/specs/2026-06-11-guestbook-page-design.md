@@ -35,6 +35,7 @@ apps/web/hooks/
 ### 页面容器
 
 对齐碎语页 (`/snippets`) 的容器规格：
+
 ```
 max-width: 680px（原碎语为 960px，留言板更窄以聚焦阅读）
 margin: 0 auto
@@ -89,28 +90,28 @@ bg-white border border-border rounded-2xl overflow-hidden
 
 **精确对齐 `CommentItem` 布局**，数据来自 `GuestbookItemResp`：
 
-| 属性 | 规格 |
-|------|------|
-| 外层 flex gap | `gap-2.5`（10px） |
-| 头像 | `UserAvatar size="md"`（28px），降级显示用户名首字母 |
-| 用户名 | `text-xs font-bold` |
-| 身份标签（`mark` 字段） | `text-[10px] text-primary bg-primary/10 rounded-full px-2` |
-| 个人站点（`site` 字段） | `text-[11px] text-(--fg3)` 链接，可选显示 |
-| 时间 | `text-[11px] text-(--fg3)` |
-| 正文 | `text-[12px] text-(--fg1) pr-7.5`，相对定位父容器 |
-| 点赞按钮 | `absolute top-0 right-1.75`，INS 风格竖排（图标 + 数字），`SvgIcon name="heart"/"heart-fill"` |
-| 回复按钮 | `mt-1.5 text-[11px] font-medium text-(--fg3)` |
+| 属性                    | 规格                                                                                          |
+| ----------------------- | --------------------------------------------------------------------------------------------- |
+| 外层 flex gap           | `gap-2.5`（10px）                                                                             |
+| 头像                    | `UserAvatar size="md"`（28px），降级显示用户名首字母                                          |
+| 用户名                  | `text-xs font-bold`                                                                           |
+| 身份标签（`mark` 字段） | `text-[10px] text-primary bg-primary/10 rounded-full px-2`                                    |
+| 个人站点（`site` 字段） | `text-[11px] text-(--fg3)` 链接，可选显示                                                     |
+| 时间                    | `text-[11px] text-(--fg3)`                                                                    |
+| 正文                    | `text-[12px] text-(--fg1) pr-7.5`，相对定位父容器                                             |
+| 点赞按钮                | `absolute top-0 right-1.75`，INS 风格竖排（图标 + 数字），`SvgIcon name="heart"/"heart-fill"` |
+| 回复按钮                | `mt-1.5 text-[11px] font-medium text-(--fg3)`                                                 |
 
 ### 回复子列表（`guestbook-replies.tsx`）
 
 对齐 `CommentReplies`，调用 `/api/guestbook/comments/{id}/replies`（已有 proxy route）：
 
-| 属性 | 规格 |
-|------|------|
-| 展开触发 | `——展开 N 条回复`（带短横线），`text-xs text-(--fg2)` |
-| 回复头像 | `UserAvatar size="sm"`（22px） |
-| 回复正文 | `text-[13px] leading-[1.65] text-(--fg2)`，`@mention` 用 `text-primary` |
-| 点赞 | 同 CommentReplies，14px 心形图标 |
+| 属性                           | 规格                                                                    |
+| ------------------------------ | ----------------------------------------------------------------------- |
+| 展开触发                       | `——展开 N 条回复`（带短横线），`text-xs text-(--fg2)`                   |
+| 回复头像                       | `UserAvatar size="sm"`（22px）                                          |
+| 回复正文                       | `text-[13px] leading-[1.65] text-(--fg2)`，`@mention` 用 `text-primary` |
+| 点赞                           | 同 CommentReplies，14px 心形图标                                        |
 | 每页 5 条，"查看更多" / "收起" |
 
 ## 4. 固定底部输入栏（`guestbook-input-bar.tsx`）
@@ -150,19 +151,22 @@ border-color: rgba(124,58,237,0.25)
 1. **预挂载编辑器**：`RichCommentInput`（Tiptap）在组件 mount 时即挂载，用 `visibility: hidden; pointer-events: none` 隐藏，展开时切换为可见。不在首次点击时才 mount，避免 Tiptap 初始化导致的卡顿帧。
 
 2. **单容器 CSS 过渡**：
+
    ```css
    .bar-card {
      will-change: height, border-radius;
      transition:
-       height        .35s cubic-bezier(.4, 0, .2, 1),
-       border-radius .3s  cubic-bezier(.4, 0, .2, 1),
-       box-shadow    .3s  ease,
-       max-width     .35s cubic-bezier(.4, 0, .2, 1);
+       height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+       border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+       box-shadow 0.3s ease,
+       max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
    }
    ```
+
    不切换两个独立 DOM 层，只改 CSS 属性。
 
 3. **状态机打开流程**：
+
    ```
    idle → 用户点击
          → rAF 帧1：设置 open 状态（触发 CSS 过渡）
@@ -170,6 +174,7 @@ border-color: rgba(124,58,237,0.25)
    ```
 
 4. **收起流程**：
+
    ```
    open → 取消/点遮罩
         → 展开层 opacity 立即降为 0
@@ -187,11 +192,11 @@ border-color: rgba(124,58,237,0.25)
 
 ### Hooks
 
-| Hook | 职责 |
-|------|------|
-| `use-guestbook-list` | 分页列表，`loadMore`、`addItem`、`updateLike` |
-| `use-guestbook-submit` | 调用 `POST /api/guestbook`，返回新条目 |
-| `use-guestbook-like` | 调用 `POST /api/guestbook/{id}/like`，乐观更新 |
+| Hook                   | 职责                                           |
+| ---------------------- | ---------------------------------------------- |
+| `use-guestbook-list`   | 分页列表，`loadMore`、`addItem`、`updateLike`  |
+| `use-guestbook-submit` | 调用 `POST /api/guestbook`，返回新条目         |
+| `use-guestbook-like`   | 调用 `POST /api/guestbook/{id}/like`，乐观更新 |
 
 对齐 `useCommentList` / `useCommentSubmit` / `useCommentLike` 的命名和接口风格。
 
@@ -211,6 +216,7 @@ export const metadata: Metadata = {
 ## 7. 测试要求
 
 每个新增文件均需对应测试：
+
 - `page.test.tsx`：渲染不崩溃 + 核心内容存在
 - `guestbook-item.test.tsx`：props 渲染、点赞交互
 - `guestbook-list.test.tsx`：列表渲染、分页交互
@@ -221,9 +227,9 @@ export const metadata: Metadata = {
 
 ## 8. 响应式
 
-| 断点 | 行为 |
-|------|------|
+| 断点             | 行为                                        |
+| ---------------- | ------------------------------------------- |
 | `base`（移动端） | 单列，底部输入栏 `width: calc(100% - 32px)` |
-| `md`（768px+） | 同桌面端布局，无侧边栏 |
+| `md`（768px+）   | 同桌面端布局，无侧边栏                      |
 
 底部输入栏在移动端展开时占满屏幕宽度（`max-width: 100%`，取消 `24px` 边距），展开高度根据内容自适应。

@@ -12,31 +12,32 @@
 
 ## File Map
 
-| 状态 | 文件 | 说明 |
-|------|------|------|
-| M | `blog-backend/internal/dto/article.go` | `Categories[]` → `Category*` |
-| M | `blog-backend/internal/service/article_mapper.go` | 取第一个分类 |
-| M | `blog-backend/internal/service/article_test.go` | 更新相关测试 |
-| C | `packages/api/src/types/article.ts` | TS 类型 |
-| C | `packages/api/src/types/category.ts` | TS 类型 |
-| M | `packages/api/src/client.ts` | 新增 articles / categories 方法 |
-| M | `packages/api/src/client.test.ts` | 新增方法测试 |
-| M | `packages/api/src/index.ts` | 导出新类型 |
-| C | `apps/web/app/api/articles/route.ts` | Route Handler 代理 |
-| M | `apps/web/app/page.tsx` | SSR 并发 fetch |
-| M | `apps/web/app/page.test.tsx` | 更新为 async 渲染 |
-| M | `apps/web/components/articles/article-card.tsx` | 改用真实类型 |
-| C | `apps/web/components/articles/article-card.test.tsx` | 新建测试 |
-| M | `apps/web/components/articles/article-list-header.tsx` | 改用 `CategoryTabItem[]` |
-| M | `apps/web/components/articles/article-list-header.test.tsx` | 更新测试 |
-| M | `apps/web/components/articles/article-section.tsx` | 全面重构 |
-| M | `apps/web/components/articles/article-section.test.tsx` | 全面重写 |
+| 状态 | 文件                                                        | 说明                            |
+| ---- | ----------------------------------------------------------- | ------------------------------- |
+| M    | `blog-backend/internal/dto/article.go`                      | `Categories[]` → `Category*`    |
+| M    | `blog-backend/internal/service/article_mapper.go`           | 取第一个分类                    |
+| M    | `blog-backend/internal/service/article_test.go`             | 更新相关测试                    |
+| C    | `packages/api/src/types/article.ts`                         | TS 类型                         |
+| C    | `packages/api/src/types/category.ts`                        | TS 类型                         |
+| M    | `packages/api/src/client.ts`                                | 新增 articles / categories 方法 |
+| M    | `packages/api/src/client.test.ts`                           | 新增方法测试                    |
+| M    | `packages/api/src/index.ts`                                 | 导出新类型                      |
+| C    | `apps/web/app/api/articles/route.ts`                        | Route Handler 代理              |
+| M    | `apps/web/app/page.tsx`                                     | SSR 并发 fetch                  |
+| M    | `apps/web/app/page.test.tsx`                                | 更新为 async 渲染               |
+| M    | `apps/web/components/articles/article-card.tsx`             | 改用真实类型                    |
+| C    | `apps/web/components/articles/article-card.test.tsx`        | 新建测试                        |
+| M    | `apps/web/components/articles/article-list-header.tsx`      | 改用 `CategoryTabItem[]`        |
+| M    | `apps/web/components/articles/article-list-header.test.tsx` | 更新测试                        |
+| M    | `apps/web/components/articles/article-section.tsx`          | 全面重构                        |
+| M    | `apps/web/components/articles/article-section.test.tsx`     | 全面重写                        |
 
 ---
 
 ## Task 1: 后端 — `ArticleListItemResp.Categories[]` → `Category*`
 
 **Files:**
+
 - Modify: `blog-backend/internal/dto/article.go`
 - Modify: `blog-backend/internal/service/article_mapper.go`
 - Modify: `blog-backend/internal/service/article_test.go`
@@ -167,6 +168,7 @@ git commit -m "refactor(api): 文章列表项 Categories[] 改为 Category* 单�
 ## Task 2: `packages/api` — TypeScript 类型定义
 
 **Files:**
+
 - Create: `packages/api/src/types/article.ts`
 - Create: `packages/api/src/types/category.ts`
 
@@ -252,6 +254,7 @@ git commit -m "feat(api): 新增文章与分类 TypeScript 类型定义"
 ## Task 3: `packages/api` — 客户端方法 + 导出 + 测试
 
 **Files:**
+
 - Modify: `packages/api/src/client.ts`
 - Modify: `packages/api/src/client.test.ts`
 - Modify: `packages/api/src/index.ts`
@@ -261,50 +264,58 @@ git commit -m "feat(api): 新增文章与分类 TypeScript 类型定义"
 在 `packages/api/src/client.test.ts` 中，在 `describe("createApiClient", ...)` 块末尾追加：
 
 ```typescript
-  // ── 文章与分类接口（公开，无需登录）────────────────────────────────
+// ── 文章与分类接口（公开，无需登录）────────────────────────────────
 
-  it("articles.listPublic 无参数时调用 /articles", async () => {
-    vi.mocked(global.fetch).mockResolvedValue(
-      mockResponse({ code: 0, message: "ok", data: { total: 0, pages: 0, page: 1, page_size: 10, list: [] } }),
-    );
-    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+it("articles.listPublic 无参数时调用 /articles", async () => {
+  vi.mocked(global.fetch).mockResolvedValue(
+    mockResponse({
+      code: 0,
+      message: "ok",
+      data: { total: 0, pages: 0, page: 1, page_size: 10, list: [] },
+    }),
+  );
+  const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
 
-    await client.articles.listPublic();
+  await client.articles.listPublic();
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      "http://api/articles",
-      expect.objectContaining({ method: "GET" }),
-    );
-  });
+  expect(global.fetch).toHaveBeenCalledWith(
+    "http://api/articles",
+    expect.objectContaining({ method: "GET" }),
+  );
+});
 
-  it("articles.listPublic 带 category_id 和 page 时构造正确 query string", async () => {
-    vi.mocked(global.fetch).mockResolvedValue(
-      mockResponse({ code: 0, message: "ok", data: { total: 0, pages: 0, page: 2, page_size: 10, list: [] } }),
-    );
-    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+it("articles.listPublic 带 category_id 和 page 时构造正确 query string", async () => {
+  vi.mocked(global.fetch).mockResolvedValue(
+    mockResponse({
+      code: 0,
+      message: "ok",
+      data: { total: 0, pages: 0, page: 2, page_size: 10, list: [] },
+    }),
+  );
+  const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
 
-    await client.articles.listPublic({ page: 2, category_id: 3 });
+  await client.articles.listPublic({ page: 2, category_id: 3 });
 
-    const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
-    const url = new URL(calledUrl);
-    expect(url.pathname).toBe("/articles");
-    expect(url.searchParams.get("page")).toBe("2");
-    expect(url.searchParams.get("category_id")).toBe("3");
-  });
+  const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
+  const url = new URL(calledUrl);
+  expect(url.pathname).toBe("/articles");
+  expect(url.searchParams.get("page")).toBe("2");
+  expect(url.searchParams.get("category_id")).toBe("3");
+});
 
-  it("categories.listTabs 调用 /categories", async () => {
-    vi.mocked(global.fetch).mockResolvedValue(
-      mockResponse({ code: 0, message: "ok", data: { list: [] } }),
-    );
-    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+it("categories.listTabs 调用 /categories", async () => {
+  vi.mocked(global.fetch).mockResolvedValue(
+    mockResponse({ code: 0, message: "ok", data: { list: [] } }),
+  );
+  const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
 
-    await client.categories.listTabs();
+  await client.categories.listTabs();
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      "http://api/categories",
-      expect.objectContaining({ method: "GET" }),
-    );
-  });
+  expect(global.fetch).toHaveBeenCalledWith(
+    "http://api/categories",
+    expect.objectContaining({ method: "GET" }),
+  );
+});
 ```
 
 - [ ] **Step 2: 运行测试，确认新测试失败**
@@ -321,46 +332,43 @@ pnpm --filter @repo/api run test
 在 `packages/api/src/client.ts` 顶部导入中追加：
 
 ```typescript
-import type {
-  ArticleListReq,
-  ArticlePageResp,
-} from "./types/article";
+import type { ArticleListReq, ArticlePageResp } from "./types/article";
 import type { CategoryTabsResp } from "./types/category";
 ```
 
 在 `createApiClient` 的 `return` 对象中，**替换整个 return 语句**：
 
 ```typescript
-  return {
-    auth: {
-      sendCode: (req: SendCodeReq) =>
-        fetchPublic<void>("/auth/send-code", { method: "POST", body: JSON.stringify(req) }),
-      register: (req: RegisterReq) =>
-        fetchPublic<UserResp>("/auth/register", { method: "POST", body: JSON.stringify(req) }),
-      login: (req: LoginReq) =>
-        fetchPublic<LoginResp>("/auth/login", { method: "POST", body: JSON.stringify(req) }),
-      refresh: (req: RefreshReq) =>
-        fetchPublic<TokenResp>("/auth/refresh", { method: "POST", body: JSON.stringify(req) }),
+return {
+  auth: {
+    sendCode: (req: SendCodeReq) =>
+      fetchPublic<void>("/auth/send-code", { method: "POST", body: JSON.stringify(req) }),
+    register: (req: RegisterReq) =>
+      fetchPublic<UserResp>("/auth/register", { method: "POST", body: JSON.stringify(req) }),
+    login: (req: LoginReq) =>
+      fetchPublic<LoginResp>("/auth/login", { method: "POST", body: JSON.stringify(req) }),
+    refresh: (req: RefreshReq) =>
+      fetchPublic<TokenResp>("/auth/refresh", { method: "POST", body: JSON.stringify(req) }),
+  },
+  articles: {
+    listPublic: (req: ArticleListReq = {}) => {
+      const params = new URLSearchParams();
+      if (req.page !== undefined) params.set("page", String(req.page));
+      if (req.page_size !== undefined) params.set("page_size", String(req.page_size));
+      if (req.recommend !== undefined) params.set("recommend", String(req.recommend));
+      if (req.category_id !== undefined) params.set("category_id", String(req.category_id));
+      if (req.tag_id !== undefined) params.set("tag_id", String(req.tag_id));
+      const qs = params.toString();
+      return fetchPublic<ArticlePageResp>(`/articles${qs ? `?${qs}` : ""}`, { method: "GET" });
     },
-    articles: {
-      listPublic: (req: ArticleListReq = {}) => {
-        const params = new URLSearchParams();
-        if (req.page !== undefined) params.set("page", String(req.page));
-        if (req.page_size !== undefined) params.set("page_size", String(req.page_size));
-        if (req.recommend !== undefined) params.set("recommend", String(req.recommend));
-        if (req.category_id !== undefined) params.set("category_id", String(req.category_id));
-        if (req.tag_id !== undefined) params.set("tag_id", String(req.tag_id));
-        const qs = params.toString();
-        return fetchPublic<ArticlePageResp>(`/articles${qs ? `?${qs}` : ""}`, { method: "GET" });
-      },
-    },
-    categories: {
-      listTabs: () => fetchPublic<CategoryTabsResp>("/categories", { method: "GET" }),
-    },
-    test: {
-      authed: () => fetchAuthed<string>("/test/authed", { method: "GET" }),
-    },
-  };
+  },
+  categories: {
+    listTabs: () => fetchPublic<CategoryTabsResp>("/categories", { method: "GET" }),
+  },
+  test: {
+    authed: () => fetchAuthed<string>("/test/authed", { method: "GET" }),
+  },
+};
 ```
 
 - [ ] **Step 4: 修改 `index.ts` — 导出新类型**
@@ -398,6 +406,7 @@ git commit -m "feat(api): 新增 articles.listPublic 与 categories.listTabs 方
 ## Task 4: Route Handler — `GET /api/articles`
 
 **Files:**
+
 - Create: `apps/web/app/api/articles/route.ts`
 
 - [ ] **Step 1: 创建 Route Handler**
@@ -451,6 +460,7 @@ git commit -m "feat(web): 新增 /api/articles Route Handler 代理后端文章�
 ## Task 5: `ArticleCard` — 改用真实类型 + 新建测试
 
 **Files:**
+
 - Modify: `apps/web/components/articles/article-card.tsx`
 - Create: `apps/web/components/articles/article-card.test.tsx`
 
@@ -660,6 +670,7 @@ git commit -m "refactor(web): ArticleCard 改用真实 ArticleListItemResp 类�
 ## Task 6: `ArticleListHeader` — 接收 `CategoryTabItem[]`
 
 **Files:**
+
 - Modify: `apps/web/components/articles/article-list-header.tsx`
 - Modify: `apps/web/components/articles/article-list-header.test.tsx`
 
@@ -820,11 +831,7 @@ export function ArticleListHeader({
       >
         <TabsList variant="button-brand-horizontal">
           {categories.map((category) => (
-            <TabsItem
-              key={category.id}
-              id={String(category.id)}
-              variant="button-brand-horizontal"
-            >
+            <TabsItem key={category.id} id={String(category.id)} variant="button-brand-horizontal">
               {category.name}
             </TabsItem>
           ))}
@@ -864,6 +871,7 @@ git commit -m "refactor(web): ArticleListHeader 改用 CategoryTabItem[] 与数�
 ## Task 7: `ArticleSection` — 重构为真实 API
 
 **Files:**
+
 - Modify: `apps/web/components/articles/article-section.tsx`
 - Modify: `apps/web/components/articles/article-section.test.tsx`
 
@@ -886,8 +894,18 @@ vi.mock("next/image", () => ({
 }));
 
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: { href: string; children: ReactNode; [k: string]: unknown }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: ReactNode;
+    [k: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -910,16 +928,33 @@ vi.mock("@repo/ui", () => ({
     className?: string;
   }) => (
     <nav aria-label="分页导航" className={className}>
-      <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage <= 1} aria-label="上一页">
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage <= 1}
+        aria-label="上一页"
+      >
         上一页
       </button>
-      <span data-testid="pagination-info">{currentPage}/{totalPages}</span>
-      <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage >= totalPages} aria-label="下一页">
+      <span data-testid="pagination-info">
+        {currentPage}/{totalPages}
+      </span>
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage >= totalPages}
+        aria-label="下一页"
+      >
         下一页
       </button>
     </nav>
   ),
-  Tabs: ({ children, onSelectionChange }: { children: ReactNode; selectedKey?: string; onSelectionChange?: (key: string) => void }) => {
+  Tabs: ({
+    children,
+    onSelectionChange,
+  }: {
+    children: ReactNode;
+    selectedKey?: string;
+    onSelectionChange?: (key: string) => void;
+  }) => {
     const handleSelect = (e: { target: EventTarget | null }) => {
       const btn = (e.target as HTMLElement).closest("button[data-tab-id]");
       if (btn && onSelectionChange) {
@@ -927,14 +962,32 @@ vi.mock("@repo/ui", () => ({
       }
     };
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-    return <div onClick={handleSelect} onKeyDown={handleSelect}>{children}</div>;
+    return (
+      <div onClick={handleSelect} onKeyDown={handleSelect}>
+        {children}
+      </div>
+    );
   },
   TabsList: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   TabsItem: ({ children, id }: { children: ReactNode; id?: string; variant?: string }) => (
     <button data-tab-id={id}>{children}</button>
   ),
-  SearchField: ({ placeholder, value, onChange }: { placeholder?: string; value?: string; onChange?: (val: string) => void; size?: string; inputClassName?: string }) => (
-    <input placeholder={placeholder} value={value ?? ""} onChange={(e) => onChange?.(e.target.value)} />
+  SearchField: ({
+    placeholder,
+    value,
+    onChange,
+  }: {
+    placeholder?: string;
+    value?: string;
+    onChange?: (val: string) => void;
+    size?: string;
+    inputClassName?: string;
+  }) => (
+    <input
+      placeholder={placeholder}
+      value={value ?? ""}
+      onChange={(e) => onChange?.(e.target.value)}
+    />
   ),
 }));
 
@@ -1003,7 +1056,10 @@ describe("ArticleSection", () => {
 
   it("pages > 1 时显示分页", () => {
     render(
-      <ArticleSection initialPage={makePageResp({ total: 25, pages: 3 })} categories={mockCategories} />,
+      <ArticleSection
+        initialPage={makePageResp({ total: 25, pages: 3 })}
+        categories={mockCategories}
+      />,
     );
     expect(screen.getByRole("navigation", { name: "分页导航" })).toBeTruthy();
   });
@@ -1018,7 +1074,9 @@ describe("ArticleSection", () => {
     render(<ArticleSection initialPage={makePageResp()} categories={mockCategories} />);
 
     const tab = screen.getByRole("button", { name: "编程" });
-    await act(async () => { await user.click(tab); });
+    await act(async () => {
+      await user.click(tab);
+    });
 
     await waitFor(() => {
       const call = vi.mocked(fetch).mock.calls[0][0] as string;
@@ -1048,7 +1106,9 @@ describe("ArticleSection", () => {
     );
 
     const nextBtn = screen.getByRole("button", { name: "下一页" });
-    await act(async () => { await user.click(nextBtn); });
+    await act(async () => {
+      await user.click(nextBtn);
+    });
 
     await waitFor(() => {
       const call = vi.mocked(fetch).mock.calls[0][0] as string;
@@ -1084,11 +1144,15 @@ describe("ArticleSection", () => {
     );
 
     // 翻到第 2 页
-    await act(async () => { await user.click(screen.getByRole("button", { name: "下一页" })); });
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "下一页" }));
+    });
     await waitFor(() => expect(screen.getByText("第二页")).toBeTruthy());
 
     // 切换分类
-    await act(async () => { await user.click(screen.getByRole("button", { name: "编程" })); });
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "编程" }));
+    });
 
     await waitFor(() => {
       const secondCall = vi.mocked(fetch).mock.calls[1][0] as string;
@@ -1230,6 +1294,7 @@ git commit -m "refactor(web): ArticleSection 接入真实分页 API，替换 moc
 ## Task 8: `page.tsx` — SSR 接入真实数据
 
 **Files:**
+
 - Modify: `apps/web/app/page.tsx`
 - Modify: `apps/web/app/page.test.tsx`
 

@@ -10,6 +10,7 @@
 ## 背景与目标
 
 将博客主页（`apps/web`）从当前中性 shadcn 风格升级为以下设计语言：
+
 - **主题色**：靛紫 Violet-Indigo（浅色 `#7c3aed` / 深色 `#a78bfa`）
 - **Navbar**：桌面悬浮胶囊，移动端全宽扁平 Header，透明→滚动后玻璃毛玻璃动效
 - **精选轮播**：全屏 Hero，进度条指示器，拖拽切换，底部液态玻璃渐变
@@ -32,41 +33,41 @@
 ```css
 @theme {
   /* Light mode */
-  --color-background:        #f7f7f9;
-  --color-foreground:        #18181b;
-  --color-card:              #ffffff;
-  --color-card-foreground:   #18181b;
-  --color-primary:           #7c3aed;
-  --color-primary-foreground:#ffffff;
-  --color-secondary:         #f4f4f5;
+  --color-background: #f7f7f9;
+  --color-foreground: #18181b;
+  --color-card: #ffffff;
+  --color-card-foreground: #18181b;
+  --color-primary: #7c3aed;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f4f4f5;
   --color-secondary-foreground: #18181b;
-  --color-muted:             #f4f4f5;
-  --color-muted-foreground:  #71717a;
-  --color-accent:            #7c3aed;
+  --color-muted: #f4f4f5;
+  --color-muted-foreground: #71717a;
+  --color-accent: #7c3aed;
   --color-accent-foreground: #ffffff;
-  --color-border:            rgba(0,0,0,0.07);
-  --color-input:             rgba(0,0,0,0.07);
-  --color-ring:              #7c3aed;
+  --color-border: rgba(0, 0, 0, 0.07);
+  --color-input: rgba(0, 0, 0, 0.07);
+  --color-ring: #7c3aed;
 }
 
 /* Dark mode overrides */
 :root {
   @variant dark {
-    --color-background:        #0c0c0f;
-    --color-foreground:        #f4f4f5;
-    --color-card:              #18181b;
-    --color-card-foreground:   #f4f4f5;
-    --color-primary:           #a78bfa;
-    --color-primary-foreground:#0c0c0f;
-    --color-secondary:         #27272a;
+    --color-background: #0c0c0f;
+    --color-foreground: #f4f4f5;
+    --color-card: #18181b;
+    --color-card-foreground: #f4f4f5;
+    --color-primary: #a78bfa;
+    --color-primary-foreground: #0c0c0f;
+    --color-secondary: #27272a;
     --color-secondary-foreground: #f4f4f5;
-    --color-muted:             #27272a;
-    --color-muted-foreground:  #71717a;
-    --color-accent:            #a78bfa;
+    --color-muted: #27272a;
+    --color-muted-foreground: #71717a;
+    --color-accent: #a78bfa;
     --color-accent-foreground: #0c0c0f;
-    --color-border:            rgba(255,255,255,0.08);
-    --color-input:             rgba(255,255,255,0.08);
-    --color-ring:              #a78bfa;
+    --color-border: rgba(255, 255, 255, 0.08);
+    --color-input: rgba(255, 255, 255, 0.08);
+    --color-ring: #a78bfa;
     color-scheme: dark;
   }
 }
@@ -76,20 +77,20 @@
 
 ```css
 :root {
-  --fg2: #52525b;        /* 次要文字 light */
-  --fg3: #a1a1aa;        /* 三级文字 light */
-  --glass-bg:  rgba(255,255,255,0.75);
-  --glass-bdr: rgba(255,255,255,0.9);
-  --glass-mob: rgba(246,246,250,0.82);  /* 移动端 nav 玻璃色 */
-  --glass-ring: rgba(0,0,0,0.08);
+  --fg2: #52525b; /* 次要文字 light */
+  --fg3: #a1a1aa; /* 三级文字 light */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-bdr: rgba(255, 255, 255, 0.9);
+  --glass-mob: rgba(246, 246, 250, 0.82); /* 移动端 nav 玻璃色 */
+  --glass-ring: rgba(0, 0, 0, 0.08);
 }
 :root.dark {
   --fg2: #a1a1aa;
   --fg3: #71717a;
-  --glass-bg:  rgba(12,12,15,0.75);
-  --glass-bdr: rgba(255,255,255,0.09);
-  --glass-mob: rgba(18,18,22,0.82);
-  --glass-ring: rgba(255,255,255,0.04);
+  --glass-bg: rgba(12, 12, 15, 0.75);
+  --glass-bdr: rgba(255, 255, 255, 0.09);
+  --glass-mob: rgba(18, 18, 22, 0.82);
+  --glass-ring: rgba(255, 255, 255, 0.04);
 }
 ```
 
@@ -103,6 +104,7 @@
 ## 二、Navbar 改造
 
 ### 涉及文件
+
 - `apps/web/components/navbar/site-navbar.tsx`
 - `apps/web/components/navbar/navbar-logo.tsx`
 - `apps/web/components/navbar/navbar-links.tsx`
@@ -112,6 +114,7 @@
 ### 设计要点
 
 #### 桌面端（≥ 681px）
+
 - `#navbar`：`fixed top-0 w-full flex justify-center`，初始 `padding: 18px 24px`
 - `.nav-capsule`：`max-w-[960px] w-full border-radius-full`
 - **透明态**（未滚动）：`bg-transparent border-transparent`
@@ -129,6 +132,7 @@
 - 主题图标：`SvgIcon name="sun"` 或 `SvgIcon name="moon"`（已有）
 
 #### 移动端（≤ 680px）
+
 - 无 padding，`#navbar` 本身承载玻璃背景
 - **在 hero 顶部**：`background: transparent`
 - **滚动后或菜单打开**：`background: var(--glass-mob)` + blur
@@ -136,6 +140,7 @@
 - **菜单**：放在 `<nav>` 内部（不是 sibling），用 `grid-template-rows: 0fr → 1fr` 展开
 
 #### 移动端菜单内容
+
 ```
 碎语 ›
 留言 ›
@@ -146,6 +151,7 @@
 ```
 
 #### 颜色规则（over hero）
+
 - Logo、nav text、汉堡按钮：`rgba(255,255,255, 0.85)`
 - 进入玻璃态后：`text-foreground` / `text-muted-foreground`
 
@@ -180,7 +186,9 @@ export function SiteNavbar() {
         "max-md:p-0",
         // Mobile glass
         "max-md:transition-[background,backdrop-filter]",
-        isGlass ? "max-md:[background:var(--glass-mob)] max-md:backdrop-blur-[20px]" : "max-md:bg-transparent",
+        isGlass
+          ? "max-md:[background:var(--glass-mob)] max-md:backdrop-blur-[20px]"
+          : "max-md:bg-transparent",
       )}
     >
       {/* nav-capsule ... */}
@@ -203,6 +211,7 @@ export function SiteNavbar() {
 ## 三、Featured Carousel 改造
 
 ### 涉及文件
+
 - `apps/web/components/featured/featured-carousel.tsx`
 - `apps/web/components/featured/featured-carousel-slide.tsx`
 - 删除：`apps/web/components/featured/featured-carousel-indicators.tsx`（如存在）
@@ -210,11 +219,13 @@ export function SiteNavbar() {
 ### 设计要点
 
 #### 容器
+
 - `height: 100vh; min-height: 520px; overflow: hidden`
 - Embla CarouselBase 控制横向滑动（已有 `@repo/ui` CarouselBase）
 - 拖拽支持：Embla 原生提供
 
 #### 每个 Slide（`featured-carousel-slide.tsx`）
+
 ```
 [图片层] → next/image fill, object-cover
 [顶部遮罩] → h-[130px], gradient to-b from-black/40 (保护 nav 可读性)
@@ -233,6 +244,7 @@ export function SiteNavbar() {
 ```
 
 #### 进度条指示器（替换原点状指示器）
+
 ```tsx
 // 每个 slide 对应一根细线
 // 激活状态：播放 CSS animation progFill 5s linear
@@ -241,6 +253,7 @@ export function SiteNavbar() {
 ```
 
 #### 自动播放
+
 - 5 秒自动切换（原有逻辑保留）
 - 悬停暂停
 
@@ -255,6 +268,7 @@ export function SiteNavbar() {
 ## 四、主页布局改造
 
 ### 涉及文件
+
 - `apps/web/app/page.tsx`
 - `apps/web/app/layout.tsx`（`<main>` padding 调整）
 
@@ -295,6 +309,7 @@ export function SiteNavbar() {
 ## 五、Category Tabs 下划线改造
 
 ### 涉及文件
+
 - `apps/web/components/articles/article-list-header.tsx`
 
 ### 设计
@@ -318,6 +333,7 @@ export function SiteNavbar() {
 ## 六、Article Card 改造
 
 ### 涉及文件
+
 - `apps/web/components/articles/article-card.tsx`
 - `apps/web/components/articles/article-card-stats.tsx`
 
@@ -335,10 +351,12 @@ export function SiteNavbar() {
 ```
 
 ### 交互
+
 - 爱心按钮：`onClick` 切换 liked 状态（`fill="red"` / `fill="none"`），**不触发评论弹窗**
 - 评论按钮：触发评论弹窗，传入 `{ type: cat, title }`
 
 ### 卡片网格
+
 ```tsx
 // grid auto-fill minmax(280px, 1fr) gap-5
 // Mobile: 1fr, 无 border/shadow，底部分隔线
@@ -357,6 +375,7 @@ export function SiteNavbar() {
 ## 七、Comment Modal 新增
 
 ### 涉及文件（新建）
+
 - `apps/web/components/comments/comment-modal.tsx`
 - `apps/web/components/comments/comment-item.tsx`
 - `apps/web/components/comments/comment-input.tsx`
@@ -401,20 +420,23 @@ export function SiteNavbar() {
 ## 八、Sidebar 改造
 
 ### 涉及文件
+
 - `apps/web/components/sidebar/recent-visitors.tsx`
 - `apps/web/components/sidebar/tags-cloud.tsx`
 - `apps/web/components/snippets/snippets-section.tsx`
 - `apps/web/components/snippets/snippet-card.tsx`
 
 ### Snippets Section
+
 - 每条碎语底部加爱心按钮（本地 toggle）和评论按钮（触发 CommentModal）
 - 爱心按钮：`<Button variant="ghost" size="sm">`
 
 ### Recent Visitors
+
 ```tsx
 // 新结构：2-col grid
 // 每项：
-//   <div className="v-item flex items-center gap-2 p-1.5 rounded-xl cursor-pointer 
+//   <div className="v-item flex items-center gap-2 p-1.5 rounded-xl cursor-pointer
 //                   hover:bg-accent/10 active:scale-95 transition-all">
 //     <img className="w-9 h-9 rounded-full object-cover" />
 //     <div className="min-w-0">
@@ -429,6 +451,7 @@ export function SiteNavbar() {
 ```
 
 ### Tags Cloud
+
 ```tsx
 // 每个 tag 显示数量
 <TagItem key={tag.id} id={tag.id}>
@@ -438,15 +461,18 @@ export function SiteNavbar() {
 ```
 
 ### Sidebar Scroll Sync（JS）
+
 在 `page.tsx` 或专用 hook 中实现：
+
 ```ts
 // useRef 指向 sidebar element
-// scroll event: 
+// scroll event:
 //   delta > 0 且 sidebar.bottom > viewport.bottom → sidebarTop -= delta
 //   delta < 0 且 sidebar.top < 88 → sidebarTop -= delta
 //   clamp: max sidebarTop=88, min = vh - sidebar.offsetHeight - 16
 //   sidebar.style.top = sidebarTop + 'px'
 ```
+
 新建 `apps/web/hooks/use-sidebar-scroll.ts`
 
 ### 任务清单
@@ -462,6 +488,7 @@ export function SiteNavbar() {
 ## 九、主题切换优化
 
 ### 涉及文件
+
 - `apps/web/app/providers/theme-provider.tsx`（已有，检查是否需要适配新变量）
 - `apps/web/lib/theme-init.ts`（THEME_CRITICAL_CSS 可能需更新）
 
@@ -476,6 +503,7 @@ export function SiteNavbar() {
 ## 十、Mock 数据更新（FeaturedPosts / Visitors / Tags）
 
 ### 涉及文件
+
 - `apps/web/app/_mock/featured-posts.ts`
 - `apps/web/app/_mock/visitors.ts`（需扩展类型）
 - `apps/web/app/_mock/tags.ts`（已有 count 字段，检查）
@@ -490,7 +518,7 @@ export interface Visitor {
   name: string;
   avatar: string;
   isOnline: boolean;
-  visitedAt: string;  // ISO datetime
+  visitedAt: string; // ISO datetime
 }
 ```
 
@@ -504,12 +532,12 @@ export interface Visitor {
 
 ## 十一、响应式收尾
 
-| 断点 | 行为 |
-|------|------|
-| `< 480px` | 轮播摘要 2-line clamp |
-| `< 680px` | Navbar 移动端，Tabs 横向滚动，文章卡片无边框，侧边栏垂直堆叠 |
-| `680px–860px` | 两列布局但文章 1 列（minmax 不够宽），侧边栏仍显示 |
-| `> 860px` | 文章 2 列 |
+| 断点          | 行为                                                         |
+| ------------- | ------------------------------------------------------------ |
+| `< 480px`     | 轮播摘要 2-line clamp                                        |
+| `< 680px`     | Navbar 移动端，Tabs 横向滚动，文章卡片无边框，侧边栏垂直堆叠 |
+| `680px–860px` | 两列布局但文章 1 列（minmax 不够宽），侧边栏仍显示           |
+| `> 860px`     | 文章 2 列                                                    |
 
 ### 任务清单
 
@@ -521,14 +549,14 @@ export interface Visitor {
 
 每改动一个组件，对应 `*.test.tsx` 必须同步更新（见 `CLAUDE.md` 要求）。
 
-| 组件 | 测试文件 |
-|------|----------|
-| site-navbar | site-navbar.test.tsx |
+| 组件              | 测试文件                           |
+| ----------------- | ---------------------------------- |
+| site-navbar       | site-navbar.test.tsx               |
 | featured-carousel | featured-carousel.test.tsx（新建） |
-| article-card | article-card.test.tsx（新建） |
-| comment-modal | comment-modal.test.tsx（新建） |
-| recent-visitors | sidebar.test.tsx |
-| page.tsx | page.test.tsx |
+| article-card      | article-card.test.tsx（新建）      |
+| comment-modal     | comment-modal.test.tsx（新建）     |
+| recent-visitors   | sidebar.test.tsx                   |
+| page.tsx          | page.test.tsx                      |
 
 ---
 
@@ -553,6 +581,7 @@ export interface Visitor {
 ## 额度检查点汇总 💳
 
 每次标有 💳 的任务完成后，在终端运行：
+
 ```bash
 # 暂时没有内置额度查询命令，请手动查看 claude.ai/settings 或询问用户
 # 在每个 💳 任务完成后 git commit，然后停下来问用户：
@@ -563,12 +592,12 @@ export interface Visitor {
 
 ## 关键设计决策记录
 
-| 决策 | 原因 |
-|------|------|
-| 菜单放 `<nav>` 内部 | 独立 fixed 元素的 JS 定位总有浮点像素缝隙 |
-| 进度条替换点状指示器 | 更直观展示自动播放进度 |
-| `grid-template-rows: 0fr→1fr` 展开动画 | GPU 加速，无 layout 抖动，比 max-height 流畅 |
-| 底部液态玻璃用 mask + backdrop-filter | background transparent 避免浅色页面泛白 |
-| 侧边栏 JS scroll sync | CSS sticky + overflow 无法同时实现"跟滚到底停住" |
-| Tabs 下划线 + overflow-x scroll | 分类多时移动端不折行，可滑动 |
-| 文章卡片移动端无边框 | 节省屏幕空间，内容更突出 |
+| 决策                                   | 原因                                             |
+| -------------------------------------- | ------------------------------------------------ |
+| 菜单放 `<nav>` 内部                    | 独立 fixed 元素的 JS 定位总有浮点像素缝隙        |
+| 进度条替换点状指示器                   | 更直观展示自动播放进度                           |
+| `grid-template-rows: 0fr→1fr` 展开动画 | GPU 加速，无 layout 抖动，比 max-height 流畅     |
+| 底部液态玻璃用 mask + backdrop-filter  | background transparent 避免浅色页面泛白          |
+| 侧边栏 JS scroll sync                  | CSS sticky + overflow 无法同时实现"跟滚到底停住" |
+| Tabs 下划线 + overflow-x scroll        | 分类多时移动端不折行，可滑动                     |
+| 文章卡片移动端无边框                   | 节省屏幕空间，内容更突出                         |

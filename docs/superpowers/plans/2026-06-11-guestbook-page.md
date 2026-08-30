@@ -50,22 +50,88 @@ apps/web/app/guestbook/
 
 ```typescript
 // packages/api/src/types/guestbook.ts
-interface GuestbookUserResp { id: number; username: string; nickname?: string; avatar_url?: string; site?: string; mark?: string; }
-interface GuestbookItemResp { id: number; owner_user_id: number; from_user_id: number; content: string; user?: GuestbookUserResp; reply_count: number; like_count: number; is_liked: boolean; created_at: string; updated_at: string; }
-interface GuestbookPageResp { total: number; pages: number; page: number; page_size: number; list: GuestbookItemResp[]; }
-interface GuestbookLikeResp { id: number; is_liked: boolean; like_count: number; }
+interface GuestbookUserResp {
+  id: number;
+  username: string;
+  nickname?: string;
+  avatar_url?: string;
+  site?: string;
+  mark?: string;
+}
+interface GuestbookItemResp {
+  id: number;
+  owner_user_id: number;
+  from_user_id: number;
+  content: string;
+  user?: GuestbookUserResp;
+  reply_count: number;
+  like_count: number;
+  is_liked: boolean;
+  created_at: string;
+  updated_at: string;
+}
+interface GuestbookPageResp {
+  total: number;
+  pages: number;
+  page: number;
+  page_size: number;
+  list: GuestbookItemResp[];
+}
+interface GuestbookLikeResp {
+  id: number;
+  is_liked: boolean;
+  like_count: number;
+}
 
 // packages/api/src/types/comment.ts
-interface CommentReplyResp { id: number; comment_id: number; from_user_id: number; to_user_id: number; parent_reply_id: number; content: string; from_user?: CommentUserResp; to_user?: CommentUserResp; like_count: number; is_liked: boolean; created_at: string; updated_at: string; }
-interface CommentReplyPageResp { total: number; pages: number; page: number; page_size: number; list: CommentReplyResp[]; }
-interface CommentLikeResp { is_liked: boolean; like_count: number; }
-interface CommentReplyCreateReq { parent_reply_id?: number; content: string; }
+interface CommentReplyResp {
+  id: number;
+  comment_id: number;
+  from_user_id: number;
+  to_user_id: number;
+  parent_reply_id: number;
+  content: string;
+  from_user?: CommentUserResp;
+  to_user?: CommentUserResp;
+  like_count: number;
+  is_liked: boolean;
+  created_at: string;
+  updated_at: string;
+}
+interface CommentReplyPageResp {
+  total: number;
+  pages: number;
+  page: number;
+  page_size: number;
+  list: CommentReplyResp[];
+}
+interface CommentLikeResp {
+  is_liked: boolean;
+  like_count: number;
+}
+interface CommentReplyCreateReq {
+  parent_reply_id?: number;
+  content: string;
+}
 
 // RichCommentInput props（apps/web/components/comments/rich-comment-input.tsx）
-interface RichCommentInputProps { value: string; onChange: (v: string) => void; onSubmit: () => void; isSubmitting?: boolean; mentionSuggestions?: MentionItem[]; placeholder?: string; isLoggedIn?: boolean; onLoginRequired?: () => void; }
+interface RichCommentInputProps {
+  value: string;
+  onChange: (v: string) => void;
+  onSubmit: () => void;
+  isSubmitting?: boolean;
+  mentionSuggestions?: MentionItem[];
+  placeholder?: string;
+  isLoggedIn?: boolean;
+  onLoginRequired?: () => void;
+}
 
 // Pagination props（packages/ui/src/pagination/pagination.tsx）
-interface PaginationProps { currentPage: number; totalPages: number; onPageChange: (page: number) => void; }
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
 ```
 
 ---
@@ -73,6 +139,7 @@ interface PaginationProps { currentPage: number; totalPages: number; onPageChang
 ## Task 1: `use-guestbook-list` Hook
 
 **Files:**
+
 - Create: `apps/web/hooks/use-guestbook-list.ts`
 - Test: `apps/web/hooks/use-guestbook-list.test.ts`
 
@@ -86,22 +153,40 @@ import { useGuestbookList } from "./use-guestbook-list";
 import type { GuestbookItemResp, GuestbookPageResp } from "@repo/api";
 
 const mockItem: GuestbookItemResp = {
-  id: 1, owner_user_id: 0, from_user_id: 1, content: "Hello!",
-  reply_count: 0, like_count: 0, is_liked: false,
-  created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z",
+  id: 1,
+  owner_user_id: 0,
+  from_user_id: 1,
+  content: "Hello!",
+  reply_count: 0,
+  like_count: 0,
+  is_liked: false,
+  created_at: "2026-01-01T00:00:00Z",
+  updated_at: "2026-01-01T00:00:00Z",
 };
 
 const initialPage: GuestbookPageResp = {
-  total: 1, pages: 1, page: 1, page_size: 10, list: [mockItem],
+  total: 1,
+  pages: 1,
+  page: 1,
+  page_size: 10,
+  list: [mockItem],
 };
 
 const emptyPage: GuestbookPageResp = {
-  total: 0, pages: 0, page: 1, page_size: 10, list: [],
+  total: 0,
+  pages: 0,
+  page: 1,
+  page_size: 10,
+  list: [],
 };
 
 describe("useGuestbookList", () => {
-  beforeEach(() => { vi.stubGlobal("fetch", vi.fn()); });
-  afterEach(() => { vi.unstubAllGlobals(); });
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
 
   it("用 SSR 数据初始化", () => {
     const { result } = renderHook(() => useGuestbookList(initialPage));
@@ -113,15 +198,21 @@ describe("useGuestbookList", () => {
 
   it("fetchPage 替换列表并更新分页状态", async () => {
     const page2: GuestbookPageResp = {
-      total: 11, pages: 2, page: 2, page_size: 10,
+      total: 11,
+      pages: 2,
+      page: 2,
+      page_size: 10,
       list: [{ ...mockItem, id: 2 }],
     };
     vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true, json: async () => page2,
+      ok: true,
+      json: async () => page2,
     } as Response);
 
     const { result } = renderHook(() => useGuestbookList(initialPage));
-    await act(async () => { await result.current.fetchPage(2); });
+    await act(async () => {
+      await result.current.fetchPage(2);
+    });
 
     expect(result.current.items[0].id).toBe(2);
     expect(result.current.page).toBe(2);
@@ -131,26 +222,34 @@ describe("useGuestbookList", () => {
   it("fetchPage 网络失败时设置 error", async () => {
     vi.mocked(fetch).mockResolvedValueOnce({ ok: false } as Response);
     const { result } = renderHook(() => useGuestbookList(emptyPage));
-    await act(async () => { await result.current.fetchPage(1); });
+    await act(async () => {
+      await result.current.fetchPage(1);
+    });
     expect(result.current.error).toBeTruthy();
   });
 
   it("addItem 前插新条目并 total+1", () => {
     const { result } = renderHook(() => useGuestbookList(initialPage));
-    act(() => { result.current.addItem({ ...mockItem, id: 99 }); });
+    act(() => {
+      result.current.addItem({ ...mockItem, id: 99 });
+    });
     expect(result.current.items[0].id).toBe(99);
     expect(result.current.total).toBe(2);
   });
 
   it("incrementReplyCount 更新对应条目", () => {
     const { result } = renderHook(() => useGuestbookList(initialPage));
-    act(() => { result.current.incrementReplyCount(1); });
+    act(() => {
+      result.current.incrementReplyCount(1);
+    });
     expect(result.current.items[0].reply_count).toBe(1);
   });
 
   it("updateLike 更新对应条目的点赞状态", () => {
     const { result } = renderHook(() => useGuestbookList(initialPage));
-    act(() => { result.current.updateLike(1, true, 5); });
+    act(() => {
+      result.current.updateLike(1, true, 5);
+    });
     expect(result.current.items[0].is_liked).toBe(true);
     expect(result.current.items[0].like_count).toBe(5);
   });
@@ -209,19 +308,28 @@ export function useGuestbookList(initialPage: GuestbookPageResp) {
 
   const incrementReplyCount = useCallback((itemId: number) => {
     setItems((prev) =>
-      prev.map((i) => (i.id === itemId ? { ...i, reply_count: i.reply_count + 1 } : i))
+      prev.map((i) => (i.id === itemId ? { ...i, reply_count: i.reply_count + 1 } : i)),
     );
   }, []);
 
   const updateLike = useCallback((itemId: number, isLiked: boolean, likeCount: number) => {
     setItems((prev) =>
-      prev.map((i) =>
-        i.id === itemId ? { ...i, is_liked: isLiked, like_count: likeCount } : i
-      )
+      prev.map((i) => (i.id === itemId ? { ...i, is_liked: isLiked, like_count: likeCount } : i)),
     );
   }, []);
 
-  return { items, page, totalPages, total, isLoading, error, fetchPage, addItem, incrementReplyCount, updateLike };
+  return {
+    items,
+    page,
+    totalPages,
+    total,
+    isLoading,
+    error,
+    fetchPage,
+    addItem,
+    incrementReplyCount,
+    updateLike,
+  };
 }
 ```
 
@@ -245,6 +353,7 @@ git commit -m "feat(guestbook): 添加 use-guestbook-list hook"
 ## Task 2: `use-guestbook-submit` Hook
 
 **Files:**
+
 - Create: `apps/web/hooks/use-guestbook-submit.ts`
 - Test: `apps/web/hooks/use-guestbook-submit.test.ts`
 
@@ -258,21 +367,38 @@ import { useGuestbookSubmit } from "./use-guestbook-submit";
 import type { GuestbookItemResp, CommentReplyResp } from "@repo/api";
 
 const mockItem: GuestbookItemResp = {
-  id: 1, owner_user_id: 0, from_user_id: 1, content: "Hello!",
-  reply_count: 0, like_count: 0, is_liked: false,
-  created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z",
+  id: 1,
+  owner_user_id: 0,
+  from_user_id: 1,
+  content: "Hello!",
+  reply_count: 0,
+  like_count: 0,
+  is_liked: false,
+  created_at: "2026-01-01T00:00:00Z",
+  updated_at: "2026-01-01T00:00:00Z",
 };
 
 const mockReply: CommentReplyResp = {
-  id: 10, target_type: "guestbook", comment_id: 1,
-  from_user_id: 2, to_user_id: 1, parent_reply_id: 0,
-  content: "Hi!", like_count: 0, is_liked: false,
-  created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z",
+  id: 10,
+  target_type: "guestbook",
+  comment_id: 1,
+  from_user_id: 2,
+  to_user_id: 1,
+  parent_reply_id: 0,
+  content: "Hi!",
+  like_count: 0,
+  is_liked: false,
+  created_at: "2026-01-01T00:00:00Z",
+  updated_at: "2026-01-01T00:00:00Z",
 };
 
 describe("useGuestbookSubmit", () => {
-  beforeEach(() => { vi.stubGlobal("fetch", vi.fn()); });
-  afterEach(() => { vi.unstubAllGlobals(); });
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
 
   it("初始状态：非提交中，无错误", () => {
     const { result } = renderHook(() => useGuestbookSubmit());
@@ -282,7 +408,8 @@ describe("useGuestbookSubmit", () => {
 
   it("submitEntry 成功返回新条目", async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true, status: 200,
+      ok: true,
+      status: 200,
       json: async () => mockItem,
     } as Response);
 
@@ -300,7 +427,9 @@ describe("useGuestbookSubmit", () => {
     vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 401 } as Response);
     const { result } = renderHook(() => useGuestbookSubmit());
     let returned: GuestbookItemResp | null = null;
-    await act(async () => { returned = await result.current.submitEntry("Hi"); });
+    await act(async () => {
+      returned = await result.current.submitEntry("Hi");
+    });
     expect(returned).toBeNull();
     expect(result.current.error).toMatch(/登录/);
   });
@@ -308,27 +437,36 @@ describe("useGuestbookSubmit", () => {
   it("submitEntry 网络失败时设置错误", async () => {
     vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 500 } as Response);
     const { result } = renderHook(() => useGuestbookSubmit());
-    await act(async () => { await result.current.submitEntry("Hi"); });
+    await act(async () => {
+      await result.current.submitEntry("Hi");
+    });
     expect(result.current.error).toBeTruthy();
   });
 
   it("submitReply 成功返回回复", async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true, status: 200,
+      ok: true,
+      status: 200,
       json: async () => mockReply,
     } as Response);
     const { result } = renderHook(() => useGuestbookSubmit());
     let returned: CommentReplyResp | null = null;
-    await act(async () => { returned = await result.current.submitReply(1, "Hi!"); });
+    await act(async () => {
+      returned = await result.current.submitReply(1, "Hi!");
+    });
     expect(returned?.id).toBe(10);
   });
 
   it("clearError 清除错误状态", async () => {
     vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 500 } as Response);
     const { result } = renderHook(() => useGuestbookSubmit());
-    await act(async () => { await result.current.submitEntry("Hi"); });
+    await act(async () => {
+      await result.current.submitEntry("Hi");
+    });
     expect(result.current.error).toBeTruthy();
-    act(() => { result.current.clearError(); });
+    act(() => {
+      result.current.clearError();
+    });
     expect(result.current.error).toBeNull();
   });
 });
@@ -362,7 +500,10 @@ export function useGuestbookSubmit() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
       });
-      if (res.status === 401) { setError("请先登录"); return null; }
+      if (res.status === 401) {
+        setError("请先登录");
+        return null;
+      }
       if (!res.ok) throw new Error("failed");
       return (await res.json()) as GuestbookItemResp;
     } catch {
@@ -374,7 +515,11 @@ export function useGuestbookSubmit() {
   }, []);
 
   const submitReply = useCallback(
-    async (guestbookId: number, content: string, parentReplyId = 0): Promise<CommentReplyResp | null> => {
+    async (
+      guestbookId: number,
+      content: string,
+      parentReplyId = 0,
+    ): Promise<CommentReplyResp | null> => {
       setIsSubmitting(true);
       setError(null);
       try {
@@ -384,7 +529,10 @@ export function useGuestbookSubmit() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        if (res.status === 401) { setError("请先登录"); return null; }
+        if (res.status === 401) {
+          setError("请先登录");
+          return null;
+        }
         if (!res.ok) throw new Error("failed");
         return (await res.json()) as CommentReplyResp;
       } catch {
@@ -423,6 +571,7 @@ git commit -m "feat(guestbook): 添加 use-guestbook-submit hook"
 ## Task 3: `use-guestbook-like` Hook
 
 **Files:**
+
 - Create: `apps/web/hooks/use-guestbook-like.ts`
 - Test: `apps/web/hooks/use-guestbook-like.test.ts`
 
@@ -436,18 +585,25 @@ import { useGuestbookLike } from "./use-guestbook-like";
 import type { GuestbookLikeResp, CommentLikeResp } from "@repo/api";
 
 describe("useGuestbookLike", () => {
-  beforeEach(() => { vi.stubGlobal("fetch", vi.fn()); });
-  afterEach(() => { vi.unstubAllGlobals(); });
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
 
   it("toggleEntryLike 成功返回更新后的点赞状态", async () => {
     const mockResp: GuestbookLikeResp = { id: 1, is_liked: true, like_count: 5 };
     vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true, json: async () => mockResp,
+      ok: true,
+      json: async () => mockResp,
     } as Response);
 
     const { result } = renderHook(() => useGuestbookLike());
     let returned: GuestbookLikeResp | null = null;
-    await act(async () => { returned = await result.current.toggleEntryLike(1); });
+    await act(async () => {
+      returned = await result.current.toggleEntryLike(1);
+    });
     expect(returned?.is_liked).toBe(true);
     expect(returned?.like_count).toBe(5);
     expect(fetch).toHaveBeenCalledWith("/api/guestbook/1/like", { method: "POST" });
@@ -457,31 +613,37 @@ describe("useGuestbookLike", () => {
     vi.mocked(fetch).mockResolvedValueOnce({ ok: false } as Response);
     const { result } = renderHook(() => useGuestbookLike());
     let returned: GuestbookLikeResp | null = null;
-    await act(async () => { returned = await result.current.toggleEntryLike(1); });
+    await act(async () => {
+      returned = await result.current.toggleEntryLike(1);
+    });
     expect(returned).toBeNull();
   });
 
   it("toggleReplyLike 成功调用正确接口", async () => {
     const mockResp: CommentLikeResp = { is_liked: true, like_count: 2 };
     vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true, json: async () => mockResp,
+      ok: true,
+      json: async () => mockResp,
     } as Response);
 
     const { result } = renderHook(() => useGuestbookLike());
     let returned: CommentLikeResp | null = null;
-    await act(async () => { returned = await result.current.toggleReplyLike(1, 10); });
+    await act(async () => {
+      returned = await result.current.toggleReplyLike(1, 10);
+    });
     expect(returned?.is_liked).toBe(true);
-    expect(fetch).toHaveBeenCalledWith(
-      "/api/guestbook/comments/1/replies/10/like",
-      { method: "POST" }
-    );
+    expect(fetch).toHaveBeenCalledWith("/api/guestbook/comments/1/replies/10/like", {
+      method: "POST",
+    });
   });
 
   it("toggleReplyLike 网络失败返回 null", async () => {
     vi.mocked(fetch).mockResolvedValueOnce({ ok: false } as Response);
     const { result } = renderHook(() => useGuestbookLike());
     let returned: CommentLikeResp | null = null;
-    await act(async () => { returned = await result.current.toggleReplyLike(1, 10); });
+    await act(async () => {
+      returned = await result.current.toggleReplyLike(1, 10);
+    });
     expect(returned).toBeNull();
   });
 });
@@ -516,10 +678,9 @@ export function useGuestbookLike() {
   const toggleReplyLike = useCallback(
     async (guestbookId: number, replyId: number): Promise<CommentLikeResp | null> => {
       try {
-        const res = await fetch(
-          `/api/guestbook/comments/${guestbookId}/replies/${replyId}/like`,
-          { method: "POST" }
-        );
+        const res = await fetch(`/api/guestbook/comments/${guestbookId}/replies/${replyId}/like`, {
+          method: "POST",
+        });
         if (!res.ok) return null;
         return (await res.json()) as CommentLikeResp;
       } catch {
@@ -553,6 +714,7 @@ git commit -m "feat(guestbook): 添加 use-guestbook-like hook"
 ## Task 4: `GuestbookPageHeader` 组件
 
 **Files:**
+
 - Create: `apps/web/components/guestbook/guestbook-page-header.tsx`
 
 （纯展示组件，无交互，不需要独立测试；已在 guestbook-page.test.tsx 中覆盖渲染验证）
@@ -587,6 +749,7 @@ git commit -m "feat(guestbook): 添加 GuestbookPageHeader 组件"
 ## Task 5: `GuestbookItem` 组件
 
 **Files:**
+
 - Create: `apps/web/components/guestbook/guestbook-item.tsx`
 - Test: `apps/web/components/guestbook/guestbook-item.test.tsx`
 
@@ -800,6 +963,7 @@ git commit -m "feat(guestbook): 添加 GuestbookItem 组件"
 ## Task 6: `GuestbookReplies` 组件
 
 **Files:**
+
 - Create: `apps/web/components/guestbook/guestbook-replies.tsx`
 - Test: `apps/web/components/guestbook/guestbook-replies.test.tsx`
 
@@ -1108,6 +1272,7 @@ git commit -m "feat(guestbook): 添加 GuestbookReplies 组件"
 ## Task 7: `GuestbookList` 组件
 
 **Files:**
+
 - Create: `apps/web/components/guestbook/guestbook-list.tsx`
 - Test: `apps/web/components/guestbook/guestbook-list.test.tsx`
 
@@ -1296,10 +1461,12 @@ git commit -m "feat(guestbook): 添加 GuestbookList 组件，分页三列居中
 ## Task 8: `GuestbookInputBar` 组件
 
 **Files:**
+
 - Create: `apps/web/components/guestbook/guestbook-input-bar.tsx`
 - Test: `apps/web/components/guestbook/guestbook-input-bar.test.tsx`
 
 **关键约束（三条必须满足）：**
+
 1. **展开态直接复用 `RichCommentInput`**（不自制输入框）
 2. **预挂载 Tiptap**：`RichCommentInput` 在组件 mount 时即渲染，仅通过 `opacity` 和 `pointer-events` 切换可见性，首次点击时 Tiptap 已初始化，无卡顿
 3. **动效**：通过 `style` prop 的 CSS `transition` 动画 `height` 和 `border-radius`，不切换 DOM 节点
@@ -1551,6 +1718,7 @@ git commit -m "feat(guestbook): 添加 GuestbookInputBar，pill→卡片动效�
 ## Task 9: `GuestbookPage` 编排组件
 
 **Files:**
+
 - Create: `apps/web/components/guestbook/guestbook-page.tsx`
 - Test: `apps/web/components/guestbook/guestbook-page.test.tsx`
 
@@ -1768,6 +1936,7 @@ git commit -m "feat(guestbook): 添加 GuestbookPage 编排组件"
 ## Task 10: `page.tsx` + `index.ts` 导出
 
 **Files:**
+
 - Create: `apps/web/app/guestbook/page.tsx`
 - Create: `apps/web/app/guestbook/page.test.tsx`
 - Create: `apps/web/components/guestbook/index.ts`
@@ -1887,17 +2056,17 @@ git commit -m "feat(guestbook): 添加 /guestbook 路由页面和组件导出"
 
 规格要求 → 计划覆盖验证：
 
-| 规格要求 | 对应 Task |
-|---------|-----------|
-| 留言列表分页 + SSR 首屏 | Task 1, Task 7, Task 10 |
-| 分页视觉居中（三列 grid） | Task 7（`grid-cols-[1fr_auto_1fr]`） |
-| 点赞留言 | Task 3, Task 5, Task 9 |
-| 回复（嵌套） | Task 2, Task 6, Task 9 |
-| 回复点赞 | Task 3, Task 6 |
-| pill → 卡片动效，无首次卡顿 | Task 8（预挂载 + CSS height 过渡） |
-| 复用 `RichCommentInput` | Task 8 |
-| 页面顶部 header（碎语风格） | Task 4 |
-| 未登录保护 | Task 8（click → openLoginModal） |
-| SEO metadata | Task 10 |
-| 响应式移动端 | Task 8（`w-[calc(100%-32px)] sm:...`） |
-| 所有新文件有对应测试 | 每个 Task 均含测试步骤 |
+| 规格要求                    | 对应 Task                              |
+| --------------------------- | -------------------------------------- |
+| 留言列表分页 + SSR 首屏     | Task 1, Task 7, Task 10                |
+| 分页视觉居中（三列 grid）   | Task 7（`grid-cols-[1fr_auto_1fr]`）   |
+| 点赞留言                    | Task 3, Task 5, Task 9                 |
+| 回复（嵌套）                | Task 2, Task 6, Task 9                 |
+| 回复点赞                    | Task 3, Task 6                         |
+| pill → 卡片动效，无首次卡顿 | Task 8（预挂载 + CSS height 过渡）     |
+| 复用 `RichCommentInput`     | Task 8                                 |
+| 页面顶部 header（碎语风格） | Task 4                                 |
+| 未登录保护                  | Task 8（click → openLoginModal）       |
+| SEO metadata                | Task 10                                |
+| 响应式移动端                | Task 8（`w-[calc(100%-32px)] sm:...`） |
+| 所有新文件有对应测试        | 每个 Task 均含测试步骤                 |

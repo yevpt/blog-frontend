@@ -93,14 +93,14 @@
 
 新表 `admin_operation_log`：
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| id | bigint pk | |
-| operator_id | uint | 操作人（管理员）ID |
-| target_user_id | uint | 被操作的目标用户 ID |
-| action | varchar(32) | 操作类型枚举 |
-| detail | json，可空 | 操作详情（如禁用原因、封禁理由与到期时间） |
-| created_at | datetime | |
+| 字段           | 类型        | 说明                                       |
+| -------------- | ----------- | ------------------------------------------ |
+| id             | bigint pk   |                                            |
+| operator_id    | uint        | 操作人（管理员）ID                         |
+| target_user_id | uint        | 被操作的目标用户 ID                        |
+| action         | varchar(32) | 操作类型枚举                               |
+| detail         | json，可空  | 操作详情（如禁用原因、封禁理由与到期时间） |
+| created_at     | datetime    |                                            |
 
 `action` 枚举：`grant_vip` / `revoke_vip` / `disable_account` / `enable_account` / `mute` / `ban` / `release` / `update_trust_level` / `clear_avatar`。
 
@@ -118,12 +118,14 @@
 ### 4.1 类型与 API 客户端（packages/api）
 
 新增/调整 `packages/api/src/types/user.ts`：
+
 - `AdminUserListReq`（keyword/role/status/page/page_size）
 - `AdminUserListItemResp`、`AdminUserPageResp`
 - `AdminUserDetailResp`
 - `AdminOperationLogItemResp`、`AdminOperationLogPageResp`
 
 `client.ts` 的 `users` 域新增方法：
+
 - `listAdmin(req: AdminUserListReq)` → `GET /admin/users`
 - `getAdminDetail(id)` → `GET /admin/users/:id`
 - `disableAccount(id)` / `enableAccount(id)` → `POST /admin/users/:id/disable|enable`
@@ -149,6 +151,7 @@
 ### 4.4 测试
 
 按 AGENTS.md 强制要求，每个改动文件同步测试：
+
 - 后端：`service/user`、`repository/user`、`handler/user` 新增/调整用例覆盖列表筛选、详情聚合、禁用校验（自己/最后一个管理员）、操作日志写入。
 - 前端：`UsersPage.test.tsx`、`use-admin-user-list.test.ts`、新增的 `UserDetailModal.test.tsx`、`use-user-detail.test.ts`、`UserToolsPage.test.tsx`；`ModerationPage.test.tsx` 同步删除对应 Tab 的断言。
 - `src/config/modules.test.ts` 检查新增子路由不破坏「路由 path 唯一」等约束。

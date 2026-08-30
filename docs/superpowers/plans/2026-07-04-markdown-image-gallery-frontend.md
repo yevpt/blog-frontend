@@ -26,10 +26,12 @@
 **背景:** `markdownToHtmlSync` 会先执行 `expandExtraBlankLines`(3+ 连续换行 → `&nbsp;` 段落),但异步 `markdownToHtml`(文章详情页所用)没有。若不修,作者在编辑器里用空段落隔开两张图,序列化成多个空行后会被 remark 折叠,两图在文章页重新相邻 → 被误合并成轮播。此修复同时统一了文章与评论的空行渲染行为。
 
 **Files:**
+
 - Modify: `packages/markdown/src/render.ts:315-320`(`markdownToHtml`)
 - Test: `packages/markdown/src/render.test.ts`(追加用例)
 
 **Interfaces:**
+
 - Produces: `markdownToHtml` 对 3+ 连续换行输出 `<p>&nbsp;</p>` 间隔段落,行为与 `markdownToHtmlSync` 一致。
 
 - [x] **Step 1: 写失败测试**
@@ -86,11 +88,13 @@ git commit -m "fix(markdown): 异步渲染管线同样保留多余空行段间�
 ### Task 2: rehype 图片轮播分组插件
 
 **Files:**
+
 - Create: `packages/markdown/src/image-gallery.ts`
 - Modify: `packages/markdown/src/render.ts`(选项 + 挂插件)
 - Test: `packages/markdown/src/image-gallery.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `rehypeImageGallery(): (tree: Root) => void` — rehype 插件;
   - 类名常量:`MD_GALLERY_CLASS = "md-gallery"`、`MD_GALLERY_TRACK_CLASS = "md-gallery-track"`、`MD_GALLERY_SLIDE_CLASS = "md-gallery-slide"`、`MD_GALLERY_NAV_CLASS = "md-gallery-nav"`、`MD_GALLERY_PREV_CLASS = "md-gallery-prev"`、`MD_GALLERY_NEXT_CLASS = "md-gallery-next"`、`MD_GALLERY_DOTS_CLASS = "md-gallery-dots"`、`MD_GALLERY_DOT_CLASS = "md-gallery-dot"`、`MD_GALLERY_DOT_ACTIVE_CLASS = "is-active"`、`MD_GALLERY_COUNTER_CLASS = "md-gallery-counter"`(Task 3/4 依赖这些常量);
@@ -284,9 +288,7 @@ function buildGallery(images: Element[]): Element {
     tagName: "button",
     properties: {
       className:
-        index === 0
-          ? [MD_GALLERY_DOT_CLASS, MD_GALLERY_DOT_ACTIVE_CLASS]
-          : [MD_GALLERY_DOT_CLASS],
+        index === 0 ? [MD_GALLERY_DOT_CLASS, MD_GALLERY_DOT_ACTIVE_CLASS] : [MD_GALLERY_DOT_CLASS],
       type: "button",
       dataIndex: String(index),
       ariaLabel: `跳转到第 ${index + 1} 张`,
@@ -403,10 +405,10 @@ export function rehypeImageGallery() {
 `buildPipeline` 中,在 `treatLinksAsUgc` 分支之后、`rehypeStringify` 之前加(顶部 import `rehypeImageGallery`):
 
 ```ts
-  if (options.groupImageGalleries) {
-    // 必须在 sanitize 之后：插件生成的 button/svg 是可信结构，不能被 schema 剥掉
-    processor.use(rehypeImageGallery);
-  }
+if (options.groupImageGalleries) {
+  // 必须在 sanitize 之后：插件生成的 button/svg 是可信结构，不能被 schema 剥掉
+  processor.use(rehypeImageGallery);
+}
 ```
 
 - [x] **Step 5: 跑测试确认通过**
@@ -426,11 +428,13 @@ git commit -m "feat(markdown): 相邻图片段落合并为轮播的 rehype 插�
 ### Task 3: 轮播交互绑定(翻页/指示点/键盘)
 
 **Files:**
+
 - Create: `packages/markdown/src/image-gallery-interactions.ts`
 - Modify: `packages/markdown/src/markdown-interactions.ts`
 - Test: `packages/markdown/src/image-gallery-interactions.test.ts`
 
 **Interfaces:**
+
 - Consumes: Task 2 的类名常量与 HTML 结构。
 - Produces: `bindMarkdownImageGalleries(container: HTMLElement): () => void` — 由 `bindMarkdownContentInteractions` 调用,返回清理函数。
 
@@ -671,7 +675,7 @@ export function bindMarkdownImageGalleries(container: HTMLElement): () => void {
 ```ts
 import { bindMarkdownImageGalleries } from "./image-gallery-interactions";
 // …bindMarkdownContentInteractions 内：
-  cleanups.push(bindMarkdownImageGalleries(container));
+cleanups.push(bindMarkdownImageGalleries(container));
 ```
 
 - [x] **Step 5: 跑测试确认通过**
@@ -691,9 +695,11 @@ git commit -m "feat(markdown): 轮播翻页与指示点交互绑定"
 ### Task 4: 轮播样式(packages/styles)
 
 **Files:**
+
 - Modify: `packages/styles/src/base.css`(文件末尾追加一节;该文件已有 `.md-code-wrapper` 等 markdown 结构样式,风格保持一致)
 
 **Interfaces:**
+
 - Consumes: Task 2 的 HTML 结构与类名。
 - 说明:滑动本体、slide 尺寸、按钮/指示点/计数覆盖层全在这里;`prose` 对 `figure`/`img` 的默认样式使用 `:where()` 零优先级选择器,普通类选择器即可覆盖,不需要 `!important`。
 
@@ -839,10 +845,12 @@ git commit -m "feat(styles): 正文图片轮播样式"
 ### Task 5: 文章详情页启用轮播
 
 **Files:**
+
 - Modify: `apps/web/lib/article-markdown-html.ts`
 - Test: `apps/web/lib/article-markdown-html.test.ts`(追加用例)
 
 **Interfaces:**
+
 - Consumes: Task 2 的 `groupImageGalleries` 选项。
 - 说明:`prepareArticleMarkdownHtml` 之后的字符串级处理(`optimizeMarkdownImages` → `deferMarkdownImageSources` → `wrapMarkdownImagesWithSkeletonHtml`)都是对 `<img>` 标签的正则处理,不关心外层结构,轮播内图片自动获得 CDN 优化/懒加载/骨架。
 
@@ -873,7 +881,7 @@ Expected: 新用例 FAIL(无 md-gallery)。
 `article-markdown-html.ts` 中:
 
 ```ts
-  const html = await markdownToHtml(markdown, { groupImageGalleries: true });
+const html = await markdownToHtml(markdown, { groupImageGalleries: true });
 ```
 
 - [x] **Step 4: 跑 web 包相关测试**

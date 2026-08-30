@@ -55,12 +55,12 @@ apps/admin/src/
 ```ts
 interface AdminModule {
   id: string;
-  nav?: AdminNavItem;        // 进侧边栏的模块给 nav；子路由(new/edit/pinned)不给
-  routes: AdminRoute[];      // 本模块贡献的全部路由（含子路由）
+  nav?: AdminNavItem; // 进侧边栏的模块给 nav；子路由(new/edit/pinned)不给
+  routes: AdminRoute[]; // 本模块贡献的全部路由（含子路由）
 }
 
 interface AdminRoute {
-  path?: string;             // 省略 + index:true 表示 index 路由
+  path?: string; // 省略 + index:true 表示 index 路由
   index?: boolean;
   element: ReactElement;
 }
@@ -72,7 +72,12 @@ interface AdminRoute {
 
 ```ts
 export const adminModules: AdminModule[] = [
-  dashboardModule, articlesModule, categoriesModule, tagsModule, musicModule, linksModule,
+  dashboardModule,
+  articlesModule,
+  categoriesModule,
+  tagsModule,
+  musicModule,
+  linksModule,
 ];
 
 // 取代手写的 config/nav.ts
@@ -87,17 +92,17 @@ export const adminRoutes = adminModules.flatMap((m) => m.routes);
 
 ## 文章迁移映射（样板）
 
-| 旧 | 新 |
-|---|---|
-| `pages/ArticlesPage.tsx`（含内联 `ArticleDeleteButton`/`ArticleStatusBadge`） | `modules/articles/ArticlesPage.tsx` + `modules/articles/components/{ArticleDeleteButton,ArticleStatusBadge}.tsx` |
-| `pages/articles-page-data.ts` | `modules/articles/model.ts` |
-| `hooks/use-admin-article-list.ts` | `modules/articles/hooks/use-article-list.ts`（去 `admin-` 前缀） |
-| `hooks/use-admin-article-filter-options.ts` | `modules/articles/hooks/use-article-filter-options.ts` |
-| `pages/DashboardPage.tsx` | `modules/dashboard/DashboardPage.tsx` |
-| `pages/module-pages.tsx` 中 5 个占位 | 各模块 `modules/<x>/<X>Page.tsx`（渲染共享 `ModulePlaceholder`）+ `module.ts`；articles 的子页 Pinned/Editor 归入 `modules/articles/` |
-| `pages/LoginPage.tsx` | 留在 `app/`（登录是外壳路由，不进 nav） |
-| `pages/ModulePlaceholder.tsx` | `components/ModulePlaceholder.tsx` |
-| `config/nav.ts` | 删除，由 `config/modules.ts` 派生 |
+| 旧                                                                            | 新                                                                                                                                    |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `pages/ArticlesPage.tsx`（含内联 `ArticleDeleteButton`/`ArticleStatusBadge`） | `modules/articles/ArticlesPage.tsx` + `modules/articles/components/{ArticleDeleteButton,ArticleStatusBadge}.tsx`                      |
+| `pages/articles-page-data.ts`                                                 | `modules/articles/model.ts`                                                                                                           |
+| `hooks/use-admin-article-list.ts`                                             | `modules/articles/hooks/use-article-list.ts`（去 `admin-` 前缀）                                                                      |
+| `hooks/use-admin-article-filter-options.ts`                                   | `modules/articles/hooks/use-article-filter-options.ts`                                                                                |
+| `pages/DashboardPage.tsx`                                                     | `modules/dashboard/DashboardPage.tsx`                                                                                                 |
+| `pages/module-pages.tsx` 中 5 个占位                                          | 各模块 `modules/<x>/<X>Page.tsx`（渲染共享 `ModulePlaceholder`）+ `module.ts`；articles 的子页 Pinned/Editor 归入 `modules/articles/` |
+| `pages/LoginPage.tsx`                                                         | 留在 `app/`（登录是外壳路由，不进 nav）                                                                                               |
+| `pages/ModulePlaceholder.tsx`                                                 | `components/ModulePlaceholder.tsx`                                                                                                    |
+| `config/nav.ts`                                                               | 删除，由 `config/modules.ts` 派生                                                                                                     |
 
 约束：
 

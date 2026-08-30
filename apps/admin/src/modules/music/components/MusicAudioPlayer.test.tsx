@@ -36,12 +36,7 @@ describe("MusicAudioPlayer", () => {
   it("播放、更新时间并跳转进度", async () => {
     const user = userEvent.setup();
     const { container } = render(
-      <MusicAudioPlayer
-        variant="full"
-        title="Ref:rain"
-        url="/ref.mp3"
-        fallbackDuration={100}
-      />,
+      <MusicAudioPlayer variant="full" title="Ref:rain" url="/ref.mp3" fallbackDuration={100} />,
     );
     const audio = container.querySelector("audio");
     expect(audio).not.toBeNull();
@@ -69,12 +64,7 @@ describe("MusicAudioPlayer", () => {
 
   it("URL 变化时暂停旧音频并重置进度", () => {
     const { container, rerender } = render(
-      <MusicAudioPlayer
-        variant="full"
-        title="Ref:rain"
-        url="/old.mp3"
-        fallbackDuration={100}
-      />,
+      <MusicAudioPlayer variant="full" title="Ref:rain" url="/old.mp3" fallbackDuration={100} />,
     );
     const audio = container.querySelector("audio");
     expect(audio).not.toBeNull();
@@ -86,12 +76,7 @@ describe("MusicAudioPlayer", () => {
     if (audio) fireEvent.timeUpdate(audio);
 
     rerender(
-      <MusicAudioPlayer
-        variant="full"
-        title="Ref:rain"
-        url="/new.mp3"
-        fallbackDuration={100}
-      />,
+      <MusicAudioPlayer variant="full" title="Ref:rain" url="/new.mp3" fallbackDuration={100} />,
     );
 
     expect(audio?.pause).toHaveBeenCalled();

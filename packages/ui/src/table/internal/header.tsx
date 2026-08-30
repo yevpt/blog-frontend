@@ -33,9 +33,7 @@ export function DataTableHeader<T extends object>({
   classNames,
 }: DataTableHeaderProps<T>) {
   return (
-    <TableHeader
-      className={cn("text-muted-foreground", classNames?.header)}
-    >
+    <TableHeader className={cn("text-muted-foreground", classNames?.header)}>
       {columns.map((column) => (
         <Column
           key={column.id}

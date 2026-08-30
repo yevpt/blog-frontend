@@ -1,6 +1,6 @@
 ---
 name: "extending-api"
-description: "Use when adding or changing a backend API call in this monorepo — a new endpoint method on the @repo/api client, new request/response types, or wiring a typed request into apps/web or apps/admin. Covers the three fetch helpers (public / optional-auth / authed), the type-naming conventions, the query-string recipe, how each app consumes the client, and the bare-fetch debt to avoid. Trigger whenever you'd otherwise write fetch(\"/api/...\"), need a new ApiClient method, or add a *Req / *Resp type."
+description: 'Use when adding or changing a backend API call in this monorepo — a new endpoint method on the @repo/api client, new request/response types, or wiring a typed request into apps/web or apps/admin. Covers the three fetch helpers (public / optional-auth / authed), the type-naming conventions, the query-string recipe, how each app consumes the client, and the bare-fetch debt to avoid. Trigger whenever you''d otherwise write fetch("/api/..."), need a new ApiClient method, or add a *Req / *Resp type.'
 license: "MIT"
 ---
 
@@ -23,11 +23,11 @@ client 自动解包后端统一响应 `{ code, message, data }`：返回 `data`�
 
 ## 选对 fetch helper（核心决策）
 
-| helper | 何时用 | token |
-| --- | --- | --- |
-| `fetchPublic` | 完全公开 / 登录前接口(login、register、send-code、列表纯公开) | 不带 |
-| `fetchOptionalAuth` | 匿名可访问，登录后返回个性化字段(如 `is_liked`) | 有则带 |
-| `fetchAuthed` | 必须登录;遇 401 自动用 refresh token 刷新并重试一次 | 必带 |
+| helper              | 何时用                                                        | token  |
+| ------------------- | ------------------------------------------------------------- | ------ |
+| `fetchPublic`       | 完全公开 / 登录前接口(login、register、send-code、列表纯公开) | 不带   |
+| `fetchOptionalAuth` | 匿名可访问，登录后返回个性化字段(如 `is_liked`)               | 有则带 |
+| `fetchAuthed`       | 必须登录;遇 401 自动用 refresh token 刷新并重试一次           | 必带   |
 
 选错的后果:该 `authed` 用了 `public` → 401 不会自动刷新;公开接口用了 `authed` → 给匿名用户徒增刷新逻辑。`refresh` 自身必须用 `fetchPublic`(否则递归)。
 
@@ -41,6 +41,7 @@ client 自动解包后端统一响应 `{ code, message, data }`：返回 `data`�
 ## query string 范式（GET 带过滤）
 
 只 set 已定义的参数,避免 `undefined` 进 URL:
+
 ```ts
 const p = new URLSearchParams();
 if (req.page !== undefined) p.set("page", String(req.page));

@@ -62,14 +62,17 @@
 > 以 mockup 为视觉/交互基准；以下文件名为建议，可按实际命名习惯微调。
 
 ### 5.1 新增 `folder` 图标
+
 1. 新建 `packages/icons/svg/folder.svg`（线性风格，1.85 stroke，viewBox 24，参照 mockup 里的 folder 路径：`M3 7a2 2 0 0 1 2-2h4l2 2.5h6a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z`）。
 2. `pnpm --filter @repo/icons build`，提交生成产物。
 3. 确认 `SvgIcon` 的 `name` 类型已含 `"folder"`。
 
 ### 5.2 菜单配置
+
 - `apps/admin/src/config/nav.ts`：导出结构化数组 `{ label, icon, path, group, badge? }`。分组：概览（无组）/ 内容（文章·分类·标签）/ 站点（音乐·友链）。路由 path：`/`、`/articles`、`/categories`、`/tags`、`/music`、`/links`。
 
 ### 5.3 布局壳 `apps/admin/src/components/layout/`
+
 - `AdminLayout.tsx`：整体两栏 + `<Outlet/>`；持有侧栏折叠 / 移动抽屉状态（抽到 `useSidebar` hook，含 `localStorage` 记忆折叠态）。
 - `Sidebar.tsx`：品牌区 + `SidebarNav` + 底部 `SidebarUser`。
 - `SidebarNav.tsx`：按 `nav.ts` 渲染分组菜单，激活态用 `NavLink` + 语义高亮；折叠态只显图标 + `Tooltip`。
@@ -79,14 +82,17 @@
 - 移动抽屉：遮罩 + 滑入；选中菜单或点遮罩关闭。
 
 ### 5.4 概览页 `apps/admin/src/pages/DashboardPage.tsx`
+
 - 欢迎行（`你好，{nickname}` + `写文章` 主按钮）→ 统计卡片网格（移动 1 / sm 2 / xl 4）→ 最近文章 `Card`（轻量表格，小屏 `overflow-x-auto`）+ 快捷入口 `Card`。
 - 全部静态占位数据，标 `// TODO(api): 待后端提供 xxx`。卡片/徽标用 `Card`/`Badge`。
 
 ### 5.5 模块占位页
+
 - 统一 `ModulePlaceholder` 组件（props：`title` / `icon` / `description`），页面头（标题+简述+占位「新建」按钮）+「功能建设中」空状态卡。
 - 文章/分类/标签/音乐/友链各自薄页面调用它。
 
 ### 5.6 路由接线 `apps/admin/src/App.tsx`
+
 - `AuthGuard` 下挂 `AdminLayout`，其子路由渲染 `DashboardPage`（index）与各占位页。保留 `/login` 与静默续期 `AuthInit`、`ToastRegion` 不动。
 
 ---

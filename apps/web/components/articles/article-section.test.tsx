@@ -13,8 +13,7 @@ const toastMockState = vi.hoisted(() => ({
 let mockSessionUserId: number | null = 7;
 let isDesktopLayout = true;
 let intersectionObserverCallback:
-  | ((entries: IntersectionObserverEntry[], observer: IntersectionObserver) => void)
-  | undefined;
+  ((entries: IntersectionObserverEntry[], observer: IntersectionObserver) => void) | undefined;
 
 vi.mock("next/image", () => ({
   default: ({ src, alt, className }: { src: string; alt: string; className?: string }) => (

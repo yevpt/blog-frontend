@@ -30,9 +30,7 @@ const musicItem: MusicItemResp = {
 
 describe("music model", () => {
   it("只从音频地址解析安全文件名", () => {
-    expect(getAudioFileName("https://cdn.example.com/audio/ref.mp3?token=secret")).toBe(
-      "ref.mp3",
-    );
+    expect(getAudioFileName("https://cdn.example.com/audio/ref.mp3?token=secret")).toBe("ref.mp3");
     expect(getAudioFileName("temp/music/%E9%9F%B3%E4%B9%90.m4a")).toBe("音乐.m4a");
     expect(getAudioFileName("https://cdn.example.com/")).toBe("已上传音频");
     expect(getAudioFileName("not a url")).toBe("not a url");

@@ -47,8 +47,7 @@ class ResizeObserverMock {
 let resizeObserver: ResizeObserverMock | undefined;
 
 let ioCallback:
-  | ((entries: IntersectionObserverEntry[], observer: IntersectionObserver) => void)
-  | null = null;
+  ((entries: IntersectionObserverEntry[], observer: IntersectionObserver) => void) | null = null;
 const ioObserve = vi.fn();
 const ioDisconnect = vi.fn();
 

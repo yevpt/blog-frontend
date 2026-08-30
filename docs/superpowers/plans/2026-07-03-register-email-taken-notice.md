@@ -24,6 +24,7 @@
 ## 文件结构总览
 
 **后端（blog-backend）：**
+
 - 改：`internal/service/auth/auth.go`（`SendCode` 加邮箱查重）
 - 改：`internal/service/auth/auth_test.go`（更新 `TestAuthService_SendCode_Success`，新增邮箱已注册用例）
 - 改：`pkg/response/response.go`（新增 `CodeAuthEmailTaken` 常量）
@@ -31,6 +32,7 @@
 - 改：`internal/handler/auth/auth_test.go`（新增 409 分支用例）
 
 **前端（blog-frontend）：**
+
 - 改：`apps/web/hooks/use-captcha-token.tsx`（拆分 `handleVerify`，新增 `onError`/`errorCode` 透传）
 - 改：`apps/web/hooks/use-captcha-token.test.tsx`（新增 `onError` 触发用例）
 - 改：`apps/web/hooks/use-register-form.tsx`（新增 `emailTaken` 状态，接入 `onError`）
@@ -43,10 +45,12 @@
 ### Task 1: 后端 — `SendCode` service 增加邮箱查重
 
 **Files:**
+
 - Modify: `/Users/vpt/Documents/Codes/blog/blog-backend/internal/service/auth/auth.go:122-166`
 - Test: `/Users/vpt/Documents/Codes/blog/blog-backend/internal/service/auth/auth_test.go:87-101`（改）+ 新增用例
 
 **Interfaces:**
+
 - Consumes：现成的 `s.repo.ExistsByEmail(email string) (bool, error)`（`internal/repository/user/user.go:114`）、现成的 `ErrEmailTaken = errors.New("该邮箱已被注册")`（`auth.go:28`）。
 - Produces：`SendCode` 在邮箱已注册时返回 `ErrEmailTaken`（后续 Task 2 的 handler 靠 `errors.Is(err, ErrEmailTaken)` 识别）。
 
@@ -146,11 +150,13 @@ git commit -m "fix(auth): 发码前校验邮箱是否已注册"
 ### Task 2: 后端 — `SendCode` handler 用 409 区分「邮箱已注册」
 
 **Files:**
+
 - Modify: `/Users/vpt/Documents/Codes/blog/blog-backend/pkg/response/response.go`
 - Modify: `/Users/vpt/Documents/Codes/blog/blog-backend/internal/handler/auth/auth.go:35-55`
 - Test: `/Users/vpt/Documents/Codes/blog/blog-backend/internal/handler/auth/auth_test.go`
 
 **Interfaces:**
+
 - Consumes：Task 1 产出的 `authservice.ErrEmailTaken`；现成的 `response.Conflict(c *gin.Context, errorCode string, message string)`（`pkg/response/response.go`，HTTP 409）。
 - Produces：`POST /auth/send-code` 命中邮箱已注册时返回 `HTTP 409` + `{code: 409, error_code: "AUTH_EMAIL_TAKEN", message: "该邮箱已被注册"}`，供前端 Task 3/4 消费。
 
@@ -247,10 +253,12 @@ git commit -m "fix(auth): 发码接口用 409 区分邮箱已注册"
 ### Task 3: 前端 — `use-captcha-token.tsx` 拆分错误路径并新增 `onError`
 
 **Files:**
+
 - Modify: `apps/web/hooks/use-captcha-token.tsx`
 - Test: `apps/web/hooks/use-captcha-token.test.tsx`
 
 **Interfaces:**
+
 - Consumes：无新外部依赖。
 - Produces：`UseCaptchaTokenOptions.onError?: (message: string, errorCode: string | null) => void`；当 `onToken` 抛出非限流错误时调用，携带从错误对象上鸭子类型探测到的 `errorCode` 属性（后续 Task 4 用它判断 `"AUTH_EMAIL_TAKEN"`）。`onError` 不传时行为等价于现状（关闭弹层，不提示）。
 
@@ -259,31 +267,31 @@ git commit -m "fix(auth): 发码接口用 409 区分邮箱已注册"
 在 `apps/web/hooks/use-captcha-token.test.tsx` 的 `"handleVerify 其它失败时重拉新挑战且保持打开"` 用例之后新增：
 
 ```tsx
-  it("handleVerify 中 onToken 抛出非限流业务错误时关闭弹层并调用 onError，不重拉挑战", async () => {
-    class BusinessError extends Error {
-      errorCode = "AUTH_EMAIL_TAKEN";
-    }
-    const onError = vi.fn();
-    const onToken = vi.fn().mockRejectedValue(new BusinessError("该邮箱已被注册"));
-    vi.spyOn(global, "fetch")
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ challenge_id: "c1", tile_x: 10, tile_y: 20 })),
-      )
-      .mockResolvedValueOnce(new Response(JSON.stringify({ captcha_token: "tok123" })));
-    const { result } = renderHook(() => useCaptchaToken({ onToken, onError }));
+it("handleVerify 中 onToken 抛出非限流业务错误时关闭弹层并调用 onError，不重拉挑战", async () => {
+  class BusinessError extends Error {
+    errorCode = "AUTH_EMAIL_TAKEN";
+  }
+  const onError = vi.fn();
+  const onToken = vi.fn().mockRejectedValue(new BusinessError("该邮箱已被注册"));
+  vi.spyOn(global, "fetch")
+    .mockResolvedValueOnce(
+      new Response(JSON.stringify({ challenge_id: "c1", tile_x: 10, tile_y: 20 })),
+    )
+    .mockResolvedValueOnce(new Response(JSON.stringify({ captcha_token: "tok123" })));
+  const { result } = renderHook(() => useCaptchaToken({ onToken, onError }));
 
-    await act(async () => {
-      await result.current.openCaptcha();
-    });
-    await act(async () => {
-      await result.current.handleVerify(15);
-    });
-
-    expect(onError).toHaveBeenCalledWith("该邮箱已被注册", "AUTH_EMAIL_TAKEN");
-    expect(result.current.captchaOpen).toBe(false);
-    // 不应重拉新挑战：仅 challenge + verify 两次请求
-    expect(global.fetch).toHaveBeenCalledTimes(2);
+  await act(async () => {
+    await result.current.openCaptcha();
   });
+  await act(async () => {
+    await result.current.handleVerify(15);
+  });
+
+  expect(onError).toHaveBeenCalledWith("该邮箱已被注册", "AUTH_EMAIL_TAKEN");
+  expect(result.current.captchaOpen).toBe(false);
+  // 不应重拉新挑战：仅 challenge + verify 两次请求
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+});
 ```
 
 - [ ] **Step 2: 跑测试确认失败**
@@ -336,53 +344,53 @@ export function useCaptchaToken(opts: UseCaptchaTokenOptions): UseCaptchaTokenRe
 4. 把 `handleVerify` 整个函数替换为：
 
 ```ts
-  const handleVerify = useCallback(
-    async (x: number) => {
-      if (!captchaChallenge) {
-        return;
-      }
-      setCaptchaLoading(true);
+const handleVerify = useCallback(
+  async (x: number) => {
+    if (!captchaChallenge) {
+      return;
+    }
+    setCaptchaLoading(true);
 
-      let verifyResult: CaptchaVerifyResp;
-      try {
-        verifyResult = await postJson<CaptchaVerifyResp>("/api/captcha/register/verify", {
-          challenge_id: captchaChallenge.challenge_id,
-          x,
-          y: captchaChallenge.tile_y,
-        });
-      } catch (err) {
-        if (isRateLimited(err)) {
+    let verifyResult: CaptchaVerifyResp;
+    try {
+      verifyResult = await postJson<CaptchaVerifyResp>("/api/captcha/register/verify", {
+        challenge_id: captchaChallenge.challenge_id,
+        x,
+        y: captchaChallenge.tile_y,
+      });
+    } catch (err) {
+      if (isRateLimited(err)) {
+        closeCaptcha();
+        onRateLimited?.(err instanceof Error ? err.message : "发送过于频繁");
+      } else {
+        // 滑块验证请求本身失败：重拉一张新挑战，让用户重试；连重拉都失败才关闭
+        try {
+          await fetchChallenge();
+        } catch {
           closeCaptcha();
-          onRateLimited?.(err instanceof Error ? err.message : "发送过于频繁");
-        } else {
-          // 滑块验证请求本身失败：重拉一张新挑战，让用户重试；连重拉都失败才关闭
-          try {
-            await fetchChallenge();
-          } catch {
-            closeCaptcha();
-          }
         }
-        setCaptchaLoading(false);
-        return;
       }
+      setCaptchaLoading(false);
+      return;
+    }
 
-      try {
-        await onToken(verifyResult.captcha_token);
-        closeCaptcha();
-      } catch (err) {
-        // 业务发码请求失败，不是滑块的问题：重拉验证码没有意义，直接关闭并把错误暴露给调用方
-        closeCaptcha();
-        if (isRateLimited(err)) {
-          onRateLimited?.(err instanceof Error ? err.message : "发送过于频繁");
-        } else {
-          onError?.(err instanceof Error ? err.message : "操作失败", extractErrorCode(err));
-        }
-      } finally {
-        setCaptchaLoading(false);
+    try {
+      await onToken(verifyResult.captcha_token);
+      closeCaptcha();
+    } catch (err) {
+      // 业务发码请求失败，不是滑块的问题：重拉验证码没有意义，直接关闭并把错误暴露给调用方
+      closeCaptcha();
+      if (isRateLimited(err)) {
+        onRateLimited?.(err instanceof Error ? err.message : "发送过于频繁");
+      } else {
+        onError?.(err instanceof Error ? err.message : "操作失败", extractErrorCode(err));
       }
-    },
-    [captchaChallenge, closeCaptcha, fetchChallenge, onToken, onRateLimited, onError],
-  );
+    } finally {
+      setCaptchaLoading(false);
+    }
+  },
+  [captchaChallenge, closeCaptcha, fetchChallenge, onToken, onRateLimited, onError],
+);
 ```
 
 - [ ] **Step 4: 跑测试确认通过**
@@ -403,10 +411,12 @@ git commit -m "fix(auth): 发码业务错误不再被验证码弹层静默吞掉
 ### Task 4: 前端 — `use-register-form.tsx` 接入 `onError`，新增 `emailTaken` 状态
 
 **Files:**
+
 - Modify: `apps/web/hooks/use-register-form.tsx`
 - Test: `apps/web/hooks/use-register-form.test.tsx`
 
 **Interfaces:**
+
 - Consumes：Task 3 产出的 `useCaptchaToken({ onError })`。
 - Produces：`useRegisterForm` 返回值新增 `emailTaken: boolean`（后续 Task 5 的 `RegisterView` 用它决定是否渲染「去登录」按钮）。
 
@@ -415,38 +425,38 @@ git commit -m "fix(auth): 发码业务错误不再被验证码弹层静默吞掉
 在 `apps/web/hooks/use-register-form.test.tsx` 的 `"successful captcha verify sends email code and starts 60 second countdown"` 用例之后新增：
 
 ```tsx
-  it("captcha verify with email already registered sets apiError and emailTaken", async () => {
-    vi.mocked(fetch)
-      .mockResolvedValueOnce(mockApiResponse(CHALLENGE))
-      .mockResolvedValueOnce(mockApiResponse({ captcha_token: "captcha-token" }))
-      .mockResolvedValueOnce({
-        json: async () => ({
-          code: 409,
-          error_code: "AUTH_EMAIL_TAKEN",
-          message: "该邮箱已被注册",
-          data: null,
-        }),
-      } as Response);
+it("captcha verify with email already registered sets apiError and emailTaken", async () => {
+  vi.mocked(fetch)
+    .mockResolvedValueOnce(mockApiResponse(CHALLENGE))
+    .mockResolvedValueOnce(mockApiResponse({ captcha_token: "captcha-token" }))
+    .mockResolvedValueOnce({
+      json: async () => ({
+        code: 409,
+        error_code: "AUTH_EMAIL_TAKEN",
+        message: "该邮箱已被注册",
+        data: null,
+      }),
+    } as Response);
 
-    const { result } = renderHook(() => useRegisterForm({ onSuccess }));
+  const { result } = renderHook(() => useRegisterForm({ onSuccess }));
 
-    act(() => {
-      result.current.setEmail("taken@example.com");
-    });
-
-    await act(async () => {
-      await result.current.openCaptcha();
-    });
-
-    await act(async () => {
-      await result.current.handleCaptchaVerify(162);
-    });
-
-    expect(result.current.apiError).toBe("该邮箱已被注册");
-    expect(result.current.emailTaken).toBe(true);
-    expect(result.current.captchaOpen).toBe(false);
-    expect(result.current.codeSent).toBe(false);
+  act(() => {
+    result.current.setEmail("taken@example.com");
   });
+
+  await act(async () => {
+    await result.current.openCaptcha();
+  });
+
+  await act(async () => {
+    await result.current.handleCaptchaVerify(162);
+  });
+
+  expect(result.current.apiError).toBe("该邮箱已被注册");
+  expect(result.current.emailTaken).toBe(true);
+  expect(result.current.captchaOpen).toBe(false);
+  expect(result.current.codeSent).toBe(false);
+});
 ```
 
 - [ ] **Step 2: 跑测试确认失败**
@@ -501,20 +511,20 @@ async function requestRegisterApi<T>(url: string, init: FetchInit): Promise<T> {
 4. `useRegisterForm` 函数体内，`apiError` state 声明之后新增：
 
 ```ts
-  const [emailTaken, setEmailTaken] = useState(false);
+const [emailTaken, setEmailTaken] = useState(false);
 ```
 
 5. `useCaptchaToken` 调用新增 `onError`：
 
 ```ts
-  const captcha = useCaptchaToken({
-    onToken: sendEmailCode,
-    onRateLimited: (message) => addToast(message, "error"),
-    onError: (message, errorCode) => {
-      setApiError(message);
-      setEmailTaken(errorCode === "AUTH_EMAIL_TAKEN");
-    },
-  });
+const captcha = useCaptchaToken({
+  onToken: sendEmailCode,
+  onRateLimited: (message) => addToast(message, "error"),
+  onError: (message, errorCode) => {
+    setApiError(message);
+    setEmailTaken(errorCode === "AUTH_EMAIL_TAKEN");
+  },
+});
 ```
 
 6. `openCaptcha` 与 `submitRegistration` 开始处各加一行重置，避免上一次「邮箱已注册」的状态残留到下一次尝试：
@@ -565,10 +575,12 @@ git commit -m "feat(auth): 注册表单感知邮箱已注册状态"
 ### Task 5: 前端 — `register-view.tsx` 展示「去登录」按钮
 
 **Files:**
+
 - Modify: `apps/web/components/auth/register-view.tsx`
 - Test: `apps/web/components/auth/register-view.test.tsx`
 
 **Interfaces:**
+
 - Consumes：Task 4 产出的 `useRegisterForm().emailTaken: boolean`；组件已有的 `onSwitchToLogin: () => void` prop。
 - Produces：无新对外接口，纯 UI 展示。
 
@@ -577,68 +589,68 @@ git commit -m "feat(auth): 注册表单感知邮箱已注册状态"
 在 `apps/web/components/auth/register-view.test.tsx` 的 `"send-code 返回 429 时关闭验证码弹层并 toast 通知，不重试拼图"` 用例之后新增：
 
 ```tsx
-  it("send-code 返回邮箱已注册时显示提示与去登录按钮，点击调用 onSwitchToLogin", async () => {
-    const user = userEvent.setup();
-    vi.mocked(global.fetch)
-      .mockResolvedValueOnce(mockProviders())
-      .mockResolvedValueOnce({
-        json: async () => ({
-          code: 0,
-          message: "ok",
-          data: {
-            challenge_id: "c1",
-            master_image: "data:image/jpeg;base64,m",
-            tile_image: "data:image/png;base64,t",
-            tile_x: 10,
-            tile_y: 80,
-            tile_width: 60,
-            tile_height: 60,
-            image_width: 300,
-            image_height: 220,
-          },
-        }),
-      } as Response)
-      .mockResolvedValueOnce({
-        json: async () => ({ code: 0, message: "ok", data: { captcha_token: "tok" } }),
-      } as Response)
-      .mockResolvedValueOnce({
-        json: async () => ({
-          code: 409,
-          error_code: "AUTH_EMAIL_TAKEN",
-          message: "该邮箱已被注册",
-          data: null,
-        }),
-      } as Response);
-
-    render(<RegisterView onSwitchToLogin={mockSwitch} onSuccess={mockSuccess} />);
-    await user.type(screen.getByPlaceholderText("邮箱地址"), "taken@example.com");
-    await user.click(screen.getByRole("button", { name: "获取验证码" }));
-
-    const track = await screen.findByTestId("captcha-track");
-    Object.defineProperty(track, "getBoundingClientRect", {
-      value: () => ({
-        left: 0,
-        top: 0,
-        right: 300,
-        bottom: 52,
-        width: 300,
-        height: 52,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
+it("send-code 返回邮箱已注册时显示提示与去登录按钮，点击调用 onSwitchToLogin", async () => {
+  const user = userEvent.setup();
+  vi.mocked(global.fetch)
+    .mockResolvedValueOnce(mockProviders())
+    .mockResolvedValueOnce({
+      json: async () => ({
+        code: 0,
+        message: "ok",
+        data: {
+          challenge_id: "c1",
+          master_image: "data:image/jpeg;base64,m",
+          tile_image: "data:image/png;base64,t",
+          tile_x: 10,
+          tile_y: 80,
+          tile_width: 60,
+          tile_height: 60,
+          image_width: 300,
+          image_height: 220,
+        },
       }),
-      configurable: true,
-    });
-    fireEvent.pointerDown(track, { clientX: 10, pointerId: 1 });
-    fireEvent.pointerMove(track, { clientX: 162 });
-    fireEvent.pointerUp(track, { clientX: 162, pointerId: 1 });
+    } as Response)
+    .mockResolvedValueOnce({
+      json: async () => ({ code: 0, message: "ok", data: { captcha_token: "tok" } }),
+    } as Response)
+    .mockResolvedValueOnce({
+      json: async () => ({
+        code: 409,
+        error_code: "AUTH_EMAIL_TAKEN",
+        message: "该邮箱已被注册",
+        data: null,
+      }),
+    } as Response);
 
-    await waitFor(() => {
-      expect(screen.getByText("该邮箱已被注册")).toBeInTheDocument();
-    });
-    await user.click(screen.getByRole("button", { name: "去登录" }));
-    expect(mockSwitch).toHaveBeenCalledOnce();
+  render(<RegisterView onSwitchToLogin={mockSwitch} onSuccess={mockSuccess} />);
+  await user.type(screen.getByPlaceholderText("邮箱地址"), "taken@example.com");
+  await user.click(screen.getByRole("button", { name: "获取验证码" }));
+
+  const track = await screen.findByTestId("captcha-track");
+  Object.defineProperty(track, "getBoundingClientRect", {
+    value: () => ({
+      left: 0,
+      top: 0,
+      right: 300,
+      bottom: 52,
+      width: 300,
+      height: 52,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    }),
+    configurable: true,
   });
+  fireEvent.pointerDown(track, { clientX: 10, pointerId: 1 });
+  fireEvent.pointerMove(track, { clientX: 162 });
+  fireEvent.pointerUp(track, { clientX: 162, pointerId: 1 });
+
+  await waitFor(() => {
+    expect(screen.getByText("该邮箱已被注册")).toBeInTheDocument();
+  });
+  await user.click(screen.getByRole("button", { name: "去登录" }));
+  expect(mockSwitch).toHaveBeenCalledOnce();
+});
 ```
 
 - [ ] **Step 2: 跑测试确认失败**
@@ -662,21 +674,25 @@ Expected: 新用例 FAIL——找不到文本「该邮箱已被注册」或找�
 2. 在现有 `apiError` 提示段落之后追加按钮：
 
 ```tsx
-        {apiError && (
-          <p role="alert" className="mt-3 text-[12px] leading-relaxed text-destructive/80">
-            {apiError}
-          </p>
-        )}
-        {emailTaken && (
-          <Button
-            type="button"
-            variant="text"
-            onPress={onSwitchToLogin}
-            className="mt-1.5 text-[12px] text-primary hover:underline"
-          >
-            去登录
-          </Button>
-        )}
+{
+  apiError && (
+    <p role="alert" className="mt-3 text-[12px] leading-relaxed text-destructive/80">
+      {apiError}
+    </p>
+  );
+}
+{
+  emailTaken && (
+    <Button
+      type="button"
+      variant="text"
+      onPress={onSwitchToLogin}
+      className="mt-1.5 text-[12px] text-primary hover:underline"
+    >
+      去登录
+    </Button>
+  );
+}
 ```
 
 - [ ] **Step 4: 跑测试确认通过**

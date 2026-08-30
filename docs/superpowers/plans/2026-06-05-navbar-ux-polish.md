@@ -12,19 +12,20 @@
 
 ## 文件清单
 
-| 操作 | 路径 |
-|---|---|
-| Create | `packages/icons/svg/bell.svg` |
-| Modify | `apps/web/components/navbar/navbar-mobile-menu.tsx` |
+| 操作   | 路径                                                     |
+| ------ | -------------------------------------------------------- |
+| Create | `packages/icons/svg/bell.svg`                            |
+| Modify | `apps/web/components/navbar/navbar-mobile-menu.tsx`      |
 | Modify | `apps/web/components/navbar/navbar-mobile-menu.test.tsx` |
-| Modify | `apps/web/components/navbar/navbar-user-menu.tsx` |
-| Modify | `apps/web/components/navbar/navbar-user-menu.test.tsx` |
+| Modify | `apps/web/components/navbar/navbar-user-menu.tsx`        |
+| Modify | `apps/web/components/navbar/navbar-user-menu.test.tsx`   |
 
 ---
 
 ## Task 1: 添加 bell 图标到 @repo/icons
 
 **Files:**
+
 - Create: `packages/icons/svg/bell.svg`
 
 - [ ] **Step 1: 写入 bell.svg**
@@ -66,6 +67,7 @@ git commit -m "chore(icons): 新增 bell 通知铃铛图标"
 ## Task 2: 移动端基础修复——cursor-pointer + 退出按钮背景色增强
 
 **Files:**
+
 - Modify: `apps/web/components/navbar/navbar-mobile-menu.tsx`
 - Test: `apps/web/components/navbar/navbar-mobile-menu.test.tsx`
 
@@ -138,6 +140,7 @@ git commit -m "fix(web): 移动端 Navbar 操作按钮加 cursor-pointer，退�
 ## Task 3: 移动端未登录状态主题切换区 A2-1 重设计
 
 **Files:**
+
 - Modify: `apps/web/components/navbar/navbar-mobile-menu.tsx`
 - Test: `apps/web/components/navbar/navbar-mobile-menu.test.tsx`
 
@@ -248,6 +251,7 @@ git commit -m "feat(web): 移动端未登录主题切换区重设计为扁平 To
 ## Task 4: 移动端消息项改名 + 换 bell 图标
 
 **Files:**
+
 - Modify: `apps/web/components/navbar/navbar-mobile-menu.tsx`
 - Test: `apps/web/components/navbar/navbar-mobile-menu.test.tsx`
 
@@ -278,12 +282,7 @@ pnpm --filter @repo/web test -- --run navbar-mobile-menu
 找到已登录状态的消息 `<Link>`（约第 128-134 行）：
 
 ```tsx
-<Link
-  href="/messages"
-  onClick={onClose}
-  aria-label="消息"
-  className={actionClass}
->
+<Link href="/messages" onClick={onClose} aria-label="消息" className={actionClass}>
   <SvgIcon name="message-circle" size={18} />
   <span>消息</span>
 </Link>
@@ -292,12 +291,7 @@ pnpm --filter @repo/web test -- --run navbar-mobile-menu
 替换为：
 
 ```tsx
-<Link
-  href="/messages"
-  onClick={onClose}
-  aria-label="我的消息"
-  className={actionClass}
->
+<Link href="/messages" onClick={onClose} aria-label="我的消息" className={actionClass}>
   <SvgIcon name="bell" size={18} />
   <span>我的消息</span>
 </Link>
@@ -324,6 +318,7 @@ git commit -m "feat(web): 移动端消息项改名为「我的消息」，图标
 ## Task 5: 桌面端 cursor-pointer + 下拉框完整重设计
 
 **Files:**
+
 - Modify: `apps/web/components/navbar/navbar-user-menu.tsx`
 - Test: `apps/web/components/navbar/navbar-user-menu.test.tsx`
 
@@ -626,9 +621,7 @@ const dropdown = (
           <span className="block truncate text-[13px] font-bold leading-tight text-foreground">
             {displayName || "我的账号"}
           </span>
-          <span className="mt-0.5 block text-[11px] font-medium text-primary/70">
-            管理账号 →
-          </span>
+          <span className="mt-0.5 block text-[11px] font-medium text-primary/70">管理账号 →</span>
         </span>
         <SvgIcon name="chevron-right" size={13} className="shrink-0 text-(--fg3) opacity-50" />
       </button>

@@ -6,11 +6,13 @@ directional navigation keys, and optionally supports row selection and sorting.
 ## Vanilla CSS example
 
 ```tsx
-import {Table, TableHeader, Column, Row, TableBody, Cell} from 'vanilla-starter/Table';
+import { Table, TableHeader, Column, Row, TableBody, Cell } from "vanilla-starter/Table";
 
 <Table>
   <TableHeader>
-    <Column id="name" isRowHeader>Name</Column>
+    <Column id="name" isRowHeader>
+      Name
+    </Column>
     <Column id="type">Type</Column>
     <Column id="date">Date Modified</Column>
   </TableHeader>
@@ -66,13 +68,13 @@ import {Table, TableHeader, Column, Row, TableBody, Cell} from 'vanilla-starter/
       <Cell>1/18/2025</Cell>
     </Row>
   </TableBody>
-</Table>
+</Table>;
 ```
 
 ### Table.tsx
 
 ```tsx
-'use client';
+"use client";
 import {
   Button,
   Collection,
@@ -93,14 +95,14 @@ import {
   TableLoadMoreItem as AriaTableLoadMoreItem,
   type TableLoadMoreItemProps,
   TableFooter as AriaTableFooter,
-  type TableFooterProps
-} from 'react-aria-components/Table';
-import {Group} from 'react-aria-components/Group';
-import {composeRenderProps} from 'react-aria-components/composeRenderProps';
-import {Checkbox} from './Checkbox';
-import {ProgressCircle} from './ProgressCircle';
-import {ChevronUp, ChevronDown, GripVertical, ChevronRight} from 'lucide-react';
-import './Table.css';
+  type TableFooterProps,
+} from "react-aria-components/Table";
+import { Group } from "react-aria-components/Group";
+import { composeRenderProps } from "react-aria-components/composeRenderProps";
+import { Checkbox } from "./Checkbox";
+import { ProgressCircle } from "./ProgressCircle";
+import { ChevronUp, ChevronDown, GripVertical, ChevronRight } from "lucide-react";
+import "./Table.css";
 
 export function Table(props: TableProps) {
   return <AriaTable {...props} />;
@@ -110,17 +112,17 @@ interface ColumnProps extends AriaColumnProps {
   allowsResizing?: boolean;
 }
 
-export function Column(props: Omit<ColumnProps, 'children'> & {children?: React.ReactNode}) {
+export function Column(props: Omit<ColumnProps, "children"> & { children?: React.ReactNode }) {
   return (
     <AriaColumn {...props} className="react-aria-Column button-base">
-      {({allowsSorting, sortDirection}) => (
+      {({ allowsSorting, sortDirection }) => (
         <div className="column-header">
           <Group role="presentation" tabIndex={-1} className="column-name">
             {props.children}
           </Group>
           {allowsSorting && (
             <span aria-hidden="true" className="sort-indicator">
-              {sortDirection === 'ascending' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              {sortDirection === "ascending" ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </span>
           )}
           {props.allowsResizing && <ColumnResizer />}
@@ -130,8 +132,8 @@ export function Column(props: Omit<ColumnProps, 'children'> & {children?: React.
   );
 }
 
-export function TableHeader<T>({columns, children, ...otherProps}: TableHeaderProps<T>) {
-  let {selectionBehavior, selectionMode, allowsDragging} = useTableOptions();
+export function TableHeader<T>({ columns, children, ...otherProps }: TableHeaderProps<T>) {
+  let { selectionBehavior, selectionMode, allowsDragging } = useTableOptions();
 
   return (
     <AriaTableHeader {...otherProps}>
@@ -140,17 +142,18 @@ export function TableHeader<T>({columns, children, ...otherProps}: TableHeaderPr
         <AriaColumn
           width={20}
           minWidth={20}
-          style={{width: 20}}
+          style={{ width: 20 }}
           className="react-aria-Column button-base"
         />
       )}
-      {selectionBehavior === 'toggle' && (
+      {selectionBehavior === "toggle" && (
         <AriaColumn
           width={32}
           minWidth={32}
-          style={{width: 32}}
-          className="react-aria-Column button-base">
-          {selectionMode === 'multiple' && <Checkbox slot="selection" />}
+          style={{ width: 32 }}
+          className="react-aria-Column button-base"
+        >
+          {selectionMode === "multiple" && <Checkbox slot="selection" />}
         </AriaColumn>
       )}
       <Collection items={columns}>{children}</Collection>
@@ -158,8 +161,8 @@ export function TableHeader<T>({columns, children, ...otherProps}: TableHeaderPr
   );
 }
 
-export function Row<T>({id, columns, children, ...otherProps}: RowProps<T>) {
-  let {selectionBehavior, allowsDragging} = useTableOptions();
+export function Row<T>({ id, columns, children, ...otherProps }: RowProps<T>) {
+  let { selectionBehavior, allowsDragging } = useTableOptions();
 
   return (
     <AriaRow id={id} {...otherProps}>
@@ -170,7 +173,7 @@ export function Row<T>({id, columns, children, ...otherProps}: RowProps<T>) {
           </Button>
         </Cell>
       )}
-      {selectionBehavior === 'toggle' && (
+      {selectionBehavior === "toggle" && (
         <Cell>
           <Checkbox slot="selection" />
         </Cell>
@@ -191,7 +194,7 @@ export function TableFooter<T>(props: TableFooterProps<T>) {
 export function Cell(props: CellProps) {
   return (
     <AriaCell {...props}>
-      {composeRenderProps(props.children, (children, {hasChildItems, isTreeColumn}) => (
+      {composeRenderProps(props.children, (children, { hasChildItems, isTreeColumn }) => (
         <>
           {isTreeColumn && hasChildItems && (
             <Button slot="chevron">
@@ -208,20 +211,19 @@ export function Cell(props: CellProps) {
 export function TableLoadMoreItem(props: TableLoadMoreItemProps) {
   return (
     <AriaTableLoadMoreItem {...props}>
-      <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
         <ProgressCircle isIndeterminate aria-label="Loading more..." />
       </div>
     </AriaTableLoadMoreItem>
   );
 }
-
 ```
 
 ### Table.css
 
 ```css
-@import './theme.css';
-@import './utilities.css';
+@import "./theme.css";
+@import "./utilities.css";
 
 .react-aria-Table {
   border: 0.5px solid var(--border-color);
@@ -460,15 +462,15 @@ export function TableLoadMoreItem(props: TableLoadMoreItemProps) {
   box-sizing: content-box;
   background-clip: content-box;
 
-  &[data-resizable-direction='both'] {
+  &[data-resizable-direction="both"] {
     cursor: ew-resize;
   }
 
-  &[data-resizable-direction='left'] {
+  &[data-resizable-direction="left"] {
     cursor: e-resize;
   }
 
-  &[data-resizable-direction='right'] {
+  &[data-resizable-direction="right"] {
     cursor: w-resize;
   }
 
@@ -511,7 +513,7 @@ export function TableLoadMoreItem(props: TableLoadMoreItemProps) {
     }
   }
 
-  .react-aria-Button[slot='chevron'] {
+  .react-aria-Button[slot="chevron"] {
     all: unset;
     vertical-align: middle;
     margin-inline-end: var(--spacing-1);
@@ -527,7 +529,7 @@ export function TableLoadMoreItem(props: TableLoadMoreItemProps) {
     }
   }
 
-  &[data-expanded] .react-aria-Button[slot='chevron'] svg {
+  &[data-expanded] .react-aria-Button[slot="chevron"] svg {
     rotate: 90deg;
   }
 }
@@ -592,17 +594,18 @@ export function TableLoadMoreItem(props: TableLoadMoreItemProps) {
   font-weight: bold;
   background: var(--gray-200);
 }
-
 ```
 
 ## Tailwind example
 
 ```tsx
-import {Table, TableHeader, TableBody, Column, Row, Cell} from 'tailwind-starter/Table';
+import { Table, TableHeader, TableBody, Column, Row, Cell } from "tailwind-starter/Table";
 
 <Table>
   <TableHeader>
-    <Column id="name" isRowHeader>Name</Column>
+    <Column id="name" isRowHeader>
+      Name
+    </Column>
     <Column id="type">Type</Column>
     <Column id="date">Date Modified</Column>
   </TableHeader>
@@ -658,15 +661,15 @@ import {Table, TableHeader, TableBody, Column, Row, Cell} from 'tailwind-starter
       <Cell>1/18/2025</Cell>
     </Row>
   </TableBody>
-</Table>
+</Table>;
 ```
 
 ### Table.tsx
 
 ```tsx
-'use client';
-import {ArrowUp, ChevronRight} from 'lucide-react';
-import React from 'react';
+"use client";
+import { ArrowUp, ChevronRight } from "lucide-react";
+import React from "react";
 import {
   Cell as AriaCell,
   Column as AriaColumn,
@@ -686,16 +689,16 @@ import {
   useTableOptions,
   type TableBodyProps,
   TableFooter as AriaTableFooter,
-  type TableFooterProps
-} from 'react-aria-components/Table';
-import {Group} from 'react-aria-components/Group';
-import {composeRenderProps} from 'react-aria-components/composeRenderProps';
-import {twMerge} from 'tailwind-merge';
-import {tv} from 'tailwind-variants';
-import {Checkbox} from './Checkbox';
-import {composeTailwindRenderProps, focusRing} from './utils';
+  type TableFooterProps,
+} from "react-aria-components/Table";
+import { Group } from "react-aria-components/Group";
+import { composeRenderProps } from "react-aria-components/composeRenderProps";
+import { twMerge } from "tailwind-merge";
+import { tv } from "tailwind-variants";
+import { Checkbox } from "./Checkbox";
+import { composeTailwindRenderProps, focusRing } from "./utils";
 
-interface TableProps extends Omit<AriaTableProps, 'className'> {
+interface TableProps extends Omit<AriaTableProps, "className"> {
   className?: string;
 }
 
@@ -704,9 +707,10 @@ export function Table(props: TableProps) {
     <ResizableTableContainer
       onScroll={props.onScroll}
       className={twMerge(
-        'w-full max-h-[320px] overflow-auto scroll-pt-[2.281rem] relative bg-white dark:bg-neutral-900 box-border border border-neutral-300 dark:border-neutral-700 rounded-lg font-sans',
-        props.className
-      )}>
+        "w-full max-h-[320px] overflow-auto scroll-pt-[2.281rem] relative bg-white dark:bg-neutral-900 box-border border border-neutral-300 dark:border-neutral-700 rounded-lg font-sans",
+        props.className,
+      )}
+    >
       <AriaTable
         {...props}
         className="border-separate border-spacing-0 box-border overflow-hidden has-[>[data-empty]]:h-full"
@@ -717,12 +721,12 @@ export function Table(props: TableProps) {
 
 const columnStyles = tv({
   extend: focusRing,
-  base: 'px-2 h-5 box-border flex-1 flex gap-1 items-center overflow-hidden'
+  base: "px-2 h-5 box-border flex-1 flex gap-1 items-center overflow-hidden",
 });
 
 const resizerStyles = tv({
   extend: focusRing,
-  base: 'w-px px-[8px] translate-x-[8px] box-content py-1 h-5 bg-clip-content bg-neutral-400 dark:bg-neutral-500 forced-colors:bg-[ButtonBorder] cursor-col-resize rounded-xs resizing:bg-blue-600 forced-colors:resizing:bg-[Highlight] resizing:w-[2px] resizing:pl-[7px] -outline-offset-2'
+  base: "w-px px-[8px] translate-x-[8px] box-content py-1 h-5 bg-clip-content bg-neutral-400 dark:bg-neutral-500 forced-colors:bg-[ButtonBorder] cursor-col-resize rounded-xs resizing:bg-blue-600 forced-colors:resizing:bg-[Highlight] resizing:w-[2px] resizing:pl-[7px] -outline-offset-2",
 });
 
 export function Column(props: ColumnProps) {
@@ -731,17 +735,19 @@ export function Column(props: ColumnProps) {
       {...props}
       className={composeTailwindRenderProps(
         props.className,
-        'box-border h-1 [&:hover]:z-20 focus-within:z-20 text-start text-sm font-semibold text-neutral-700 dark:text-neutral-300 cursor-default'
-      )}>
-      {composeRenderProps(props.children, (children, {allowsSorting, sortDirection}) => (
+        "box-border h-1 [&:hover]:z-20 focus-within:z-20 text-start text-sm font-semibold text-neutral-700 dark:text-neutral-300 cursor-default",
+      )}
+    >
+      {composeRenderProps(props.children, (children, { allowsSorting, sortDirection }) => (
         <div className="flex items-center">
           <Group role="presentation" tabIndex={-1} className={columnStyles}>
             <span className="truncate">{children}</span>
             {allowsSorting && (
               <span
                 className={`w-4 h-4 flex items-center justify-center transition ${
-                  sortDirection === 'descending' ? 'rotate-180' : ''
-                }`}>
+                  sortDirection === "descending" ? "rotate-180" : ""
+                }`}
+              >
                 {sortDirection && (
                   <ArrowUp
                     aria-hidden
@@ -759,23 +765,25 @@ export function Column(props: ColumnProps) {
 }
 
 export function TableHeader<T>(props: TableHeaderProps<T>) {
-  let {selectionBehavior, selectionMode, allowsDragging} = useTableOptions();
+  let { selectionBehavior, selectionMode, allowsDragging } = useTableOptions();
 
   return (
     <AriaTableHeader
       {...props}
       className={composeTailwindRenderProps(
         props.className,
-        'sticky top-0 z-10 bg-neutral-100/60 dark:bg-neutral-700/60 backdrop-blur-md supports-[-moz-appearance:none]:bg-neutral-100 dark:supports-[-moz-appearance:none]:bg-neutral-700 forced-colors:bg-[Canvas] rounded-t-lg border-b border-b-neutral-200 dark:border-b-neutral-700'
-      )}>
+        "sticky top-0 z-10 bg-neutral-100/60 dark:bg-neutral-700/60 backdrop-blur-md supports-[-moz-appearance:none]:bg-neutral-100 dark:supports-[-moz-appearance:none]:bg-neutral-700 forced-colors:bg-[Canvas] rounded-t-lg border-b border-b-neutral-200 dark:border-b-neutral-700",
+      )}
+    >
       {/* Add extra columns for drag and drop and selection. */}
       {allowsDragging && <Column />}
-      {selectionBehavior === 'toggle' && (
+      {selectionBehavior === "toggle" && (
         <AriaColumn
           width={36}
           minWidth={36}
-          className="box-border p-2 text-sm font-semibold cursor-default text-start">
-          {selectionMode === 'multiple' && <Checkbox slot="selection" />}
+          className="box-border p-2 text-sm font-semibold cursor-default text-start"
+        >
+          {selectionMode === "multiple" && <Checkbox slot="selection" />}
         </AriaColumn>
       )}
       <Collection items={props.columns}>{props.children}</Collection>
@@ -793,11 +801,11 @@ export function TableFooter<T>(props: TableFooterProps<T>) {
 
 const rowStyles = tv({
   extend: focusRing,
-  base: 'group/row relative cursor-default select-none -outline-offset-2 text-neutral-900 disabled:text-neutral-300 dark:text-neutral-200 dark:disabled:text-neutral-600 text-sm hover:bg-neutral-100 pressed:bg-neutral-100 dark:hover:bg-neutral-800 dark:pressed:bg-neutral-800 selected:bg-blue-100 selected:hover:bg-blue-200 selected:pressed:bg-blue-200 dark:selected:bg-blue-700/30 dark:selected:hover:bg-blue-700/40 dark:selected:pressed:bg-blue-700/40 last:rounded-b-lg'
+  base: "group/row relative cursor-default select-none -outline-offset-2 text-neutral-900 disabled:text-neutral-300 dark:text-neutral-200 dark:disabled:text-neutral-600 text-sm hover:bg-neutral-100 pressed:bg-neutral-100 dark:hover:bg-neutral-800 dark:pressed:bg-neutral-800 selected:bg-blue-100 selected:hover:bg-blue-200 selected:pressed:bg-blue-200 dark:selected:bg-blue-700/30 dark:selected:hover:bg-blue-700/40 dark:selected:pressed:bg-blue-700/40 last:rounded-b-lg",
 });
 
-export function Row<T>({id, columns, children, ...otherProps}: RowProps<T>) {
-  let {selectionBehavior, allowsDragging} = useTableOptions();
+export function Row<T>({ id, columns, children, ...otherProps }: RowProps<T>) {
+  let { selectionBehavior, allowsDragging } = useTableOptions();
 
   return (
     <AriaRow id={id} {...otherProps} className={rowStyles}>
@@ -806,7 +814,7 @@ export function Row<T>({id, columns, children, ...otherProps}: RowProps<T>) {
           <Button slot="drag">≡</Button>
         </Cell>
       )}
-      {selectionBehavior === 'toggle' && (
+      {selectionBehavior === "toggle" && (
         <Cell>
           <Checkbox slot="selection" />
         </Cell>
@@ -818,29 +826,29 @@ export function Row<T>({id, columns, children, ...otherProps}: RowProps<T>) {
 
 const cellStyles = tv({
   extend: focusRing,
-  base: 'box-border [-webkit-tap-highlight-color:transparent] border-b border-b-neutral-200 dark:border-b-neutral-700 group-last/row:border-b-0 [--selected-border:var(--color-blue-200)] dark:[--selected-border:var(--color-blue-900)] group-selected/row:border-(--selected-border) [:is(:has(+[data-selected])_*)]:border-(--selected-border) p-2 truncate -outline-offset-2 group-last/row:first:rounded-bl-lg group-last/row:last:rounded-br-lg'
+  base: "box-border [-webkit-tap-highlight-color:transparent] border-b border-b-neutral-200 dark:border-b-neutral-700 group-last/row:border-b-0 [--selected-border:var(--color-blue-200)] dark:[--selected-border:var(--color-blue-900)] group-selected/row:border-(--selected-border) [:is(:has(+[data-selected])_*)]:border-(--selected-border) p-2 truncate -outline-offset-2 group-last/row:first:rounded-bl-lg group-last/row:last:rounded-br-lg",
 });
 
 const expandButton = tv({
   extend: focusRing,
-  base: 'border-0 p-0 pr-1 bg-transparent shrink-0 align-middle cursor-default [-webkit-tap-highlight-color:transparent]',
+  base: "border-0 p-0 pr-1 bg-transparent shrink-0 align-middle cursor-default [-webkit-tap-highlight-color:transparent]",
   variants: {
     isDisabled: {
-      true: 'text-neutral-300 dark:text-neutral-600 forced-colors:text-[GrayText]'
-    }
-  }
+      true: "text-neutral-300 dark:text-neutral-600 forced-colors:text-[GrayText]",
+    },
+  },
 });
 
 const chevron = tv({
-  base: 'w-4.5 h-4.5 text-neutral-500 dark:text-neutral-400 transition-transform duration-200 ease-in-out',
+  base: "w-4.5 h-4.5 text-neutral-500 dark:text-neutral-400 transition-transform duration-200 ease-in-out",
   variants: {
     isExpanded: {
-      true: 'transform rotate-90'
+      true: "transform rotate-90",
     },
     isDisabled: {
-      true: 'text-neutral-300 dark:text-neutral-600 forced-colors:text-[GrayText]'
-    }
-  }
+      true: "text-neutral-300 dark:text-neutral-600 forced-colors:text-[GrayText]",
+    },
+  },
 });
 
 export function Cell(props: CellProps) {
@@ -848,28 +856,28 @@ export function Cell(props: CellProps) {
     <AriaCell
       {...props}
       className={cellStyles}
-      style={({hasChildItems, isTreeColumn, level}) => ({
+      style={({ hasChildItems, isTreeColumn, level }) => ({
         paddingInlineStart: isTreeColumn
           ? 4 + (hasChildItems ? 0 : 20) + (level - 1) * 16
-          : undefined
-      })}>
+          : undefined,
+      })}
+    >
       {composeRenderProps(
         props.children,
-        (children, {hasChildItems, isTreeColumn, isExpanded, isDisabled}) => (
+        (children, { hasChildItems, isTreeColumn, isExpanded, isDisabled }) => (
           <>
             {hasChildItems && isTreeColumn && (
-              <Button slot="chevron" className={expandButton({isDisabled})}>
-                <ChevronRight aria-hidden className={chevron({isExpanded, isDisabled})} />
+              <Button slot="chevron" className={expandButton({ isDisabled })}>
+                <ChevronRight aria-hidden className={chevron({ isExpanded, isDisabled })} />
               </Button>
             )}
             {children}
           </>
-        )
+        ),
       )}
     </AriaCell>
   );
 }
-
 ```
 
 ## Content
@@ -878,62 +886,95 @@ export function Cell(props: CellProps) {
 In this example, both the columns and the rows are provided to the table via a render function, enabling the user to hide and show columns and add additional rows.
 
 ```tsx
-import {Table, TableHeader, Column, Row, TableBody, Cell, TableFooter} from 'vanilla-starter/Table';
-import {CheckboxGroup} from 'vanilla-starter/CheckboxGroup';
-import {Checkbox} from 'vanilla-starter/Checkbox';
-import {Button} from 'vanilla-starter/Button';
-import {useState} from 'react';
+import {
+  Table,
+  TableHeader,
+  Column,
+  Row,
+  TableBody,
+  Cell,
+  TableFooter,
+} from "vanilla-starter/Table";
+import { CheckboxGroup } from "vanilla-starter/CheckboxGroup";
+import { Checkbox } from "vanilla-starter/Checkbox";
+import { Button } from "vanilla-starter/Button";
+import { useState } from "react";
 
 const columns = [
-  {name: 'Title', id: 'title', isRowHeader: true},
-  {name: 'Status', id: 'status'},
-  {name: 'Payment Method', id: 'paymentMethod'},
-  {name: 'Price', id: 'price'}
+  { name: "Title", id: "title", isRowHeader: true },
+  { name: "Status", id: "status" },
+  { name: "Payment Method", id: "paymentMethod" },
+  { name: "Price", id: "price" },
 ];
 
 const initialRows = [
-  {id: 1, title: 'Website Design', status: 'Paid', paymentMethod: 'Credit Card', price: 1200},
-  {id: 2, title: 'Logo Creation', status: 'Pending', paymentMethod: 'PayPal', price: 350},
-  {id: 3, title: 'SEO Optimization', status: 'Overdue', paymentMethod: 'Bank Transfer', price: 800},
-  {id: 4, title: 'Social Media Setup', status: 'Paid', paymentMethod: 'Debit Card', price: 450},
-  {id: 5, title: 'Content Writing', status: 'Pending', paymentMethod: 'Credit Card', price: 600}
+  { id: 1, title: "Website Design", status: "Paid", paymentMethod: "Credit Card", price: 1200 },
+  { id: 2, title: "Logo Creation", status: "Pending", paymentMethod: "PayPal", price: 350 },
+  {
+    id: 3,
+    title: "SEO Optimization",
+    status: "Overdue",
+    paymentMethod: "Bank Transfer",
+    price: 800,
+  },
+  { id: 4, title: "Social Media Setup", status: "Paid", paymentMethod: "Debit Card", price: 450 },
+  { id: 5, title: "Content Writing", status: "Pending", paymentMethod: "Credit Card", price: 600 },
 ];
 
 function FileTable() {
-  let [showColumns, setShowColumns] = useState(['title', 'status', 'paymentMethod', 'price']);
-  let visibleColumns = columns.filter(column => showColumns.includes(column.id));
+  let [showColumns, setShowColumns] = useState(["title", "status", "paymentMethod", "price"]);
+  let visibleColumns = columns.filter((column) => showColumns.includes(column.id));
 
   let [rows, setRows] = useState(initialRows);
   let addRow = () => {
-    setRows(rows => [
+    setRows((rows) => [
       ...rows,
-      {id: rows.length + 1, title: 'New Invoice', status: 'Pending', paymentMethod: 'Credit Card', price: 250}
+      {
+        id: rows.length + 1,
+        title: "New Invoice",
+        status: "Pending",
+        paymentMethod: "Credit Card",
+        price: 250,
+      },
     ]);
   };
 
   return (
-    <div style={{display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'start', width: '100%'}}>
-      <CheckboxGroup aria-label="Show columns" value={showColumns} onChange={setShowColumns} orientation="horizontal">
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        alignItems: "start",
+        width: "100%",
+      }}
+    >
+      <CheckboxGroup
+        aria-label="Show columns"
+        value={showColumns}
+        onChange={setShowColumns}
+        orientation="horizontal"
+      >
         <Checkbox value="status">Status</Checkbox>
         <Checkbox value="paymentMethod">Payment Method</Checkbox>
       </CheckboxGroup>
-      <Table aria-label="Files" style={{width: '100%'}}>
+      <Table aria-label="Files" style={{ width: "100%" }}>
         <TableHeader columns={visibleColumns}>
-          {column => (
-            <Column isRowHeader={column.isRowHeader}>
-              {column.name}
-            </Column>
-          )}
+          {(column) => <Column isRowHeader={column.isRowHeader}>{column.name}</Column>}
         </TableHeader>
         {/*- begin highlight -*/}
         <TableBody items={rows} dependencies={[visibleColumns]}>
-          {item => (
+          {(item) => (
             /*- end highlight -*/
             <Row columns={visibleColumns}>
-              {column => (
+              {(column) => (
                 <Cell>
-                  {column.id === 'price' 
-                    ? item.price.toLocaleString('en-US', {style: 'currency', currency: 'USD', maximumFractionDigits: 0})
+                  {column.id === "price"
+                    ? item.price.toLocaleString("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                        maximumFractionDigits: 0,
+                      })
                     : item[column.id]}
                 </Cell>
               )}
@@ -943,7 +984,15 @@ function FileTable() {
         <TableFooter>
           <Row>
             <Cell colSpan={showColumns.length - 1}>Total</Cell>
-            <Cell>{rows.reduce((p, row) => p + row.price, 0).toLocaleString('en-US', {style: 'currency', currency: 'USD', maximumFractionDigits: 0})}</Cell>
+            <Cell>
+              {rows
+                .reduce((p, row) => p + row.price, 0)
+                .toLocaleString("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                  maximumFractionDigits: 0,
+                })}
+            </Cell>
           </Row>
         </TableFooter>
       </Table>
@@ -964,27 +1013,45 @@ function FileTable() {
 Rows can be nested to display hierarchical data. Use the `treeColumn` prop to designate a column, and render a `<Button slot="chevron">` within the cells in that column to allow users to expand and collapse the row. Use the `expandedKeys` prop to control the expanded rows.
 
 ```tsx
-import {Table, TableHeader, Column, Row, TableBody, Cell} from 'vanilla-starter/Table';
-import {Collection, type Key} from 'react-aria-components/Collection';
-import {useState} from 'react';
+import { Table, TableHeader, Column, Row, TableBody, Cell } from "vanilla-starter/Table";
+import { Collection, type Key } from "react-aria-components/Collection";
+import { useState } from "react";
 
 /*- begin collapse -*/
 const rows = [
-  {id: '1', title: 'Documents', type: 'Directory', date: '10/20/2025', children: [
-    {id: '2', title: 'Project', type: 'Directory', date: '8/2/2025', children: [
-      {id: '3', title: 'Weekly Report', type: 'File', date: '7/10/2025', children: []},
-      {id: '4', title: 'Budget', type: 'File', date: '8/20/2025', children: []}
-    ]}
-  ]},
-  {id: '5', title: 'Photos', type: 'Directory', date: '2/3/2026', children: [
-    {id: '6', title: 'Image 1', type: 'File', date: '1/23/2026', children: []},
-    {id: '7', title: 'Image 2', type: 'File', date: '2/3/2026', children: []}
-  ]}
+  {
+    id: "1",
+    title: "Documents",
+    type: "Directory",
+    date: "10/20/2025",
+    children: [
+      {
+        id: "2",
+        title: "Project",
+        type: "Directory",
+        date: "8/2/2025",
+        children: [
+          { id: "3", title: "Weekly Report", type: "File", date: "7/10/2025", children: [] },
+          { id: "4", title: "Budget", type: "File", date: "8/20/2025", children: [] },
+        ],
+      },
+    ],
+  },
+  {
+    id: "5",
+    title: "Photos",
+    type: "Directory",
+    date: "2/3/2026",
+    children: [
+      { id: "6", title: "Image 1", type: "File", date: "1/23/2026", children: [] },
+      { id: "7", title: "Image 2", type: "File", date: "2/3/2026", children: [] },
+    ],
+  },
 ];
 /*- end collapse -*/
 
 function Example() {
-  let [expandedKeys, setExpandedKeys] = useState(new Set<Key>(['1']))
+  let [expandedKeys, setExpandedKeys] = useState(new Set<Key>(["1"]));
 
   return (
     <Table
@@ -992,10 +1059,13 @@ function Example() {
       /*- begin highlight -*/
       treeColumn="name"
       expandedKeys={expandedKeys}
-      onExpandedChange={setExpandedKeys}>
+      onExpandedChange={setExpandedKeys}
+    >
       {/*- end highlight -*/}
       <TableHeader>
-        <Column id="name" isRowHeader>Name</Column>
+        <Column id="name" isRowHeader>
+          Name
+        </Column>
         <Column id="type">Type</Column>
         <Column id="date">Date Modified</Column>
       </TableHeader>
@@ -1008,9 +1078,7 @@ function Example() {
               <Cell>{item.date}</Cell>
               {/*- begin highlight -*/}
               {/* recursively render children */}
-              <Collection items={item.children}>
-                {renderItem}
-              </Collection>
+              <Collection items={item.children}>{renderItem}</Collection>
               {/*- end highlight -*/}
             </Row>
           );
@@ -1026,10 +1094,18 @@ function Example() {
 Use [renderEmptyState](#empty-state) to display a spinner during initial load. To enable infinite scrolling, render a `<TableLoadMoreItem>` at the end of the list. Use whatever data fetching library you prefer – this example uses `useAsyncList` from `react-stately`.
 
 ```tsx
-import {Collection} from 'react-aria-components/Collection';
-import {useAsyncList} from 'react-aria-components/useAsyncList';
-import {Table, TableHeader, Column, Row, TableBody, Cell, TableLoadMoreItem} from 'vanilla-starter/Table';
-import {ProgressCircle} from 'vanilla-starter/ProgressCircle';
+import { Collection } from "react-aria-components/Collection";
+import { useAsyncList } from "react-aria-components/useAsyncList";
+import {
+  Table,
+  TableHeader,
+  Column,
+  Row,
+  TableBody,
+  Cell,
+  TableLoadMoreItem,
+} from "vanilla-starter/Table";
+import { ProgressCircle } from "vanilla-starter/ProgressCircle";
 
 interface Character {
   name: string;
@@ -1042,51 +1118,54 @@ function AsyncSortTable() {
   let list = useAsyncList<Character>({
     async load({ signal, cursor }) {
       if (cursor) {
-        cursor = cursor.replace(/^http:\/\//i, 'https://');
+        cursor = cursor.replace(/^http:\/\//i, "https://");
       }
 
-      let res = await fetch(
-        cursor || 'https://swapi.py4e.com/api/people/?search=',
-        { signal }
-      );
+      let res = await fetch(cursor || "https://swapi.py4e.com/api/people/?search=", { signal });
       let json = await res.json();
 
       return {
         items: json.results,
-        cursor: json.next
+        cursor: json.next,
       };
-    }
+    },
   });
 
   return (
     <div
       style={{
         height: 150,
-        overflow: 'auto',
-        border: '0.5px solid var(--border-color)',
-        borderRadius: 'var(--radius)'
-      }}>
+        overflow: "auto",
+        border: "0.5px solid var(--border-color)",
+        borderRadius: "var(--radius)",
+      }}
+    >
       <Table
         aria-label="Star Wars characters"
-        style={{tableLayout: 'fixed', width: '100%', border: 0}}>
+        style={{ tableLayout: "fixed", width: "100%", border: 0 }}
+      >
         <TableHeader
           style={{
-            position: 'sticky',
+            position: "sticky",
             top: 0,
-            background: 'var(--overlay-background)',
-            zIndex: 1
-          }}>
-          <Column id="name" isRowHeader>Name</Column>
+            background: "var(--overlay-background)",
+            zIndex: 1,
+          }}
+        >
+          <Column id="name" isRowHeader>
+            Name
+          </Column>
           <Column id="height">Height</Column>
           <Column id="mass">Mass</Column>
           <Column id="birth_year">Birth Year</Column>
         </TableHeader>
         <TableBody
           renderEmptyState={() => (
-            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
               <ProgressCircle isIndeterminate aria-label="Loading..." />
             </div>
-          )}>
+          )}
+        >
           <Collection items={list.items}>
             {(item) => (
               <Row id={item.name}>
@@ -1100,7 +1179,8 @@ function AsyncSortTable() {
           {/*- begin highlight -*/}
           <TableLoadMoreItem
             onLoadMore={list.loadMore}
-            isLoading={list.loadingState === 'loadingMore'} />
+            isLoading={list.loadingState === "loadingMore"}
+          />
           {/*- end highlight -*/}
         </TableBody>
       </Table>
@@ -1114,7 +1194,7 @@ function AsyncSortTable() {
 Use the `href` prop on a `<Row>` to create a link. Link interactions vary depending on the selection behavior. See the [selection guide](selection.md) for more details.
 
 ```tsx
-import {Table, TableHeader, Column, Row, TableBody, Cell} from 'vanilla-starter/Table';
+import { Table, TableHeader, Column, Row, TableBody, Cell } from "vanilla-starter/Table";
 
 <Table>
   <TableHeader>
@@ -1141,21 +1221,23 @@ import {Table, TableHeader, Column, Row, TableBody, Cell} from 'vanilla-starter/
       <Cell>July 12, 2023</Cell>
     </Row>
   </TableBody>
-</Table>
+</Table>;
 ```
 
 <InlineAlert
-  variant="notice"
-  UNSAFE_style={{marginTop: '2rem'}}
+variant="notice"
+UNSAFE_style={{marginTop: '2rem'}}
+
 >
-  <Heading>Client-side routing</Heading>
-  <Content>Due to [HTML spec limitations](https://github.com/w3c/html-aria/issues/473), table rows cannot be rendered as `<a>` elements. React Aria handles link clicks with JavaScript and triggers native navigation. When using a client-side router, use the `onAction` event to programmatically trigger navigation instead of the `href` prop.</Content>
+
+<Heading>Client-side routing</Heading>
+<Content>Due to [HTML spec limitations](https://github.com/w3c/html-aria/issues/473), table rows cannot be rendered as `<a>` elements. React Aria handles link clicks with JavaScript and triggers native navigation. When using a client-side router, use the `onAction` event to programmatically trigger navigation instead of the `href` prop.</Content>
 </InlineAlert>
 
 ### Empty state
 
 ```tsx
-import {Table, TableHeader, Column, TableBody} from 'vanilla-starter/Table';
+import { Table, TableHeader, Column, TableBody } from "vanilla-starter/Table";
 
 <Table aria-label="Search results">
   <TableHeader>
@@ -1164,11 +1246,11 @@ import {Table, TableHeader, Column, TableBody} from 'vanilla-starter/Table';
     <Column>Date Modified</Column>
   </TableHeader>
   {/*- begin highlight -*/}
-  <TableBody renderEmptyState={() => 'No results found.'}>
-  {/*- end highlight -*/}
+  <TableBody renderEmptyState={() => "No results found."}>
+    {/*- end highlight -*/}
     {[]}
   </TableBody>
-</Table>
+</Table>;
 ```
 
 ## Selection and actions
@@ -1176,9 +1258,9 @@ import {Table, TableHeader, Column, TableBody} from 'vanilla-starter/Table';
 Use the `selectionMode` prop to enable single or multiple selection. The selected rows can be controlled via the `selectedKeys` prop, matching the `id` prop of the rows. The `onRowAction` event handles item actions. Rows can be disabled with the `isDisabled` prop. See the [selection guide](selection.md) for more details.
 
 ```tsx
-import type {Selection} from 'react-aria-components/Table';
-import {Table, TableHeader, Column, Row, TableBody, Cell} from 'vanilla-starter/Table';
-import {useState} from 'react';
+import type { Selection } from "react-aria-components/Table";
+import { Table, TableHeader, Column, Row, TableBody, Cell } from "vanilla-starter/Table";
+import { useState } from "react";
 
 function Example(props) {
   let [selected, setSelected] = useState<Selection>(new Set());
@@ -1188,10 +1270,10 @@ function Example(props) {
       <Table
         {...props}
         aria-label="Favorite pokemon"
-        
+
         selectedKeys={selected}
         onSelectionChange={setSelected}
-        onRowAction={key => alert(`Clicked ${key}`)}
+        onRowAction={(key) => alert(`Clicked ${key}`)}
       >
         <TableHeader>
           <Column isRowHeader>Name</Column>
@@ -1221,7 +1303,7 @@ function Example(props) {
           </Row>
         </TableBody>
       </Table>
-      <p>Current selection: {selected === 'all' ? 'all' : [...selected].join(', ')}</p>
+      <p>Current selection: {selected === "all" ? "all" : [...selected].join(", ")}</p>
     </>
   );
 }
@@ -1232,21 +1314,21 @@ function Example(props) {
 Set the `allowsSorting` prop on a `<Column>` to make it sortable. When the column header is pressed, `onSortChange` is called with a `SortDescriptor` including the sorted column and direction (ascending or descending). Use this to sort the data accordingly, and pass the `sortDescriptor` prop to the `<Table>` to display the sorted column.
 
 ```tsx
-import {type SortDescriptor} from 'react-aria-components/Table';
-import {Table, TableHeader, Column, TableBody, Row, Cell} from 'vanilla-starter/Table';
-import {useState} from 'react';
+import { type SortDescriptor } from "react-aria-components/Table";
+import { Table, TableHeader, Column, TableBody, Row, Cell } from "vanilla-starter/Table";
+import { useState } from "react";
 
 const rows = [
-  {id: 1, name: 'Charizard', type: 'Fire, Flying', level: 67},
-  {id: 2, name: 'Blastoise', type: 'Water', level: 56},
-  {id: 3, name: 'Venusaur', type: 'Grass, Poison', level: 83},
-  {id: 4, name: 'Pikachu', type: 'Electric', level: 100}
+  { id: 1, name: "Charizard", type: "Fire, Flying", level: 67 },
+  { id: 2, name: "Blastoise", type: "Water", level: 56 },
+  { id: 3, name: "Venusaur", type: "Grass, Poison", level: 83 },
+  { id: 4, name: "Pikachu", type: "Electric", level: 100 },
 ];
 
 function SortableTable() {
   let [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
-    column: 'name',
-    direction: 'ascending'
+    column: "name",
+    direction: "ascending",
   });
 
   let sortedRows = rows;
@@ -1255,7 +1337,7 @@ function SortableTable() {
       let first = a[sortDescriptor.column];
       let second = b[sortDescriptor.column];
       let cmp = first < second ? -1 : 1;
-      if (sortDescriptor.direction === 'descending') {
+      if (sortDescriptor.direction === "descending") {
         cmp = -cmp;
       }
       return cmp;
@@ -1269,12 +1351,18 @@ function SortableTable() {
       onSortChange={setSortDescriptor}
     >
       <TableHeader>
-        <Column id="name" isRowHeader allowsSorting>Name</Column>
-        <Column id="type" allowsSorting>Type</Column>
-        <Column id="level" allowsSorting>Level</Column>
+        <Column id="name" isRowHeader allowsSorting>
+          Name
+        </Column>
+        <Column id="type" allowsSorting>
+          Type
+        </Column>
+        <Column id="level" allowsSorting>
+          Level
+        </Column>
       </TableHeader>
       <TableBody items={sortedRows}>
-        {item => (
+        {(item) => (
           <Row>
             <Cell>{item.name}</Cell>
             <Cell>{item.type}</Cell>
@@ -1292,27 +1380,38 @@ function SortableTable() {
 Wrap the `<Table>` with a `<ResizableTableContainer>`, and add a `<ColumnResizer>` to each column to make it resizable. Use the `defaultWidth`, `width`, `minWidth`, and `maxWidth` props on a `<Column>` to control resizing behavior. These accept pixels, percentages, or fractional values (the [fr](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout/Basic_Concepts_of_Grid_Layout#the_fr_unit) unit). The default column width is `1fr`.
 
 ```tsx
-import {Table, TableHeader, Column, Row, TableBody, Cell} from 'vanilla-starter/Table';
-import {ResizableTableContainer} from 'react-aria-components/Table';
+import { Table, TableHeader, Column, Row, TableBody, Cell } from "vanilla-starter/Table";
+import { ResizableTableContainer } from "react-aria-components/Table";
 
 const rows = [
-  {id: 1, name: '2022 Roadmap Proposal Revision 012822 Copy (2)', date: 'November 27, 2022 at 4:56PM', size: '214 KB'},
-  {id: 2, name: 'Budget', date: 'January 27, 2021 at 1:56AM', size: '14 MB'},
-  {id: 3, name: 'Welcome Email Template', date: 'July 24, 2022 at 2:48 PM', size: '20 KB'},
-  {id: 4, name: 'Job Posting_8301', date: 'May 30, 2025', size: '139 KB'}
+  {
+    id: 1,
+    name: "2022 Roadmap Proposal Revision 012822 Copy (2)",
+    date: "November 27, 2022 at 4:56PM",
+    size: "214 KB",
+  },
+  { id: 2, name: "Budget", date: "January 27, 2021 at 1:56AM", size: "14 MB" },
+  { id: 3, name: "Welcome Email Template", date: "July 24, 2022 at 2:48 PM", size: "20 KB" },
+  { id: 4, name: "Job Posting_8301", date: "May 30, 2025", size: "139 KB" },
 ];
 
 <ResizableTableContainer>
   <Table aria-label="Table with resizable columns">
     <TableHeader>
       {/*- begin highlight -*/}
-      <Column id="file" isRowHeader allowsResizing maxWidth={500}>File Name</Column>
-      <Column id="size" allowsResizing defaultWidth={80}>Size</Column>
-      <Column id="date" minWidth={100}>Date Modified</Column>
+      <Column id="file" isRowHeader allowsResizing maxWidth={500}>
+        File Name
+      </Column>
+      <Column id="size" allowsResizing defaultWidth={80}>
+        Size
+      </Column>
+      <Column id="date" minWidth={100}>
+        Date Modified
+      </Column>
       {/*- end highlight -*/}
     </TableHeader>
     <TableBody items={rows}>
-      {item => (
+      {(item) => (
         <Row>
           <Cell>{item.name}</Cell>
           <Cell>{item.size}</Cell>
@@ -1321,7 +1420,7 @@ const rows = [
       )}
     </TableBody>
   </Table>
-</ResizableTableContainer>
+</ResizableTableContainer>;
 ```
 
 ### Resize events
@@ -1329,41 +1428,44 @@ const rows = [
 The ResizableTableContainer's `onResize` event is called when a column resizer is moved by the user. The `onResizeEnd` event is called when the user finishes resizing. These receive a `Map` containing the widths of all columns in the Table. This example persists the column widths in `localStorage`.
 
 ```tsx
-import {Table, TableHeader, Column, Row, TableBody, Cell} from 'vanilla-starter/Table';
-import {ResizableTableContainer} from 'react-aria-components/Table';
-import {useSyncExternalStore} from 'react';
+import { Table, TableHeader, Column, Row, TableBody, Cell } from "vanilla-starter/Table";
+import { ResizableTableContainer } from "react-aria-components/Table";
+import { useSyncExternalStore } from "react";
 
 const rows = [
-  {id: 1, name: '2022 Roadmap Proposal Revision 012822 Copy (2)', date: 'November 27, 2022 at 4:56PM', size: '214 KB'},
-  {id: 2, name: 'Budget', date: 'January 27, 2021 at 1:56AM', size: '14 MB'},
-  {id: 3, name: 'Welcome Email Template', date: 'July 24, 2022 at 2:48 PM', size: '20 KB'},
-  {id: 4, name: 'Job Posting_8301', date: 'May 30, 2025', size: '139 KB'}
+  {
+    id: 1,
+    name: "2022 Roadmap Proposal Revision 012822 Copy (2)",
+    date: "November 27, 2022 at 4:56PM",
+    size: "214 KB",
+  },
+  { id: 2, name: "Budget", date: "January 27, 2021 at 1:56AM", size: "14 MB" },
+  { id: 3, name: "Welcome Email Template", date: "July 24, 2022 at 2:48 PM", size: "20 KB" },
+  { id: 4, name: "Job Posting_8301", date: "May 30, 2025", size: "139 KB" },
 ];
 
 const columns = [
-  {id: 'file', name: 'File Name'},
-  {id: 'size', name: 'Size'},
-  {id: 'date', name: 'Date'}
+  { id: "file", name: "File Name" },
+  { id: "size", name: "Size" },
+  { id: "date", name: "Date" },
 ];
 
 const initialWidths = new Map<string, number | string>([
-  ['file', '1fr'],
-  ['size', 80],
-  ['date', 100]
+  ["file", "1fr"],
+  ["size", 80],
+  ["date", 100],
 ]);
 
 export default function ResizableTable() {
   let columnWidths = useSyncExternalStore(subscribe, getColumnWidths, getInitialWidths);
 
   return (
-    <ResizableTableContainer
-      onResize={setColumnWidths}
-    >
+    <ResizableTableContainer onResize={setColumnWidths}>
       <Table aria-label="Table with resizable columns">
         <TableHeader columns={columns} dependencies={[columnWidths]}>
-          {column => (
+          {(column) => (
             <Column
-              isRowHeader={column.id === 'file'}
+              isRowHeader={column.id === "file"}
               allowsResizing
               width={columnWidths.get(column.id)}
             >
@@ -1372,7 +1474,7 @@ export default function ResizableTable() {
           )}
         </TableHeader>
         <TableBody items={rows}>
-          {item => (
+          {(item) => (
             <Row>
               <Cell>{item.name}</Cell>
               <Cell>{item.size}</Cell>
@@ -1389,7 +1491,7 @@ let parsedWidths;
 function getColumnWidths() {
   // Parse column widths from localStorage.
   if (!parsedWidths) {
-    let data = localStorage.getItem('table-widths');
+    let data = localStorage.getItem("table-widths");
     if (data) {
       parsedWidths = new Map(JSON.parse(data));
     }
@@ -1399,8 +1501,8 @@ function getColumnWidths() {
 
 function setColumnWidths(widths) {
   // Store new widths in localStorage, and trigger subscriptions.
-  localStorage.setItem('table-widths', JSON.stringify(Array.from(widths)));
-  window.dispatchEvent(new Event('storage'));
+  localStorage.setItem("table-widths", JSON.stringify(Array.from(widths)));
+  window.dispatchEvent(new Event("storage"));
 }
 
 function getInitialWidths() {
@@ -1414,8 +1516,8 @@ function subscribe(fn) {
     fn();
   };
 
-  window.addEventListener('storage', onStorage);
-  return () => window.removeEventListener('storage', onStorage);
+  window.addEventListener("storage", onStorage);
+  return () => window.removeEventListener("storage", onStorage);
 }
 ```
 
@@ -1424,35 +1526,54 @@ function subscribe(fn) {
 Table supports drag and drop interactions when the `dragAndDropHooks` prop is provided using the `useDragAndDrop` hook. Users can drop data on the table as a whole, on individual rows, insert new rows between existing ones, or reorder rows. React Aria supports drag and drop via mouse, touch, keyboard, and screen reader interactions. See the [drag and drop guide](dnd.md?component=Table) to learn more.
 
 ```tsx
-import {Table, TableHeader, TableBody, Column, Row, Cell} from 'vanilla-starter/Table';
-import {useDragAndDrop} from 'react-aria-components/useDragAndDrop';
-import {useTreeData} from 'react-aria-components/useTreeData';
-import {Collection} from 'react-aria-components/Collection';
+import { Table, TableHeader, TableBody, Column, Row, Cell } from "vanilla-starter/Table";
+import { useDragAndDrop } from "react-aria-components/useDragAndDrop";
+import { useTreeData } from "react-aria-components/useTreeData";
+import { Collection } from "react-aria-components/Collection";
 
 function ReorderableTable() {
   let tree = useTreeData({
     initialItems: [
-      {id: '1', title: 'Documents', type: 'Directory', date: '10/20/2025', children: [
-        {id: '2', title: 'Project', type: 'Directory', date: '8/2/2025', children: [
-          {id: '3', title: 'Weekly Report', type: 'File', date: '7/10/2025', children: []},
-          {id: '4', title: 'Budget', type: 'File', date: '8/20/2025', children: []}
-        ]}
-      ]},
-      {id: '5', title: 'Photos', type: 'Directory', date: '2/3/2026', children: [
-        {id: '6', title: 'Image 1', type: 'File', date: '1/23/2026', children: []},
-        {id: '7', title: 'Image 2', type: 'File', date: '2/3/2026', children: []}
-      ]}
-    ]
+      {
+        id: "1",
+        title: "Documents",
+        type: "Directory",
+        date: "10/20/2025",
+        children: [
+          {
+            id: "2",
+            title: "Project",
+            type: "Directory",
+            date: "8/2/2025",
+            children: [
+              { id: "3", title: "Weekly Report", type: "File", date: "7/10/2025", children: [] },
+              { id: "4", title: "Budget", type: "File", date: "8/20/2025", children: [] },
+            ],
+          },
+        ],
+      },
+      {
+        id: "5",
+        title: "Photos",
+        type: "Directory",
+        date: "2/3/2026",
+        children: [
+          { id: "6", title: "Image 1", type: "File", date: "1/23/2026", children: [] },
+          { id: "7", title: "Image 2", type: "File", date: "2/3/2026", children: [] },
+        ],
+      },
+    ],
   });
 
-  let {dragAndDropHooks} = useDragAndDrop({
-    getItems: (keys, items: typeof tree.items) => items.map(item => ({'text/plain': item.value.title})),
+  let { dragAndDropHooks } = useDragAndDrop({
+    getItems: (keys, items: typeof tree.items) =>
+      items.map((item) => ({ "text/plain": item.value.title })),
     onMove(e) {
-      if (e.target.dropPosition === 'before') {
+      if (e.target.dropPosition === "before") {
         tree.moveBefore(e.target.key, e.keys);
-      } else if (e.target.dropPosition === 'after') {
+      } else if (e.target.dropPosition === "after") {
         tree.moveAfter(e.target.key, e.keys);
-      } else if (e.target.dropPosition === 'on') {
+      } else if (e.target.dropPosition === "on") {
         // Move items to become children of the target
         let targetNode = tree.getItem(e.target.key);
         if (targetNode) {
@@ -1463,7 +1584,7 @@ function ReorderableTable() {
           }
         }
       }
-    }
+    },
   });
 
   return (
@@ -1471,11 +1592,13 @@ function ReorderableTable() {
       aria-label="Files"
       selectionMode="multiple"
       treeColumn="name"
-      defaultExpandedKeys={['5']}
+      defaultExpandedKeys={["5"]}
       dragAndDropHooks={dragAndDropHooks}
     >
       <TableHeader>
-        <Column id="name" isRowHeader>Name</Column>
+        <Column id="name" isRowHeader>
+          Name
+        </Column>
         <Column id="type">Type</Column>
         <Column id="date">Date Modified</Column>
       </TableHeader>
@@ -1486,9 +1609,7 @@ function ReorderableTable() {
               <Cell>{item.value.title}</Cell>
               <Cell>{item.value.type}</Cell>
               <Cell>{item.value.date}</Cell>
-              {item.children && <Collection items={item.children}>
-                {renderItem}
-              </Collection>}
+              {item.children && <Collection items={item.children}>{renderItem}</Collection>}
             </Row>
           );
         }}
@@ -1512,13 +1633,19 @@ function ReorderableTable() {
   <Table>
     <TableHeader>
       <Column />
-      <Column><Checkbox slot="selection" /></Column>
-      <Column><ColumnResizer /></Column>
+      <Column>
+        <Checkbox slot="selection" />
+      </Column>
+      <Column>
+        <ColumnResizer />
+      </Column>
       <Column />
     </TableHeader>
     <TableBody>
       <Row>
-        <Cell><Button slot="drag" /></Cell>
+        <Cell>
+          <Button slot="drag" />
+        </Cell>
         <Cell>
           <Checkbox slot="selection" /> or <SelectionIndicator />
         </Cell>
@@ -1526,9 +1653,7 @@ function ReorderableTable() {
           <Button slot="chevron" />
         </Cell>
         <Cell />
-        <Row>
-          {/* ... */}
-        </Row>
+        <Row>{/* ... */}</Row>
       </Row>
       <TableLoadMoreItem />
     </TableBody>
@@ -1543,871 +1668,871 @@ function ReorderableTable() {
 
 ### Table
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `aria-describedby` | `string | undefined` | — | Identifies the element (or elements) that describes the object. |
-| `aria-details` | `string | undefined` | — | Identifies the element (or elements) that provide a detailed, extended description for the object. |
-| `aria-label` | `string | undefined` | — | Defines a string value that labels the current element. |
-| `aria-labelledby` | `string | undefined` | — | Identifies the element (or elements) that labels the current element. |
-| `children` | `React.ReactNode` | — | The elements that make up the table. Includes the TableHeader, TableBody, Columns, and Rows. |
-| `className` | `ClassNameOrFunction<TableRenderProps> | undefined` | 'react-aria-Table' | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state. |
-| `defaultExpandedKeys` | `Iterable<Key> | undefined` | — | The initial expanded keys in the collection (uncontrolled). |
-| `defaultSelectedKeys` | `"all" | Iterable<Key> | undefined` | — | The initial selected keys in the collection (uncontrolled). |
-| `dir` | `string | undefined` | — |  |
-| `disabledBehavior` | `DisabledBehavior | undefined` | 'all' | Whether `disabledKeys` applies to all interactions, or only selection. |
-| `disabledKeys` | `Iterable<Key> | undefined` | — | A list of row keys to disable. |
-| `disallowEmptySelection` | `boolean | undefined` | — | Whether the collection allows empty selection. |
-| `dragAndDropHooks` | `DragAndDropHooks | undefined` | — | The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the Table. |
-| `escapeKeyBehavior` | `"clearSelection" | "none" | undefined` | 'clearSelection' | Whether pressing the escape key should clear selection in the table or not. Most experiences should not modify this option as it eliminates a keyboard user's ability to easily clear selection. Only use if the escape key is being handled externally or should not trigger selection clearing contextually. |
-| `expandedKeys` | `Iterable<Key> | undefined` | — | The currently expanded keys in the collection (controlled). |
-| `hidden` | `boolean | undefined` | — |  |
-| `inert` | `boolean | undefined` | — |  |
-| `lang` | `string | undefined` | — |  |
-| `onAnimationEnd` | `React.AnimationEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onAnimationEndCapture` | `React.AnimationEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onAnimationIteration` | `React.AnimationEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onAnimationStart` | `React.AnimationEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onAnimationStartCapture` | `React.AnimationEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onAuxClick` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onAuxClickCapture` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onClick` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onClickCapture` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onContextMenu` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onContextMenuCapture` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onDoubleClick` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onDoubleClickCapture` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onExpandedChange` | `((keys: Set<Key>) => any) | undefined` | — | Handler that is called when items are expanded or collapsed. |
-| `onGotPointerCapture` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onGotPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onLostPointerCapture` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onMouseDown` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onMouseDownCapture` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onMouseEnter` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onMouseLeave` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onMouseMove` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onMouseMoveCapture` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onMouseOut` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onMouseOutCapture` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onMouseOver` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onMouseOverCapture` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onMouseUp` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onMouseUpCapture` | `React.MouseEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onPointerCancel` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onPointerCancelCapture` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onPointerDown` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onPointerDownCapture` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onPointerEnter` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onPointerLeave` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onPointerMove` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onPointerMoveCapture` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onPointerOut` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onPointerOutCapture` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onPointerOver` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onPointerOverCapture` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onPointerUp` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onPointerUpCapture` | `React.PointerEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onRowAction` | `((key: Key) => void) | undefined` | — | Handler that is called when a user performs an action on the row. |
-| `onScroll` | `React.UIEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onScrollCapture` | `React.UIEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onSelectionChange` | `((keys: Selection) => void) | undefined` | — | Handler that is called when the selection changes. |
-| `onSortChange` | `((descriptor: SortDescriptor) => any) | undefined` | — | Handler that is called when the sorted column or direction changes. |
-| `onTouchCancel` | `React.TouchEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onTouchCancelCapture` | `React.TouchEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onTouchEnd` | `React.TouchEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onTouchEndCapture` | `React.TouchEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onTouchMove` | `React.TouchEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onTouchMoveCapture` | `React.TouchEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onTouchStart` | `React.TouchEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onTouchStartCapture` | `React.TouchEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onTransitionCancel` | `React.TransitionEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onTransitionCancelCapture` | `React.TransitionEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onTransitionEnd` | `React.TransitionEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onTransitionEndCapture` | `React.TransitionEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onTransitionRun` | `React.TransitionEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onTransitionRunCapture` | `React.TransitionEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onTransitionStart` | `React.TransitionEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onTransitionStartCapture` | `React.TransitionEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onWheel` | `React.WheelEventHandler<HTMLTableElement> | undefined` | — |  |
-| `onWheelCapture` | `React.WheelEventHandler<HTMLTableElement> | undefined` | — |  |
-| `render` | `DOMRenderFunction<"table" | "div", TableRenderProps> | undefined` | — | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an   `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop   as appropriate. |
-| `selectedKeys` | `"all" | Iterable<Key> | undefined` | — | The currently selected keys in the collection (controlled). |
-| `selectionBehavior` | `SelectionBehavior | undefined` | 'toggle' | How multiple selection should behave in the collection. |
-| `selectionMode` | `SelectionMode | undefined` | — | The type of selection that is allowed in the collection. |
-| `shouldSelectOnPressUp` | `boolean | undefined` | — | Whether selection should occur on press up instead of press down. |
-| `slot` | `string | null | undefined` | — | A slot name for the component. Slots allow the component to receive props from a parent component. An explicit `null` value indicates that the local props completely override all props received from a parent. |
-| `sortDescriptor` | `SortDescriptor | undefined` | — | The current sorted column and direction. |
-| `style` | `(((values: TableRenderProps & { defaultStyle: React.CSSProperties; }) => React.CSSProperties | React.CSSProperties | undefined)) | undefined` | — | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state. |
-| `translate` | `"no" | "yes" | undefined` | — |  |
-| `treeColumn` | `Key | undefined` | — | The id of the column that displays hierarchical data. |
+| Name                          | Type                                                                                          | Default                  | Description                                                                                  |
+| ----------------------------- | --------------------------------------------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------- |
+| `aria-describedby`            | `string                                                                                       | undefined`               | —                                                                                            | Identifies the element (or elements) that describes the object.                                                                                                                    |
+| `aria-details`                | `string                                                                                       | undefined`               | —                                                                                            | Identifies the element (or elements) that provide a detailed, extended description for the object.                                                                                 |
+| `aria-label`                  | `string                                                                                       | undefined`               | —                                                                                            | Defines a string value that labels the current element.                                                                                                                            |
+| `aria-labelledby`             | `string                                                                                       | undefined`               | —                                                                                            | Identifies the element (or elements) that labels the current element.                                                                                                              |
+| `children`                    | `React.ReactNode`                                                                             | —                        | The elements that make up the table. Includes the TableHeader, TableBody, Columns, and Rows. |
+| `className`                   | `ClassNameOrFunction<TableRenderProps>                                                        | undefined`               | 'react-aria-Table'                                                                           | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state. |
+| `defaultExpandedKeys`         | `Iterable<Key>                                                                                | undefined`               | —                                                                                            | The initial expanded keys in the collection (uncontrolled).                                                                                                                        |
+| `defaultSelectedKeys`         | `"all"                                                                                        | Iterable<Key>            | undefined`                                                                                   | —                                                                                                                                                                                  | The initial selected keys in the collection (uncontrolled).                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `dir`                         | `string                                                                                       | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `disabledBehavior`            | `DisabledBehavior                                                                             | undefined`               | 'all'                                                                                        | Whether `disabledKeys` applies to all interactions, or only selection.                                                                                                             |
+| `disabledKeys`                | `Iterable<Key>                                                                                | undefined`               | —                                                                                            | A list of row keys to disable.                                                                                                                                                     |
+| `disallowEmptySelection`      | `boolean                                                                                      | undefined`               | —                                                                                            | Whether the collection allows empty selection.                                                                                                                                     |
+| `dragAndDropHooks`            | `DragAndDropHooks                                                                             | undefined`               | —                                                                                            | The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the Table.                                                                          |
+| `escapeKeyBehavior`           | `"clearSelection"                                                                             | "none"                   | undefined`                                                                                   | 'clearSelection'                                                                                                                                                                   | Whether pressing the escape key should clear selection in the table or not. Most experiences should not modify this option as it eliminates a keyboard user's ability to easily clear selection. Only use if the escape key is being handled externally or should not trigger selection clearing contextually.                                                                                                                                                                                                               |
+| `expandedKeys`                | `Iterable<Key>                                                                                | undefined`               | —                                                                                            | The currently expanded keys in the collection (controlled).                                                                                                                        |
+| `hidden`                      | `boolean                                                                                      | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `inert`                       | `boolean                                                                                      | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `lang`                        | `string                                                                                       | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onAnimationEnd`              | `React.AnimationEventHandler<HTMLTableElement>                                                | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onAnimationEndCapture`       | `React.AnimationEventHandler<HTMLTableElement>                                                | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onAnimationIteration`        | `React.AnimationEventHandler<HTMLTableElement>                                                | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLTableElement>                                                | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onAnimationStart`            | `React.AnimationEventHandler<HTMLTableElement>                                                | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onAnimationStartCapture`     | `React.AnimationEventHandler<HTMLTableElement>                                                | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onAuxClick`                  | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onAuxClickCapture`           | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onClick`                     | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onClickCapture`              | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onContextMenu`               | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onContextMenuCapture`        | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onDoubleClick`               | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onDoubleClickCapture`        | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onExpandedChange`            | `((keys: Set<Key>) => any)                                                                    | undefined`               | —                                                                                            | Handler that is called when items are expanded or collapsed.                                                                                                                       |
+| `onGotPointerCapture`         | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onGotPointerCaptureCapture`  | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onLostPointerCapture`        | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onMouseDown`                 | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onMouseDownCapture`          | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onMouseEnter`                | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onMouseLeave`                | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onMouseMove`                 | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onMouseMoveCapture`          | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onMouseOut`                  | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onMouseOutCapture`           | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onMouseOver`                 | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onMouseOverCapture`          | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onMouseUp`                   | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onMouseUpCapture`            | `React.MouseEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onPointerCancel`             | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onPointerCancelCapture`      | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onPointerDown`               | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onPointerDownCapture`        | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onPointerEnter`              | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onPointerLeave`              | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onPointerMove`               | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onPointerMoveCapture`        | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onPointerOut`                | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onPointerOutCapture`         | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onPointerOver`               | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onPointerOverCapture`        | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onPointerUp`                 | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onPointerUpCapture`          | `React.PointerEventHandler<HTMLTableElement>                                                  | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onRowAction`                 | `((key: Key) => void)                                                                         | undefined`               | —                                                                                            | Handler that is called when a user performs an action on the row.                                                                                                                  |
+| `onScroll`                    | `React.UIEventHandler<HTMLTableElement>                                                       | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onScrollCapture`             | `React.UIEventHandler<HTMLTableElement>                                                       | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onSelectionChange`           | `((keys: Selection) => void)                                                                  | undefined`               | —                                                                                            | Handler that is called when the selection changes.                                                                                                                                 |
+| `onSortChange`                | `((descriptor: SortDescriptor) => any)                                                        | undefined`               | —                                                                                            | Handler that is called when the sorted column or direction changes.                                                                                                                |
+| `onTouchCancel`               | `React.TouchEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onTouchCancelCapture`        | `React.TouchEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onTouchEnd`                  | `React.TouchEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onTouchEndCapture`           | `React.TouchEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onTouchMove`                 | `React.TouchEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onTouchMoveCapture`          | `React.TouchEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onTouchStart`                | `React.TouchEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onTouchStartCapture`         | `React.TouchEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onTransitionCancel`          | `React.TransitionEventHandler<HTMLTableElement>                                               | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onTransitionCancelCapture`   | `React.TransitionEventHandler<HTMLTableElement>                                               | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onTransitionEnd`             | `React.TransitionEventHandler<HTMLTableElement>                                               | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onTransitionEndCapture`      | `React.TransitionEventHandler<HTMLTableElement>                                               | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onTransitionRun`             | `React.TransitionEventHandler<HTMLTableElement>                                               | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onTransitionRunCapture`      | `React.TransitionEventHandler<HTMLTableElement>                                               | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onTransitionStart`           | `React.TransitionEventHandler<HTMLTableElement>                                               | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onTransitionStartCapture`    | `React.TransitionEventHandler<HTMLTableElement>                                               | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onWheel`                     | `React.WheelEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `onWheelCapture`              | `React.WheelEventHandler<HTMLTableElement>                                                    | undefined`               | —                                                                                            |                                                                                                                                                                                    |
+| `render`                      | `DOMRenderFunction<"table"                                                                    | "div", TableRenderProps> | undefined`                                                                                   | —                                                                                                                                                                                  | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop as appropriate. |
+| `selectedKeys`                | `"all"                                                                                        | Iterable<Key>            | undefined`                                                                                   | —                                                                                                                                                                                  | The currently selected keys in the collection (controlled).                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `selectionBehavior`           | `SelectionBehavior                                                                            | undefined`               | 'toggle'                                                                                     | How multiple selection should behave in the collection.                                                                                                                            |
+| `selectionMode`               | `SelectionMode                                                                                | undefined`               | —                                                                                            | The type of selection that is allowed in the collection.                                                                                                                           |
+| `shouldSelectOnPressUp`       | `boolean                                                                                      | undefined`               | —                                                                                            | Whether selection should occur on press up instead of press down.                                                                                                                  |
+| `slot`                        | `string                                                                                       | null                     | undefined`                                                                                   | —                                                                                                                                                                                  | A slot name for the component. Slots allow the component to receive props from a parent component. An explicit `null` value indicates that the local props completely override all props received from a parent.                                                                                                                                                                                                                                                                                                             |
+| `sortDescriptor`              | `SortDescriptor                                                                               | undefined`               | —                                                                                            | The current sorted column and direction.                                                                                                                                           |
+| `style`                       | `(((values: TableRenderProps & { defaultStyle: React.CSSProperties; }) => React.CSSProperties | React.CSSProperties      | undefined))                                                                                  | undefined`                                                                                                                                                                         | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state. |
+| `translate`                   | `"no"                                                                                         | "yes"                    | undefined`                                                                                   | —                                                                                                                                                                                  |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `treeColumn`                  | `Key                                                                                          | undefined`               | —                                                                                            | The id of the column that displays hierarchical data.                                                                                                                              |
 
 ### TableHeader
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `children` | `((item: T) => ReactElement) | React.ReactNode` | — | A list of `Column(s)` or a function. If the latter, a list of columns must be provided using the `columns` prop. |
-| `className` | `ClassNameOrFunction<TableHeaderRenderProps> | undefined` | 'react-aria-TableHeader' | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state. |
-| `columns` | `Iterable<T> | undefined` | — | A list of table columns. |
-| `dependencies` | `readonly any[] | undefined` | — | Values that should invalidate the column cache when using dynamic collections. |
-| `dir` | `string | undefined` | — |  |
-| `hidden` | `boolean | undefined` | — |  |
-| `inert` | `boolean | undefined` | — |  |
-| `lang` | `string | undefined` | — |  |
-| `onAnimationEnd` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAnimationEndCapture` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAnimationIteration` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAnimationStart` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAnimationStartCapture` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAuxClick` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAuxClickCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onClick` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onClickCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onContextMenu` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onContextMenuCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onDoubleClick` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onDoubleClickCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onGotPointerCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onGotPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onHoverChange` | `((isHovering: boolean) => void) | undefined` | — | Handler that is called when the hover state changes. |
-| `onHoverEnd` | `((e: HoverEvent) => void) | undefined` | — | Handler that is called when a hover interaction ends. |
-| `onHoverStart` | `((e: HoverEvent) => void) | undefined` | — | Handler that is called when a hover interaction starts. |
-| `onLostPointerCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseDown` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseDownCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseEnter` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseLeave` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseMove` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseMoveCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseOut` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseOutCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseOver` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseOverCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseUp` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseUpCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerCancel` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerCancelCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerDown` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerDownCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerEnter` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerLeave` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerMove` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerMoveCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerOut` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerOutCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerOver` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerOverCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerUp` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerUpCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onScroll` | `React.UIEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onScrollCapture` | `React.UIEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchCancel` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchCancelCapture` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchEnd` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchEndCapture` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchMove` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchMoveCapture` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchStart` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchStartCapture` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionCancel` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionCancelCapture` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionEnd` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionEndCapture` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionRun` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionRunCapture` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionStart` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionStartCapture` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onWheel` | `React.WheelEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onWheelCapture` | `React.WheelEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `render` | `DOMRenderFunction<"div" | "thead", TableHeaderRenderProps> | undefined` | — | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an   `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop   as appropriate. |
-| `style` | `(((values: TableHeaderRenderProps & { defaultStyle: React.CSSProperties; }) => React.CSSProperties | React.CSSProperties | undefined)) | undefined` | — | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state. |
-| `translate` | `"no" | "yes" | undefined` | — |  |
+| Name                          | Type                                                                                                | Default                          | Description              |
+| ----------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------- | ------------------------ |
+| `children`                    | `((item: T) => ReactElement)                                                                        | React.ReactNode`                 | —                        | A list of `Column(s)` or a function. If the latter, a list of columns must be provided using the `columns` prop.                                                                   |
+| `className`                   | `ClassNameOrFunction<TableHeaderRenderProps>                                                        | undefined`                       | 'react-aria-TableHeader' | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state. |
+| `columns`                     | `Iterable<T>                                                                                        | undefined`                       | —                        | A list of table columns.                                                                                                                                                           |
+| `dependencies`                | `readonly any[]                                                                                     | undefined`                       | —                        | Values that should invalidate the column cache when using dynamic collections.                                                                                                     |
+| `dir`                         | `string                                                                                             | undefined`                       | —                        |                                                                                                                                                                                    |
+| `hidden`                      | `boolean                                                                                            | undefined`                       | —                        |                                                                                                                                                                                    |
+| `inert`                       | `boolean                                                                                            | undefined`                       | —                        |                                                                                                                                                                                    |
+| `lang`                        | `string                                                                                             | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onAnimationEnd`              | `React.AnimationEventHandler<HTMLTableSectionElement>                                               | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onAnimationEndCapture`       | `React.AnimationEventHandler<HTMLTableSectionElement>                                               | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onAnimationIteration`        | `React.AnimationEventHandler<HTMLTableSectionElement>                                               | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLTableSectionElement>                                               | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onAnimationStart`            | `React.AnimationEventHandler<HTMLTableSectionElement>                                               | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onAnimationStartCapture`     | `React.AnimationEventHandler<HTMLTableSectionElement>                                               | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onAuxClick`                  | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onAuxClickCapture`           | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onClick`                     | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onClickCapture`              | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onContextMenu`               | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onContextMenuCapture`        | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onDoubleClick`               | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onDoubleClickCapture`        | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onGotPointerCapture`         | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onGotPointerCaptureCapture`  | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onHoverChange`               | `((isHovering: boolean) => void)                                                                    | undefined`                       | —                        | Handler that is called when the hover state changes.                                                                                                                               |
+| `onHoverEnd`                  | `((e: HoverEvent) => void)                                                                          | undefined`                       | —                        | Handler that is called when a hover interaction ends.                                                                                                                              |
+| `onHoverStart`                | `((e: HoverEvent) => void)                                                                          | undefined`                       | —                        | Handler that is called when a hover interaction starts.                                                                                                                            |
+| `onLostPointerCapture`        | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onMouseDown`                 | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onMouseDownCapture`          | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onMouseEnter`                | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onMouseLeave`                | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onMouseMove`                 | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onMouseMoveCapture`          | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onMouseOut`                  | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onMouseOutCapture`           | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onMouseOver`                 | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onMouseOverCapture`          | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onMouseUp`                   | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onMouseUpCapture`            | `React.MouseEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onPointerCancel`             | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onPointerCancelCapture`      | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onPointerDown`               | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onPointerDownCapture`        | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onPointerEnter`              | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onPointerLeave`              | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onPointerMove`               | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onPointerMoveCapture`        | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onPointerOut`                | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onPointerOutCapture`         | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onPointerOver`               | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onPointerOverCapture`        | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onPointerUp`                 | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onPointerUpCapture`          | `React.PointerEventHandler<HTMLTableSectionElement>                                                 | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onScroll`                    | `React.UIEventHandler<HTMLTableSectionElement>                                                      | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onScrollCapture`             | `React.UIEventHandler<HTMLTableSectionElement>                                                      | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onTouchCancel`               | `React.TouchEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onTouchCancelCapture`        | `React.TouchEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onTouchEnd`                  | `React.TouchEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onTouchEndCapture`           | `React.TouchEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onTouchMove`                 | `React.TouchEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onTouchMoveCapture`          | `React.TouchEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onTouchStart`                | `React.TouchEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onTouchStartCapture`         | `React.TouchEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onTransitionCancel`          | `React.TransitionEventHandler<HTMLTableSectionElement>                                              | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onTransitionCancelCapture`   | `React.TransitionEventHandler<HTMLTableSectionElement>                                              | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onTransitionEnd`             | `React.TransitionEventHandler<HTMLTableSectionElement>                                              | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onTransitionEndCapture`      | `React.TransitionEventHandler<HTMLTableSectionElement>                                              | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onTransitionRun`             | `React.TransitionEventHandler<HTMLTableSectionElement>                                              | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onTransitionRunCapture`      | `React.TransitionEventHandler<HTMLTableSectionElement>                                              | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onTransitionStart`           | `React.TransitionEventHandler<HTMLTableSectionElement>                                              | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onTransitionStartCapture`    | `React.TransitionEventHandler<HTMLTableSectionElement>                                              | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onWheel`                     | `React.WheelEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `onWheelCapture`              | `React.WheelEventHandler<HTMLTableSectionElement>                                                   | undefined`                       | —                        |                                                                                                                                                                                    |
+| `render`                      | `DOMRenderFunction<"div"                                                                            | "thead", TableHeaderRenderProps> | undefined`               | —                                                                                                                                                                                  | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop as appropriate. |
+| `style`                       | `(((values: TableHeaderRenderProps & { defaultStyle: React.CSSProperties; }) => React.CSSProperties | React.CSSProperties              | undefined))              | undefined`                                                                                                                                                                         | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state. |
+| `translate`                   | `"no"                                                                                               | "yes"                            | undefined`               | —                                                                                                                                                                                  |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ### Column
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `allowsSorting` | `boolean | undefined` | — | Whether the column allows sorting. |
-| `children` | `ChildrenOrFunction<ColumnRenderProps>` | — | The children of the component. A function may be provided to alter the children based on component state. |
-| `className` | `ClassNameOrFunction<ColumnRenderProps> | undefined` | 'react-aria-Column' | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state. |
-| `defaultWidth` | `ColumnSize | null | undefined` | — | The default width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`. |
-| `dir` | `string | undefined` | — |  |
-| `hidden` | `boolean | undefined` | — |  |
-| `id` | `Key | undefined` | — | The unique id of the column. |
-| `inert` | `boolean | undefined` | — |  |
-| `isRowHeader` | `boolean | undefined` | — | Whether a column is a [row header](https://www.w3.org/TR/wai-aria-1.1/#rowheader) and should be announced by assistive technology during row navigation. |
-| `lang` | `string | undefined` | — |  |
-| `maxWidth` | `ColumnStaticSize | null | undefined` | — | The maximum width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`. |
-| `minWidth` | `ColumnStaticSize | null | undefined` | — | The minimum width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`. |
-| `onAnimationEnd` | `React.AnimationEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onAnimationEndCapture` | `React.AnimationEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onAnimationIteration` | `React.AnimationEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onAnimationStart` | `React.AnimationEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onAnimationStartCapture` | `React.AnimationEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onAuxClick` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onAuxClickCapture` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onClick` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onClickCapture` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onContextMenu` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onContextMenuCapture` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onDoubleClick` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onDoubleClickCapture` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onGotPointerCapture` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onGotPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onLostPointerCapture` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onMouseDown` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onMouseDownCapture` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onMouseEnter` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onMouseLeave` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onMouseMove` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onMouseMoveCapture` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onMouseOut` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onMouseOutCapture` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onMouseOver` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onMouseOverCapture` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onMouseUp` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onMouseUpCapture` | `React.MouseEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onPointerCancel` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onPointerCancelCapture` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onPointerDown` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onPointerDownCapture` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onPointerEnter` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onPointerLeave` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onPointerMove` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onPointerMoveCapture` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onPointerOut` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onPointerOutCapture` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onPointerOver` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onPointerOverCapture` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onPointerUp` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onPointerUpCapture` | `React.PointerEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onScroll` | `React.UIEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onScrollCapture` | `React.UIEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onTouchCancel` | `React.TouchEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onTouchCancelCapture` | `React.TouchEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onTouchEnd` | `React.TouchEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onTouchEndCapture` | `React.TouchEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onTouchMove` | `React.TouchEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onTouchMoveCapture` | `React.TouchEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onTouchStart` | `React.TouchEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onTouchStartCapture` | `React.TouchEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onTransitionCancel` | `React.TransitionEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onTransitionCancelCapture` | `React.TransitionEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onTransitionEnd` | `React.TransitionEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onTransitionEndCapture` | `React.TransitionEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onTransitionRun` | `React.TransitionEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onTransitionRunCapture` | `React.TransitionEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onTransitionStart` | `React.TransitionEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onTransitionStartCapture` | `React.TransitionEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onWheel` | `React.WheelEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `onWheelCapture` | `React.WheelEventHandler<HTMLTableHeaderCellElement> | undefined` | — |  |
-| `render` | `DOMRenderFunction<"div" | "th", ColumnRenderProps> | undefined` | — | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an   `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop   as appropriate. |
-| `style` | `(((values: ColumnRenderProps & { defaultStyle: React.CSSProperties; }) => React.CSSProperties | React.CSSProperties | undefined)) | undefined` | — | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state. |
-| `textValue` | `string | undefined` | — | A string representation of the column's contents, used for accessibility announcements. |
-| `translate` | `"no" | "yes" | undefined` | — |  |
-| `width` | `ColumnSize | null | undefined` | — | The width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`. |
+| Name                          | Type                                                                                           | Default                  | Description                                                                                               |
+| ----------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `allowsSorting`               | `boolean                                                                                       | undefined`               | —                                                                                                         | Whether the column allows sorting.                                                                                                                                                 |
+| `children`                    | `ChildrenOrFunction<ColumnRenderProps>`                                                        | —                        | The children of the component. A function may be provided to alter the children based on component state. |
+| `className`                   | `ClassNameOrFunction<ColumnRenderProps>                                                        | undefined`               | 'react-aria-Column'                                                                                       | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state. |
+| `defaultWidth`                | `ColumnSize                                                                                    | null                     | undefined`                                                                                                | —                                                                                                                                                                                  | The default width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `dir`                         | `string                                                                                        | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `hidden`                      | `boolean                                                                                       | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `id`                          | `Key                                                                                           | undefined`               | —                                                                                                         | The unique id of the column.                                                                                                                                                       |
+| `inert`                       | `boolean                                                                                       | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `isRowHeader`                 | `boolean                                                                                       | undefined`               | —                                                                                                         | Whether a column is a [row header](https://www.w3.org/TR/wai-aria-1.1/#rowheader) and should be announced by assistive technology during row navigation.                           |
+| `lang`                        | `string                                                                                        | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `maxWidth`                    | `ColumnStaticSize                                                                              | null                     | undefined`                                                                                                | —                                                                                                                                                                                  | The maximum width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `minWidth`                    | `ColumnStaticSize                                                                              | null                     | undefined`                                                                                                | —                                                                                                                                                                                  | The minimum width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `onAnimationEnd`              | `React.AnimationEventHandler<HTMLTableHeaderCellElement>                                       | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onAnimationEndCapture`       | `React.AnimationEventHandler<HTMLTableHeaderCellElement>                                       | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onAnimationIteration`        | `React.AnimationEventHandler<HTMLTableHeaderCellElement>                                       | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLTableHeaderCellElement>                                       | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onAnimationStart`            | `React.AnimationEventHandler<HTMLTableHeaderCellElement>                                       | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onAnimationStartCapture`     | `React.AnimationEventHandler<HTMLTableHeaderCellElement>                                       | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onAuxClick`                  | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onAuxClickCapture`           | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onClick`                     | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onClickCapture`              | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onContextMenu`               | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onContextMenuCapture`        | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onDoubleClick`               | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onDoubleClickCapture`        | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onGotPointerCapture`         | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onGotPointerCaptureCapture`  | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onLostPointerCapture`        | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseDown`                 | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseDownCapture`          | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseEnter`                | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseLeave`                | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseMove`                 | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseMoveCapture`          | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseOut`                  | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseOutCapture`           | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseOver`                 | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseOverCapture`          | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseUp`                   | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseUpCapture`            | `React.MouseEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerCancel`             | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerCancelCapture`      | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerDown`               | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerDownCapture`        | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerEnter`              | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerLeave`              | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerMove`               | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerMoveCapture`        | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerOut`                | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerOutCapture`         | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerOver`               | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerOverCapture`        | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerUp`                 | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerUpCapture`          | `React.PointerEventHandler<HTMLTableHeaderCellElement>                                         | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onScroll`                    | `React.UIEventHandler<HTMLTableHeaderCellElement>                                              | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onScrollCapture`             | `React.UIEventHandler<HTMLTableHeaderCellElement>                                              | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onTouchCancel`               | `React.TouchEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onTouchCancelCapture`        | `React.TouchEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onTouchEnd`                  | `React.TouchEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onTouchEndCapture`           | `React.TouchEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onTouchMove`                 | `React.TouchEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onTouchMoveCapture`          | `React.TouchEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onTouchStart`                | `React.TouchEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onTouchStartCapture`         | `React.TouchEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onTransitionCancel`          | `React.TransitionEventHandler<HTMLTableHeaderCellElement>                                      | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onTransitionCancelCapture`   | `React.TransitionEventHandler<HTMLTableHeaderCellElement>                                      | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onTransitionEnd`             | `React.TransitionEventHandler<HTMLTableHeaderCellElement>                                      | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onTransitionEndCapture`      | `React.TransitionEventHandler<HTMLTableHeaderCellElement>                                      | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onTransitionRun`             | `React.TransitionEventHandler<HTMLTableHeaderCellElement>                                      | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onTransitionRunCapture`      | `React.TransitionEventHandler<HTMLTableHeaderCellElement>                                      | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onTransitionStart`           | `React.TransitionEventHandler<HTMLTableHeaderCellElement>                                      | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onTransitionStartCapture`    | `React.TransitionEventHandler<HTMLTableHeaderCellElement>                                      | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onWheel`                     | `React.WheelEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `onWheelCapture`              | `React.WheelEventHandler<HTMLTableHeaderCellElement>                                           | undefined`               | —                                                                                                         |                                                                                                                                                                                    |
+| `render`                      | `DOMRenderFunction<"div"                                                                       | "th", ColumnRenderProps> | undefined`                                                                                                | —                                                                                                                                                                                  | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop as appropriate. |
+| `style`                       | `(((values: ColumnRenderProps & { defaultStyle: React.CSSProperties; }) => React.CSSProperties | React.CSSProperties      | undefined))                                                                                               | undefined`                                                                                                                                                                         | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state. |
+| `textValue`                   | `string                                                                                        | undefined`               | —                                                                                                         | A string representation of the column's contents, used for accessibility announcements.                                                                                            |
+| `translate`                   | `"no"                                                                                          | "yes"                    | undefined`                                                                                                | —                                                                                                                                                                                  |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `width`                       | `ColumnSize                                                                                    | null                     | undefined`                                                                                                | —                                                                                                                                                                                  | The width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ### TableBody
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `children` | `((item: T) => ReactNode) | React.ReactNode` | — | The contents of the collection. |
-| `className` | `ClassNameOrFunction<TableBodyRenderProps> | undefined` | 'react-aria-TableBody' | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state. |
-| `dependencies` | `readonly any[] | undefined` | — | Values that should invalidate the item cache when using dynamic collections. |
-| `dir` | `string | undefined` | — |  |
-| `hidden` | `boolean | undefined` | — |  |
-| `inert` | `boolean | undefined` | — |  |
-| `items` | `Iterable<T> | undefined` | — | Item objects in the collection. |
-| `lang` | `string | undefined` | — |  |
-| `onAnimationEnd` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAnimationEndCapture` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAnimationIteration` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAnimationStart` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAnimationStartCapture` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAuxClick` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAuxClickCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onClick` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onClickCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onContextMenu` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onContextMenuCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onDoubleClick` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onDoubleClickCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onGotPointerCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onGotPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onLostPointerCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseDown` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseDownCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseEnter` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseLeave` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseMove` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseMoveCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseOut` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseOutCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseOver` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseOverCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseUp` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseUpCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerCancel` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerCancelCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerDown` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerDownCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerEnter` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerLeave` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerMove` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerMoveCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerOut` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerOutCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerOver` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerOverCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerUp` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerUpCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onScroll` | `React.UIEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onScrollCapture` | `React.UIEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchCancel` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchCancelCapture` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchEnd` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchEndCapture` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchMove` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchMoveCapture` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchStart` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchStartCapture` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionCancel` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionCancelCapture` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionEnd` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionEndCapture` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionRun` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionRunCapture` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionStart` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionStartCapture` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onWheel` | `React.WheelEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onWheelCapture` | `React.WheelEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `render` | `DOMRenderFunction<"div" | "tbody", TableBodyRenderProps> | undefined` | — | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an   `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop   as appropriate. |
-| `renderEmptyState` | `((props: TableBodyRenderProps) => ReactNode) | undefined` | — | Provides content to display when there are no rows in the table. |
-| `style` | `(((values: TableBodyRenderProps & { defaultStyle: React.CSSProperties; }) => React.CSSProperties | React.CSSProperties | undefined)) | undefined` | — | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state. |
-| `translate` | `"no" | "yes" | undefined` | — |  |
+| Name                          | Type                                                                                              | Default                        | Description            |
+| ----------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------ | ---------------------- |
+| `children`                    | `((item: T) => ReactNode)                                                                         | React.ReactNode`               | —                      | The contents of the collection.                                                                                                                                                    |
+| `className`                   | `ClassNameOrFunction<TableBodyRenderProps>                                                        | undefined`                     | 'react-aria-TableBody' | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state. |
+| `dependencies`                | `readonly any[]                                                                                   | undefined`                     | —                      | Values that should invalidate the item cache when using dynamic collections.                                                                                                       |
+| `dir`                         | `string                                                                                           | undefined`                     | —                      |                                                                                                                                                                                    |
+| `hidden`                      | `boolean                                                                                          | undefined`                     | —                      |                                                                                                                                                                                    |
+| `inert`                       | `boolean                                                                                          | undefined`                     | —                      |                                                                                                                                                                                    |
+| `items`                       | `Iterable<T>                                                                                      | undefined`                     | —                      | Item objects in the collection.                                                                                                                                                    |
+| `lang`                        | `string                                                                                           | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onAnimationEnd`              | `React.AnimationEventHandler<HTMLTableSectionElement>                                             | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onAnimationEndCapture`       | `React.AnimationEventHandler<HTMLTableSectionElement>                                             | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onAnimationIteration`        | `React.AnimationEventHandler<HTMLTableSectionElement>                                             | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLTableSectionElement>                                             | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onAnimationStart`            | `React.AnimationEventHandler<HTMLTableSectionElement>                                             | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onAnimationStartCapture`     | `React.AnimationEventHandler<HTMLTableSectionElement>                                             | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onAuxClick`                  | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onAuxClickCapture`           | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onClick`                     | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onClickCapture`              | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onContextMenu`               | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onContextMenuCapture`        | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onDoubleClick`               | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onDoubleClickCapture`        | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onGotPointerCapture`         | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onGotPointerCaptureCapture`  | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onLostPointerCapture`        | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onMouseDown`                 | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onMouseDownCapture`          | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onMouseEnter`                | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onMouseLeave`                | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onMouseMove`                 | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onMouseMoveCapture`          | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onMouseOut`                  | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onMouseOutCapture`           | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onMouseOver`                 | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onMouseOverCapture`          | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onMouseUp`                   | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onMouseUpCapture`            | `React.MouseEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onPointerCancel`             | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onPointerCancelCapture`      | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onPointerDown`               | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onPointerDownCapture`        | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onPointerEnter`              | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onPointerLeave`              | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onPointerMove`               | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onPointerMoveCapture`        | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onPointerOut`                | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onPointerOutCapture`         | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onPointerOver`               | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onPointerOverCapture`        | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onPointerUp`                 | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onPointerUpCapture`          | `React.PointerEventHandler<HTMLTableSectionElement>                                               | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onScroll`                    | `React.UIEventHandler<HTMLTableSectionElement>                                                    | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onScrollCapture`             | `React.UIEventHandler<HTMLTableSectionElement>                                                    | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onTouchCancel`               | `React.TouchEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onTouchCancelCapture`        | `React.TouchEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onTouchEnd`                  | `React.TouchEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onTouchEndCapture`           | `React.TouchEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onTouchMove`                 | `React.TouchEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onTouchMoveCapture`          | `React.TouchEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onTouchStart`                | `React.TouchEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onTouchStartCapture`         | `React.TouchEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onTransitionCancel`          | `React.TransitionEventHandler<HTMLTableSectionElement>                                            | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onTransitionCancelCapture`   | `React.TransitionEventHandler<HTMLTableSectionElement>                                            | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onTransitionEnd`             | `React.TransitionEventHandler<HTMLTableSectionElement>                                            | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onTransitionEndCapture`      | `React.TransitionEventHandler<HTMLTableSectionElement>                                            | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onTransitionRun`             | `React.TransitionEventHandler<HTMLTableSectionElement>                                            | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onTransitionRunCapture`      | `React.TransitionEventHandler<HTMLTableSectionElement>                                            | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onTransitionStart`           | `React.TransitionEventHandler<HTMLTableSectionElement>                                            | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onTransitionStartCapture`    | `React.TransitionEventHandler<HTMLTableSectionElement>                                            | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onWheel`                     | `React.WheelEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `onWheelCapture`              | `React.WheelEventHandler<HTMLTableSectionElement>                                                 | undefined`                     | —                      |                                                                                                                                                                                    |
+| `render`                      | `DOMRenderFunction<"div"                                                                          | "tbody", TableBodyRenderProps> | undefined`             | —                                                                                                                                                                                  | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop as appropriate. |
+| `renderEmptyState`            | `((props: TableBodyRenderProps) => ReactNode)                                                     | undefined`                     | —                      | Provides content to display when there are no rows in the table.                                                                                                                   |
+| `style`                       | `(((values: TableBodyRenderProps & { defaultStyle: React.CSSProperties; }) => React.CSSProperties | React.CSSProperties            | undefined))            | undefined`                                                                                                                                                                         | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state. |
+| `translate`                   | `"no"                                                                                             | "yes"                          | undefined`             | —                                                                                                                                                                                  |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ### Row
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `children` | `((item: T) => ReactElement) | React.ReactNode` | — | The cells within the row. Supports static items or a function for dynamic rendering. |
-| `className` | `ClassNameOrFunction<RowRenderProps> | undefined` | 'react-aria-Row' | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state. |
-| `columns` | `Iterable<T> | undefined` | — | A list of columns used when dynamically rendering cells. |
-| `dependencies` | `readonly any[] | undefined` | — | Values that should invalidate the cell cache when using dynamic collections. |
-| `dir` | `string | undefined` | — |  |
-| `disabledBehavior` | `DisabledBehavior | undefined` | — | Whether `disabledKeys` applies to all interactions, or only selection. |
-| `download` | `boolean | string | undefined` | — | Causes the browser to download the linked URL. A string may be provided to suggest a file name. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#download). |
-| `hasChildItems` | `boolean | undefined` | — | Whether this row has children, even if not loaded yet. |
-| `hidden` | `boolean | undefined` | — |  |
-| `href` | `string | undefined` | — | A URL to link to. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#href). |
-| `hrefLang` | `string | undefined` | — | Hints at the human language of the linked URL. See[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#hreflang). |
-| `id` | `Key | undefined` | — | The unique id of the row. |
-| `inert` | `boolean | undefined` | — |  |
-| `isDisabled` | `boolean | undefined` | — | Whether the row is disabled. |
-| `lang` | `string | undefined` | — |  |
-| `onAction` | `(() => void) | undefined` | — | Handler that is called when a user performs an action on the row. The exact user event depends on the collection's `selectionBehavior` prop and the interaction modality. |
-| `onAnimationEnd` | `React.AnimationEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onAnimationEndCapture` | `React.AnimationEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onAnimationIteration` | `React.AnimationEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onAnimationStart` | `React.AnimationEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onAnimationStartCapture` | `React.AnimationEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onAuxClick` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onAuxClickCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onClick` | `((e: React.MouseEvent<FocusableElement>) => void) | undefined` | — | **Not recommended – use `onPress` instead.** `onClick` is an alias for `onPress` provided for compatibility with other libraries. `onPress` provides additional event details for non-mouse interactions. |
-| `onClickCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onContextMenu` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onContextMenuCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onDoubleClick` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onDoubleClickCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onGotPointerCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onGotPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onHoverChange` | `((isHovering: boolean) => void) | undefined` | — | Handler that is called when the hover state changes. |
-| `onHoverEnd` | `((e: HoverEvent) => void) | undefined` | — | Handler that is called when a hover interaction ends. |
-| `onHoverStart` | `((e: HoverEvent) => void) | undefined` | — | Handler that is called when a hover interaction starts. |
-| `onLostPointerCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseDown` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseDownCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseEnter` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseLeave` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseMove` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseMoveCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseOut` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseOutCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseOver` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseOverCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseUp` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseUpCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerCancel` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerCancelCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerDown` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerDownCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerEnter` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerLeave` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerMove` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerMoveCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerOut` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerOutCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerOver` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerOverCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerUp` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerUpCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPress` | `((e: PressEvent) => void) | undefined` | — | Handler that is called when the press is released over the target. |
-| `onPressChange` | `((isPressed: boolean) => void) | undefined` | — | Handler that is called when the press state changes. |
-| `onPressEnd` | `((e: PressEvent) => void) | undefined` | — | Handler that is called when a press interaction ends, either over the target or when the pointer leaves the target. |
-| `onPressStart` | `((e: PressEvent) => void) | undefined` | — | Handler that is called when a press interaction starts. |
-| `onPressUp` | `((e: PressEvent) => void) | undefined` | — | Handler that is called when a press is released over the target, regardless of whether it started on the target or not. |
-| `onScroll` | `React.UIEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onScrollCapture` | `React.UIEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTouchCancel` | `React.TouchEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTouchCancelCapture` | `React.TouchEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTouchEnd` | `React.TouchEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTouchEndCapture` | `React.TouchEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTouchMove` | `React.TouchEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTouchMoveCapture` | `React.TouchEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTouchStart` | `React.TouchEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTouchStartCapture` | `React.TouchEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTransitionCancel` | `React.TransitionEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTransitionCancelCapture` | `React.TransitionEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTransitionEnd` | `React.TransitionEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTransitionEndCapture` | `React.TransitionEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTransitionRun` | `React.TransitionEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTransitionRunCapture` | `React.TransitionEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTransitionStart` | `React.TransitionEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTransitionStartCapture` | `React.TransitionEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onWheel` | `React.WheelEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onWheelCapture` | `React.WheelEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `ping` | `string | undefined` | — | A space-separated list of URLs to ping when the link is followed. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#ping). |
-| `referrerPolicy` | `React.HTMLAttributeReferrerPolicy | undefined` | — | How much of the referrer to send when following the link. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#referrerpolicy). |
-| `rel` | `string | undefined` | — | The relationship between the linked resource and the current page. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel). |
-| `render` | `DOMRenderFunction<"div" | "tr", RowRenderProps> | undefined` | — | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an   `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop   as appropriate. |
-| `routerOptions` | `undefined` | — | Options for the configured client side router. |
-| `style` | `(((values: RowRenderProps & { defaultStyle: React.CSSProperties; }) => React.CSSProperties | React.CSSProperties | undefined)) | undefined` | — | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state. |
-| `target` | `React.HTMLAttributeAnchorTarget | undefined` | — | The target window for the link. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#target). |
-| `textValue` | `string | undefined` | — | A string representation of the row's contents, used for features like typeahead. |
-| `translate` | `"no" | "yes" | undefined` | — |  |
-| `value` | `T | undefined` | — | The object value that this row represents. When using dynamic collections, this is set automatically. |
+| Name                          | Type                                                                                        | Default               | Description                                    |
+| ----------------------------- | ------------------------------------------------------------------------------------------- | --------------------- | ---------------------------------------------- |
+| `children`                    | `((item: T) => ReactElement)                                                                | React.ReactNode`      | —                                              | The cells within the row. Supports static items or a function for dynamic rendering.                                                                                                                      |
+| `className`                   | `ClassNameOrFunction<RowRenderProps>                                                        | undefined`            | 'react-aria-Row'                               | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state.                        |
+| `columns`                     | `Iterable<T>                                                                                | undefined`            | —                                              | A list of columns used when dynamically rendering cells.                                                                                                                                                  |
+| `dependencies`                | `readonly any[]                                                                             | undefined`            | —                                              | Values that should invalidate the cell cache when using dynamic collections.                                                                                                                              |
+| `dir`                         | `string                                                                                     | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `disabledBehavior`            | `DisabledBehavior                                                                           | undefined`            | —                                              | Whether `disabledKeys` applies to all interactions, or only selection.                                                                                                                                    |
+| `download`                    | `boolean                                                                                    | string                | undefined`                                     | —                                                                                                                                                                                                         | Causes the browser to download the linked URL. A string may be provided to suggest a file name. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#download).                                                                                                                                                                                                                                                                                                                                             |
+| `hasChildItems`               | `boolean                                                                                    | undefined`            | —                                              | Whether this row has children, even if not loaded yet.                                                                                                                                                    |
+| `hidden`                      | `boolean                                                                                    | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `href`                        | `string                                                                                     | undefined`            | —                                              | A URL to link to. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#href).                                                                                                            |
+| `hrefLang`                    | `string                                                                                     | undefined`            | —                                              | Hints at the human language of the linked URL. See[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#hreflang).                                                                            |
+| `id`                          | `Key                                                                                        | undefined`            | —                                              | The unique id of the row.                                                                                                                                                                                 |
+| `inert`                       | `boolean                                                                                    | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `isDisabled`                  | `boolean                                                                                    | undefined`            | —                                              | Whether the row is disabled.                                                                                                                                                                              |
+| `lang`                        | `string                                                                                     | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onAction`                    | `(() => void)                                                                               | undefined`            | —                                              | Handler that is called when a user performs an action on the row. The exact user event depends on the collection's `selectionBehavior` prop and the interaction modality.                                 |
+| `onAnimationEnd`              | `React.AnimationEventHandler<HTMLTableRowElement>                                           | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onAnimationEndCapture`       | `React.AnimationEventHandler<HTMLTableRowElement>                                           | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onAnimationIteration`        | `React.AnimationEventHandler<HTMLTableRowElement>                                           | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLTableRowElement>                                           | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onAnimationStart`            | `React.AnimationEventHandler<HTMLTableRowElement>                                           | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onAnimationStartCapture`     | `React.AnimationEventHandler<HTMLTableRowElement>                                           | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onAuxClick`                  | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onAuxClickCapture`           | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onClick`                     | `((e: React.MouseEvent<FocusableElement>) => void)                                          | undefined`            | —                                              | **Not recommended – use `onPress` instead.** `onClick` is an alias for `onPress` provided for compatibility with other libraries. `onPress` provides additional event details for non-mouse interactions. |
+| `onClickCapture`              | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onContextMenu`               | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onContextMenuCapture`        | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onDoubleClick`               | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onDoubleClickCapture`        | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onGotPointerCapture`         | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onGotPointerCaptureCapture`  | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onHoverChange`               | `((isHovering: boolean) => void)                                                            | undefined`            | —                                              | Handler that is called when the hover state changes.                                                                                                                                                      |
+| `onHoverEnd`                  | `((e: HoverEvent) => void)                                                                  | undefined`            | —                                              | Handler that is called when a hover interaction ends.                                                                                                                                                     |
+| `onHoverStart`                | `((e: HoverEvent) => void)                                                                  | undefined`            | —                                              | Handler that is called when a hover interaction starts.                                                                                                                                                   |
+| `onLostPointerCapture`        | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onMouseDown`                 | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onMouseDownCapture`          | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onMouseEnter`                | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onMouseLeave`                | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onMouseMove`                 | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onMouseMoveCapture`          | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onMouseOut`                  | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onMouseOutCapture`           | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onMouseOver`                 | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onMouseOverCapture`          | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onMouseUp`                   | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onMouseUpCapture`            | `React.MouseEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onPointerCancel`             | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onPointerCancelCapture`      | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onPointerDown`               | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onPointerDownCapture`        | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onPointerEnter`              | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onPointerLeave`              | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onPointerMove`               | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onPointerMoveCapture`        | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onPointerOut`                | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onPointerOutCapture`         | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onPointerOver`               | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onPointerOverCapture`        | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onPointerUp`                 | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onPointerUpCapture`          | `React.PointerEventHandler<HTMLTableRowElement>                                             | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onPress`                     | `((e: PressEvent) => void)                                                                  | undefined`            | —                                              | Handler that is called when the press is released over the target.                                                                                                                                        |
+| `onPressChange`               | `((isPressed: boolean) => void)                                                             | undefined`            | —                                              | Handler that is called when the press state changes.                                                                                                                                                      |
+| `onPressEnd`                  | `((e: PressEvent) => void)                                                                  | undefined`            | —                                              | Handler that is called when a press interaction ends, either over the target or when the pointer leaves the target.                                                                                       |
+| `onPressStart`                | `((e: PressEvent) => void)                                                                  | undefined`            | —                                              | Handler that is called when a press interaction starts.                                                                                                                                                   |
+| `onPressUp`                   | `((e: PressEvent) => void)                                                                  | undefined`            | —                                              | Handler that is called when a press is released over the target, regardless of whether it started on the target or not.                                                                                   |
+| `onScroll`                    | `React.UIEventHandler<HTMLTableRowElement>                                                  | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onScrollCapture`             | `React.UIEventHandler<HTMLTableRowElement>                                                  | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onTouchCancel`               | `React.TouchEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onTouchCancelCapture`        | `React.TouchEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onTouchEnd`                  | `React.TouchEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onTouchEndCapture`           | `React.TouchEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onTouchMove`                 | `React.TouchEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onTouchMoveCapture`          | `React.TouchEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onTouchStart`                | `React.TouchEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onTouchStartCapture`         | `React.TouchEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onTransitionCancel`          | `React.TransitionEventHandler<HTMLTableRowElement>                                          | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onTransitionCancelCapture`   | `React.TransitionEventHandler<HTMLTableRowElement>                                          | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onTransitionEnd`             | `React.TransitionEventHandler<HTMLTableRowElement>                                          | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onTransitionEndCapture`      | `React.TransitionEventHandler<HTMLTableRowElement>                                          | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onTransitionRun`             | `React.TransitionEventHandler<HTMLTableRowElement>                                          | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onTransitionRunCapture`      | `React.TransitionEventHandler<HTMLTableRowElement>                                          | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onTransitionStart`           | `React.TransitionEventHandler<HTMLTableRowElement>                                          | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onTransitionStartCapture`    | `React.TransitionEventHandler<HTMLTableRowElement>                                          | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onWheel`                     | `React.WheelEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `onWheelCapture`              | `React.WheelEventHandler<HTMLTableRowElement>                                               | undefined`            | —                                              |                                                                                                                                                                                                           |
+| `ping`                        | `string                                                                                     | undefined`            | —                                              | A space-separated list of URLs to ping when the link is followed. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#ping).                                                            |
+| `referrerPolicy`              | `React.HTMLAttributeReferrerPolicy                                                          | undefined`            | —                                              | How much of the referrer to send when following the link. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#referrerpolicy).                                                          |
+| `rel`                         | `string                                                                                     | undefined`            | —                                              | The relationship between the linked resource and the current page. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel).                                                           |
+| `render`                      | `DOMRenderFunction<"div"                                                                    | "tr", RowRenderProps> | undefined`                                     | —                                                                                                                                                                                                         | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop as appropriate. |
+| `routerOptions`               | `undefined`                                                                                 | —                     | Options for the configured client side router. |
+| `style`                       | `(((values: RowRenderProps & { defaultStyle: React.CSSProperties; }) => React.CSSProperties | React.CSSProperties   | undefined))                                    | undefined`                                                                                                                                                                                                | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state. |
+| `target`                      | `React.HTMLAttributeAnchorTarget                                                            | undefined`            | —                                              | The target window for the link. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#target).                                                                                            |
+| `textValue`                   | `string                                                                                     | undefined`            | —                                              | A string representation of the row's contents, used for features like typeahead.                                                                                                                          |
+| `translate`                   | `"no"                                                                                       | "yes"                 | undefined`                                     | —                                                                                                                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `value`                       | `T                                                                                          | undefined`            | —                                              | The object value that this row represents. When using dynamic collections, this is set automatically.                                                                                                     |
 
 ### Cell
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `children` | `ChildrenOrFunction<CellRenderProps>` | — | The children of the component. A function may be provided to alter the children based on component state. |
-| `className` | `ClassNameOrFunction<CellRenderProps> | undefined` | 'react-aria-Cell' | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state. |
-| `colSpan` | `number | undefined` | — | Indicates how many columns the data cell spans. |
-| `dir` | `string | undefined` | — |  |
-| `hidden` | `boolean | undefined` | — |  |
-| `id` | `Key | undefined` | — | The unique id of the cell. |
-| `inert` | `boolean | undefined` | — |  |
-| `lang` | `string | undefined` | — |  |
-| `onAnimationEnd` | `React.AnimationEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onAnimationEndCapture` | `React.AnimationEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onAnimationIteration` | `React.AnimationEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onAnimationStart` | `React.AnimationEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onAnimationStartCapture` | `React.AnimationEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onAuxClick` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onAuxClickCapture` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onClick` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onClickCapture` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onContextMenu` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onContextMenuCapture` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onDoubleClick` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onDoubleClickCapture` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onGotPointerCapture` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onGotPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onLostPointerCapture` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onMouseDown` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onMouseDownCapture` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onMouseEnter` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onMouseLeave` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onMouseMove` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onMouseMoveCapture` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onMouseOut` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onMouseOutCapture` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onMouseOver` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onMouseOverCapture` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onMouseUp` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onMouseUpCapture` | `React.MouseEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onPointerCancel` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onPointerCancelCapture` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onPointerDown` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onPointerDownCapture` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onPointerEnter` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onPointerLeave` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onPointerMove` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onPointerMoveCapture` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onPointerOut` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onPointerOutCapture` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onPointerOver` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onPointerOverCapture` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onPointerUp` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onPointerUpCapture` | `React.PointerEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onScroll` | `React.UIEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onScrollCapture` | `React.UIEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onTouchCancel` | `React.TouchEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onTouchCancelCapture` | `React.TouchEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onTouchEnd` | `React.TouchEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onTouchEndCapture` | `React.TouchEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onTouchMove` | `React.TouchEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onTouchMoveCapture` | `React.TouchEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onTouchStart` | `React.TouchEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onTouchStartCapture` | `React.TouchEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onTransitionCancel` | `React.TransitionEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onTransitionCancelCapture` | `React.TransitionEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onTransitionEnd` | `React.TransitionEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onTransitionEndCapture` | `React.TransitionEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onTransitionRun` | `React.TransitionEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onTransitionRunCapture` | `React.TransitionEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onTransitionStart` | `React.TransitionEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onTransitionStartCapture` | `React.TransitionEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onWheel` | `React.WheelEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `onWheelCapture` | `React.WheelEventHandler<HTMLTableCellElement> | undefined` | — |  |
-| `render` | `DOMRenderFunction<"div" | "td", CellRenderProps> | undefined` | — | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an   `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop   as appropriate. |
-| `style` | `(((values: CellRenderProps & { defaultStyle: React.CSSProperties; }) => React.CSSProperties | React.CSSProperties | undefined)) | undefined` | — | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state. |
-| `textValue` | `string | undefined` | — | A string representation of the cell's contents, used for features like typeahead. |
-| `translate` | `"no" | "yes" | undefined` | — |  |
+| Name                          | Type                                                                                         | Default                | Description                                                                                               |
+| ----------------------------- | -------------------------------------------------------------------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------- |
+| `children`                    | `ChildrenOrFunction<CellRenderProps>`                                                        | —                      | The children of the component. A function may be provided to alter the children based on component state. |
+| `className`                   | `ClassNameOrFunction<CellRenderProps>                                                        | undefined`             | 'react-aria-Cell'                                                                                         | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state. |
+| `colSpan`                     | `number                                                                                      | undefined`             | —                                                                                                         | Indicates how many columns the data cell spans.                                                                                                                                    |
+| `dir`                         | `string                                                                                      | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `hidden`                      | `boolean                                                                                     | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `id`                          | `Key                                                                                         | undefined`             | —                                                                                                         | The unique id of the cell.                                                                                                                                                         |
+| `inert`                       | `boolean                                                                                     | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `lang`                        | `string                                                                                      | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onAnimationEnd`              | `React.AnimationEventHandler<HTMLTableCellElement>                                           | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onAnimationEndCapture`       | `React.AnimationEventHandler<HTMLTableCellElement>                                           | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onAnimationIteration`        | `React.AnimationEventHandler<HTMLTableCellElement>                                           | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLTableCellElement>                                           | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onAnimationStart`            | `React.AnimationEventHandler<HTMLTableCellElement>                                           | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onAnimationStartCapture`     | `React.AnimationEventHandler<HTMLTableCellElement>                                           | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onAuxClick`                  | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onAuxClickCapture`           | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onClick`                     | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onClickCapture`              | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onContextMenu`               | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onContextMenuCapture`        | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onDoubleClick`               | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onDoubleClickCapture`        | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onGotPointerCapture`         | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onGotPointerCaptureCapture`  | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onLostPointerCapture`        | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseDown`                 | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseDownCapture`          | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseEnter`                | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseLeave`                | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseMove`                 | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseMoveCapture`          | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseOut`                  | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseOutCapture`           | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseOver`                 | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseOverCapture`          | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseUp`                   | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onMouseUpCapture`            | `React.MouseEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerCancel`             | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerCancelCapture`      | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerDown`               | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerDownCapture`        | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerEnter`              | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerLeave`              | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerMove`               | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerMoveCapture`        | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerOut`                | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerOutCapture`         | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerOver`               | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerOverCapture`        | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerUp`                 | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onPointerUpCapture`          | `React.PointerEventHandler<HTMLTableCellElement>                                             | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onScroll`                    | `React.UIEventHandler<HTMLTableCellElement>                                                  | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onScrollCapture`             | `React.UIEventHandler<HTMLTableCellElement>                                                  | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onTouchCancel`               | `React.TouchEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onTouchCancelCapture`        | `React.TouchEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onTouchEnd`                  | `React.TouchEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onTouchEndCapture`           | `React.TouchEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onTouchMove`                 | `React.TouchEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onTouchMoveCapture`          | `React.TouchEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onTouchStart`                | `React.TouchEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onTouchStartCapture`         | `React.TouchEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onTransitionCancel`          | `React.TransitionEventHandler<HTMLTableCellElement>                                          | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onTransitionCancelCapture`   | `React.TransitionEventHandler<HTMLTableCellElement>                                          | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onTransitionEnd`             | `React.TransitionEventHandler<HTMLTableCellElement>                                          | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onTransitionEndCapture`      | `React.TransitionEventHandler<HTMLTableCellElement>                                          | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onTransitionRun`             | `React.TransitionEventHandler<HTMLTableCellElement>                                          | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onTransitionRunCapture`      | `React.TransitionEventHandler<HTMLTableCellElement>                                          | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onTransitionStart`           | `React.TransitionEventHandler<HTMLTableCellElement>                                          | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onTransitionStartCapture`    | `React.TransitionEventHandler<HTMLTableCellElement>                                          | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onWheel`                     | `React.WheelEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `onWheelCapture`              | `React.WheelEventHandler<HTMLTableCellElement>                                               | undefined`             | —                                                                                                         |                                                                                                                                                                                    |
+| `render`                      | `DOMRenderFunction<"div"                                                                     | "td", CellRenderProps> | undefined`                                                                                                | —                                                                                                                                                                                  | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop as appropriate. |
+| `style`                       | `(((values: CellRenderProps & { defaultStyle: React.CSSProperties; }) => React.CSSProperties | React.CSSProperties    | undefined))                                                                                               | undefined`                                                                                                                                                                         | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state. |
+| `textValue`                   | `string                                                                                      | undefined`             | —                                                                                                         | A string representation of the cell's contents, used for features like typeahead.                                                                                                  |
+| `translate`                   | `"no"                                                                                        | "yes"                  | undefined`                                                                                                | —                                                                                                                                                                                  |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ### TableFooter
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `children` | `((item: T) => ReactNode) | React.ReactNode` | — | The contents of the collection. |
-| `className` | `string | undefined` | 'react-aria-TableFooter' | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. |
-| `dependencies` | `readonly any[] | undefined` | — | Values that should invalidate the item cache when using dynamic collections. |
-| `dir` | `string | undefined` | — |  |
-| `hidden` | `boolean | undefined` | — |  |
-| `inert` | `boolean | undefined` | — |  |
-| `items` | `Iterable<T> | undefined` | — | Item objects in the collection. |
-| `lang` | `string | undefined` | — |  |
-| `onAnimationEnd` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAnimationEndCapture` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAnimationIteration` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAnimationStart` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAnimationStartCapture` | `React.AnimationEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAuxClick` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onAuxClickCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onClick` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onClickCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onContextMenu` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onContextMenuCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onDoubleClick` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onDoubleClickCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onGotPointerCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onGotPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onLostPointerCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseDown` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseDownCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseEnter` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseLeave` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseMove` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseMoveCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseOut` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseOutCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseOver` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseOverCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseUp` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onMouseUpCapture` | `React.MouseEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerCancel` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerCancelCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerDown` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerDownCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerEnter` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerLeave` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerMove` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerMoveCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerOut` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerOutCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerOver` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerOverCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerUp` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onPointerUpCapture` | `React.PointerEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onScroll` | `React.UIEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onScrollCapture` | `React.UIEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchCancel` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchCancelCapture` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchEnd` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchEndCapture` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchMove` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchMoveCapture` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchStart` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTouchStartCapture` | `React.TouchEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionCancel` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionCancelCapture` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionEnd` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionEndCapture` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionRun` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionRunCapture` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionStart` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onTransitionStartCapture` | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onWheel` | `React.WheelEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `onWheelCapture` | `React.WheelEventHandler<HTMLTableSectionElement> | undefined` | — |  |
-| `style` | `React.CSSProperties | undefined` | — | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. |
-| `translate` | `"no" | "yes" | undefined` | — |  |
+| Name                          | Type                                                   | Default          | Description              |
+| ----------------------------- | ------------------------------------------------------ | ---------------- | ------------------------ |
+| `children`                    | `((item: T) => ReactNode)                              | React.ReactNode` | —                        | The contents of the collection.                                                                          |
+| `className`                   | `string                                                | undefined`       | 'react-aria-TableFooter' | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. |
+| `dependencies`                | `readonly any[]                                        | undefined`       | —                        | Values that should invalidate the item cache when using dynamic collections.                             |
+| `dir`                         | `string                                                | undefined`       | —                        |                                                                                                          |
+| `hidden`                      | `boolean                                               | undefined`       | —                        |                                                                                                          |
+| `inert`                       | `boolean                                               | undefined`       | —                        |                                                                                                          |
+| `items`                       | `Iterable<T>                                           | undefined`       | —                        | Item objects in the collection.                                                                          |
+| `lang`                        | `string                                                | undefined`       | —                        |                                                                                                          |
+| `onAnimationEnd`              | `React.AnimationEventHandler<HTMLTableSectionElement>  | undefined`       | —                        |                                                                                                          |
+| `onAnimationEndCapture`       | `React.AnimationEventHandler<HTMLTableSectionElement>  | undefined`       | —                        |                                                                                                          |
+| `onAnimationIteration`        | `React.AnimationEventHandler<HTMLTableSectionElement>  | undefined`       | —                        |                                                                                                          |
+| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLTableSectionElement>  | undefined`       | —                        |                                                                                                          |
+| `onAnimationStart`            | `React.AnimationEventHandler<HTMLTableSectionElement>  | undefined`       | —                        |                                                                                                          |
+| `onAnimationStartCapture`     | `React.AnimationEventHandler<HTMLTableSectionElement>  | undefined`       | —                        |                                                                                                          |
+| `onAuxClick`                  | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onAuxClickCapture`           | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onClick`                     | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onClickCapture`              | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onContextMenu`               | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onContextMenuCapture`        | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onDoubleClick`               | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onDoubleClickCapture`        | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onGotPointerCapture`         | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onGotPointerCaptureCapture`  | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onLostPointerCapture`        | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onMouseDown`                 | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onMouseDownCapture`          | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onMouseEnter`                | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onMouseLeave`                | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onMouseMove`                 | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onMouseMoveCapture`          | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onMouseOut`                  | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onMouseOutCapture`           | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onMouseOver`                 | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onMouseOverCapture`          | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onMouseUp`                   | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onMouseUpCapture`            | `React.MouseEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onPointerCancel`             | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onPointerCancelCapture`      | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onPointerDown`               | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onPointerDownCapture`        | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onPointerEnter`              | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onPointerLeave`              | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onPointerMove`               | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onPointerMoveCapture`        | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onPointerOut`                | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onPointerOutCapture`         | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onPointerOver`               | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onPointerOverCapture`        | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onPointerUp`                 | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onPointerUpCapture`          | `React.PointerEventHandler<HTMLTableSectionElement>    | undefined`       | —                        |                                                                                                          |
+| `onScroll`                    | `React.UIEventHandler<HTMLTableSectionElement>         | undefined`       | —                        |                                                                                                          |
+| `onScrollCapture`             | `React.UIEventHandler<HTMLTableSectionElement>         | undefined`       | —                        |                                                                                                          |
+| `onTouchCancel`               | `React.TouchEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onTouchCancelCapture`        | `React.TouchEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onTouchEnd`                  | `React.TouchEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onTouchEndCapture`           | `React.TouchEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onTouchMove`                 | `React.TouchEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onTouchMoveCapture`          | `React.TouchEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onTouchStart`                | `React.TouchEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onTouchStartCapture`         | `React.TouchEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onTransitionCancel`          | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined`       | —                        |                                                                                                          |
+| `onTransitionCancelCapture`   | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined`       | —                        |                                                                                                          |
+| `onTransitionEnd`             | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined`       | —                        |                                                                                                          |
+| `onTransitionEndCapture`      | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined`       | —                        |                                                                                                          |
+| `onTransitionRun`             | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined`       | —                        |                                                                                                          |
+| `onTransitionRunCapture`      | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined`       | —                        |                                                                                                          |
+| `onTransitionStart`           | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined`       | —                        |                                                                                                          |
+| `onTransitionStartCapture`    | `React.TransitionEventHandler<HTMLTableSectionElement> | undefined`       | —                        |                                                                                                          |
+| `onWheel`                     | `React.WheelEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `onWheelCapture`              | `React.WheelEventHandler<HTMLTableSectionElement>      | undefined`       | —                        |                                                                                                          |
+| `style`                       | `React.CSSProperties                                   | undefined`       | —                        | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element.  |
+| `translate`                   | `"no"                                                  | "yes"            | undefined`               | —                                                                                                        |     |
 
 ### ResizableTableContainer
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `children` | `React.ReactNode` | — | The children of the component. |
-| `className` | `string | undefined` | 'react-aria-ResizableTableContainer' | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. |
-| `dir` | `string | undefined` | — |  |
-| `hidden` | `boolean | undefined` | — |  |
-| `id` | `string | undefined` | — | The element's unique identifier. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id). |
-| `inert` | `boolean | undefined` | — |  |
-| `lang` | `string | undefined` | — |  |
-| `onAnimationEnd` | `React.AnimationEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onAnimationEndCapture` | `React.AnimationEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onAnimationIteration` | `React.AnimationEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onAnimationStart` | `React.AnimationEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onAnimationStartCapture` | `React.AnimationEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onAuxClick` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onAuxClickCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onClick` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onClickCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onContextMenu` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onContextMenuCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onDoubleClick` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onDoubleClickCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onGotPointerCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onGotPointerCaptureCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onLostPointerCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseDown` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseDownCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseEnter` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseLeave` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseMove` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseMoveCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseOut` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseOutCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseOver` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseOverCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseUp` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseUpCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerCancel` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerCancelCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerDown` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerDownCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerEnter` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerLeave` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerMove` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerMoveCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerOut` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerOutCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerOver` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerOverCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerUp` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerUpCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onResize` | `((widths: Map<Key, ColumnSize>) => void) | undefined` | — | Handler that is called when a user performs a column resize. Can be used with the width property on columns to put the column widths into a controlled state. |
-| `onResizeEnd` | `((widths: Map<Key, ColumnSize>) => void) | undefined` | — | Handler that is called after a user performs a column resize. Can be used to store the widths of columns for another future session. |
-| `onResizeStart` | `((widths: Map<Key, ColumnSize>) => void) | undefined` | — | Handler that is called when a user starts a column resize. |
-| `onScroll` | `React.UIEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onScrollCapture` | `React.UIEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTouchCancel` | `React.TouchEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTouchCancelCapture` | `React.TouchEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTouchEnd` | `React.TouchEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTouchEndCapture` | `React.TouchEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTouchMove` | `React.TouchEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTouchMoveCapture` | `React.TouchEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTouchStart` | `React.TouchEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTouchStartCapture` | `React.TouchEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTransitionCancel` | `React.TransitionEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTransitionCancelCapture` | `React.TransitionEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTransitionEnd` | `React.TransitionEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTransitionEndCapture` | `React.TransitionEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTransitionRun` | `React.TransitionEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTransitionRunCapture` | `React.TransitionEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTransitionStart` | `React.TransitionEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTransitionStartCapture` | `React.TransitionEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onWheel` | `React.WheelEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onWheelCapture` | `React.WheelEventHandler<HTMLDivElement> | undefined` | — |  |
-| `render` | `DOMRenderFunction<"div", undefined> | undefined` | — | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an   `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop   as appropriate. |
-| `style` | `React.CSSProperties | undefined` | — | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. |
-| `translate` | `"no" | "yes" | undefined` | — |  |
+| Name                          | Type                                          | Default    | Description                          |
+| ----------------------------- | --------------------------------------------- | ---------- | ------------------------------------ |
+| `children`                    | `React.ReactNode`                             | —          | The children of the component.       |
+| `className`                   | `string                                       | undefined` | 'react-aria-ResizableTableContainer' | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element.                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `dir`                         | `string                                       | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `hidden`                      | `boolean                                      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `id`                          | `string                                       | undefined` | —                                    | The element's unique identifier. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `inert`                       | `boolean                                      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `lang`                        | `string                                       | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onAnimationEnd`              | `React.AnimationEventHandler<HTMLDivElement>  | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onAnimationEndCapture`       | `React.AnimationEventHandler<HTMLDivElement>  | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onAnimationIteration`        | `React.AnimationEventHandler<HTMLDivElement>  | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLDivElement>  | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onAnimationStart`            | `React.AnimationEventHandler<HTMLDivElement>  | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onAnimationStartCapture`     | `React.AnimationEventHandler<HTMLDivElement>  | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onAuxClick`                  | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onAuxClickCapture`           | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onClick`                     | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onClickCapture`              | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onContextMenu`               | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onContextMenuCapture`        | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onDoubleClick`               | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onDoubleClickCapture`        | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onGotPointerCapture`         | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onGotPointerCaptureCapture`  | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onLostPointerCapture`        | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseDown`                 | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseDownCapture`          | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseEnter`                | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseLeave`                | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseMove`                 | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseMoveCapture`          | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseOut`                  | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseOutCapture`           | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseOver`                 | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseOverCapture`          | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseUp`                   | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseUpCapture`            | `React.MouseEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerCancel`             | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerCancelCapture`      | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerDown`               | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerDownCapture`        | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerEnter`              | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerLeave`              | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerMove`               | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerMoveCapture`        | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerOut`                | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerOutCapture`         | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerOver`               | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerOverCapture`        | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerUp`                 | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerUpCapture`          | `React.PointerEventHandler<HTMLDivElement>    | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onResize`                    | `((widths: Map<Key, ColumnSize>) => void)     | undefined` | —                                    | Handler that is called when a user performs a column resize. Can be used with the width property on columns to put the column widths into a controlled state.                                                                                                                                                                                                                                                                                                                                                                |
+| `onResizeEnd`                 | `((widths: Map<Key, ColumnSize>) => void)     | undefined` | —                                    | Handler that is called after a user performs a column resize. Can be used to store the widths of columns for another future session.                                                                                                                                                                                                                                                                                                                                                                                         |
+| `onResizeStart`               | `((widths: Map<Key, ColumnSize>) => void)     | undefined` | —                                    | Handler that is called when a user starts a column resize.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `onScroll`                    | `React.UIEventHandler<HTMLDivElement>         | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onScrollCapture`             | `React.UIEventHandler<HTMLDivElement>         | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTouchCancel`               | `React.TouchEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTouchCancelCapture`        | `React.TouchEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTouchEnd`                  | `React.TouchEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTouchEndCapture`           | `React.TouchEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTouchMove`                 | `React.TouchEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTouchMoveCapture`          | `React.TouchEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTouchStart`                | `React.TouchEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTouchStartCapture`         | `React.TouchEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTransitionCancel`          | `React.TransitionEventHandler<HTMLDivElement> | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTransitionCancelCapture`   | `React.TransitionEventHandler<HTMLDivElement> | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTransitionEnd`             | `React.TransitionEventHandler<HTMLDivElement> | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTransitionEndCapture`      | `React.TransitionEventHandler<HTMLDivElement> | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTransitionRun`             | `React.TransitionEventHandler<HTMLDivElement> | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTransitionRunCapture`      | `React.TransitionEventHandler<HTMLDivElement> | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTransitionStart`           | `React.TransitionEventHandler<HTMLDivElement> | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTransitionStartCapture`    | `React.TransitionEventHandler<HTMLDivElement> | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onWheel`                     | `React.WheelEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onWheelCapture`              | `React.WheelEventHandler<HTMLDivElement>      | undefined` | —                                    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `render`                      | `DOMRenderFunction<"div", undefined>          | undefined` | —                                    | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop as appropriate. |
+| `style`                       | `React.CSSProperties                          | undefined` | —                                    | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element.                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `translate`                   | `"no"                                         | "yes"      | undefined`                           | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |     |
 
 ### ColumnResizer
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `aria-label` | `string | undefined` | — | A custom accessibility label for the resizer. |
-| `children` | `ChildrenOrFunction<ColumnResizerRenderProps>` | — | The children of the component. A function may be provided to alter the children based on component state. |
-| `className` | `ClassNameOrFunction<ColumnResizerRenderProps> | undefined` | 'react-aria-ColumnResizer' | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state. |
-| `dir` | `string | undefined` | — |  |
-| `hidden` | `boolean | undefined` | — |  |
-| `inert` | `boolean | undefined` | — |  |
-| `lang` | `string | undefined` | — |  |
-| `onAnimationEnd` | `React.AnimationEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onAnimationEndCapture` | `React.AnimationEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onAnimationIteration` | `React.AnimationEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onAnimationStart` | `React.AnimationEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onAnimationStartCapture` | `React.AnimationEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onAuxClick` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onAuxClickCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onClick` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onClickCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onContextMenu` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onContextMenuCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onDoubleClick` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onDoubleClickCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onGotPointerCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onGotPointerCaptureCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onHoverChange` | `((isHovering: boolean) => void) | undefined` | — | Handler that is called when the hover state changes. |
-| `onHoverEnd` | `((e: HoverEvent) => void) | undefined` | — | Handler that is called when a hover interaction ends. |
-| `onHoverStart` | `((e: HoverEvent) => void) | undefined` | — | Handler that is called when a hover interaction starts. |
-| `onLostPointerCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseDown` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseDownCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseEnter` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseLeave` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseMove` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseMoveCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseOut` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseOutCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseOver` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseOverCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseUp` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onMouseUpCapture` | `React.MouseEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerCancel` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerCancelCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerDown` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerDownCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerEnter` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerLeave` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerMove` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerMoveCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerOut` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerOutCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerOver` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerOverCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerUp` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onPointerUpCapture` | `React.PointerEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onScroll` | `React.UIEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onScrollCapture` | `React.UIEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTouchCancel` | `React.TouchEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTouchCancelCapture` | `React.TouchEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTouchEnd` | `React.TouchEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTouchEndCapture` | `React.TouchEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTouchMove` | `React.TouchEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTouchMoveCapture` | `React.TouchEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTouchStart` | `React.TouchEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTouchStartCapture` | `React.TouchEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTransitionCancel` | `React.TransitionEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTransitionCancelCapture` | `React.TransitionEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTransitionEnd` | `React.TransitionEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTransitionEndCapture` | `React.TransitionEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTransitionRun` | `React.TransitionEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTransitionRunCapture` | `React.TransitionEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTransitionStart` | `React.TransitionEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onTransitionStartCapture` | `React.TransitionEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onWheel` | `React.WheelEventHandler<HTMLDivElement> | undefined` | — |  |
-| `onWheelCapture` | `React.WheelEventHandler<HTMLDivElement> | undefined` | — |  |
-| `render` | `DOMRenderFunction<"div", ColumnResizerRenderProps> | undefined` | — | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an   `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop   as appropriate. |
-| `style` | `(((values: ColumnResizerRenderProps & { defaultStyle: React.CSSProperties; }) => React.CSSProperties | React.CSSProperties | undefined)) | undefined` | — | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state. |
-| `translate` | `"no" | "yes" | undefined` | — |  |
+| Name                          | Type                                                                                                  | Default             | Description                                                                                               |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------- |
+| `aria-label`                  | `string                                                                                               | undefined`          | —                                                                                                         | A custom accessibility label for the resizer.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `children`                    | `ChildrenOrFunction<ColumnResizerRenderProps>`                                                        | —                   | The children of the component. A function may be provided to alter the children based on component state. |
+| `className`                   | `ClassNameOrFunction<ColumnResizerRenderProps>                                                        | undefined`          | 'react-aria-ColumnResizer'                                                                                | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state.                                                                                                                                                                                                                                                                                                                                           |
+| `dir`                         | `string                                                                                               | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `hidden`                      | `boolean                                                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `inert`                       | `boolean                                                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `lang`                        | `string                                                                                               | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onAnimationEnd`              | `React.AnimationEventHandler<HTMLDivElement>                                                          | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onAnimationEndCapture`       | `React.AnimationEventHandler<HTMLDivElement>                                                          | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onAnimationIteration`        | `React.AnimationEventHandler<HTMLDivElement>                                                          | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLDivElement>                                                          | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onAnimationStart`            | `React.AnimationEventHandler<HTMLDivElement>                                                          | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onAnimationStartCapture`     | `React.AnimationEventHandler<HTMLDivElement>                                                          | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onAuxClick`                  | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onAuxClickCapture`           | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onClick`                     | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onClickCapture`              | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onContextMenu`               | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onContextMenuCapture`        | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onDoubleClick`               | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onDoubleClickCapture`        | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onGotPointerCapture`         | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onGotPointerCaptureCapture`  | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onHoverChange`               | `((isHovering: boolean) => void)                                                                      | undefined`          | —                                                                                                         | Handler that is called when the hover state changes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `onHoverEnd`                  | `((e: HoverEvent) => void)                                                                            | undefined`          | —                                                                                                         | Handler that is called when a hover interaction ends.                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `onHoverStart`                | `((e: HoverEvent) => void)                                                                            | undefined`          | —                                                                                                         | Handler that is called when a hover interaction starts.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `onLostPointerCapture`        | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseDown`                 | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseDownCapture`          | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseEnter`                | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseLeave`                | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseMove`                 | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseMoveCapture`          | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseOut`                  | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseOutCapture`           | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseOver`                 | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseOverCapture`          | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseUp`                   | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onMouseUpCapture`            | `React.MouseEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerCancel`             | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerCancelCapture`      | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerDown`               | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerDownCapture`        | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerEnter`              | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerLeave`              | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerMove`               | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerMoveCapture`        | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerOut`                | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerOutCapture`         | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerOver`               | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerOverCapture`        | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerUp`                 | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onPointerUpCapture`          | `React.PointerEventHandler<HTMLDivElement>                                                            | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onScroll`                    | `React.UIEventHandler<HTMLDivElement>                                                                 | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onScrollCapture`             | `React.UIEventHandler<HTMLDivElement>                                                                 | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTouchCancel`               | `React.TouchEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTouchCancelCapture`        | `React.TouchEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTouchEnd`                  | `React.TouchEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTouchEndCapture`           | `React.TouchEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTouchMove`                 | `React.TouchEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTouchMoveCapture`          | `React.TouchEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTouchStart`                | `React.TouchEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTouchStartCapture`         | `React.TouchEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTransitionCancel`          | `React.TransitionEventHandler<HTMLDivElement>                                                         | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTransitionCancelCapture`   | `React.TransitionEventHandler<HTMLDivElement>                                                         | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTransitionEnd`             | `React.TransitionEventHandler<HTMLDivElement>                                                         | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTransitionEndCapture`      | `React.TransitionEventHandler<HTMLDivElement>                                                         | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTransitionRun`             | `React.TransitionEventHandler<HTMLDivElement>                                                         | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTransitionRunCapture`      | `React.TransitionEventHandler<HTMLDivElement>                                                         | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTransitionStart`           | `React.TransitionEventHandler<HTMLDivElement>                                                         | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onTransitionStartCapture`    | `React.TransitionEventHandler<HTMLDivElement>                                                         | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onWheel`                     | `React.WheelEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `onWheelCapture`              | `React.WheelEventHandler<HTMLDivElement>                                                              | undefined`          | —                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `render`                      | `DOMRenderFunction<"div", ColumnResizerRenderProps>                                                   | undefined`          | —                                                                                                         | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop as appropriate. |
+| `style`                       | `(((values: ColumnResizerRenderProps & { defaultStyle: React.CSSProperties; }) => React.CSSProperties | React.CSSProperties | undefined))                                                                                               | undefined`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | —   | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state. |
+| `translate`                   | `"no"                                                                                                 | "yes"               | undefined`                                                                                                | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |     |
 
 ### TableLoadMoreItem
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `children` | `React.ReactNode` | — | The load more spinner to render when loading additional items. |
-| `className` | `string | undefined` | 'react-aria-TableLoadMoreItem' | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. |
-| `dir` | `string | undefined` | — |  |
-| `hidden` | `boolean | undefined` | — |  |
-| `inert` | `boolean | undefined` | — |  |
-| `isLoading` | `boolean | undefined` | — | Whether or not the loading spinner should be rendered or not. |
-| `lang` | `string | undefined` | — |  |
-| `onAnimationEnd` | `React.AnimationEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onAnimationEndCapture` | `React.AnimationEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onAnimationIteration` | `React.AnimationEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onAnimationStart` | `React.AnimationEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onAnimationStartCapture` | `React.AnimationEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onAuxClick` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onAuxClickCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onClick` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onClickCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onContextMenu` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onContextMenuCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onDoubleClick` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onDoubleClickCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onGotPointerCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onGotPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onLoadMore` | `(() => any) | undefined` | — | Handler that is called when more items should be loaded, e.g. while scrolling near the bottom. |
-| `onLostPointerCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseDown` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseDownCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseEnter` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseLeave` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseMove` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseMoveCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseOut` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseOutCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseOver` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseOverCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseUp` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onMouseUpCapture` | `React.MouseEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerCancel` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerCancelCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerDown` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerDownCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerEnter` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerLeave` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerMove` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerMoveCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerOut` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerOutCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerOver` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerOverCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerUp` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onPointerUpCapture` | `React.PointerEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onScroll` | `React.UIEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onScrollCapture` | `React.UIEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTouchCancel` | `React.TouchEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTouchCancelCapture` | `React.TouchEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTouchEnd` | `React.TouchEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTouchEndCapture` | `React.TouchEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTouchMove` | `React.TouchEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTouchMoveCapture` | `React.TouchEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTouchStart` | `React.TouchEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTouchStartCapture` | `React.TouchEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTransitionCancel` | `React.TransitionEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTransitionCancelCapture` | `React.TransitionEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTransitionEnd` | `React.TransitionEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTransitionEndCapture` | `React.TransitionEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTransitionRun` | `React.TransitionEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTransitionRunCapture` | `React.TransitionEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTransitionStart` | `React.TransitionEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onTransitionStartCapture` | `React.TransitionEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onWheel` | `React.WheelEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `onWheelCapture` | `React.WheelEventHandler<HTMLTableRowElement> | undefined` | — |  |
-| `render` | `DOMRenderFunction<"div" | "tr", undefined> | undefined` | — | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an   `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop   as appropriate. |
-| `scrollOffset` | `number | undefined` | 1 | The amount of offset from the bottom of your scrollable region that should trigger load more. Uses a percentage value relative to the scroll body's client height. Load more is then triggered when your current scroll position's distance from the bottom of the currently loaded list of items is less than or equal to the provided value. (e.g. 1 = 100% of the scroll region's height). |
-| `style` | `React.CSSProperties | undefined` | — | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. |
-| `translate` | `"no" | "yes" | undefined` | — |  |
+| Name                          | Type                                               | Default          | Description                                                    |
+| ----------------------------- | -------------------------------------------------- | ---------------- | -------------------------------------------------------------- |
+| `children`                    | `React.ReactNode`                                  | —                | The load more spinner to render when loading additional items. |
+| `className`                   | `string                                            | undefined`       | 'react-aria-TableLoadMoreItem'                                 | The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element.                                                                                                                                                                                                                                                                                      |
+| `dir`                         | `string                                            | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `hidden`                      | `boolean                                           | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `inert`                       | `boolean                                           | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `isLoading`                   | `boolean                                           | undefined`       | —                                                              | Whether or not the loading spinner should be rendered or not.                                                                                                                                                                                                                                                                                                                                 |
+| `lang`                        | `string                                            | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onAnimationEnd`              | `React.AnimationEventHandler<HTMLTableRowElement>  | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onAnimationEndCapture`       | `React.AnimationEventHandler<HTMLTableRowElement>  | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onAnimationIteration`        | `React.AnimationEventHandler<HTMLTableRowElement>  | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onAnimationIterationCapture` | `React.AnimationEventHandler<HTMLTableRowElement>  | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onAnimationStart`            | `React.AnimationEventHandler<HTMLTableRowElement>  | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onAnimationStartCapture`     | `React.AnimationEventHandler<HTMLTableRowElement>  | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onAuxClick`                  | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onAuxClickCapture`           | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onClick`                     | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onClickCapture`              | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onContextMenu`               | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onContextMenuCapture`        | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onDoubleClick`               | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onDoubleClickCapture`        | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onGotPointerCapture`         | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onGotPointerCaptureCapture`  | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onLoadMore`                  | `(() => any)                                       | undefined`       | —                                                              | Handler that is called when more items should be loaded, e.g. while scrolling near the bottom.                                                                                                                                                                                                                                                                                                |
+| `onLostPointerCapture`        | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onLostPointerCaptureCapture` | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onMouseDown`                 | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onMouseDownCapture`          | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onMouseEnter`                | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onMouseLeave`                | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onMouseMove`                 | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onMouseMoveCapture`          | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onMouseOut`                  | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onMouseOutCapture`           | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onMouseOver`                 | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onMouseOverCapture`          | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onMouseUp`                   | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onMouseUpCapture`            | `React.MouseEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onPointerCancel`             | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onPointerCancelCapture`      | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onPointerDown`               | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onPointerDownCapture`        | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onPointerEnter`              | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onPointerLeave`              | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onPointerMove`               | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onPointerMoveCapture`        | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onPointerOut`                | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onPointerOutCapture`         | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onPointerOver`               | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onPointerOverCapture`        | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onPointerUp`                 | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onPointerUpCapture`          | `React.PointerEventHandler<HTMLTableRowElement>    | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onScroll`                    | `React.UIEventHandler<HTMLTableRowElement>         | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onScrollCapture`             | `React.UIEventHandler<HTMLTableRowElement>         | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onTouchCancel`               | `React.TouchEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onTouchCancelCapture`        | `React.TouchEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onTouchEnd`                  | `React.TouchEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onTouchEndCapture`           | `React.TouchEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onTouchMove`                 | `React.TouchEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onTouchMoveCapture`          | `React.TouchEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onTouchStart`                | `React.TouchEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onTouchStartCapture`         | `React.TouchEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onTransitionCancel`          | `React.TransitionEventHandler<HTMLTableRowElement> | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onTransitionCancelCapture`   | `React.TransitionEventHandler<HTMLTableRowElement> | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onTransitionEnd`             | `React.TransitionEventHandler<HTMLTableRowElement> | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onTransitionEndCapture`      | `React.TransitionEventHandler<HTMLTableRowElement> | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onTransitionRun`             | `React.TransitionEventHandler<HTMLTableRowElement> | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onTransitionRunCapture`      | `React.TransitionEventHandler<HTMLTableRowElement> | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onTransitionStart`           | `React.TransitionEventHandler<HTMLTableRowElement> | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onTransitionStartCapture`    | `React.TransitionEventHandler<HTMLTableRowElement> | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onWheel`                     | `React.WheelEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `onWheelCapture`              | `React.WheelEventHandler<HTMLTableRowElement>      | undefined`       | —                                                              |                                                                                                                                                                                                                                                                                                                                                                                               |
+| `render`                      | `DOMRenderFunction<"div"                           | "tr", undefined> | undefined`                                                     | —                                                                                                                                                                                                                                                                                                                                                                                             | Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: - You must render the expected element type (e.g. if `<button>` is expected, you cannot render an `<a>`). - Only a single root DOM element can be rendered (no fragments). - You must pass through props and ref to the underlying DOM element, merging with your own prop as appropriate. |
+| `scrollOffset`                | `number                                            | undefined`       | 1                                                              | The amount of offset from the bottom of your scrollable region that should trigger load more. Uses a percentage value relative to the scroll body's client height. Load more is then triggered when your current scroll position's distance from the bottom of the currently loaded list of items is less than or equal to the provided value. (e.g. 1 = 100% of the scroll region's height). |
+| `style`                       | `React.CSSProperties                               | undefined`       | —                                                              | The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element.                                                                                                                                                                                                                                                                                       |
+| `translate`                   | `"no"                                              | "yes"            | undefined`                                                     | —                                                                                                                                                                                                                                                                                                                                                                                             |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ## Related Types
 
 ### SortDescriptor
 
-| Name | Type | Description |
-|------|------|-------------|
-| `column` \* | `Key` | The key of the column to sort by. |
-| `direction` \* | `SortDirection` | The direction to sort by. |
+| Name           | Type            | Description                       |
+| -------------- | --------------- | --------------------------------- |
+| `column` \*    | `Key`           | The key of the column to sort by. |
+| `direction` \* | `SortDirection` | The direction to sort by.         |
 
 ### useDragAndDrop
 
@@ -2416,26 +2541,26 @@ function ReorderableTable() {
 Provides the hooks required to enable drag and drop behavior for a drag and drop compatible
 collection component.
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `acceptedDragTypes` | `"all" | (string | symbol)[] | undefined` | 'all' | The drag types that the droppable collection accepts. If the collection accepts directories, include `DIRECTORY_DRAG_TYPE` in your array of allowed types. |
-| `dropTargetDelegate` | `DropTargetDelegate | undefined` | — | A custom delegate object that provides drop targets for pointer coordinates within the collection. |
-| `getAllowedDropOperations` | `(() => DropOperation[]) | undefined` | — | Function that returns the drop operations that are allowed for the dragged items. If not provided, all drop operations are allowed. |
-| `getDropOperation` | `((target: DropTarget, types: DragTypes, allowedOperations: DropOperation[]) => DropOperation) | undefined` | — | A function returning the drop operation to be performed when items matching the given types are dropped on the drop target. |
-| `getItems` | `((keys: Set<Key>, items: T[]) => DragItem[]) | undefined` | () => \[] | A function that returns the items being dragged. If not specified, we assume that the collection is not draggable. |
-| `isDisabled` | `boolean | undefined` | — | Whether the drag and drop events should be disabled. |
-| `onDragEnd` | `((e: DraggableCollectionEndEvent) => void) | undefined` | — | Handler that is called when the drag operation is ended, either as a result of a drop or a cancellation. |
-| `onDragMove` | `((e: DraggableCollectionMoveEvent) => void) | undefined` | — | Handler that is called when the drag is moved. |
-| `onDragStart` | `((e: DraggableCollectionStartEvent) => void) | undefined` | — | Handler that is called when a drag operation is started. |
-| `onDrop` | `((e: DroppableCollectionDropEvent) => void) | undefined` | — | Handler that is called when a valid drag is dropped on a drop target. When defined, this overrides other drop handlers such as `onInsert`, and `onItemDrop`. |
-| `onDropActivate` | `((e: DroppableCollectionActivateEvent) => void) | undefined` | — | Handler that is called after a valid drag is held over a drop target for a period of time. |
-| `onDropEnter` | `((e: DroppableCollectionEnterEvent) => void) | undefined` | — | Handler that is called when a valid drag enters a drop target. |
-| `onDropExit` | `((e: DroppableCollectionExitEvent) => void) | undefined` | — | Handler that is called when a valid drag exits a drop target. |
-| `onInsert` | `((e: DroppableCollectionInsertDropEvent) => void) | undefined` | — | Handler that is called when external items are dropped "between" items. |
-| `onItemDrop` | `((e: DroppableCollectionOnItemDropEvent) => void) | undefined` | — | Handler that is called when items are dropped "on" an item. |
-| `onMove` | `((e: DroppableCollectionReorderEvent) => void) | undefined` | — | Handler that is called when items are moved within the source collection. This handler allows dropping both on or between items, and items may be moved to a different parent item within a tree. |
-| `onReorder` | `((e: DroppableCollectionReorderEvent) => void) | undefined` | — | Handler that is called when items are reordered within the collection. This handler only allows dropping between items, not on items. It does not allow moving items to a different parent item within a tree. |
-| `onRootDrop` | `((e: DroppableCollectionRootDropEvent) => void) | undefined` | — | Handler that is called when external items are dropped on the droppable collection's root. |
-| `renderDragPreview` | `((items: DragItem[]) => JSX.Element | { element: JSX.Element; x: number; y: number; }) | undefined` | — | A function that renders a drag preview, which is shown under the user's cursor while dragging. By default, a copy of the dragged element is rendered. |
-| `renderDropIndicator` | `((target: DropTarget) => JSX.Element) | undefined` | — | A function that renders a drop indicator element between two items in a collection. This should render a `<DropIndicator>` element. If this function is not provided, a default DropIndicator is provided. |
-| `shouldAcceptItemDrop` | `((target: ItemDropTarget, types: DragTypes) => boolean) | undefined` | — | A function returning whether a given target in the droppable collection is a valid "on" drop target for the current drag types. |
+| Name                       | Type                                                                                           | Default                                          | Description |
+| -------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------- |
+| `acceptedDragTypes`        | `"all"                                                                                         | (string                                          | symbol)[]   | undefined`                                                                                                                                                                                                     | 'all'                                                                                                                                                 | The drag types that the droppable collection accepts. If the collection accepts directories, include `DIRECTORY_DRAG_TYPE` in your array of allowed types. |
+| `dropTargetDelegate`       | `DropTargetDelegate                                                                            | undefined`                                       | —           | A custom delegate object that provides drop targets for pointer coordinates within the collection.                                                                                                             |
+| `getAllowedDropOperations` | `(() => DropOperation[])                                                                       | undefined`                                       | —           | Function that returns the drop operations that are allowed for the dragged items. If not provided, all drop operations are allowed.                                                                            |
+| `getDropOperation`         | `((target: DropTarget, types: DragTypes, allowedOperations: DropOperation[]) => DropOperation) | undefined`                                       | —           | A function returning the drop operation to be performed when items matching the given types are dropped on the drop target.                                                                                    |
+| `getItems`                 | `((keys: Set<Key>, items: T[]) => DragItem[])                                                  | undefined`                                       | () => \[]   | A function that returns the items being dragged. If not specified, we assume that the collection is not draggable.                                                                                             |
+| `isDisabled`               | `boolean                                                                                       | undefined`                                       | —           | Whether the drag and drop events should be disabled.                                                                                                                                                           |
+| `onDragEnd`                | `((e: DraggableCollectionEndEvent) => void)                                                    | undefined`                                       | —           | Handler that is called when the drag operation is ended, either as a result of a drop or a cancellation.                                                                                                       |
+| `onDragMove`               | `((e: DraggableCollectionMoveEvent) => void)                                                   | undefined`                                       | —           | Handler that is called when the drag is moved.                                                                                                                                                                 |
+| `onDragStart`              | `((e: DraggableCollectionStartEvent) => void)                                                  | undefined`                                       | —           | Handler that is called when a drag operation is started.                                                                                                                                                       |
+| `onDrop`                   | `((e: DroppableCollectionDropEvent) => void)                                                   | undefined`                                       | —           | Handler that is called when a valid drag is dropped on a drop target. When defined, this overrides other drop handlers such as `onInsert`, and `onItemDrop`.                                                   |
+| `onDropActivate`           | `((e: DroppableCollectionActivateEvent) => void)                                               | undefined`                                       | —           | Handler that is called after a valid drag is held over a drop target for a period of time.                                                                                                                     |
+| `onDropEnter`              | `((e: DroppableCollectionEnterEvent) => void)                                                  | undefined`                                       | —           | Handler that is called when a valid drag enters a drop target.                                                                                                                                                 |
+| `onDropExit`               | `((e: DroppableCollectionExitEvent) => void)                                                   | undefined`                                       | —           | Handler that is called when a valid drag exits a drop target.                                                                                                                                                  |
+| `onInsert`                 | `((e: DroppableCollectionInsertDropEvent) => void)                                             | undefined`                                       | —           | Handler that is called when external items are dropped "between" items.                                                                                                                                        |
+| `onItemDrop`               | `((e: DroppableCollectionOnItemDropEvent) => void)                                             | undefined`                                       | —           | Handler that is called when items are dropped "on" an item.                                                                                                                                                    |
+| `onMove`                   | `((e: DroppableCollectionReorderEvent) => void)                                                | undefined`                                       | —           | Handler that is called when items are moved within the source collection. This handler allows dropping both on or between items, and items may be moved to a different parent item within a tree.              |
+| `onReorder`                | `((e: DroppableCollectionReorderEvent) => void)                                                | undefined`                                       | —           | Handler that is called when items are reordered within the collection. This handler only allows dropping between items, not on items. It does not allow moving items to a different parent item within a tree. |
+| `onRootDrop`               | `((e: DroppableCollectionRootDropEvent) => void)                                               | undefined`                                       | —           | Handler that is called when external items are dropped on the droppable collection's root.                                                                                                                     |
+| `renderDragPreview`        | `((items: DragItem[]) => JSX.Element                                                           | { element: JSX.Element; x: number; y: number; }) | undefined`  | —                                                                                                                                                                                                              | A function that renders a drag preview, which is shown under the user's cursor while dragging. By default, a copy of the dragged element is rendered. |
+| `renderDropIndicator`      | `((target: DropTarget) => JSX.Element)                                                         | undefined`                                       | —           | A function that renders a drop indicator element between two items in a collection. This should render a `<DropIndicator>` element. If this function is not provided, a default DropIndicator is provided.     |
+| `shouldAcceptItemDrop`     | `((target: ItemDropTarget, types: DragTypes) => boolean)                                       | undefined`                                       | —           | A function returning whether a given target in the droppable collection is a valid "on" drop target for the current drag types.                                                                                |

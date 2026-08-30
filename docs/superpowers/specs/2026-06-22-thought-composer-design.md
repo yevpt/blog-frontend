@@ -9,6 +9,7 @@
 提供一个「写碎语」发布弹窗，体验类似发推：上方内联富文本编辑器（隐藏插入图片），下方图片插入区。
 
 范围内：
+
 - 内联富文本输入（复用 `@repo/editor` 的 `RichEditor`）。
 - 图片插入：最多 9 张，选图即压缩至 ~500KB，点击预览、删除、拖拽排序，发布时才上传。
 - 800 字限制与发布态控制。
@@ -33,6 +34,7 @@ ThoughtComposerModal              ← 业务入口，组装 + 提交编排
 现状：`apps/web/components/comments/views/comment-modal.tsx` 已实现「桌面居中 dialog + 移动底部 sheet（可拖到全屏）」，但与评论内容耦合。本次把外壳抽成公用组件，`CommentModal` 与 `ThoughtComposerModal` 共用。
 
 抽取后职责：
+
 - 用 `matchMedia("(min-width: 768px)")` 在打开时锁定 desktop / mobile（沿用现有做法，避免初始抖动重复挂载）。
 - 桌面：`@repo/ui` `Modal placement="center"`，复用 `useAnimatedClose` + `useAnimatedPanelHeight`（内容变化时高度 spring 过渡）。
 - 移动：`Modal placement="sheet"` + `useSheetGesture`，70dvh ↔ 100dvh 拖拽展开/收起/下滑关闭，顶部 grab handle。

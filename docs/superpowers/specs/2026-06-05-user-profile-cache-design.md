@@ -78,11 +78,11 @@ UserCacheService.Get(userId)   // Redis 优先，miss 则读 DB
 
 ### 6. 缓存失效时机
 
-| 触发事件 | 操作 |
-|---------|------|
+| 触发事件                   | 操作                         |
+| -------------------------- | ---------------------------- |
 | 用户修改昵称/头像/基本资料 | `Invalidate` + `Set`（重建） |
-| 管理员修改用户角色 | 同上 |
-| 用户被禁用/注销 | `Invalidate` |
+| 管理员修改用户角色         | 同上                         |
+| 用户被禁用/注销            | `Invalidate`                 |
 
 ---
 
@@ -95,13 +95,13 @@ UserCacheService.Get(userId)   // Redis 优先，miss 则读 DB
 ```typescript
 // apps/web/lib/session.ts
 export interface Session {
-  userId: number;  // 仅从 JWT 解码
+  userId: number; // 仅从 JWT 解码
 }
 
 // apps/web/app/providers/session-provider.tsx
 interface SessionContextValue {
   userId: number | null;
-  profile: UserDetailResp | null;  // 来自 /users/me；未登录或请求失败时为 null
+  profile: UserDetailResp | null; // 来自 /users/me；未登录或请求失败时为 null
 }
 ```
 
@@ -146,40 +146,42 @@ const displayName = profile?.nickname ?? profile?.username ?? "";
 
 ### 后端（`blog-backend`）
 
-| 文件 | 变更类型 |
-|------|---------|
-| `pkg/jwt/jwt.go` | 移除 Username/Roles，精简 Generate 方法签名 |
-| `internal/service/user_cache.go` | **新建** Redis 缓存服务 |
-| `internal/middleware/auth.go` | 中间件增强：Redis 读取用户资料，设置 context |
-| `internal/service/auth/auth.go` | Login/Refresh 适配精简 JWT + 缓存预热 |
-| `internal/service/user_detail.go` | GetDetail 走缓存层 |
-| `internal/wire/` 或 DI 入口 | 注入 UserCacheService |
+| 文件                              | 变更类型                                     |
+| --------------------------------- | -------------------------------------------- |
+| `pkg/jwt/jwt.go`                  | 移除 Username/Roles，精简 Generate 方法签名  |
+| `internal/service/user_cache.go`  | **新建** Redis 缓存服务                      |
+| `internal/middleware/auth.go`     | 中间件增强：Redis 读取用户资料，设置 context |
+| `internal/service/auth/auth.go`   | Login/Refresh 适配精简 JWT + 缓存预热        |
+| `internal/service/user_detail.go` | GetDetail 走缓存层                           |
+| `internal/wire/` 或 DI 入口       | 注入 UserCacheService                        |
 
 ### 前端（`blog-frontend`）
 
-| 文件 | 变更类型 |
-|------|---------|
-| `packages/api/src/types/user.ts` | 移除 UserProfileCache（不再需要） |
-| `packages/api/src/index.ts` | 同步更新导出 |
-| `apps/web/lib/session.ts` | Session 只含 userId，getSession 精简 |
-| `apps/web/lib/session.test.ts` | 更新测试 |
-| `apps/web/app/layout.tsx` | 首屏 SSR 调用 /users/me |
-| `apps/web/app/providers/session-provider.tsx` | Context 增加 profile |
-| `apps/web/app/api/auth/login/route.ts` | 移除 /users/me 调用（简化） |
-| `apps/web/components/navbar/navbar-actions.tsx` | 用 userId 判断登录态 |
-| `apps/web/components/navbar/navbar-user-menu.tsx` | 用 profile 取头像/名称 |
-| `apps/web/components/navbar/navbar-user-menu.test.tsx` | 更新头像测试 |
+| 文件                                                   | 变更类型                             |
+| ------------------------------------------------------ | ------------------------------------ |
+| `packages/api/src/types/user.ts`                       | 移除 UserProfileCache（不再需要）    |
+| `packages/api/src/index.ts`                            | 同步更新导出                         |
+| `apps/web/lib/session.ts`                              | Session 只含 userId，getSession 精简 |
+| `apps/web/lib/session.test.ts`                         | 更新测试                             |
+| `apps/web/app/layout.tsx`                              | 首屏 SSR 调用 /users/me              |
+| `apps/web/app/providers/session-provider.tsx`          | Context 增加 profile                 |
+| `apps/web/app/api/auth/login/route.ts`                 | 移除 /users/me 调用（简化）          |
+| `apps/web/components/navbar/navbar-actions.tsx`        | 用 userId 判断登录态                 |
+| `apps/web/components/navbar/navbar-user-menu.tsx`      | 用 profile 取头像/名称               |
+| `apps/web/components/navbar/navbar-user-menu.test.tsx` | 更新头像测试                         |
 
 ---
 
 ## 测试要求
 
 ### 后端
+
 - `UserCacheService.Get`：Redis 命中返回缓存；miss 时读 DB 并回填；用户不存在返回 nil
 - Auth 中间件：无 token → 401；token 过期 → 401；用户被禁用 → 401；正常 → context 含用户资料
 - `Refresh`：用旧 token 签发新 token，roles 来自 Redis/DB（不来自旧 token）
 
 ### 前端
+
 - `getSession()`：有效 token → `{ userId }`；无 token → null；过期 token → null
 - `layout.tsx`：已登录时 `SessionProvider` 接收到 `profile`；未登录时 `profile` 为 null
 - `NavbarUserMenu`：`profile.avatar_url` 有值时渲染 `<img>`；`profile` 为 null 时显示首字母 fallback

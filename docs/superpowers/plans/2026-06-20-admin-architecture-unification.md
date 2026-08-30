@@ -11,6 +11,7 @@
 > **重构性质说明：** 本计划绝大多数任务是**纯文件迁移 + import 重写**，不改变任何运行时行为。因此验证方式是「迁移后跑现有测试 + check-types，期望全绿」，而非先写失败测试的标准 TDD。仅 Task 5 引入新逻辑（注册表派生），需补新测试。每个任务结束时仓库必须 `check-types` 通过、相关测试通过，并独立 commit。
 >
 > 所有命令在仓库根目录执行。常用：
+>
 > - `pnpm --filter admin check-types`
 > - `pnpm --filter admin test`
 > - `pnpm --filter admin lint`
@@ -68,6 +69,7 @@ apps/admin/src/
 把数据层与 hooks 移入 `modules/articles/`，此时 `ArticlesPage` 仍在 `pages/`，仅更新其 import 指向新位置（临时跨目录引用，Task 2 收口）。
 
 **Files:**
+
 - Move: `apps/admin/src/pages/articles-page-data.ts` → `apps/admin/src/modules/articles/model.ts`
 - Move: `apps/admin/src/pages/articles-page-data.test.ts` → `apps/admin/src/modules/articles/model.test.ts`
 - Move: `apps/admin/src/hooks/use-admin-article-list.ts` → `apps/admin/src/modules/articles/hooks/use-article-list.ts`
@@ -98,6 +100,7 @@ cd ../..
 - [ ] **Step 3: 修正 use-article-list.ts 内部 import**
 
 将顶部：
+
 ```ts
 import { apiClient } from "../lib/api";
 import {
@@ -110,7 +113,9 @@ import {
   type ArticleTableSort,
 } from "../pages/articles-page-data";
 ```
+
 改为：
+
 ```ts
 import { apiClient } from "../../../lib/api";
 import {
@@ -130,7 +135,9 @@ import {
 import { apiClient } from "../lib/api";
 import { buildIdFilterOptions, type FilterOption } from "../pages/articles-page-data";
 ```
+
 改为：
+
 ```ts
 import { apiClient } from "../../../lib/api";
 import { buildIdFilterOptions, type FilterOption } from "../model";
@@ -146,16 +153,22 @@ import { buildIdFilterOptions, type FilterOption } from "../model";
 import { useAdminArticleFilterOptions } from "../hooks/use-admin-article-filter-options";
 import { useAdminArticleList } from "../hooks/use-admin-article-list";
 ```
+
 改为：
+
 ```ts
 import { useAdminArticleFilterOptions } from "../modules/articles/hooks/use-article-filter-options";
 import { useAdminArticleList } from "../modules/articles/hooks/use-article-list";
 ```
+
 并把：
+
 ```ts
 } from "./articles-page-data";
 ```
+
 改为：
+
 ```ts
 } from "../modules/articles/model";
 ```
@@ -170,7 +183,9 @@ import { useAdminArticleList } from "../hooks/use-admin-article-list";
 vi.mock("../hooks/use-admin-article-list", () => ({ ... }));
 vi.mock("../hooks/use-admin-article-filter-options", () => ({ ... }));
 ```
+
 对应改为：
+
 ```ts
 import type { ArticleRow } from "../modules/articles/model";
 import { useAdminArticleFilterOptions } from "../modules/articles/hooks/use-article-filter-options";
@@ -179,6 +194,7 @@ import { useAdminArticleList } from "../modules/articles/hooks/use-article-list"
 vi.mock("../modules/articles/hooks/use-article-list", () => ({ ... }));
 vi.mock("../modules/articles/hooks/use-article-filter-options", () => ({ ... }));
 ```
+
 （mock 工厂内部实现不变，只改路径字符串。）
 
 - [ ] **Step 8: 跑类型检查与测试，期望全绿**
@@ -198,6 +214,7 @@ git commit -m "refactor(admin): 迁移 articles 数据层与 hooks 到 modules �
 ## Task 2: 迁移 ArticlesPage、拆出私有组件、建模块定义
 
 **Files:**
+
 - Create: `apps/admin/src/modules/articles/components/ArticleStatusBadge.tsx`
 - Create: `apps/admin/src/modules/articles/components/ArticleDeleteButton.tsx`
 - Move: `apps/admin/src/pages/ArticlesPage.tsx` → `apps/admin/src/modules/articles/ArticlesPage.tsx`
@@ -230,7 +247,11 @@ interface ArticleDeleteButtonProps {
   onConfirmDelete: (articleId: string) => Promise<void>;
 }
 
-export function ArticleDeleteButton({ article, isDeleting, onConfirmDelete }: ArticleDeleteButtonProps) {
+export function ArticleDeleteButton({
+  article,
+  isDeleting,
+  onConfirmDelete,
+}: ArticleDeleteButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -299,6 +320,7 @@ cd ../..
 - `from "../lib/api"` → `from "../../lib/api"`；`from "../lib/toast"`（addToast）→ `from "../../lib/toast"`
 - model：`from "../modules/articles/model"` → `from "./model"`
 - 新增：
+
 ```ts
 import { ArticleDeleteButton } from "./components/ArticleDeleteButton";
 import { ArticleStatusBadge } from "./components/ArticleStatusBadge";
@@ -309,6 +331,7 @@ import { ArticleStatusBadge } from "./components/ArticleStatusBadge";
 - [ ] **Step 5: 修正 ArticlesPage.test.tsx 路径**
 
 测试现与 `ArticlesPage`、`model`、`hooks/` 同处 `modules/articles/`。把：
+
 ```ts
 import { ArticlesPage } from "./ArticlesPage";
 import type { ArticleRow } from "../modules/articles/model";
@@ -317,7 +340,9 @@ import { useAdminArticleList } from "../modules/articles/hooks/use-article-list"
 vi.mock("../modules/articles/hooks/use-article-list", ...)
 vi.mock("../modules/articles/hooks/use-article-filter-options", ...)
 ```
+
 改为：
+
 ```ts
 import { ArticlesPage } from "./ArticlesPage";
 import type { ArticleRow } from "./model";
@@ -326,6 +351,7 @@ import { useAdminArticleList } from "./hooks/use-article-list";
 vi.mock("./hooks/use-article-list", ...)
 vi.mock("./hooks/use-article-filter-options", ...)
 ```
+
 若测试内还 mock 了 `../lib/...`，改为 `../../lib/...`（先 `grep -n "vi.mock\|from \"\\.\\." src/modules/articles/ArticlesPage.test.tsx` 核对）。
 
 - [ ] **Step 6: 新建 modules/articles/index.ts**
@@ -337,13 +363,17 @@ export { ArticlesPage } from "./ArticlesPage";
 - [ ] **Step 7: 临时桥接 module-pages.tsx 的 ArticlesPage 来源**
 
 `src/pages/module-pages.tsx` 顶部：
+
 ```ts
 import { ArticlesPage } from "./ArticlesPage";
 ```
+
 改为：
+
 ```ts
 import { ArticlesPage } from "../modules/articles";
 ```
+
 （`App.tsx` 仍从 `./pages/module-pages` 取 ArticlesPage，保持可编译；module-pages 将在 Task 4 删除。）
 
 - [ ] **Step 8: 类型检查与测试，期望全绿**
@@ -363,6 +393,7 @@ git commit -m "refactor(admin): ArticlesPage 迁入 modules 并拆分私有组�
 ## Task 3: 迁移 DashboardPage
 
 **Files:**
+
 - Move: `apps/admin/src/pages/DashboardPage.tsx` → `apps/admin/src/modules/dashboard/DashboardPage.tsx`
 - Move: `apps/admin/src/pages/DashboardPage.test.tsx` → `apps/admin/src/modules/dashboard/DashboardPage.test.tsx`
 - Modify: `apps/admin/src/App.tsx`（DashboardPage import 路径）
@@ -380,6 +411,7 @@ cd ../..
 - [ ] **Step 2: 修正 DashboardPage.tsx 内部 import**
 
 由 `src/pages/` 变为 `src/modules/dashboard/`（深一层）：
+
 - `import { adminNavItems } from "../config/nav";` → `import { adminNavItems } from "../../config/nav";`（Task 5 再统一切到 `config/modules`）
 - `import { useAuthStore } from "../store/auth";` → `import { useAuthStore } from "../../store/auth";`
 
@@ -394,7 +426,9 @@ cd ../..
 ```ts
 import { DashboardPage } from "./pages/DashboardPage";
 ```
+
 改为：
+
 ```ts
 import { DashboardPage } from "./modules/dashboard/DashboardPage";
 ```
@@ -416,6 +450,7 @@ git commit -m "refactor(admin): DashboardPage 迁入 modules 目录"
 ## Task 4: 上移 ModulePlaceholder、拆解 module-pages 为各占位模块页
 
 **Files:**
+
 - Move: `apps/admin/src/pages/ModulePlaceholder.tsx` → `apps/admin/src/components/ModulePlaceholder.tsx`
 - Move: `apps/admin/src/pages/ModulePlaceholder.test.tsx` → `apps/admin/src/components/ModulePlaceholder.test.tsx`
 - Create: `apps/admin/src/modules/articles/PinnedArticlesPage.tsx`
@@ -435,6 +470,7 @@ git mv src/pages/ModulePlaceholder.tsx src/components/ModulePlaceholder.tsx
 git mv src/pages/ModulePlaceholder.test.tsx src/components/ModulePlaceholder.test.tsx
 cd ../..
 ```
+
 `ModulePlaceholder.tsx` 仅 import `@repo/icons`/`@repo/ui`（绝对包名），无相对路径需改。`ModulePlaceholder.test.tsx` import `./ModulePlaceholder` 同目录不变。
 
 - [ ] **Step 2: 新建 modules/articles/PinnedArticlesPage.tsx**
@@ -472,6 +508,7 @@ export function ArticleEditorPage() {
 - [ ] **Step 4: 新建 categories / tags / music / links 四个占位页**
 
 `src/modules/categories/CategoriesPage.tsx`:
+
 ```tsx
 import { ModulePlaceholder } from "../../components/ModulePlaceholder";
 
@@ -485,7 +522,9 @@ export function CategoriesPage() {
   );
 }
 ```
+
 `src/modules/tags/TagsPage.tsx`:
+
 ```tsx
 import { ModulePlaceholder } from "../../components/ModulePlaceholder";
 
@@ -499,7 +538,9 @@ export function TagsPage() {
   );
 }
 ```
+
 `src/modules/music/MusicPage.tsx`:
+
 ```tsx
 import { ModulePlaceholder } from "../../components/ModulePlaceholder";
 
@@ -513,7 +554,9 @@ export function MusicPage() {
   );
 }
 ```
+
 `src/modules/links/LinksPage.tsx`:
+
 ```tsx
 import { ModulePlaceholder } from "../../components/ModulePlaceholder";
 
@@ -533,7 +576,9 @@ export function LinksPage() {
 ```bash
 git rm apps/admin/src/pages/module-pages.tsx
 ```
+
 `App.tsx` 原：
+
 ```ts
 import {
   ArticleEditorPage,
@@ -545,7 +590,9 @@ import {
   TagsPage,
 } from "./pages/module-pages";
 ```
+
 改为：
+
 ```ts
 import { ArticlesPage } from "./modules/articles";
 import { ArticleEditorPage } from "./modules/articles/ArticleEditorPage";
@@ -555,6 +602,7 @@ import { TagsPage } from "./modules/tags/TagsPage";
 import { MusicPage } from "./modules/music/MusicPage";
 import { LinksPage } from "./modules/links/LinksPage";
 ```
+
 （路由表暂不动，Task 5 切换为注册表驱动。）
 
 - [ ] **Step 6: 类型检查与测试，期望全绿**
@@ -574,6 +622,7 @@ git commit -m "refactor(admin): 拆解 module-pages 为各模块占位页并上�
 ## Task 5: 建立模块契约、注册表与路由生成，切换 nav 来源
 
 **Files:**
+
 - Create: `apps/admin/src/config/module-types.ts`
 - Create: `apps/admin/src/modules/articles/module.tsx`
 - Create: `apps/admin/src/modules/dashboard/module.tsx`
@@ -625,6 +674,7 @@ export interface AdminModule {
 - [ ] **Step 2: 新建各模块 module.tsx**
 
 `src/modules/dashboard/module.tsx`:
+
 ```tsx
 import type { AdminModule } from "../../config/module-types";
 import { DashboardPage } from "./DashboardPage";
@@ -635,7 +685,9 @@ export const dashboardModule: AdminModule = {
   routes: [{ index: true, element: <DashboardPage /> }],
 };
 ```
+
 `src/modules/articles/module.tsx`:
+
 ```tsx
 import type { AdminModule } from "../../config/module-types";
 import { ArticlesPage } from "./ArticlesPage";
@@ -659,7 +711,9 @@ export const articlesModule: AdminModule = {
   ],
 };
 ```
+
 `src/modules/categories/module.tsx`:
+
 ```tsx
 import type { AdminModule } from "../../config/module-types";
 import { CategoriesPage } from "./CategoriesPage";
@@ -676,18 +730,28 @@ export const categoriesModule: AdminModule = {
   routes: [{ path: "/categories", element: <CategoriesPage /> }],
 };
 ```
+
 `src/modules/tags/module.tsx`:
+
 ```tsx
 import type { AdminModule } from "../../config/module-types";
 import { TagsPage } from "./TagsPage";
 
 export const tagsModule: AdminModule = {
   id: "tags",
-  nav: { label: "标签", icon: "tag", path: "/tags", group: "内容", description: "整理标签与内容关联" },
+  nav: {
+    label: "标签",
+    icon: "tag",
+    path: "/tags",
+    group: "内容",
+    description: "整理标签与内容关联",
+  },
   routes: [{ path: "/tags", element: <TagsPage /> }],
 };
 ```
+
 `src/modules/music/module.tsx`:
+
 ```tsx
 import type { AdminModule } from "../../config/module-types";
 import { MusicPage } from "./MusicPage";
@@ -704,7 +768,9 @@ export const musicModule: AdminModule = {
   routes: [{ path: "/music", element: <MusicPage /> }],
 };
 ```
+
 `src/modules/links/module.tsx`:
+
 ```tsx
 import type { AdminModule } from "../../config/module-types";
 import { LinksPage } from "./LinksPage";
@@ -777,10 +843,13 @@ export function renderModuleRoutes() {
 - [ ] **Step 5: 改写 App.tsx 使用注册表**
 
 删除 Task 4 引入的 7 行占位页/Dashboard 显式 import 与原 `ArticlesPage` 等 import（这些现由注册表内部引用）。在文件顶部 import 区加：
+
 ```ts
 import { renderModuleRoutes } from "./app/routes";
 ```
+
 把内层路由块：
+
 ```tsx
 <Route element={<AdminLayout />}>
   <Route index element={<DashboardPage />} />
@@ -794,10 +863,13 @@ import { renderModuleRoutes } from "./app/routes";
   <Route path="/links" element={<LinksPage />} />
 </Route>
 ```
+
 替换为：
+
 ```tsx
 <Route element={<AdminLayout />}>{renderModuleRoutes()}</Route>
 ```
+
 保留 `/login` 与 `*` 兜底路由、`AuthGuard`、`AuthInit`、`ThemeProvider` 等外壳不变。删除现已无用的 `DashboardPage`、`ArticlesPage`、`ArticleEditorPage`、`PinnedArticlesPage`、`CategoriesPage`、`TagsPage`、`MusicPage`、`LinksPage` import。
 
 > 用 `grep -n "DashboardPage\|ArticlesPage\|EditorPage\|PinnedArticlesPage\|CategoriesPage\|TagsPage\|MusicPage\|LinksPage" src/App.tsx` 确认无残留引用后再删 import。
@@ -808,9 +880,11 @@ import { renderModuleRoutes } from "./app/routes";
 - `src/components/layout/SidebarNav.test.tsx`: `from "../../config/nav"` → `from "../../config/modules"`
 - `src/modules/dashboard/DashboardPage.tsx`: `from "../../config/nav"` → `from "../../config/modules"`
 - 删除文件：
+
 ```bash
 git rm apps/admin/src/config/nav.ts
 ```
+
 > `getNavItemByPath` 若有其他引用：`grep -rn "getNavItemByPath" apps/admin/src`，确保都来自 `config/modules`。
 
 - [ ] **Step 7: 新建 config/modules.test.ts（守护单一事实来源不变量）**
@@ -882,6 +956,7 @@ git commit -m "refactor(admin): 引入模块注册表统一 nav 与路由来源"
 ## Task 6: 迁移 LoginPage 到 app/，清空 pages/
 
 **Files:**
+
 - Move: `apps/admin/src/pages/LoginPage.tsx` → `apps/admin/src/app/LoginPage.tsx`
 - Move: `apps/admin/src/pages/LoginPage.test.tsx` → `apps/admin/src/app/LoginPage.test.tsx`
 - Modify: `apps/admin/src/App.tsx`（LoginPage import）
@@ -894,6 +969,7 @@ git mv src/pages/LoginPage.tsx src/app/LoginPage.tsx
 git mv src/pages/LoginPage.test.tsx src/app/LoginPage.test.tsx
 cd ../..
 ```
+
 > `pages/` 与 `app/` 同为 `src/` 下一层，`LoginPage.tsx` 的 `../components/...`、`../lib/...`、`../store/...` 相对深度不变，**无需改 LoginPage 内部 import**。`LoginPage.test.tsx` 的 `./LoginPage` 同目录不变；其余 `../` 引用同理不变。用 `grep -n "from \"\\.\\." src/app/LoginPage.tsx src/app/LoginPage.test.tsx` 复核确认深度一致。
 
 - [ ] **Step 2: 修正 App.tsx 的 LoginPage import**
@@ -901,7 +977,9 @@ cd ../..
 ```ts
 import { LoginPage } from "./pages/LoginPage";
 ```
+
 改为：
+
 ```ts
 import { LoginPage } from "./app/LoginPage";
 ```
@@ -937,6 +1015,7 @@ git commit -m "refactor(admin): LoginPage 迁入 app 目录并清理空目录"
 ## Task 7: 沉淀 building-admin-module skill 与 AGENTS.md 指针
 
 **Files:**
+
 - Create: `.agents/skills/building-admin-module/SKILL.md`
 - Modify: `apps/admin/AGENTS.md`（若不存在则改根 `AGENTS.md`）的「按场景读 skill」清单
 
@@ -945,6 +1024,7 @@ git commit -m "refactor(admin): LoginPage 迁入 app 目录并清理空目录"
 ```bash
 ls apps/admin/AGENTS.md apps/admin/CLAUDE.md 2>/dev/null
 ```
+
 有则在其中加指针；无则在根 `AGENTS.md` 的「按场景读 skill」清单加一行。
 
 - [ ] **Step 2: 新建 .agents/skills/building-admin-module/SKILL.md**
@@ -1003,6 +1083,7 @@ description: Use when adding or restructuring a page/module in apps/admin (the V
 - [ ] **Step 3: 在 AGENTS.md「按场景读 skill」清单加指针**
 
 在该列表末尾加一行（路径取 Step 1 结论；下例为根 `AGENTS.md`）：
+
 ```markdown
 - 在 `apps/admin` 加/改页面或模块 → `building-admin-module`
 ```
@@ -1012,6 +1093,7 @@ description: Use when adding or restructuring a page/module in apps/admin (the V
 ```bash
 test -f .agents/skills/building-admin-module/SKILL.md && head -5 .agents/skills/building-admin-module/SKILL.md
 ```
+
 Expected: 打印 frontmatter 的 `---` / `name:` / `description:`。
 
 - [ ] **Step 5: Commit**
@@ -1030,19 +1112,23 @@ git commit -m "docs(admin): 新增 building-admin-module skill 与 AGENTS 指针
 - [ ] **Step 1: 全仓类型检查、lint、测试**
 
 Run:
+
 ```bash
 pnpm --filter admin check-types
 pnpm --filter admin lint
 pnpm --filter admin test
 ```
+
 Expected: 三者均通过，`lint` 零警告（`--max-warnings 0`）。
 
 - [ ] **Step 2: 确认旧路径已彻底消失**
 
 Run:
+
 ```bash
 grep -rn "pages/module-pages\|articles-page-data\|use-admin-article\|config/nav\b\|from \"./pages/" apps/admin/src
 ```
+
 Expected: 无输出。
 
 - [ ] **Step 3: 前台冒烟（preview）**
@@ -1063,4 +1149,7 @@ Expected: 无输出。
 - **占位边界**：5 个占位模块仅做结构落位（Task 4）并纳入注册表（Task 5），不接后端，符合 spec。
 - **类型一致性**：`AdminModule`/`AdminRoute`/`AdminNavItem` 定义于 `config/module-types.ts`（Task 5 Step 1），各 `module.tsx` 与 `config/modules.ts` 均引用同名类型；`adminNavItems`/`adminRoutes`/`getNavItemByPath` 命名在注册表、消费方（SidebarNav/DashboardPage）、测试间一致。
 - **绿色检查点**：每个 Task 末尾均 `check-types` + `test` 通过后再 commit；跨任务桥接（Task 2 Step 7 的 module-pages 临时改 import）在 Task 4 删除 module-pages 时清除。
+
+```
+
 ```

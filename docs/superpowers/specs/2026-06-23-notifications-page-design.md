@@ -78,12 +78,12 @@
 
 按 `root_type` 为主、`type` 为辅。当前图标集可用项：`message-circle`、`heart`/`heart-fill`、`edit`、`bell`。
 
-| root_type | 文案 | 图标 | 配色 |
-|-----------|------|------|------|
-| article | 评论/回复 | message-circle | 紫（primary） |
-| moment | 碎语（赞/评论） | heart / message-circle | 粉 |
-| guestbook | 留言 | edit | 灰/中性 |
-| 其它/兜底 | 系统通知 | bell | 中性 |
+| root_type | 文案            | 图标                   | 配色          |
+| --------- | --------------- | ---------------------- | ------------- |
+| article   | 评论/回复       | message-circle         | 紫（primary） |
+| moment    | 碎语（赞/评论） | heart / message-circle | 粉            |
+| guestbook | 留言            | edit                   | 灰/中性       |
+| 其它/兜底 | 系统通知        | bell                   | 中性          |
 
 胶囊文案取「评论 / 碎语 / 留言 / 通知」等短词。具体 `type` 细分（如点赞 vs 评论）在实现时据后端实际 `type` 值细化，未知值落到兜底。
 

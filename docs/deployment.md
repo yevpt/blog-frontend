@@ -32,21 +32,21 @@ Fork 本项目自行部署时需准备：
 
 字段参考 [`apps/web/.env.example`](../apps/web/.env.example)：
 
-| 变量 | 用途 |
-|---|---|
-| `API_BASE_URL` | Go 后端基础 URL（服务端使用，不暴露给浏览器） |
-| `BLOG_USER_ID` | 博主用户 ID，用于过滤碎语接口 |
+| 变量                             | 用途                                                                                                                          |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `API_BASE_URL`                   | Go 后端基础 URL（服务端使用，不暴露给浏览器）                                                                                 |
+| `BLOG_USER_ID`                   | 博主用户 ID，用于过滤碎语接口                                                                                                 |
 | `ANALYTICS_COLLECT_TOKEN_SECRET` | 埋点 collect token 签名密钥（仅 SSR 使用）。**必须与后端 `BLOG_ANALYTICS_COLLECT_TOKEN_SECRET` 完全一致**；留空则开发模式放行 |
-| `ANALYTICS_COLLECT_TOKEN_TTL_MS` | collect token 有效期（毫秒），默认 `300000`（5 分钟），应与后端保持一致 |
+| `ANALYTICS_COLLECT_TOKEN_TTL_MS` | collect token 有效期（毫秒），默认 `300000`（5 分钟），应与后端保持一致                                                       |
 
 > ⚠️ SSR 服务器与后端之间的时钟偏移可能导致有效 token 被拒（SSR 时钟超前时），两端均应启用 NTP 校时。
 
 ## CI 所需的 GitHub Secrets / Variables
 
-| 类型 | 变量 | 用途 |
-|---|---|---|
-| Secret | `REGISTRY_PASSWORD` | 镜像仓库登录密码 / Token |
-| Secret | `REMOTE_HOST` / `REMOTE_USER` / `SSH_PRIVATE_KEY` | SSH 登录部署服务器 |
-| Variable | `REGISTRY_HOST` / `REGISTRY_USERNAME` / `REGISTRY_NAMESPACE` | 镜像仓库地址与命名空间 |
-| Variable | `DEPLOY_WEB_ROOT` / `DEPLOY_ADMIN_ROOT` | 服务器上 web / admin 的部署目录 |
-| Variable | `REMOTE_PORT`（可选，默认 22） | SSH 端口 |
+| 类型     | 变量                                                         | 用途                            |
+| -------- | ------------------------------------------------------------ | ------------------------------- |
+| Secret   | `REGISTRY_PASSWORD`                                          | 镜像仓库登录密码 / Token        |
+| Secret   | `REMOTE_HOST` / `REMOTE_USER` / `SSH_PRIVATE_KEY`            | SSH 登录部署服务器              |
+| Variable | `REGISTRY_HOST` / `REGISTRY_USERNAME` / `REGISTRY_NAMESPACE` | 镜像仓库地址与命名空间          |
+| Variable | `DEPLOY_WEB_ROOT` / `DEPLOY_ADMIN_ROOT`                      | 服务器上 web / admin 的部署目录 |
+| Variable | `REMOTE_PORT`（可选，默认 22）                               | SSH 端口                        |

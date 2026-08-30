@@ -12,19 +12,19 @@
 
 ## 文件结构总览
 
-| 操作 | 文件 |
-|------|------|
-| Modify | `packages/ui/src/button.tsx` |
-| Create | `packages/ui/src/button.test.tsx` |
-| Modify | `apps/web/app/providers/locale-provider.tsx` |
-| Modify | `apps/web/app/providers/locale-provider.test.tsx` |
-| Modify | `apps/web/components/navbar/site-navbar.tsx` |
-| Modify | `apps/web/components/navbar/site-navbar.test.tsx` |
+| 操作   | 文件                                                       |
+| ------ | ---------------------------------------------------------- |
+| Modify | `packages/ui/src/button.tsx`                               |
+| Create | `packages/ui/src/button.test.tsx`                          |
+| Modify | `apps/web/app/providers/locale-provider.tsx`               |
+| Modify | `apps/web/app/providers/locale-provider.test.tsx`          |
+| Modify | `apps/web/components/navbar/site-navbar.tsx`               |
+| Modify | `apps/web/components/navbar/site-navbar.test.tsx`          |
 | Modify | `apps/web/components/featured/featured-carousel-slide.tsx` |
-| Modify | `apps/web/components/articles/article-list-header.tsx` |
-| Modify | `apps/web/components/articles/article-section.test.tsx` |
-| Modify | `apps/web/components/snippets/snippets-section.tsx` |
-| Modify | `apps/web/app/page.tsx` |
+| Modify | `apps/web/components/articles/article-list-header.tsx`     |
+| Modify | `apps/web/components/articles/article-section.test.tsx`    |
+| Modify | `apps/web/components/snippets/snippets-section.tsx`        |
+| Modify | `apps/web/app/page.tsx`                                    |
 
 ---
 
@@ -33,6 +33,7 @@
 **背景：** Button 组件基础类缺少 `cursor-pointer`，导致所有按钮 hover 时不显示手型光标。同时需要新增 `brand` variant 供 Tab 样式使用。
 
 **Files:**
+
 - Modify: `packages/ui/src/button.tsx`
 
 - [ ] **Step 1: 修改 button.tsx**
@@ -104,6 +105,7 @@ git commit -m "feat(ui): Button 新增 brand variant，基础类加 cursor-point
 **背景：** `packages/ui` 规范要求每个组件旁都有 `*.test.tsx`，当前缺失。
 
 **Files:**
+
 - Create: `packages/ui/src/button.test.tsx`
 
 - [ ] **Step 1: 创建测试文件**
@@ -167,13 +169,21 @@ describe("Button", () => {
   it("disabled 时不触发 onClick", async () => {
     const user = userEvent.setup();
     const handleClick = vi.fn();
-    render(<Button disabled onClick={handleClick}>禁用</Button>);
+    render(
+      <Button disabled onClick={handleClick}>
+        禁用
+      </Button>,
+    );
     await user.click(screen.getByRole("button", { name: "禁用" }));
     expect(handleClick).not.toHaveBeenCalled();
   });
 
   it("className 透传，rounded-full 覆盖 rounded-md（tailwind-merge）", () => {
-    const { container } = render(<Button size="sm" className="rounded-full">圆</Button>);
+    const { container } = render(
+      <Button size="sm" className="rounded-full">
+        圆
+      </Button>,
+    );
     const cls = container.querySelector("button")?.className ?? "";
     expect(cls).toContain("rounded-full");
     expect(cls).not.toContain("rounded-md");
@@ -203,6 +213,7 @@ git commit -m "test(ui): 新增 Button 组件测试文件"
 **背景：** `LocaleProvider` 当前 `messages` 初始为 `null`，`t(key)` 在异步 JSON 加载完成前返回 key 本身（即 `"article.searchPlaceholder"`、`"sidebar.joinQQ"` 等原始 key 名显示在界面上）。修复方案：静态导入 `zh.json` 作为初始 messages，zh 语言用户首屏立即看到正确文字；en 仍走动态导入（少量用户且不影响 SSR 水合）。
 
 **Files:**
+
 - Modify: `apps/web/app/providers/locale-provider.tsx`
 
 - [ ] **Step 1: 修改 locale-provider.tsx**
@@ -303,6 +314,7 @@ git commit -m "fix(web): LocaleProvider 静态导入 zh.json 修复首屏国际�
 **背景：** Task 3 修改后，原有测试 "messages 未加载完成时 t() 降级返回 key 本身" 的前提变化（zh 首屏同步可用），该测试会失败，需要更新为反映新行为的用例。
 
 **Files:**
+
 - Modify: `apps/web/app/providers/locale-provider.test.tsx`
 
 - [ ] **Step 1: 定位并替换 "messages 未加载完成时" 测试**
@@ -310,31 +322,31 @@ git commit -m "fix(web): LocaleProvider 静态导入 zh.json 修复首屏国际�
 找到以下代码块（文件末尾 ~line 156-167）：
 
 ```tsx
-  it("messages 未加载完成时 t() 降级返回 key 本身", () => {
-    // 同步渲染后 messages 尚未加载完成，t() 应返回 key
-    render(
-      <LocaleProvider>
-        <LocaleDisplay />
-      </LocaleProvider>,
-    );
+it("messages 未加载完成时 t() 降级返回 key 本身", () => {
+  // 同步渲染后 messages 尚未加载完成，t() 应返回 key
+  render(
+    <LocaleProvider>
+      <LocaleDisplay />
+    </LocaleProvider>,
+  );
 
-    // 刚渲染、messages 为 null，应降级返回 key
-    expect(screen.getByTestId("nav-home").textContent).toBe("nav.home");
-  });
+  // 刚渲染、messages 为 null，应降级返回 key
+  expect(screen.getByTestId("nav-home").textContent).toBe("nav.home");
+});
 ```
 
 替换为：
 
 ```tsx
-  it("默认 zh locale 时，t() 同步返回中文值（无需等待异步加载）", () => {
-    render(
-      <LocaleProvider>
-        <LocaleDisplay />
-      </LocaleProvider>,
-    );
-    // zh.json 静态导入，首屏即可用
-    expect(screen.getByTestId("nav-home").textContent).toBe("首页");
-  });
+it("默认 zh locale 时，t() 同步返回中文值（无需等待异步加载）", () => {
+  render(
+    <LocaleProvider>
+      <LocaleDisplay />
+    </LocaleProvider>,
+  );
+  // zh.json 静态导入，首屏即可用
+  expect(screen.getByTestId("nav-home").textContent).toBe("首页");
+});
 ```
 
 - [ ] **Step 2: 运行测试确认全部通过**
@@ -359,6 +371,7 @@ git commit -m "test(web): 更新 LocaleProvider 测试，反映 zh 同步加载�
 **背景：** `SiteNavbar` 用 `mounted` state 实现入场动画：初始值 `false` 使 navbar 带 `-translate-y-full opacity-0`，`useEffect` 触发后才变可见。若 hydration 过程出现任何 React 错误（如国际化 hydration mismatch），`useEffect` 不执行，navbar 永久隐藏。修复：移除 `mounted` 依赖，navbar 始终可见；滚动收缩效果保留。
 
 **Files:**
+
 - Modify: `apps/web/components/navbar/site-navbar.tsx`
 
 - [ ] **Step 1: 修改 site-navbar.tsx**
@@ -415,12 +428,12 @@ export function SiteNavbar() {
 在 `apps/web/components/navbar/site-navbar.test.tsx` 的 `describe("SiteNavbar", () => {` 块内，在第一个 `it` 之后插入以下测试：
 
 ```tsx
-  it("初始渲染时 header 无 -translate-y-full 和 opacity-0（始终可见）", () => {
-    render(<SiteNavbar />);
-    const header = document.querySelector("header");
-    expect(header?.className).not.toContain("-translate-y-full");
-    expect(header?.className).not.toContain("opacity-0");
-  });
+it("初始渲染时 header 无 -translate-y-full 和 opacity-0（始终可见）", () => {
+  render(<SiteNavbar />);
+  const header = document.querySelector("header");
+  expect(header?.className).not.toContain("-translate-y-full");
+  expect(header?.className).not.toContain("opacity-0");
+});
 ```
 
 - [ ] **Step 3: 运行测试确认通过**
@@ -445,6 +458,7 @@ git commit -m "fix(web): 移除 SiteNavbar mounted 动画依赖，确保导航�
 **背景：** 轮播图容器内，所有幻灯片均 `absolute inset-0`（铺满容器）。不活跃幻灯片 `opacity-0` 仍响应指针事件，可能拦截底部指示器按钮的点击。修复：不活跃幻灯片加 `pointer-events-none`，活跃幻灯片显式 `pointer-events-auto`。
 
 **Files:**
+
 - Modify: `apps/web/components/featured/featured-carousel-slide.tsx`
 
 - [ ] **Step 1: 修改 featured-carousel-slide.tsx**
@@ -489,6 +503,7 @@ git commit -m "fix(web): 不活跃轮播幻灯片加 pointer-events-none，修�
 **背景：** `ArticleListHeader` 中的分类 Tab 当前使用原始 `<button>` 自定义样式，不符合 "Button brand horizontal 风格" 要求。改为使用 `@repo/ui` 的 `Button` 组件：活跃 Tab 用 `brand` variant，非活跃用 `ghost`，均加 `rounded-full` 实现 pill 形状。
 
 **Files:**
+
 - Modify: `apps/web/components/articles/article-list-header.tsx`
 - Modify: `apps/web/components/articles/article-section.test.tsx`
 
@@ -668,7 +683,13 @@ vi.mock("@repo/ui", () => ({
     onClick?: () => void;
     [key: string]: unknown;
   }) => (
-    <button data-variant={variant} data-size={size} className={className} onClick={onClick} {...props}>
+    <button
+      data-variant={variant}
+      data-size={size}
+      className={className}
+      onClick={onClick}
+      {...props}
+    >
       {children}
     </button>
   ),
@@ -699,6 +720,7 @@ git commit -m "feat(web): 文章分类 Tab 改用 Button brand/ghost variant，p
 **背景：** 用户要求将 `SnippetsSection` 从主内容区迁移到右侧 `aside`，且每行只显示一个碎语卡片（grid 从 `md:grid-cols-2` 改为始终 `grid-cols-1`）。
 
 **Files:**
+
 - Modify: `apps/web/app/page.tsx`
 - Modify: `apps/web/components/snippets/snippets-section.tsx`
 
@@ -809,15 +831,15 @@ pnpm --filter @repo/web dev
 
 打开 `http://localhost:3000` 验证以下各项：
 
-| 检查项 | 预期结果 |
-|--------|---------|
-| 导航栏 | 页面加载后立即可见，无闪烁 |
-| 按钮 hover | 所有按钮显示手型光标（cursor-pointer） |
-| 文章分类 Tab | 活跃 Tab 为品牌主色 pill，非活跃为 ghost 样式 |
-| 搜索框 | 左侧有搜索图标（搜索镜头），placeholder 显示"搜索文章..." |
-| 轮播图 | 点击底部水滴指示器可正常切换幻灯片 |
-| 国际化 | 页面加载后所有文字正常显示（无 key 名如 "sidebar.joinQQ"） |
-| 右侧栏 | 碎语模块在右侧栏，每行一条，最近来访和标签云也在右侧 |
+| 检查项       | 预期结果                                                   |
+| ------------ | ---------------------------------------------------------- |
+| 导航栏       | 页面加载后立即可见，无闪烁                                 |
+| 按钮 hover   | 所有按钮显示手型光标（cursor-pointer）                     |
+| 文章分类 Tab | 活跃 Tab 为品牌主色 pill，非活跃为 ghost 样式              |
+| 搜索框       | 左侧有搜索图标（搜索镜头），placeholder 显示"搜索文章..."  |
+| 轮播图       | 点击底部水滴指示器可正常切换幻灯片                         |
+| 国际化       | 页面加载后所有文字正常显示（无 key 名如 "sidebar.joinQQ"） |
+| 右侧栏       | 碎语模块在右侧栏，每行一条，最近来访和标签云也在右侧       |
 
 - [ ] **Step 3: 最终 Commit（如有遗留改动）**
 
@@ -833,8 +855,10 @@ git commit -m "fix(web): 首页修复收尾"
 ## 已知注意事项
 
 ### 搜索图标（Issue #4）
+
 代码 `article-list-header.tsx:67` 已有 `<SvgIcon name="search" size={16} />` 且 `search.svg` 已构建进 sprite。图标不显示的根因大概率是国际化 bug 导致整体 UI 渲染异常。Task 3 修复 i18n 后，搜索图标应自动恢复正常。若仍不显示，检查 `SvgSprite` 是否在 `layout.tsx` 的 body 中正确注入（当前已注入，位于 main 之前）。
 
 ### Button `brand` vs `default` 的区别
+
 - `default`：`bg-primary text-primary-foreground shadow hover:bg-primary/90`（有阴影，用于主 CTA 按钮）
 - `brand`：`bg-primary text-primary-foreground hover:bg-primary/90`（无阴影，用于 Tab 等嵌入式强调元素）

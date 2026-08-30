@@ -1,12 +1,7 @@
 import optimizedImageHosts from "./optimized-image-hosts.json";
 
 export type CdnImagePreset =
-  | "article"
-  | "comment"
-  | "article-cover"
-  | "article-mobile-cover"
-  | "thumbnail"
-  | "off";
+  "article" | "comment" | "article-cover" | "article-mobile-cover" | "thumbnail" | "off";
 
 export type MarkdownImageVariant = "article" | "comment";
 

@@ -13,48 +13,51 @@
 ## 文件索引
 
 ### 新建
-| 文件 | 职责 |
-|------|------|
-| `packages/editor/package.json` | 包配置，name: @repo/editor |
-| `packages/editor/tsconfig.json` | TS 配置，extends @repo/typescript-config/react |
-| `packages/editor/vitest.config.ts` | 测试配置，happy-dom 环境 |
-| `packages/editor/src/types.ts` | 所有对外 interface（InsertHandlers、MentionItem、RichEditorProps） |
-| `packages/editor/src/extensions/underline.ts` | 下划线扩展（教科书注释 + 追溯说明） |
-| `packages/editor/src/extensions/mention.ts` | @提及扩展（stub 候选列表，预留 API 接口） |
-| `packages/editor/src/hooks/use-rich-editor.ts` | 封装 useEditor()，管理所有扩展实例 |
-| `packages/editor/src/toolbar/ToolbarButton.tsx` | 工具栏单按钮（active 态、disabled 态） |
-| `packages/editor/src/toolbar/Toolbar.tsx` | 底部工具栏（响应式横向滚动） |
-| `packages/editor/src/RichEditor.tsx` | 主组件，教科书注释 + 响应式说明 |
-| `packages/editor/src/index.ts` | 公开 API |
-| `packages/editor/src/__tests__/underline.test.ts` | underline 扩展单元测试 |
-| `packages/editor/src/__tests__/RichEditor.test.tsx` | RichEditor 组件集成测试 |
-| `packages/icons/svg/link.svg` | 链接图标 |
-| `packages/icons/svg/image.svg` | 图片图标 |
-| `packages/icons/svg/code-block.svg` | 代码块图标 |
-| `packages/icons/svg/at.svg` | @提及图标 |
-| `apps/web/components/comments/dialogs/image-dialog.tsx` | 图片插入对话框（URL + alt） |
-| `apps/web/components/comments/dialogs/link-dialog.tsx` | 链接插入对话框（URL + title） |
-| `apps/web/components/comments/dialogs/code-dialog.tsx` | 代码块对话框（code + language） |
-| `apps/web/components/comments/dialogs/image-dialog.test.tsx` | ImageDialog 测试 |
-| `apps/web/components/comments/dialogs/link-dialog.test.tsx` | LinkDialog 测试 |
-| `apps/web/components/comments/dialogs/code-dialog.test.tsx` | CodeDialog 测试 |
-| `apps/web/components/comments/rich-comment-input.tsx` | RichEditor + 三个对话框的组合组件 |
-| `apps/web/components/comments/rich-comment-input.test.tsx` | RichCommentInput 测试 |
+
+| 文件                                                         | 职责                                                               |
+| ------------------------------------------------------------ | ------------------------------------------------------------------ |
+| `packages/editor/package.json`                               | 包配置，name: @repo/editor                                         |
+| `packages/editor/tsconfig.json`                              | TS 配置，extends @repo/typescript-config/react                     |
+| `packages/editor/vitest.config.ts`                           | 测试配置，happy-dom 环境                                           |
+| `packages/editor/src/types.ts`                               | 所有对外 interface（InsertHandlers、MentionItem、RichEditorProps） |
+| `packages/editor/src/extensions/underline.ts`                | 下划线扩展（教科书注释 + 追溯说明）                                |
+| `packages/editor/src/extensions/mention.ts`                  | @提及扩展（stub 候选列表，预留 API 接口）                          |
+| `packages/editor/src/hooks/use-rich-editor.ts`               | 封装 useEditor()，管理所有扩展实例                                 |
+| `packages/editor/src/toolbar/ToolbarButton.tsx`              | 工具栏单按钮（active 态、disabled 态）                             |
+| `packages/editor/src/toolbar/Toolbar.tsx`                    | 底部工具栏（响应式横向滚动）                                       |
+| `packages/editor/src/RichEditor.tsx`                         | 主组件，教科书注释 + 响应式说明                                    |
+| `packages/editor/src/index.ts`                               | 公开 API                                                           |
+| `packages/editor/src/__tests__/underline.test.ts`            | underline 扩展单元测试                                             |
+| `packages/editor/src/__tests__/RichEditor.test.tsx`          | RichEditor 组件集成测试                                            |
+| `packages/icons/svg/link.svg`                                | 链接图标                                                           |
+| `packages/icons/svg/image.svg`                               | 图片图标                                                           |
+| `packages/icons/svg/code-block.svg`                          | 代码块图标                                                         |
+| `packages/icons/svg/at.svg`                                  | @提及图标                                                          |
+| `apps/web/components/comments/dialogs/image-dialog.tsx`      | 图片插入对话框（URL + alt）                                        |
+| `apps/web/components/comments/dialogs/link-dialog.tsx`       | 链接插入对话框（URL + title）                                      |
+| `apps/web/components/comments/dialogs/code-dialog.tsx`       | 代码块对话框（code + language）                                    |
+| `apps/web/components/comments/dialogs/image-dialog.test.tsx` | ImageDialog 测试                                                   |
+| `apps/web/components/comments/dialogs/link-dialog.test.tsx`  | LinkDialog 测试                                                    |
+| `apps/web/components/comments/dialogs/code-dialog.test.tsx`  | CodeDialog 测试                                                    |
+| `apps/web/components/comments/rich-comment-input.tsx`        | RichEditor + 三个对话框的组合组件                                  |
+| `apps/web/components/comments/rich-comment-input.test.tsx`   | RichCommentInput 测试                                              |
 
 ### 修改
-| 文件 | 改动 |
-|------|------|
-| `apps/web/package.json` | 添加 `"@repo/editor": "workspace:*"` |
-| `apps/web/components/comments/comment-section.tsx` | inline layout 改用 RichCommentInput |
-| `apps/web/components/comments/comment-section.test.tsx` | 更新测试 |
-| `apps/web/lib/markdown.ts` | rehype-sanitize 允许 `<u>` 标签 |
-| `apps/web/next.config.ts`（或 `next.config.js`） | transpilePackages 添加 @repo/editor |
+
+| 文件                                                    | 改动                                 |
+| ------------------------------------------------------- | ------------------------------------ |
+| `apps/web/package.json`                                 | 添加 `"@repo/editor": "workspace:*"` |
+| `apps/web/components/comments/comment-section.tsx`      | inline layout 改用 RichCommentInput  |
+| `apps/web/components/comments/comment-section.test.tsx` | 更新测试                             |
+| `apps/web/lib/markdown.ts`                              | rehype-sanitize 允许 `<u>` 标签      |
+| `apps/web/next.config.ts`（或 `next.config.js`）        | transpilePackages 添加 @repo/editor  |
 
 ---
 
 ## Task 1: 包脚手架
 
 **Files:**
+
 - Create: `packages/editor/package.json`
 - Create: `packages/editor/tsconfig.json`
 - Create: `packages/editor/vitest.config.ts`
@@ -149,6 +152,7 @@ export default defineConfig({
 - [ ] **Step 5: 创建测试 setup 文件**
 
 `packages/editor/src/__tests__/setup.ts`:
+
 ```typescript
 import "@testing-library/jest-dom/vitest";
 
@@ -197,6 +201,7 @@ git commit -m "chore(editor): 初始化 @repo/editor 包脚手架"
 ## Task 2: 添加缺失 SVG 图标
 
 **Files:**
+
 - Create: `packages/icons/svg/link.svg`
 - Create: `packages/icons/svg/image.svg`
 - Create: `packages/icons/svg/code-block.svg`
@@ -205,6 +210,7 @@ git commit -m "chore(editor): 初始化 @repo/editor 包脚手架"
 - [ ] **Step 1: 添加 link.svg**
 
 `packages/icons/svg/link.svg`:
+
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
@@ -215,6 +221,7 @@ git commit -m "chore(editor): 初始化 @repo/editor 包脚手架"
 - [ ] **Step 2: 添加 image.svg**
 
 `packages/icons/svg/image.svg`:
+
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -226,6 +233,7 @@ git commit -m "chore(editor): 初始化 @repo/editor 包脚手架"
 - [ ] **Step 3: 添加 code-block.svg**
 
 `packages/icons/svg/code-block.svg`:
+
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <polyline points="16 18 22 12 16 6"/>
@@ -236,6 +244,7 @@ git commit -m "chore(editor): 初始化 @repo/editor 包脚手架"
 - [ ] **Step 4: 添加 at.svg**
 
 `packages/icons/svg/at.svg`:
+
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="12" cy="12" r="4"/>
@@ -254,6 +263,7 @@ pnpm --filter @repo/icons build
 - [ ] **Step 6: 验证新图标类型可用**
 
 在任意文件临时写入下列代码并检查类型（然后删除）：
+
 ```typescript
 import { SvgIcon } from "@repo/icons";
 // 若以下无 TS 报错则说明图标类型生成成功
@@ -275,11 +285,13 @@ git commit -m "feat(icons): 添加 link / image / code-block / at 图标"
 ## Task 3: 类型定义
 
 **Files:**
+
 - Create: `packages/editor/src/types.ts`
 
 - [ ] **Step 1: 编写类型定义**
 
 `packages/editor/src/types.ts`:
+
 ```typescript
 /**
  * ================================================================
@@ -371,6 +383,7 @@ export interface RichEditorProps extends InsertHandlers {
 - [ ] **Step 2: 更新 index.ts 导出**
 
 `packages/editor/src/index.ts`:
+
 ```typescript
 export type { InsertHandlers, MentionItem, RichEditorProps } from "./types";
 ```
@@ -395,12 +408,14 @@ git commit -m "feat(editor): 定义 InsertHandlers / MentionItem / RichEditorPro
 ## Task 4: Underline 扩展（教科书注释）
 
 **Files:**
+
 - Create: `packages/editor/src/extensions/underline.ts`
 - Create: `packages/editor/src/__tests__/underline.test.ts`
 
 - [ ] **Step 1: 先写失败测试**
 
 `packages/editor/src/__tests__/underline.test.ts`:
+
 ```typescript
 import { describe, it, expect } from "vitest";
 import { Editor } from "@tiptap/core";
@@ -466,6 +481,7 @@ pnpm --filter @repo/editor test
 - [ ] **Step 3: 实现 underline.ts**
 
 `packages/editor/src/extensions/underline.ts`:
+
 ```typescript
 /**
  * ================================================================
@@ -534,11 +550,13 @@ git commit -m "feat(editor): 添加 UnderlineExtension（教科书注释，含�
 ## Task 5: Mention 扩展
 
 **Files:**
+
 - Create: `packages/editor/src/extensions/mention.ts`
 
 - [ ] **Step 1: 实现 mention.ts**
 
 `packages/editor/src/extensions/mention.ts`:
+
 ```typescript
 /**
  * ================================================================
@@ -594,9 +612,7 @@ export function createMentionExtension(suggestions: MentionItem[]) {
        */
       items: ({ query }: { query: string }) =>
         suggestions
-          .filter((item) =>
-            item.label.toLowerCase().startsWith(query.toLowerCase()),
-          )
+          .filter((item) => item.label.toLowerCase().startsWith(query.toLowerCase()))
           .slice(0, 8),
 
       /**
@@ -618,10 +634,7 @@ export function createMentionExtension(suggestions: MentionItem[]) {
         }
 
         /** 用候选列表填充下拉 div */
-        function populate(
-          items: MentionItem[],
-          command: (item: MentionItem) => void,
-        ) {
+        function populate(items: MentionItem[], command: (item: MentionItem) => void) {
           if (!dropdown) return;
           dropdown.innerHTML = "";
           items.forEach((item) => {
@@ -721,11 +734,13 @@ git commit -m "feat(editor): 添加 Mention 扩展（stub 候选列表，预留�
 ## Task 6: useRichEditor Hook
 
 **Files:**
+
 - Create: `packages/editor/src/hooks/use-rich-editor.ts`
 
 - [ ] **Step 1: 实现 hook**
 
 `packages/editor/src/hooks/use-rich-editor.ts`:
+
 ```typescript
 /**
  * ================================================================
@@ -877,11 +892,13 @@ git commit -m "feat(editor): 实现 useRichEditor hook（SSR 适配 + 扩展教�
 ## Task 7: ToolbarButton 组件
 
 **Files:**
+
 - Create: `packages/editor/src/toolbar/ToolbarButton.tsx`
 
 - [ ] **Step 1: 实现组件**
 
 `packages/editor/src/toolbar/ToolbarButton.tsx`:
+
 ```tsx
 /**
  * ToolbarButton — 工具栏单个按钮
@@ -933,9 +950,7 @@ export function ToolbarButton({
         // 基础样式
         "flex h-7 w-7 items-center justify-center rounded-md text-sm transition-colors",
         // 状态样式
-        active
-          ? "bg-primary/10 text-primary"
-          : "text-(--fg2) hover:bg-muted hover:text-foreground",
+        active ? "bg-primary/10 text-primary" : "text-(--fg2) hover:bg-muted hover:text-foreground",
         disabled && "cursor-not-allowed opacity-40",
       )}
     >
@@ -963,11 +978,13 @@ git commit -m "feat(editor): 实现 ToolbarButton（图标/文字双模式，act
 ## Task 8: Toolbar 组件
 
 **Files:**
+
 - Create: `packages/editor/src/toolbar/Toolbar.tsx`
 
 - [ ] **Step 1: 实现 Toolbar**
 
 `packages/editor/src/toolbar/Toolbar.tsx`:
+
 ```tsx
 /**
  * Toolbar — 底部工具栏
@@ -1060,17 +1077,9 @@ export function Toolbar({
             onClick={() => {
               onInsertLink((url, title) => {
                 if (title) {
-                  editor
-                    .chain()
-                    .focus()
-                    .insertContent(`[${title}](${url})`)
-                    .run();
+                  editor.chain().focus().insertContent(`[${title}](${url})`).run();
                 } else {
-                  editor
-                    .chain()
-                    .focus()
-                    .setLink({ href: url })
-                    .run();
+                  editor.chain().focus().setLink({ href: url }).run();
                 }
               });
             }}
@@ -1084,7 +1093,11 @@ export function Toolbar({
             disabled={disabled}
             onClick={() => {
               onInsertImage((url, alt) => {
-                editor.chain().focus().setImage({ src: url, alt: alt ?? "" }).run();
+                editor
+                  .chain()
+                  .focus()
+                  .setImage({ src: url, alt: alt ?? "" })
+                  .run();
               });
             }}
           />
@@ -1097,12 +1110,7 @@ export function Toolbar({
             disabled={disabled}
             onClick={() => {
               onInsertCode((code, lang) => {
-                editor
-                  .chain()
-                  .focus()
-                  .setCodeBlock({ language: lang })
-                  .insertContent(code)
-                  .run();
+                editor.chain().focus().setCodeBlock({ language: lang }).insertContent(code).run();
               });
             }}
           />
@@ -1156,12 +1164,14 @@ git commit -m "feat(editor): 实现 Toolbar（响应式横向滚动 + 可选操�
 ## Task 9: RichEditor 主组件
 
 **Files:**
+
 - Create: `packages/editor/src/RichEditor.tsx`
 - Create: `packages/editor/src/__tests__/RichEditor.test.tsx`
 
 - [ ] **Step 1: 先写失败测试**
 
 `packages/editor/src/__tests__/RichEditor.test.tsx`:
+
 ```tsx
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -1170,9 +1180,7 @@ import { RichEditor } from "../RichEditor";
 
 describe("RichEditor", () => {
   it("渲染不崩溃，EditorContent 挂载成功", () => {
-    const { container } = render(
-      <RichEditor value="" onChange={() => {}} />,
-    );
+    const { container } = render(<RichEditor value="" onChange={() => {}} />);
     // Tiptap EditorContent 会渲染一个 contenteditable div
     expect(container.querySelector("[contenteditable]")).toBeTruthy();
   });
@@ -1186,17 +1194,13 @@ describe("RichEditor", () => {
   });
 
   it("disabled=true 时 contenteditable 为 false", () => {
-    const { container } = render(
-      <RichEditor value="" onChange={() => {}} disabled />,
-    );
+    const { container } = render(<RichEditor value="" onChange={() => {}} disabled />);
     const ce = container.querySelector("[contenteditable]");
     expect(ce?.getAttribute("contenteditable")).toBe("false");
   });
 
   it("onSubmit 存在时渲染发送按钮", () => {
-    render(
-      <RichEditor value="" onChange={() => {}} onSubmit={() => {}} />,
-    );
+    render(<RichEditor value="" onChange={() => {}} onSubmit={() => {}} />);
     expect(screen.getByRole("button", { name: "发送评论" })).toBeInTheDocument();
   });
 
@@ -1208,9 +1212,7 @@ describe("RichEditor", () => {
   it("onInsertImage 提供时渲染图片按钮并触发 handler", async () => {
     const handler = vi.fn();
     const user = userEvent.setup();
-    render(
-      <RichEditor value="" onChange={() => {}} onInsertImage={handler} />,
-    );
+    render(<RichEditor value="" onChange={() => {}} onInsertImage={handler} />);
     const btn = screen.getByRole("button", { name: "插入图片" });
     await user.click(btn);
     expect(handler).toHaveBeenCalledOnce();
@@ -1229,6 +1231,7 @@ pnpm --filter @repo/editor test
 - [ ] **Step 3: 实现 RichEditor.tsx**
 
 `packages/editor/src/RichEditor.tsx`:
+
 ```tsx
 /**
  * ================================================================
@@ -1372,12 +1375,14 @@ git commit -m "feat(editor): 实现 RichEditor 主组件（教科书注释 + 响
 ## Task 10: 完善包公开 API
 
 **Files:**
+
 - Modify: `packages/editor/src/index.ts`
 
 - [ ] **Step 1: 更新 index.ts**
 
 `packages/editor/src/index.ts`:
-```typescript
+
+````typescript
 /**
  * @repo/editor 公开 API
  *
@@ -1401,7 +1406,7 @@ git commit -m "feat(editor): 实现 RichEditor 主组件（教科书注释 + 响
  */
 export { RichEditor } from "./RichEditor";
 export type { RichEditorProps, InsertHandlers, MentionItem } from "./types";
-```
+````
 
 - [ ] **Step 2: 类型检查**
 
@@ -1423,12 +1428,14 @@ git commit -m "feat(editor): 导出 RichEditor 公开 API"
 ## Task 11: 集成到 apps/web
 
 **Files:**
+
 - Modify: `apps/web/package.json`
 - Modify: `apps/web/next.config.ts`（或 next.config.js/mjs）
 
 - [ ] **Step 1: 添加 @repo/editor 依赖**
 
 在 `apps/web/package.json` 的 `dependencies` 中添加：
+
 ```json
 "@repo/editor": "workspace:*"
 ```
@@ -1476,12 +1483,14 @@ git commit -m "chore(web): 集成 @repo/editor 依赖"
 ## Task 12: ImageDialog
 
 **Files:**
+
 - Create: `apps/web/components/comments/dialogs/image-dialog.tsx`
 - Create: `apps/web/components/comments/dialogs/image-dialog.test.tsx`
 
 - [ ] **Step 1: 先写失败测试**
 
 `apps/web/components/comments/dialogs/image-dialog.test.tsx`:
+
 ```tsx
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -1536,6 +1545,7 @@ pnpm --filter apps/web test apps/web/components/comments/dialogs/image-dialog.te
 - [ ] **Step 3: 实现 ImageDialog**
 
 `apps/web/components/comments/dialogs/image-dialog.tsx`:
+
 ```tsx
 "use client";
 
@@ -1599,9 +1609,7 @@ export function ImageDialog({ open, onClose, onConfirm }: ImageDialogProps) {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-(--fg2)">
-              图片描述（可选）
-            </label>
+            <label className="mb-1 block text-xs font-medium text-(--fg2)">图片描述（可选）</label>
             <input
               type="text"
               value={alt}
@@ -1616,12 +1624,7 @@ export function ImageDialog({ open, onClose, onConfirm }: ImageDialogProps) {
           <Button variant="ghost" size="sm" onPress={onClose}>
             取消
           </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            isDisabled={!url.trim()}
-            onPress={handleConfirm}
-          >
+          <Button variant="primary" size="sm" isDisabled={!url.trim()} onPress={handleConfirm}>
             插入
           </Button>
         </div>
@@ -1651,12 +1654,14 @@ git commit -m "feat(web): 实现 ImageDialog（URL + alt 输入）"
 ## Task 13: LinkDialog
 
 **Files:**
+
 - Create: `apps/web/components/comments/dialogs/link-dialog.tsx`
 - Create: `apps/web/components/comments/dialogs/link-dialog.test.tsx`
 
 - [ ] **Step 1: 先写失败测试**
 
 `apps/web/components/comments/dialogs/link-dialog.test.tsx`:
+
 ```tsx
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -1709,6 +1714,7 @@ pnpm --filter apps/web test apps/web/components/comments/dialogs/link-dialog.tes
 - [ ] **Step 3: 实现 LinkDialog**
 
 `apps/web/components/comments/dialogs/link-dialog.tsx`:
+
 ```tsx
 "use client";
 
@@ -1726,7 +1732,10 @@ export function LinkDialog({ open, onClose, onConfirm }: LinkDialogProps) {
   const [title, setTitle] = useState("");
 
   useEffect(() => {
-    if (!open) { setUrl(""); setTitle(""); }
+    if (!open) {
+      setUrl("");
+      setTitle("");
+    }
   }, [open]);
 
   if (!open) return null;
@@ -1743,7 +1752,9 @@ export function LinkDialog({ open, onClose, onConfirm }: LinkDialogProps) {
       aria-modal="true"
       aria-label="插入链接"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div className="w-[min(90vw,400px)] rounded-2xl bg-background p-5 shadow-xl">
         <h3 className="mb-4 text-[15px] font-semibold text-foreground">插入链接</h3>
@@ -1763,9 +1774,7 @@ export function LinkDialog({ open, onClose, onConfirm }: LinkDialogProps) {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-(--fg2)">
-              链接文字（可选）
-            </label>
+            <label className="mb-1 block text-xs font-medium text-(--fg2)">链接文字（可选）</label>
             <input
               type="text"
               value={title}
@@ -1777,7 +1786,9 @@ export function LinkDialog({ open, onClose, onConfirm }: LinkDialogProps) {
         </div>
 
         <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" size="sm" onPress={onClose}>取消</Button>
+          <Button variant="ghost" size="sm" onPress={onClose}>
+            取消
+          </Button>
           <Button variant="primary" size="sm" isDisabled={!url.trim()} onPress={handleConfirm}>
             插入
           </Button>
@@ -1808,10 +1819,12 @@ git commit -m "feat(web): 实现 LinkDialog（URL + 链接文字输入）"
 ## Task 14: CodeDialog
 
 **Files:**
+
 - Create: `apps/web/components/comments/dialogs/code-dialog.tsx`
 - Create: `apps/web/components/comments/dialogs/code-dialog.test.tsx`
 
 支持的语言列表（`SUPPORTED_LANGUAGES`）：
+
 ```
 plain | javascript | typescript | python | rust | go | java | cpp | css | html | bash | json | sql | yaml
 ```
@@ -1819,6 +1832,7 @@ plain | javascript | typescript | python | rust | go | java | cpp | css | html |
 - [ ] **Step 1: 先写失败测试**
 
 `apps/web/components/comments/dialogs/code-dialog.test.tsx`:
+
 ```tsx
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -1871,6 +1885,7 @@ pnpm --filter apps/web test apps/web/components/comments/dialogs/code-dialog.tes
 - [ ] **Step 3: 实现 CodeDialog**
 
 `apps/web/components/comments/dialogs/code-dialog.tsx`:
+
 ```tsx
 "use client";
 
@@ -1906,7 +1921,10 @@ export function CodeDialog({ open, onClose, onConfirm }: CodeDialogProps) {
   const [lang, setLang] = useState<string>("plain");
 
   useEffect(() => {
-    if (!open) { setCode(""); setLang("plain"); }
+    if (!open) {
+      setCode("");
+      setLang("plain");
+    }
   }, [open]);
 
   if (!open) return null;
@@ -1923,17 +1941,16 @@ export function CodeDialog({ open, onClose, onConfirm }: CodeDialogProps) {
       aria-modal="true"
       aria-label="插入代码块"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div className="w-[min(90vw,520px)] rounded-2xl bg-background p-5 shadow-xl">
         <h3 className="mb-4 text-[15px] font-semibold text-foreground">插入代码块</h3>
 
         <div className="flex flex-col gap-3">
           <div>
-            <label
-              htmlFor="code-lang"
-              className="mb-1 block text-xs font-medium text-(--fg2)"
-            >
+            <label htmlFor="code-lang" className="mb-1 block text-xs font-medium text-(--fg2)">
               语言
             </label>
             <select
@@ -1944,16 +1961,15 @@ export function CodeDialog({ open, onClose, onConfirm }: CodeDialogProps) {
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
             >
               {SUPPORTED_LANGUAGES.map((l) => (
-                <option key={l.value} value={l.value}>{l.label}</option>
+                <option key={l.value} value={l.value}>
+                  {l.label}
+                </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label
-              htmlFor="code-content"
-              className="mb-1 block text-xs font-medium text-(--fg2)"
-            >
+            <label htmlFor="code-content" className="mb-1 block text-xs font-medium text-(--fg2)">
               代码内容 <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -1970,7 +1986,9 @@ export function CodeDialog({ open, onClose, onConfirm }: CodeDialogProps) {
         </div>
 
         <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" size="sm" onPress={onClose}>取消</Button>
+          <Button variant="ghost" size="sm" onPress={onClose}>
+            取消
+          </Button>
           <Button variant="primary" size="sm" isDisabled={!code.trim()} onPress={handleConfirm}>
             插入
           </Button>
@@ -2001,12 +2019,14 @@ git commit -m "feat(web): 实现 CodeDialog（代码输入 + 14 种语言选择�
 ## Task 15: RichCommentInput 组合组件
 
 **Files:**
+
 - Create: `apps/web/components/comments/rich-comment-input.tsx`
 - Create: `apps/web/components/comments/rich-comment-input.test.tsx`
 
 - [ ] **Step 1: 先写失败测试**
 
 `apps/web/components/comments/rich-comment-input.test.tsx`:
+
 ```tsx
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -2073,6 +2093,7 @@ pnpm --filter apps/web test apps/web/components/comments/rich-comment-input.test
 - [ ] **Step 3: 实现 RichCommentInput**
 
 `apps/web/components/comments/rich-comment-input.tsx`:
+
 ```tsx
 "use client";
 
@@ -2125,26 +2146,17 @@ export function RichCommentInput({
     insert?: (code: string, lang: string) => void;
   }>({ open: false });
 
-  const handleInsertImage = useCallback(
-    (insert: (url: string, alt?: string) => void) => {
-      setImageDialog({ open: true, insert });
-    },
-    [],
-  );
+  const handleInsertImage = useCallback((insert: (url: string, alt?: string) => void) => {
+    setImageDialog({ open: true, insert });
+  }, []);
 
-  const handleInsertLink = useCallback(
-    (insert: (url: string, title?: string) => void) => {
-      setLinkDialog({ open: true, insert });
-    },
-    [],
-  );
+  const handleInsertLink = useCallback((insert: (url: string, title?: string) => void) => {
+    setLinkDialog({ open: true, insert });
+  }, []);
 
-  const handleInsertCode = useCallback(
-    (insert: (code: string, lang: string) => void) => {
-      setCodeDialog({ open: true, insert });
-    },
-    [],
-  );
+  const handleInsertCode = useCallback((insert: (code: string, lang: string) => void) => {
+    setCodeDialog({ open: true, insert });
+  }, []);
 
   return (
     <>
@@ -2211,6 +2223,7 @@ git commit -m "feat(web): 实现 RichCommentInput（RichEditor + 三对话框组
 ## Task 16: 接入 CommentSection
 
 **Files:**
+
 - Modify: `apps/web/components/comments/comment-section.tsx`
 - Modify: `apps/web/components/comments/comment-section.test.tsx`
 
@@ -2223,11 +2236,13 @@ cat apps/web/components/comments/comment-section.tsx
 - [ ] **Step 2: 修改 comment-section.tsx**
 
 在文件顶部 import 区域添加：
+
 ```typescript
 import { RichCommentInput } from "./rich-comment-input";
 ```
 
 找到 `inline` layout 的渲染分支（文件末尾约第 215 行）：
+
 ```tsx
 // inline layout：输入框在上，列表自然流（页面整体可滚动）
 return (
@@ -2239,13 +2254,17 @@ return (
 ```
 
 将 `{input}` 替换为 `RichCommentInput`：
+
 ```tsx
 // inline layout：输入框在上，列表自然流（页面整体可滚动）
 return (
   <div className="flex flex-col gap-6">
     <RichCommentInput
       value={content}
-      onChange={(v) => { setContent(v); clearError(); }}
+      onChange={(v) => {
+        setContent(v);
+        clearError();
+      }}
       onSubmit={handleSubmit}
       isSubmitting={isSubmitting}
       placeholder={replyTarget ? "写下你的回复..." : "写下你的评论..."}
@@ -2280,6 +2299,7 @@ pnpm --filter apps/web test apps/web/components/comments/comment-section.test.ts
 ```
 
 期望：所有现有测试仍 PASS（inline layout 新增用 RichCommentInput mock 覆盖）。如有测试因 RichEditor 引入而失败，在测试文件顶部添加：
+
 ```typescript
 vi.mock("@repo/editor", () => ({
   RichEditor: ({ onChange, onSubmit }: { onChange: (v: string) => void; onSubmit: () => void }) => (
@@ -2311,6 +2331,7 @@ git commit -m "feat(web): inline 评论区接入 RichCommentInput（modal layout
 ## Task 17: 修复 rehype-sanitize 允许 `<u>` 标签
 
 **Files:**
+
 - Modify: `apps/web/lib/markdown.ts`
 
 - [ ] **Step 1: 读取当前 markdown.ts**
@@ -2324,6 +2345,7 @@ cat apps/web/lib/markdown.ts
 在 `rehypeSanitize` 的配置中，找到 `attributes` 的 `defaultSchema` 合并处，添加 `tagNames` 覆盖以允许 `u`：
 
 当前代码：
+
 ```typescript
 .use(rehypeSanitize, {
   ...defaultSchema,
@@ -2335,6 +2357,7 @@ cat apps/web/lib/markdown.ts
 ```
 
 修改为：
+
 ```typescript
 .use(rehypeSanitize, {
   ...defaultSchema,
@@ -2422,19 +2445,19 @@ git commit -m "feat(editor): RichEditor WYSIWYG 评论编辑器完整实现
 
 ## 自检清单
 
-| 设计文档需求 | 对应 Task |
-|------------|---------|
-| 内联渲染（输入即格式化）| Task 9 RichEditor + useRichEditor |
-| 底部工具栏 B/I/U/链接/图片/代码/@| Task 7/8 Toolbar |
-| 下划线可追溯 | Task 4 underline.ts |
-| @提及 stub | Task 5 mention.ts |
-| 图片 URL 对话框 | Task 12 |
-| 链接对话框 | Task 13 |
-| 代码 + 语言选择对话框 | Task 14 |
-| InsertHandlers 注入接口 | Task 3 types.ts + Task 15 |
-| SSR immediatelyRender: false | Task 6 use-rich-editor.ts |
-| 响应式移动端横向滚动 | Task 8 Toolbar |
-| rehype-sanitize 允许 `<u>` | Task 17 |
-| 测试覆盖 | 每 Task 含 TDD 步骤 |
-| @tiptap/markdown 替换点 | use-rich-editor.ts 注释标注 |
-| 版本 Tiptap v3.26.0 | Task 1 package.json |
+| 设计文档需求                      | 对应 Task                         |
+| --------------------------------- | --------------------------------- |
+| 内联渲染（输入即格式化）          | Task 9 RichEditor + useRichEditor |
+| 底部工具栏 B/I/U/链接/图片/代码/@ | Task 7/8 Toolbar                  |
+| 下划线可追溯                      | Task 4 underline.ts               |
+| @提及 stub                        | Task 5 mention.ts                 |
+| 图片 URL 对话框                   | Task 12                           |
+| 链接对话框                        | Task 13                           |
+| 代码 + 语言选择对话框             | Task 14                           |
+| InsertHandlers 注入接口           | Task 3 types.ts + Task 15         |
+| SSR immediatelyRender: false      | Task 6 use-rich-editor.ts         |
+| 响应式移动端横向滚动              | Task 8 Toolbar                    |
+| rehype-sanitize 允许 `<u>`        | Task 17                           |
+| 测试覆盖                          | 每 Task 含 TDD 步骤               |
+| @tiptap/markdown 替换点           | use-rich-editor.ts 注释标注       |
+| 版本 Tiptap v3.26.0               | Task 1 package.json               |

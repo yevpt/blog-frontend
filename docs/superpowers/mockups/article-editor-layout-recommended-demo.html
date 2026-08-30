@@ -851,7 +851,9 @@
             </div>
           </div>
           <div class="actions">
-            <button class="btn secondary" id="themeBtn" type="button" aria-label="切换深浅色">◐</button>
+            <button class="btn secondary" id="themeBtn" type="button" aria-label="切换深浅色">
+              ◐
+            </button>
             <button class="btn secondary" id="draftBtn" type="button">存草稿</button>
             <button class="btn" id="publishBtn" type="button">发布</button>
           </div>
@@ -873,8 +875,7 @@
                 aria-label="文章描述"
                 placeholder="添加摘要，会显示在列表与分享卡片上"
               >
-从后台写作流出发，重新整理封面、分类、标签与正文，让发布过程安静、连贯。</textarea
-              >
+从后台写作流出发，重新整理封面、分类、标签与正文，让发布过程安静、连贯。</textarea>
             </div>
 
             <div class="editor-zone">
@@ -893,7 +894,12 @@
 
               <div class="editor-scroll">
                 <div class="editor-inner">
-                  <article class="editor" id="editor" contenteditable="true" aria-label="文章内容编辑器">
+                  <article
+                    class="editor"
+                    id="editor"
+                    contenteditable="true"
+                    aria-label="文章内容编辑器"
+                  >
                     <h2>写作区应该尽量安静</h2>
                     <p>
                       标题、摘要与正文在同一开放画布上连续流动，不再套一层内嵌编辑框。右侧发布配置则按「上标签下控件」纵向排布，窄栏里更易扫读。
@@ -905,7 +911,10 @@
               </div>
 
               <footer class="canvas-foot">
-                <span><strong id="wordCount">0</strong> 字 · 约 <strong id="readTime">1</strong> 分钟</span>
+                <span
+                  ><strong id="wordCount">0</strong> 字 · 约
+                  <strong id="readTime">1</strong> 分钟</span
+                >
                 <span id="saveHint">自动保存关闭</span>
               </footer>
             </div>
@@ -949,9 +958,16 @@
                     <button class="tag on" type="button" data-tag="React">React</button>
                     <button class="tag on" type="button" data-tag="后台">后台</button>
                     <button class="tag on" type="button" data-tag="体验设计">体验设计</button>
-                    <button class="tag add" id="addTagBtn" type="button" aria-expanded="false">+ 添加</button>
+                    <button class="tag add" id="addTagBtn" type="button" aria-expanded="false">
+                      + 添加
+                    </button>
                     <div class="tag-popover" id="tagPopover">
-                      <input class="tag-search" id="tagSearch" aria-label="搜索标签" placeholder="搜索标签" />
+                      <input
+                        class="tag-search"
+                        id="tagSearch"
+                        aria-label="搜索标签"
+                        placeholder="搜索标签"
+                      />
                       <div class="tag-options" id="tagOptions"></div>
                     </div>
                   </div>
@@ -967,12 +983,24 @@
                         <div class="music-meta">Luma · 03:42</div>
                       </div>
                       <div class="music-actions">
-                        <button class="mini-btn" type="button" aria-label="更换音乐" title="更换">↻</button>
-                        <button class="mini-btn danger" id="removeMusic" type="button" aria-label="移除" title="移除">×</button>
+                        <button class="mini-btn" type="button" aria-label="更换音乐" title="更换">
+                          ↻
+                        </button>
+                        <button
+                          class="mini-btn danger"
+                          id="removeMusic"
+                          type="button"
+                          aria-label="移除"
+                          title="移除"
+                        >
+                          ×
+                        </button>
                       </div>
                     </div>
                   </div>
-                  <button class="music-empty" id="musicAdd" type="button" hidden>+ 添加背景音乐</button>
+                  <button class="music-empty" id="musicAdd" type="button" hidden>
+                    + 添加背景音乐
+                  </button>
                 </div>
               </div>
 

@@ -21,19 +21,20 @@
 
 **原则**：UI 组件放 `packages/ui`（无全局状态、可跨 app 复用）；Queue 实例和 helper 放 `apps/web`（app 级状态）
 
-| 文件 | 职责 |
-|---|---|
-| `packages/ui/src/toast/toast.tsx` | `ToastRegion`（容器）+ 内部 `ToastItem`（单条）纯 UI 组件，接受 `queue` prop |
-| `packages/ui/src/toast/toast.test.tsx` | 组件渲染 / 关闭交互 |
-| `packages/ui/src/index.ts` | 追加导出 `ToastRegion`、`ToastItem` |
-| `apps/web/lib/toast.ts` | 创建全局 `toastQueue` 实例；导出 `addToast(message, type?)` helper |
-| `apps/web/app/providers/global-modals.tsx` | 追加渲染 `<ToastRegion queue={toastQueue} />`（Client Component） |
+| 文件                                       | 职责                                                                         |
+| ------------------------------------------ | ---------------------------------------------------------------------------- |
+| `packages/ui/src/toast/toast.tsx`          | `ToastRegion`（容器）+ 内部 `ToastItem`（单条）纯 UI 组件，接受 `queue` prop |
+| `packages/ui/src/toast/toast.test.tsx`     | 组件渲染 / 关闭交互                                                          |
+| `packages/ui/src/index.ts`                 | 追加导出 `ToastRegion`、`ToastItem`                                          |
+| `apps/web/lib/toast.ts`                    | 创建全局 `toastQueue` 实例；导出 `addToast(message, type?)` helper           |
+| `apps/web/app/providers/global-modals.tsx` | 追加渲染 `<ToastRegion queue={toastQueue} />`（Client Component）            |
 
 **依赖**：`react-aria-components@1.18.0`（已安装）中的 `UNSTABLE_ToastQueue`、`UNSTABLE_ToastRegion`、`UNSTABLE_Toast`，无需新增依赖。
 
 **Toast 类型**：
+
 ```ts
-type ToastType = 'success' | 'error' | 'info'
+type ToastType = "success" | "error" | "info";
 // queue content: { message: string; type?: ToastType }
 ```
 
@@ -49,12 +50,13 @@ type ToastType = 'success' | 'error' | 'info'
 
 **表单校验**（提交前，不调接口）：
 
-| 条件 | error 文案 |
-|---|---|
+| 条件              | error 文案                 |
+| ----------------- | -------------------------- |
 | `identifier` 为空 | 请输入账号 / 邮箱 / 手机号 |
-| `password` 为空 | 请输入密码 |
+| `password` 为空   | 请输入密码                 |
 
 **提交流程**：
+
 1. 校验不通过 → `setError(message)` 直接返回
 2. `setLoading(true)`，`setError(null)`
 3. `POST /api/auth/login` with `{ identifier, password }`
@@ -72,9 +74,9 @@ type ToastType = 'success' | 'error' | 'info'
 
 ```ts
 function handleLoginSuccess(user: UserResp) {
-  close()           // 关闭弹窗（useLoginModal）
-  addToast(`欢迎回来，${user.nickname ?? user.username}`, 'success')
-  router.refresh()  // 触发 Server Components 重渲染，SessionProvider 自动更新
+  close(); // 关闭弹窗（useLoginModal）
+  addToast(`欢迎回来，${user.nickname ?? user.username}`, "success");
+  router.refresh(); // 触发 Server Components 重渲染，SessionProvider 自动更新
 }
 ```
 
@@ -99,11 +101,13 @@ function handleLoginSuccess(user: UserResp) {
 ## 测试策略
 
 ### packages/ui/src/toast/toast.test.tsx（新建）
+
 - 渲染 `ToastRegion` 不崩溃
 - 有 toast 时渲染消息文字
 - 点击关闭按钮触发 dismiss
 
 ### apps/web/components/auth/login-view.test.tsx（补充）
+
 - `identifier` / `password` 输入控制（受控输入）
 - 空 identifier 提交 → 显示校验提示，不调接口
 - 空 password 提交 → 显示校验提示，不调接口

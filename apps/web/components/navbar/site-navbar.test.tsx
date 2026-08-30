@@ -81,8 +81,7 @@ vi.mock("@repo/hooks/locale", () => ({
 // 受控的 IntersectionObserver mock：捕获回调，由测试手动触发模拟“哨兵进/出视口”。
 // jsdom 不实现 IntersectionObserver，必须 mock。
 let ioCallback:
-  | ((entries: IntersectionObserverEntry[], observer: IntersectionObserver) => void)
-  | null = null;
+  ((entries: IntersectionObserverEntry[], observer: IntersectionObserver) => void) | null = null;
 const ioObserve = vi.fn();
 const ioDisconnect = vi.fn();
 

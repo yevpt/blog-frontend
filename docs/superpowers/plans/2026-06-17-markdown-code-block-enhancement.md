@@ -12,20 +12,21 @@
 
 ## 文件结构
 
-| 文件 | 变更类型 | 职责 |
-|------|----------|------|
-| `packages/markdown/package.json` | 修改 | 新增 `rehype-highlight`、`unist-util-visit`、`hast` 依赖 |
-| `packages/markdown/src/render.ts` | 修改 | 加入高亮插件 + 自定义 wrapper 插件 + 更新 sanitize schema |
-| `packages/markdown/src/render.test.ts` | 修改 | 新增代码块高亮与工具栏输出测试 |
-| `packages/markdown/src/markdown-content.tsx` | 修改 | 加 `'use client'`、`useRef`、`useEffect` 绑复制事件 |
-| `packages/markdown/src/markdown-content.test.tsx` | 修改 | 新增复制按钮行为测试 |
-| `packages/styles/src/base.css` | 修改 | 工具栏布局 CSS + hljs 配色规则 |
+| 文件                                              | 变更类型 | 职责                                                      |
+| ------------------------------------------------- | -------- | --------------------------------------------------------- |
+| `packages/markdown/package.json`                  | 修改     | 新增 `rehype-highlight`、`unist-util-visit`、`hast` 依赖  |
+| `packages/markdown/src/render.ts`                 | 修改     | 加入高亮插件 + 自定义 wrapper 插件 + 更新 sanitize schema |
+| `packages/markdown/src/render.test.ts`            | 修改     | 新增代码块高亮与工具栏输出测试                            |
+| `packages/markdown/src/markdown-content.tsx`      | 修改     | 加 `'use client'`、`useRef`、`useEffect` 绑复制事件       |
+| `packages/markdown/src/markdown-content.test.tsx` | 修改     | 新增复制按钮行为测试                                      |
+| `packages/styles/src/base.css`                    | 修改     | 工具栏布局 CSS + hljs 配色规则                            |
 
 ---
 
 ## Task 1: 安装依赖
 
 **Files:**
+
 - Modify: `packages/markdown/package.json`
 
 - [ ] **Step 1: 安装 rehype-highlight 和辅助包**
@@ -55,6 +56,7 @@ git commit -m "chore(markdown): 安装 rehype-highlight 和 unist-util-visit"
 ## Task 2: 添加语法高亮（TDD）
 
 **Files:**
+
 - Modify: `packages/markdown/src/render.ts`
 - Modify: `packages/markdown/src/render.test.ts`
 
@@ -62,17 +64,17 @@ git commit -m "chore(markdown): 安装 rehype-highlight 和 unist-util-visit"
 
 打开 `packages/markdown/src/render.test.ts`，在文件末尾 `markdownToHtml` describe 块内追加：
 
-```typescript
-  it("typescript 代码围栏生成语法高亮类名", async () => {
-    const html = await markdownToHtml("```typescript\nconst x = 1\n```");
-    expect(html).toContain("hljs-keyword");
-  });
+````typescript
+it("typescript 代码围栏生成语法高亮类名", async () => {
+  const html = await markdownToHtml("```typescript\nconst x = 1\n```");
+  expect(html).toContain("hljs-keyword");
+});
 
-  it("代码围栏的 code 元素保留 language-* className", async () => {
-    const html = await markdownToHtml("```typescript\nconst x = 1\n```");
-    expect(html).toContain('language-typescript');
-  });
-```
+it("代码围栏的 code 元素保留 language-* className", async () => {
+  const html = await markdownToHtml("```typescript\nconst x = 1\n```");
+  expect(html).toContain("language-typescript");
+});
+````
 
 - [ ] **Step 2: 运行测试，确认失败**
 
@@ -294,20 +296,21 @@ function buildSanitizeSchema() {
   return {
     ...defaultSchema,
     clobberPrefix: "",
-    tagNames: [
-      ...(defaultSchema.tagNames ?? []),
-      "u",
-      "button",
-      "svg",
-      "path",
-      "polyline",
-      "rect",
-    ],
+    tagNames: [...(defaultSchema.tagNames ?? []), "u", "button", "svg", "path", "polyline", "rect"],
     attributes: {
       ...defaultSchema.attributes,
       "*": [...(defaultSchema.attributes?.["*"] ?? []), "id", "className"],
       button: ["type", "ariaLabel", "className"],
-      svg: ["viewBox", "fill", "stroke", "strokeWidth", "strokeLinecap", "strokeLinejoin", "width", "height"],
+      svg: [
+        "viewBox",
+        "fill",
+        "stroke",
+        "strokeWidth",
+        "strokeLinecap",
+        "strokeLinejoin",
+        "width",
+        "height",
+      ],
       path: ["d"],
       polyline: ["points"],
       rect: ["x", "y", "width", "height", "rx"],
@@ -377,11 +380,12 @@ git commit -m "feat(markdown): 添加语法高亮（rehype-highlight）"
 ## Task 3: 添加代码块工具栏 wrapper 插件测试（TDD）
 
 **Files:**
+
 - Modify: `packages/markdown/src/render.test.ts`
 
 - [ ] **Step 1: 在 render.test.ts 末尾追加工具栏相关测试**
 
-```typescript
+````typescript
 describe("rehypeCodeWrapper", () => {
   it("有语言的代码围栏输出 md-code-wrapper 和 md-code-toolbar", async () => {
     const html = await markdownToHtml("```typescript\nconst x = 1\n```");
@@ -419,7 +423,7 @@ describe("rehypeCodeWrapper", () => {
     expect(html.indexOf("md-code-wrapper")).toBeLessThan(html.indexOf("<pre"));
   });
 });
-```
+````
 
 - [ ] **Step 2: 运行测试，确认新测试全部通过（Task 2 已实现 wrapper）**
 
@@ -441,6 +445,7 @@ git commit -m "test(markdown): 补充代码块工具栏输出测试"
 ## Task 4: 添加 CSS 样式
 
 **Files:**
+
 - Modify: `packages/styles/src/base.css`
 
 - [ ] **Step 1: 在 base.css 的「RichEditor 代码块样式」区块之后添加以下 CSS**
@@ -600,6 +605,7 @@ git commit -m "style: 添加 Markdown 代码块工具栏与语法高亮 CSS"
 ## Task 5: 更新 MarkdownContent 绑定复制事件（TDD）
 
 **Files:**
+
 - Modify: `packages/markdown/src/markdown-content.tsx`
 - Modify: `packages/markdown/src/markdown-content.test.tsx`
 
@@ -791,6 +797,7 @@ pnpm --filter web dev
 - [ ] **Step 2: 在浏览器访问任一带代码块的文章页或评论页**
 
 检查以下项：
+
 - [ ] 语法高亮颜色正确（关键字紫色、字符串绿色等）
 - [ ] 有语言时：顶部显示 `</>` 图标 + 语言名，右侧剪贴板图标
 - [ ] 无语言时：无顶部栏，剪贴板图标绝对定位于右上角

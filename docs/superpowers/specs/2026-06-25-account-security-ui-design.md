@@ -20,32 +20,32 @@
 
 ### 2.1 读取
 
-| 数据 | 来源 | 字段 |
-| --- | --- | --- |
-| 用户名 | `GET /users/me` | `username` |
-| 是否已设密码 | `GET /users/me` | `password_set`（bool） |
-| 主邮箱 | `GET /users/me` | `email`（可空） |
-| 副邮箱 | `GET /users/me` | `meta.sub_email`（可空） |
-| 对外展示邮箱 | `GET /users/me` | `setting.mail_show`（uint8） |
+| 数据             | 来源                   | 字段                                                       |
+| ---------------- | ---------------------- | ---------------------------------------------------------- |
+| 用户名           | `GET /users/me`        | `username`                                                 |
+| 是否已设密码     | `GET /users/me`        | `password_set`（bool）                                     |
+| 主邮箱           | `GET /users/me`        | `email`（可空）                                            |
+| 副邮箱           | `GET /users/me`        | `meta.sub_email`（可空）                                   |
+| 对外展示邮箱     | `GET /users/me`        | `setting.mail_show`（uint8）                               |
 | 启用的第三方平台 | `GET /oauth/providers` | `string[]`（如 `["github","gitee","qq","weibo","baidu"]`） |
-| 已绑定的平台 | `GET /oauth/bindings` | `{ source: string; social_user_id: number }[]` |
+| 已绑定的平台     | `GET /oauth/bindings`  | `{ source: string; social_user_id: number }[]`             |
 
 第三方列表 = `providers` 全集，逐项判断 `source` 是否出现在 `bindings` 中得出 `bound`。
 
 ### 2.2 写入（全部已就绪）
 
-| 操作 | 接口 | 请求体 / 约束 |
-| --- | --- | --- |
-| 改用户名 | `PATCH /users/me/username` | `{ username }`，3–155 字符；成功后需重新登录 |
-| 改密码（已设密码） | `PATCH /users/me/password` | `{ old_password, new_password }`，后端 min 6 |
-| 设初始密码（未设密码） | `PATCH /users/me/password/initial` | `{ new_password(min 8), code(6 位) }`，需先向主邮箱发码 |
-| 发账号邮箱验证码 | `POST /users/me/email/code` | `{ email, captcha_token }`，限流 strict，发 6 位码 |
-| 换绑主/副邮箱 | `PATCH /users/me/email` | `{ target: "main"\|"sub", email, code(6 位) }` |
-| 设对外展示邮箱 | `PATCH /users/me/email/display` | `{ display: "main"\|"sub"\|"none" }` |
-| 解绑第三方 | `DELETE /oauth/bindings/:source` | 可能返回 `ErrLastLoginMethod`（最后登录方式，拒绝） |
-| 绑定第三方（取授权地址） | `GET /oauth/:source/authorize?action=bind&redirect_uri=...` | OptionalAuth；返回 `{ authorize_url }` |
-| 找回密码·发码（公开） | `POST /auth/password-reset/code` | `{ email, captcha_token }` |
-| 找回密码·重置（公开） | `POST /auth/password-reset` | `{ email, code(6 位), new_password(min 8) }` |
+| 操作                     | 接口                                                        | 请求体 / 约束                                           |
+| ------------------------ | ----------------------------------------------------------- | ------------------------------------------------------- |
+| 改用户名                 | `PATCH /users/me/username`                                  | `{ username }`，3–155 字符；成功后需重新登录            |
+| 改密码（已设密码）       | `PATCH /users/me/password`                                  | `{ old_password, new_password }`，后端 min 6            |
+| 设初始密码（未设密码）   | `PATCH /users/me/password/initial`                          | `{ new_password(min 8), code(6 位) }`，需先向主邮箱发码 |
+| 发账号邮箱验证码         | `POST /users/me/email/code`                                 | `{ email, captcha_token }`，限流 strict，发 6 位码      |
+| 换绑主/副邮箱            | `PATCH /users/me/email`                                     | `{ target: "main"\|"sub", email, code(6 位) }`          |
+| 设对外展示邮箱           | `PATCH /users/me/email/display`                             | `{ display: "main"\|"sub"\|"none" }`                    |
+| 解绑第三方               | `DELETE /oauth/bindings/:source`                            | 可能返回 `ErrLastLoginMethod`（最后登录方式，拒绝）     |
+| 绑定第三方（取授权地址） | `GET /oauth/:source/authorize?action=bind&redirect_uri=...` | OptionalAuth；返回 `{ authorize_url }`                  |
+| 找回密码·发码（公开）    | `POST /auth/password-reset/code`                            | `{ email, captcha_token }`                              |
+| 找回密码·重置（公开）    | `POST /auth/password-reset`                                 | `{ email, code(6 位), new_password(min 8) }`            |
 
 ### 2.3 图形验证码（已核实通用）
 
@@ -60,15 +60,18 @@
 手机端为基准的纵向分组列表（沿用现有 `SecuritySection` / `SecurityItem` 行式结构，修正数据与状态），三个分组：
 
 **登录凭证**
+
 - 用户名 — 显示 `username` 真实值，右侧「修改」。
 - 登录密码 — `password_set ? 「已设置」徽标 + 「修改」 : 「未设置」徽标 + 「设置」`。
 
 **邮箱**
+
 - 主邮箱 — 有值显示具体邮箱 + 「换绑」；无值显示灰字「未绑定」+ 「绑定」。
 - 副邮箱 — 有值显示具体邮箱 + 「换绑」；无值显示灰字「未设置」+ 「添加」。
 - 对外展示 — 真实下拉（主邮箱 / 副邮箱 / 不展示），值绑定 `mail_show`；副邮箱为空时禁用「副邮箱」选项；变更即调 `PATCH /users/me/email/display`，乐观更新 + 失败回滚。
 
 **第三方绑定**（标题下注明来源 `/oauth/providers`）
+
 - 按 `providers` 全量渲染，每项左侧平台图标 + 名称，右侧：`bound ? 绿色「已绑定」徽标 + 灰色「解绑」 : 灰色「未绑定」徽标 + 「绑定」`。
 - 平台 `source → 展示名/图标` 的映射在前端维护一张常量表；未知 source 兜底显示原始 `source` 文本 + 通用图标。
 
@@ -79,9 +82,11 @@
 所有多步操作用 `@repo/ui` 的 `Modal`，`placement="fullscreen-mobile"`（移动端底部 Sheet、`md+` 居中 Dialog），复用其抓手条 / 标题 / 关闭。
 
 ### 4.1 用户名
+
 单字段 Sheet：输入新用户名（3–155）→ 提交 `updateUsername`。成功后提示「用户名已修改，需重新登录」并触发登出 / 跳登录（沿用项目现有登出逻辑）。
 
 ### 4.2 密码（三条流程，同一 Sheet 内切换）
+
 - **A 修改密码**（`password_set === true`）：当前密码 + 新密码 + 确认 → `updatePassword`。底部「忘记原密码？用邮箱找回」链接切到 B。
 - **B 找回密码**（由 A 链接进入）：主邮箱（只读）+ 图形验证 + 邮箱验证码 + 新密码 → `passwordResetCode` 发码 → `passwordReset` 重置。走**公开**接口，不需旧密码。
 - **C 设置初始密码**（`password_set === false`，列表点「设置」直接进入）：主邮箱（只读）+ 图形验证 + 邮箱验证码 + 新密码 → `sendAccountEmailCode` 发码 → `setInitialPassword`。
@@ -89,18 +94,22 @@
 - 找回流程（B）提取为可复用组件 `PasswordRecoveryForm`，登录页 `login-view.tsx` 现有的空壳「忘记密码？」按钮后续可直接复用它（本次顺带接通，属目标范围内的就近改进）。
 
 ### 4.3 邮箱（换绑 / 添加）
+
 Sheet：新邮箱 + 图形验证 + 邮箱验证码（**验证码发往新邮箱**）→ `sendAccountEmailCode(newEmail)` → `updateEmail({ target, email, code })`。主邮箱入口 `target="main"`，副邮箱入口 `target="sub"`，共用同一组件。
 
 ### 4.4 第三方绑定 / 解绑
+
 - **绑定**：点「绑定」→ `authorizeOAuth(source, "bind", redirectUri)` 取 `authorize_url` → 整页跳转第三方授权页 → callback 返回当前页 → 重新拉 `bindings` 刷新。`redirect_uri` 指回用户详情页。
 - **解绑**：点「解绑」→ 轻量确认 `Modal`（`placement="center"`, `size="sm"`）→ `unbindOAuth(source)`。后端返回 `ErrLastLoginMethod` 等业务错误时用 toast 回显其文案，不刷新；成功则刷新列表。
 
 ### 4.5 发码按钮通用行为
+
 「获取验证码」点击前必须先完成图形验证（拿到 `captcha_token`）；发码成功后按钮进入 60s 倒计时禁用；`429` 提示「发送过于频繁，请稍后再试」。
 
 ## 5. 组件与代码改动
 
 ### 5.1 `@repo/api`（`packages/api/src`）
+
 - **修正** `OAuthBindingResp` 类型为 `{ source: string; social_user_id: number }`（`types/user.ts`）。
 - **新增** 方法（`client.ts` `users` / 新增 `oauth` 命名空间，遵循 `extending-api` 三种 fetch 助手约定）：
   - `getProviders(): string[]` — `fetchPublic("/oauth/providers")`
@@ -115,8 +124,10 @@ Sheet：新邮箱 + 图形验证 + 邮箱验证码（**验证码发往新邮箱*
 - **新增类型**：`UpdateEmailReq`、`SendAccountEmailCodeReq`、`SetInitialPasswordReq`、`PasswordResetCodeReq`、`PasswordResetReq`、`OAuthProvidersResp`（与后端 DTO 对齐）。
 
 ### 5.2 `apps/web` 代理路由（`app/api/...`）
+
 现有：`me/meta`、`me/username`、`me/password`、`me/oauth-bindings`、`me/social/[platform]`、`me/email/display`、`oauth/providers`、`oauth/[source]/authorize`、`oauth/[source]/callback`。
 **需新增**代理（均已核实当前不存在）：
+
 - `POST app/api/users/me/email/code`
 - `PATCH app/api/users/me/email`
 - `PATCH app/api/users/me/password/initial`
@@ -126,6 +137,7 @@ Sheet：新邮箱 + 图形验证 + 邮箱验证码（**验证码发往新邮箱*
 captcha 代理 `app/api/captcha/register/challenge|verify` 已存在，直接复用。
 
 ### 5.3 `apps/web` 组件（`security-tab/`）
+
 - `security-tab.tsx` 改为 `'use client'` 容器：取数 + 组合下列子组件。
 - 子组件拆分（各自单一职责、独立可测）：
   - `security-list.tsx`（纯展示，受控）
@@ -138,6 +150,7 @@ captcha 代理 `app/api/captcha/register/challenge|verify` 已存在，直接复
 - **提取** 可复用图形验证码单元 `use-captcha-token.ts`（或 `captcha-verifier.tsx`），封装「拉挑战 → 滑块校验 → 产出一次性 `captcha_token`」，供邮箱发码 / 找回密码复用；同步重构 `register-view.tsx` 改用它（避免平行实现）。
 
 ### 5.4 测试（强制）
+
 - `security-tab.test.tsx`：三组数据展示、`password_set` 两态、providers∪bindings 合并渲染。
 - 各 Sheet 组件 `*.test.tsx`：关键交互（发码前需图形验证、提交参数正确、错误 toast）。
 - `use-captcha-token` 测试。

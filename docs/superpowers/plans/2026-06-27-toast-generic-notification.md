@@ -22,6 +22,7 @@
 ### Task 1: `ToastRegion` 泛型化（`packages/ui`）
 
 **Files:**
+
 - Modify: `packages/ui/package.json`（新增 `react-stately` 直接依赖）
 - Modify: `packages/ui/src/toast/types.ts`
 - Modify: `packages/ui/src/toast/toast.tsx`
@@ -30,6 +31,7 @@
 - Modify: `packages/ui/src/toast/toast.test.tsx`
 
 **Interfaces:**
+
 - Consumes: 无（叶子任务）。
 - Produces: `ToastRegion`（重载：`ToastRegion(props: ToastRegionProps<ToastContent>)` 与 `ToastRegion<T>(props: ToastRegionProps<T> & { renderToast: ... })`）、`ToastRenderHelpers`（`{ close: () => void }`）、`toastChromeClassName`（字符串常量）。Task 2 依赖这三者，从 `@repo/ui` 直接 import。
 
@@ -61,12 +63,7 @@ export type ToastType = "success" | "error" | "info";
 
 /** Toast 弹出位置，默认 "bottom-right"。 */
 export type ToastPosition =
-  | "top-left"
-  | "top-center"
-  | "top-right"
-  | "bottom-left"
-  | "bottom-center"
-  | "bottom-right";
+  "top-left" | "top-center" | "top-right" | "bottom-left" | "bottom-center" | "bottom-right";
 
 /** 单条 toast 的内容。 */
 export interface ToastContent {
@@ -98,56 +95,56 @@ export interface ToastRegionProps<T = ToastContent> {
 在 `packages/ui/src/toast/toast.test.tsx` 文件末尾、最后一个 `it` 和结尾的 `});` 之间，插入以下三个新测试（保留原有全部内容不变）：
 
 ```tsx
-  it("传入 renderToast 时按自定义内容渲染", () => {
-    interface DemoContent {
-      label: string;
-    }
-    const queue = new ToastQueue<DemoContent>({ maxVisibleToasts: 5 });
-    queue.add({ label: "自定义内容" });
-    render(<ToastRegion queue={queue} renderToast={(toast) => <span>{toast.content.label}</span>} />);
-    expect(screen.getByText("自定义内容")).toBeInTheDocument();
-  });
+it("传入 renderToast 时按自定义内容渲染", () => {
+  interface DemoContent {
+    label: string;
+  }
+  const queue = new ToastQueue<DemoContent>({ maxVisibleToasts: 5 });
+  queue.add({ label: "自定义内容" });
+  render(<ToastRegion queue={queue} renderToast={(toast) => <span>{toast.content.label}</span>} />);
+  expect(screen.getByText("自定义内容")).toBeInTheDocument();
+});
 
-  it("itemClassName 覆盖默认的宽度与对齐类名", () => {
-    interface DemoContent {
-      label: string;
-    }
-    const queue = new ToastQueue<DemoContent>({ maxVisibleToasts: 5 });
-    queue.add({ label: "自定义内容" });
-    render(
-      <ToastRegion
-        queue={queue}
-        itemClassName="w-[300px] items-start"
-        renderToast={(toast) => <span>{toast.content.label}</span>}
-      />,
-    );
-    const item = screen.getByRole("alertdialog");
-    expect(item).toHaveClass("w-[300px]");
-    expect(item).toHaveClass("items-start");
-    expect(item).not.toHaveClass("w-fit");
-  });
+it("itemClassName 覆盖默认的宽度与对齐类名", () => {
+  interface DemoContent {
+    label: string;
+  }
+  const queue = new ToastQueue<DemoContent>({ maxVisibleToasts: 5 });
+  queue.add({ label: "自定义内容" });
+  render(
+    <ToastRegion
+      queue={queue}
+      itemClassName="w-[300px] items-start"
+      renderToast={(toast) => <span>{toast.content.label}</span>}
+    />,
+  );
+  const item = screen.getByRole("alertdialog");
+  expect(item).toHaveClass("w-[300px]");
+  expect(item).toHaveClass("items-start");
+  expect(item).not.toHaveClass("w-fit");
+});
 
-  it("renderToast 的 close helper 能关闭对应 toast", async () => {
-    interface DemoContent {
-      label: string;
-    }
-    const user = userEvent.setup();
-    const queue = new ToastQueue<DemoContent>({ maxVisibleToasts: 5 });
-    queue.add({ label: "可关闭内容" });
-    render(
-      <ToastRegion
-        queue={queue}
-        renderToast={(toast, { close }) => (
-          <button type="button" onClick={close}>
-            关闭 {toast.content.label}
-          </button>
-        )}
-      />,
-    );
-    const closeBtn = screen.getByRole("button", { name: /可关闭内容/ });
-    await user.click(closeBtn);
-    expect(screen.queryByText(/可关闭内容/)).not.toBeInTheDocument();
-  });
+it("renderToast 的 close helper 能关闭对应 toast", async () => {
+  interface DemoContent {
+    label: string;
+  }
+  const user = userEvent.setup();
+  const queue = new ToastQueue<DemoContent>({ maxVisibleToasts: 5 });
+  queue.add({ label: "可关闭内容" });
+  render(
+    <ToastRegion
+      queue={queue}
+      renderToast={(toast, { close }) => (
+        <button type="button" onClick={close}>
+          关闭 {toast.content.label}
+        </button>
+      )}
+    />,
+  );
+  const closeBtn = screen.getByRole("button", { name: /可关闭内容/ });
+  await user.click(closeBtn);
+  expect(screen.queryByText(/可关闭内容/)).not.toBeInTheDocument();
+});
 ```
 
 - [ ] **Step 4: 运行测试，确认新断言按预期失败**
@@ -335,10 +332,12 @@ EOF
 ### Task 2: `NotificationProvider` 接入 `ToastQueue<NotificationItemResp>`（`apps/web`）
 
 **Files:**
+
 - Modify: `apps/web/components/notifications/notification-provider.tsx`
 - Modify: `apps/web/components/notifications/notification-provider.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 1 产出的 `ToastRegion`（泛型重载）、`ToastQueue`、`ToastRenderHelpers` 类型，均从 `@repo/ui` 导入。
 - Produces: `notificationToastQueue`（导出的 `ToastQueue<NotificationItemResp>` 单例，供测试文件在 `beforeEach` 里调用 `.clear()` 重置）。`NotificationProvider` 对外 props（`{children}`）不变。
 

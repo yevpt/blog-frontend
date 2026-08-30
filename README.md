@@ -9,15 +9,15 @@
 
 ## 技术栈
 
-| 分类 | 选型 |
-|---|---|
+| 分类          | 选型                                                          |
+| ------------- | ------------------------------------------------------------- |
 | 语言 / 包管理 | TypeScript、pnpm workspaces（无 Turborepo，纯 `-r` 递归脚本） |
-| 博客前台 | Next.js 16（App Router、Server Components 优先） |
-| 管理后台 | Vite 8 + React Router 7（SPA） |
-| UI / 状态 | React 19、TailwindCSS 4、Zustand |
-| 富文本 / 渲染 | Tiptap 编辑器、Markdown（客户端 + 服务端两套） |
-| 测试 | Vitest 4 + Testing Library（happy-dom，全仓库统一根配置） |
-| CI/CD | GitHub Actions + Docker（多阶段构建）+ SSH 远程部署 |
+| 博客前台      | Next.js 16（App Router、Server Components 优先）              |
+| 管理后台      | Vite 8 + React Router 7（SPA）                                |
+| UI / 状态     | React 19、TailwindCSS 4、Zustand                              |
+| 富文本 / 渲染 | Tiptap 编辑器、Markdown（客户端 + 服务端两套）                |
+| 测试          | Vitest 4 + Testing Library（happy-dom，全仓库统一根配置）     |
+| CI/CD         | GitHub Actions + Docker（多阶段构建）+ SSH 远程部署           |
 
 ## 项目结构
 
@@ -45,26 +45,26 @@ pnpm dev:admin                            # http://localhost:5173
 
 ## 常用命令
 
-| 命令 | 说明 |
-|---|---|
-| `pnpm dev:web` / `pnpm dev:admin` | 启动对应应用的开发服务器 |
-| `pnpm build` | 递归构建所有 app/package |
-| `pnpm test` / `pnpm test:run` | 运行全部测试（watch / 单次） |
-| `pnpm test:coverage` | 生成测试覆盖率报告 |
-| `pnpm check-types` | 全量 TypeScript 类型检查 |
-| `pnpm lint` / `pnpm lint:fix` | ESLint 检查 / 自动修复 |
-| `pnpm format` / `pnpm format:check` | Prettier 格式化 / 校验 |
-| `pnpm --filter @repo/icons build` | 重新生成 SVG 雪碧图 |
+| 命令                                | 说明                         |
+| ----------------------------------- | ---------------------------- |
+| `pnpm dev:web` / `pnpm dev:admin`   | 启动对应应用的开发服务器     |
+| `pnpm build`                        | 递归构建所有 app/package     |
+| `pnpm test` / `pnpm test:run`       | 运行全部测试（watch / 单次） |
+| `pnpm test:coverage`                | 生成测试覆盖率报告           |
+| `pnpm check-types`                  | 全量 TypeScript 类型检查     |
+| `pnpm lint` / `pnpm lint:fix`       | ESLint 检查 / 自动修复       |
+| `pnpm format` / `pnpm format:check` | Prettier 格式化 / 校验       |
+| `pnpm --filter @repo/icons build`   | 重新生成 SVG 雪碧图          |
 
 ## 文档导航
 
-| 文档 | 内容 |
-|---|---|
-| [架构设计](docs/architecture.md) | Monorepo 结构、依赖方向、共享层取舍（API / 图标 / 样式） |
-| [apps/web —— 博客前台](docs/app-web.md) | 业务模块、BFF 层、SSR/RSC、鉴权中间件、服务端工具 |
-| [apps/admin —— 管理后台](docs/app-admin.md) | 模块化结构、`AdminModule` 契约、路由与图表 |
-| [共享包](docs/packages.md) | `packages/*` 逐包职责与入口 |
-| [部署](docs/deployment.md) | CI/CD 流程、自托管、环境变量、GitHub Secrets |
+| 文档                                        | 内容                                                     |
+| ------------------------------------------- | -------------------------------------------------------- |
+| [架构设计](docs/architecture.md)            | Monorepo 结构、依赖方向、共享层取舍（API / 图标 / 样式） |
+| [apps/web —— 博客前台](docs/app-web.md)     | 业务模块、BFF 层、SSR/RSC、鉴权中间件、服务端工具        |
+| [apps/admin —— 管理后台](docs/app-admin.md) | 模块化结构、`AdminModule` 契约、路由与图表               |
+| [共享包](docs/packages.md)                  | `packages/*` 逐包职责与入口                              |
+| [部署](docs/deployment.md)                  | CI/CD 流程、自托管、环境变量、GitHub Secrets             |
 
 ## 测试与质量门槛
 

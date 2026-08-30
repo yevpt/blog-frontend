@@ -20,18 +20,20 @@
 
 ## 后端接口
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/moments` | 分页查询公开碎语，支持 `page`、`page_size` 过滤 |
+| 方法 | 路径       | 说明                                            |
+| ---- | ---------- | ----------------------------------------------- |
+| GET  | `/moments` | 分页查询公开碎语，支持 `page`、`page_size` 过滤 |
 
 **首页调用参数：** `page=1&page_size=3`（侧边栏最多显示 3 条）
 
 **响应类型 `MomentPageResp`：**
+
 ```
 total, pages, page, page_size, list: MomentItemResp[]
 ```
 
 **`MomentItemResp` 关键字段：**
+
 - `id: number`
 - `content: string`
 - `like_count: number`（Go int64）
@@ -45,6 +47,7 @@ total, pages, page, page_size, list: MomentItemResp[]
 - `images: MomentMediaResp[]`
 
 **`MomentUserResp` 字段：**
+
 - `id: number`、`username: string`
 - `nickname?: string`、`avatar_url?: string`、`site?: string`、`mark?: string`
 
@@ -53,7 +56,9 @@ total, pages, page, page_size, list: MomentItemResp[]
 ## 变更清单
 
 ### 1. `packages/api/src/types/moment.ts`（新建）
+
 对应后端 DTO 的 TypeScript 接口：
+
 - `MomentListReq`（可选 `user_id`、`role_id`、`page`、`page_size`）
 - `MomentUserResp`
 - `MomentMediaResp`（含 `access_url`）
@@ -61,27 +66,34 @@ total, pages, page, page_size, list: MomentItemResp[]
 - `MomentPageResp`
 
 ### 2. `packages/api/src/client.ts`
+
 在 `createApiClient` 返回值中增加：
+
 ```ts
 moments: {
-  listPublic: (req?: MomentListReq) => fetchPublic<MomentPageResp>('/moments?...')
+  listPublic: (req?: MomentListReq) => fetchPublic<MomentPageResp>("/moments?...");
 }
 ```
+
 调用 `fetchPublic`（公开端点，无需 token）。
 
 ### 3. `packages/api/src/index.ts`
+
 导出 `MomentListReq`、`MomentItemResp`、`MomentUserResp`、`MomentMediaResp`、`MomentPageResp`。
 
 ### 4. `apps/web/app/page.tsx`
+
 - 移除 `import { snippets }` mock 导入
 - 在 `Promise.all` 中并发调用 `api.moments.listPublic({ page: 1, page_size: 3 })`
 - 请求失败时降级为空数组 `[]`
 - 将 `MomentItemResp[]` 传给 `<SnippetsSection>`
 
 ### 5. `apps/web/components/snippets/snippets-section.tsx`
+
 - `SnippetsSectionProps.snippets` 类型从 `Snippet[]` 改为 `MomentItemResp[]`
 
 ### 6. `apps/web/components/snippets/snippet-card.tsx`
+
 - props 类型从 `Snippet` 改为 `MomentItemResp`
 - 字段映射：
   - 作者名：`moment.user?.nickname ?? moment.user?.username ?? "匿名"`
@@ -92,10 +104,12 @@ moments: {
   - 评论数：`moment.comment_count`
 
 ### 7. `apps/web/components/snippets/snippets-section.test.tsx`
+
 - 改用 `MomentItemResp` 构造测试数据（去掉 `Snippet` 类型导入）
 - 更新 `makeSnippet` 辅助函数签名及字段
 
 ### 8. `apps/web/app/home-content.tsx`（删除）
+
 确认未被引用，删除废弃文件。
 
 ---
@@ -103,9 +117,11 @@ moments: {
 ## 数据降级策略
 
 定义空值常量，与 articles 的处理方式保持一致：
+
 ```ts
 const EMPTY_MOMENTS: MomentPageResp = { total: 0, pages: 0, page: 1, page_size: 3, list: [] };
 ```
+
 `api.moments.listPublic({ page: 1, page_size: 3 }).catch(() => EMPTY_MOMENTS)`，确保 API 异常时首页仍能正常渲染。
 
 ---

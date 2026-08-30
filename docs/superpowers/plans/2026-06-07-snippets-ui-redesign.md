@@ -12,24 +12,25 @@
 
 ## File Structure
 
-| Action | File | Responsibility |
-|--------|------|----------------|
-| Modify | `packages/icons/src/generated/types.ts` | 新增 `"shuffle"` 到 IconName 联合类型 |
-| Modify | `packages/icons/src/generated/sprite.ts` | 新增 shuffle SVG symbol |
-| Rewrite | `apps/web/components/snippets/snippet-card.tsx` | 卡片堆叠布局：双行 header + 图片网格 + ArticleCardStats 风格按钮 |
-| Modify | `apps/web/components/snippets/snippets-section.tsx` | 新 section header（渐变图标 + shuffle 按钮）+ 新底部 CTA |
-| Modify | `apps/web/components/snippets/snippet-content.tsx` | 微调间距适配新卡片 |
-| Delete | `apps/web/components/snippets/snippet-actions.tsx` | 被 ArticleCardStats 风格替代 |
-| Modify | `apps/web/components/snippets/index.ts` | 移除 SnippetActions 导出（如有） |
-| Modify | `apps/web/app/snippets/page.tsx` | 独立页面适配新卡片样式 |
-| Rewrite | `apps/web/components/snippets/snippet-card.test.tsx` | 适配新卡片结构 |
-| Rewrite | `apps/web/components/snippets/snippets-section.test.tsx` | 适配新 section 结构 |
+| Action  | File                                                     | Responsibility                                                   |
+| ------- | -------------------------------------------------------- | ---------------------------------------------------------------- |
+| Modify  | `packages/icons/src/generated/types.ts`                  | 新增 `"shuffle"` 到 IconName 联合类型                            |
+| Modify  | `packages/icons/src/generated/sprite.ts`                 | 新增 shuffle SVG symbol                                          |
+| Rewrite | `apps/web/components/snippets/snippet-card.tsx`          | 卡片堆叠布局：双行 header + 图片网格 + ArticleCardStats 风格按钮 |
+| Modify  | `apps/web/components/snippets/snippets-section.tsx`      | 新 section header（渐变图标 + shuffle 按钮）+ 新底部 CTA         |
+| Modify  | `apps/web/components/snippets/snippet-content.tsx`       | 微调间距适配新卡片                                               |
+| Delete  | `apps/web/components/snippets/snippet-actions.tsx`       | 被 ArticleCardStats 风格替代                                     |
+| Modify  | `apps/web/components/snippets/index.ts`                  | 移除 SnippetActions 导出（如有）                                 |
+| Modify  | `apps/web/app/snippets/page.tsx`                         | 独立页面适配新卡片样式                                           |
+| Rewrite | `apps/web/components/snippets/snippet-card.test.tsx`     | 适配新卡片结构                                                   |
+| Rewrite | `apps/web/components/snippets/snippets-section.test.tsx` | 适配新 section 结构                                              |
 
 ---
 
 ### Task 1: 新增 shuffle 图标
 
 **Files:**
+
 - Modify: `packages/icons/src/generated/types.ts`
 - Modify: `packages/icons/src/generated/sprite.ts`
 
@@ -114,6 +115,7 @@ git commit -m "feat(icons): 添加 shuffle 图标"
 ### Task 2: 重写 SnippetCard
 
 **Files:**
+
 - Rewrite: `apps/web/components/snippets/snippet-card.tsx`
 - Delete: `apps/web/components/snippets/snippet-actions.tsx`
 
@@ -280,6 +282,7 @@ git commit -m "feat(snippets): 重写 SnippetCard 为卡片堆叠布局"
 ### Task 3: 重写 SnippetsSection
 
 **Files:**
+
 - Rewrite: `apps/web/components/snippets/snippets-section.tsx`
 
 - [ ] **Step 1: 重写 snippets-section.tsx**
@@ -375,6 +378,7 @@ git commit -m "feat(snippets): 重写 SnippetsSection 容器布局"
 ### Task 4: 更新测试
 
 **Files:**
+
 - Rewrite: `apps/web/components/snippets/snippet-card.test.tsx`
 - Rewrite: `apps/web/components/snippets/snippets-section.test.tsx`
 
@@ -505,12 +509,30 @@ describe("SnippetCard", () => {
   it("有图片时渲染图片网格", () => {
     const snippet = makeMoment({
       images: [
-        { id: 1, name: "photo1", file_type: "image/jpeg", url: "/1.jpg", access_url: "/1.jpg", size: 1000, seq: 1 },
-        { id: 2, name: "photo2", file_type: "image/jpeg", url: "/2.jpg", access_url: "/2.jpg", size: 2000, seq: 2 },
+        {
+          id: 1,
+          name: "photo1",
+          file_type: "image/jpeg",
+          url: "/1.jpg",
+          access_url: "/1.jpg",
+          size: 1000,
+          seq: 1,
+        },
+        {
+          id: 2,
+          name: "photo2",
+          file_type: "image/jpeg",
+          url: "/2.jpg",
+          access_url: "/2.jpg",
+          size: 2000,
+          seq: 2,
+        },
       ],
     });
     render(<SnippetCard snippet={snippet} />);
-    const images = screen.getAllByRole("img").filter((el) => el.tagName === "IMG" && el.getAttribute("src")?.startsWith("/"));
+    const images = screen
+      .getAllByRole("img")
+      .filter((el) => el.tagName === "IMG" && el.getAttribute("src")?.startsWith("/"));
     expect(images.length).toBe(2);
   });
 
@@ -754,6 +776,7 @@ git commit -m "test(snippets): 更新碎语模块测试适配新 UI"
 ### Task 5: 更新碎语独立页面
 
 **Files:**
+
 - Modify: `apps/web/app/snippets/page.tsx`
 
 - [ ] **Step 1: 更新 snippets/page.tsx**

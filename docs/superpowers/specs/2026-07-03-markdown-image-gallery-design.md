@@ -27,8 +27,10 @@
 
 ```html
 <div class="md-gallery" data-count="3">
-  <div class="md-gallery-track">   <!-- 横向 scroll-snap 滑道 -->
-    <figure class="md-gallery-slide"><img …></figure> <!-- ×N -->
+  <div class="md-gallery-track">
+    <!-- 横向 scroll-snap 滑道 -->
+    <figure class="md-gallery-slide"><img … /></figure>
+    <!-- ×N -->
   </div>
   <button class="md-gallery-prev" type="button" aria-label="上一张">…</button>
   <button class="md-gallery-next" type="button" aria-label="下一张">…</button>

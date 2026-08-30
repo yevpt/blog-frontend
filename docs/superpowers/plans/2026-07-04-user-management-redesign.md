@@ -25,6 +25,7 @@
 ### Task 1: 操作日志表 + repository + service（`adminlog` 域）
 
 **Files:**
+
 - Create: `migrations/20260704_admin_operation_log.sql`
 - Create: `internal/model/admin_operation_log.go`
 - Create: `internal/repository/adminlog/adminlog.go`
@@ -34,6 +35,7 @@
 - Create: `internal/service/adminlog/adminlog_test.go`
 
 **Interfaces:**
+
 - Produces：`adminlog.Action`（string 类型常量）、`adminlog.Recorder` 接口 `Record(ctx context.Context, operatorID, targetUserID uint, action Action, detail map[string]any) error`、`adminlog.NewService(repo adminlogrepo.Repository) Recorder`、`adminlogrepo.Repository` 接口 `Create(ctx context.Context, entry *model.AdminOperationLog) error` 和 `ListByTargetUser(ctx context.Context, targetUserID uint, offset, limit int) ([]model.AdminOperationLog, int64, error)`。
 - 后续 Task 5、7、8、9 都依赖这里的 `Action` 常量和 `Recorder` 接口。
 
@@ -204,6 +206,7 @@ Expected: PASS
 - [ ] **Step 7: 生成 mock**
 
 Run:
+
 ```bash
 mockgen -destination=internal/repository/adminlog/mock/mock_adminlog_repository.go -package=mock github.com/vpt/blog-backend/internal/repository/adminlog Repository
 ```
@@ -348,6 +351,7 @@ git commit -m "feat(user): 新增管理员操作日志表与记录服务"
 ### Task 2: 账号禁用/启用能力（repository + service 校验规则）
 
 **Files:**
+
 - Modify: `internal/repository/user/user.go`（`UserRepository` 接口新增 `SetStatus`、`CountByRole`）
 - Modify: `internal/repository/user/mock/mock_user_repository.go`（mockgen 重新生成）
 - Modify: `internal/service/user/admin.go`（`AdminService` 新增 `DisableAccount`/`EnableAccount`）
@@ -355,6 +359,7 @@ git commit -m "feat(user): 新增管理员操作日志表与记录服务"
 - Modify: `pkg/roles/roles.go`（无需改，仅引用 `AdminRole` 常量）
 
 **Interfaces:**
+
 - Consumes：Task 1 的 `adminlog.Recorder`（不在本任务注入，留给 Task 7 统一接线，本任务只做纯业务逻辑）。
 - Produces：`AdminService.DisableAccount(operatorID, targetUserID uint) error`、`AdminService.EnableAccount(targetUserID uint) error`；错误 `user.ErrCannotDisableSelf`、`user.ErrLastAdminAccount`。
 
@@ -389,6 +394,7 @@ func (r *userRepo) CountByRole(roleName string) (int64, error) {
 - [ ] **Step 2: 重新生成 mock**
 
 Run:
+
 ```bash
 mockgen -destination=internal/repository/user/mock/mock_user_repository.go -package=mock github.com/vpt/blog-backend/internal/repository/user UserRepository
 ```
@@ -566,11 +572,13 @@ git commit -m "feat(user): 新增账号禁用/启用能力，禁止禁用自己�
 ### Task 3: 账号禁用/启用的 HTTP 接口
 
 **Files:**
+
 - Modify: `internal/handler/user/admin.go`（新增 `DisableAccount`/`EnableAccount` handler）
 - Create: `internal/handler/user/admin_status_test.go`
 - Modify: `internal/router/router.go`（注册 `POST /admin/users/:id/disable`、`POST /admin/users/:id/enable`）
 
 **Interfaces:**
+
 - Consumes：Task 2 的 `userservice.AdminService.DisableAccount/EnableAccount`、`userservice.ErrCannotDisableSelf`、`userservice.ErrLastAdminAccount`。
 - Produces：两个新路由，供 Task 10 的前端 `apiClient.users.disableAccount/enableAccount` 调用。
 
@@ -708,6 +716,7 @@ git commit -m "feat(user): 暴露账号禁用/启用管理端接口"
 ### Task 4: 管理端用户列表——关键词/角色/状态筛选
 
 **Files:**
+
 - Modify: `internal/dto/user.go`（新增 `AdminUserListReq`、`AdminUserListItemResp`、`AdminUserPageResp`）
 - Modify: `internal/repository/user/user.go`（`ListAll` 签名改为接受筛选条件）
 - Modify: `internal/repository/user/user_test.go`（覆盖新筛选行为）
@@ -719,6 +728,7 @@ git commit -m "feat(user): 暴露账号禁用/启用管理端接口"
 > 说明：`GET /users`（公开）继续用现有 `ListRecent`/`ListAll` 语义不变；本任务把 `UserRepository.ListAll` 改造成管理端专用的可筛选查询，`internal/handler/user/user.go` 的 `ListAll`（公开路由 `GET /users`）改为调用不带筛选条件的默认参数，行为保持向后兼容。
 
 **Interfaces:**
+
 - Produces：`userrepo.UserListFilter{Keyword string; Role string; Status *uint8}`、`UserRepository.ListAll(filter UserListFilter, offset, limit int) ([]model.User, int64, error)`（原双参数签名改为三参数）；`dto.AdminUserListReq{Page, PageSize int; Keyword, Role, Status string}`、`dto.AdminUserListItemResp`（比 `UserListItemResp` 多 `Email`、`Status`、`SanctionState` 字段）、`dto.AdminUserPageResp`。
 - Task 5 的 handler/router 消费 `dto.AdminUserListReq`/`AdminUserPageResp`。
 
@@ -869,6 +879,7 @@ Expected: PASS（如有其它调用 `ListAll(offset, limit)` 的旧测试，同�
 - [ ] **Step 6: 重新生成 mock**
 
 Run:
+
 ```bash
 mockgen -destination=internal/repository/user/mock/mock_user_repository.go -package=mock github.com/vpt/blog-backend/internal/repository/user UserRepository
 ```
@@ -900,6 +911,7 @@ git commit -m "feat(user): repository ListAll 支持关键词/角色/状态筛�
 ### Task 5: 管理端用户列表 + 详情接口（handler/router）
 
 **Files:**
+
 - Modify: `internal/service/user/admin.go`（`AdminService` 新增 `ListAdmin`、`GetAdminDetail`）
 - Modify: `internal/dto/user.go`（新增 `AdminUserDetailResp`）
 - Create: `internal/service/user/admin_list_test.go`
@@ -908,6 +920,7 @@ git commit -m "feat(user): repository ListAll 支持关键词/角色/状态筛�
 - Modify: `internal/router/router.go`（注册 `GET /admin/users`、`GET /admin/users/:id`）
 
 **Interfaces:**
+
 - Consumes：Task 4 的 `userrepo.UserListFilter`、`dto.AdminUserListReq/AdminUserPageResp`；`internal/repository/moderation`（读取 `user_moderation_profile.sanction_state`，若无现成的按 userID 查询方法则在本任务的 `UserModerationProfileReader` 里新增一个最小接口，仅查询该用户的 `sanction_state`）。
 - Produces：`AdminService.ListAdmin(req *dto.AdminUserListReq) (*dto.AdminUserPageResp, error)`、`AdminService.GetAdminDetail(userID uint) (*dto.AdminUserDetailResp, error)`；供 Task 10 前端 `listAdmin`/`getAdminDetail` 调用。
 
@@ -1213,6 +1226,7 @@ git commit -m "feat(user): 新增管理端用户列表与详情接口"
 ### Task 6: 操作日志查询接口
 
 **Files:**
+
 - Modify: `internal/dto/user.go`（新增 `AdminOperationLogItemResp`、`AdminOperationLogPageResp`）
 - Modify: `internal/service/user/admin.go`（`AdminService` 新增 `GetOperationLogs`，注入 `adminlog.Repository`）
 - Create: `internal/service/user/admin_log_test.go`
@@ -1221,6 +1235,7 @@ git commit -m "feat(user): 新增管理端用户列表与详情接口"
 - Modify: `internal/router/router.go`（注册 `GET /admin/users/:id/operation-logs`，构造 `adminlog` 仓储/服务并注入）
 
 **Interfaces:**
+
 - Consumes：Task 1 的 `adminlogrepo.Repository.ListByTargetUser`。
 - Produces：`AdminService.GetOperationLogs(targetUserID uint, page, pageSize int) (*dto.AdminOperationLogPageResp, error)`。
 
@@ -1391,11 +1406,13 @@ git commit -m "feat(user): 新增用户操作日志查询接口"
 ### Task 7: 把操作日志接进用户管理的现有操作（VIP/禁用/头像清除）
 
 **Files:**
+
 - Modify: `internal/handler/user/admin.go`（`UserAdminHandler` 构造函数新增 `logRecorder adminlog.Recorder` 参数，`GrantVip`/`RevokeVip`/`DisableAccount`/`EnableAccount`/`ClearUserAvatar` 成功后调用）
 - Modify: `internal/handler/user/admin_test.go`、`internal/handler/user/admin_status_test.go`（更新构造函数调用）
 - Modify: `internal/router/router.go`（传入 Task 6 构造的 `adminlogSvc`）
 
 **Interfaces:**
+
 - Consumes：Task 1 的 `adminlog.Recorder`、`adminlog.Action*` 常量。
 
 - [ ] **Step 1: 改构造函数签名**
@@ -1479,6 +1496,7 @@ git commit -m "feat(user): VIP/禁用/头像清除操作写入操作日志"
 ### Task 8: 把操作日志接进内容审核的用户处罚操作（mute/ban/release/信任等级）
 
 **Files:**
+
 - Modify: `internal/handler/moderation/moderation.go`（`AdminHandler` 新增 `logRecorder adminlog.Recorder` 字段 + `SetOperationLogRecorder` setter，沿用 `SetObjectURLResolver` 的可选注入风格）
 - Modify: `internal/handler/moderation/operations.go`（`setSanction`、`ReleaseUser`、`UpdateUserProfile` 成功后调用）
 - Modify: `internal/router/moderation_admin.go`（`newModerationAdminHandler` 新增 `recorder adminlog.Recorder` 参数并调用 setter）
@@ -1486,6 +1504,7 @@ git commit -m "feat(user): VIP/禁用/头像清除操作写入操作日志"
 - Modify: `internal/handler/moderation/moderation_test.go`、`internal/handler/moderation/operations_test.go`（若存在，补日志断言或保持不受影响）
 
 **Interfaces:**
+
 - Consumes：Task 1 的 `adminlog.Recorder`、`adminlog.Action*`；Task 6 在 router.go 构造的 `adminlogSvc`。
 
 - [ ] **Step 1: `AdminHandler` 加 setter**
@@ -1625,10 +1644,12 @@ Expected: 看到 `20260704_admin_operation_log.sql` 排在最后（按文件名�
 ### Task 10: `packages/api` 新增类型与客户端方法
 
 **Files:**
+
 - Modify: `packages/api/src/types/user.ts`
 - Modify: `packages/api/src/client.ts`
 
 **Interfaces:**
+
 - Produces：`AdminUserListReq`、`AdminUserListItemResp`、`AdminUserPageResp`、`AdminUserDetailResp`、`AdminOperationLogItemResp`、`AdminOperationLogPageResp`；`apiClient.users.listAdmin/getAdminDetail/disableAccount/enableAccount/getOperationLogs`。
 - 供 Task 11-19 的前端 hook/组件消费。
 
@@ -1771,12 +1792,14 @@ git commit -m "feat(api): 新增管理端用户列表/详情/禁用/操作日志
 ### Task 11: 用户列表查询状态扩展（筛选 codec + hook）
 
 **Files:**
+
 - Modify: `apps/admin/src/modules/users/model.ts`
 - Modify: `apps/admin/src/modules/users/model.test.ts`（若不存在则新建）
 - Modify: `apps/admin/src/modules/users/hooks/use-admin-user-list.ts`
 - Modify: `apps/admin/src/modules/users/hooks/use-admin-user-list.test.ts`
 
 **Interfaces:**
+
 - Consumes：Task 10 的 `apiClient.users.listAdmin`、`AdminUserListItemResp`、`AdminUserPageResp`。
 - Produces：`AdminUserListFilters{ keyword: string; role: string; status: string }`、`AdminUserListQueryState{ page: number; filters: AdminUserListFilters }`、`userListQueryCodec`（沿用 `AdminListQueryCodec` 接口）；`useAdminUserList()` 返回值新增 `filters`、`setFilters`（原 `search`/`setSearch` 废弃，改名统一走 `filters.keyword`）。
 - Task 12（UsersPage/Toolbar）、Task 13（详情弹层触发的 refetch）依赖这里的返回形状。
@@ -1898,13 +1921,19 @@ function formatAdminDateTime(value?: string) {
   });
 }
 
-export function getAccountStatusBadge(row: UserRow): { label: string; variant: "secondary" | "destructive" } {
+export function getAccountStatusBadge(row: UserRow): {
+  label: string;
+  variant: "secondary" | "destructive";
+} {
   return row.accountStatus === "active"
     ? { label: "正常", variant: "secondary" }
     : { label: "已禁用", variant: "destructive" };
 }
 
-export function getSanctionBadge(row: UserRow): { label: string; variant: "secondary" | "warning" | "destructive" } {
+export function getSanctionBadge(row: UserRow): {
+  label: string;
+  variant: "secondary" | "warning" | "destructive";
+} {
   switch (row.sanctionState) {
     case "muted":
       return { label: "禁言", variant: "warning" };
@@ -1927,7 +1956,12 @@ import { useCallback, useEffect, useState } from "react";
 import type { AdminUserPageResp } from "@repo/api";
 import { useAdminListQuery } from "../../../lib/admin-list-query";
 import { apiClient } from "../../../lib/api";
-import { mapUserToRow, userListQueryCodec, type AdminUserListFilters, type UserRow } from "../model";
+import {
+  mapUserToRow,
+  userListQueryCodec,
+  type AdminUserListFilters,
+  type UserRow,
+} from "../model";
 
 export interface UseAdminUserListResult {
   rows: UserRow[];
@@ -1970,7 +2004,10 @@ export function useAdminUserList(): UseAdminUserListResult {
           page,
           page_size: DEFAULT_PAGE_SIZE,
           keyword: filters.keyword.trim() || undefined,
-          role: filters.role === "all" ? undefined : (filters.role as "ROLE_ADMIN" | "ROLE_VIP" | "ROLE_NORMAL"),
+          role:
+            filters.role === "all"
+              ? undefined
+              : (filters.role as "ROLE_ADMIN" | "ROLE_VIP" | "ROLE_NORMAL"),
           status: filters.status === "all" ? undefined : (filters.status as "active" | "disabled"),
         });
         if (cancelled) return;
@@ -2044,6 +2081,7 @@ git commit -m "feat(admin): 用户列表改为后端真实关键词/角色/状�
 ### Task 12: `UsersPage.tsx` 重排布局 + 筛选工具栏 + 新列
 
 **Files:**
+
 - Modify: `apps/admin/src/modules/users/components/UserListToolbar.tsx`
 - Modify: `apps/admin/src/modules/users/components/UserListToolbar.test.tsx`（若不存在则新建）
 - Modify: `apps/admin/src/modules/users/UsersPage.tsx`
@@ -2051,6 +2089,7 @@ git commit -m "feat(admin): 用户列表改为后端真实关键词/角色/状�
 - Modify: `apps/admin/src/modules/users/components/UserMobileList.tsx`
 
 **Interfaces:**
+
 - Consumes：Task 11 的 `useAdminUserList()`（`filters`/`setFilters` 替代 `search`/`setSearch`）、`UserRow`（新字段 `accountStatus`/`sanctionState`/`email`/`registerAt`）。
 - Produces：`UsersPage` 内新增 `selectedUserId` state，供 Task 14 的详情 Modal 消费（本任务先只做「点击行→设置 selectedUserId」，Modal 本体留给 Task 14）。
 
@@ -2068,7 +2107,12 @@ interface UserListToolbarProps {
   onClear?: () => void;
 }
 
-export function UserListToolbar({ filters, onFiltersChange, canClear = false, onClear }: UserListToolbarProps) {
+export function UserListToolbar({
+  filters,
+  onFiltersChange,
+  canClear = false,
+  onClear,
+}: UserListToolbarProps) {
   return (
     <AdminListToolbar
       searchLabel="搜索用户"
@@ -2202,7 +2246,7 @@ import { getAccountStatusBadge, getSanctionBadge } from "../model";
   <Badge variant={user.isOnline ? "success" : "secondary"}>{user.isOnline ? "在线" : "离线"}</Badge>
   <Badge variant={getAccountStatusBadge(user).variant}>{getAccountStatusBadge(user).label}</Badge>
   <Badge variant={getSanctionBadge(user).variant}>{getSanctionBadge(user).label}</Badge>
-</div>
+</div>;
 ```
 
 把原来的「授予/取消 VIP」按钮换成「查看详情」，`onPress={() => onViewDetail(user)}`（`UserMobileListProps` 新增 `onViewDetail: (user: UserRow) => void`，替换原 `togglingUserId`/`onToggleVip` 两个 prop）。
@@ -2228,10 +2272,12 @@ git commit -m "feat(admin): 用户列表页移除头像工具、加角色/状态
 ### Task 13: 抽取单用户头像工具片段（供详情弹层复用）
 
 **Files:**
+
 - Modify: `apps/admin/src/modules/users/components/AvatarNormalizeTool.tsx`（拆成 `SingleUserAvatarTool` + `AllUsersAvatarTool` 两个导出）
 - Modify: `apps/admin/src/modules/users/components/AvatarNormalizeTool.test.tsx`（拆成对应两个测试文件或保留一个文件测两个组件）
 
 **Interfaces:**
+
 - Produces：`SingleUserAvatarTool({ userId }: { userId: number })`（无用户 ID 输入框，直接对传入的 `userId` 操作，供 Task 16 的详情弹层「头像」Tab 用）；`AllUsersAvatarTool()`（原「处理全部」+「处理单个用户」两个按钮，保留手动输入 ID 的整页版本，供 Task 19 的 `/users/tools` 用）。
 
 - [ ] **Step 1: 拆分组件**
@@ -2249,10 +2295,16 @@ export function SingleUserAvatarTool({ userId }: { userId: number }) {
     setError(null);
     setIsSubmitting(true);
     try {
-      const data = await apiClient.users.normalizeAvatars({ user_id: userId, clear_invalid: clearInvalid });
+      const data = await apiClient.users.normalizeAvatars({
+        user_id: userId,
+        clear_invalid: clearInvalid,
+      });
       const item = data.items[0] ?? null;
       setResult(item);
-      addToast(item ? `${STATUS_LABELS[item.status] ?? item.status}` : "已合规，无需处理", "success");
+      addToast(
+        item ? `${STATUS_LABELS[item.status] ?? item.status}` : "已合规，无需处理",
+        "success",
+      );
     } catch (err) {
       const message = err instanceof ApiError ? err.message : "头像归一化失败，请稍后重试";
       setError(message);
@@ -2280,16 +2332,30 @@ export function SingleUserAvatarTool({ userId }: { userId: number }) {
       <p className="text-sm text-muted-foreground">
         检查该用户头像是否符合 240px、20KB 规范；不合规则压缩为 WebP 并替换。
       </p>
-      <Checkbox isSelected={clearInvalid} onChange={setClearInvalid} isDisabled={isSubmitting} label="无法处理时自动清除" />
+      <Checkbox
+        isSelected={clearInvalid}
+        onChange={setClearInvalid}
+        isDisabled={isSubmitting}
+        label="无法处理时自动清除"
+      />
       <div className="flex flex-wrap gap-2">
         <Button size="sm" isLoading={isSubmitting} onPress={() => void handleSubmit()}>
           检查并处理
         </Button>
-        <Button size="sm" variant="outline" isLoading={isSubmitting} onPress={() => void handleClearAvatar()}>
+        <Button
+          size="sm"
+          variant="outline"
+          isLoading={isSubmitting}
+          onPress={() => void handleClearAvatar()}
+        >
           清除头像
         </Button>
       </div>
-      {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
       {result ? (
         <p className="text-sm text-muted-foreground">
           {STATUS_LABELS[result.status] ?? result.status}
@@ -2324,6 +2390,7 @@ git commit -m "refactor(admin): 头像归一化工具拆分为单用户/全量�
 ### Task 14: 用户详情弹层——基本信息 + 角色与账号 Tab
 
 **Files:**
+
 - Create: `apps/admin/src/modules/users/hooks/use-user-detail.ts`
 - Create: `apps/admin/src/modules/users/hooks/use-user-detail.test.ts`
 - Create: `apps/admin/src/modules/users/components/UserDetailModal.tsx`
@@ -2332,6 +2399,7 @@ git commit -m "refactor(admin): 头像归一化工具拆分为单用户/全量�
 - Modify: `apps/admin/src/modules/users/UsersPage.test.tsx`
 
 **Interfaces:**
+
 - Consumes：Task 10 的 `apiClient.users.getAdminDetail/grantVipRole/revokeVipRole/disableAccount/enableAccount`；`@repo/ui` 的 `Modal`/`Tabs`/`TabsList`/`TabsItem`/`TabsPanels`/`TabsPanel`（用法参照 `ModerationPage.tsx`）。
 - Produces：`useUserDetail(userId: number | null)` 返回 `{ detail, isLoading, error, reload, grantVip, revokeVip, disableAccount, enableAccount, isMutating }`；`<UserDetailModal userId={string | null} onClose={() => void} onChanged={() => void} />`（`onChanged` 在任意操作成功后调用，供 `UsersPage` 刷新列表）。本任务先只做「基本信息」「角色与账号」两个 Tab，其余 3 个 Tab 留给 Task 15/16/17。
 
@@ -2369,9 +2437,15 @@ describe("useUserDetail", () => {
 
   it("加载详情成功", async () => {
     vi.mocked(apiClient.users.getAdminDetail).mockResolvedValue({
-      id: 7, username: "vpt", email_verified: true, password_set: true,
-      roles: ["ROLE_NORMAL"], register_at: "2026-01-01T00:00:00Z",
-      is_online: false, sanction_state: "active", status: 1,
+      id: 7,
+      username: "vpt",
+      email_verified: true,
+      password_set: true,
+      roles: ["ROLE_NORMAL"],
+      register_at: "2026-01-01T00:00:00Z",
+      is_online: false,
+      sanction_state: "active",
+      status: 1,
     });
 
     const { result } = renderHook(() => useUserDetail(7));
@@ -2381,11 +2455,20 @@ describe("useUserDetail", () => {
 
   it("grantVip 成功后重新加载详情", async () => {
     vi.mocked(apiClient.users.getAdminDetail).mockResolvedValue({
-      id: 7, username: "vpt", email_verified: true, password_set: true,
-      roles: ["ROLE_NORMAL"], register_at: "2026-01-01T00:00:00Z",
-      is_online: false, sanction_state: "active", status: 1,
+      id: 7,
+      username: "vpt",
+      email_verified: true,
+      password_set: true,
+      roles: ["ROLE_NORMAL"],
+      register_at: "2026-01-01T00:00:00Z",
+      is_online: false,
+      sanction_state: "active",
+      status: 1,
     });
-    vi.mocked(apiClient.users.grantVipRole).mockResolvedValue({ user_id: 7, roles: ["ROLE_NORMAL", "ROLE_VIP"] });
+    vi.mocked(apiClient.users.grantVipRole).mockResolvedValue({
+      user_id: 7,
+      roles: ["ROLE_NORMAL", "ROLE_VIP"],
+    });
 
     const { result } = renderHook(() => useUserDetail(7));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -2491,7 +2574,17 @@ export function useUserDetail(userId: number | null): UseUserDetailResult {
     await runMutation(() => apiClient.users.enableAccount(userId), "已启用账号");
   }, [userId, runMutation]);
 
-  return { detail, isLoading, error, isMutating, reload, grantVip, revokeVip, disableAccount, enableAccount };
+  return {
+    detail,
+    isLoading,
+    error,
+    isMutating,
+    reload,
+    grantVip,
+    revokeVip,
+    disableAccount,
+    enableAccount,
+  };
 }
 ```
 
@@ -2514,8 +2607,16 @@ interface UserDetailModalProps {
 }
 
 export function UserDetailModal({ userId, onClose, onChanged }: UserDetailModalProps) {
-  const { detail, isLoading, error, isMutating, grantVip, revokeVip, disableAccount, enableAccount } =
-    useUserDetail(userId);
+  const {
+    detail,
+    isLoading,
+    error,
+    isMutating,
+    grantVip,
+    revokeVip,
+    disableAccount,
+    enableAccount,
+  } = useUserDetail(userId);
 
   const isOpen = userId !== null;
 
@@ -2531,7 +2632,11 @@ export function UserDetailModal({ userId, onClose, onChanged }: UserDetailModalP
           用户详情 {detail ? `#${detail.id} · ${detail.nickname ?? detail.username}` : ""}
         </h2>
 
-        {error ? <p role="alert" className="text-sm text-destructive">{error.message}</p> : null}
+        {error ? (
+          <p role="alert" className="text-sm text-destructive">
+            {error.message}
+          </p>
+        ) : null}
         {isLoading || !detail ? (
           <p className="text-sm text-muted-foreground">加载中…</p>
         ) : (
@@ -2543,15 +2648,29 @@ export function UserDetailModal({ userId, onClose, onChanged }: UserDetailModalP
             <TabsPanels className="flex-1 overflow-y-auto">
               <TabsPanel id="profile" className="grid gap-2 text-sm">
                 <p>用户名：{detail.username}</p>
-                <p>邮箱：{detail.email ?? "-"}（{detail.email_verified ? "已验证" : "未验证"}）</p>
+                <p>
+                  邮箱：{detail.email ?? "-"}（{detail.email_verified ? "已验证" : "未验证"}）
+                </p>
                 <p>手机号：{detail.phone ?? "-"}</p>
                 <p>注册时间：{new Date(detail.register_at).toLocaleString("zh-CN")}</p>
-                <p>最近登录：{detail.last_login_at ? new Date(detail.last_login_at).toLocaleString("zh-CN") : "-"}</p>
-                <p>最近活跃：{detail.last_active_at ? new Date(detail.last_active_at).toLocaleString("zh-CN") : "-"}</p>
+                <p>
+                  最近登录：
+                  {detail.last_login_at
+                    ? new Date(detail.last_login_at).toLocaleString("zh-CN")
+                    : "-"}
+                </p>
+                <p>
+                  最近活跃：
+                  {detail.last_active_at
+                    ? new Date(detail.last_active_at).toLocaleString("zh-CN")
+                    : "-"}
+                </p>
               </TabsPanel>
               <TabsPanel id="role" className="grid gap-4 text-sm">
                 <div className="flex flex-wrap gap-1.5">
-                  {detail.roles.includes("ROLE_ADMIN") ? <Badge variant="brand">管理员</Badge> : null}
+                  {detail.roles.includes("ROLE_ADMIN") ? (
+                    <Badge variant="brand">管理员</Badge>
+                  ) : null}
                   {detail.roles.includes("ROLE_VIP") ? <Badge variant="success">VIP</Badge> : null}
                   <Badge variant={detail.status === 1 ? "secondary" : "destructive"}>
                     {detail.status === 1 ? "账号正常" : "已禁用"}
@@ -2571,7 +2690,9 @@ export function UserDetailModal({ userId, onClose, onChanged }: UserDetailModalP
                   <Button
                     size="sm"
                     variant="outline"
-                    className={detail.status === 1 ? "text-destructive hover:bg-destructive/10" : ""}
+                    className={
+                      detail.status === 1 ? "text-destructive hover:bg-destructive/10" : ""
+                    }
                     isLoading={isMutating}
                     onPress={() =>
                       void withRefresh(detail.status === 1 ? disableAccount : enableAccount)
@@ -2623,6 +2744,7 @@ git commit -m "feat(admin): 新增用户详情弹层，含基本信息与角色/
 ### Task 15: 用户详情弹层——内容治理 Tab（迁移自审核模块）
 
 **Files:**
+
 - Create: `apps/admin/src/modules/users/hooks/use-user-moderation.ts`
 - Create: `apps/admin/src/modules/users/hooks/use-user-moderation.test.ts`
 - Create: `apps/admin/src/modules/users/components/UserModerationPanel.tsx`（从 `apps/admin/src/modules/moderation/components/ModerationUserPanel.tsx` 迁移改造）
@@ -2631,6 +2753,7 @@ git commit -m "feat(admin): 新增用户详情弹层，含基本信息与角色/
 - Modify: `apps/admin/src/modules/users/components/UserDetailModal.test.tsx`
 
 **Interfaces:**
+
 - Consumes：`apiClient.moderation.getUserProfile/updateUserProfile/muteUser/banUser/releaseUser/hideUserContent/restoreUserContent`（接口不变，只是调用方从 moderation 模块换到 users 模块）；沿用 `apps/admin/src/modules/moderation/components/ModerationUserBatchPanel.tsx`、`ModerationUserSummary.tsx`（直接复用，不复制，import 路径改成相对跨模块引用 `../../moderation/components/...`——若 lint 规则不允许跨模块引用私有组件，则把这两个文件移动到 `apps/admin/src/components/` 作为共享组件，本任务里先尝试直接引用，若 `pnpm lint` 报错再移动）。
 - Produces：`useUserModeration(userId: number | null)`（去掉原 `use-moderation-user.ts` 里手动输入 ID 查询的部分，改为 `userId` 变化时自动加载）；`<UserModerationPanel userId={number} />`（无 ID 输入框）。
 
@@ -2668,10 +2791,18 @@ describe("useUserModeration", () => {
 
   it("userId 变化时自动加载画像", async () => {
     vi.mocked(apiClient.moderation.getUserProfile).mockResolvedValue({
-      user_id: 7, trust_level: "normal", trust_source: "auto", manual_trust_locked: false,
-      sanction_state: "active", clean_approval_streak: 0, corrected_count: 0,
-      rejected_count: 0, high_risk_count: 0, violation_score: 0,
-      created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z",
+      user_id: 7,
+      trust_level: "normal",
+      trust_source: "auto",
+      manual_trust_locked: false,
+      sanction_state: "active",
+      clean_approval_streak: 0,
+      corrected_count: 0,
+      rejected_count: 0,
+      high_risk_count: 0,
+      violation_score: 0,
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
     });
 
     const { result } = renderHook(() => useUserModeration(7));
@@ -2754,7 +2885,11 @@ export function useUserModeration(userId: number | null) {
   );
 
   const updateProfile = useCallback(
-    async (req: { trust_level: ModerationTrustLevel; manual_locked: boolean; restricted_until?: string | null }) => {
+    async (req: {
+      trust_level: ModerationTrustLevel;
+      manual_locked: boolean;
+      restricted_until?: string | null;
+    }) => {
       if (userId === null) return;
       await runSave(() => apiClient.moderation.updateUserProfile(userId, req), "已更新审核画像");
     },
@@ -2815,9 +2950,18 @@ export function useUserModeration(userId: number | null) {
   );
 
   return {
-    profile, isLoading, isSaving, error, batch,
-    reload: loadProfile, updateProfile, muteUser, banUser, releaseUser,
-    hideContentBatch, restoreContentBatch,
+    profile,
+    isLoading,
+    isSaving,
+    error,
+    batch,
+    reload: loadProfile,
+    updateProfile,
+    muteUser,
+    banUser,
+    releaseUser,
+    hideContentBatch,
+    restoreContentBatch,
   };
 }
 ```
@@ -2839,8 +2983,19 @@ interface UserModerationPanelProps {
 }
 
 export function UserModerationPanel({ userId }: UserModerationPanelProps) {
-  const { profile, isLoading, isSaving, error, batch, updateProfile, muteUser, banUser, releaseUser, hideContentBatch, restoreContentBatch } =
-    useUserModeration(userId);
+  const {
+    profile,
+    isLoading,
+    isSaving,
+    error,
+    batch,
+    updateProfile,
+    muteUser,
+    banUser,
+    releaseUser,
+    hideContentBatch,
+    restoreContentBatch,
+  } = useUserModeration(userId);
   // ...其余表单 state 和 JSX 与 ModerationUserPanel 一致，只是去掉 profile/onLoadProfile/onResetProfile 相关的输入框与按钮
 }
 ```
@@ -2878,6 +3033,7 @@ git commit -m "feat(admin): 用户详情弹层新增内容治理 Tab，迁移自
 ### Task 16: 用户详情弹层——头像 Tab + 操作日志 Tab
 
 **Files:**
+
 - Modify: `apps/admin/src/modules/users/components/UserDetailModal.tsx`
 - Modify: `apps/admin/src/modules/users/components/UserDetailModal.test.tsx`
 - Create: `apps/admin/src/modules/users/hooks/use-user-operation-logs.ts`
@@ -2886,6 +3042,7 @@ git commit -m "feat(admin): 用户详情弹层新增内容治理 Tab，迁移自
 - Create: `apps/admin/src/modules/users/components/UserOperationLogList.test.tsx`
 
 **Interfaces:**
+
 - Consumes：Task 13 的 `SingleUserAvatarTool`；Task 10 的 `apiClient.users.getOperationLogs`。
 - Produces：`useUserOperationLogs(userId: number | null)` 返回 `{ items, total, page, setPage, isLoading, error }`；`<UserOperationLogList userId={number} />`。
 
@@ -2964,7 +3121,12 @@ export function UserOperationLogList({ userId }: { userId: number }) {
   const totalPages = Math.max(1, Math.ceil(total / 10));
 
   if (isLoading) return <p className="text-sm text-muted-foreground">加载中…</p>;
-  if (error) return <p role="alert" className="text-sm text-destructive">{error.message}</p>;
+  if (error)
+    return (
+      <p role="alert" className="text-sm text-destructive">
+        {error.message}
+      </p>
+    );
   if (items.length === 0) return <p className="text-sm text-muted-foreground">暂无操作记录</p>;
 
   return (
@@ -2979,7 +3141,9 @@ export function UserOperationLogList({ userId }: { userId: number }) {
           </li>
         ))}
       </ul>
-      {totalPages > 1 ? <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} /> : null}
+      {totalPages > 1 ? (
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+      ) : null}
     </div>
   );
 }
@@ -3023,12 +3187,14 @@ git commit -m "feat(admin): 用户详情弹层补齐头像与操作日志 Tab，
 ### Task 17: `/users/tools` 全局头像批量处理页
 
 **Files:**
+
 - Create: `apps/admin/src/modules/users/UserToolsPage.tsx`
 - Create: `apps/admin/src/modules/users/UserToolsPage.test.tsx`
 - Modify: `apps/admin/src/modules/users/module.tsx`（追加无 nav 的子路由）
 - Modify: `apps/admin/src/config/modules.test.ts`（若断言了路由总数，同步更新）
 
 **Interfaces:**
+
 - Consumes：Task 13 的 `AllUsersAvatarTool`。
 - Produces：路由 `/users/tools`，从 `UsersPage.tsx`（Task 12 已加的「工具」按钮）跳转过来。
 
@@ -3114,6 +3280,7 @@ git commit -m "feat(admin): 新增 /users/tools 承载全局头像批量归一�
 ### Task 18: 删除审核模块的「用户治理」Tab
 
 **Files:**
+
 - Modify: `apps/admin/src/modules/moderation/ModerationPage.tsx`
 - Modify: `apps/admin/src/modules/moderation/ModerationPage.test.tsx`
 - Delete: `apps/admin/src/modules/moderation/components/ModerationUserPanel.tsx`
@@ -3136,6 +3303,7 @@ git commit -m "feat(admin): 新增 /users/tools 承载全局头像批量归一�
 - [ ] **Step 3: 删除废弃文件**
 
 Run:
+
 ```bash
 git rm apps/admin/src/modules/moderation/components/ModerationUserPanel.tsx apps/admin/src/modules/moderation/components/ModerationUserPanel.test.tsx apps/admin/src/modules/moderation/hooks/use-moderation-user.ts apps/admin/src/modules/moderation/hooks/use-moderation-user.test.ts
 ```

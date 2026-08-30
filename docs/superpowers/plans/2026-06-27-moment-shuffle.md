@@ -24,11 +24,13 @@
 ### Task 1: 扩展 `MomentListReq` 类型与 `moments.listPublic` 序列化
 
 **Files:**
+
 - Modify: `packages/api/src/types/moment.ts:1-6`
 - Modify: `packages/api/src/client.ts:524-534`
 - Test: `packages/api/src/client.test.ts`（在第 830 行 `moments.listPublic 带 user_id 时构造正确 query string` 测试后插入新测试，第 832 行 `moments.feed` 测试之前）
 
 **Interfaces:**
+
 - Produces: `MomentListReq.random?: boolean`、`MomentListReq.exclude_ids?: number[]`；`client.moments.listPublic(req)` 在 `req.random !== undefined` 时附加 `?random=true|false`，在 `req.exclude_ids` 非空数组时附加 `?exclude_ids=<逗号拼接的数字列表>`。
 
 - [ ] **Step 1: 扩展类型定义**
@@ -53,41 +55,41 @@ export interface MomentListReq {
 在 `packages/api/src/client.test.ts` 第 830 行（`moments.listPublic 带 user_id 时构造正确 query string` 测试结束的 `});` 之后）插入：
 
 ```ts
-  it("moments.listPublic 带 random 和 exclude_ids 时构造正确 query string", async () => {
-    vi.mocked(global.fetch).mockResolvedValue(
-      mockResponse({
-        code: 0,
-        message: "ok",
-        data: { total: 0, pages: 0, page: 1, page_size: 3, list: [] },
-      }),
-    );
-    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+it("moments.listPublic 带 random 和 exclude_ids 时构造正确 query string", async () => {
+  vi.mocked(global.fetch).mockResolvedValue(
+    mockResponse({
+      code: 0,
+      message: "ok",
+      data: { total: 0, pages: 0, page: 1, page_size: 3, list: [] },
+    }),
+  );
+  const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
 
-    await client.moments.listPublic({ random: true, exclude_ids: [1, 2, 3], page_size: 3 });
+  await client.moments.listPublic({ random: true, exclude_ids: [1, 2, 3], page_size: 3 });
 
-    const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
-    const url = new URL(calledUrl);
-    expect(url.pathname).toBe("/moments");
-    expect(url.searchParams.get("random")).toBe("true");
-    expect(url.searchParams.get("exclude_ids")).toBe("1,2,3");
-  });
+  const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
+  const url = new URL(calledUrl);
+  expect(url.pathname).toBe("/moments");
+  expect(url.searchParams.get("random")).toBe("true");
+  expect(url.searchParams.get("exclude_ids")).toBe("1,2,3");
+});
 
-  it("moments.listPublic exclude_ids 为空数组时不附加该参数", async () => {
-    vi.mocked(global.fetch).mockResolvedValue(
-      mockResponse({
-        code: 0,
-        message: "ok",
-        data: { total: 0, pages: 0, page: 1, page_size: 3, list: [] },
-      }),
-    );
-    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+it("moments.listPublic exclude_ids 为空数组时不附加该参数", async () => {
+  vi.mocked(global.fetch).mockResolvedValue(
+    mockResponse({
+      code: 0,
+      message: "ok",
+      data: { total: 0, pages: 0, page: 1, page_size: 3, list: [] },
+    }),
+  );
+  const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
 
-    await client.moments.listPublic({ random: true, exclude_ids: [] });
+  await client.moments.listPublic({ random: true, exclude_ids: [] });
 
-    const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
-    const url = new URL(calledUrl);
-    expect(url.searchParams.has("exclude_ids")).toBe(false);
-  });
+  const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
+  const url = new URL(calledUrl);
+  expect(url.searchParams.has("exclude_ids")).toBe(false);
+});
 ```
 
 - [ ] **Step 3: 运行测试，确认失败**
@@ -134,10 +136,12 @@ git commit -m "feat(api): moments.listPublic 支持 random/exclude_ids 随机抽
 ### Task 2: BFF 路由透传 `random`/`exclude_ids`
 
 **Files:**
+
 - Modify: `apps/web/app/api/moments/route.ts`
 - Test: `apps/web/app/api/moments/route.test.ts`
 
 **Interfaces:**
+
 - Consumes: Task 1 产出的 `MomentListReq.random` / `MomentListReq.exclude_ids`。
 - Produces: `GET /api/moments` 在收到 `?random=true&exclude_ids=1,2,3` 时，调用 `api.moments.listPublic({ ...其余字段, random: true, exclude_ids: [1,2,3] })`。
 
@@ -278,10 +282,12 @@ git commit -m "feat(api): /api/moments 透传 random/exclude_ids 查询参数"
 ### Task 3: 新增 `useMomentShuffle` hook
 
 **Files:**
+
 - Create: `apps/web/hooks/use-moment-shuffle.ts`
 - Test: Create `apps/web/hooks/use-moment-shuffle.test.ts`
 
 **Interfaces:**
+
 - Consumes: `apiJson`、`getApiErrorMessage`（`@/lib/client-fetch`）；`addToast`（`@/lib/toast`）；`buildQuery`（`@/lib/query`）；`MomentItemResp`、`MomentPageResp`（`@repo/api`）。
 - Produces: `useMomentShuffle({ pageSize: number; initialMomentIds: number[]; onShuffled: (list: MomentItemResp[]) => void }): { shuffle: () => Promise<void>; isShuffling: boolean }`。供 Task 4 的 `MomentsSection` 使用。
 
@@ -513,10 +519,9 @@ export function useMomentShuffle({
         exclude_ids: shownIdsRef.current.join(","),
       });
       const data = await apiJson<MomentPageResp>(`/api/moments?${qs}`);
-      shownIdsRef.current = [
-        ...shownIdsRef.current,
-        ...data.list.map((moment) => moment.id),
-      ].slice(-MAX_TRACKED_SHOWN_IDS);
+      shownIdsRef.current = [...shownIdsRef.current, ...data.list.map((moment) => moment.id)].slice(
+        -MAX_TRACKED_SHOWN_IDS,
+      );
       onShuffled(data.list);
     } catch (err) {
       addToast(getApiErrorMessage(err, "换一批失败，请稍后重试"), "error");
@@ -547,10 +552,12 @@ git commit -m "feat(moments): 新增 useMomentShuffle 随机抽样去重 hook"
 ### Task 4: 接入 `MomentsSection`——按钮绑定真实行为
 
 **Files:**
+
 - Modify: `apps/web/components/moments/moments-section.tsx`
 - Modify: `apps/web/components/moments/moments-section.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 3 产出的 `useMomentShuffle({ pageSize, initialMomentIds, onShuffled }): { shuffle, isShuffling }`；`useMomentList` 已导出的 `setMoments`（现有代码，无需改动签名）。
 
 - [ ] **Step 1: 写失败的测试**
@@ -558,79 +565,77 @@ git commit -m "feat(moments): 新增 useMomentShuffle 随机抽样去重 hook"
 在 `apps/web/components/moments/moments-section.test.tsx` 中，文件最后一个 `it(...)` 块结束（第 370 行 `});`）之后、`describe` 收尾的 `});`（第 371 行，文件最后一行）之前插入：
 
 ```tsx
-  it("点击换一批会请求随机碎语并替换卡片，exclude_ids 携带当前已展示的碎语 ID", async () => {
-    const user = userEvent.setup();
-    vi.mocked(fetch).mockResolvedValueOnce(
-      jsonResponse({
-        total: 10,
-        pages: 1,
-        page: 1,
-        page_size: 3,
-        list: [makeMoment(101, "换一批换出来的碎语")],
+it("点击换一批会请求随机碎语并替换卡片，exclude_ids 携带当前已展示的碎语 ID", async () => {
+  const user = userEvent.setup();
+  vi.mocked(fetch).mockResolvedValueOnce(
+    jsonResponse({
+      total: 10,
+      pages: 1,
+      page: 1,
+      page_size: 3,
+      list: [makeMoment(101, "换一批换出来的碎语")],
+    }),
+  );
+
+  render(
+    <MomentsSection initialMoments={[makeMoment(1, SHORT_CONTENT), makeMoment(2, LONG_CONTENT)]} />,
+  );
+
+  await user.click(screen.getByRole("button", { name: /换一批/ }));
+
+  await waitFor(() => {
+    expect(screen.getByText("换一批换出来的碎语")).toBeTruthy();
+  });
+  expect(screen.queryByText(SHORT_CONTENT)).toBeNull();
+
+  const calledUrl = vi.mocked(fetch).mock.calls.at(-1)?.[0] as string;
+  const url = new URL(calledUrl, "http://localhost");
+  expect(url.pathname).toBe("/api/moments");
+  expect(url.searchParams.get("random")).toBe("true");
+  expect(url.searchParams.get("exclude_ids")).toBe("1,2");
+  expect(url.searchParams.get("page_size")).toBe("3");
+  expect(url.searchParams.has("user_id")).toBe(false);
+});
+
+it("换一批请求进行中按钮禁用，请求完成后恢复可点击", async () => {
+  const user = userEvent.setup();
+  let resolveFetch!: (value: Response) => void;
+  vi.mocked(fetch).mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        resolveFetch = resolve;
       }),
-    );
+  );
 
-    render(
-      <MomentsSection
-        initialMoments={[makeMoment(1, SHORT_CONTENT), makeMoment(2, LONG_CONTENT)]}
-      />,
-    );
+  render(<MomentsSection initialMoments={[makeMoment(1, SHORT_CONTENT)]} />);
 
-    await user.click(screen.getByRole("button", { name: /换一批/ }));
+  const shuffleButton = screen.getByRole("button", { name: /换一批/ });
+  await user.click(shuffleButton);
 
-    await waitFor(() => {
-      expect(screen.getByText("换一批换出来的碎语")).toBeTruthy();
-    });
-    expect(screen.queryByText(SHORT_CONTENT)).toBeNull();
+  expect(shuffleButton).toBeDisabled();
 
-    const calledUrl = vi.mocked(fetch).mock.calls.at(-1)?.[0] as string;
-    const url = new URL(calledUrl, "http://localhost");
-    expect(url.pathname).toBe("/api/moments");
-    expect(url.searchParams.get("random")).toBe("true");
-    expect(url.searchParams.get("exclude_ids")).toBe("1,2");
-    expect(url.searchParams.get("page_size")).toBe("3");
-    expect(url.searchParams.has("user_id")).toBe(false);
+  await act(async () => {
+    resolveFetch(jsonResponse({ total: 1, pages: 1, page: 1, page_size: 3, list: [] }));
   });
 
-  it("换一批请求进行中按钮禁用，请求完成后恢复可点击", async () => {
-    const user = userEvent.setup();
-    let resolveFetch!: (value: Response) => void;
-    vi.mocked(fetch).mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          resolveFetch = resolve;
-        }),
-    );
-
-    render(<MomentsSection initialMoments={[makeMoment(1, SHORT_CONTENT)]} />);
-
-    const shuffleButton = screen.getByRole("button", { name: /换一批/ });
-    await user.click(shuffleButton);
-
-    expect(shuffleButton).toBeDisabled();
-
-    await act(async () => {
-      resolveFetch(jsonResponse({ total: 1, pages: 1, page: 1, page_size: 3, list: [] }));
-    });
-
-    await waitFor(() => {
-      expect(shuffleButton).not.toBeDisabled();
-    });
+  await waitFor(() => {
+    expect(shuffleButton).not.toBeDisabled();
   });
+});
 
-  it("换一批失败时 toast 展示兜底文案，不改变已展示内容", async () => {
-    const user = userEvent.setup();
-    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+it("换一批失败时 toast 展示兜底文案，不改变已展示内容", async () => {
+  const user = userEvent.setup();
+  vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
 
-    render(<MomentsSection initialMoments={[makeMoment(1, SHORT_CONTENT)]} />);
+  render(<MomentsSection initialMoments={[makeMoment(1, SHORT_CONTENT)]} />);
 
-    await user.click(screen.getByRole("button", { name: /换一批/ }));
+  await user.click(screen.getByRole("button", { name: /换一批/ }));
 
-    await waitFor(() => {
-      expect(toastMockState.addToast).toHaveBeenCalledWith("换一批失败，请稍后重试", "error");
-    });
-    expect(screen.getByText(SHORT_CONTENT)).toBeTruthy();
+  await waitFor(() => {
+    expect(toastMockState.addToast).toHaveBeenCalledWith("换一批失败，请稍后重试", "error");
   });
+  expect(screen.getByText(SHORT_CONTENT)).toBeTruthy();
+});
 ```
 
 同时把文件第 2 行 `import { render, screen, waitFor } from "@testing-library/react";` 改为补充 `act`：
@@ -657,28 +662,20 @@ import { useMomentShuffle } from "@/hooks/use-moment-shuffle";
 在 `useMomentList(...)` 调用结束之后（原第 61 行 `});` 之后，`const [activeComment, ...` 之前）新增：
 
 ```tsx
-  const { shuffle, isShuffling } = useMomentShuffle({
-    pageSize: MAX_MOMENTS,
-    initialMomentIds: initialMoments.map((moment) => moment.id),
-    onShuffled: setMoments,
-  });
+const { shuffle, isShuffling } = useMomentShuffle({
+  pageSize: MAX_MOMENTS,
+  initialMomentIds: initialMoments.map((moment) => moment.id),
+  onShuffled: setMoments,
+});
 ```
 
 将原第 101-104 行的按钮替换为：
 
 ```tsx
-            <SidebarSectionAction
-              aria-label={t("moment.shuffle")}
-              onPress={shuffle}
-              isDisabled={isShuffling}
-            >
-              <SvgIcon
-                name="refresh-cw"
-                size={12}
-                className={isShuffling ? "animate-spin" : undefined}
-              />
-              {t("moment.shuffle")}
-            </SidebarSectionAction>
+<SidebarSectionAction aria-label={t("moment.shuffle")} onPress={shuffle} isDisabled={isShuffling}>
+  <SvgIcon name="refresh-cw" size={12} className={isShuffling ? "animate-spin" : undefined} />
+  {t("moment.shuffle")}
+</SidebarSectionAction>
 ```
 
 - [ ] **Step 4: 运行测试，确认通过**
@@ -689,6 +686,7 @@ Expected: 全部测试 PASS（原有 17 个 + 新增 3 个）。
 - [ ] **Step 5: 跑相关测试与类型/lint 检查，确认无回归**
 
 Run:
+
 ```bash
 pnpm test:run apps/web/components/moments/moments-section.test.tsx apps/web/hooks/use-moment-shuffle.test.ts apps/web/hooks/use-moment-list.test.ts apps/web/app/api/moments/route.test.ts packages/api/src/client.test.ts
 pnpm --filter web check-types
@@ -696,6 +694,7 @@ pnpm --filter web lint
 pnpm --filter @repo/api check-types
 pnpm --filter @repo/api lint
 ```
+
 Expected: 全部 PASS / 0 error / 0 warning。
 
 - [ ] **Step 6: Commit**

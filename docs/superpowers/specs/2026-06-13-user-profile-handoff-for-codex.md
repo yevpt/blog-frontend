@@ -8,18 +8,19 @@
 
 ## 一、项目技术栈
 
-| 技术 | 说明 |
-|------|------|
-| Next.js App Router | Server Components 默认，只有需要 hooks/浏览器 API 时加 `'use client'` |
-| TypeScript | 严禁 `any`，用精确 interface/type |
-| TailwindCSS | 唯一样式方案，条件类名用 `clsx` 或 `tailwind-merge` |
-| `@repo/ui` | 项目 UI 组件库（Button、Input、Avatar、Modal、Tabs 等） |
-| `@repo/icons` | 图标库，用 `<SvgIcon name="..." />` —— **禁止内联 SVG 或引入第三方图标库** |
-| `@repo/api` | API 客户端，`createApiClient()` / `createServerApiClient()` |
-| Zustand | 全局客户端状态（auth store） |
-| Vitest + Testing Library | 单元测试，组件/Hook/页面均需同目录测试文件 |
+| 技术                     | 说明                                                                       |
+| ------------------------ | -------------------------------------------------------------------------- |
+| Next.js App Router       | Server Components 默认，只有需要 hooks/浏览器 API 时加 `'use client'`      |
+| TypeScript               | 严禁 `any`，用精确 interface/type                                          |
+| TailwindCSS              | 唯一样式方案，条件类名用 `clsx` 或 `tailwind-merge`                        |
+| `@repo/ui`               | 项目 UI 组件库（Button、Input、Avatar、Modal、Tabs 等）                    |
+| `@repo/icons`            | 图标库，用 `<SvgIcon name="..." />` —— **禁止内联 SVG 或引入第三方图标库** |
+| `@repo/api`              | API 客户端，`createApiClient()` / `createServerApiClient()`                |
+| Zustand                  | 全局客户端状态（auth store）                                               |
+| Vitest + Testing Library | 单元测试，组件/Hook/页面均需同目录测试文件                                 |
 
 **关键约束**：
+
 - `apps/web/` 下不得自建基础 UI 组件，统一从 `@repo/ui` 引入
 - 响应式：移动端优先，`base → sm → md → lg`
 - 每个新组件和页面旁必须有 `*.test.tsx`
@@ -81,8 +82,8 @@ gender.svg      birthday.svg shield.svg    camera.svg
 ### 现有 API 方法（`packages/api/src/client.ts`）
 
 ```typescript
-api.users.getMe()          // GET /users/me — 当前登录用户完整信息（含 meta、setting、social_links）
-api.users.listPublic(req)  // GET /users — 公开用户列表
+api.users.getMe(); // GET /users/me — 当前登录用户完整信息（含 meta、setting、social_links）
+api.users.listPublic(req); // GET /users — 公开用户列表
 ```
 
 ### 需要后端新增的 API（前端需先确认后端是否已有，否则 mock 占位）
@@ -116,8 +117,8 @@ export interface UserPublicProfileResp {
   id: number;
   nickname: string;
   avatar_url: string | null;
-  mark: string | null;           // 身份标签
-  description: string | null;   // 个人简介
+  mark: string | null; // 身份标签
+  description: string | null; // 个人简介
   last_login_at: string | null;
   register_at: string;
   roles: string[];
@@ -126,15 +127,15 @@ export interface UserPublicProfileResp {
   social_links: UserSocialLinkResp[];
   // meta 字段（仅部分公开）
   gender: string | null;
-  birthday: string | null;      // "YYYY-MM-DD"
+  birthday: string | null; // "YYYY-MM-DD"
 }
 
 /** PATCH /users/me/email/display */
-export type EmailDisplaySetting = 'main' | 'sub' | 'none';
+export type EmailDisplaySetting = "main" | "sub" | "none";
 
 /** GET /users/me/oauth-bindings */
 export interface OAuthBindingResp {
-  provider: string;   // "google" | "github" | "qq" 等
+  provider: string; // "google" | "github" | "qq" 等
   bound: boolean;
   bound_at?: string;
 }
@@ -182,17 +183,18 @@ apps/web/app/users/
 interface FieldRowProps {
   label: string;
   value: string | null;
-  isEditMode: boolean;        // 全局编辑模式开关
-  isOwner: boolean;           // 是否本人（非本人不显示编辑入口）
-  emptyText?: string;         // 空值时的「+ 添加」文案，不传则只读时隐藏该行
-  onSave: (value: string) => Promise<void>;  // 保存回调，抛错则显示错误
-  validate?: (value: string) => string | null;  // 前端校验，返回错误文字
-  inputType?: 'text' | 'email' | 'tel' | 'url' | 'textarea' | 'select';
-  selectOptions?: { label: string; value: string }[];  // inputType=select 时用
+  isEditMode: boolean; // 全局编辑模式开关
+  isOwner: boolean; // 是否本人（非本人不显示编辑入口）
+  emptyText?: string; // 空值时的「+ 添加」文案，不传则只读时隐藏该行
+  onSave: (value: string) => Promise<void>; // 保存回调，抛错则显示错误
+  validate?: (value: string) => string | null; // 前端校验，返回错误文字
+  inputType?: "text" | "email" | "tel" | "url" | "textarea" | "select";
+  selectOptions?: { label: string; value: string }[]; // inputType=select 时用
 }
 ```
 
 **渲染逻辑**：
+
 1. `!isEditMode || !isOwner`：只读行（`value` 为空且无 `emptyText` 则 `display:none`）
 2. `isEditMode && isOwner && !isActiveEditing`：显示值 + 右侧铅笔图标
 3. `isEditMode && isOwner && isActiveEditing`：显示输入框 + 内嵌 ✓ / ✕ 图标
@@ -211,20 +213,20 @@ const [isEditMode, setIsEditMode] = useState(false);
 
 ## 七、页面可见性规则总结
 
-| 元素 | 访客 | 本人（只读） | 本人（编辑模式） |
-|------|------|-------------|----------------|
-| Banner 遮罩「更换背景」 | ✗ | ✗ | ✓ |
-| 头像遮罩 | ✗ | ✗ | ✓ |
-| 「编辑个人资料」按钮（蓝） | ✗ | ✓ | ✗ |
-| 「退出编辑」按钮（红） | ✗ | ✗ | ✓ |
-| 字段铅笔图标 | ✗ | ✗ | ✓ |
-| Tab：碎语、点赞 | ✓ | ✓ | ✗ |
-| Tab：账号安全 | ✗ | ✗ | ✓（编辑模式才显示） |
-| 空字段行 | ✗ | ✗ | ✓（显示「+ 添加」） |
-| 社交账号区块（列表底部） | ✗ | ✗ | ✓ |
-| 联系邮箱（只读） | ✓（展示邮箱） | ✓ | ✗ |
-| 主/副邮箱（编辑） | ✗ | ✗ | ✓ |
-| 昵称铅笔图标 | ✗ | ✗ | ✓ |
+| 元素                       | 访客          | 本人（只读） | 本人（编辑模式）    |
+| -------------------------- | ------------- | ------------ | ------------------- |
+| Banner 遮罩「更换背景」    | ✗             | ✗            | ✓                   |
+| 头像遮罩                   | ✗             | ✗            | ✓                   |
+| 「编辑个人资料」按钮（蓝） | ✗             | ✓            | ✗                   |
+| 「退出编辑」按钮（红）     | ✗             | ✗            | ✓                   |
+| 字段铅笔图标               | ✗             | ✗            | ✓                   |
+| Tab：碎语、点赞            | ✓             | ✓            | ✗                   |
+| Tab：账号安全              | ✗             | ✗            | ✓（编辑模式才显示） |
+| 空字段行                   | ✗             | ✗            | ✓（显示「+ 添加」） |
+| 社交账号区块（列表底部）   | ✗             | ✗            | ✓                   |
+| 联系邮箱（只读）           | ✓（展示邮箱） | ✓            | ✗                   |
+| 主/副邮箱（编辑）          | ✗             | ✗            | ✓                   |
+| 昵称铅笔图标               | ✗             | ✗            | ✓                   |
 
 ---
 
@@ -271,6 +273,7 @@ const [isEditMode, setIsEditMode] = useState(false);
 ## 十一、测试最低覆盖要求
 
 每个组件测试文件需覆盖：
+
 - 渲染不崩溃
 - `isOwner=false` 时不显示编辑入口
 - `isEditMode=true` 时显示铅笔图标

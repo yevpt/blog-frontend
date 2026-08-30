@@ -44,6 +44,7 @@
 ## Task 1: Add Shared Browser Request Helpers
 
 **Files:**
+
 - Create: `apps/web/lib/client-fetch.ts`
 - Create: `apps/web/lib/query.ts`
 - Test: `apps/web/lib/client-fetch.test.ts`
@@ -52,6 +53,7 @@
 - [ ] Step 1: Create tests for query building.
 
 Test these cases in `apps/web/lib/query.test.ts`:
+
 - omits `undefined`, `null`, and empty string values
 - keeps `0` and `false`
 - returns `""` when no values are set
@@ -77,6 +79,7 @@ export function buildQuery(params: Record<string, QueryValue>): string {
 - [ ] Step 3: Create tests for client fetch.
 
 Test these behaviors in `apps/web/lib/client-fetch.test.ts`:
+
 - `apiJson<T>` returns parsed JSON on `2xx`
 - `apiJson<T>` throws an `ApiClientError` with status/message on non-OK response
 - `apiJson<T>` supports `AbortSignal`
@@ -85,11 +88,13 @@ Test these behaviors in `apps/web/lib/client-fetch.test.ts`:
 - [ ] Step 4: Implement `client-fetch.ts`.
 
 Required exports:
+
 - `ApiClientError`
 - `apiJson<T>(path: string, init?: RequestInit): Promise<T>`
 - `apiForm<T>(path: string, formData: FormData, init?: Omit<RequestInit, "body">): Promise<T>`
 
 Important behavior:
+
 - If backend route returns `{ error: "..." }`, use that as the thrown message.
 - If response body is empty, return `undefined as T`.
 - Do not import `@repo/api` here; this helper is only for browser `/api/**` routes.
@@ -109,6 +114,7 @@ Expected: both test files pass.
 ## Task 2: Move Article List State/Requests Out Of `ArticleSection`
 
 **Files:**
+
 - Create: `apps/web/hooks/use-article-list.ts`
 - Test: `apps/web/hooks/use-article-list.test.ts`
 - Modify: `apps/web/components/articles/article-section.tsx`
@@ -117,6 +123,7 @@ Expected: both test files pass.
 - [ ] Step 1: Write hook tests for article pagination and likes.
 
 Cover:
+
 - initializes from `initialPage`
 - `changeCategory(id)` resets to page 1 and requests `/api/articles?page=1&category_id=ID`
 - `changePage(page)` requests current category
@@ -145,6 +152,7 @@ Suggested return shape:
 ```
 
 Implementation notes:
+
 - Use `apiJson<ArticlePageResp>` and `buildQuery`.
 - Store pending like ids as `Set<number>` internally.
 - Expose `pendingLikeIds` as `ReadonlySet<number>` so render checks are O(1).
@@ -153,12 +161,14 @@ Implementation notes:
 - [ ] Step 3: Refactor `ArticleSection`.
 
 Remove from `ArticleSection`:
+
 - raw `fetch`
 - `AbortController` state
 - `pendingLikeIds` array logic
 - page/category request logic
 
 Keep in `ArticleSection`:
+
 - layout
 - header/search UI
 - comment modal state
@@ -179,6 +189,7 @@ Expected: tests pass.
 ## Task 3: Fix And Extract Snippets/Moments List State
 
 **Files:**
+
 - Create: `apps/web/hooks/use-moment-list.ts`
 - Test: `apps/web/hooks/use-moment-list.test.ts`
 - Modify: `apps/web/components/snippets/snippets-list.tsx`
@@ -187,6 +198,7 @@ Expected: tests pass.
 - [ ] Step 1: Write tests that expose the current query bug.
 
 Cover:
+
 - when active tab is `friends`, refresh after session change requests `role_id`
 - when active tab is `owner`, refresh requests `user_id`
 - when active tab is `all`, refresh requests neither `user_id` nor `role_id`
@@ -211,6 +223,7 @@ export interface MomentListQuery {
 ```
 
 Hook responsibilities:
+
 - hold `activeTab`, `activeSort`, `pageData`, `moments`, loading flags, end state, fetch error
 - build `/api/moments` query from the full active tab state
 - refresh on user/session change using the same active tab query
@@ -220,6 +233,7 @@ Hook responsibilities:
 - [ ] Step 3: Stabilize infinite-scroll observer.
 
 In `SnippetsList`, keep a stable observer effect:
+
 - put latest `loadMore` in a ref, or make observer callback read from refs
 - avoid disconnect/reconnect on every page/loading state change
 - keep root margin at `200px`
@@ -227,9 +241,11 @@ In `SnippetsList`, keep a stable observer effect:
 - [ ] Step 4: Keep pure masonry helpers in a small file if needed.
 
 If `snippets-list.tsx` remains over 250 lines after the hook extraction, create:
+
 - `apps/web/components/snippets/snippet-masonry.ts`
 
 Move pure helpers there:
+
 - `getSnippetColumnCount`
 - `estimateHeight`
 - `distributeToColumns`
@@ -251,6 +267,7 @@ Expected: tests pass, including the `friends` refresh case.
 ## Task 4: Split Registration View Into Hook And Small Components
 
 **Files:**
+
 - Create: `apps/web/components/auth/register-captcha.tsx`
 - Create: `apps/web/hooks/use-register-form.ts`
 - Test: `apps/web/hooks/use-register-form.test.ts`
@@ -260,6 +277,7 @@ Expected: tests pass, including the `friends` refresh case.
 - [ ] Step 1: Move validation helpers into the hook module.
 
 Required exported helpers:
+
 - `isValidEmail(value: string): boolean`
 - `validatePassword(value: string): string | null`
 
@@ -268,6 +286,7 @@ Keep current Chinese error messages unchanged.
 - [ ] Step 2: Write hook tests.
 
 Cover:
+
 - invalid email blocks captcha open
 - password shorter than 8 chars returns the existing error
 - successful captcha challenge opens modal and initializes `captchaX`
@@ -278,11 +297,13 @@ Cover:
 - [ ] Step 3: Create `RegisterCaptcha`.
 
 Move from `register-view.tsx`:
+
 - `CaptchaSlider`
 - captcha modal rendering
 - puzzle image rendering
 
 Props should be explicit:
+
 - `challenge`
 - `captchaX`
 - `captchaOpen`
@@ -295,6 +316,7 @@ Props should be explicit:
 - [ ] Step 4: Refactor `RegisterView`.
 
 After extraction, `RegisterView` should mostly render:
+
 - title
 - email/code/password/nickname/avatar fields
 - submit button
@@ -306,9 +328,11 @@ It should not define `requestJSON`, `ApiError`, or captcha request logic.
 - [ ] Step 5: Replace raw inputs only if it does not create churn.
 
 Preferred:
+
 - Use `Input` from `@repo/ui` for text/email/password fields.
 
 Acceptable for this task:
+
 - Keep existing native inputs if replacing them breaks existing tests or styling. Do not mix in a partial UI rewrite that changes UX.
 
 - [ ] Step 6: Run targeted tests.
@@ -326,6 +350,7 @@ Expected: tests pass and visible registration behavior is unchanged.
 ## Task 5: Extract Profile Editing State And Static Config
 
 **Files:**
+
 - Create: `apps/web/app/users/[id]/_components/profile-tab/profile-config.ts`
 - Create: `apps/web/app/users/[id]/_components/profile-tab/profile-format.ts`
 - Create: `apps/web/hooks/use-profile-editor.ts`
@@ -336,11 +361,13 @@ Expected: tests pass and visible registration behavior is unchanged.
 - [ ] Step 1: Extract pure profile format helpers.
 
 Move these from `profile-tab.tsx` into `profile-format.ts`:
+
 - `getZodiac`
 - `getAge`
 - `formatRegisterAt`
 
 Add tests for:
+
 - birthday age before/after current birthday
 - zodiac boundary examples
 - ISO date formatting fallback
@@ -348,6 +375,7 @@ Add tests for:
 - [ ] Step 2: Extract static social config and validators.
 
 Move into `profile-config.ts`:
+
 - `SOCIAL_PLATFORMS`
 - gender options
 - social field list
@@ -358,6 +386,7 @@ Keep current labels and messages unchanged.
 - [ ] Step 3: Write `use-profile-editor` tests.
 
 Cover:
+
 - saving `nickname` PATCHes `/api/users/me/profile` and updates local profile
 - saving `mark`/`description` PATCHes profile endpoint with `null` for empty values
 - saving `gender`/`birthday` PATCHes `/api/users/me/meta`
@@ -389,6 +418,7 @@ Use `apiJson` and `apiForm`.
 
 Remove direct raw fetch helpers from `user-profile-page.tsx`.
 Keep page composition only:
+
 - header
 - tabs card
 - profile editor hook wiring
@@ -397,6 +427,7 @@ Keep page composition only:
 
 Use extracted config and format helpers.
 If the file is still over 250 lines, split read-only rendering:
+
 - Create `apps/web/app/users/[id]/_components/profile-tab/profile-read-view.tsx`
 - Keep edit rows in `profile-tab.tsx`
 
@@ -415,6 +446,7 @@ Then run any existing user profile related tests if present.
 ## Task 6: Reduce Comment Section Responsibilities
 
 **Files:**
+
 - Create: `apps/web/hooks/use-comment-section-state.ts`
 - Test: `apps/web/hooks/use-comment-section-state.test.ts`
 - Modify: `apps/web/components/comments/comment-section.tsx`
@@ -423,6 +455,7 @@ Then run any existing user profile related tests if present.
 - [ ] Step 1: Extract non-visual comment orchestration.
 
 Move into `use-comment-section-state`:
+
 - reply target state
 - content state
 - submit comment/reply orchestration
@@ -435,6 +468,7 @@ Keep layout-specific scroll/ResizeObserver code in `CommentSection` unless it ca
 - [ ] Step 2: Write tests for the hook.
 
 Cover:
+
 - reply action opens login modal when logged out
 - comment submit calls `addComment`, clears content, and calls `onCommentAdded`
 - reply submit increments reply count and stores pending reply
@@ -444,6 +478,7 @@ Cover:
 - [ ] Step 3: Optionally split render list.
 
 If `comment-section.tsx` remains over 250 lines, create `comment-list-view.tsx` with props:
+
 - `comments`
 - `isLoading`
 - `error`
@@ -469,6 +504,7 @@ Expected: tests pass.
 ## Task 7: Migrate Remaining Web Hooks To Shared `apiJson`
 
 **Files:**
+
 - Modify: `apps/web/hooks/use-comment-list.ts`
 - Modify: `apps/web/hooks/use-comment-submit.ts`
 - Modify: `apps/web/hooks/use-comment-like.ts`
@@ -487,6 +523,7 @@ Use `buildQuery` for pagination URLs.
 - [ ] Step 2: Preserve abort behavior.
 
 Where a hook currently supports abort:
+
 - pass `signal` through `apiJson`
 - keep `AbortError` handling behavior equivalent
 
@@ -505,6 +542,7 @@ If some listed test files do not exist, create focused tests for the hooks chang
 ## Task 8: Full Verification And Cleanup
 
 **Files:**
+
 - No planned feature files; only fix failures found by verification.
 
 - [ ] Step 1: Check for long files after refactor.
@@ -520,6 +558,7 @@ rg --files apps packages -g '!node_modules/**' -g '!.next/**' -g '!dist/**' -g '
 ```
 
 Expected:
+
 - No app feature component over 250 lines unless it has a documented reason.
 - Shared package internals like carousel/pagination may remain over 250 if not touched.
 
@@ -532,6 +571,7 @@ rg -n "fetch\\(" apps/web -g '!node_modules/**' -g '!.next/**' -g '!*.test.*'
 ```
 
 Expected:
+
 - `fetch` remains only in route handlers, proxy/server files, auth/OAuth special cases, or documented fire-and-forget view tracking.
 - General feature hooks/components should use `apiJson`/`apiForm`.
 
@@ -550,6 +590,7 @@ Expected: all pass.
 - [ ] Step 4: Final manual smoke paths.
 
 Run the web app and check:
+
 - home article category/page switching
 - article like when logged out opens login modal
 - snippets all/friends/owner tabs and load more

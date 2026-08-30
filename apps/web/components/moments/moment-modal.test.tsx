@@ -305,8 +305,7 @@ describe("MomentModal", () => {
 
   function lastPublishKey(fetchMock: ReturnType<typeof vi.fn>): string | undefined {
     const init = fetchMock.mock.calls.at(-1)?.[1] as
-      | { headers?: Record<string, string> }
-      | undefined;
+      { headers?: Record<string, string> } | undefined;
     return init?.headers?.["Idempotency-Key"];
   }
 

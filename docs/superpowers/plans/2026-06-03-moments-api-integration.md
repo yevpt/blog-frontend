@@ -12,24 +12,25 @@
 
 ## 文件变更清单
 
-| 操作 | 文件 | 职责 |
-|------|------|------|
-| 新建 | `packages/api/src/types/moment.ts` | 对应后端 DTO 的 TypeScript 类型 |
-| 修改 | `packages/api/src/client.ts` | 添加 `moments.listPublic()` 方法 |
-| 修改 | `packages/api/src/client.test.ts` | 为 `moments.listPublic` 补充测试 |
-| 修改 | `packages/api/src/index.ts` | 导出 moment 类型 |
-| 修改 | `apps/web/components/snippets/snippets-section.test.tsx` | 改用 `MomentItemResp` 构造测试数据 |
-| 修改 | `apps/web/components/snippets/snippet-card.tsx` | 接受 `MomentItemResp`，更新字段映射 |
-| 修改 | `apps/web/components/snippets/snippets-section.tsx` | props 类型改为 `MomentItemResp[]` |
-| 修改 | `apps/web/app/page.test.tsx` | 更新 mock 和断言以包含 moments 请求 |
-| 修改 | `apps/web/app/page.tsx` | 替换 mock 导入，调用真实 API |
-| 删除 | `apps/web/app/home-content.tsx` | 废弃文件 |
+| 操作 | 文件                                                     | 职责                                |
+| ---- | -------------------------------------------------------- | ----------------------------------- |
+| 新建 | `packages/api/src/types/moment.ts`                       | 对应后端 DTO 的 TypeScript 类型     |
+| 修改 | `packages/api/src/client.ts`                             | 添加 `moments.listPublic()` 方法    |
+| 修改 | `packages/api/src/client.test.ts`                        | 为 `moments.listPublic` 补充测试    |
+| 修改 | `packages/api/src/index.ts`                              | 导出 moment 类型                    |
+| 修改 | `apps/web/components/snippets/snippets-section.test.tsx` | 改用 `MomentItemResp` 构造测试数据  |
+| 修改 | `apps/web/components/snippets/snippet-card.tsx`          | 接受 `MomentItemResp`，更新字段映射 |
+| 修改 | `apps/web/components/snippets/snippets-section.tsx`      | props 类型改为 `MomentItemResp[]`   |
+| 修改 | `apps/web/app/page.test.tsx`                             | 更新 mock 和断言以包含 moments 请求 |
+| 修改 | `apps/web/app/page.tsx`                                  | 替换 mock 导入，调用真实 API        |
+| 删除 | `apps/web/app/home-content.tsx`                          | 废弃文件                            |
 
 ---
 
 ## Task 1: 新建 moment 类型文件
 
 **Files:**
+
 - Create: `packages/api/src/types/moment.ts`
 
 - [ ] **Step 1: 创建类型文件**
@@ -106,6 +107,7 @@ Expected: 无错误输出
 ## Task 2: 在 API 客户端添加 moments.listPublic
 
 **Files:**
+
 - Modify: `packages/api/src/client.ts`
 - Modify: `packages/api/src/client.test.ts`
 
@@ -114,62 +116,62 @@ Expected: 无错误输出
 在 `describe("createApiClient", ...)` 最后一个测试之后添加：
 
 ```typescript
-  // ── 碎语接口（公开，无需登录）────────────────────────────────────────
+// ── 碎语接口（公开，无需登录）────────────────────────────────────────
 
-  it("moments.listPublic 无参数时调用 /moments", async () => {
-    vi.mocked(global.fetch).mockResolvedValue(
-      mockResponse({
-        code: 0,
-        message: "ok",
-        data: { total: 0, pages: 0, page: 1, page_size: 10, list: [] },
-      }),
-    );
-    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+it("moments.listPublic 无参数时调用 /moments", async () => {
+  vi.mocked(global.fetch).mockResolvedValue(
+    mockResponse({
+      code: 0,
+      message: "ok",
+      data: { total: 0, pages: 0, page: 1, page_size: 10, list: [] },
+    }),
+  );
+  const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
 
-    await client.moments.listPublic();
+  await client.moments.listPublic();
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      "http://api/moments",
-      expect.objectContaining({ method: "GET" }),
-    );
-  });
+  expect(global.fetch).toHaveBeenCalledWith(
+    "http://api/moments",
+    expect.objectContaining({ method: "GET" }),
+  );
+});
 
-  it("moments.listPublic 带 page 和 page_size 时构造正确 query string", async () => {
-    vi.mocked(global.fetch).mockResolvedValue(
-      mockResponse({
-        code: 0,
-        message: "ok",
-        data: { total: 0, pages: 0, page: 1, page_size: 3, list: [] },
-      }),
-    );
-    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+it("moments.listPublic 带 page 和 page_size 时构造正确 query string", async () => {
+  vi.mocked(global.fetch).mockResolvedValue(
+    mockResponse({
+      code: 0,
+      message: "ok",
+      data: { total: 0, pages: 0, page: 1, page_size: 3, list: [] },
+    }),
+  );
+  const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
 
-    await client.moments.listPublic({ page: 1, page_size: 3 });
+  await client.moments.listPublic({ page: 1, page_size: 3 });
 
-    const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
-    const url = new URL(calledUrl);
-    expect(url.pathname).toBe("/moments");
-    expect(url.searchParams.get("page")).toBe("1");
-    expect(url.searchParams.get("page_size")).toBe("3");
-  });
+  const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
+  const url = new URL(calledUrl);
+  expect(url.pathname).toBe("/moments");
+  expect(url.searchParams.get("page")).toBe("1");
+  expect(url.searchParams.get("page_size")).toBe("3");
+});
 
-  it("moments.listPublic 带 user_id 时构造正确 query string", async () => {
-    vi.mocked(global.fetch).mockResolvedValue(
-      mockResponse({
-        code: 0,
-        message: "ok",
-        data: { total: 0, pages: 0, page: 1, page_size: 10, list: [] },
-      }),
-    );
-    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+it("moments.listPublic 带 user_id 时构造正确 query string", async () => {
+  vi.mocked(global.fetch).mockResolvedValue(
+    mockResponse({
+      code: 0,
+      message: "ok",
+      data: { total: 0, pages: 0, page: 1, page_size: 10, list: [] },
+    }),
+  );
+  const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
 
-    await client.moments.listPublic({ user_id: 2 });
+  await client.moments.listPublic({ user_id: 2 });
 
-    const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
-    const url = new URL(calledUrl);
-    expect(url.pathname).toBe("/moments");
-    expect(url.searchParams.get("user_id")).toBe("2");
-  });
+  const calledUrl = vi.mocked(global.fetch).mock.calls[0][0] as string;
+  const url = new URL(calledUrl);
+  expect(url.pathname).toBe("/moments");
+  expect(url.searchParams.get("user_id")).toBe("2");
+});
 ```
 
 - [ ] **Step 2: 运行测试，确认失败**
@@ -183,11 +185,13 @@ Expected: `TypeError: client.moments is not a function` 或 `client.moments is u
 - [ ] **Step 3: 在 client.ts 中添加类型导入和 moments 方法**
 
 在 `client.ts` 顶部已有的 `import type { ... }` 语句后添加：
+
 ```typescript
 import type { MomentListReq, MomentPageResp } from "./types/moment";
 ```
 
 在 `createApiClient` 的返回值对象中，`categories` 之后、`test` 之前添加：
+
 ```typescript
     moments: {
       /** 分页查询公开碎语，支持用户/角色过滤 */
@@ -223,6 +227,7 @@ git commit -m "feat(api): 新增 moment 类型和 moments.listPublic 方法"
 ## Task 3: 从 packages/api 导出 moment 类型
 
 **Files:**
+
 - Modify: `packages/api/src/index.ts`
 
 - [ ] **Step 1: 在 index.ts 末尾追加导出**
@@ -257,6 +262,7 @@ git commit -m "chore(api): 导出 moment 相关类型"
 ## Task 4: 将组件测试改用 MomentItemResp（先写失败测试）
 
 **Files:**
+
 - Modify: `apps/web/components/snippets/snippets-section.test.tsx`
 
 - [ ] **Step 1: 替换 snippets-section.test.tsx 全部内容**
@@ -485,6 +491,7 @@ Expected: 类型错误或运行时错误（组件期望 `Snippet` 但收到 `Mom
 ## Task 5: 更新 snippet-card.tsx 使用 MomentItemResp
 
 **Files:**
+
 - Modify: `apps/web/components/snippets/snippet-card.tsx`
 
 - [ ] **Step 1: 替换 snippet-card.tsx 全部内容**
@@ -553,6 +560,7 @@ export function SnippetCard({ snippet }: SnippetCardProps) {
 ## Task 6: 更新 snippets-section.tsx 使用 MomentItemResp，运行测试
 
 **Files:**
+
 - Modify: `apps/web/components/snippets/snippets-section.tsx`
 
 - [ ] **Step 1: 替换 snippets-section.tsx 全部内容**
@@ -626,6 +634,7 @@ git commit -m "refactor(web): 碎语组件 props 类型从 Snippet 迁移到 Mom
 ## Task 7: 更新 page.test.tsx 以包含 moments mock（先写失败测试）
 
 **Files:**
+
 - Modify: `apps/web/app/page.test.tsx`
 
 - [ ] **Step 1: 更新 page.test.tsx**
@@ -635,6 +644,7 @@ git commit -m "refactor(web): 碎语组件 props 类型从 Snippet 迁移到 Mom
 **修改 1**：在 `homePageMockState` 的 `vi.hoisted` 中添加 `listMomentsPublic`：
 
 将：
+
 ```typescript
 const homePageMockState = vi.hoisted(() => {
   const listPublic = vi.fn();
@@ -650,6 +660,7 @@ const homePageMockState = vi.hoisted(() => {
 ```
 
 替换为：
+
 ```typescript
 const homePageMockState = vi.hoisted(() => {
   const listPublic = vi.fn();
@@ -669,6 +680,7 @@ const homePageMockState = vi.hoisted(() => {
 **修改 2**：在 `createServerApiClient` mock 中添加 `moments`：
 
 将：
+
 ```typescript
 vi.mock("@/lib/server-api", () => ({
   createServerApiClient: async () => ({
@@ -683,6 +695,7 @@ vi.mock("@/lib/server-api", () => ({
 ```
 
 替换为：
+
 ```typescript
 vi.mock("@/lib/server-api", () => ({
   createServerApiClient: async () => ({
@@ -702,55 +715,59 @@ vi.mock("@/lib/server-api", () => ({
 **修改 3**：在 `beforeEach` 的 reset 和默认值块中添加 moments mock 初始化：
 
 在 `homePageMockState.listTabs.mockReset()` 之后追加：
+
 ```typescript
-    homePageMockState.listMomentsPublic.mockReset();
+homePageMockState.listMomentsPublic.mockReset();
 ```
 
 在 `homePageMockState.listTabs.mockResolvedValue({ list: [] });` 之后追加：
+
 ```typescript
-    homePageMockState.listMomentsPublic.mockResolvedValue({
-      total: 0,
-      pages: 0,
-      page: 1,
-      page_size: 3,
-      list: [],
-    });
+homePageMockState.listMomentsPublic.mockResolvedValue({
+  total: 0,
+  pages: 0,
+  page: 1,
+  page_size: 3,
+  list: [],
+});
 ```
 
 **修改 4**：将 `"同时请求分类、最新文章和推荐文章"` 测试替换为包含碎语请求的版本：
 
 将：
-```typescript
-  it("同时请求分类、最新文章和推荐文章", async () => {
-    render(await Page());
 
-    expect(homePageMockState.listTabs).toHaveBeenCalledOnce();
-    expect(homePageMockState.listPublic).toHaveBeenCalledWith({ page: 1 });
-    expect(homePageMockState.listPublic).toHaveBeenCalledWith({
-      page: 1,
-      page_size: 5,
-      recommend: true,
-    });
+```typescript
+it("同时请求分类、最新文章和推荐文章", async () => {
+  render(await Page());
+
+  expect(homePageMockState.listTabs).toHaveBeenCalledOnce();
+  expect(homePageMockState.listPublic).toHaveBeenCalledWith({ page: 1 });
+  expect(homePageMockState.listPublic).toHaveBeenCalledWith({
+    page: 1,
+    page_size: 5,
+    recommend: true,
   });
+});
 ```
 
 替换为：
-```typescript
-  it("同时请求分类、最新文章、推荐文章和碎语", async () => {
-    render(await Page());
 
-    expect(homePageMockState.listTabs).toHaveBeenCalledOnce();
-    expect(homePageMockState.listPublic).toHaveBeenCalledWith({ page: 1 });
-    expect(homePageMockState.listPublic).toHaveBeenCalledWith({
-      page: 1,
-      page_size: 5,
-      recommend: true,
-    });
-    expect(homePageMockState.listMomentsPublic).toHaveBeenCalledWith({
-      page: 1,
-      page_size: 3,
-    });
+```typescript
+it("同时请求分类、最新文章、推荐文章和碎语", async () => {
+  render(await Page());
+
+  expect(homePageMockState.listTabs).toHaveBeenCalledOnce();
+  expect(homePageMockState.listPublic).toHaveBeenCalledWith({ page: 1 });
+  expect(homePageMockState.listPublic).toHaveBeenCalledWith({
+    page: 1,
+    page_size: 5,
+    recommend: true,
   });
+  expect(homePageMockState.listMomentsPublic).toHaveBeenCalledWith({
+    page: 1,
+    page_size: 3,
+  });
+});
 ```
 
 - [ ] **Step 2: 运行页面测试，确认失败**
@@ -766,6 +783,7 @@ Expected: `TypeError: api.moments is undefined` 或类似错误（`page.tsx` 尚
 ## Task 8: 更新 page.tsx 调用真实 moments API
 
 **Files:**
+
 - Modify: `apps/web/app/page.tsx`
 
 - [ ] **Step 1: 替换 page.tsx 全部内容**
@@ -884,6 +902,7 @@ git commit -m "feat(web): 碎语区接入真实 API，替换 mock 数据"
 ## Task 9: 删除废弃文件 home-content.tsx
 
 **Files:**
+
 - Delete: `apps/web/app/home-content.tsx`
 
 - [ ] **Step 1: 确认该文件未被任何模块引用**

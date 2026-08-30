@@ -13,15 +13,7 @@ describe("Slider", () => {
   it("支持键盘调整受控值", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(
-      <Slider
-        label="播放进度"
-        value={25}
-        minValue={0}
-        maxValue={100}
-        onChange={onChange}
-      />,
-    );
+    render(<Slider label="播放进度" value={25} minValue={0} maxValue={100} onChange={onChange} />);
 
     await user.click(screen.getByRole("slider", { name: "播放进度" }));
     await user.keyboard("{ArrowRight}");

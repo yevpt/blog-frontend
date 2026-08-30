@@ -74,6 +74,7 @@ apps/web/components/article-detail/
 ### Task 1: 更新 packages/api 类型文件
 
 **Files:**
+
 - Modify: `packages/api/src/types/comment.ts`
 - Create: `packages/api/src/types/guestbook.ts`
 - Modify: `packages/api/src/index.ts`
@@ -277,6 +278,7 @@ git commit -m "feat(api): 重构评论类型，新增留言板类型
 ### Task 2: 更新 packages/api client
 
 **Files:**
+
 - Modify: `packages/api/src/client.ts`
 
 - [ ] **Step 1: 替换 comments 方法组，新增 guestbook 方法组**
@@ -465,6 +467,7 @@ git commit -m "feat(api): 重写评论/留言 client 方法对齐新后端路由
 ### Task 3: 创建 Route Handler 代理工具函数
 
 **Files:**
+
 - Create: `apps/web/lib/backend-proxy.ts`
 
 - [ ] **Step 1: 创建 `apps/web/lib/backend-proxy.ts`**
@@ -578,6 +581,7 @@ git commit -m "feat(web): 新增 backend-proxy 工具函数，删除旧评论 Ro
 ### Task 4: 创建 Article 评论 Route Handlers
 
 **Files:**
+
 - Create: `apps/web/app/api/articles/[id]/comments/route.ts`
 - Create: `apps/web/app/api/articles/comments/[id]/like/route.ts`
 - Create: `apps/web/app/api/articles/comments/[id]/replies/route.ts`
@@ -680,6 +684,7 @@ git commit -m "feat(web): 新增文章评论 Route Handlers（列表/创建/回�
 ### Task 5: 创建 Moment + Guestbook Route Handlers
 
 **Files:**
+
 - Create: `apps/web/app/api/moments/[id]/comments/route.ts`
 - Create: `apps/web/app/api/moments/comments/[id]/like/route.ts`
 - Create: `apps/web/app/api/moments/comments/[id]/replies/route.ts`
@@ -847,6 +852,7 @@ git commit -m "feat(web): 新增碎语评论和留言板 Route Handlers"
 ### Task 6: 更新 Hooks（use-comment-list / use-comment-submit / 新增 use-comment-like）
 
 **Files:**
+
 - Modify: `apps/web/hooks/use-comment-list.ts`
 - Modify: `apps/web/hooks/use-comment-list.test.ts`
 - Modify: `apps/web/hooks/use-comment-submit.ts`
@@ -1098,7 +1104,19 @@ describe("useCommentSubmit", () => {
     vi.mocked(global.fetch).mockResolvedValue({
       ok: true,
       status: 200,
-      json: () => Promise.resolve({ id: 1, content: "test", reply_count: 0, like_count: 0, is_liked: false, target_type: "article", target_id: 5, user_id: 1, created_at: "", updated_at: "" }),
+      json: () =>
+        Promise.resolve({
+          id: 1,
+          content: "test",
+          reply_count: 0,
+          like_count: 0,
+          is_liked: false,
+          target_type: "article",
+          target_id: 5,
+          user_id: 1,
+          created_at: "",
+          updated_at: "",
+        }),
     } as Response);
 
     const { result } = renderHook(() => useCommentSubmit("article", 5));
@@ -1114,7 +1132,19 @@ describe("useCommentSubmit", () => {
     vi.mocked(global.fetch).mockResolvedValue({
       ok: true,
       status: 200,
-      json: () => Promise.resolve({ id: 1, content: "test", reply_count: 0, like_count: 0, is_liked: false, target_type: "moment", target_id: 3, user_id: 1, created_at: "", updated_at: "" }),
+      json: () =>
+        Promise.resolve({
+          id: 1,
+          content: "test",
+          reply_count: 0,
+          like_count: 0,
+          is_liked: false,
+          target_type: "moment",
+          target_id: 3,
+          user_id: 1,
+          created_at: "",
+          updated_at: "",
+        }),
     } as Response);
 
     const { result } = renderHook(() => useCommentSubmit("moment", 3));
@@ -1130,7 +1160,20 @@ describe("useCommentSubmit", () => {
     vi.mocked(global.fetch).mockResolvedValue({
       ok: true,
       status: 200,
-      json: () => Promise.resolve({ id: 10, content: "reply", like_count: 0, is_liked: false, target_type: "article", comment_id: 1, from_user_id: 2, to_user_id: 1, parent_reply_id: 0, created_at: "", updated_at: "" }),
+      json: () =>
+        Promise.resolve({
+          id: 10,
+          content: "reply",
+          like_count: 0,
+          is_liked: false,
+          target_type: "article",
+          comment_id: 1,
+          from_user_id: 2,
+          to_user_id: 1,
+          parent_reply_id: 0,
+          created_at: "",
+          updated_at: "",
+        }),
     } as Response);
 
     const { result } = renderHook(() => useCommentSubmit("article", 5));
@@ -1151,7 +1194,9 @@ describe("useCommentSubmit", () => {
 
     const { result } = renderHook(() => useCommentSubmit("article", 1));
     let ret: unknown;
-    await act(async () => { ret = await result.current.submitComment("test"); });
+    await act(async () => {
+      ret = await result.current.submitComment("test");
+    });
 
     expect(ret).toBeNull();
     expect(result.current.error).toBe("请先登录");
@@ -1195,7 +1240,10 @@ export function useCommentSubmit(targetType: TargetType, targetId: number) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ content }),
         });
-        if (res.status === 401) { setError("请先登录"); return null; }
+        if (res.status === 401) {
+          setError("请先登录");
+          return null;
+        }
         if (!res.ok) throw new Error("failed");
         return (await res.json()) as CommentItemResp;
       } catch {
@@ -1223,7 +1271,10 @@ export function useCommentSubmit(targetType: TargetType, targetId: number) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ parent_reply_id: parentReplyId, content }),
         });
-        if (res.status === 401) { setError("请先登录"); return null; }
+        if (res.status === 401) {
+          setError("请先登录");
+          return null;
+        }
         if (!res.ok) throw new Error("failed");
         return (await res.json()) as CommentReplyResp;
       } catch {
@@ -1299,7 +1350,9 @@ describe("useCommentLike", () => {
 
     const { result } = renderHook(() => useCommentLike("article"));
     let ret: unknown;
-    await act(async () => { ret = await result.current.toggleCommentLike(1); });
+    await act(async () => {
+      ret = await result.current.toggleCommentLike(1);
+    });
     expect(ret).toBeNull();
   });
 });
@@ -1377,6 +1430,7 @@ git commit -m "feat(web): 更新评论 hooks，新增 use-comment-like
 ### Task 7: 实现 use-sheet-gesture Hook
 
 **Files:**
+
 - Create: `apps/web/hooks/use-sheet-gesture.ts`
 - Create: `apps/web/hooks/use-sheet-gesture.test.ts`
 
@@ -1419,8 +1473,13 @@ function fire(el: HTMLElement, type: string, clientY: number) {
 describe("useSheetGesture", () => {
   let onDismiss: ReturnType<typeof vi.fn>;
 
-  beforeEach(() => { onDismiss = vi.fn(); vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); });
+  beforeEach(() => {
+    onDismiss = vi.fn();
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
 
   it("初始状态：transform=translateY(0px)，isDragging=false", () => {
     const { sheet, scroll } = makeEls();
@@ -1441,11 +1500,7 @@ describe("useSheetGesture", () => {
     const { sheet, scroll } = makeEls();
     // scrollTop 默认 0，满足 drag mode 判定
     const { result, unmount } = renderHook(() =>
-      useSheetGesture(
-        { current: sheet } as never,
-        { current: scroll } as never,
-        { onDismiss },
-      ),
+      useSheetGesture({ current: sheet } as never, { current: scroll } as never, { onDismiss }),
     );
 
     act(() => {
@@ -1461,11 +1516,10 @@ describe("useSheetGesture", () => {
   it("大位移松手触发 onDismiss（延迟 350ms）", () => {
     const { sheet, scroll } = makeEls();
     const { unmount } = renderHook(() =>
-      useSheetGesture(
-        { current: sheet } as never,
-        { current: scroll } as never,
-        { onDismiss, snapThreshold: 0.3 },
-      ),
+      useSheetGesture({ current: sheet } as never, { current: scroll } as never, {
+        onDismiss,
+        snapThreshold: 0.3,
+      }),
     );
 
     act(() => {
@@ -1484,11 +1538,7 @@ describe("useSheetGesture", () => {
   it("小位移松手弹回，translateY 回到 0", () => {
     const { sheet, scroll } = makeEls();
     const { result, unmount } = renderHook(() =>
-      useSheetGesture(
-        { current: sheet } as never,
-        { current: scroll } as never,
-        { onDismiss },
-      ),
+      useSheetGesture({ current: sheet } as never, { current: scroll } as never, { onDismiss }),
     );
 
     act(() => {
@@ -1506,11 +1556,7 @@ describe("useSheetGesture", () => {
   it("卸载时不报错（事件监听器已清理）", () => {
     const { sheet, scroll } = makeEls();
     const { unmount } = renderHook(() =>
-      useSheetGesture(
-        { current: sheet } as never,
-        { current: scroll } as never,
-        { onDismiss },
-      ),
+      useSheetGesture({ current: sheet } as never, { current: scroll } as never, { onDismiss }),
     );
     expect(() => unmount()).not.toThrow();
     cleanup(sheet, scroll);
@@ -1623,7 +1669,9 @@ export function useSheetGesture(
   const gestureRef = useRef<GestureState | null>(null);
   // 始终持有最新的 onDismiss，避免闭包捕获旧版本
   const onDismissRef = useRef(onDismiss);
-  useEffect(() => { onDismissRef.current = onDismiss; });
+  useEffect(() => {
+    onDismissRef.current = onDismiss;
+  });
 
   useEffect(() => {
     const sheet = sheetRef.current;
@@ -1798,6 +1846,7 @@ git commit -m "feat(web): 新增 useSheetGesture 手势引擎
 ### Task 8: 创建 CommentReplies 组件
 
 **Files:**
+
 - Create: `apps/web/components/comments/comment-replies.tsx`
 - Create: `apps/web/components/comments/comment-replies.test.tsx`
 
@@ -2107,7 +2156,7 @@ pnpm --filter apps/web test components/comments/comment-replies
 
 - [ ] **Step 5: Commit**
 
-```bash
+````bash
 git add apps/web/components/comments/comment-replies.tsx apps/web/components/comments/comment-replies.test.tsx
 git commit -m "feat(web): 新增 CommentReplies 组件（懒加载回复列表）"
 
@@ -2197,7 +2246,7 @@ describe("CommentItem", () => {
     expect(screen.getByText("replies:2")).toBeTruthy();
   });
 });
-```
+````
 
 - [ ] **Step 2: 实现新 `comment-item.tsx`**
 
@@ -2310,6 +2359,7 @@ git commit -m "refactor(web): 重构 CommentItem 为 INS 风格，接入 Comment
 ### Task 10: 重构 CommentInput（三态 + ↑ 发送按钮）
 
 **Files:**
+
 - Modify: `apps/web/components/comments/comment-input.tsx`
 - Modify: `apps/web/components/comments/comment-input.test.tsx`
 
@@ -2530,6 +2580,7 @@ git commit -m "refactor(web): CommentInput 三态重构，↑ 发送按钮嵌入
 ### Task 11: 重构 CommentSection（layout prop + pendingReplies + like 回调）
 
 **Files:**
+
 - Modify: `apps/web/components/comments/comment-section.tsx`
 - Modify: `apps/web/components/comments/comment-section.test.tsx`
 
@@ -2788,7 +2839,7 @@ pnpm --filter apps/web test components/comments/comment-section
 
 - [ ] **Step 4: Commit**
 
-```bash
+````bash
 git add apps/web/components/comments/comment-section.tsx apps/web/components/comments/comment-section.test.tsx
 git commit -m "refactor(web): CommentSection 新增 layout prop，接入 like/pendingReplies"
 
@@ -2878,7 +2929,7 @@ describe("CommentModal", () => {
     expect(screen.getByTestId("comment-section")).toBeTruthy();
   });
 });
-```
+````
 
 - [ ] **Step 2: 实现新 `comment-modal.tsx`**
 
@@ -2979,8 +3030,14 @@ export function CommentModal({ open, targetType, targetId, onClose }: CommentMod
 
 ```css
 @keyframes slideUpSheet {
-  from { transform: translateY(100%); opacity: 0.6; }
-  to   { transform: translateY(0);    opacity: 1; }
+  from {
+    transform: translateY(100%);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 ```
 
@@ -3006,6 +3063,7 @@ git commit -m "refactor(web): CommentModal 重构为 INS Sheet，接入 useSheet
 ### Task 13: 更新 ArticleComments + 清理导出 + 全量验证
 
 **Files:**
+
 - Modify: `apps/web/components/article-detail/article-comments.tsx`
 - Modify: `apps/web/components/article-detail/article-comments.test.tsx`
 - Modify: `apps/web/components/comments/index.ts`
@@ -3107,6 +3165,7 @@ git commit -m "feat(web): ArticleComments 接入 inline layout，更新 comments
 ## 自查清单
 
 **Spec 覆盖：**
+
 - [x] INS 风格底部抽屉（70%dvh，把手，手势收起）→ Task 12
 - [x] useSheetGesture 状态机（undecided/drag/scroll，速度+位移判断）→ Task 7
 - [x] pull-to-refresh 三层防御 → Task 7
@@ -3122,9 +3181,12 @@ git commit -m "feat(web): ArticleComments 接入 inline layout，更新 comments
 - [x] guestbook 类型 + Route Handlers（UI 暂留未来）→ Task 1/5
 
 **类型一致性确认：**
+
 - `CommentItemResp.reply_count`（非 `replies[]`）贯穿 Task 1→6→8→9
 - `TargetType = "article" | "moment"` 贯穿 Task 6→8→9→11→12
 - `ReplyTarget` 定义在 `comment-item.tsx`，由 `comment-replies.tsx` / `comment-section.tsx` 导入
 - `scrollRef` 从 `CommentModal` 传入 `CommentSection`（Task 11/12 对齐）
+
 ```
+
 ```

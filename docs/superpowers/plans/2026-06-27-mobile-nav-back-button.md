@@ -21,11 +21,13 @@
 ### Task 1: 碎语路由改为 default variant + 标题
 
 **Files:**
+
 - Modify: `apps/web/components/navbar/navbar-route-config.ts`
 - Test: `apps/web/components/navbar/navbar-route-config.test.ts`
 - Test: `apps/web/components/navbar/use-navbar-context.test.ts`
 
 **Interfaces:**
+
 - Consumes: 无。
 - Produces: `matchNavbarRoute("/moments")` 返回 `{ mobileVariant: "default", title: "碎语" }`；仅 `/` 仍为 `home` variant。
 
@@ -34,12 +36,12 @@
 把文件中现有的 moments 用例（`it("moments 复用 home variant，无标题", ...)` 整块）替换为：
 
 ```ts
-  it("moments 命中 default，标题为碎语", () => {
-    expect(matchNavbarRoute("/moments")).toEqual({
-      mobileVariant: "default",
-      title: "碎语",
-    });
+it("moments 命中 default，标题为碎语", () => {
+  expect(matchNavbarRoute("/moments")).toEqual({
+    mobileVariant: "default",
+    title: "碎语",
   });
+});
 ```
 
 - [ ] **Step 2: 改测试 — use-navbar-context.test.ts 的 moments 期望**
@@ -47,16 +49,16 @@
 把文件中现有的 moments 用例（`it("碎语页复用 home variant，无标题", ...)` 整块）替换为：
 
 ```ts
-  it("碎语页命中 default variant，标题为碎语，显示返回", () => {
-    mockPathname = "/moments";
+it("碎语页命中 default variant，标题为碎语，显示返回", () => {
+  mockPathname = "/moments";
 
-    const { result } = renderHook(() => useNavbarContext());
+  const { result } = renderHook(() => useNavbarContext());
 
-    expect(result.current.title).toBe("碎语");
-    expect(result.current.mobileVariant).toBe("default");
-    expect(result.current.showHomeBack).toBe(true);
-    expect(result.current.desktopCapsuleThreshold).toBe(24);
-  });
+  expect(result.current.title).toBe("碎语");
+  expect(result.current.mobileVariant).toBe("default");
+  expect(result.current.showHomeBack).toBe(true);
+  expect(result.current.desktopCapsuleThreshold).toBe(24);
+});
 ```
 
 - [ ] **Step 3: 跑测试，确认失败**
@@ -126,10 +128,12 @@ git commit -m "feat(navbar): 碎语移动端改用 default 变体显示返回按
 ### Task 2: 新增 useBackNavigation Hook
 
 **Files:**
+
 - Create: `apps/web/components/navbar/use-back-navigation.ts`
 - Test: `apps/web/components/navbar/use-back-navigation.test.ts`
 
 **Interfaces:**
+
 - Consumes: `next/navigation` 的 `useRouter()`（`back()`/`push()`）与 `usePathname()`。
 - Produces: `useBackNavigation(): () => void` —— 返回一个 `goBack` 函数。决策：`window.navigation` 存在时 `canGoBack ? router.back() : router.push("/")`；否则落地页（首次挂载捕获的 pathname）或未捕获时 `router.push("/")`，其余 `router.back()`。
 
@@ -316,10 +320,12 @@ git commit -m "feat(navbar): 新增 useBackNavigation 分层返回决策 Hook"
 ### Task 3: NavbarMobileHeader 接入 goBack 与返回语义
 
 **Files:**
+
 - Modify: `apps/web/components/navbar/navbar-mobile-header.tsx`
 - Test: `apps/web/components/navbar/navbar-mobile-header.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 2 的 `useBackNavigation(): () => void`。
 - Produces: 返回按钮 `aria-label="返回"`，点击触发 `goBack()`（不再直接 `router.push("/")`）。
 
@@ -473,6 +479,7 @@ git commit -m "feat(navbar): 移动端返回按钮改用 goBack 回到上一页"
 ## Self-Review
 
 **Spec coverage：**
+
 - 兜底统一 `/` → `useBackNavigation` 中 `FALLBACK_PATH = "/"`（Task 2）。✓
 - Navigation API 优先 + A+ 回退 → Task 2 `readCanGoBack` + 落地页比对，测试覆盖 5 条路径。✓
 - 碎语统一返回按钮 + 标题「碎语」→ Task 1。✓

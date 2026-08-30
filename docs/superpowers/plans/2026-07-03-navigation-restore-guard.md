@@ -23,10 +23,12 @@
 ### Task 1: `useCommentModal` store 新增 `isVisible`/`hide`/`show`
 
 **Files:**
+
 - Modify: `apps/web/store/use-comment-modal.ts`
 - Modify: `apps/web/store/use-comment-modal.test.ts`
 
 **Interfaces:**
+
 - Produces: `useCommentModal` 新增字段 `isVisible: boolean`；新增动作 `hide(): void`（仅隐藏，保留 `targetType`/`targetId`/`onCommentAdded`）、`show(): void`（仅显示，不检查 `targetType`——调用方负责在调用前自行判断是否还有 target）。`open()` 额外把 `isVisible` 置 `true`；`close()` 额外把 `isVisible` 置 `false`。
 
 - [ ] **Step 1: 写失败测试**
@@ -34,49 +36,54 @@
 打开 `apps/web/store/use-comment-modal.test.ts`，在文件末尾（最后一个 `it` 之后、`});` 之前）追加：
 
 ```ts
-  it("初始状态 isVisible 为 false", () => {
-    expect(useCommentModal.getState().isVisible).toBe(false);
-  });
+it("初始状态 isVisible 为 false", () => {
+  expect(useCommentModal.getState().isVisible).toBe(false);
+});
 
-  it("open() 把 isVisible 置为 true", () => {
-    useCommentModal.getState().open("article", 7);
-    expect(useCommentModal.getState().isVisible).toBe(true);
-  });
+it("open() 把 isVisible 置为 true", () => {
+  useCommentModal.getState().open("article", 7);
+  expect(useCommentModal.getState().isVisible).toBe(true);
+});
 
-  it("close() 把 isVisible 置为 false", () => {
-    useCommentModal.getState().open("article", 7);
-    useCommentModal.getState().close();
-    expect(useCommentModal.getState().isVisible).toBe(false);
-  });
+it("close() 把 isVisible 置为 false", () => {
+  useCommentModal.getState().open("article", 7);
+  useCommentModal.getState().close();
+  expect(useCommentModal.getState().isVisible).toBe(false);
+});
 
-  it("hide() 只隐藏，保留 targetType/targetId", () => {
-    useCommentModal.getState().open("article", 7);
-    useCommentModal.getState().hide();
+it("hide() 只隐藏，保留 targetType/targetId", () => {
+  useCommentModal.getState().open("article", 7);
+  useCommentModal.getState().hide();
 
-    const state = useCommentModal.getState();
-    expect(state.isVisible).toBe(false);
-    expect(state.targetType).toBe("article");
-    expect(state.targetId).toBe(7);
-  });
+  const state = useCommentModal.getState();
+  expect(state.isVisible).toBe(false);
+  expect(state.targetType).toBe("article");
+  expect(state.targetId).toBe(7);
+});
 
-  it("show() 把 isVisible 置为 true，不改变 target", () => {
-    useCommentModal.getState().open("article", 7);
-    useCommentModal.getState().hide();
-    useCommentModal.getState().show();
+it("show() 把 isVisible 置为 true，不改变 target", () => {
+  useCommentModal.getState().open("article", 7);
+  useCommentModal.getState().hide();
+  useCommentModal.getState().show();
 
-    const state = useCommentModal.getState();
-    expect(state.isVisible).toBe(true);
-    expect(state.targetType).toBe("article");
-    expect(state.targetId).toBe(7);
-  });
+  const state = useCommentModal.getState();
+  expect(state.isVisible).toBe(true);
+  expect(state.targetType).toBe("article");
+  expect(state.targetId).toBe(7);
+});
 ```
 
 同时把文件顶部的 `beforeEach` 里的 `setState` 补上 `isVisible: false`：
 
 ```ts
-  beforeEach(() => {
-    useCommentModal.setState({ targetType: null, targetId: null, onCommentAdded: null, isVisible: false });
+beforeEach(() => {
+  useCommentModal.setState({
+    targetType: null,
+    targetId: null,
+    onCommentAdded: null,
+    isVisible: false,
   });
+});
 ```
 
 - [ ] **Step 2: 运行测试确认失败**
@@ -141,10 +148,12 @@ EOF
 ### Task 2: `GlobalCommentModal` 渲染条件加上 `isVisible`
 
 **Files:**
+
 - Modify: `apps/web/components/comments/views/global-comment-modal.tsx`
 - Modify: `apps/web/components/comments/views/global-comment-modal.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `useCommentModal` 的 `isVisible` from Task 1。
 
 - [ ] **Step 1: 写失败测试**
@@ -152,19 +161,29 @@ EOF
 打开 `apps/web/components/comments/views/global-comment-modal.test.tsx`，在现有 `describe("GlobalCommentModal", ...)` 块内追加一个用例（放在已有用例之后）：
 
 ```tsx
-  it("有 target 但 isVisible 为 false 时不渲染", () => {
-    useCommentModal.setState({ targetType: "article", targetId: 42, onCommentAdded: null, isVisible: false });
-    const { container } = render(<GlobalCommentModal />);
-    expect(container.innerHTML).toBe("");
+it("有 target 但 isVisible 为 false 时不渲染", () => {
+  useCommentModal.setState({
+    targetType: "article",
+    targetId: 42,
+    onCommentAdded: null,
+    isVisible: false,
   });
+  const { container } = render(<GlobalCommentModal />);
+  expect(container.innerHTML).toBe("");
+});
 ```
 
 同时把文件里已有的 `beforeEach` 改成同时复位 `isVisible`：
 
 ```ts
-  beforeEach(() => {
-    useCommentModal.setState({ targetType: null, targetId: null, onCommentAdded: null, isVisible: false });
+beforeEach(() => {
+  useCommentModal.setState({
+    targetType: null,
+    targetId: null,
+    onCommentAdded: null,
+    isVisible: false,
   });
+});
 ```
 
 以及把已有的"store 有打开目标时渲染 CommentModal"这条用例里的 `useCommentModal.getState().open("article", 42);` 保持不变（`open()` 已经会把 `isVisible` 置 true，这条用例不需要改）。
@@ -225,10 +244,12 @@ EOF
 ### Task 3: `useInlineEditorStore` store
 
 **Files:**
+
 - Create: `apps/web/store/use-inline-editor-store.ts`
 - Test: `apps/web/store/use-inline-editor-store.test.ts`
 
 **Interfaces:**
+
 - Produces: `useInlineEditorStore` — Zustand store。
   - State: `editors: Record<string, { isOpen: boolean; content: string }>`。
   - Actions: `open(key: string, initialContent?: string): void`（写入 `{isOpen: true, content: initialContent ?? ""}`）；`setContent(key: string, content: string): void`（只更新已存在 key 的 content，key 不存在时不做任何事）；`close(key: string): void`（从 `editors` 里删除该 key）；`submitSuccess(key: string): void`（同 `close`，从 `editors` 里删除该 key）；`discardAll(): void`（清空整个 `editors`）。
@@ -379,10 +400,12 @@ EOF
 ### Task 4: `useFriendLinksPausedStore` store
 
 **Files:**
+
 - Create: `apps/web/store/use-friend-links-paused-store.ts`
 - Test: `apps/web/store/use-friend-links-paused-store.test.ts`
 
 **Interfaces:**
+
 - Produces: `useFriendLinksPausedStore` — Zustand store。State: `open: boolean`。Actions: `setOpen(open: boolean): void`、`reset(): void`（等价于 `setOpen(false)`）。
 
 - [ ] **Step 1: 写失败测试**
@@ -467,10 +490,12 @@ EOF
 ### Task 5: `InlineReplyEditor` 从不受控改为受控
 
 **Files:**
+
 - Modify: `apps/web/components/comments/inputs/inline-reply-editor.tsx`
 - Modify: `apps/web/components/comments/inputs/inline-reply-editor.test.tsx`
 
 **Interfaces:**
+
 - Produces: `InlineReplyEditor` 新 props 签名 `{ value: string; onChange: (value: string) => void; placeholder: string; header?: ReactNode; isLoggedIn?: boolean; onLoginRequired?: () => void; onSubmit: (content: string) => Promise<boolean>; className?: string; }`——移除原来的 `initialValue`，新增必填的 `value`/`onChange`。
 
 - [ ] **Step 1: 改测试为受控写法**
@@ -702,11 +727,13 @@ EOF
 ### Task 6: `NavigationRestoreGuard` 组件 + 挂载
 
 **Files:**
+
 - Create: `apps/web/app/providers/navigation-restore-guard.tsx`
 - Create: `apps/web/app/providers/navigation-restore-guard.test.tsx`
 - Modify: `apps/web/app/providers/global-modals.tsx`
 
 **Interfaces:**
+
 - Consumes: `useCommentModal`（`getState().targetType`/`isVisible`/`hide()`/`show()`/`close()`，from Task 1）、`useInlineEditorStore`（`getState().discardAll()`，from Task 3）、`useFriendLinksPausedStore`（`getState().reset()`，from Task 4）。
 - Produces: `NavigationRestoreGuard` —— 无 props、不渲染任何内容的组件，只在根 layout 挂载一次。同文件导出 `useNavigationRestoreSlot`（内部用的单槽位 store，`{ pathname: string | null }`，仅供测试 `setState()` 复位，不对外提供给业务组件使用）。
 
@@ -752,7 +779,12 @@ function popTo(rerender: (ui: ReactElement) => void, path: string) {
 
 describe("NavigationRestoreGuard", () => {
   beforeEach(() => {
-    useCommentModal.setState({ targetType: null, targetId: null, onCommentAdded: null, isVisible: false });
+    useCommentModal.setState({
+      targetType: null,
+      targetId: null,
+      onCommentAdded: null,
+      isVisible: false,
+    });
     useInlineEditorStore.setState({ editors: {} });
     useFriendLinksPausedStore.setState({ open: false });
     useNavigationRestoreSlot.setState({ pathname: null });
@@ -972,10 +1004,12 @@ EOF
 ### Task 7: 迁移 `comment-item.tsx` 到 `useInlineEditorStore`
 
 **Files:**
+
 - Modify: `apps/web/components/comments/parts/comment-item.tsx`
 - Modify: `apps/web/components/comments/parts/comment-item.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `useInlineEditorStore` from Task 3（`open`/`setContent`/`close`/`submitSuccess`）；`InlineReplyEditor` 新的 `value`/`onChange` props from Task 5。
 - key 约定：回复框 `` `${targetType}-comment:${comment.id}:reply` ``，编辑框 `` `${targetType}-comment:${comment.id}:edit` ``。
 
@@ -1022,9 +1056,9 @@ import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 3. 在 `describe("CommentItem", ...)` 块内最前面新增：
 
 ```tsx
-  beforeEach(() => {
-    useInlineEditorStore.setState({ editors: {} });
-  });
+beforeEach(() => {
+  useInlineEditorStore.setState({ editors: {} });
+});
 ```
 
 4. 把第 61 行（`<textarea data-testid="inline-editor-value" readOnly value={initialValue} />`，已在上面第 1 步一并替换，这里不需要重复处理）保持第 1 步替换后的版本。
@@ -1032,54 +1066,54 @@ import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 5. 在文件末尾（最后一个 `it` 之后、`});` 之前）追加两个新用例，验证跨挂载恢复：
 
 ```tsx
-  it("展开回复框输入草稿后卸载重新挂载，草稿仍在", async () => {
-    const user = userEvent.setup();
-    const { unmount } = render(
-      <CommentItem
-        comment={baseComment}
-        targetType="article"
-        onSubmitReply={vi.fn().mockResolvedValue(true)}
-      />,
-    );
+it("展开回复框输入草稿后卸载重新挂载，草稿仍在", async () => {
+  const user = userEvent.setup();
+  const { unmount } = render(
+    <CommentItem
+      comment={baseComment}
+      targetType="article"
+      onSubmitReply={vi.fn().mockResolvedValue(true)}
+    />,
+  );
 
-    await user.click(screen.getByRole("button", { name: "回复" }));
-    await user.type(screen.getByTestId("inline-editor-value"), "写了一半");
-    unmount();
+  await user.click(screen.getByRole("button", { name: "回复" }));
+  await user.type(screen.getByTestId("inline-editor-value"), "写了一半");
+  unmount();
 
-    render(
-      <CommentItem
-        comment={baseComment}
-        targetType="article"
-        onSubmitReply={vi.fn().mockResolvedValue(true)}
-      />,
-    );
+  render(
+    <CommentItem
+      comment={baseComment}
+      targetType="article"
+      onSubmitReply={vi.fn().mockResolvedValue(true)}
+    />,
+  );
 
-    expect(screen.getByTestId("inline-reply-editor")).toBeTruthy();
-    expect(screen.getByTestId("inline-editor-value")).toHaveValue("写了一半");
-  });
+  expect(screen.getByTestId("inline-reply-editor")).toBeTruthy();
+  expect(screen.getByTestId("inline-editor-value")).toHaveValue("写了一半");
+});
 
-  it("删除评论成功后清空该评论关联的回复/编辑草稿", async () => {
-    const user = userEvent.setup();
-    const onDelete = vi.fn().mockResolvedValue(true);
-    render(
-      <CommentItem
-        comment={baseComment}
-        targetType="article"
-        currentUserId={10}
-        onDelete={onDelete}
-        onSubmitReply={vi.fn().mockResolvedValue(true)}
-      />,
-    );
+it("删除评论成功后清空该评论关联的回复/编辑草稿", async () => {
+  const user = userEvent.setup();
+  const onDelete = vi.fn().mockResolvedValue(true);
+  render(
+    <CommentItem
+      comment={baseComment}
+      targetType="article"
+      currentUserId={10}
+      onDelete={onDelete}
+      onSubmitReply={vi.fn().mockResolvedValue(true)}
+    />,
+  );
 
-    await user.click(screen.getByRole("button", { name: "回复" }));
-    await user.type(screen.getByTestId("inline-editor-value"), "草稿");
+  await user.click(screen.getByRole("button", { name: "回复" }));
+  await user.type(screen.getByTestId("inline-editor-value"), "草稿");
 
-    await user.click(screen.getByRole("button", { name: "删除评论" }));
-    await user.click(screen.getByRole("button", { name: "删除" }));
+  await user.click(screen.getByRole("button", { name: "删除评论" }));
+  await user.click(screen.getByRole("button", { name: "删除" }));
 
-    await Promise.resolve();
-    expect(useInlineEditorStore.getState().editors).toEqual({});
-  });
+  await Promise.resolve();
+  expect(useInlineEditorStore.getState().editors).toEqual({});
+});
 ```
 
 - [ ] **Step 2: 运行测试确认失败**
@@ -1100,230 +1134,222 @@ import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 2. 把：
 
 ```ts
-  const { userId } = useSession();
-  const openLoginModal = useLoginModal((s) => s.open);
-  const [repliesOpen, setRepliesOpen] = useState(false);
-  const [isReplying, setIsReplying] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+const { userId } = useSession();
+const openLoginModal = useLoginModal((s) => s.open);
+const [repliesOpen, setRepliesOpen] = useState(false);
+const [isReplying, setIsReplying] = useState(false);
+const [isEditing, setIsEditing] = useState(false);
 ```
 
 改为：
 
 ```ts
-  const { userId } = useSession();
-  const openLoginModal = useLoginModal((s) => s.open);
-  const [repliesOpen, setRepliesOpen] = useState(false);
-  const replyKey = `${targetType}-comment:${comment.id}:reply`;
-  const editKey = `${targetType}-comment:${comment.id}:edit`;
-  const isReplying = useInlineEditorStore((s) => Boolean(s.editors[replyKey]?.isOpen));
-  const isEditing = useInlineEditorStore((s) => Boolean(s.editors[editKey]?.isOpen));
-  const replyContent = useInlineEditorStore((s) => s.editors[replyKey]?.content ?? "");
-  const editContent = useInlineEditorStore((s) => s.editors[editKey]?.content ?? "");
-  const {
-    open: openEditor,
-    setContent: setEditorContent,
-    close: closeEditor,
-    submitSuccess: editorSubmitSuccess,
-  } = useInlineEditorStore();
+const { userId } = useSession();
+const openLoginModal = useLoginModal((s) => s.open);
+const [repliesOpen, setRepliesOpen] = useState(false);
+const replyKey = `${targetType}-comment:${comment.id}:reply`;
+const editKey = `${targetType}-comment:${comment.id}:edit`;
+const isReplying = useInlineEditorStore((s) => Boolean(s.editors[replyKey]?.isOpen));
+const isEditing = useInlineEditorStore((s) => Boolean(s.editors[editKey]?.isOpen));
+const replyContent = useInlineEditorStore((s) => s.editors[replyKey]?.content ?? "");
+const editContent = useInlineEditorStore((s) => s.editors[editKey]?.content ?? "");
+const {
+  open: openEditor,
+  setContent: setEditorContent,
+  close: closeEditor,
+  submitSuccess: editorSubmitSuccess,
+} = useInlineEditorStore();
 ```
 
 3. 把 `handleReply`：
 
 ```ts
-  const handleReply = useCallback(() => {
-    if (onSubmitReply) {
-      if (isReplying) {
-        setIsReplying(false);
-        return;
-      }
-      if (!userId) {
-        openLoginModal();
-        return;
-      }
-      setIsEditing(false);
-      setIsReplying(true);
+const handleReply = useCallback(() => {
+  if (onSubmitReply) {
+    if (isReplying) {
+      setIsReplying(false);
       return;
     }
     if (!userId) {
       openLoginModal();
       return;
     }
-    onReply?.({ commentId: comment.id, toUsername: displayName });
-  }, [isReplying, userId, openLoginModal, onSubmitReply, onReply, comment.id, displayName]);
+    setIsEditing(false);
+    setIsReplying(true);
+    return;
+  }
+  if (!userId) {
+    openLoginModal();
+    return;
+  }
+  onReply?.({ commentId: comment.id, toUsername: displayName });
+}, [isReplying, userId, openLoginModal, onSubmitReply, onReply, comment.id, displayName]);
 ```
 
 改为：
 
 ```ts
-  const handleReply = useCallback(() => {
-    if (onSubmitReply) {
-      if (isReplying) {
-        closeEditor(replyKey);
-        return;
-      }
-      if (!userId) {
-        openLoginModal();
-        return;
-      }
-      closeEditor(editKey);
-      openEditor(replyKey);
+const handleReply = useCallback(() => {
+  if (onSubmitReply) {
+    if (isReplying) {
+      closeEditor(replyKey);
       return;
     }
     if (!userId) {
       openLoginModal();
       return;
     }
-    onReply?.({ commentId: comment.id, toUsername: displayName });
-  }, [
-    isReplying,
-    userId,
-    openLoginModal,
-    onSubmitReply,
-    onReply,
-    comment.id,
-    displayName,
-    closeEditor,
-    openEditor,
-    replyKey,
-    editKey,
-  ]);
+    closeEditor(editKey);
+    openEditor(replyKey);
+    return;
+  }
+  if (!userId) {
+    openLoginModal();
+    return;
+  }
+  onReply?.({ commentId: comment.id, toUsername: displayName });
+}, [
+  isReplying,
+  userId,
+  openLoginModal,
+  onSubmitReply,
+  onReply,
+  comment.id,
+  displayName,
+  closeEditor,
+  openEditor,
+  replyKey,
+  editKey,
+]);
 ```
 
 4. 把 `handleDelete`：
 
 ```ts
-  const handleDelete = useCallback(() => {
-    return onDelete?.(comment.id) ?? false;
-  }, [onDelete, comment.id]);
+const handleDelete = useCallback(() => {
+  return onDelete?.(comment.id) ?? false;
+}, [onDelete, comment.id]);
 ```
 
 改为：
 
 ```ts
-  const handleDelete = useCallback(() => {
-    const result = onDelete?.(comment.id);
-    result?.then((ok) => {
-      if (ok) {
-        closeEditor(replyKey);
-        closeEditor(editKey);
-      }
-    });
-    return result ?? false;
-  }, [onDelete, comment.id, closeEditor, replyKey, editKey]);
+const handleDelete = useCallback(() => {
+  const result = onDelete?.(comment.id);
+  result?.then((ok) => {
+    if (ok) {
+      closeEditor(replyKey);
+      closeEditor(editKey);
+    }
+  });
+  return result ?? false;
+}, [onDelete, comment.id, closeEditor, replyKey, editKey]);
 ```
 
 5. 把 `handleEdit`：
 
 ```ts
-  const handleEdit = useCallback(() => {
-    if (!isOwnComment || !canEdit) return;
-    if (onSubmitEditComment) {
-      if (isEditing) {
-        setIsEditing(false);
-        return;
-      }
-      setIsReplying(false);
-      setIsEditing(true);
+const handleEdit = useCallback(() => {
+  if (!isOwnComment || !canEdit) return;
+  if (onSubmitEditComment) {
+    if (isEditing) {
+      setIsEditing(false);
       return;
     }
-    onEditComment?.({
-      type: "comment",
-      id: comment.id,
-      initialContent: pendingContent,
-      pendingReview: Boolean(comment.moderation?.has_pending_revision),
-    });
-  }, [
-    isOwnComment,
-    canEdit,
-    isEditing,
-    onSubmitEditComment,
-    onEditComment,
-    comment,
-    pendingContent,
-  ]);
+    setIsReplying(false);
+    setIsEditing(true);
+    return;
+  }
+  onEditComment?.({
+    type: "comment",
+    id: comment.id,
+    initialContent: pendingContent,
+    pendingReview: Boolean(comment.moderation?.has_pending_revision),
+  });
+}, [isOwnComment, canEdit, isEditing, onSubmitEditComment, onEditComment, comment, pendingContent]);
 ```
 
 改为：
 
 ```ts
-  const handleEdit = useCallback(() => {
-    if (!isOwnComment || !canEdit) return;
-    if (onSubmitEditComment) {
-      if (isEditing) {
-        closeEditor(editKey);
-        return;
-      }
-      closeEditor(replyKey);
-      openEditor(editKey, pendingContent);
+const handleEdit = useCallback(() => {
+  if (!isOwnComment || !canEdit) return;
+  if (onSubmitEditComment) {
+    if (isEditing) {
+      closeEditor(editKey);
       return;
     }
-    onEditComment?.({
-      type: "comment",
-      id: comment.id,
-      initialContent: pendingContent,
-      pendingReview: Boolean(comment.moderation?.has_pending_revision),
-    });
-  }, [
-    isOwnComment,
-    canEdit,
-    isEditing,
-    onSubmitEditComment,
-    onEditComment,
-    comment,
-    pendingContent,
-    closeEditor,
-    openEditor,
-    replyKey,
-    editKey,
-  ]);
+    closeEditor(replyKey);
+    openEditor(editKey, pendingContent);
+    return;
+  }
+  onEditComment?.({
+    type: "comment",
+    id: comment.id,
+    initialContent: pendingContent,
+    pendingReview: Boolean(comment.moderation?.has_pending_revision),
+  });
+}, [
+  isOwnComment,
+  canEdit,
+  isEditing,
+  onSubmitEditComment,
+  onEditComment,
+  comment,
+  pendingContent,
+  closeEditor,
+  openEditor,
+  replyKey,
+  editKey,
+]);
 ```
 
 6. 把 `handleReplySubmit`/`handleEditSubmit`：
 
 ```ts
-  const handleReplySubmit = useCallback(
-    async (content: string) => {
-      const ok = (await onSubmitReply?.(comment.id, undefined, content)) ?? false;
-      if (ok) setIsReplying(false);
-      return ok;
-    },
-    [onSubmitReply, comment.id],
-  );
+const handleReplySubmit = useCallback(
+  async (content: string) => {
+    const ok = (await onSubmitReply?.(comment.id, undefined, content)) ?? false;
+    if (ok) setIsReplying(false);
+    return ok;
+  },
+  [onSubmitReply, comment.id],
+);
 ```
 
 ```ts
-  const handleEditSubmit = useCallback(
-    async (content: string) => {
-      const ok = (await onSubmitEditComment?.(comment.id, content)) ?? false;
-      if (ok) setIsEditing(false);
-      return ok;
-    },
-    [onSubmitEditComment, comment.id],
-  );
+const handleEditSubmit = useCallback(
+  async (content: string) => {
+    const ok = (await onSubmitEditComment?.(comment.id, content)) ?? false;
+    if (ok) setIsEditing(false);
+    return ok;
+  },
+  [onSubmitEditComment, comment.id],
+);
 ```
 
 分别改为：
 
 ```ts
-  const handleReplySubmit = useCallback(
-    async (content: string) => {
-      const ok = (await onSubmitReply?.(comment.id, undefined, content)) ?? false;
-      if (ok) editorSubmitSuccess(replyKey);
-      return ok;
-    },
-    [onSubmitReply, comment.id, editorSubmitSuccess, replyKey],
-  );
+const handleReplySubmit = useCallback(
+  async (content: string) => {
+    const ok = (await onSubmitReply?.(comment.id, undefined, content)) ?? false;
+    if (ok) editorSubmitSuccess(replyKey);
+    return ok;
+  },
+  [onSubmitReply, comment.id, editorSubmitSuccess, replyKey],
+);
 ```
 
 ```ts
-  const handleEditSubmit = useCallback(
-    async (content: string) => {
-      const ok = (await onSubmitEditComment?.(comment.id, content)) ?? false;
-      if (ok) editorSubmitSuccess(editKey);
-      return ok;
-    },
-    [onSubmitEditComment, comment.id, editorSubmitSuccess, editKey],
-  );
+const handleEditSubmit = useCallback(
+  async (content: string) => {
+    const ok = (await onSubmitEditComment?.(comment.id, content)) ?? false;
+    if (ok) editorSubmitSuccess(editKey);
+    return ok;
+  },
+  [onSubmitEditComment, comment.id, editorSubmitSuccess, editKey],
+);
 ```
 
 7. 渲染部分，把：
@@ -1376,33 +1402,37 @@ import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 8. 渲染部分，把：
 
 ```tsx
-      {isReplying && (
-        <InlineReplyEditor
-          placeholder="请输入你的回复内容"
-          header={<ReplyBanner toUsername={displayName} onCancel={() => setIsReplying(false)} />}
-          isLoggedIn={!!userId}
-          onLoginRequired={openLoginModal}
-          onSubmit={handleReplySubmit}
-          className="mb-4"
-        />
-      )}
+{
+  isReplying && (
+    <InlineReplyEditor
+      placeholder="请输入你的回复内容"
+      header={<ReplyBanner toUsername={displayName} onCancel={() => setIsReplying(false)} />}
+      isLoggedIn={!!userId}
+      onLoginRequired={openLoginModal}
+      onSubmit={handleReplySubmit}
+      className="mb-4"
+    />
+  );
+}
 ```
 
 改为：
 
 ```tsx
-      {isReplying && (
-        <InlineReplyEditor
-          value={replyContent}
-          onChange={(value) => setEditorContent(replyKey, value)}
-          placeholder="请输入你的回复内容"
-          header={<ReplyBanner toUsername={displayName} onCancel={() => closeEditor(replyKey)} />}
-          isLoggedIn={!!userId}
-          onLoginRequired={openLoginModal}
-          onSubmit={handleReplySubmit}
-          className="mb-4"
-        />
-      )}
+{
+  isReplying && (
+    <InlineReplyEditor
+      value={replyContent}
+      onChange={(value) => setEditorContent(replyKey, value)}
+      placeholder="请输入你的回复内容"
+      header={<ReplyBanner toUsername={displayName} onCancel={() => closeEditor(replyKey)} />}
+      isLoggedIn={!!userId}
+      onLoginRequired={openLoginModal}
+      onSubmit={handleReplySubmit}
+      className="mb-4"
+    />
+  );
+}
 ```
 
 - [ ] **Step 4: 运行测试确认通过**
@@ -1428,10 +1458,12 @@ EOF
 ### Task 8: 迁移 `guestbook-item.tsx` 到 `useInlineEditorStore`
 
 **Files:**
+
 - Modify: `apps/web/components/guestbook/guestbook-item.tsx`
 - Modify: `apps/web/components/guestbook/guestbook-item.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `useInlineEditorStore` from Task 3；`InlineReplyEditor` 新 props from Task 5。
 - key 约定：回复框 `` `guestbook:${item.id}:reply` ``，编辑框 `` `guestbook:${item.id}:edit` ``。
 
@@ -1478,9 +1510,9 @@ import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 3. 在 `describe("GuestbookItem", ...)` 块最前面新增：
 
 ```tsx
-  beforeEach(() => {
-    useInlineEditorStore.setState({ editors: {} });
-  });
+beforeEach(() => {
+  useInlineEditorStore.setState({ editors: {} });
+});
 ```
 
 4. 第 330-360 行"中风险留言：公开显示旧正文，编辑器初始正文为 pending_content"这条用例里，`await userEvent.click(screen.getByRole("button", { name: "保存" }));` 之后的断言不变（因为 mock 已经改成用 `value` 渲染，`value` 初始就是 `pending_content`，逻辑等价）。
@@ -1488,41 +1520,41 @@ import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 5. 在文件末尾（`describe("作者编辑", ...)` 块的最后一个 `it` 之后，即整个文件倒数第二个 `});` 之前）追加两个新用例：
 
 ```tsx
-  it("展开回复框输入草稿后卸载重新挂载，草稿仍在", async () => {
-    const { unmount } = render(
-      <GuestbookItem item={mockItem} onSubmitReply={vi.fn().mockResolvedValue(true)} />,
-    );
+it("展开回复框输入草稿后卸载重新挂载，草稿仍在", async () => {
+  const { unmount } = render(
+    <GuestbookItem item={mockItem} onSubmitReply={vi.fn().mockResolvedValue(true)} />,
+  );
 
-    await userEvent.click(screen.getByRole("button", { name: "回复" }));
-    await userEvent.type(screen.getByTestId("inline-editor-value"), "写了一半");
-    unmount();
+  await userEvent.click(screen.getByRole("button", { name: "回复" }));
+  await userEvent.type(screen.getByTestId("inline-editor-value"), "写了一半");
+  unmount();
 
-    render(<GuestbookItem item={mockItem} onSubmitReply={vi.fn().mockResolvedValue(true)} />);
+  render(<GuestbookItem item={mockItem} onSubmitReply={vi.fn().mockResolvedValue(true)} />);
 
-    expect(screen.getByTestId("inline-editor")).toBeTruthy();
-    expect(screen.getByTestId("inline-editor-value")).toHaveValue("写了一半");
-  });
+  expect(screen.getByTestId("inline-editor")).toBeTruthy();
+  expect(screen.getByTestId("inline-editor-value")).toHaveValue("写了一半");
+});
 
-  it("删除留言成功后清空该留言关联的回复/编辑草稿", async () => {
-    const onDelete = vi.fn().mockResolvedValue(true);
-    render(
-      <GuestbookItem
-        item={mockItem}
-        currentUserId={1}
-        onDelete={onDelete}
-        onSubmitReply={vi.fn().mockResolvedValue(true)}
-      />,
-    );
+it("删除留言成功后清空该留言关联的回复/编辑草稿", async () => {
+  const onDelete = vi.fn().mockResolvedValue(true);
+  render(
+    <GuestbookItem
+      item={mockItem}
+      currentUserId={1}
+      onDelete={onDelete}
+      onSubmitReply={vi.fn().mockResolvedValue(true)}
+    />,
+  );
 
-    await userEvent.click(screen.getByRole("button", { name: "回复" }));
-    await userEvent.type(screen.getByTestId("inline-editor-value"), "草稿");
+  await userEvent.click(screen.getByRole("button", { name: "回复" }));
+  await userEvent.type(screen.getByTestId("inline-editor-value"), "草稿");
 
-    await userEvent.click(screen.getByRole("button", { name: "删除留言" }));
-    await userEvent.click(screen.getByRole("button", { name: "删除" }));
+  await userEvent.click(screen.getByRole("button", { name: "删除留言" }));
+  await userEvent.click(screen.getByRole("button", { name: "删除" }));
 
-    await Promise.resolve();
-    expect(useInlineEditorStore.getState().editors).toEqual({});
-  });
+  await Promise.resolve();
+  expect(useInlineEditorStore.getState().editors).toEqual({});
+});
 ```
 
 - [ ] **Step 2: 运行测试确认失败**
@@ -1543,116 +1575,116 @@ import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 2. 把：
 
 ```ts
-  const displayName = getThreadDisplayName(item.user);
-  const { userId } = useSession();
-  const openLoginModal = useLoginModal((s) => s.open);
-  const [repliesOpen, setRepliesOpen] = useState(false);
-  const [isReplying, setIsReplying] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+const displayName = getThreadDisplayName(item.user);
+const { userId } = useSession();
+const openLoginModal = useLoginModal((s) => s.open);
+const [repliesOpen, setRepliesOpen] = useState(false);
+const [isReplying, setIsReplying] = useState(false);
+const [isEditing, setIsEditing] = useState(false);
 ```
 
 改为：
 
 ```ts
-  const displayName = getThreadDisplayName(item.user);
-  const { userId } = useSession();
-  const openLoginModal = useLoginModal((s) => s.open);
-  const [repliesOpen, setRepliesOpen] = useState(false);
-  const replyKey = `guestbook:${item.id}:reply`;
-  const editKey = `guestbook:${item.id}:edit`;
-  const isReplying = useInlineEditorStore((s) => Boolean(s.editors[replyKey]?.isOpen));
-  const isEditing = useInlineEditorStore((s) => Boolean(s.editors[editKey]?.isOpen));
-  const replyContent = useInlineEditorStore((s) => s.editors[replyKey]?.content ?? "");
-  const editContent = useInlineEditorStore((s) => s.editors[editKey]?.content ?? "");
-  const {
-    open: openEditor,
-    setContent: setEditorContent,
-    close: closeEditor,
-    submitSuccess: editorSubmitSuccess,
-  } = useInlineEditorStore();
+const displayName = getThreadDisplayName(item.user);
+const { userId } = useSession();
+const openLoginModal = useLoginModal((s) => s.open);
+const [repliesOpen, setRepliesOpen] = useState(false);
+const replyKey = `guestbook:${item.id}:reply`;
+const editKey = `guestbook:${item.id}:edit`;
+const isReplying = useInlineEditorStore((s) => Boolean(s.editors[replyKey]?.isOpen));
+const isEditing = useInlineEditorStore((s) => Boolean(s.editors[editKey]?.isOpen));
+const replyContent = useInlineEditorStore((s) => s.editors[replyKey]?.content ?? "");
+const editContent = useInlineEditorStore((s) => s.editors[editKey]?.content ?? "");
+const {
+  open: openEditor,
+  setContent: setEditorContent,
+  close: closeEditor,
+  submitSuccess: editorSubmitSuccess,
+} = useInlineEditorStore();
 ```
 
 3. 把 `handleReply`：
 
 ```ts
-  const handleReply = useCallback(() => {
-    if (!canInteract) return;
-    if (isReplying) {
-      setIsReplying(false);
-      return;
-    }
-    if (!userId) {
-      openLoginModal();
-      return;
-    }
-    setIsEditing(false);
-    setIsReplying(true);
-  }, [canInteract, isReplying, userId, openLoginModal]);
+const handleReply = useCallback(() => {
+  if (!canInteract) return;
+  if (isReplying) {
+    setIsReplying(false);
+    return;
+  }
+  if (!userId) {
+    openLoginModal();
+    return;
+  }
+  setIsEditing(false);
+  setIsReplying(true);
+}, [canInteract, isReplying, userId, openLoginModal]);
 ```
 
 改为：
 
 ```ts
-  const handleReply = useCallback(() => {
-    if (!canInteract) return;
-    if (isReplying) {
-      closeEditor(replyKey);
-      return;
-    }
-    if (!userId) {
-      openLoginModal();
-      return;
-    }
-    closeEditor(editKey);
-    openEditor(replyKey);
-  }, [canInteract, isReplying, userId, openLoginModal, closeEditor, openEditor, replyKey, editKey]);
+const handleReply = useCallback(() => {
+  if (!canInteract) return;
+  if (isReplying) {
+    closeEditor(replyKey);
+    return;
+  }
+  if (!userId) {
+    openLoginModal();
+    return;
+  }
+  closeEditor(editKey);
+  openEditor(replyKey);
+}, [canInteract, isReplying, userId, openLoginModal, closeEditor, openEditor, replyKey, editKey]);
 ```
 
 4. 把：
 
 ```ts
-  const handleDelete = useCallback(() => onDelete?.(item.id) ?? false, [onDelete, item.id]);
+const handleDelete = useCallback(() => onDelete?.(item.id) ?? false, [onDelete, item.id]);
 ```
 
 改为：
 
 ```ts
-  const handleDelete = useCallback(() => {
-    const result = onDelete?.(item.id);
-    result?.then((ok) => {
-      if (ok) {
-        closeEditor(replyKey);
-        closeEditor(editKey);
-      }
-    });
-    return result ?? false;
-  }, [onDelete, item.id, closeEditor, replyKey, editKey]);
+const handleDelete = useCallback(() => {
+  const result = onDelete?.(item.id);
+  result?.then((ok) => {
+    if (ok) {
+      closeEditor(replyKey);
+      closeEditor(editKey);
+    }
+  });
+  return result ?? false;
+}, [onDelete, item.id, closeEditor, replyKey, editKey]);
 ```
 
 5. 把 `handleToggleEditor`：
 
 ```ts
-  const handleToggleEditor = useCallback(() => {
-    if (isEditing) {
-      setIsEditing(false);
-      return;
-    }
-    setIsReplying(false);
-    setIsEditing(true);
-  }, [isEditing]);
+const handleToggleEditor = useCallback(() => {
+  if (isEditing) {
+    setIsEditing(false);
+    return;
+  }
+  setIsReplying(false);
+  setIsEditing(true);
+}, [isEditing]);
 ```
 
 改为：
 
 ```ts
-  const handleToggleEditor = useCallback(() => {
-    if (isEditing) {
-      closeEditor(editKey);
-      return;
-    }
-    closeEditor(replyKey);
-    openEditor(editKey, editInitialContent);
-  }, [isEditing, closeEditor, openEditor, replyKey, editKey, editInitialContent]);
+const handleToggleEditor = useCallback(() => {
+  if (isEditing) {
+    closeEditor(editKey);
+    return;
+  }
+  closeEditor(replyKey);
+  openEditor(editKey, editInitialContent);
+}, [isEditing, closeEditor, openEditor, replyKey, editKey, editInitialContent]);
 ```
 
 > 注意：`editInitialContent` 目前在源文件里定义在 `handleToggleEditor` 之后（`const editInitialContent = item.moderation?.pending_content ?? item.content;`）。需要把这一行**移到 `handleToggleEditor` 定义之前**（放在 `handleDeleteReply` 之后即可），否则会在赋值前引用。
@@ -1660,45 +1692,45 @@ import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 6. 把 `handleReplySubmit`/`handleEditSubmit`：
 
 ```ts
-  const handleReplySubmit = useCallback(
-    async (content: string) => {
-      const ok = (await onSubmitReply?.(item.id, undefined, content)) ?? false;
-      if (ok) setIsReplying(false);
-      return ok;
-    },
-    [onSubmitReply, item.id],
-  );
+const handleReplySubmit = useCallback(
+  async (content: string) => {
+    const ok = (await onSubmitReply?.(item.id, undefined, content)) ?? false;
+    if (ok) setIsReplying(false);
+    return ok;
+  },
+  [onSubmitReply, item.id],
+);
 
-  const handleEditSubmit = useCallback(
-    async (content: string) => {
-      const ok = (await onEdit?.(item.id, content)) ?? false;
-      if (ok) setIsEditing(false);
-      return ok;
-    },
-    [onEdit, item.id],
-  );
+const handleEditSubmit = useCallback(
+  async (content: string) => {
+    const ok = (await onEdit?.(item.id, content)) ?? false;
+    if (ok) setIsEditing(false);
+    return ok;
+  },
+  [onEdit, item.id],
+);
 ```
 
 改为：
 
 ```ts
-  const handleReplySubmit = useCallback(
-    async (content: string) => {
-      const ok = (await onSubmitReply?.(item.id, undefined, content)) ?? false;
-      if (ok) editorSubmitSuccess(replyKey);
-      return ok;
-    },
-    [onSubmitReply, item.id, editorSubmitSuccess, replyKey],
-  );
+const handleReplySubmit = useCallback(
+  async (content: string) => {
+    const ok = (await onSubmitReply?.(item.id, undefined, content)) ?? false;
+    if (ok) editorSubmitSuccess(replyKey);
+    return ok;
+  },
+  [onSubmitReply, item.id, editorSubmitSuccess, replyKey],
+);
 
-  const handleEditSubmit = useCallback(
-    async (content: string) => {
-      const ok = (await onEdit?.(item.id, content)) ?? false;
-      if (ok) editorSubmitSuccess(editKey);
-      return ok;
-    },
-    [onEdit, item.id, editorSubmitSuccess, editKey],
-  );
+const handleEditSubmit = useCallback(
+  async (content: string) => {
+    const ok = (await onEdit?.(item.id, content)) ?? false;
+    if (ok) editorSubmitSuccess(editKey);
+    return ok;
+  },
+  [onEdit, item.id, editorSubmitSuccess, editKey],
+);
 ```
 
 7. 渲染部分，把：
@@ -1751,33 +1783,37 @@ import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 8. 渲染部分，把：
 
 ```tsx
-      {isReplying && (
-        <InlineReplyEditor
-          placeholder="请输入你的回复内容"
-          header={<ReplyBanner toUsername={displayName} onCancel={() => setIsReplying(false)} />}
-          isLoggedIn={!!userId}
-          onLoginRequired={openLoginModal}
-          onSubmit={handleReplySubmit}
-          className="mb-4"
-        />
-      )}
+{
+  isReplying && (
+    <InlineReplyEditor
+      placeholder="请输入你的回复内容"
+      header={<ReplyBanner toUsername={displayName} onCancel={() => setIsReplying(false)} />}
+      isLoggedIn={!!userId}
+      onLoginRequired={openLoginModal}
+      onSubmit={handleReplySubmit}
+      className="mb-4"
+    />
+  );
+}
 ```
 
 改为：
 
 ```tsx
-      {isReplying && (
-        <InlineReplyEditor
-          value={replyContent}
-          onChange={(value) => setEditorContent(replyKey, value)}
-          placeholder="请输入你的回复内容"
-          header={<ReplyBanner toUsername={displayName} onCancel={() => closeEditor(replyKey)} />}
-          isLoggedIn={!!userId}
-          onLoginRequired={openLoginModal}
-          onSubmit={handleReplySubmit}
-          className="mb-4"
-        />
-      )}
+{
+  isReplying && (
+    <InlineReplyEditor
+      value={replyContent}
+      onChange={(value) => setEditorContent(replyKey, value)}
+      placeholder="请输入你的回复内容"
+      header={<ReplyBanner toUsername={displayName} onCancel={() => closeEditor(replyKey)} />}
+      isLoggedIn={!!userId}
+      onLoginRequired={openLoginModal}
+      onSubmit={handleReplySubmit}
+      className="mb-4"
+    />
+  );
+}
 ```
 
 - [ ] **Step 4: 运行测试确认通过**
@@ -1803,10 +1839,12 @@ EOF
 ### Task 9: 迁移 `comment-replies.tsx` 的 `ReplyItem` 到 `useInlineEditorStore`
 
 **Files:**
+
 - Modify: `apps/web/components/comments/parts/comment-replies.tsx`
 - Modify: `apps/web/components/comments/parts/comment-replies.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `useInlineEditorStore` from Task 3；`InlineReplyEditor` 新 props from Task 5。
 - key 约定：某条回复自己的回复框 `` `${targetType}-reply:${reply.id}:reply` ``，编辑框 `` `${targetType}-reply:${reply.id}:edit` ``。
 
@@ -1858,22 +1896,22 @@ import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 3. 找到已有的 `beforeEach`：
 
 ```ts
-  beforeEach(() => {
-    vi.resetAllMocks();
-    global.fetch = vi.fn();
-    useCommentRepliesStore.setState({ openKeys: new Set() });
-  });
+beforeEach(() => {
+  vi.resetAllMocks();
+  global.fetch = vi.fn();
+  useCommentRepliesStore.setState({ openKeys: new Set() });
+});
 ```
 
 改为同时复位新 store：
 
 ```ts
-  beforeEach(() => {
-    vi.resetAllMocks();
-    global.fetch = vi.fn();
-    useCommentRepliesStore.setState({ openKeys: new Set() });
-    useInlineEditorStore.setState({ editors: {} });
-  });
+beforeEach(() => {
+  vi.resetAllMocks();
+  global.fetch = vi.fn();
+  useCommentRepliesStore.setState({ openKeys: new Set() });
+  useInlineEditorStore.setState({ editors: {} });
+});
 ```
 
 4. 第 306-328 行"点击回复内的回复按钮展开内联回复框，提交时调用 onSubmitReply"用例里 `expect(screen.getByTestId("inline-editor-placeholder")).toHaveTextContent("请输入你的回复内容");` 这一断言不变，其余逻辑因为 mock 改成受控写法而自然兼容。
@@ -1966,302 +2004,310 @@ import { useInlineEditorStore } from "@/store/use-inline-editor-store";
 2. 把 `ReplyItem` 内部：
 
 ```ts
-  const { userId } = useSession();
-  const openLoginModal = useLoginModal((s) => s.open);
-  const { toggleReplyLike } = useCommentLike(targetType);
-  const isOwnReply = currentUserId != null && currentUserId === reply.from_user_id;
-  const [isReplying, setIsReplying] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+const { userId } = useSession();
+const openLoginModal = useLoginModal((s) => s.open);
+const { toggleReplyLike } = useCommentLike(targetType);
+const isOwnReply = currentUserId != null && currentUserId === reply.from_user_id;
+const [isReplying, setIsReplying] = useState(false);
+const [isEditing, setIsEditing] = useState(false);
 ```
 
 改为：
 
 ```ts
-  const { userId } = useSession();
-  const openLoginModal = useLoginModal((s) => s.open);
-  const { toggleReplyLike } = useCommentLike(targetType);
-  const isOwnReply = currentUserId != null && currentUserId === reply.from_user_id;
-  const replyKey = `${targetType}-reply:${reply.id}:reply`;
-  const editKey = `${targetType}-reply:${reply.id}:edit`;
-  const isReplying = useInlineEditorStore((s) => Boolean(s.editors[replyKey]?.isOpen));
-  const isEditing = useInlineEditorStore((s) => Boolean(s.editors[editKey]?.isOpen));
-  const replyContent = useInlineEditorStore((s) => s.editors[replyKey]?.content ?? "");
-  const editContent = useInlineEditorStore((s) => s.editors[editKey]?.content ?? "");
-  const {
-    open: openEditor,
-    setContent: setEditorContent,
-    close: closeEditor,
-    submitSuccess: editorSubmitSuccess,
-  } = useInlineEditorStore();
+const { userId } = useSession();
+const openLoginModal = useLoginModal((s) => s.open);
+const { toggleReplyLike } = useCommentLike(targetType);
+const isOwnReply = currentUserId != null && currentUserId === reply.from_user_id;
+const replyKey = `${targetType}-reply:${reply.id}:reply`;
+const editKey = `${targetType}-reply:${reply.id}:edit`;
+const isReplying = useInlineEditorStore((s) => Boolean(s.editors[replyKey]?.isOpen));
+const isEditing = useInlineEditorStore((s) => Boolean(s.editors[editKey]?.isOpen));
+const replyContent = useInlineEditorStore((s) => s.editors[replyKey]?.content ?? "");
+const editContent = useInlineEditorStore((s) => s.editors[editKey]?.content ?? "");
+const {
+  open: openEditor,
+  setContent: setEditorContent,
+  close: closeEditor,
+  submitSuccess: editorSubmitSuccess,
+} = useInlineEditorStore();
 ```
 
 3. 把 `handleReply`：
 
 ```ts
-  const handleReply = useCallback(() => {
-    if (onSubmitReply) {
-      if (isReplying) {
-        setIsReplying(false);
-        return;
-      }
-      if (!userId) {
-        openLoginModal();
-        return;
-      }
-      setIsEditing(false);
-      setIsReplying(true);
+const handleReply = useCallback(() => {
+  if (onSubmitReply) {
+    if (isReplying) {
+      setIsReplying(false);
       return;
     }
     if (!userId) {
       openLoginModal();
       return;
     }
-    onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName });
-  }, [isReplying, userId, openLoginModal, onSubmitReply, onReply, commentId, reply.id, fromName]);
+    setIsEditing(false);
+    setIsReplying(true);
+    return;
+  }
+  if (!userId) {
+    openLoginModal();
+    return;
+  }
+  onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName });
+}, [isReplying, userId, openLoginModal, onSubmitReply, onReply, commentId, reply.id, fromName]);
 ```
 
 改为：
 
 ```ts
-  const handleReply = useCallback(() => {
-    if (onSubmitReply) {
-      if (isReplying) {
-        closeEditor(replyKey);
-        return;
-      }
-      if (!userId) {
-        openLoginModal();
-        return;
-      }
-      closeEditor(editKey);
-      openEditor(replyKey);
+const handleReply = useCallback(() => {
+  if (onSubmitReply) {
+    if (isReplying) {
+      closeEditor(replyKey);
       return;
     }
     if (!userId) {
       openLoginModal();
       return;
     }
-    onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName });
-  }, [
-    isReplying,
-    userId,
-    openLoginModal,
-    onSubmitReply,
-    onReply,
-    commentId,
-    reply.id,
-    fromName,
-    closeEditor,
-    openEditor,
-    replyKey,
-    editKey,
-  ]);
+    closeEditor(editKey);
+    openEditor(replyKey);
+    return;
+  }
+  if (!userId) {
+    openLoginModal();
+    return;
+  }
+  onReply?.({ commentId, parentReplyId: reply.id, toUsername: fromName });
+}, [
+  isReplying,
+  userId,
+  openLoginModal,
+  onSubmitReply,
+  onReply,
+  commentId,
+  reply.id,
+  fromName,
+  closeEditor,
+  openEditor,
+  replyKey,
+  editKey,
+]);
 ```
 
 4. 把 `handleDelete`：
 
 ```ts
-  const handleDelete = useCallback(() => {
-    return onDeleteReply?.(reply.id) ?? false;
-  }, [onDeleteReply, reply.id]);
+const handleDelete = useCallback(() => {
+  return onDeleteReply?.(reply.id) ?? false;
+}, [onDeleteReply, reply.id]);
 ```
 
 改为：
 
 ```ts
-  const handleDelete = useCallback(() => {
-    const result = onDeleteReply?.(reply.id);
-    result?.then((ok) => {
-      if (ok) {
-        closeEditor(replyKey);
-        closeEditor(editKey);
-      }
-    });
-    return result ?? false;
-  }, [onDeleteReply, reply.id, closeEditor, replyKey, editKey]);
+const handleDelete = useCallback(() => {
+  const result = onDeleteReply?.(reply.id);
+  result?.then((ok) => {
+    if (ok) {
+      closeEditor(replyKey);
+      closeEditor(editKey);
+    }
+  });
+  return result ?? false;
+}, [onDeleteReply, reply.id, closeEditor, replyKey, editKey]);
 ```
 
 5. 把 `handleEdit`：
 
 ```ts
-  const handleEdit = useCallback(() => {
-    if (!isOwnReply || !canEdit) return;
-    if (onSubmitEditReply) {
-      if (isEditing) {
-        setIsEditing(false);
-        return;
-      }
-      setIsReplying(false);
-      setIsEditing(true);
+const handleEdit = useCallback(() => {
+  if (!isOwnReply || !canEdit) return;
+  if (onSubmitEditReply) {
+    if (isEditing) {
+      setIsEditing(false);
       return;
     }
-    onEditReply?.({
-      type: "reply",
-      id: reply.id,
-      commentId,
-      parentReplyId: reply.parent_reply_id,
-      initialContent: pendingContent,
-      pendingReview: Boolean(reply.moderation?.has_pending_revision),
-    });
-  }, [
-    isOwnReply,
-    canEdit,
-    isEditing,
-    onSubmitEditReply,
-    onEditReply,
-    reply,
+    setIsReplying(false);
+    setIsEditing(true);
+    return;
+  }
+  onEditReply?.({
+    type: "reply",
+    id: reply.id,
     commentId,
-    pendingContent,
-  ]);
+    parentReplyId: reply.parent_reply_id,
+    initialContent: pendingContent,
+    pendingReview: Boolean(reply.moderation?.has_pending_revision),
+  });
+}, [
+  isOwnReply,
+  canEdit,
+  isEditing,
+  onSubmitEditReply,
+  onEditReply,
+  reply,
+  commentId,
+  pendingContent,
+]);
 ```
 
 改为：
 
 ```ts
-  const handleEdit = useCallback(() => {
-    if (!isOwnReply || !canEdit) return;
-    if (onSubmitEditReply) {
-      if (isEditing) {
-        closeEditor(editKey);
-        return;
-      }
-      closeEditor(replyKey);
-      openEditor(editKey, pendingContent);
+const handleEdit = useCallback(() => {
+  if (!isOwnReply || !canEdit) return;
+  if (onSubmitEditReply) {
+    if (isEditing) {
+      closeEditor(editKey);
       return;
     }
-    onEditReply?.({
-      type: "reply",
-      id: reply.id,
-      commentId,
-      parentReplyId: reply.parent_reply_id,
-      initialContent: pendingContent,
-      pendingReview: Boolean(reply.moderation?.has_pending_revision),
-    });
-  }, [
-    isOwnReply,
-    canEdit,
-    isEditing,
-    onSubmitEditReply,
-    onEditReply,
-    reply,
+    closeEditor(replyKey);
+    openEditor(editKey, pendingContent);
+    return;
+  }
+  onEditReply?.({
+    type: "reply",
+    id: reply.id,
     commentId,
-    pendingContent,
-    closeEditor,
-    openEditor,
-    replyKey,
-    editKey,
-  ]);
+    parentReplyId: reply.parent_reply_id,
+    initialContent: pendingContent,
+    pendingReview: Boolean(reply.moderation?.has_pending_revision),
+  });
+}, [
+  isOwnReply,
+  canEdit,
+  isEditing,
+  onSubmitEditReply,
+  onEditReply,
+  reply,
+  commentId,
+  pendingContent,
+  closeEditor,
+  openEditor,
+  replyKey,
+  editKey,
+]);
 ```
 
 6. 把 `handleReplySubmit`/`handleEditSubmit`：
 
 ```ts
-  const handleReplySubmit = useCallback(
-    async (content: string) => {
-      const ok = (await onSubmitReply?.(commentId, reply.id, content)) ?? false;
-      if (ok) setIsReplying(false);
-      return ok;
-    },
-    [onSubmitReply, commentId, reply.id],
-  );
+const handleReplySubmit = useCallback(
+  async (content: string) => {
+    const ok = (await onSubmitReply?.(commentId, reply.id, content)) ?? false;
+    if (ok) setIsReplying(false);
+    return ok;
+  },
+  [onSubmitReply, commentId, reply.id],
+);
 
-  const handleEditSubmit = useCallback(
-    async (content: string) => {
-      const ok =
-        (await onSubmitEditReply?.(reply.id, reply.parent_reply_id, commentId, content)) ?? false;
-      if (ok) setIsEditing(false);
-      return ok;
-    },
-    [onSubmitEditReply, reply.id, reply.parent_reply_id, commentId],
-  );
+const handleEditSubmit = useCallback(
+  async (content: string) => {
+    const ok =
+      (await onSubmitEditReply?.(reply.id, reply.parent_reply_id, commentId, content)) ?? false;
+    if (ok) setIsEditing(false);
+    return ok;
+  },
+  [onSubmitEditReply, reply.id, reply.parent_reply_id, commentId],
+);
 ```
 
 改为：
 
 ```ts
-  const handleReplySubmit = useCallback(
-    async (content: string) => {
-      const ok = (await onSubmitReply?.(commentId, reply.id, content)) ?? false;
-      if (ok) editorSubmitSuccess(replyKey);
-      return ok;
-    },
-    [onSubmitReply, commentId, reply.id, editorSubmitSuccess, replyKey],
-  );
+const handleReplySubmit = useCallback(
+  async (content: string) => {
+    const ok = (await onSubmitReply?.(commentId, reply.id, content)) ?? false;
+    if (ok) editorSubmitSuccess(replyKey);
+    return ok;
+  },
+  [onSubmitReply, commentId, reply.id, editorSubmitSuccess, replyKey],
+);
 
-  const handleEditSubmit = useCallback(
-    async (content: string) => {
-      const ok =
-        (await onSubmitEditReply?.(reply.id, reply.parent_reply_id, commentId, content)) ?? false;
-      if (ok) editorSubmitSuccess(editKey);
-      return ok;
-    },
-    [onSubmitEditReply, reply.id, reply.parent_reply_id, commentId, editorSubmitSuccess, editKey],
-  );
+const handleEditSubmit = useCallback(
+  async (content: string) => {
+    const ok =
+      (await onSubmitEditReply?.(reply.id, reply.parent_reply_id, commentId, content)) ?? false;
+    if (ok) editorSubmitSuccess(editKey);
+    return ok;
+  },
+  [onSubmitEditReply, reply.id, reply.parent_reply_id, commentId, editorSubmitSuccess, editKey],
+);
 ```
 
 7. 渲染部分，把：
 
 ```tsx
-      {isReplying && (
-        <InlineReplyEditor
-          placeholder="请输入你的回复内容"
-          header={<ReplyBanner toUsername={fromName} onCancel={() => setIsReplying(false)} />}
-          isLoggedIn={!!userId}
-          onLoginRequired={openLoginModal}
-          onSubmit={handleReplySubmit}
+{
+  isReplying && (
+    <InlineReplyEditor
+      placeholder="请输入你的回复内容"
+      header={<ReplyBanner toUsername={fromName} onCancel={() => setIsReplying(false)} />}
+      isLoggedIn={!!userId}
+      onLoginRequired={openLoginModal}
+      onSubmit={handleReplySubmit}
+    />
+  );
+}
+{
+  isEditing && (
+    <InlineReplyEditor
+      initialValue={pendingContent}
+      placeholder="编辑内容..."
+      header={
+        <ReplyBanner
+          toUsername="编辑中"
+          onCancel={() => setIsEditing(false)}
+          editing
+          pendingReview={Boolean(reply.moderation?.has_pending_revision)}
         />
-      )}
-      {isEditing && (
-        <InlineReplyEditor
-          initialValue={pendingContent}
-          placeholder="编辑内容..."
-          header={
-            <ReplyBanner
-              toUsername="编辑中"
-              onCancel={() => setIsEditing(false)}
-              editing
-              pendingReview={Boolean(reply.moderation?.has_pending_revision)}
-            />
-          }
-          isLoggedIn={!!userId}
-          onLoginRequired={openLoginModal}
-          onSubmit={handleEditSubmit}
-        />
-      )}
+      }
+      isLoggedIn={!!userId}
+      onLoginRequired={openLoginModal}
+      onSubmit={handleEditSubmit}
+    />
+  );
+}
 ```
 
 改为：
 
 ```tsx
-      {isReplying && (
-        <InlineReplyEditor
-          value={replyContent}
-          onChange={(value) => setEditorContent(replyKey, value)}
-          placeholder="请输入你的回复内容"
-          header={<ReplyBanner toUsername={fromName} onCancel={() => closeEditor(replyKey)} />}
-          isLoggedIn={!!userId}
-          onLoginRequired={openLoginModal}
-          onSubmit={handleReplySubmit}
+{
+  isReplying && (
+    <InlineReplyEditor
+      value={replyContent}
+      onChange={(value) => setEditorContent(replyKey, value)}
+      placeholder="请输入你的回复内容"
+      header={<ReplyBanner toUsername={fromName} onCancel={() => closeEditor(replyKey)} />}
+      isLoggedIn={!!userId}
+      onLoginRequired={openLoginModal}
+      onSubmit={handleReplySubmit}
+    />
+  );
+}
+{
+  isEditing && (
+    <InlineReplyEditor
+      value={editContent}
+      onChange={(value) => setEditorContent(editKey, value)}
+      placeholder="编辑内容..."
+      header={
+        <ReplyBanner
+          toUsername="编辑中"
+          onCancel={() => closeEditor(editKey)}
+          editing
+          pendingReview={Boolean(reply.moderation?.has_pending_revision)}
         />
-      )}
-      {isEditing && (
-        <InlineReplyEditor
-          value={editContent}
-          onChange={(value) => setEditorContent(editKey, value)}
-          placeholder="编辑内容..."
-          header={
-            <ReplyBanner
-              toUsername="编辑中"
-              onCancel={() => closeEditor(editKey)}
-              editing
-              pendingReview={Boolean(reply.moderation?.has_pending_revision)}
-            />
-          }
-          isLoggedIn={!!userId}
-          onLoginRequired={openLoginModal}
-          onSubmit={handleEditSubmit}
-        />
-      )}
+      }
+      isLoggedIn={!!userId}
+      onLoginRequired={openLoginModal}
+      onSubmit={handleEditSubmit}
+    />
+  );
+}
 ```
 
 - [ ] **Step 4: 运行测试确认通过**
@@ -2287,11 +2333,13 @@ EOF
 ### Task 10: 迁移 `friend-links-paused-section.tsx` 到 `useFriendLinksPausedStore`
 
 **Files:**
+
 - Modify: `apps/web/components/friend-links/friend-links-paused-section.tsx`
 - Create: `apps/web/components/friend-links/friend-links-paused-section.test.tsx`
 - Modify: `apps/web/components/friend-links/friend-links-page.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `useFriendLinksPausedStore` from Task 4。
 
 - [ ] **Step 1: 写失败测试**
@@ -2479,9 +2527,9 @@ import { useFriendLinksPausedStore } from "@/store/use-friend-links-paused-store
 在 `describe("FriendLinksPage", ...)` 块最前面新增：
 
 ```tsx
-  beforeEach(() => {
-    useFriendLinksPausedStore.setState({ open: false });
-  });
+beforeEach(() => {
+  useFriendLinksPausedStore.setState({ open: false });
+});
 ```
 
 Run: `pnpm --filter web test components/friend-links/friend-links-page.test.tsx`

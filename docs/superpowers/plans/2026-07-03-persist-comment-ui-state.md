@@ -5,6 +5,7 @@
 **Goal:** 修复"打开评论弹窗/展开回复后，点击站内 `<Link>` 跳走再返回，状态丢失"的 bug。
 
 **Architecture:** 根因是 Next.js App Router 客户端路由切换时会卸载离开页面的组件子树，与 `staleTimes`/RSC 缓存无关（已用生产构建 + Network 面板验证：返回导航没有发起新的整页请求，但组件状态仍丢失）。修复方式是把两块瞬时 UI 状态从页面级 `useState` 挪到 Zustand store：
+
 1. 评论弹窗（`activeComment`）迁移到全局 store + 挂载在 `app/providers/global-modals.tsx`（与现有 `MomentModal`/`LoginModal` 同级），使弹窗整棵子树（含内部嵌套的 `CommentReplies`）脱离页面路由树，不再随路由切换卸载。
 2. 回复展开态（`comment-replies.tsx` 的 `isOpen`）迁移到按 `targetType:commentId` 键控的 Zustand store。这个修复覆盖面更广：无论是弹窗内的评论、留言板（`guestbook-item.tsx`）还是文章详情页内联评论（`article-comments.tsx` → `InlineComments`），都共用 `CommentReplies` 这一个组件，一次修复三处生效，不需要单独处理留言板。
 
@@ -24,10 +25,12 @@
 ### Task 1: `useCommentModal` Zustand store
 
 **Files:**
+
 - Create: `apps/web/store/use-comment-modal.ts`
 - Test: `apps/web/store/use-comment-modal.test.ts`
 
 **Interfaces:**
+
 - Produces: `useCommentModal` — Zustand store 单例。
   - State: `targetType: "article" | "moment" | null`，`targetId: number | null`，`onCommentAdded: (() => void) | null`。
   - Actions: `open(targetType: "article" | "moment", targetId: number, onCommentAdded?: () => void): void`；`close(): void`。
@@ -97,11 +100,7 @@ interface CommentModalStore {
   targetType: CommentModalTargetType | null;
   targetId: number | null;
   onCommentAdded: (() => void) | null;
-  open: (
-    targetType: CommentModalTargetType,
-    targetId: number,
-    onCommentAdded?: () => void,
-  ) => void;
+  open: (targetType: CommentModalTargetType, targetId: number, onCommentAdded?: () => void) => void;
   close: () => void;
 }
 
@@ -137,12 +136,14 @@ EOF
 ### Task 2: `GlobalCommentModal` 组件 + 挂载到全局
 
 **Files:**
+
 - Create: `apps/web/components/comments/views/global-comment-modal.tsx`
 - Create: `apps/web/components/comments/views/global-comment-modal.test.tsx`
 - Modify: `apps/web/components/comments/index.ts`
 - Modify: `apps/web/app/providers/global-modals.tsx`
 
 **Interfaces:**
+
 - Consumes: `useCommentModal` from Task 1（`targetType`/`targetId`/`onCommentAdded`/`close`）；已有的 `CommentModal` from `./comment-modal`（props：`targetType`、`targetId`、`onClose`、`onCommentAdded?`）。
 - Produces: `GlobalCommentModal` — 无 props 的组件，导出自 `@/components/comments`。
 
@@ -166,7 +167,11 @@ vi.mock("./comment-modal", () => ({
     targetType: string;
     onClose: () => void;
   }) => (
-    <div data-testid="comment-modal" data-target-id={String(targetId)} data-target-type={targetType}>
+    <div
+      data-testid="comment-modal"
+      data-target-id={String(targetId)}
+      data-target-type={targetType}
+    >
       <button onClick={onClose}>关闭</button>
     </div>
   ),
@@ -299,10 +304,12 @@ EOF
 ### Task 3: 迁移 `article-section.tsx` 到全局 store
 
 **Files:**
+
 - Modify: `apps/web/components/articles/article-section.tsx`
 - Modify: `apps/web/components/articles/article-section.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `useCommentModal` from Task 1.
 
 - [ ] **Step 1: 修改测试断言打开方式**
@@ -377,40 +384,42 @@ Expected: FAIL（`article-section.tsx` 仍渲染 `<CommentModal>`，且 store mo
 6. 把 `handleCommentAdded`（第 152-161 行）改为不再依赖 `activeComment`，改用参数接收 `articleId`：
 
 ```ts
-  const handleCommentAdded = useCallback(
-    (articleId: number) => {
-      setArticles((current) =>
-        current.map((item) =>
-          item.id === articleId ? { ...item, comment_count: item.comment_count + 1 } : item,
-        ),
-      );
-    },
-    [setArticles],
-  );
+const handleCommentAdded = useCallback(
+  (articleId: number) => {
+    setArticles((current) =>
+      current.map((item) =>
+        item.id === articleId ? { ...item, comment_count: item.comment_count + 1 } : item,
+      ),
+    );
+  },
+  [setArticles],
+);
 ```
 
 7. 把 `openComment`（第 163-169 行）改为：
 
 ```ts
-  const openComment = useCallback(
-    (article: ArticleListItemResp) => {
-      openCommentModal("article", article.id, () => handleCommentAdded(article.id));
-    },
-    [openCommentModal, handleCommentAdded],
-  );
+const openComment = useCallback(
+  (article: ArticleListItemResp) => {
+    openCommentModal("article", article.id, () => handleCommentAdded(article.id));
+  },
+  [openCommentModal, handleCommentAdded],
+);
 ```
 
 8. 删除渲染末尾的：
 
 ```tsx
-      {activeComment !== null && (
-        <CommentModal
-          targetType={activeComment.type === "moment" ? "moment" : "article"}
-          targetId={activeComment.articleId}
-          onClose={() => setActiveComment(null)}
-          onCommentAdded={handleCommentAdded}
-        />
-      )}
+{
+  activeComment !== null && (
+    <CommentModal
+      targetType={activeComment.type === "moment" ? "moment" : "article"}
+      targetId={activeComment.articleId}
+      onClose={() => setActiveComment(null)}
+      onCommentAdded={handleCommentAdded}
+    />
+  );
+}
 ```
 
 （`</section>` 前的这一整块，直接移除；`</section>` 前保留 `articleGrid`/`sidebar` 渲染逻辑不变。）
@@ -440,10 +449,12 @@ EOF
 ### Task 4: 迁移 `moments-section.tsx` 到全局 store
 
 **Files:**
+
 - Modify: `apps/web/components/moments/moments-section.tsx`
 - Modify: `apps/web/components/moments/moments-section.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `useCommentModal` from Task 1.
 
 - [ ] **Step 1: 修改测试**
@@ -494,41 +505,43 @@ Expected: FAIL
 5. 把 `handleCommentAdded`（第 90-99 行）改为接受 `momentId` 参数：
 
 ```ts
-  const handleCommentAdded = useCallback(
-    (momentId: number) => {
-      setMoments((current) =>
-        current.map((item) =>
-          item.id === momentId ? { ...item, comment_count: item.comment_count + 1 } : item,
-        ),
-      );
-    },
-    [setMoments],
-  );
+const handleCommentAdded = useCallback(
+  (momentId: number) => {
+    setMoments((current) =>
+      current.map((item) =>
+        item.id === momentId ? { ...item, comment_count: item.comment_count + 1 } : item,
+      ),
+    );
+  },
+  [setMoments],
+);
 ```
 
 6. 把 `openComment`（第 71-73 行）改为：
 
 ```ts
-  const openComment = useCallback(
-    (moment: MomentItemResp) => {
-      openCommentModal("moment", moment.id, () => handleCommentAdded(moment.id));
-    },
-    [openCommentModal, handleCommentAdded],
-  );
+const openComment = useCallback(
+  (moment: MomentItemResp) => {
+    openCommentModal("moment", moment.id, () => handleCommentAdded(moment.id));
+  },
+  [openCommentModal, handleCommentAdded],
+);
 ```
 
 7. 删除 `closeComment`（第 80-82 行，不再需要，`GlobalCommentModal` 自带 `onClose`）。
 8. 删除渲染末尾的：
 
 ```tsx
-      {activeComment !== null && (
-        <CommentModal
-          targetType="moment"
-          targetId={activeComment.momentId}
-          onClose={closeComment}
-          onCommentAdded={handleCommentAdded}
-        />
-      )}
+{
+  activeComment !== null && (
+    <CommentModal
+      targetType="moment"
+      targetId={activeComment.momentId}
+      onClose={closeComment}
+      onCommentAdded={handleCommentAdded}
+    />
+  );
+}
 ```
 
 （连同外层多余的 `<>...</>` fragment 一并简化：若移除后 `return` 只剩一个 `<section>...</section>`，把最外层的 `<>`/`</>` 也去掉，直接 `return (<section>...</section>);`。）
@@ -555,10 +568,12 @@ EOF
 ### Task 5: 迁移 `moments-list.tsx` 到全局 store
 
 **Files:**
+
 - Modify: `apps/web/components/moments/moments-list.tsx`
 - Modify: `apps/web/components/moments/moments-list.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `useCommentModal` from Task 1.
 
 - [ ] **Step 1: 修改测试**
@@ -610,48 +625,46 @@ const CommentModal = dynamic(() => import("@/components/comments").then((m) => m
 });
 ```
 
-（第 17-19 行）。
-2. 新增 `import { useCommentModal } from "@/store/use-comment-modal";`。
-3. 删除 `const [activeComment, setActiveComment] = useState<{ momentId: number } | null>(null);`（第 86 行）。
-4. 新增 `const openCommentModal = useCommentModal((s) => s.open);`（紧邻 `const openMomentModal = useMomentModal((state) => state.open);` 之后）。
-5. 把 `handleCommentAdded`（第 160-171 行）改为接受 `momentId` 参数：
+（第 17-19 行）。2. 新增 `import { useCommentModal } from "@/store/use-comment-modal";`。3. 删除 `const [activeComment, setActiveComment] = useState<{ momentId: number } | null>(null);`（第 86 行）。4. 新增 `const openCommentModal = useCommentModal((s) => s.open);`（紧邻 `const openMomentModal = useMomentModal((state) => state.open);` 之后）。5. 把 `handleCommentAdded`（第 160-171 行）改为接受 `momentId` 参数：
 
 ```ts
-  const handleCommentAdded = useCallback(
-    (momentId: number) => {
-      setMoments((current) =>
-        current.map((item) =>
-          item.id === momentId ? { ...item, comment_count: item.comment_count + 1 } : item,
-        ),
-      );
-    },
-    [setMoments],
-  );
+const handleCommentAdded = useCallback(
+  (momentId: number) => {
+    setMoments((current) =>
+      current.map((item) =>
+        item.id === momentId ? { ...item, comment_count: item.comment_count + 1 } : item,
+      ),
+    );
+  },
+  [setMoments],
+);
 ```
 
 6. 把 `openComment`（第 145-147 行）改为：
 
 ```ts
-  const openComment = useCallback(
-    (moment: MomentItemResp) => {
-      openCommentModal("moment", moment.id, () => handleCommentAdded(moment.id));
-    },
-    [openCommentModal, handleCommentAdded],
-  );
+const openComment = useCallback(
+  (moment: MomentItemResp) => {
+    openCommentModal("moment", moment.id, () => handleCommentAdded(moment.id));
+  },
+  [openCommentModal, handleCommentAdded],
+);
 ```
 
 7. 删除 `closeComment`（第 156-158 行）。
 8. 删除渲染末尾的：
 
 ```tsx
-      {activeComment !== null && (
-        <CommentModal
-          targetType="moment"
-          targetId={activeComment.momentId}
-          onClose={closeComment}
-          onCommentAdded={handleCommentAdded}
-        />
-      )}
+{
+  activeComment !== null && (
+    <CommentModal
+      targetType="moment"
+      targetId={activeComment.momentId}
+      onClose={closeComment}
+      onCommentAdded={handleCommentAdded}
+    />
+  );
+}
 ```
 
 - [ ] **Step 4: 运行测试确认通过**
@@ -677,10 +690,12 @@ EOF
 ### Task 6: 迁移 `profile-moments-tab.tsx` 到全局 store
 
 **Files:**
+
 - Modify: `apps/web/app/users/[id]/_components/profile-moments-tab/profile-moments-tab.tsx`
 - Modify: `apps/web/app/users/[id]/_components/profile-moments-tab/profile-moments-tab.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `useCommentModal` from Task 1.
 
 - [ ] **Step 1: 修改测试**
@@ -784,48 +799,46 @@ const CommentModal = dynamic(() => import("@/components/comments").then((m) => m
 });
 ```
 
-（第 13-15 行）。
-2. 新增 `import { useCommentModal } from "@/store/use-comment-modal";`。
-3. 删除 `const [activeComment, setActiveComment] = useState<{ momentId: number } | null>(null);`（第 46 行）。
-4. 新增 `const openCommentModal = useCommentModal((s) => s.open);`（紧邻 `const openMomentModal = useMomentModal((state) => state.open);` 之后）。
-5. 把 `handleCommentAdded`（第 69-80 行）改为接受 `momentId` 参数：
+（第 13-15 行）。2. 新增 `import { useCommentModal } from "@/store/use-comment-modal";`。3. 删除 `const [activeComment, setActiveComment] = useState<{ momentId: number } | null>(null);`（第 46 行）。4. 新增 `const openCommentModal = useCommentModal((s) => s.open);`（紧邻 `const openMomentModal = useMomentModal((state) => state.open);` 之后）。5. 把 `handleCommentAdded`（第 69-80 行）改为接受 `momentId` 参数：
 
 ```ts
-  const handleCommentAdded = useCallback(
-    (momentId: number) => {
-      setMoments((current) =>
-        current.map((item) =>
-          item.id === momentId ? { ...item, comment_count: item.comment_count + 1 } : item,
-        ),
-      );
-    },
-    [setMoments],
-  );
+const handleCommentAdded = useCallback(
+  (momentId: number) => {
+    setMoments((current) =>
+      current.map((item) =>
+        item.id === momentId ? { ...item, comment_count: item.comment_count + 1 } : item,
+      ),
+    );
+  },
+  [setMoments],
+);
 ```
 
 6. 把 `openComment`（第 54-56 行）改为：
 
 ```ts
-  const openComment = useCallback(
-    (moment: MomentItemResp) => {
-      openCommentModal("moment", moment.id, () => handleCommentAdded(moment.id));
-    },
-    [openCommentModal, handleCommentAdded],
-  );
+const openComment = useCallback(
+  (moment: MomentItemResp) => {
+    openCommentModal("moment", moment.id, () => handleCommentAdded(moment.id));
+  },
+  [openCommentModal, handleCommentAdded],
+);
 ```
 
 7. 删除 `closeComment`（第 65-67 行）。
 8. 删除渲染末尾的：
 
 ```tsx
-      {activeComment !== null && (
-        <CommentModal
-          targetType="moment"
-          targetId={activeComment.momentId}
-          onClose={closeComment}
-          onCommentAdded={handleCommentAdded}
-        />
-      )}
+{
+  activeComment !== null && (
+    <CommentModal
+      targetType="moment"
+      targetId={activeComment.momentId}
+      onClose={closeComment}
+      onCommentAdded={handleCommentAdded}
+    />
+  );
+}
 ```
 
 - [ ] **Step 4: 运行测试确认通过**
@@ -851,10 +864,12 @@ EOF
 ### Task 7: `useCommentRepliesStore` Zustand store
 
 **Files:**
+
 - Create: `apps/web/store/use-comment-replies-store.ts`
 - Test: `apps/web/store/use-comment-replies-store.test.ts`
 
 **Interfaces:**
+
 - Consumes: `type TargetType` from `@/components/comments/parts/comment-replies`（已存在，`"article" | "moment" | "guestbook"`）。
 - Produces: `useCommentRepliesStore` — Zustand store 单例。
   - State: `openKeys: Set<string>`。
@@ -964,10 +979,12 @@ EOF
 ### Task 8: 迁移 `comment-replies.tsx` 到 `useCommentRepliesStore`
 
 **Files:**
+
 - Modify: `apps/web/components/comments/parts/comment-replies.tsx`
 - Modify: `apps/web/components/comments/parts/comment-replies.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `useCommentRepliesStore` from Task 7.
 
 - [ ] **Step 1: 先改测试文件的 `beforeEach`，避免用例间状态串扰**
@@ -981,20 +998,20 @@ import { useCommentRepliesStore } from "@/store/use-comment-replies-store";
 把已有的：
 
 ```ts
-  beforeEach(() => {
-    vi.resetAllMocks();
-    global.fetch = vi.fn();
-  });
+beforeEach(() => {
+  vi.resetAllMocks();
+  global.fetch = vi.fn();
+});
 ```
 
 改为：
 
 ```ts
-  beforeEach(() => {
-    vi.resetAllMocks();
-    global.fetch = vi.fn();
-    useCommentRepliesStore.setState({ openKeys: new Set() });
-  });
+beforeEach(() => {
+  vi.resetAllMocks();
+  global.fetch = vi.fn();
+  useCommentRepliesStore.setState({ openKeys: new Set() });
+});
 ```
 
 - [ ] **Step 2: 在同一测试文件末尾新增「跨挂载保持展开态」用例**
@@ -1096,28 +1113,28 @@ import { useCommentRepliesStore } from "@/store/use-comment-replies-store";
 2. 在 `CommentReplies` 组件内，把：
 
 ```ts
-  const [isOpen, setIsOpen] = useState(false);
-  const [replies, setReplies] = useState<CommentReplyResp[]>([]);
+const [isOpen, setIsOpen] = useState(false);
+const [replies, setReplies] = useState<CommentReplyResp[]>([]);
 ```
 
 改为：
 
 ```ts
-  const isOpen = useCommentRepliesStore((s) => s.openKeys.has(`${targetType}:${commentId}`));
-  const setStoreOpen = useCommentRepliesStore((s) => s.setOpen);
-  const [replies, setReplies] = useState<CommentReplyResp[]>([]);
+const isOpen = useCommentRepliesStore((s) => s.openKeys.has(`${targetType}:${commentId}`));
+const setStoreOpen = useCommentRepliesStore((s) => s.setOpen);
+const [replies, setReplies] = useState<CommentReplyResp[]>([]);
 ```
 
 3. 把 `fetchReplies` 里的：
 
 ```ts
-        if (!append) setIsOpen(true);
+if (!append) setIsOpen(true);
 ```
 
 改为：
 
 ```ts
-        if (!append) setStoreOpen(targetType, commentId, true);
+if (!append) setStoreOpen(targetType, commentId, true);
 ```
 
 同时把该 `useCallback` 的依赖数组从 `[targetType, commentId]` 改为 `[targetType, commentId, setStoreOpen]`。
@@ -1125,42 +1142,42 @@ import { useCommentRepliesStore } from "@/store/use-comment-replies-store";
 4. 把 `handleToggle` 里的：
 
 ```ts
-  const handleToggle = useCallback(() => {
-    if (!isOpen) {
-      setError(null);
-      void fetchReplies(1, false);
-    } else {
-      setIsOpen(false);
-    }
-  }, [isOpen, fetchReplies]);
+const handleToggle = useCallback(() => {
+  if (!isOpen) {
+    setError(null);
+    void fetchReplies(1, false);
+  } else {
+    setIsOpen(false);
+  }
+}, [isOpen, fetchReplies]);
 ```
 
 改为：
 
 ```ts
-  const handleToggle = useCallback(() => {
-    if (!isOpen) {
-      setError(null);
-      void fetchReplies(1, false);
-    } else {
-      setStoreOpen(targetType, commentId, false);
-    }
-  }, [isOpen, fetchReplies, setStoreOpen, targetType, commentId]);
+const handleToggle = useCallback(() => {
+  if (!isOpen) {
+    setError(null);
+    void fetchReplies(1, false);
+  } else {
+    setStoreOpen(targetType, commentId, false);
+  }
+}, [isOpen, fetchReplies, setStoreOpen, targetType, commentId]);
 ```
 
 5. 在 `updateReplyLike`/`updateReply` 声明之后、`handleDeleteReply` 之前（任意两个已有 `useCallback` 之间即可，保持在 `if (replyCount <= 0) return null;` 之前）新增自动恢复展开态的 effect：
 
 ```ts
-  // 展开态从 store 恢复（如路由返回导航后重新挂载）但本地回复数据已清空时，
-  // 自动重新拉取一次，避免停留在「已展开但空列表」的状态
-  const didAutoRestoreRef = useRef(false);
-  useEffect(() => {
-    if (didAutoRestoreRef.current) return;
-    didAutoRestoreRef.current = true;
-    if (isOpen && replies.length === 0) {
-      void fetchReplies(1, false);
-    }
-  }, [isOpen, replies.length, fetchReplies]);
+// 展开态从 store 恢复（如路由返回导航后重新挂载）但本地回复数据已清空时，
+// 自动重新拉取一次，避免停留在「已展开但空列表」的状态
+const didAutoRestoreRef = useRef(false);
+useEffect(() => {
+  if (didAutoRestoreRef.current) return;
+  didAutoRestoreRef.current = true;
+  if (isOpen && replies.length === 0) {
+    void fetchReplies(1, false);
+  }
+}, [isOpen, replies.length, fetchReplies]);
 ```
 
 - [ ] **Step 5: 运行测试确认全部通过**

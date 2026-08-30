@@ -19,6 +19,7 @@
 当前 `<Link>` 包裹整个卡片，需重构为外层 `div` + 内层 `Link`（头像 + 名字）+ 独立 `button`（退出）。
 
 **结构变更：**
+
 ```
 div.user-card [gradient bg]
   ├── Link href="/profile"   → 头像 + 姓名/副标题（flex: 1）
@@ -26,19 +27,20 @@ div.user-card [gradient bg]
 ```
 
 **用户卡片背景**（同时更新未登录态，保持一致）：
+
 - 当前：`rounded-[18px] bg-gradient-to-br from-primary/[0.10] to-amber-500/[0.13]`
 - 新：`rounded-2xl bg-gradient-to-br from-primary/[0.08] to-amber-500/[0.10]` + hover 略加深
 
 **退出按钮交互规格：**
 
-| 状态 | 样式 |
-|------|------|
-| 默认（浅色） | `text-foreground/[0.28]`，无背景 |
-| 默认（深色） | `dark:text-foreground/[0.45]`，无背景（修复深色模式不可见问题） |
-| Hover | `hover:bg-destructive/[0.10] hover:text-destructive/70` |
-| Hover 深色 | `dark:hover:bg-destructive/[0.15] dark:hover:text-destructive/80` |
-| Active | `active:scale-90` |
-| Transition | `transition-all duration-150` |
+| 状态         | 样式                                                              |
+| ------------ | ----------------------------------------------------------------- |
+| 默认（浅色） | `text-foreground/[0.28]`，无背景                                  |
+| 默认（深色） | `dark:text-foreground/[0.45]`，无背景（修复深色模式不可见问题）   |
+| Hover        | `hover:bg-destructive/[0.10] hover:text-destructive/70`           |
+| Hover 深色   | `dark:hover:bg-destructive/[0.15] dark:hover:text-destructive/80` |
+| Active       | `active:scale-90`                                                 |
+| Transition   | `transition-all duration-150`                                     |
 
 图标：`SvgIcon name="log-out" size={16}`
 
@@ -59,11 +61,12 @@ Link href="/messages"
 ```
 
 **Props 新增：**
+
 ```ts
 interface NavbarMobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  unreadCount?: number;   // 新增，未读消息数
+  unreadCount?: number; // 新增，未读消息数
 }
 ```
 
@@ -81,9 +84,11 @@ button（全宽）
 ```
 
 图标色块规格（与消息行 icon-box 保持一致）：
+
 - `h-7 w-7 shrink-0 rounded-lg bg-amber-500/[0.10]` + `flex items-center justify-content`
 
 Toggle 规格（不变）：
+
 - Track: `relative flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200`
 - Track 开：`bg-primary/80`；关：`bg-foreground/20`
 - Thumb: `absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200`

@@ -12,21 +12,22 @@
 
 ## 文件结构
 
-| 文件 | 类型 | 说明 |
-|------|------|------|
-| `apps/web/components/navbar/site-navbar.tsx` | 修改 | 哨兵 div：`h-[60px]` → `style={{ height: 'var(--nav-sentinel-height, 60px)' }}` |
-| `apps/web/components/navbar/site-navbar.test.tsx` | 修改 | 新增：哨兵高度读取 CSS var |
-| `apps/web/components/article-detail/hero-sentinel-setter.tsx` | 新建 | null-render `'use client'`，mount 时写 CSS var，unmount 时清除 |
-| `apps/web/components/article-detail/hero-sentinel-setter.test.tsx` | 新建 | mount/unmount 行为测试 |
-| `apps/web/components/article-detail/article-hero.tsx` | 修改 | 拆分为双层渐变 + 渲染 `HeroSentinelSetter` |
-| `apps/web/components/article-detail/article-hero.test.tsx` | 修改 | 更新渐变层测试，验证有/无封面行为 |
-| `apps/web/components/article-detail/index.ts` | 修改 | barrel export 加入 `HeroSentinelSetter` |
+| 文件                                                               | 类型 | 说明                                                                            |
+| ------------------------------------------------------------------ | ---- | ------------------------------------------------------------------------------- |
+| `apps/web/components/navbar/site-navbar.tsx`                       | 修改 | 哨兵 div：`h-[60px]` → `style={{ height: 'var(--nav-sentinel-height, 60px)' }}` |
+| `apps/web/components/navbar/site-navbar.test.tsx`                  | 修改 | 新增：哨兵高度读取 CSS var                                                      |
+| `apps/web/components/article-detail/hero-sentinel-setter.tsx`      | 新建 | null-render `'use client'`，mount 时写 CSS var，unmount 时清除                  |
+| `apps/web/components/article-detail/hero-sentinel-setter.test.tsx` | 新建 | mount/unmount 行为测试                                                          |
+| `apps/web/components/article-detail/article-hero.tsx`              | 修改 | 拆分为双层渐变 + 渲染 `HeroSentinelSetter`                                      |
+| `apps/web/components/article-detail/article-hero.test.tsx`         | 修改 | 更新渐变层测试，验证有/无封面行为                                               |
+| `apps/web/components/article-detail/index.ts`                      | 修改 | barrel export 加入 `HeroSentinelSetter`                                         |
 
 ---
 
 ## Task 1：SiteNavbar 哨兵高度改为 CSS var
 
 **Files:**
+
 - Modify: `apps/web/components/navbar/site-navbar.tsx:77-80`
 - Modify: `apps/web/components/navbar/site-navbar.test.tsx`
 
@@ -99,6 +100,7 @@ git commit -m "feat(web): SiteNavbar 哨兵高度改为读取 CSS var --nav-sent
 ## Task 2：新建 HeroSentinelSetter 客户端组件
 
 **Files:**
+
 - Create: `apps/web/components/article-detail/hero-sentinel-setter.tsx`
 - Create: `apps/web/components/article-detail/hero-sentinel-setter.test.tsx`
 - Modify: `apps/web/components/article-detail/index.ts`
@@ -221,12 +223,14 @@ git commit -m "feat(web): 新增 HeroSentinelSetter，动态设置导航哨兵�
 ## Task 3：ArticleHero 双层渐变重构 + 集成 HeroSentinelSetter
 
 **Files:**
+
 - Modify: `apps/web/components/article-detail/article-hero.tsx`
 - Modify: `apps/web/components/article-detail/article-hero.test.tsx`
 
 ### 背景
 
 将当前单层渐变遮罩拆为两层：
+
 1. **顶部色晕层**（新增）：有封面图时，用 `backdrop-filter: blur(24px) saturate(200%)` + `mask-image` 渐变，令封面顶部像素柔和向上延伸；无封面图时用降级半透明遮罩。
 2. **底部压暗层**（保留）：保持现有 `linear-gradient(to top, rgba(0,0,0,0.82)...)` 不变，确保标题可读。
 
@@ -489,6 +493,7 @@ pnpm --filter web dev
 - [ ] **Step 2：打开一篇有封面图的文章**
 
 访问 `http://localhost:3000/articles/<有封面图的 id>`，在页面顶部检查：
+
 1. 封面图顶部应有柔和色晕（图片主色模糊混入导航区域）
 2. 导航栏文字在封面可见期间清晰可读
 3. 向下滚动约 380-480px 后，导航进入玻璃态
@@ -496,6 +501,7 @@ pnpm --filter web dev
 - [ ] **Step 3：测试无封面图文章**
 
 访问一篇无封面图的文章，确认：
+
 1. 顶部出现 `rgba(0,0,0,0.45)` 降级遮罩（导航可读）
 2. 底部压暗层正常，标题可读
 

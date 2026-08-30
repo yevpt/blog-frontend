@@ -20,14 +20,15 @@ metadata:
 
 Vitest 4.x **没有** workspace / `environmentMatchGlobs`。环境由各包自己的 `vitest.config.ts` 定:
 
-| 区域 | filter name | environment |
-| --- | --- | --- |
-| `apps/web` | `web` | **jsdom** |
-| `apps/admin` | `admin` | happy-dom |
-| `packages/ui` | `@repo/ui` | happy-dom |
+| 区域                              | filter name                 | environment       |
+| --------------------------------- | --------------------------- | ----------------- |
+| `apps/web`                        | `web`                       | **jsdom**         |
+| `apps/admin`                      | `admin`                     | happy-dom         |
+| `packages/ui`                     | `@repo/ui`                  | happy-dom         |
 | `packages/hooks` / `packages/api` | `@repo/hooks` / `@repo/api` | happy-dom(根默认) |
 
 **单文件要换环境**用文件首行注解(不要改 config):
+
 ```ts
 // @vitest-environment jsdom
 ```
@@ -52,6 +53,7 @@ beforeEach(() => {
 ## Mock 配方
 
 **共享包**(组件测试里几乎都要,只 mock 你这次用到的导出):
+
 ```ts
 vi.mock("@repo/icons", () => ({
   SvgIcon: ({ name }: { name: string }) => <span data-testid={`icon-${name}`} />,
@@ -66,11 +68,13 @@ vi.mock("@repo/ui", () => ({
 ```
 
 **类型安全的返回值**:用 `vi.mocked`,别 `as any`:
+
 ```ts
-vi.mocked(apiClient.auth.login).mockResolvedValue({ access_token: "acc", /* ... */ });
+vi.mocked(apiClient.auth.login).mockResolvedValue({ access_token: "acc" /* ... */ });
 ```
 
 **web Server Component / page.tsx**:mock 数据源 `@/lib/server-api` 和重子组件,只验输出的 HTML 结构,不测服务端取数逻辑。`vi.fn` 要提到顶层用 `vi.hoisted`:
+
 ```ts
 const mockState = vi.hoisted(() => ({ listPublic: vi.fn() }));
 vi.mock("@/lib/server-api", () => ({
@@ -81,6 +85,7 @@ vi.mock("@/lib/server-api", () => ({
 **web 客户端组件**:数据走 hook,所以 mock `@/hooks/use-*`(及 `@/lib/toast` 等副作用),不要去 mock 裸 fetch。
 
 **admin(React Query + 路由 + zustand)**:mock 全局 `apiClient`,组件用 `<MemoryRouter>` 包裹,store 用 `setState` 复位;断言异步用 `waitFor`。React Query 组件需 `QueryClientProvider` 包裹,覆盖 loading/error/success。
+
 ```ts
 vi.mock("../lib/api", () => ({ apiClient: { auth: { login: vi.fn() } } }));
 ```

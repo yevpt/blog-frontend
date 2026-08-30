@@ -12,31 +12,32 @@
 
 ## 文件改动一览
 
-| 文件 | 操作 |
-|---|---|
-| `packages/icons/svg/arrow-up-right.svg` | 新增 |
-| `packages/icons/src/generated/types.ts` | 自动生成（build 产物） |
-| `packages/icons/src/generated/sprite.ts` | 自动生成（build 产物） |
-| `packages/ui/src/tabs.tsx` | 修改 |
-| `packages/ui/src/tabs.test.tsx` | 更新 |
-| `apps/web/components/featured/featured-carousel.tsx` | 修改 |
-| `apps/web/components/featured/featured-carousel-slide.tsx` | 修改 |
-| `apps/web/components/featured/featured-carousel.test.tsx` | 更新 |
-| `apps/web/components/articles/article-list-header.tsx` | 修改 |
-| `apps/web/components/articles/article-list-header.test.tsx` | 更新 |
-| `apps/web/components/articles/article-card.tsx` | 修改 |
-| `apps/web/components/articles/article-card.test.tsx` | 更新 |
-| `apps/web/components/articles/article-card-skeleton.tsx` | 新增 |
-| `apps/web/components/articles/article-card-skeleton.test.tsx` | 新增 |
-| `apps/web/components/articles/article-section.tsx` | 修改 |
-| `apps/web/components/articles/article-section.test.tsx` | 更新 |
-| `apps/web/components/articles/index.ts` | 更新导出 |
+| 文件                                                          | 操作                   |
+| ------------------------------------------------------------- | ---------------------- |
+| `packages/icons/svg/arrow-up-right.svg`                       | 新增                   |
+| `packages/icons/src/generated/types.ts`                       | 自动生成（build 产物） |
+| `packages/icons/src/generated/sprite.ts`                      | 自动生成（build 产物） |
+| `packages/ui/src/tabs.tsx`                                    | 修改                   |
+| `packages/ui/src/tabs.test.tsx`                               | 更新                   |
+| `apps/web/components/featured/featured-carousel.tsx`          | 修改                   |
+| `apps/web/components/featured/featured-carousel-slide.tsx`    | 修改                   |
+| `apps/web/components/featured/featured-carousel.test.tsx`     | 更新                   |
+| `apps/web/components/articles/article-list-header.tsx`        | 修改                   |
+| `apps/web/components/articles/article-list-header.test.tsx`   | 更新                   |
+| `apps/web/components/articles/article-card.tsx`               | 修改                   |
+| `apps/web/components/articles/article-card.test.tsx`          | 更新                   |
+| `apps/web/components/articles/article-card-skeleton.tsx`      | 新增                   |
+| `apps/web/components/articles/article-card-skeleton.test.tsx` | 新增                   |
+| `apps/web/components/articles/article-section.tsx`            | 修改                   |
+| `apps/web/components/articles/article-section.test.tsx`       | 更新                   |
+| `apps/web/components/articles/index.ts`                       | 更新导出               |
 
 ---
 
 ## Task 1: 新增 arrow-up-right 图标
 
 **Files:**
+
 - Create: `packages/icons/svg/arrow-up-right.svg`
 - Modified (generated): `packages/icons/src/generated/types.ts`
 
@@ -86,6 +87,7 @@ git commit -m "feat(icons): 新增 arrow-up-right 图标"
 ## Task 2: TabsList underline 变体支持横向滚动
 
 **Files:**
+
 - Modify: `packages/ui/src/tabs.tsx`
 - Modify: `packages/ui/src/tabs.test.tsx`
 
@@ -98,7 +100,9 @@ it("underline variant tablist 含 overflow-x-auto 横向滚动样式", () => {
   render(
     <Tabs defaultSelectedKey="a">
       <TabsList variant="underline">
-        <TabsItem id="a" variant="underline">A</TabsItem>
+        <TabsItem id="a" variant="underline">
+          A
+        </TabsItem>
       </TabsList>
     </Tabs>,
   );
@@ -110,7 +114,9 @@ it("underline variant tab 含 whitespace-nowrap 防止文字折行", () => {
   render(
     <Tabs defaultSelectedKey="a">
       <TabsList variant="underline">
-        <TabsItem id="a" variant="underline">A</TabsItem>
+        <TabsItem id="a" variant="underline">
+          A
+        </TabsItem>
       </TabsList>
     </Tabs>,
   );
@@ -179,6 +185,7 @@ git commit -m "feat(ui): Tabs underline 变体支持横向滚动，防止 tab �
 ## Task 3: ArticleListHeader 移动端搜索图标切换
 
 **Files:**
+
 - Modify: `apps/web/components/articles/article-list-header.tsx`
 - Modify: `apps/web/components/articles/article-list-header.test.tsx`
 
@@ -318,9 +325,7 @@ export function ArticleListHeader({
 
       {/* 正常态：Tabs + 桌面搜索框 + 移动搜索图标 */}
       <div
-        className={`flex flex-1 items-center gap-2 min-w-0 ${
-          isSearchOpen ? "hidden md:flex" : ""
-        }`}
+        className={`flex flex-1 items-center gap-2 min-w-0 ${isSearchOpen ? "hidden md:flex" : ""}`}
       >
         <Tabs
           selectedKey={String(currentCategoryId)}
@@ -386,6 +391,7 @@ git commit -m "feat(web): ArticleListHeader 移动端搜索改为图标切换，
 ## Task 4: FeaturedCarousel 移动端堆叠布局
 
 **Files:**
+
 - Modify: `apps/web/components/featured/featured-carousel.tsx`
 - Modify: `apps/web/components/featured/featured-carousel-slide.tsx`
 - Modify: `apps/web/components/featured/featured-carousel.test.tsx`
@@ -578,29 +584,39 @@ describe("FeaturedCarousel 自动轮播（fake timers）", () => {
   it("自动轮播：4 秒后切换到第二张", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
-    act(() => { vi.advanceTimersByTime(4000); });
+    act(() => {
+      vi.advanceTimersByTime(4000);
+    });
     expect(screen.getByLabelText("第 2 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 
   it("自动轮播：8 秒后切换到第三张", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
-    act(() => { vi.advanceTimersByTime(8000); });
+    act(() => {
+      vi.advanceTimersByTime(8000);
+    });
     expect(screen.getByLabelText("第 3 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 
   it("自动轮播：12 秒后循环回到第一张", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
-    act(() => { vi.advanceTimersByTime(12000); });
+    act(() => {
+      vi.advanceTimersByTime(12000);
+    });
     expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 
   it("悬停时暂停自动轮播", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
-    act(() => { fireEvent.mouseEnter(screen.getByRole("region", { name: "推荐文章" })); });
-    act(() => { vi.advanceTimersByTime(4000); });
+    act(() => {
+      fireEvent.mouseEnter(screen.getByRole("region", { name: "推荐文章" }));
+    });
+    act(() => {
+      vi.advanceTimersByTime(4000);
+    });
     expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 
@@ -608,11 +624,19 @@ describe("FeaturedCarousel 自动轮播（fake timers）", () => {
     vi.useFakeTimers();
     render(<FeaturedCarousel posts={mockPosts} />);
     const carousel = screen.getByRole("region", { name: "推荐文章" });
-    act(() => { fireEvent.mouseEnter(carousel); });
-    act(() => { vi.advanceTimersByTime(5000); });
+    act(() => {
+      fireEvent.mouseEnter(carousel);
+    });
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
     expect(screen.getByLabelText("第 1 张，共 3 张")).toHaveAttribute("aria-current", "true");
-    act(() => { fireEvent.mouseLeave(carousel); });
-    act(() => { vi.advanceTimersByTime(4000); });
+    act(() => {
+      fireEvent.mouseLeave(carousel);
+    });
+    act(() => {
+      vi.advanceTimersByTime(4000);
+    });
     expect(screen.getByLabelText("第 2 张，共 3 张")).toHaveAttribute("aria-current", "true");
   });
 });
@@ -767,9 +791,7 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
         <span className="inline-block mb-2 px-3 py-1 text-xs font-medium text-secondary-foreground bg-secondary rounded-full">
           {activePost.category}
         </span>
-        <h2 className="text-lg font-bold text-foreground mb-2 line-clamp-2">
-          {activePost.title}
-        </h2>
+        <h2 className="text-lg font-bold text-foreground mb-2 line-clamp-2">{activePost.title}</h2>
         <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{activePost.excerpt}</p>
         <Button href={activePost.href} variant="outline" size="sm">
           阅读全文
@@ -804,6 +826,7 @@ git commit -m "feat(web): 轮播图移动端堆叠布局，文字显示在图片
 **依赖：Task 1 已完成（arrow-up-right 图标可用）**
 
 **Files:**
+
 - Modify: `apps/web/components/articles/article-card.tsx`
 - Modify: `apps/web/components/articles/article-card.test.tsx`
 
@@ -953,6 +976,7 @@ git commit -m "feat(web): 文章卡片分类标签移至标题下方，新增外
 ## Task 6: 新建 ArticleCardSkeleton 组件
 
 **Files:**
+
 - Create: `apps/web/components/articles/article-card-skeleton.tsx`
 - Create: `apps/web/components/articles/article-card-skeleton.test.tsx`
 - Modify: `apps/web/components/articles/index.ts`
@@ -1063,6 +1087,7 @@ git commit -m "feat(web): 新增 ArticleCardSkeleton 骨架屏组件"
 ## Task 7: ArticleSection 骨架屏加载 + 分页平滑滚动
 
 **Files:**
+
 - Modify: `apps/web/components/articles/article-section.tsx`
 - Modify: `apps/web/components/articles/article-section.test.tsx`
 
@@ -1111,7 +1136,10 @@ it("翻页后调用 scrollIntoView 平滑滚动到文章区顶部", async () => 
 it("加载中显示骨架屏，加载完成后显示文章", async () => {
   let resolveResponse!: (val: Response) => void;
   vi.mocked(fetch).mockImplementationOnce(
-    () => new Promise<Response>((r) => { resolveResponse = r; }),
+    () =>
+      new Promise<Response>((r) => {
+        resolveResponse = r;
+      }),
   );
 
   render(
@@ -1254,9 +1282,7 @@ export function ArticleSection({ initialPage, categories }: ArticleSectionProps)
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         {isLoading
           ? Array.from({ length: skeletonCount }, (_, i) => <ArticleCardSkeleton key={i} />)
-          : pageData.list.map((article) => (
-              <ArticleCard key={article.id} article={article} />
-            ))}
+          : pageData.list.map((article) => <ArticleCard key={article.id} article={article} />)}
       </div>
 
       {fetchError && (
@@ -1304,13 +1330,13 @@ git commit -m "feat(web): 文章列表翻页骨架屏加载 + 平滑滚动到顶
 
 ## 自查：规范覆盖
 
-| 需求 | 对应 Task |
-|---|---|
-| 轮播图移动端文字在图下方 | Task 4 |
-| 移动端搜索变图标 | Task 3 |
-| Tabs 横向滚动，不换行 | Task 2 + Task 3 |
-| 文章分类在标题下方 | Task 5 |
-| 标题右侧外链图标 | Task 1 + Task 5 |
-| 分页平滑滚动到列表顶部 | Task 7 |
-| 分页骨架屏加载 | Task 6 + Task 7 |
-| 所有改动对应测试更新 | 每个 Task 均含 |
+| 需求                     | 对应 Task       |
+| ------------------------ | --------------- |
+| 轮播图移动端文字在图下方 | Task 4          |
+| 移动端搜索变图标         | Task 3          |
+| Tabs 横向滚动，不换行    | Task 2 + Task 3 |
+| 文章分类在标题下方       | Task 5          |
+| 标题右侧外链图标         | Task 1 + Task 5 |
+| 分页平滑滚动到列表顶部   | Task 7          |
+| 分页骨架屏加载           | Task 6 + Task 7 |
+| 所有改动对应测试更新     | 每个 Task 均含  |

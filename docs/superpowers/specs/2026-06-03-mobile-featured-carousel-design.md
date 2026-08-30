@@ -9,6 +9,7 @@
 ## 背景
 
 现有移动端轮播图存在两个问题：
+
 1. 受限于 `max-w-[1120px]` 容器，无法充分利用手机全屏空间
 2. 图片与文字分离（图上文下），在小屏上显得局促
 
@@ -26,17 +27,19 @@
 
 ### 容器
 
-| 属性 | 值 |
-|------|---|
-| 宽度 | `100vw`（破出父容器 `max-w` 限制，使用负 margin） |
-| 高度 | `h-[100svh]`（使用 svh 兼容移动端浏览器工具栏） |
-| 圆角 | 无（`rounded-none`） |
-| 顶部内边距 | 无（容器本身破出，不受 `pt-16` 影响） |
+| 属性       | 值                                                |
+| ---------- | ------------------------------------------------- |
+| 宽度       | `100vw`（破出父容器 `max-w` 限制，使用负 margin） |
+| 高度       | `h-[100svh]`（使用 svh 兼容移动端浏览器工具栏）   |
+| 圆角       | 无（`rounded-none`）                              |
+| 顶部内边距 | 无（容器本身破出，不受 `pt-16` 影响）             |
 
 破出方案：在 `FeaturedCarousel` 包裹层对移动端使用：
+
 ```
 -mx-3 w-screen   （对应父容器 px-3）
 ```
+
 或在 `FeaturedCarouselMobile` 自身加 `relative -mx-[calc(50vw-50%)]` 使其宽度对齐视口。
 
 实际做法：将 `FeaturedCarousel` 外层 padding/max-width 仅在 `md+` 生效，移动端不套容器。
@@ -80,6 +83,7 @@ background: linear-gradient(to top,
 ## 桌面端（不变）
 
 `md+` 断点以上所有代码、样式、交互均不改动：
+
 - 左图右文两栏布局
 - 垂直翻页（CSS translateY）
 - 右侧竖向胶囊指示器
@@ -88,11 +92,11 @@ background: linear-gradient(to top,
 
 ## 涉及文件
 
-| 文件 | 改动内容 |
-|------|---------|
-| `apps/web/components/featured/featured-carousel.tsx` | 移动端容器破出 max-width，高度改为 `100svh` |
+| 文件                                                       | 改动内容                                                        |
+| ---------------------------------------------------------- | --------------------------------------------------------------- |
+| `apps/web/components/featured/featured-carousel.tsx`       | 移动端容器破出 max-width，高度改为 `100svh`                     |
 | `apps/web/components/featured/featured-carousel-slide.tsx` | 移动端布局从「图上文下」改为 overlay（图片全屏 + 文字叠加底部） |
-| `apps/web/components/featured/featured-carousel.test.tsx` | 更新快照 / 结构断言 |
+| `apps/web/components/featured/featured-carousel.test.tsx`  | 更新快照 / 结构断言                                             |
 
 ---
 

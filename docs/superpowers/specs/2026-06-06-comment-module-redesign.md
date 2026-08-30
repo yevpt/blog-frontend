@@ -30,6 +30,7 @@ apps/web/hooks/
 ## 核心架构：三层分离
 
 > **这是本次设计最重要的约束**。评论模块后续需覆盖四个场景：
+>
 > - 移动端弹窗（当前实现目标）
 > - PC 端弹窗（后续）
 > - 移动端内嵌（文章详情 / 留言板）
@@ -69,6 +70,7 @@ apps/web/hooks/
 ```
 
 **各层契约**：
+
 - Primitive 组件不 import 任何 hook，只接收 props
 - Section 不感知自己在哪个 Shell 里（不读屏幕宽度、不做定位）
 - Shell 只负责容器和动画，把 `<CommentSection>` 当黑盒放入
@@ -85,17 +87,17 @@ apps/web/hooks/
 
 ```ts
 interface SheetGestureOptions {
-  snapThreshold?: number;      // 位移/高度比例阈值，默认 0.3
-  velocityThreshold?: number;  // px/s，默认 600
-  minDisplacement?: number;    // velocity 生效的最小位移保底，默认 60px
+  snapThreshold?: number; // 位移/高度比例阈值，默认 0.3
+  velocityThreshold?: number; // px/s，默认 600
+  minDisplacement?: number; // velocity 生效的最小位移保底，默认 60px
   onDismiss: () => void;
 }
 
 function useSheetGesture(
   sheetRef: RefObject<HTMLElement>,
   scrollRef: RefObject<HTMLElement>,
-  options: SheetGestureOptions
-): { sheetStyle: CSSProperties; isDragging: boolean }
+  options: SheetGestureOptions,
+): { sheetStyle: CSSProperties; isDragging: boolean };
 ```
 
 **手势状态机**：
@@ -140,17 +142,19 @@ touchend
    const y = window.scrollY;
    document.body.style.cssText = `overflow:hidden;position:fixed;top:-${y}px;width:100%`;
    // 关闭时
-   document.body.style.cssText = '';
+   document.body.style.cssText = "";
    window.scrollTo(0, y);
    ```
 3. 提前 `preventDefault()`：touch 监听注册在 **`sheetRef` 元素**（整个抽屉 div）上，选项为 `{ passive: false }`，不注册在 `scrollRef` 上（否则会破坏滚动）。在 `startScrollTop === 0 && deltaY > 0` 时，于 8px 阈值之前就调用 `e.preventDefault()`，关闭浏览器认领手势的窗口期
 
 **注释要求**：
+
 - hook 文件顶部写完整状态机流程图注释
 - 每个阶段（touchstart / undecided / drag / scroll / rubber-band / touchend / dismiss / snapback）标注流程编号
 - 每条防御策略注释说明它解决的具体问题及覆盖的浏览器/版本
 
 **测试**：`apps/web/hooks/use-sheet-gesture.test.ts`
+
 - 模拟 touch 序列，覆盖所有 mode 分支
 - 重点测试：scroll 模式中途不切换为 drag；velocity 快但未松手不提前收起；displacement 小 + velocity 大但未超 minDisplacement 不收起
 
@@ -178,11 +182,12 @@ touchend
 **回复条目**：头像 22px，样式与主评论一致（小一号），`@username` 用主色标注。
 
 **新增 props**：
+
 ```ts
 interface CommentItemProps {
   comment: CommentItemResp;
   onReply?: (target: ReplyTarget) => void;
-  onLike?: (commentId: number) => void;  // 新增，可选
+  onLike?: (commentId: number) => void; // 新增，可选
 }
 ```
 
@@ -193,10 +198,11 @@ interface CommentItemProps {
 **位置**：`apps/web/components/comments/comment-replies.tsx`
 
 **props**：
+
 ```ts
 interface CommentRepliesProps {
   commentId: number;
-  initialReplies: CommentReplyResp[];  // 来自父评论 response 的初始数据（可能为空数组）
+  initialReplies: CommentReplyResp[]; // 来自父评论 response 的初始数据（可能为空数组）
   onReply?: (target: ReplyTarget) => void;
 }
 ```
@@ -214,17 +220,18 @@ interface CommentRepliesProps {
 
 **三种渲染状态**（由 `userId` 和 `value` 派生，不增加额外 prop）：
 
-| 条件 | 渲染 |
-|---|---|
-| `userId == null` | 全宽 pill：`登录后参与讨论` + 右侧登录按钮，无头像 |
-| `userId != null && !value.trim()` | 头像 + pill 输入框，无发送按钮 |
-| `userId != null && value.trim()` | 头像 + pill + 内嵌 `↑` 圆形发送按钮 |
+| 条件                              | 渲染                                               |
+| --------------------------------- | -------------------------------------------------- |
+| `userId == null`                  | 全宽 pill：`登录后参与讨论` + 右侧登录按钮，无头像 |
+| `userId != null && !value.trim()` | 头像 + pill 输入框，无发送按钮                     |
+| `userId != null && value.trim()`  | 头像 + pill + 内嵌 `↑` 圆形发送按钮                |
 
 **回复状态**：输入框上方显示 chip `回复 @username [取消]`，chip 出现/消失带 fade 动画。
 
 **发送按钮**：`↑` 箭头图标，仅有内容时出现，内嵌在 pill 右侧，`isSubmitting` 时显示 loading。
 
 **props**（基本保持，移除 `submitError` 显示位置调整）：
+
 ```ts
 interface CommentInputProps {
   value: string;
@@ -234,7 +241,7 @@ interface CommentInputProps {
   onCancelReply?: () => void;
   isSubmitting?: boolean;
   submitError?: string | null;
-  className?: string;  // 新增，供不同 layout 调整间距
+  className?: string; // 新增，供不同 layout 调整间距
 }
 ```
 
@@ -248,7 +255,7 @@ interface CommentInputProps {
 interface CommentSectionProps {
   targetType: "article" | "moment" | "guestbook";
   targetId: number;
-  layout?: "modal" | "inline";  // 默认 "inline"
+  layout?: "modal" | "inline"; // 默认 "inline"
 }
 ```
 
@@ -288,11 +295,13 @@ Backdrop（fixed inset-0, bg-black/45, backdrop-blur）
 ```
 
 **高度状态**：
+
 - 默认：70% viewport height
 - 展开：92% viewport height（上滑触发，border-radius 缩小）
 - 收起：跟手 translateY，dismiss 时淡出
 
 **动画**：
+
 - 打开：`slideUp` keyframe（现有，保持）
 - 手势跟手：`transform: translateY(Xpx)`，不改 height
 - spring 弹回：CSS transition `cubic-bezier(.32,.72,0,1) 0.35s`
@@ -314,33 +323,33 @@ Backdrop（fixed inset-0, bg-black/45, backdrop-blur）
 
 ## 文件变更清单
 
-| 文件 | 操作 |
-|---|---|
-| `apps/web/hooks/use-sheet-gesture.ts` | 新建 |
-| `apps/web/hooks/use-sheet-gesture.test.ts` | 新建 |
-| `apps/web/components/comments/comment-replies.tsx` | 新建 |
-| `apps/web/components/comments/comment-replies.test.tsx` | 新建 |
-| `apps/web/components/comments/comment-item.tsx` | 重构 |
-| `apps/web/components/comments/comment-item.test.tsx` | 更新 |
-| `apps/web/components/comments/comment-input.tsx` | 重构 |
-| `apps/web/components/comments/comment-input.test.tsx` | 更新 |
-| `apps/web/components/comments/comment-section.tsx` | 重构 |
-| `apps/web/components/comments/comment-section.test.tsx` | 更新 |
-| `apps/web/components/comments/comment-modal.tsx` | 重构 |
-| `apps/web/components/comments/comment-modal.test.tsx` | 更新 |
-| `apps/web/components/article-detail/article-comments.tsx` | 微调 |
+| 文件                                                           | 操作 |
+| -------------------------------------------------------------- | ---- |
+| `apps/web/hooks/use-sheet-gesture.ts`                          | 新建 |
+| `apps/web/hooks/use-sheet-gesture.test.ts`                     | 新建 |
+| `apps/web/components/comments/comment-replies.tsx`             | 新建 |
+| `apps/web/components/comments/comment-replies.test.tsx`        | 新建 |
+| `apps/web/components/comments/comment-item.tsx`                | 重构 |
+| `apps/web/components/comments/comment-item.test.tsx`           | 更新 |
+| `apps/web/components/comments/comment-input.tsx`               | 重构 |
+| `apps/web/components/comments/comment-input.test.tsx`          | 更新 |
+| `apps/web/components/comments/comment-section.tsx`             | 重构 |
+| `apps/web/components/comments/comment-section.test.tsx`        | 更新 |
+| `apps/web/components/comments/comment-modal.tsx`               | 重构 |
+| `apps/web/components/comments/comment-modal.test.tsx`          | 更新 |
+| `apps/web/components/article-detail/article-comments.tsx`      | 微调 |
 | `apps/web/components/article-detail/article-comments.test.tsx` | 更新 |
 
 ---
 
 ## 未来场景扩展路径（不在本次范围，仅作预留说明）
 
-| 场景 | 新增内容 | 复用内容 |
-|---|---|---|
-| PC 弹窗 | `CommentDialog`（侧边/居中定位 Shell） | CommentSection + 全部 Primitives |
-| 移动端内嵌 | `ArticleComments` 已支持 | CommentSection(layout="inline") |
-| PC 内嵌 | `ArticleComments` 响应式调整 | CommentSection(layout="inline") |
-| 留言板 | 新页面 + `CommentSection(targetType="guestbook", layout="inline")` | 全部复用 |
+| 场景       | 新增内容                                                           | 复用内容                         |
+| ---------- | ------------------------------------------------------------------ | -------------------------------- |
+| PC 弹窗    | `CommentDialog`（侧边/居中定位 Shell）                             | CommentSection + 全部 Primitives |
+| 移动端内嵌 | `ArticleComments` 已支持                                           | CommentSection(layout="inline")  |
+| PC 内嵌    | `ArticleComments` 响应式调整                                       | CommentSection(layout="inline")  |
+| 留言板     | 新页面 + `CommentSection(targetType="guestbook", layout="inline")` | 全部复用                         |
 
 新增 Shell 时：只需提供容器 div，将 `<CommentSection>` 放入即可。无需修改任何 Primitive 或 Section 代码。
 

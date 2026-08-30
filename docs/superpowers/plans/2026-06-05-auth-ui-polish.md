@@ -12,30 +12,31 @@
 
 ## File Map
 
-| Action | File |
-|--------|------|
-| CREATE | `packages/icons/svg/log-out.svg` |
-| CREATE | `apps/web/components/common/user-avatar.tsx` |
-| CREATE | `apps/web/components/common/user-avatar.test.tsx` |
-| CREATE | `apps/web/store/use-snippet-modal.ts` |
-| CREATE | `apps/web/store/use-snippet-modal.test.ts` |
-| CREATE | `apps/web/components/navbar/navbar-user-menu.tsx` |
-| CREATE | `apps/web/components/navbar/navbar-user-menu.test.tsx` |
+| Action | File                                                     |
+| ------ | -------------------------------------------------------- |
+| CREATE | `packages/icons/svg/log-out.svg`                         |
+| CREATE | `apps/web/components/common/user-avatar.tsx`             |
+| CREATE | `apps/web/components/common/user-avatar.test.tsx`        |
+| CREATE | `apps/web/store/use-snippet-modal.ts`                    |
+| CREATE | `apps/web/store/use-snippet-modal.test.ts`               |
+| CREATE | `apps/web/components/navbar/navbar-user-menu.tsx`        |
+| CREATE | `apps/web/components/navbar/navbar-user-menu.test.tsx`   |
 | CREATE | `apps/web/components/navbar/navbar-mobile-menu.test.tsx` |
-| MODIFY | `apps/web/app/globals.css` |
-| MODIFY | `apps/web/components/auth/register-view.tsx` |
-| MODIFY | `apps/web/components/auth/register-view.test.tsx` |
-| MODIFY | `apps/web/components/auth/login-view.tsx` |
-| MODIFY | `apps/web/components/navbar/navbar-actions.tsx` |
-| MODIFY | `apps/web/components/navbar/navbar-actions.test.tsx` |
-| MODIFY | `apps/web/components/navbar/navbar-mobile-menu.tsx` |
-| MODIFY | `apps/web/components/comments/comment-item.tsx` |
+| MODIFY | `apps/web/app/globals.css`                               |
+| MODIFY | `apps/web/components/auth/register-view.tsx`             |
+| MODIFY | `apps/web/components/auth/register-view.test.tsx`        |
+| MODIFY | `apps/web/components/auth/login-view.tsx`                |
+| MODIFY | `apps/web/components/navbar/navbar-actions.tsx`          |
+| MODIFY | `apps/web/components/navbar/navbar-actions.test.tsx`     |
+| MODIFY | `apps/web/components/navbar/navbar-mobile-menu.tsx`      |
+| MODIFY | `apps/web/components/comments/comment-item.tsx`          |
 
 ---
 
 ### Task 1: `UserAvatar` 公共组件
 
 **Files:**
+
 - Create: `apps/web/components/common/user-avatar.tsx`
 - Create: `apps/web/components/common/user-avatar.test.tsx`
 
@@ -92,6 +93,7 @@ describe("UserAvatar", () => {
 ```bash
 pnpm --filter web test -- user-avatar
 ```
+
 Expected: FAIL — `Cannot find module './user-avatar'`
 
 - [ ] **Step 3: 实现组件**
@@ -130,12 +132,7 @@ export function UserAvatar({ src, name, size = "md", className }: UserAvatarProp
     );
   }
   return (
-    <div
-      className={cn(
-        base,
-        "flex items-center justify-center bg-border font-bold text-(--fg2)",
-      )}
-    >
+    <div className={cn(base, "flex items-center justify-center bg-border font-bold text-(--fg2)")}>
       {name[0]?.toUpperCase() ?? "?"}
     </div>
   );
@@ -147,6 +144,7 @@ export function UserAvatar({ src, name, size = "md", className }: UserAvatarProp
 ```bash
 pnpm --filter web test -- user-avatar
 ```
+
 Expected: PASS (6 tests)
 
 - [ ] **Step 5: Commit**
@@ -161,6 +159,7 @@ git commit -m "feat(web): 新增 UserAvatar 公共用户头像组件"
 ### Task 2: `useSnippetModal` stub store
 
 **Files:**
+
 - Create: `apps/web/store/use-snippet-modal.ts`
 - Create: `apps/web/store/use-snippet-modal.test.ts`
 
@@ -198,6 +197,7 @@ describe("useSnippetModal", () => {
 ```bash
 pnpm --filter web test -- use-snippet-modal
 ```
+
 Expected: FAIL — `Cannot find module './use-snippet-modal'`
 
 - [ ] **Step 3: 实现 store**
@@ -224,6 +224,7 @@ export const useSnippetModal = create<SnippetModalStore>((set) => ({
 ```bash
 pnpm --filter web test -- use-snippet-modal
 ```
+
 Expected: PASS (3 tests)
 
 - [ ] **Step 5: Commit**
@@ -238,6 +239,7 @@ git commit -m "feat(web): 新增 useSnippetModal stub store（预留全局碎语
 ### Task 3: `log-out` SVG 图标
 
 **Files:**
+
 - Create: `packages/icons/svg/log-out.svg`
 - Modify (generated): `packages/icons/src/generated/types.ts`, `packages/icons/src/generated/sprite.ts`
 
@@ -258,9 +260,11 @@ git commit -m "feat(web): 新增 useSnippetModal stub store（预留全局碎语
 ```bash
 pnpm --filter @repo/icons build
 ```
+
 Expected: `packages/icons/src/generated/types.ts` 中出现 `'log-out'`
 
 验证：
+
 ```bash
 grep "log-out" packages/icons/src/generated/types.ts
 ```
@@ -277,6 +281,7 @@ git commit -m "feat(icons): 新增 log-out 图标"
 ### Task 4: `globals.css` 添加下拉入场动画
 
 **Files:**
+
 - Modify: `apps/web/app/globals.css`
 
 - [ ] **Step 1: 在 globals.css 中添加 dropdown 动画**
@@ -328,6 +333,7 @@ git commit -m "style(web): 新增 dropdown 入场动画 keyframe"
 ### Task 5: `NavbarUserMenu` 桌面端下拉组件
 
 **Files:**
+
 - Create: `apps/web/components/navbar/navbar-user-menu.tsx`
 - Create: `apps/web/components/navbar/navbar-user-menu.test.tsx`
 
@@ -448,6 +454,7 @@ describe("NavbarUserMenu", () => {
 ```bash
 pnpm --filter web test -- navbar-user-menu
 ```
+
 Expected: FAIL — `Cannot find module './navbar-user-menu'`
 
 - [ ] **Step 3: 实现组件**
@@ -526,9 +533,7 @@ export function NavbarUserMenu({ user, isGlass = false }: NavbarUserMenuProps) {
               {displayName}
             </p>
             {user.email && (
-              <p className="mt-0.5 truncate text-[11px] text-muted-foreground/60">
-                {user.email}
-              </p>
+              <p className="mt-0.5 truncate text-[11px] text-muted-foreground/60">{user.email}</p>
             )}
           </div>
           {/* 菜单项 */}
@@ -543,7 +548,10 @@ export function NavbarUserMenu({ user, isGlass = false }: NavbarUserMenuProps) {
             </button>
             <button
               type="button"
-              onClick={() => { setOpen(false); openSnippetModal(); }}
+              onClick={() => {
+                setOpen(false);
+                openSnippetModal();
+              }}
               className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-foreground/[0.05]"
             >
               <SvgIcon name="plus" size={14} className="shrink-0 text-muted-foreground/60" />
@@ -583,6 +591,7 @@ export function NavbarUserMenu({ user, isGlass = false }: NavbarUserMenuProps) {
 ```bash
 pnpm --filter web test -- navbar-user-menu
 ```
+
 Expected: PASS (8 tests)
 
 - [ ] **Step 5: Commit**
@@ -597,6 +606,7 @@ git commit -m "feat(web): 新增 NavbarUserMenu 桌面端用户下拉菜单"
 ### Task 6: `NavbarActions` 登录态适配
 
 **Files:**
+
 - Modify: `apps/web/components/navbar/navbar-actions.tsx`
 - Modify: `apps/web/components/navbar/navbar-actions.test.tsx`
 
@@ -651,6 +661,7 @@ it("未登录：显示登录按钮，不显示 UserMenu", () => {
 ```bash
 pnpm --filter web test -- navbar-actions
 ```
+
 Expected: 2 new FAIL（现有 5 个 PASS 不变）
 
 - [ ] **Step 3: 修改 navbar-actions.tsx**
@@ -731,6 +742,7 @@ export function NavbarActions({ isGlass = false }: NavbarActionsProps) {
 ```bash
 pnpm --filter web test -- navbar-actions
 ```
+
 Expected: PASS (7 tests)
 
 - [ ] **Step 5: Commit**
@@ -745,6 +757,7 @@ git commit -m "feat(web): NavbarActions 登录态显示用户头像下拉菜单"
 ### Task 7: `NavbarMobileMenu` 登录态布局
 
 **Files:**
+
 - Create: `apps/web/components/navbar/navbar-mobile-menu.test.tsx`
 - Modify: `apps/web/components/navbar/navbar-mobile-menu.tsx`
 
@@ -859,6 +872,7 @@ describe("NavbarMobileMenu", () => {
 ```bash
 pnpm --filter web test -- navbar-mobile-menu.test
 ```
+
 Expected: FAIL（useSession / UserAvatar / useRouter 等调用均不存在于当前实现）
 
 - [ ] **Step 3: 修改 navbar-mobile-menu.tsx**
@@ -1022,6 +1036,7 @@ export function NavbarMobileMenu({ isOpen, onClose }: NavbarMobileMenuProps) {
 ```bash
 pnpm --filter web test -- navbar-mobile-menu.test
 ```
+
 Expected: PASS (4 tests)
 
 - [ ] **Step 5: Commit**
@@ -1036,6 +1051,7 @@ git commit -m "feat(web): NavbarMobileMenu 登录态展示用户信息与快捷�
 ### Task 8: `register-view.tsx` 429 → Toast
 
 **Files:**
+
 - Modify: `apps/web/components/auth/register-view.tsx`
 - Modify: `apps/web/components/auth/register-view.test.tsx`
 
@@ -1091,8 +1107,15 @@ it("send-code 返回 429 时关闭验证码弹层并 toast 通知，不重试拼
   const track = await screen.findByTestId("captcha-track");
   Object.defineProperty(track, "getBoundingClientRect", {
     value: () => ({
-      left: 0, top: 0, right: 300, bottom: 52,
-      width: 300, height: 52, x: 0, y: 0, toJSON: () => ({}),
+      left: 0,
+      top: 0,
+      right: 300,
+      bottom: 52,
+      width: 300,
+      height: 52,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
     }),
     configurable: true,
   });
@@ -1113,19 +1136,25 @@ it("send-code 返回 429 时关闭验证码弹层并 toast 通知，不重试拼
 ```bash
 pnpm --filter web test -- register-view
 ```
+
 Expected: 1 new FAIL，其余 PASS
 
 - [ ] **Step 3: 修改 register-view.tsx**
 
 **3a.** 在 import 区末尾追加：
+
 ```tsx
 import { addToast } from "@/lib/toast";
 ```
 
 **3b.** 在 `// ── 自定义拼图滑块` 注释行之前，追加 `ApiError` 类（模块级）：
+
 ```tsx
 class ApiError extends Error {
-  constructor(message: string, public readonly code: number) {
+  constructor(
+    message: string,
+    public readonly code: number,
+  ) {
     super(message);
     this.name = "ApiError";
   }
@@ -1133,15 +1162,19 @@ class ApiError extends Error {
 ```
 
 **3c.** 在 `RegisterView` 组件内，将 `requestJSON` 函数中的：
+
 ```tsx
 if (json.code !== 0) throw new Error(json.message || "请求失败");
 ```
+
 改为：
+
 ```tsx
 if (json.code !== 0) throw new ApiError(json.message || "请求失败", json.code);
 ```
 
 **3d.** 在 `handleCaptchaVerify` 的第一个 `catch (err)` 块，将：
+
 ```tsx
 } catch {
   // 验证失败：自动刷新新一轮拼图
@@ -1157,7 +1190,9 @@ if (json.code !== 0) throw new ApiError(json.message || "请求失败", json.cod
   }
 }
 ```
+
 改为：
+
 ```tsx
 } catch (err) {
   if (err instanceof ApiError && err.code === 429) {
@@ -1185,6 +1220,7 @@ if (json.code !== 0) throw new ApiError(json.message || "请求失败", json.cod
 ```bash
 pnpm --filter web test -- register-view
 ```
+
 Expected: PASS (10 tests)
 
 - [ ] **Step 5: Commit**
@@ -1199,12 +1235,14 @@ git commit -m "fix(web): send-code 429 封禁改为 Toast 通知，不再重试�
 ### Task 9: 滑块无缝化 + 输入框间距
 
 **Files:**
+
 - Modify: `apps/web/components/auth/register-view.tsx`
 - Modify: `apps/web/components/auth/login-view.tsx`
 
 - [ ] **Step 1: 修改 CaptchaSlider 轨道样式**
 
 在 `register-view.tsx` 的 `CaptchaSlider` 组件中，将 track div 的 className 从：
+
 ```tsx
 className={cn(
   "relative w-full h-[48px] rounded-xl select-none touch-none overflow-hidden",
@@ -1212,7 +1250,9 @@ className={cn(
   disabled ? "opacity-50 cursor-not-allowed" : "cursor-grab active:cursor-grabbing",
 )}
 ```
+
 改为：
+
 ```tsx
 className={cn(
   "relative w-full h-[44px] rounded-lg select-none touch-none overflow-hidden",
@@ -1226,7 +1266,9 @@ className={cn(
 在 `register-view.tsx` 的 captchaOpen portal 中，将旧的 `{/* 拼图区域 */}` + `{/* 滑块 */}` 两块结构替换为统一容器：
 
 ```tsx
-{/* 验证码统一容器（拼图 + 滑块无缝整合） */}
+{
+  /* 验证码统一容器（拼图 + 滑块无缝整合） */
+}
 <div className="overflow-hidden rounded-xl border border-border">
   {/* 拼图区域 */}
   <div
@@ -1271,25 +1313,31 @@ className={cn(
       onRelease={(x) => handleCaptchaVerify(x)}
     />
   </div>
-</div>
+</div>;
 ```
 
 - [ ] **Step 3: 调整两个表单的输入框间距**
 
 在 `register-view.tsx` 中，找到（表单区域）：
+
 ```tsx
 <div className="flex flex-col gap-[10px]">
 ```
+
 改为：
+
 ```tsx
 <div className="flex flex-col gap-[14px]">
 ```
 
 在 `login-view.tsx` 中，找到：
+
 ```tsx
 <div className="flex flex-col gap-[10px]">
 ```
+
 改为：
+
 ```tsx
 <div className="flex flex-col gap-[14px]">
 ```
@@ -1299,6 +1347,7 @@ className={cn(
 ```bash
 pnpm --filter web test -- register-view login-modal
 ```
+
 Expected: PASS（全部现有测试通过）
 
 - [ ] **Step 5: Commit**
@@ -1313,6 +1362,7 @@ git commit -m "style(web): 验证码滑块弹层无缝化，调整表单输入�
 ### Task 10: `comment-item.tsx` 改用公共 UserAvatar
 
 **Files:**
+
 - Modify: `apps/web/components/comments/comment-item.tsx`
 
 - [ ] **Step 1: 修改 comment-item.tsx**
@@ -1320,24 +1370,31 @@ git commit -m "style(web): 验证码滑块弹层无缝化，调整表单输入�
 **1a.** 删除文件中的本地 `Avatar` 函数组件（整个 `function Avatar(...)` 定义，约第 20-33 行）。
 
 **1b.** 在 import 区末尾追加：
+
 ```tsx
 import { UserAvatar } from "@/components/common/user-avatar";
 ```
 
 **1c.** 将 `ReplyItem` 中的：
+
 ```tsx
 <Avatar url={reply.from_user?.avatar_url} name={fromName} size="sm" />
 ```
+
 改为：
+
 ```tsx
 <UserAvatar src={reply.from_user?.avatar_url} name={fromName} size="sm" />
 ```
 
 **1d.** 将 `CommentItem` 中的：
+
 ```tsx
 <Avatar url={comment.user?.avatar_url} name={displayName} size="md" />
 ```
+
 改为：
+
 ```tsx
 <UserAvatar src={comment.user?.avatar_url} name={displayName} size="md" />
 ```
@@ -1349,6 +1406,7 @@ import { UserAvatar } from "@/components/common/user-avatar";
 ```bash
 pnpm --filter web check-types
 ```
+
 Expected: 无报错
 
 - [ ] **Step 3: Commit**
@@ -1374,6 +1432,7 @@ Task 1 (UserAvatar) → Task 2 (SnippetModal) → Task 3 (log-out icon) → Task
 ## Self-Review
 
 **Spec Coverage:**
+
 - ✅ 429 → Toast: Task 8
 - ✅ 滑块无缝化: Task 9
 - ✅ 输入框间距: Task 9
@@ -1389,6 +1448,7 @@ Task 1 (UserAvatar) → Task 2 (SnippetModal) → Task 3 (log-out icon) → Task
 **Placeholder scan:** 无 TBD/TODO，所有代码完整。
 
 **Type consistency:**
+
 - `UserAvatar` `{ src?, name, size?, className? }` — Task 1 定义，Task 5/7/10 使用，一致。
 - `useSnippetModal` `{ isOpen, open, close }` — Task 2 定义，Task 5 调用 `open`，一致。
 - `NavbarUserMenu` `{ user: UserResp, isGlass?: boolean }` — Task 5 定义，Task 6 使用，一致。

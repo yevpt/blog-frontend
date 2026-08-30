@@ -5,21 +5,15 @@ It normalizes behavior across browsers and platforms, and handles many nuances
 of dealing with pointer and keyboard events.
 
 ```tsx
-import React from 'react';
-import {usePress} from 'react-aria/usePress';
+import React from "react";
+import { usePress } from "react-aria/usePress";
 
 function Example() {
   let [events, setEvents] = React.useState<string[]>([]);
-  let {pressProps, isPressed} = usePress({
-    onPressStart: e => setEvents(
-      events => [...events, `press start with ${e.pointerType}`]
-    ),
-    onPressEnd: e => setEvents(
-      events => [...events, `press end with ${e.pointerType}`]
-    ),
-    onPress: e => setEvents(
-      events => [...events, `press with ${e.pointerType}`]
-    )
+  let { pressProps, isPressed } = usePress({
+    onPressStart: (e) => setEvents((events) => [...events, `press start with ${e.pointerType}`]),
+    onPressEnd: (e) => setEvents((events) => [...events, `press end with ${e.pointerType}`]),
+    onPress: (e) => setEvents((events) => [...events, `press with ${e.pointerType}`]),
   });
 
   return (
@@ -27,23 +21,27 @@ function Example() {
       <div
         {...pressProps}
         style={{
-          background: isPressed ? 'darkgreen' : 'green',
-          color: 'white',
-          display: 'inline-block',
-          padding: '8px 12px',
+          background: isPressed ? "darkgreen" : "green",
+          color: "white",
+          display: "inline-block",
+          padding: "8px 12px",
           borderRadius: 8,
-          cursor: 'pointer'
+          cursor: "pointer",
         }}
         role="button"
-        tabIndex={0}>
+        tabIndex={0}
+      >
         Press me!
       </div>
       <ul
         style={{
-          maxHeight: '200px',
-          overflow: 'auto'
-        }}>
-        {events.map((e, i) => <li key={i}>{e}</li>)}
+          maxHeight: "200px",
+          overflow: "auto",
+        }}
+      >
+        {events.map((e, i) => (
+          <li key={i}>{e}</li>
+        ))}
       </ul>
     </>
   );
@@ -75,9 +73,9 @@ Read our [blog post](blog/building-a-button-part-1.md) learn more.
 
 ### PressResult
 
-| Name | Type | Description |
-|------|------|-------------|
-| `isPressed` \* | `boolean` | Whether the target is currently pressed. |
-| `pressProps` \* | `DOMAttributes<FocusableElement>` | Props to spread on the target element. |
+| Name            | Type                              | Description                              |
+| --------------- | --------------------------------- | ---------------------------------------- |
+| `isPressed` \*  | `boolean`                         | Whether the target is currently pressed. |
+| `pressProps` \* | `DOMAttributes<FocusableElement>` | Props to spread on the target element.   |
 
 ### PressEvent

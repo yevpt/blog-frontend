@@ -14,41 +14,42 @@
 
 ### 后端 (`blog-backend`)
 
-| 文件 | 操作 |
-|------|------|
-| `pkg/jwt/jwt.go` | 修改：Claims 移除 Username/Roles，Generate 方法简化签名 |
-| `pkg/jwt/jwt_test.go` | 修改：更新测试调用 |
-| `internal/service/user_cache.go` | **新建**：UserCacheService 接口 + 实现 |
-| `internal/service/user_cache_test.go` | **新建**：缓存服务单元测试 |
-| `internal/service/user_detail.go` | 修改：`detailToDTO` 重命名为包级函数 `assembleUserDetail`，注入 cache |
-| `internal/service/user.go` | 修改：`userService` 改为依赖 `UserCacheService` |
-| `internal/middleware/auth.go` | 修改：Auth 从 Redis 加载用户资料，新增 `GetUserDetail()` |
-| `internal/middleware/rbac.go` | 修改：`RequireRole` 从 UserDetail 读取 Roles |
-| `internal/middleware/auth_test.go` | 修改：更新 Generate 调用签名 |
-| `internal/service/auth/auth.go` | 修改：Login/Refresh 适配精简 JWT，Login 预热缓存 |
-| `internal/handler/user.go` | 修改：直接从 Context 读 UserDetail，不再调 service |
-| `internal/router/router.go` | 修改：接线 UserCacheService，更新 Auth 中间件调用 |
+| 文件                                  | 操作                                                                  |
+| ------------------------------------- | --------------------------------------------------------------------- |
+| `pkg/jwt/jwt.go`                      | 修改：Claims 移除 Username/Roles，Generate 方法简化签名               |
+| `pkg/jwt/jwt_test.go`                 | 修改：更新测试调用                                                    |
+| `internal/service/user_cache.go`      | **新建**：UserCacheService 接口 + 实现                                |
+| `internal/service/user_cache_test.go` | **新建**：缓存服务单元测试                                            |
+| `internal/service/user_detail.go`     | 修改：`detailToDTO` 重命名为包级函数 `assembleUserDetail`，注入 cache |
+| `internal/service/user.go`            | 修改：`userService` 改为依赖 `UserCacheService`                       |
+| `internal/middleware/auth.go`         | 修改：Auth 从 Redis 加载用户资料，新增 `GetUserDetail()`              |
+| `internal/middleware/rbac.go`         | 修改：`RequireRole` 从 UserDetail 读取 Roles                          |
+| `internal/middleware/auth_test.go`    | 修改：更新 Generate 调用签名                                          |
+| `internal/service/auth/auth.go`       | 修改：Login/Refresh 适配精简 JWT，Login 预热缓存                      |
+| `internal/handler/user.go`            | 修改：直接从 Context 读 UserDetail，不再调 service                    |
+| `internal/router/router.go`           | 修改：接线 UserCacheService，更新 Auth 中间件调用                     |
 
 ### 前端 (`blog-frontend`)
 
-| 文件 | 操作 |
-|------|------|
-| `packages/api/src/types/user.ts` | 修改：移除 `UserProfileCache`（不再需要） |
-| `packages/api/src/index.ts` | 修改：同步导出 |
-| `apps/web/lib/session.ts` | 修改：Session 只含 userId，getSession 精简 |
-| `apps/web/lib/session.test.ts` | 修改：更新测试 |
-| `apps/web/app/providers/session-provider.tsx` | 修改：Context 增加 `profile: UserDetailResp \| null` |
-| `apps/web/app/layout.tsx` | 修改：已登录时 SSR 调用 `/users/me` |
-| `apps/web/app/api/auth/login/route.ts` | 修改：移除 `/users/me` 调用（简化） |
-| `apps/web/components/navbar/navbar-actions.tsx` | 修改：用 `userId` 判断登录态 |
-| `apps/web/components/navbar/navbar-user-menu.tsx` | 修改：从 `useSession()` 读 `profile`，传 `src` 给 UserAvatar |
-| `apps/web/components/navbar/navbar-user-menu.test.tsx` | 修改：新增头像测试 |
+| 文件                                                   | 操作                                                         |
+| ------------------------------------------------------ | ------------------------------------------------------------ |
+| `packages/api/src/types/user.ts`                       | 修改：移除 `UserProfileCache`（不再需要）                    |
+| `packages/api/src/index.ts`                            | 修改：同步导出                                               |
+| `apps/web/lib/session.ts`                              | 修改：Session 只含 userId，getSession 精简                   |
+| `apps/web/lib/session.test.ts`                         | 修改：更新测试                                               |
+| `apps/web/app/providers/session-provider.tsx`          | 修改：Context 增加 `profile: UserDetailResp \| null`         |
+| `apps/web/app/layout.tsx`                              | 修改：已登录时 SSR 调用 `/users/me`                          |
+| `apps/web/app/api/auth/login/route.ts`                 | 修改：移除 `/users/me` 调用（简化）                          |
+| `apps/web/components/navbar/navbar-actions.tsx`        | 修改：用 `userId` 判断登录态                                 |
+| `apps/web/components/navbar/navbar-user-menu.tsx`      | 修改：从 `useSession()` 读 `profile`，传 `src` 给 UserAvatar |
+| `apps/web/components/navbar/navbar-user-menu.test.tsx` | 修改：新增头像测试                                           |
 
 ---
 
 ## Task 1：JWT Claims 精简
 
 **Files:**
+
 - Modify: `blog-backend/pkg/jwt/jwt.go`
 - Modify: `blog-backend/pkg/jwt/jwt_test.go`
 
@@ -363,6 +364,7 @@ git commit -m "refactor(jwt): 精简 Claims，移除 Username/Roles，仅保留 
 ## Task 2：UserCacheService 新建
 
 **Files:**
+
 - Create: `blog-backend/internal/service/user_cache.go`
 - Create: `blog-backend/internal/service/user_cache_test.go`
 
@@ -751,6 +753,7 @@ git commit -m "feat(service): 新建 UserCacheService，用户资料 Redis 缓�
 ## Task 3：Auth 中间件增强 + RequireRole 更新
 
 **Files:**
+
 - Modify: `blog-backend/internal/middleware/auth.go`
 - Modify: `blog-backend/internal/middleware/rbac.go`
 
@@ -920,6 +923,7 @@ git commit -m "feat(middleware): Auth 从 Redis 加载用户资料，RequireRole
 ## Task 4：AuthService Login/Refresh 适配 + Router 接线
 
 **Files:**
+
 - Modify: `blog-backend/internal/service/auth/auth.go`
 - Modify: `blog-backend/internal/handler/user.go`
 - Modify: `blog-backend/internal/router/router.go`
@@ -1176,6 +1180,7 @@ git commit -m "feat(auth): Login/Refresh 适配精简 JWT，Router 接线 UserCa
 ## Task 5：前端 Session 精简
 
 **Files:**
+
 - Modify: `blog-frontend/apps/web/lib/session.ts`
 - Modify: `blog-frontend/apps/web/lib/session.test.ts`
 
@@ -1302,6 +1307,7 @@ git commit -m "refactor(web): Session 精简为 { userId }，getSession 不再�
 ## Task 6：SessionProvider + layout.tsx 更新
 
 **Files:**
+
 - Modify: `blog-frontend/apps/web/app/providers/session-provider.tsx`
 - Modify: `blog-frontend/apps/web/app/layout.tsx`
 
@@ -1389,6 +1395,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 ```
 
 确保 layout.tsx 顶部已导入 `createServerApiClient`：
+
 ```typescript
 import { createServerApiClient } from "@/lib/server-api";
 ```
@@ -1414,6 +1421,7 @@ git commit -m "feat(web): SessionProvider 新增 profile，layout.tsx SSR 获取
 ## Task 7：Navbar 接入 profile + 类型清理
 
 **Files:**
+
 - Modify: `blog-frontend/packages/api/src/types/user.ts`
 - Modify: `blog-frontend/packages/api/src/index.ts`
 - Modify: `blog-frontend/apps/web/components/navbar/navbar-actions.tsx`

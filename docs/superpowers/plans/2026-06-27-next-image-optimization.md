@@ -28,6 +28,7 @@
 ### Task 1: 建立 Markdown 图片优化纯函数
 
 **Files:**
+
 - Create: `apps/web/config/optimized-image-hosts.json`
 - Create: `apps/web/lib/markdown-image-optimizer.ts`
 - Create: `apps/web/lib/markdown-image-optimizer.test.ts`
@@ -53,7 +54,10 @@ describe("optimizeMarkdownImages", () => {
   it("为白名单静态图生成 Next 响应式地址并保存原图", () => {
     const original = "https://blog-oss.yevpt.com/posts/cover.jpg?x=1&y=2";
     const image = parseImage(
-      optimizeMarkdownImages(`<p><img src="${original.replace("&", "&#x26;")}" alt="封面"></p>`, "article"),
+      optimizeMarkdownImages(
+        `<p><img src="${original.replace("&", "&#x26;")}" alt="封面"></p>`,
+        "article",
+      ),
     );
 
     expect(image.dataset.originalSrc).toBe(original);
@@ -184,10 +188,7 @@ function setHtmlAttribute(tag: string, name: string, value: string): string {
     : tag.replace(/\s*\/?>$/, (closing) => `${attribute}${closing}`);
 }
 
-export function optimizeMarkdownImages(
-  html: string,
-  variant: MarkdownImageVariant,
-): string {
+export function optimizeMarkdownImages(html: string, variant: MarkdownImageVariant): string {
   return html.replace(/<img\b[^>]*>/gi, (tag) => {
     const sourceMatch = tag.match(/\ssrc=(['"])([\s\S]*?)\1/i);
     if (!sourceMatch?.[2]) return tag;
@@ -195,7 +196,9 @@ export function optimizeMarkdownImages(
     if (!isOptimizableRemoteImage(originalSrc)) return tag;
 
     const widths = WIDTHS[variant];
-    const sourceSet = widths.map((width) => `${nextImageUrl(originalSrc, width)} ${width}w`).join(", ");
+    const sourceSet = widths
+      .map((width) => `${nextImageUrl(originalSrc, width)} ${width}w`)
+      .join(", ");
     let optimizedTag = setHtmlAttribute(tag, "src", nextImageUrl(originalSrc, widths.at(-1)!));
     optimizedTag = setHtmlAttribute(optimizedTag, "srcset", sourceSet);
     optimizedTag = setHtmlAttribute(optimizedTag, "sizes", SIZES[variant]);
@@ -225,6 +228,7 @@ git commit -m "perf(images): 新增 Markdown 响应式图片地址"
 ### Task 2: 为 Markdown 优化图增加重试和原图回退
 
 **Files:**
+
 - Create: `packages/markdown/src/image-retry.ts`
 - Modify: `packages/markdown/src/image-fallback.ts`
 - Modify: `packages/markdown/src/markdown-content.tsx`
@@ -376,6 +380,7 @@ git commit -m "fix(markdown): 增加优化图片重试与原图回退"
 ### Task 3: 在 Web Markdown 入口接入优化
 
 **Files:**
+
 - Modify: `apps/web/components/common/previewable-markdown.tsx`
 - Modify: `apps/web/components/common/previewable-markdown.test.tsx`
 
@@ -417,12 +422,7 @@ export function PreviewableMarkdown({
   const open = useImageViewer((state) => state.open);
   const optimizedHtml = useMemo(() => optimizeMarkdownImages(html, variant), [html, variant]);
   return (
-    <MarkdownContent
-      {...props}
-      html={optimizedHtml}
-      variant={variant}
-      onImagePreview={open}
-    />
+    <MarkdownContent {...props} html={optimizedHtml} variant={variant} onImagePreview={open} />
   );
 }
 ```
@@ -445,6 +445,7 @@ git commit -m "perf(markdown): 启用响应式图片优化"
 ### Task 4: 启用首页轮播图片优化并保留 GIF
 
 **Files:**
+
 - Modify: `apps/web/components/featured/featured-carousel-slide.tsx`
 - Modify: `apps/web/components/featured/featured-carousel.test.tsx`
 
@@ -465,7 +466,9 @@ it("普通轮播封面启用 Next 优化并保持等比裁切配置", () => {
 it("GIF 轮播封面跳过 Next 优化", () => {
   const gifPost = { ...mockPosts[0]!, coverImage: "https://blog-oss.yevpt.com/hero.GIF?v=1" };
   render(<FeaturedCarousel posts={[gifPost]} />);
-  expect(screen.getAllByRole("img").every((image) => image.getAttribute("data-unoptimized") === "true")).toBe(true);
+  expect(
+    screen.getAllByRole("img").every((image) => image.getAttribute("data-unoptimized") === "true"),
+  ).toBe(true);
 });
 ```
 
@@ -507,6 +510,7 @@ git commit -m "perf(carousel): 启用封面图片优化"
 ### Task 5: 全量验证
 
 **Files:**
+
 - Verify only
 
 - [ ] **Step 1: 运行相关包测试**

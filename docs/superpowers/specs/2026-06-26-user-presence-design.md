@@ -8,11 +8,11 @@
 
 ## 1. 背景与问题
 
-| 现状 | 问题 |
-|------|------|
+| 现状                                                                   | 问题                           |
+| ---------------------------------------------------------------------- | ------------------------------ |
 | Analytics 心跳（15s）→ Redis `analytics:online`（member=`visitor_id`） | 只服务站点统计，与用户 UI 无关 |
-| UI 用 `last_login_at` + 3 分钟阈值判「在线」 | 语义错误；仅登录时更新 |
-| `POST /users/me/login-time` 存在但前端未调用 | 死代码，且语义仍是「登录」 |
+| UI 用 `last_login_at` + 3 分钟阈值判「在线」                           | 语义错误；仅登录时更新         |
+| `POST /users/me/login-time` 存在但前端未调用                           | 死代码，且语义仍是「登录」     |
 
 **目标：** 将**认证**（login）与**活跃**（presence）分离；collect 为 presence 唯一写入源；UI 展示真实在线与最近活跃时间。
 
@@ -62,14 +62,14 @@
 
 ### 3.5 示例
 
-| 场景 | is_online | last_active_at | 展示 |
-|------|-----------|----------------|------|
-| 正在浏览站点 | true | 刚刚 | 在线 |
-| 5 分钟前关 tab | false | 5 分钟前 | 5 分钟前活跃过 |
-| 3 个月未访问 | false | 3 个月前 | 3 个月前活跃过 |
-| 上线前老用户（迁移回填） | false | = 原 last_login_at | X 前活跃过 |
-| 注册从未登录 | false | null，last_login_at null | 从未活跃 |
-| 刚登录、首个心跳未到 | true | 登录时写入 | 在线 |
+| 场景                     | is_online | last_active_at           | 展示           |
+| ------------------------ | --------- | ------------------------ | -------------- |
+| 正在浏览站点             | true      | 刚刚                     | 在线           |
+| 5 分钟前关 tab           | false     | 5 分钟前                 | 5 分钟前活跃过 |
+| 3 个月未访问             | false     | 3 个月前                 | 3 个月前活跃过 |
+| 上线前老用户（迁移回填） | false     | = 原 last_login_at       | X 前活跃过     |
+| 注册从未登录             | false     | null，last_login_at null | 从未活跃       |
+| 刚登录、首个心跳未到     | true      | 登录时写入               | 在线           |
 
 ---
 
@@ -79,8 +79,8 @@
 
 新增：
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
+| 字段             | 类型            | 说明                 |
+| ---------------- | --------------- | -------------------- |
 | `last_active_at` | `datetime NULL` | 最后一次可信活跃时间 |
 
 `last_login_at` 保留，仅认证时更新。
@@ -172,10 +172,10 @@ IsOnline     bool        `json:"is_online"`
 
 ### 6.2 排序
 
-| 接口 | 新排序 |
-|------|--------|
+| 接口                | 新排序                                    |
+| ------------------- | ----------------------------------------- |
 | `GET /users/recent` | `last_active_at DESC`（最近**活跃**访客） |
-| `GET /users/public` | 角色权重 + `last_active_at DESC` |
+| `GET /users/public` | 角色权重 + `last_active_at DESC`          |
 
 ### 6.3 废弃
 
@@ -187,19 +187,19 @@ IsOnline     bool        `json:"is_online"`
 
 ### 7.1 组件
 
-| 文件 | 变更 |
-|------|------|
-| `BaseUserCard` | 读 `is_online` / `last_active_at`；离线文案见 §3 |
-| `UserBanner` / `UserInfoHeader` | 同上 |
-| `app/page.tsx` | 去掉 `isOnline: false` 硬编码，用 API 字段 |
+| 文件                            | 变更                                             |
+| ------------------------------- | ------------------------------------------------ |
+| `BaseUserCard`                  | 读 `is_online` / `last_active_at`；离线文案见 §3 |
+| `UserBanner` / `UserInfoHeader` | 同上                                             |
+| `app/page.tsx`                  | 去掉 `isOnline: false` 硬编码，用 API 字段       |
 
 ### 7.2 展示函数（建议抽到 `@/lib/user-presence`）
 
 ```typescript
 type PresenceDisplay =
   | { kind: "online" }
-  | { kind: "offline"; label: string }  // "3 天前活跃过"
-  | { kind: "never" };                  // "从未活跃"
+  | { kind: "offline"; label: string } // "3 天前活跃过"
+  | { kind: "never" }; // "从未活跃"
 
 function resolvePresenceDisplay(input: {
   is_online: boolean;
@@ -269,13 +269,13 @@ BaseUserCard / UserBanner（is_online + 相对时间）
 
 ## 12. 已确认决策
 
-| 项 | 决策 |
-|----|------|
-| 在线窗口 | 90s，与 analytics 一致 |
-| `/users/recent` 排序 | `last_active_at DESC` |
-| 离线文案 | 「X 分钟前活跃过」 |
-| `POST /users/me/login-time` | 废弃 |
-| 长期未访问展示 | 保留最后 `last_active_at`，相对时间拉长（§3.2） |
-| 无活跃记录 | 「从未活跃」；迁移从 `last_login_at` 回填（§4.1） |
-| 登录双写 | 单 SQL 写 `last_login_at` + `last_active_at` + Redis `user:online`（§4.1） |
-| 迁移脚本 | `migrations/20260626_user_last_active_at.sql` 上线必跑（§4.1） |
+| 项                          | 决策                                                                       |
+| --------------------------- | -------------------------------------------------------------------------- |
+| 在线窗口                    | 90s，与 analytics 一致                                                     |
+| `/users/recent` 排序        | `last_active_at DESC`                                                      |
+| 离线文案                    | 「X 分钟前活跃过」                                                         |
+| `POST /users/me/login-time` | 废弃                                                                       |
+| 长期未访问展示              | 保留最后 `last_active_at`，相对时间拉长（§3.2）                            |
+| 无活跃记录                  | 「从未活跃」；迁移从 `last_login_at` 回填（§4.1）                          |
+| 登录双写                    | 单 SQL 写 `last_login_at` + `last_active_at` + Redis `user:online`（§4.1） |
+| 迁移脚本                    | `migrations/20260626_user_last_active_at.sql` 上线必跑（§4.1）             |

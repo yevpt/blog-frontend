@@ -27,16 +27,16 @@
 
 Agent 领取前认领对应任务、完成后勾选。**A 组（T1/T2/T5/T6/T7）互不依赖，可并行启动**；其余按依赖推进。
 
-| 任务 | 模块 | 依赖 | 并行组 | 状态 |
-|------|------|------|--------|------|
-| T1 | BFF 代理路由（read / read-all / delete） | 无 | A | ☑ |
-| T2 | `notification-type.ts` 类型映射 | 无 | A | ☑ |
-| T5 | `notification-filter-tabs` 筛选 Tab | 无 | A | ☑ |
-| T6 | `notification-selection-bar` 选择操作条 | 无 | A | ☑ |
-| T7 | 导航入口 + 跳转兜底修正 | 无 | A | ☑ |
-| T3 | `use-notifications` 数据 Hook | T1（运行时）| B | ☑ |
-| T4 | `notification-card` 卡片组件 | T2 | B | ☑ |
-| T8 | 页面装配 `notifications-page` + 路由 | T3,T4,T5,T6 | C | ☑ |
+| 任务 | 模块                                     | 依赖         | 并行组 | 状态 |
+| ---- | ---------------------------------------- | ------------ | ------ | ---- |
+| T1   | BFF 代理路由（read / read-all / delete） | 无           | A      | ☑    |
+| T2   | `notification-type.ts` 类型映射          | 无           | A      | ☑    |
+| T5   | `notification-filter-tabs` 筛选 Tab      | 无           | A      | ☑    |
+| T6   | `notification-selection-bar` 选择操作条  | 无           | A      | ☑    |
+| T7   | 导航入口 + 跳转兜底修正                  | 无           | A      | ☑    |
+| T3   | `use-notifications` 数据 Hook            | T1（运行时） | B      | ☑    |
+| T4   | `notification-card` 卡片组件             | T2           | B      | ☑    |
+| T8   | 页面装配 `notifications-page` + 路由     | T3,T4,T5,T6  | C      | ☑    |
 
 依赖图：`A 组 → T3(运行时需 T1 路由)/T4(需 T2) → T8(需 T3,T4,T5,T6)`。T3 测试用 mock `apiJson`，与 T1 无代码耦合，可在 T1 完成前编写。
 
@@ -45,6 +45,7 @@ Agent 领取前认领对应任务、完成后勾选。**A 组（T1/T2/T5/T6/T7�
 ## 文件结构
 
 新增：
+
 - `apps/web/app/api/notifications/[id]/read/route.ts`(+`.test.ts`) — PATCH 代理
 - `apps/web/app/api/notifications/read-all/route.ts`(+`.test.ts`) — POST 代理
 - `apps/web/app/api/notifications/[id]/route.ts`(+`.test.ts`) — DELETE 代理
@@ -57,6 +58,7 @@ Agent 领取前认领对应任务、完成后勾选。**A 组（T1/T2/T5/T6/T7�
 - `apps/web/app/notifications/page.tsx`(+`page.test.tsx`)
 
 修改：
+
 - `apps/web/components/notifications/notification-target.ts`（兜底 `/messages`→`/notifications`）+ `notification-target.test.ts`
 - `apps/web/components/navbar/navbar-user-menu.tsx`（`/messages`→`/notifications`）+ `navbar-user-menu.test.tsx`
 
@@ -65,11 +67,13 @@ Agent 领取前认领对应任务、完成后勾选。**A 组（T1/T2/T5/T6/T7�
 ## Task 1: BFF 代理路由
 
 **Files:**
+
 - Create: `apps/web/app/api/notifications/[id]/read/route.ts`(+`route.test.ts`)
 - Create: `apps/web/app/api/notifications/read-all/route.ts`(+`route.test.ts`)
 - Create: `apps/web/app/api/notifications/[id]/route.ts`(+`route.test.ts`)
 
 **Interfaces:**
+
 - Consumes: `proxyPatch(req, path)`、`proxyPost(req, path)`、`proxyDelete(req, path)`（均在 `@/lib/backend-proxy`，已有）。
 - Produces: 同源端点 `/api/notifications/{id}/read`(PATCH)、`/api/notifications/read-all`(POST)、`/api/notifications/{id}`(DELETE)。
 
@@ -196,9 +200,11 @@ git commit -m "feat(notifications): 新增已读/批量已读/删除 BFF 代理�
 ## Task 2: 类型映射 notification-type.ts
 
 **Files:**
+
 - Create: `apps/web/components/notifications/notification-type.ts`(+`.test.ts`)
 
 **Interfaces:**
+
 - Consumes: `NotificationItemResp`（`@repo/api`）；图标名取自 `@repo/icons` 可用集：`message-circle`/`heart`/`edit`/`bell`。
 - Produces:
   - `interface NotificationVisual { icon: string; label: string; tone: "primary" | "pink" | "neutral" }`
@@ -216,21 +222,35 @@ import { getNotificationVisual } from "./notification-type";
 
 function item(root_type: string): NotificationItemResp {
   return {
-    id: 1, event_id: 1, type: "comment", title: "t", content_excerpt: "",
-    is_read: false, created_at: "", source_type: "", source_id: 0,
-    root_type, root_id: 1,
+    id: 1,
+    event_id: 1,
+    type: "comment",
+    title: "t",
+    content_excerpt: "",
+    is_read: false,
+    created_at: "",
+    source_type: "",
+    source_id: 0,
+    root_type,
+    root_id: 1,
   };
 }
 
 describe("getNotificationVisual", () => {
   it("article → 评论/紫", () => {
-    expect(getNotificationVisual(item("article"))).toMatchObject({ label: "评论", tone: "primary" });
+    expect(getNotificationVisual(item("article"))).toMatchObject({
+      label: "评论",
+      tone: "primary",
+    });
   });
   it("moment → 碎语/粉", () => {
     expect(getNotificationVisual(item("moment"))).toMatchObject({ label: "碎语", tone: "pink" });
   });
   it("guestbook → 留言/中性", () => {
-    expect(getNotificationVisual(item("guestbook"))).toMatchObject({ label: "留言", tone: "neutral" });
+    expect(getNotificationVisual(item("guestbook"))).toMatchObject({
+      label: "留言",
+      tone: "neutral",
+    });
   });
   it("未知 → 通知/bell", () => {
     expect(getNotificationVisual(item("unknown"))).toMatchObject({ label: "通知", icon: "bell" });
@@ -293,9 +313,11 @@ git commit -m "feat(notifications): 新增通知类型映射工具"
 ## Task 3: 数据 Hook use-notifications
 
 **Files:**
+
 - Create: `apps/web/components/notifications/use-notifications.ts`(+`.test.ts`)
 
 **Interfaces:**
+
 - Consumes: `apiJson`（`@/lib/client-fetch`）；`useNotificationStore`（`setUnreadCount`、`getState().unreadCount`）；类型 `NotificationItemResp`/`NotificationPageResp`/`NotificationReadResp`（`@repo/api`）。
 - Produces:
   - `useNotifications({ pageSize?: number }) => { items, unreadOnly, setUnreadOnly, loading, error, hasMore, loadMore, reload, markRead, remove, markReadBatch, markAllRead }`
@@ -322,10 +344,27 @@ vi.mock("@/store/use-notification-store", () => ({
 }));
 
 function page(over: Partial<NotificationPageResp> = {}): NotificationPageResp {
-  return { total: 1, page: 1, page_size: 20, list: [
-    { id: 1, event_id: 1, type: "comment", title: "t", content_excerpt: "", is_read: false,
-      created_at: "", source_type: "", source_id: 0, root_type: "article", root_id: 1 },
-  ], ...over };
+  return {
+    total: 1,
+    page: 1,
+    page_size: 20,
+    list: [
+      {
+        id: 1,
+        event_id: 1,
+        type: "comment",
+        title: "t",
+        content_excerpt: "",
+        is_read: false,
+        created_at: "",
+        source_type: "",
+        source_id: 0,
+        root_type: "article",
+        root_id: 1,
+      },
+    ],
+    ...over,
+  };
 }
 
 describe("useNotifications", () => {
@@ -335,7 +374,9 @@ describe("useNotifications", () => {
     apiJson.mockResolvedValueOnce(page());
     const { result } = renderHook(() => useNotifications({ pageSize: 20 }));
     await waitFor(() => expect(result.current.items).toHaveLength(1));
-    expect(apiJson).toHaveBeenCalledWith("/api/notifications?page=1&page_size=20&unread_only=false");
+    expect(apiJson).toHaveBeenCalledWith(
+      "/api/notifications?page=1&page_size=20&unread_only=false",
+    );
   });
 
   it("markRead 调 PATCH 并把该条置已读", async () => {
@@ -343,7 +384,9 @@ describe("useNotifications", () => {
     const { result } = renderHook(() => useNotifications({ pageSize: 20 }));
     await waitFor(() => expect(result.current.items).toHaveLength(1));
     apiJson.mockResolvedValueOnce({ updated: 1 });
-    await act(async () => { await result.current.markRead(1); });
+    await act(async () => {
+      await result.current.markRead(1);
+    });
     expect(apiJson).toHaveBeenLastCalledWith("/api/notifications/1/read", { method: "PATCH" });
     expect(result.current.items[0].is_read).toBe(true);
   });
@@ -353,7 +396,9 @@ describe("useNotifications", () => {
     const { result } = renderHook(() => useNotifications({ pageSize: 20 }));
     await waitFor(() => expect(result.current.items).toHaveLength(1));
     apiJson.mockResolvedValueOnce({ updated: 1 });
-    await act(async () => { await result.current.remove(1); });
+    await act(async () => {
+      await result.current.remove(1);
+    });
     expect(result.current.items).toHaveLength(0);
   });
 
@@ -361,9 +406,13 @@ describe("useNotifications", () => {
     apiJson.mockResolvedValue(page());
     const { result } = renderHook(() => useNotifications({ pageSize: 20 }));
     await waitFor(() => expect(result.current.items).toHaveLength(1));
-    await act(async () => { result.current.setUnreadOnly(true); });
+    await act(async () => {
+      result.current.setUnreadOnly(true);
+    });
     await waitFor(() =>
-      expect(apiJson).toHaveBeenLastCalledWith("/api/notifications?page=1&page_size=20&unread_only=true"),
+      expect(apiJson).toHaveBeenLastCalledWith(
+        "/api/notifications?page=1&page_size=20&unread_only=true",
+      ),
     );
   });
 
@@ -384,11 +433,7 @@ Expected: FAIL
 
 ```ts
 import { useCallback, useEffect, useState } from "react";
-import type {
-  NotificationItemResp,
-  NotificationPageResp,
-  NotificationReadResp,
-} from "@repo/api";
+import type { NotificationItemResp, NotificationPageResp, NotificationReadResp } from "@repo/api";
 import { apiJson } from "@/lib/client-fetch";
 import { useNotificationStore } from "@/store/use-notification-store";
 
@@ -504,8 +549,18 @@ export function useNotifications({ pageSize = 20 }: UseNotificationsOptions = {}
   const hasMore = items.length < total;
 
   return {
-    items, unreadOnly, setUnreadOnly, loading, error, hasMore,
-    loadMore, reload, markRead, remove, markReadBatch, markAllRead,
+    items,
+    unreadOnly,
+    setUnreadOnly,
+    loading,
+    error,
+    hasMore,
+    loadMore,
+    reload,
+    markRead,
+    remove,
+    markReadBatch,
+    markAllRead,
   };
 }
 ```
@@ -527,9 +582,11 @@ git commit -m "feat(notifications): 新增消息列表数据 Hook"
 ## Task 4: 卡片组件 notification-card
 
 **Files:**
+
 - Create: `apps/web/components/notifications/notification-card.tsx`(+`.test.tsx`)
 
 **Interfaces:**
+
 - Consumes: `getNotificationVisual`/`TONE_CLASS`（T2）；`formatRelativeTime`/`formatDateTime`（`@/lib/format-time`）；`SvgIcon`（`@repo/icons`）；`Button`/`cn`（`@repo/ui`）。
 - Produces:
   - props `{ item: NotificationItemResp; selecting: boolean; selected: boolean; onOpen(item); onRead(id); onRemove(id); onToggleSelect(id) }`
@@ -543,45 +600,99 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import type { NotificationItemResp } from "@repo/api";
 import NotificationCard from "./notification-card";
 
-vi.mock("@repo/icons", () => ({ SvgIcon: ({ name }: { name: string }) => <span data-icon={name} /> }));
+vi.mock("@repo/icons", () => ({
+  SvgIcon: ({ name }: { name: string }) => <span data-icon={name} />,
+}));
 vi.mock("@repo/ui", () => ({
-  Button: ({ children, onPress, ...p }: never) => <button onClick={onPress} {...p}>{children}</button>,
+  Button: ({ children, onPress, ...p }: never) => (
+    <button onClick={onPress} {...p}>
+      {children}
+    </button>
+  ),
   cn: (...a: unknown[]) => a.filter(Boolean).join(" "),
 }));
 
 function item(over: Partial<NotificationItemResp> = {}): NotificationItemResp {
-  return { id: 1, event_id: 1, type: "comment", title: "有人回复了你", content_excerpt: "正文",
-    is_read: false, created_at: "2026-06-23T10:00:00Z", source_type: "", source_id: 0,
-    root_type: "article", root_id: 5, ...over };
+  return {
+    id: 1,
+    event_id: 1,
+    type: "comment",
+    title: "有人回复了你",
+    content_excerpt: "正文",
+    is_read: false,
+    created_at: "2026-06-23T10:00:00Z",
+    source_type: "",
+    source_id: 0,
+    root_type: "article",
+    root_id: 5,
+    ...over,
+  };
 }
 
 describe("NotificationCard", () => {
   it("未读显示标记已读按钮，点击触发 onRead", () => {
     const onRead = vi.fn();
-    render(<NotificationCard item={item()} selecting={false} selected={false}
-      onOpen={vi.fn()} onRead={onRead} onRemove={vi.fn()} onToggleSelect={vi.fn()} />);
+    render(
+      <NotificationCard
+        item={item()}
+        selecting={false}
+        selected={false}
+        onOpen={vi.fn()}
+        onRead={onRead}
+        onRemove={vi.fn()}
+        onToggleSelect={vi.fn()}
+      />,
+    );
     fireEvent.click(screen.getByLabelText("标记已读"));
     expect(onRead).toHaveBeenCalledWith(1);
   });
 
   it("已读不显示标记已读按钮", () => {
-    render(<NotificationCard item={item({ is_read: true })} selecting={false} selected={false}
-      onOpen={vi.fn()} onRead={vi.fn()} onRemove={vi.fn()} onToggleSelect={vi.fn()} />);
+    render(
+      <NotificationCard
+        item={item({ is_read: true })}
+        selecting={false}
+        selected={false}
+        onOpen={vi.fn()}
+        onRead={vi.fn()}
+        onRemove={vi.fn()}
+        onToggleSelect={vi.fn()}
+      />,
+    );
     expect(screen.queryByLabelText("标记已读")).toBeNull();
   });
 
   it("点击卡片主体触发 onOpen", () => {
     const onOpen = vi.fn();
-    render(<NotificationCard item={item()} selecting={false} selected={false}
-      onOpen={onOpen} onRead={vi.fn()} onRemove={vi.fn()} onToggleSelect={vi.fn()} />);
+    render(
+      <NotificationCard
+        item={item()}
+        selecting={false}
+        selected={false}
+        onOpen={onOpen}
+        onRead={vi.fn()}
+        onRemove={vi.fn()}
+        onToggleSelect={vi.fn()}
+      />,
+    );
     fireEvent.click(screen.getByText("有人回复了你"));
     expect(onOpen).toHaveBeenCalled();
   });
 
   it("选择模式下点击主体触发 onToggleSelect 而非 onOpen", () => {
-    const onOpen = vi.fn(); const onToggleSelect = vi.fn();
-    render(<NotificationCard item={item()} selecting selected={false}
-      onOpen={onOpen} onRead={vi.fn()} onRemove={vi.fn()} onToggleSelect={onToggleSelect} />);
+    const onOpen = vi.fn();
+    const onToggleSelect = vi.fn();
+    render(
+      <NotificationCard
+        item={item()}
+        selecting
+        selected={false}
+        onOpen={onOpen}
+        onRead={vi.fn()}
+        onRemove={vi.fn()}
+        onToggleSelect={onToggleSelect}
+      />,
+    );
     fireEvent.click(screen.getByText("有人回复了你"));
     expect(onToggleSelect).toHaveBeenCalledWith(1);
     expect(onOpen).not.toHaveBeenCalled();
@@ -616,7 +727,13 @@ interface NotificationCardProps {
 }
 
 export default function NotificationCard({
-  item, selecting, selected, onOpen, onRead, onRemove, onToggleSelect,
+  item,
+  selecting,
+  selected,
+  onOpen,
+  onRead,
+  onRemove,
+  onToggleSelect,
 }: NotificationCardProps) {
   const visual = getNotificationVisual(item);
   const tone = TONE_CLASS[visual.tone];
@@ -644,17 +761,31 @@ export default function NotificationCard({
           className="mt-1 h-4 w-4 shrink-0 accent-primary"
         />
       )}
-      <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-full", tone.iconWrap)}>
+      <span
+        className={cn(
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+          tone.iconWrap,
+        )}
+      >
         <SvgIcon name={visual.icon} size={18} />
       </span>
 
       <button type="button" onClick={handleBody} className="min-w-0 flex-1 text-left">
         <span className="flex items-center gap-2">
-          {unread && <span className="h-[7px] w-[7px] shrink-0 rounded-full bg-primary" aria-hidden />}
-          <span className={cn("truncate text-sm font-medium", unread ? "text-foreground" : "text-muted-foreground")}>
+          {unread && (
+            <span className="h-[7px] w-[7px] shrink-0 rounded-full bg-primary" aria-hidden />
+          )}
+          <span
+            className={cn(
+              "truncate text-sm font-medium",
+              unread ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
             {item.title || "你有一条新消息"}
           </span>
-          <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px]", tone.pill)}>{visual.label}</span>
+          <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px]", tone.pill)}>
+            {visual.label}
+          </span>
         </span>
         {item.content_excerpt && (
           <span className="mt-1 line-clamp-2 block text-[13px] leading-relaxed text-muted-foreground">
@@ -662,7 +793,10 @@ export default function NotificationCard({
           </span>
         )}
         {created && (
-          <span className="mt-1 block text-xs text-muted-foreground/80" title={formatDateTime(created)}>
+          <span
+            className="mt-1 block text-xs text-muted-foreground/80"
+            title={formatDateTime(created)}
+          >
             {formatRelativeTime(created)}
           </span>
         )}
@@ -671,15 +805,25 @@ export default function NotificationCard({
       {!selecting && (
         <span className="flex flex-col gap-1.5 self-center opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
           {unread && (
-            <Button type="button" variant={null} size={null} aria-label="标记已读"
+            <Button
+              type="button"
+              variant={null}
+              size={null}
+              aria-label="标记已读"
               onPress={() => onRead(item.id)}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/[0.06]">
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/[0.06]"
+            >
               <SvgIcon name="check" size={16} />
             </Button>
           )}
-          <Button type="button" variant={null} size={null} aria-label="删除"
+          <Button
+            type="button"
+            variant={null}
+            size={null}
+            aria-label="删除"
             onPress={() => onRemove(item.id)}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-destructive/80 hover:bg-destructive/[0.08]">
+            className="flex h-7 w-7 items-center justify-center rounded-md text-destructive/80 hover:bg-destructive/[0.08]"
+          >
             <SvgIcon name="trash" size={16} />
           </Button>
         </span>
@@ -708,9 +852,11 @@ git commit -m "feat(notifications): 新增通知卡片组件"
 ## Task 5: 筛选 Tab notification-filter-tabs
 
 **Files:**
+
 - Create: `apps/web/components/notifications/notification-filter-tabs.tsx`(+`.test.tsx`)
 
 **Interfaces:**
+
 - Consumes: `cn`（`@repo/ui`）。
 - Produces: props `{ unreadOnly: boolean; unreadCount: number; onChange(unreadOnly: boolean) }`，default export `NotificationFilterTabs`。
 
@@ -756,19 +902,39 @@ interface NotificationFilterTabsProps {
   onChange: (unreadOnly: boolean) => void;
 }
 
-export default function NotificationFilterTabs({ unreadOnly, unreadCount, onChange }: NotificationFilterTabsProps) {
+export default function NotificationFilterTabs({
+  unreadOnly,
+  unreadCount,
+  onChange,
+}: NotificationFilterTabsProps) {
   return (
     <div role="tablist" className="flex gap-1 border-b border-border">
-      <button type="button" role="tab" aria-selected={!unreadOnly} onClick={() => onChange(false)}
-        className={cn("px-1 py-2 text-sm", !unreadOnly
-          ? "border-b-2 border-primary font-medium text-foreground"
-          : "text-muted-foreground")}>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={!unreadOnly}
+        onClick={() => onChange(false)}
+        className={cn(
+          "px-1 py-2 text-sm",
+          !unreadOnly
+            ? "border-b-2 border-primary font-medium text-foreground"
+            : "text-muted-foreground",
+        )}
+      >
         全部
       </button>
-      <button type="button" role="tab" aria-selected={unreadOnly} onClick={() => onChange(true)}
-        className={cn("flex items-center gap-1.5 px-3 py-2 text-sm", unreadOnly
-          ? "border-b-2 border-primary font-medium text-foreground"
-          : "text-muted-foreground")}>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={unreadOnly}
+        onClick={() => onChange(true)}
+        className={cn(
+          "flex items-center gap-1.5 px-3 py-2 text-sm",
+          unreadOnly
+            ? "border-b-2 border-primary font-medium text-foreground"
+            : "text-muted-foreground",
+        )}
+      >
         未读
         {unreadCount > 0 && (
           <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-white">
@@ -798,9 +964,11 @@ git commit -m "feat(notifications): 新增全部/未读筛选 Tab"
 ## Task 6: 选择操作条 notification-selection-bar
 
 **Files:**
+
 - Create: `apps/web/components/notifications/notification-selection-bar.tsx`(+`.test.tsx`)
 
 **Interfaces:**
+
 - Consumes: `Button`（`@repo/ui`）、`SvgIcon`（`@repo/icons`）。
 - Produces: props `{ count: number; onMarkRead(); onCancel() }`，default export `NotificationSelectionBar`。
 
@@ -811,10 +979,15 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import NotificationSelectionBar from "./notification-selection-bar";
 
-vi.mock("@repo/icons", () => ({ SvgIcon: ({ name }: { name: string }) => <span data-icon={name} /> }));
+vi.mock("@repo/icons", () => ({
+  SvgIcon: ({ name }: { name: string }) => <span data-icon={name} />,
+}));
 vi.mock("@repo/ui", () => ({
-  Button: ({ children, onPress, isDisabled, ...p }: never) =>
-    <button onClick={onPress} disabled={isDisabled} {...p}>{children}</button>,
+  Button: ({ children, onPress, isDisabled, ...p }: never) => (
+    <button onClick={onPress} disabled={isDisabled} {...p}>
+      {children}
+    </button>
+  ),
 }));
 
 describe("NotificationSelectionBar", () => {
@@ -854,18 +1027,33 @@ interface NotificationSelectionBarProps {
   onCancel: () => void;
 }
 
-export default function NotificationSelectionBar({ count, onMarkRead, onCancel }: NotificationSelectionBarProps) {
+export default function NotificationSelectionBar({
+  count,
+  onMarkRead,
+  onCancel,
+}: NotificationSelectionBarProps) {
   return (
     <div className="sticky bottom-0 z-10 mt-2 flex items-center justify-between gap-3 rounded-xl border border-border bg-card/95 px-4 py-3 backdrop-blur">
       <span className="text-sm text-muted-foreground">已选 {count} 条</span>
       <span className="flex gap-2">
-        <Button type="button" variant={null} size={null} isDisabled={count === 0} onPress={onMarkRead}
-          className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm disabled:opacity-50">
+        <Button
+          type="button"
+          variant={null}
+          size={null}
+          isDisabled={count === 0}
+          onPress={onMarkRead}
+          className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm disabled:opacity-50"
+        >
           <SvgIcon name="check" size={15} />
           标记已读
         </Button>
-        <Button type="button" variant={null} size={null} onPress={onCancel}
-          className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground">
+        <Button
+          type="button"
+          variant={null}
+          size={null}
+          onPress={onCancel}
+          className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground"
+        >
           取消
         </Button>
       </span>
@@ -891,6 +1079,7 @@ git commit -m "feat(notifications): 新增批量选择操作条"
 ## Task 7: 导航入口与跳转兜底修正
 
 **Files:**
+
 - Modify: `apps/web/components/notifications/notification-target.ts`（兜底 return）+ `notification-target.test.ts`
 - Modify: `apps/web/components/navbar/navbar-user-menu.tsx:130`（`navigate("/messages")`）+ `navbar-user-menu.test.tsx`
 
@@ -902,7 +1091,9 @@ git commit -m "feat(notifications): 新增批量选择操作条"
 
 ```ts
 it("未知 root_type 兜底到 /notifications", () => {
-  expect(getNotificationHref({ ...base, root_type: "x", root_id: 1 } as never)).toBe("/notifications");
+  expect(getNotificationHref({ ...base, root_type: "x", root_id: 1 } as never)).toBe(
+    "/notifications",
+  );
 });
 ```
 
@@ -918,7 +1109,7 @@ Expected: FAIL（仍是 /messages）
 `notification-target.ts` 兜底：
 
 ```ts
-  return "/notifications";
+return "/notifications";
 ```
 
 `navbar-user-menu.tsx:130`：
@@ -944,10 +1135,12 @@ git commit -m "fix(notifications): 消息入口与跳转兜底改为 /notificati
 ## Task 8: 页面装配 notifications-page + 路由
 
 **Files:**
+
 - Create: `apps/web/components/notifications/notifications-page.tsx`(+`.test.tsx`)
 - Create: `apps/web/app/notifications/page.tsx`(+`page.test.tsx`)
 
 **Interfaces:**
+
 - Consumes: `useNotifications`（T3）、`NotificationCard`（T4）、`NotificationFilterTabs`（T5）、`NotificationSelectionBar`（T6）、`useNotificationStore`、`getNotificationHref`、`useRouter`（`next/navigation`）。
 - Produces: `NotificationsPage`（default export 客户端容器）；路由 `page.tsx` 渲染它并导出 `metadata`。
 
@@ -960,10 +1153,18 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 
 const hook = {
-  items: [] as unknown[], unreadOnly: false, setUnreadOnly: vi.fn(),
-  loading: false, error: false, hasMore: false,
-  loadMore: vi.fn(), reload: vi.fn(), markRead: vi.fn(),
-  remove: vi.fn(), markReadBatch: vi.fn(), markAllRead: vi.fn(),
+  items: [] as unknown[],
+  unreadOnly: false,
+  setUnreadOnly: vi.fn(),
+  loading: false,
+  error: false,
+  hasMore: false,
+  loadMore: vi.fn(),
+  reload: vi.fn(),
+  markRead: vi.fn(),
+  remove: vi.fn(),
+  markReadBatch: vi.fn(),
+  markAllRead: vi.fn(),
 };
 vi.mock("./use-notifications", () => ({ useNotifications: () => hook }));
 vi.mock("@/store/use-notification-store", () => ({
@@ -971,10 +1172,15 @@ vi.mock("@/store/use-notification-store", () => ({
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@repo/ui", () => ({
-  Button: ({ children, onPress, isDisabled, ...p }: never) =>
-    <button onClick={onPress} disabled={isDisabled} {...p}>{children}</button>,
+  Button: ({ children, onPress, isDisabled, ...p }: never) => (
+    <button onClick={onPress} disabled={isDisabled} {...p}>
+      {children}
+    </button>
+  ),
 }));
-vi.mock("@repo/icons", () => ({ SvgIcon: ({ name }: { name: string }) => <span data-icon={name} /> }));
+vi.mock("@repo/icons", () => ({
+  SvgIcon: ({ name }: { name: string }) => <span data-icon={name} />,
+}));
 vi.mock("./notification-card", () => ({ default: () => <div data-testid="card" /> }));
 vi.mock("./notification-filter-tabs", () => ({ default: () => <div data-testid="tabs" /> }));
 vi.mock("./notification-selection-bar", () => ({ default: () => <div data-testid="bar" /> }));
@@ -983,7 +1189,8 @@ import NotificationsPage from "./notifications-page";
 
 describe("NotificationsPage", () => {
   it("无数据显示空状态", () => {
-    hook.error = false; hook.items = [];
+    hook.error = false;
+    hook.items = [];
     render(<NotificationsPage />);
     expect(screen.getByText(/还没有消息|没有未读/)).toBeTruthy();
   });
@@ -1030,7 +1237,8 @@ export default function NotificationsPage() {
   function toggleSelect(id: number) {
     setSelected((cur) => {
       const next = new Set(cur);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
@@ -1060,29 +1268,49 @@ export default function NotificationsPage() {
           </span>
         </div>
         <div className="flex gap-2">
-          <Button type="button" variant={null} size={null}
+          <Button
+            type="button"
+            variant={null}
+            size={null}
             onPress={() => (selecting ? exitSelect() : setSelecting(true))}
-            className="rounded-lg border border-border px-3 py-1.5 text-[13px]">
+            className="rounded-lg border border-border px-3 py-1.5 text-[13px]"
+          >
             {selecting ? "取消" : "选择"}
           </Button>
-          <Button type="button" variant={null} size={null} isDisabled={unreadCount === 0}
+          <Button
+            type="button"
+            variant={null}
+            size={null}
+            isDisabled={unreadCount === 0}
             onPress={n.markAllRead}
-            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[13px] disabled:opacity-50">
+            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[13px] disabled:opacity-50"
+          >
             <SvgIcon name="check" size={15} />
             全部已读
           </Button>
         </div>
       </header>
 
-      <NotificationFilterTabs unreadOnly={n.unreadOnly} unreadCount={unreadCount}
-        onChange={(v) => { exitSelect(); n.setUnreadOnly(v); }} />
+      <NotificationFilterTabs
+        unreadOnly={n.unreadOnly}
+        unreadCount={unreadCount}
+        onChange={(v) => {
+          exitSelect();
+          n.setUnreadOnly(v);
+        }}
+      />
 
       <div className="mt-3.5">
         {n.error ? (
           <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
             <p className="text-sm">加载失败了</p>
-            <Button type="button" variant={null} size={null} onPress={n.reload}
-              className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm">
+            <Button
+              type="button"
+              variant={null}
+              size={null}
+              onPress={n.reload}
+              className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm"
+            >
               <SvgIcon name="refresh-cw" size={15} />
               重试
             </Button>
@@ -1090,7 +1318,10 @@ export default function NotificationsPage() {
         ) : n.loading && n.items.length === 0 ? (
           <div className="flex flex-col gap-2">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="h-[76px] animate-pulse rounded-xl border border-border bg-muted/40" />
+              <div
+                key={i}
+                className="h-[76px] animate-pulse rounded-xl border border-border bg-muted/40"
+              />
             ))}
           </div>
         ) : n.items.length === 0 ? (
@@ -1102,16 +1333,28 @@ export default function NotificationsPage() {
           <>
             <div className="flex flex-col gap-2">
               {n.items.map((item) => (
-                <NotificationCard key={item.id} item={item} selecting={selecting}
-                  selected={selected.has(item.id)} onOpen={openItem} onRead={n.markRead}
-                  onRemove={n.remove} onToggleSelect={toggleSelect} />
+                <NotificationCard
+                  key={item.id}
+                  item={item}
+                  selecting={selecting}
+                  selected={selected.has(item.id)}
+                  onOpen={openItem}
+                  onRead={n.markRead}
+                  onRemove={n.remove}
+                  onToggleSelect={toggleSelect}
+                />
               ))}
             </div>
             {n.hasMore && (
               <div className="mt-3.5 flex justify-center">
-                <Button type="button" variant={null} size={null} isDisabled={n.loading}
+                <Button
+                  type="button"
+                  variant={null}
+                  size={null}
+                  isDisabled={n.loading}
                   onPress={n.loadMore}
-                  className="flex items-center gap-1.5 rounded-lg border border-border px-5 py-2 text-[13px] disabled:opacity-50">
+                  className="flex items-center gap-1.5 rounded-lg border border-border px-5 py-2 text-[13px] disabled:opacity-50"
+                >
                   {n.loading ? "加载中…" : "加载更多"}
                   {!n.loading && <SvgIcon name="chevron-down" size={15} />}
                 </Button>
@@ -1122,7 +1365,11 @@ export default function NotificationsPage() {
       </div>
 
       {selecting && (
-        <NotificationSelectionBar count={selected.size} onMarkRead={batchRead} onCancel={exitSelect} />
+        <NotificationSelectionBar
+          count={selected.size}
+          onMarkRead={batchRead}
+          onCancel={exitSelect}
+        />
       )}
     </main>
   );

@@ -23,11 +23,13 @@
 ### Task 1: 修正 info-circle 图标几何，新增 alert-circle 图标
 
 **Files:**
+
 - Modify: `packages/icons/svg/info-circle.svg`
 - Create: `packages/icons/svg/alert-circle.svg`
 - Generated（由脚本产出，需一并提交）: `packages/icons/src/generated/sprite.ts`、`packages/icons/src/generated/types.ts`
 
 **Interfaces:**
+
 - Consumes: 无（叶子任务，不依赖其它任务）。
 - Produces: `IconName` 联合类型新增成员 `"alert-circle"`（`"info-circle"` 已存在，仅几何变化）。Task 2 的 `SvgIcon name="alert-circle"` / `name="info-circle"` 依赖此处生成的 sprite symbol。
 
@@ -131,10 +133,12 @@ EOF
 ### Task 2: 重新设计 ToastRegion —— 毛玻璃卡片 + 图标芯片 + 宽度自适应
 
 **Files:**
+
 - Modify: `packages/ui/src/toast/toast.tsx`
 - Modify: `packages/ui/src/toast/toast.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 1 产出的 `IconName` 新成员 `"alert-circle"`；`@repo/icons` 现有 `SvgIcon`（`name`/`size`/`className` props 不变）；`packages/ui/src/lib/utils` 的 `cn`（未变）；`./types` 的 `ToastRegionProps`/`ToastType`（未变）。
 - Produces: `ToastRegion` 组件对外接口完全不变（`{ queue, className }` props），仅内部渲染结构变化，对 `apps/web/app/providers/global-modals.tsx` 等调用方零影响。
 
@@ -182,7 +186,9 @@ describe("ToastRegion", () => {
       { message: "测试通知", type: "info" },
     );
     const { container } = render(<ToastRegion queue={queue} />);
-    const hrefs = Array.from(container.querySelectorAll("use")).map((el) => el.getAttribute("href"));
+    const hrefs = Array.from(container.querySelectorAll("use")).map((el) =>
+      el.getAttribute("href"),
+    );
     expect(hrefs).toContain("#icon-check");
     expect(hrefs).toContain("#icon-alert-circle");
     expect(hrefs).toContain("#icon-info-circle");
@@ -321,6 +327,7 @@ pnpm dev:web
 打开 `http://localhost:3000` 任意文章详情页，在**未登录**状态下尝试提交评论（触发 `apps/web/hooks/use-comment-submit.ts:27` 的 `addToast("请先登录", "error")`）。
 
 确认：
+
 - 右下角出现毛玻璃质感卡片（半透明 + 背景模糊，能看到卡片背后内容的虚化），不是纯红色块。
 - "请先登录"四个字不再撑满一条 320px 长条，卡片宽度贴合文字内容。
 - 卡片左侧有一个红色调的圆形感叹号图标。

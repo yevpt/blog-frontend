@@ -40,9 +40,11 @@
 用「提交并处理副作用，返回是否成功」的细粒度回调替代「设置 target 交给父级统一处理」：
 
 ```ts
-onSubmitReply: (commentId: number, parentReplyId: number | undefined, content: string) => Promise<boolean>;
+onSubmitReply: (commentId: number, parentReplyId: number | undefined, content: string) =>
+  Promise<boolean>;
 onSubmitEditComment: (commentId: number, content: string) => Promise<boolean>;
-onSubmitEditReply: (replyId: number, parentReplyId: number, commentId: number, content: string) => Promise<boolean>;
+onSubmitEditReply: (replyId: number, parentReplyId: number, commentId: number, content: string) =>
+  Promise<boolean>;
 ```
 
 与现有 `onDelete`/`onEdit`（guestbook）风格一致。成功后由内联编辑器自己收起（`isReplying`/`isEditing` 置 `false`，清空本地 content）；失败时保持展开、内容不丢，交由 hook 内部的 toast 提示错误原因。
@@ -72,7 +74,7 @@ onSubmitEditReply: (replyId: number, parentReplyId: number, commentId: number, c
 `use-comment-submit.ts`、`use-comment-edit.ts`、`use-guestbook-submit.ts` 三个文件里，`submitComment`/`submitReply`/`editComment`/`editReply`/`submitEntry`/`editEntry` 各自都有一把**全局唯一**的 `isSubmittingRef`/`isEditingRef` 互斥锁：
 
 ```ts
-if (isSubmittingRef.current) return null;   // 静默丢弃，无报错无提示
+if (isSubmittingRef.current) return null; // 静默丢弃，无报错无提示
 ```
 
 这是在「同一时刻分区内只有一个编辑器」的前提下写的合理防抖。允许同时展开多个内联编辑器后，这把锁会导致：用户同时给评论 A、评论 B 提交回复，后发出的那个请求被直接吞掉且没有任何提示。

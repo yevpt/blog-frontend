@@ -12,36 +12,37 @@
 
 ## 文件映射
 
-| 操作 | 路径 |
-|------|------|
-| 新建 | `packages/markdown/package.json` |
-| 新建 | `packages/markdown/tsconfig.json` |
-| 新建 | `packages/markdown/vitest.config.ts` |
-| 新建 | `packages/markdown/eslint.config.js` |
-| 新建 | `packages/markdown/src/render.ts` |
-| 新建 | `packages/markdown/src/render.test.ts` |
-| 新建 | `packages/markdown/src/markdown-content.tsx` |
-| 新建 | `packages/markdown/src/markdown-content.test.tsx` |
-| 新建 | `packages/markdown/src/use-markdown.ts` |
-| 新建 | `packages/markdown/src/use-markdown.test.ts` |
-| 新建 | `packages/markdown/src/index.ts` |
-| 新建 | `packages/markdown/src/server.ts` |
-| 修改 | `packages/styles/src/base.css`（添加 Tailwind 扫描路径）|
-| 修改 | `apps/web/package.json`（添加 `@repo/markdown` 依赖）|
-| 修改 | `apps/web/lib/markdown.ts`（改为从 `@repo/markdown/server` re-export）|
-| 修改 | `apps/web/app/actions/markdown.ts`（改为从 `@repo/markdown/server` 导入）|
-| 修改 | `apps/web/components/article-detail/article-content.tsx`（使用 `MarkdownContent`）|
-| 修改 | `apps/web/components/comments/comment-item.tsx`（使用 `useMarkdown` + `MarkdownContent`）|
-| 修改 | `apps/web/components/comments/comment-item.test.tsx`（更新 mock）|
-| 修改 | `apps/web/components/comments/comment-replies.tsx`（使用 `useMarkdown` + `MarkdownContent`）|
-| 修改 | `apps/web/components/comments/comment-replies.test.tsx`（更新 mock）|
-| 删除 | `apps/web/components/comments/markdown-text.tsx` |
+| 操作 | 路径                                                                                         |
+| ---- | -------------------------------------------------------------------------------------------- |
+| 新建 | `packages/markdown/package.json`                                                             |
+| 新建 | `packages/markdown/tsconfig.json`                                                            |
+| 新建 | `packages/markdown/vitest.config.ts`                                                         |
+| 新建 | `packages/markdown/eslint.config.js`                                                         |
+| 新建 | `packages/markdown/src/render.ts`                                                            |
+| 新建 | `packages/markdown/src/render.test.ts`                                                       |
+| 新建 | `packages/markdown/src/markdown-content.tsx`                                                 |
+| 新建 | `packages/markdown/src/markdown-content.test.tsx`                                            |
+| 新建 | `packages/markdown/src/use-markdown.ts`                                                      |
+| 新建 | `packages/markdown/src/use-markdown.test.ts`                                                 |
+| 新建 | `packages/markdown/src/index.ts`                                                             |
+| 新建 | `packages/markdown/src/server.ts`                                                            |
+| 修改 | `packages/styles/src/base.css`（添加 Tailwind 扫描路径）                                     |
+| 修改 | `apps/web/package.json`（添加 `@repo/markdown` 依赖）                                        |
+| 修改 | `apps/web/lib/markdown.ts`（改为从 `@repo/markdown/server` re-export）                       |
+| 修改 | `apps/web/app/actions/markdown.ts`（改为从 `@repo/markdown/server` 导入）                    |
+| 修改 | `apps/web/components/article-detail/article-content.tsx`（使用 `MarkdownContent`）           |
+| 修改 | `apps/web/components/comments/comment-item.tsx`（使用 `useMarkdown` + `MarkdownContent`）    |
+| 修改 | `apps/web/components/comments/comment-item.test.tsx`（更新 mock）                            |
+| 修改 | `apps/web/components/comments/comment-replies.tsx`（使用 `useMarkdown` + `MarkdownContent`） |
+| 修改 | `apps/web/components/comments/comment-replies.test.tsx`（更新 mock）                         |
+| 删除 | `apps/web/components/comments/markdown-text.tsx`                                             |
 
 ---
 
 ## Task 1: 新建 packages/markdown 包配置
 
 **Files:**
+
 - Create: `packages/markdown/package.json`
 - Create: `packages/markdown/tsconfig.json`
 - Create: `packages/markdown/vitest.config.ts`
@@ -173,6 +174,7 @@ git commit -m "chore(markdown): 初始化 @repo/markdown 包结构"
 ## Task 2: 实现 markdownToHtml 和 extractTocFromHtml（TDD）
 
 **Files:**
+
 - Create: `packages/markdown/src/render.ts`
 - Create: `packages/markdown/src/render.test.ts`
 
@@ -320,6 +322,7 @@ git commit -m "feat(markdown): 实现 markdownToHtml 和 extractTocFromHtml"
 ## Task 3: 实现 MarkdownContent 展示组件（TDD）
 
 **Files:**
+
 - Create: `packages/markdown/src/markdown-content.tsx`
 - Create: `packages/markdown/src/markdown-content.test.tsx`
 
@@ -358,7 +361,7 @@ describe("MarkdownContent", () => {
 
   it("className prop 追加到根元素", () => {
     const { container } = render(
-      <MarkdownContent html="<p>test</p>" className="my-custom-class" />
+      <MarkdownContent html="<p>test</p>" className="my-custom-class" />,
     );
     expect(container.firstChild).toHaveClass("my-custom-class");
   });
@@ -439,6 +442,7 @@ git commit -m "feat(markdown): 实现 MarkdownContent 展示组件，支持 arti
 ## Task 4: 实现 useMarkdown hook（TDD）
 
 **Files:**
+
 - Create: `packages/markdown/src/use-markdown.ts`
 - Create: `packages/markdown/src/use-markdown.test.ts`
 
@@ -472,7 +476,7 @@ describe("useMarkdown", () => {
     const renderFn = vi.fn().mockResolvedValue("<p>content</p>");
     const { result, rerender } = renderHook(
       ({ content }: { content: string }) => useMarkdown(content, renderFn),
-      { initialProps: { content: "hello" } }
+      { initialProps: { content: "hello" } },
     );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     rerender({ content: "world" });
@@ -522,7 +526,7 @@ import { useState, useEffect } from "react";
  */
 export function useMarkdown(
   content: string,
-  renderFn: (content: string) => Promise<string>
+  renderFn: (content: string) => Promise<string>,
 ): { html: string | null; isLoading: boolean; error: string | null } {
   const [html, setHtml] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -577,6 +581,7 @@ git commit -m "feat(markdown): 实现 useMarkdown hook，renderFn 由调用方�
 ## Task 5: 包导出入口 + Tailwind 扫描配置
 
 **Files:**
+
 - Modify: `packages/markdown/src/index.ts`
 - Create: `packages/markdown/src/server.ts`
 - Modify: `packages/styles/src/base.css`
@@ -608,6 +613,7 @@ export type { TocItem } from "./render";
 ```
 
 完整扫描块：
+
 ```css
 @source "../../ui/src";
 @source "../../hooks/src";
@@ -635,6 +641,7 @@ git commit -m "feat(markdown): 配置包导出入口，添加 Tailwind 扫描路
 ## Task 6: 迁移 apps/web（lib、actions、article-content）
 
 **Files:**
+
 - Modify: `apps/web/package.json`
 - Modify: `apps/web/lib/markdown.ts`
 - Modify: `apps/web/app/actions/markdown.ts`
@@ -643,11 +650,13 @@ git commit -m "feat(markdown): 配置包导出入口，添加 Tailwind 扫描路
 - [ ] **Step 1: 在 apps/web/package.json 中添加 @repo/markdown 依赖**
 
 在 `dependencies` 中追加：
+
 ```json
 "@repo/markdown": "workspace:*"
 ```
 
 运行 `pnpm install` 链接依赖：
+
 ```bash
 pnpm install
 ```
@@ -701,10 +710,7 @@ export function ArticleContent({ contentHtml }: ArticleContentProps) {
         style={{ width: `${progress * 100}%` }}
       />
       {/* 外层 article 保持语义标签和定位样式，prose 样式由 MarkdownContent 管理 */}
-      <article
-        ref={articleRef}
-        className="mx-auto max-w-[720px] pb-10 px-2 md:px-0 pt-8"
-      >
+      <article ref={articleRef} className="mx-auto max-w-[720px] pb-10 px-2 md:px-0 pt-8">
         <MarkdownContent html={contentHtml} variant="article" />
       </article>
     </>
@@ -733,6 +739,7 @@ git commit -m "feat(markdown): 迁移 apps/web 使用 @repo/markdown"
 ## Task 7: 更新评论组件，删除旧 MarkdownText
 
 **Files:**
+
 - Modify: `apps/web/components/comments/comment-item.tsx`
 - Modify: `apps/web/components/comments/comment-item.test.tsx`
 - Modify: `apps/web/components/comments/comment-replies.tsx`
@@ -889,6 +896,7 @@ vi.mock("@repo/markdown", () => ({
 在 `ReplyItem` 函数内，替换 `MarkdownText` 为 `useMarkdown` + `MarkdownContent`：
 
 在文件顶部导入部分，替换：
+
 ```ts
 // 删除：
 import { MarkdownText } from "./markdown-text";
@@ -900,6 +908,7 @@ import { renderMarkdown } from "@/app/actions/markdown";
 在 `ReplyItem` 函数内，新增一个内部组件处理 Markdown 渲染（与 comment-item.tsx 保持一致的模式）：
 
 在 `ReplyItem` 函数定义前添加：
+
 ```tsx
 /** 回复正文：异步渲染 Markdown，加载期间展示纯文本 */
 function ReplyBody({ content }: { content: string }) {
@@ -912,10 +921,13 @@ function ReplyBody({ content }: { content: string }) {
 ```
 
 将 `ReplyItem` JSX 中的：
+
 ```tsx
 <MarkdownText content={reply.content} />
 ```
+
 替换为：
+
 ```tsx
 <ReplyBody content={reply.content} />
 ```

@@ -87,6 +87,7 @@ type PresenceProvider interface {
 ```
 
 复用两件现成事：
+
 1. `OnlineChecker.BatchIsUserOnline(ctx, ids)` —— 已有，Redis pipeline ZSET（`internal/service/analytics/presence.go`）。
 2. **新增** `userrepo.BatchFetchActiveLogin(ctx, ids)`（`repository/user`）：`SELECT id, last_active_at, last_login_at FROM users WHERE id IN (?)`，返回 `map[uint]*ActiveLogin{ LastActiveAt, LastLoginAt *time.Time }`。
 
@@ -164,17 +165,17 @@ interface PresenceState {
 
 ```ts
 const MAX_SUBSCRIBERS = 100;
-const subscribers = new Map<number, true>();   // 仅用 Map 维持插入序，value 无意义
+const subscribers = new Map<number, true>(); // 仅用 Map 维持插入序，value 无意义
 
 export function subscribe(ids: number[]): () => void {
   for (const id of ids) {
-    subscribers.delete(id);                    // 先删 → 重设后位于末位（最新）
+    subscribers.delete(id); // 先删 → 重设后位于末位（最新）
     subscribers.set(id, true);
   }
   trim();
   emit();
   return () => {
-    for (const id of ids) subscribers.delete(id);   // 不存在则静默忽略
+    for (const id of ids) subscribers.delete(id); // 不存在则静默忽略
     emit();
   };
 }
@@ -183,16 +184,17 @@ function trim() {
   if (subscribers.size <= MAX_SUBSCRIBERS) return;
   const drop = subscribers.size - MAX_SUBSCRIBERS;
   let i = 0;
-  for (const key of subscribers.keys()) {        // 头部 = 最久未订阅
+  for (const key of subscribers.keys()) {
+    // 头部 = 最久未订阅
     subscribers.delete(key);
     if (++i >= drop) break;
   }
 }
 
 export function getSubscribedIds(): number[] {
-  return [...subscribers.keys()];                // 最旧→最新，最多 100
+  return [...subscribers.keys()]; // 最旧→最新，最多 100
 }
-export function onSubscriptionChange(cb: (ids: number[]) => void): () => void
+export function onSubscriptionChange(cb: (ids: number[]) => void): () => void;
 ```
 
 - 「最新加入排末位」配合 `keys()` 自然 LRU；硬上限 100 防 data 无限堆积。
@@ -278,12 +280,16 @@ export function PresenceProvider({ children }: { children: ReactNode }) {
 
 ```ts
 export interface UsePresenceResult {
-  record: PresenceRecord | undefined;   // undefined → UI 占位
+  record: PresenceRecord | undefined; // undefined → UI 占位
 }
-export function usePresence(id: number | null | undefined, seed?: PresenceRecord): UsePresenceResult
+export function usePresence(
+  id: number | null | undefined,
+  seed?: PresenceRecord,
+): UsePresenceResult;
 ```
 
 实现要点：
+
 - `useEffect` 内：`id != null` → `subscribe([id])`，返回 cleanup。
 - 同一 memo 周期内 `store.seed(id, seed)`；用 `id+seed` 作 deps 防重复 seed。
 - 通过 zustand `useStore(selector)` 订阅 `records.get(id)`，自动重渲。
@@ -321,25 +327,25 @@ export function usePresence(id: number | null | undefined, seed?: PresenceRecord
 
 ### tick 失败处理
 
-| 失败位 | 处理 |
-|---|---|
+| 失败位                                | 处理                                                                        |
+| ------------------------------------- | --------------------------------------------------------------------------- |
 | `apiClient.users.presence.batch` 抛错 | 捕获、不 bubble；保留 store 当前 `records`（UI 显示旧值，不闪退）；进入退避 |
-| 响应里某 id 缺失 | 只 apply 命中的 id，缺失的不清空，下轮再试 |
-| 响应体非法 | 同网络错误处理 |
-| `document.hidden` 时 | 不打、不变 timer |
-| 订阅集空 | 早返回，不打、停 timer；下次 subscribe 触发 restart |
+| 响应里某 id 缺失                      | 只 apply 命中的 id，缺失的不清空，下轮再试                                  |
+| 响应体非法                            | 同网络错误处理                                                              |
+| `document.hidden` 时                  | 不打、不变 timer                                                            |
+| 订阅集空                              | 早返回，不打、停 timer；下次 subscribe 触发 restart                         |
 
 ### 退避序列
 
 `BACKOFF_BASE_MS = 60_000`，`BACKOFF_CAP_MS = 5 * BACKOFF_BASE_MS = 300_000`。_failCount_ 上限不设硬截断（继续递增不影响已封顶的 interval）：
 
 | 连续失败次数 | 下次 interval |
-|---|---|
-| 0（成功） | 60s |
-| 1 | 120s |
-| 2 | 240s |
-| 3 | 300s（封顶） |
-| ≥ 4 | 300s |
+| ------------ | ------------- |
+| 0（成功）    | 60s           |
+| 1            | 120s          |
+| 2            | 240s          |
+| 3            | 300s（封顶）  |
+| ≥ 4          | 300s          |
 
 封顶靠 `Math.min(BACKOFF_BASE_MS * 2 ** failCount, BACKOFF_CAP_MS)`：failCount=3 时 `60*8=480` 被 cap 到 300，failCount ≥ 3 恒为 300。
 
@@ -353,6 +359,7 @@ export function usePresence(id: number | null | undefined, seed?: PresenceRecord
 4. step 3 成功后 `schedule()` 续命，回正常 60s 循环。
 
 触发 `restart()` 的两个入口语义完全一致：
+
 - **visibility 恢复**（`document.hidden = false`）：清零 + 立即拉 + 续命。
 - **订阅集变化**（debouncedRestart 200ms 后）：清零 + 立即拉 + 续命。
 
@@ -365,17 +372,20 @@ export function usePresence(id: number | null | undefined, seed?: PresenceRecord
 ### 前端（Vitest + jsdom）
 
 **`packages/hooks/use-presence.test.ts`**
+
 - `id=null` → 不订阅、`record=undefined`。
 - `id=42` → subscribe 被调一次；cleanup 卸载被 unsubscribe。
 - `seed` 写入 store；返回的 record 反映 store。
 - `seed` 二次调用不覆盖 `apply` 写入的最新值（关键：测 seed 幂等）。
 
 **`apps/web/lib/presence-store.test.ts`**
+
 - `seed(id, recA)` 后 `apply({id: recB})` → get = recB（apply 优先）。
 - `seed` 已存在 id 不覆盖。
 - `apply` 多 id 合并、未触及的 id 保留。
 
 **`apps/web/lib/presence-subscriptions.test.ts`**
+
 - 订阅顺序：`subscribe([1,2,3])` → `subscribe([4,5])` → keys 为 `[1,2,3,4,5]`。
 - 重订阅 LRU：`subscribe([1,2,3])` → `subscribe([1])` → keys 为 `[2,3,1]`。
 - 硬上限：连续 `subscribe([i])` 100 次后，第 101 次淘汰最早那条；size 恒 ≤ 100。
@@ -383,6 +393,7 @@ export function usePresence(id: number | null | undefined, seed?: PresenceRecord
 - `onSubscriptionChange` 在订阅集真变化时被调（cleanup 也触发）。
 
 **`apps/web/app/providers/presence-provider.test.tsx`** — fake timers + `apiClient.users.presence.batch` mock：
+
 - 挂载 50 个 `usePresence` → 60s 后 mock 被调一次、参数含全部 50 ids。
 - `document.hidden = true` → 60s 内不被再次调用。
 - 切回 visible → 立即调用一次。
@@ -392,16 +403,19 @@ export function usePresence(id: number | null | undefined, seed?: PresenceRecord
 - 订阅集变化去抖 200ms → 高频 subscribe 不连发请求。
 
 **集成**：
+
 - `base-user-card.test.tsx` 补一个「seed 来自 user prop；store apply 后卡片更新文案」的用例，替换原 `resolvePresenceDisplay` 测试点。
 
 ### 后端
 
 `internal/service/user` 新增 `presence_test.go`（gomock）：
+
 - `BatchIsUserOnline` 全在线 / 全离线 / 部分。
 - `BatchFetchActiveLogin` 返回 `*time.Time` 正确转 unix 秒；nil 时间 → 字段缺席（不写 0）。
 - 未知 id：返回的 map 不含该键。
 
 `internal/handler/user/user_test.go` 加 `TestBatchPresence`（httptest）：
+
 - ids 解析：CSV 重复去除、非数字丢弃、超 100 截断、空 → `{}`。
 - handler 调用 service、断响应体。
 - service err → 5xx。

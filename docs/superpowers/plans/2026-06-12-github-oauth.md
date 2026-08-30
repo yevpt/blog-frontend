@@ -12,27 +12,28 @@
 
 ## 文件清单
 
-| 操作 | 文件路径 | 职责 |
-|------|---------|------|
-| 修改 | `packages/api/src/types/auth.ts` | 补充 OAuth 相关类型 |
-| 修改 | `packages/api/src/index.ts` | 导出新类型 |
-| 新建 | `apps/web/lib/oauth.ts` | Popup 通信消息类型（两端共用） |
-| 新建 | `apps/web/app/api/oauth/[source]/authorize/route.ts` | 代理后端 authorize 接口 |
-| 新建 | `apps/web/app/api/oauth/[source]/authorize/route.test.ts` | 代理路由测试 |
-| 新建 | `apps/web/app/api/oauth/[source]/callback/route.ts` | 代理后端 callback 接口，写 Cookie |
-| 新建 | `apps/web/app/api/oauth/[source]/callback/route.test.ts` | Cookie 写入逻辑测试 |
-| 新建 | `apps/web/app/oauth/[source]/callback/page.tsx` | Popup 回调接收页 |
-| 新建 | `apps/web/app/oauth/[source]/callback/page.test.tsx` | 回调页测试 |
-| 修改 | `apps/web/components/auth/oauth-grid.tsx` | GitHub 按钮触发 popup 流程 |
-| 修改 | `apps/web/components/auth/oauth-grid.test.tsx` | 补充 popup 流程测试 |
-| 修改 | `apps/web/components/auth/login-view.tsx` | 将 onSuccess 传给 OAuthGrid |
-| 修改 | `apps/web/components/auth/login-view.test.tsx` | 补充 OAuthGrid onSuccess 冒泡测试 |
+| 操作 | 文件路径                                                  | 职责                              |
+| ---- | --------------------------------------------------------- | --------------------------------- |
+| 修改 | `packages/api/src/types/auth.ts`                          | 补充 OAuth 相关类型               |
+| 修改 | `packages/api/src/index.ts`                               | 导出新类型                        |
+| 新建 | `apps/web/lib/oauth.ts`                                   | Popup 通信消息类型（两端共用）    |
+| 新建 | `apps/web/app/api/oauth/[source]/authorize/route.ts`      | 代理后端 authorize 接口           |
+| 新建 | `apps/web/app/api/oauth/[source]/authorize/route.test.ts` | 代理路由测试                      |
+| 新建 | `apps/web/app/api/oauth/[source]/callback/route.ts`       | 代理后端 callback 接口，写 Cookie |
+| 新建 | `apps/web/app/api/oauth/[source]/callback/route.test.ts`  | Cookie 写入逻辑测试               |
+| 新建 | `apps/web/app/oauth/[source]/callback/page.tsx`           | Popup 回调接收页                  |
+| 新建 | `apps/web/app/oauth/[source]/callback/page.test.tsx`      | 回调页测试                        |
+| 修改 | `apps/web/components/auth/oauth-grid.tsx`                 | GitHub 按钮触发 popup 流程        |
+| 修改 | `apps/web/components/auth/oauth-grid.test.tsx`            | 补充 popup 流程测试               |
+| 修改 | `apps/web/components/auth/login-view.tsx`                 | 将 onSuccess 传给 OAuthGrid       |
+| 修改 | `apps/web/components/auth/login-view.test.tsx`            | 补充 OAuthGrid onSuccess 冒泡测试 |
 
 ---
 
 ## Task 1: 补充 API 类型并导出
 
 **Files:**
+
 - Modify: `packages/api/src/types/auth.ts`
 - Modify: `packages/api/src/index.ts`
 
@@ -73,8 +74,8 @@ export type {
   CaptchaChallengeResp,
   CaptchaVerifyReq,
   CaptchaVerifyResp,
-  OAuthAuthorizeResp,   // ← 新增
-  OAuthCallbackResp,    // ← 新增
+  OAuthAuthorizeResp, // ← 新增
+  OAuthCallbackResp, // ← 新增
 } from "./types/auth";
 ```
 
@@ -99,6 +100,7 @@ git commit -m "feat(api): 新增 OAuthAuthorizeResp、OAuthCallbackResp 类型"
 ## Task 2: 创建 Popup 通信消息共享类型
 
 **Files:**
+
 - Create: `apps/web/lib/oauth.ts`
 
 - [ ] **Step 1: 创建文件**
@@ -141,6 +143,7 @@ git commit -m "feat(oauth): 新增 Popup 通信消息共享类型 OAuthMessage"
 ## Task 3: 创建 `/api/oauth/[source]/authorize` 代理路由
 
 **Files:**
+
 - Create: `apps/web/app/api/oauth/[source]/authorize/route.ts`
 - Create: `apps/web/app/api/oauth/[source]/authorize/route.test.ts`
 
@@ -181,12 +184,8 @@ describe("GET /api/oauth/[source]/authorize", () => {
       expect.stringContaining("http://localhost:8080/oauth/github/authorize"),
     );
     // redirect_uri 被正确编码后传出
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining("redirect_uri="),
-    );
-    expect(body.data.authorize_url).toBe(
-      "https://github.com/login/oauth/authorize?client_id=xxx",
-    );
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining("redirect_uri="));
+    expect(body.data.authorize_url).toBe("https://github.com/login/oauth/authorize?client_id=xxx");
   });
 
   it("后端返回错误时，透传错误响应给客户端", async () => {
@@ -241,10 +240,7 @@ export async function GET(
   const redirectUri = request.nextUrl.searchParams.get("redirect_uri") ?? "";
 
   // 拼接后端 URL，保留 redirect_uri 编码，避免特殊字符问题
-  const backendUrl = new URL(
-    `/oauth/${source}/authorize`,
-    process.env.API_BASE_URL,
-  );
+  const backendUrl = new URL(`/oauth/${source}/authorize`, process.env.API_BASE_URL);
   backendUrl.searchParams.set("action", "login");
   backendUrl.searchParams.set("redirect_uri", redirectUri);
 
@@ -275,6 +271,7 @@ git commit -m "feat(oauth): 新增 /api/oauth/[source]/authorize 代理路由"
 ## Task 4: 创建 `/api/oauth/[source]/callback` 代理路由（写 Cookie）
 
 **Files:**
+
 - Create: `apps/web/app/api/oauth/[source]/callback/route.ts`
 - Create: `apps/web/app/api/oauth/[source]/callback/route.test.ts`
 
@@ -311,9 +308,7 @@ describe("GET /api/oauth/[source]/callback", () => {
         }),
     } as Response);
 
-    const req = new NextRequest(
-      "http://localhost/api/oauth/github/callback?code=abc&state=xyz",
-    );
+    const req = new NextRequest("http://localhost/api/oauth/github/callback?code=abc&state=xyz");
     const res = await GET(req, { params: Promise.resolve({ source: "github" }) });
     const body = await res.json();
 
@@ -351,12 +346,8 @@ describe("GET /api/oauth/[source]/callback", () => {
     );
     await GET(req, { params: Promise.resolve({ source: "github" }) });
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining("code=mycode"),
-    );
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining("state=mystate"),
-    );
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining("code=mycode"));
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining("state=mystate"));
   });
 
   it("后端返回业务错误时，透传错误响应，不设置 Cookie", async () => {
@@ -364,9 +355,7 @@ describe("GET /api/oauth/[source]/callback", () => {
       json: () => Promise.resolve({ code: 400, message: "state 校验失败" }),
     } as Response);
 
-    const req = new NextRequest(
-      "http://localhost/api/oauth/github/callback?code=bad&state=bad",
-    );
+    const req = new NextRequest("http://localhost/api/oauth/github/callback?code=bad&state=bad");
     const res = await GET(req, { params: Promise.resolve({ source: "github" }) });
     const body = await res.json();
 
@@ -417,10 +406,7 @@ export async function GET(
   const code = request.nextUrl.searchParams.get("code") ?? "";
   const state = request.nextUrl.searchParams.get("state") ?? "";
 
-  const backendUrl = new URL(
-    `/oauth/${source}/callback`,
-    process.env.API_BASE_URL,
-  );
+  const backendUrl = new URL(`/oauth/${source}/callback`, process.env.API_BASE_URL);
   backendUrl.searchParams.set("code", code);
   backendUrl.searchParams.set("state", state);
 
@@ -485,6 +471,7 @@ git commit -m "feat(oauth): 新增 /api/oauth/[source]/callback 代理路由，�
 ## Task 5: 创建 OAuth 回调接收页
 
 **Files:**
+
 - Create: `apps/web/app/oauth/[source]/callback/page.tsx`
 - Create: `apps/web/app/oauth/[source]/callback/page.test.tsx`
 
@@ -519,7 +506,9 @@ describe("OAuth 回调接收页", () => {
 
     // 默认携带正确参数
     const mockSearchParams = new URLSearchParams("code=abc&state=xyz");
-    vi.mocked(useSearchParams).mockReturnValue(mockSearchParams as ReturnType<typeof useSearchParams>);
+    vi.mocked(useSearchParams).mockReturnValue(
+      mockSearchParams as ReturnType<typeof useSearchParams>,
+    );
 
     // 默认模拟为 popup 场景（window.opener 存在）
     Object.defineProperty(window, "opener", {
@@ -541,8 +530,7 @@ describe("OAuth 回调接收页", () => {
 
   it("Popup 模式：登录成功后 postMessage 给父窗口并关闭自身", async () => {
     vi.mocked(global.fetch).mockResolvedValue({
-      json: () =>
-        Promise.resolve({ code: 0, data: { user: { id: 1, username: "vpt" } } }),
+      json: () => Promise.resolve({ code: 0, data: { user: { id: 1, username: "vpt" } } }),
     } as Response);
 
     render(<OAuthCallbackPage />);
@@ -579,8 +567,7 @@ describe("OAuth 回调接收页", () => {
     Object.defineProperty(window, "opener", { writable: true, value: null });
 
     vi.mocked(global.fetch).mockResolvedValue({
-      json: () =>
-        Promise.resolve({ code: 0, data: { user: { id: 1, username: "vpt" } } }),
+      json: () => Promise.resolve({ code: 0, data: { user: { id: 1, username: "vpt" } } }),
     } as Response);
 
     render(<OAuthCallbackPage />);
@@ -736,6 +723,7 @@ git commit -m "feat(oauth): 新增 OAuth 回调页，Popup postMessage 通知父
 ## Task 6: 更新 OAuthGrid — GitHub 按钮触发 Popup 流程
 
 **Files:**
+
 - Modify: `apps/web/components/auth/oauth-grid.tsx`
 - Modify: `apps/web/components/auth/oauth-grid.test.tsx`
 
@@ -1113,6 +1101,7 @@ git commit -m "feat(oauth): OAuthGrid 接入 GitHub Popup 登录流程，其余�
 ## Task 7: 更新 LoginView — 将 onSuccess 传入 OAuthGrid
 
 **Files:**
+
 - Modify: `apps/web/components/auth/login-view.tsx`
 - Modify: `apps/web/components/auth/login-view.test.tsx`
 
@@ -1195,6 +1184,7 @@ git commit -m "feat(oauth): LoginView 将 onSuccess 传给 OAuthGrid，完成登
 ## 自查结果
 
 **Spec 覆盖：**
+
 - ✅ `OAuthAuthorizeResp` / `OAuthCallbackResp` 类型 → Task 1
 - ✅ `/api/oauth/[source]/authorize` 代理路由 → Task 3
 - ✅ `/api/oauth/[source]/callback` 代理路由 + Cookie → Task 4
@@ -1205,6 +1195,7 @@ git commit -m "feat(oauth): LoginView 将 onSuccess 传给 OAuthGrid，完成登
 - ✅ 测试覆盖所有新逻辑
 
 **类型一致性：**
+
 - `OAuthMessage` 在 `lib/oauth.ts` 定义，callback page 和 OAuthGrid 均从此导入 → 一致
 - `UserResp` 统一从 `@repo/api` 导入 → 一致
 - `LoginResp` 字段（`access_token`, `refresh_token`, `expires_in`, `user`）在 callback route 中使用 → 与 Task 1 定义一致

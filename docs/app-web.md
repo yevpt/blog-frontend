@@ -6,18 +6,18 @@ Next.js 16（App Router）实现的博客前台，默认 Server Components，SSR
 
 路由覆盖以下业务：
 
-| 路由 | 说明 |
-|---|---|
-| `articles` | 文章列表 / 详情 |
-| `categories` | 分类 |
-| `circle` | 圈子 |
-| `moments` | 碎语（动态） |
-| `guestbook` | 留言板 |
-| `friend-links` | 友邻 |
-| `users` | 用户主页 |
-| `notifications` | 通知中心 |
-| `oauth` | 第三方登录回调 |
-| `(auth)` | 登录 / 鉴权相关路由组 |
+| 路由            | 说明                  |
+| --------------- | --------------------- |
+| `articles`      | 文章列表 / 详情       |
+| `categories`    | 分类                  |
+| `circle`        | 圈子                  |
+| `moments`       | 碎语（动态）          |
+| `guestbook`     | 留言板                |
+| `friend-links`  | 友邻                  |
+| `users`         | 用户主页              |
+| `notifications` | 通知中心              |
+| `oauth`         | 第三方登录回调        |
+| `(auth)`        | 登录 / 鉴权相关路由组 |
 
 `sitemap.ts`、`robots.ts`、`feed.xml` 提供 SEO 与订阅能力。
 

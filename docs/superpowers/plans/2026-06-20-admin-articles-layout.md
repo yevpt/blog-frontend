@@ -24,6 +24,7 @@
 ### Task 1: Let DataTable Omit An Empty Toolbar
 
 **Files:**
+
 - Modify: `packages/ui/src/table/table.tsx`
 - Test: `packages/ui/src/table/table.test.tsx`
 
@@ -110,6 +111,7 @@ git commit -m "fix(ui): 允许表格隐藏空工具栏"
 ### Task 2: Add Expandable Article Search
 
 **Files:**
+
 - Create: `apps/admin/src/modules/articles/components/ArticleListSearch.tsx`
 - Create: `apps/admin/src/modules/articles/components/ArticleListSearch.test.tsx`
 
@@ -256,6 +258,7 @@ git commit -m "feat(admin): 新增文章列表展开搜索"
 ### Task 3: Rebuild ArticlesPage Layout
 
 **Files:**
+
 - Modify: `apps/admin/src/modules/articles/ArticlesPage.tsx`
 - Modify: `apps/admin/src/modules/articles/ArticlesPage.test.tsx`
 
@@ -265,7 +268,9 @@ In `ArticlesPage.test.tsx`, update the main render test expectations:
 
 ```tsx
 expect(screen.getByRole("heading", { name: "文章管理" })).toBeInTheDocument();
-expect(screen.queryByText("集中查看文章、按表头筛选排序，并从标题直接进入编辑页面。")).not.toBeInTheDocument();
+expect(
+  screen.queryByText("集中查看文章、按表头筛选排序，并从标题直接进入编辑页面。"),
+).not.toBeInTheDocument();
 expect(screen.queryByRole("link", { name: "置顶管理" })).not.toBeInTheDocument();
 expect(screen.getByRole("link", { name: "新建" })).toHaveAttribute("href", "/articles/new");
 expect(screen.getByText("全部 42")).toBeInTheDocument();
@@ -333,9 +338,7 @@ Use this layout skeleton:
 return (
   <div className="grid h-[calc(100dvh-6.5rem)] min-h-0 grid-rows-[64px_auto_minmax(0,1fr)] overflow-hidden lg:h-[calc(100dvh-3rem)]">
     <section className="flex min-w-0 items-center justify-between gap-3">
-      <h2 className="truncate text-2xl font-semibold tracking-normal text-foreground">
-        文章管理
-      </h2>
+      <h2 className="truncate text-2xl font-semibold tracking-normal text-foreground">文章管理</h2>
       <Button href="/articles/new" size="sm" className="shrink-0">
         <SvgIcon name="plus" size={15} />
         新建
@@ -420,10 +423,10 @@ return (
 Add the select items near the columns:
 
 ```tsx
-  const categorySelectItems = useMemo(
-    () => categoryOptions.map((option) => ({ id: option.value, label: option.label })),
-    [categoryOptions],
-  );
+const categorySelectItems = useMemo(
+  () => categoryOptions.map((option) => ({ id: option.value, label: option.label })),
+  [categoryOptions],
+);
 ```
 
 Remove the `filter` property from the `category` column because category filtering is now owned by the filter row.
@@ -450,6 +453,7 @@ git commit -m "refactor(admin): 优化文章管理页布局"
 ### Task 4: Verify The Whole Change
 
 **Files:**
+
 - No planned source edits. Fix only failures caused by the previous tasks.
 
 - [ ] **Step 1: Run affected package tests**

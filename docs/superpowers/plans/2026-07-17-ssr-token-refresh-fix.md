@@ -21,6 +21,7 @@
 ### Task 1: 将 proxy.ts 重命名为生效的 middleware.ts
 
 **Files:**
+
 - Create: `apps/web/middleware.ts`（内容来自 `apps/web/proxy.ts`，函数改名）
 - Delete: `apps/web/proxy.ts`
 - Create: `apps/web/middleware.test.ts`（内容来自 `apps/web/proxy.test.ts`，import 改名）
@@ -28,6 +29,7 @@
 - Modify: `apps/web/lib/server-api.ts:8-9`（注释中 `proxy.ts` → `middleware.ts`）
 
 **Interfaces:**
+
 - Produces: `export async function middleware(request: NextRequest)`、`export const config`（matcher 不变），文件位于 `apps/web/middleware.ts`，被 Next.js 自动识别为 middleware。
 
 - [ ] **Step 1: 创建 middleware.ts**
@@ -116,6 +118,7 @@ git rm apps/web/proxy.test.ts
  * 注意：此处不配置 onRefreshFailed，因为 token 刷新
  * 由 middleware.ts 在请求到达页面前已处理完成。
 ```
+
 （`onTokenRefreshed`/`getRefreshToken` 会在 Task 2 接入，此处注释一并调整，见 Task 2。本步只改 `proxy.ts` → `middleware.ts` 字样。）
 
 - [ ] **Step 6: 运行 middleware 测试，确认通过**
@@ -141,10 +144,12 @@ git commit -m "fix(web): 将 proxy.ts 重命名为生效的 middleware.ts 恢复
 ### Task 2: createServerApiClient 接入 refresh 回调（SSR 兜底）
 
 **Files:**
+
 - Modify: `apps/web/lib/server-api.ts`
 - Create: `apps/web/lib/server-api.test.ts`
 
 **Interfaces:**
+
 - Consumes: `@repo/api` 的 `createApiClient`（已内建 `fetchAuthed` 在 401 时 `getRefreshToken` → `POST /auth/refresh` → `onTokenRefreshed` → 用新 token 重试）；`lib/auth-refresh.ts` 的 `REFRESH_TOKEN_COOKIE`。
 - Produces: `createServerApiClient()` 返回的 client，在 access token 失效导致 `getMe()` 401 时，会自动用 cookie 中的 refresh token 续期并重试，使本次 SSR 取到正确 profile。
 
@@ -277,9 +282,11 @@ git commit -m "fix(web): SSR API 客户端接入 refresh 回调作为续期兜�
 ### Task 3: layout.tsx 补 getMe 失败日志
 
 **Files:**
+
 - Modify: `apps/web/app/layout.tsx:62-66`
 
 **Interfaces:**
+
 - Consumes: 无新增依赖，仅在既有 `catch` 内加 `console.error`。
 
 - [ ] **Step 1: 在 catch 中加结构化日志**
@@ -287,12 +294,12 @@ git commit -m "fix(web): SSR API 客户端接入 refresh 回调作为续期兜�
 将 `apps/web/app/layout.tsx` 第 62-66 行的静默 catch 改为记录错误（保留降级行为不变）：
 
 ```typescript
-    try {
-      profile = await api.users.getMe();
-    } catch (error) {
-      // /users/me 失败不影响页面渲染，profile 降级为 null，但需记录以便排查续期问题。
-      console.error("[layout] getMe 失败，profile 降级为 null", error);
-    }
+try {
+  profile = await api.users.getMe();
+} catch (error) {
+  // /users/me 失败不影响页面渲染，profile 降级为 null，但需记录以便排查续期问题。
+  console.error("[layout] getMe 失败，profile 降级为 null", error);
+}
 ```
 
 - [ ] **Step 2: 运行现有页面/布局相关测试确认无回归**

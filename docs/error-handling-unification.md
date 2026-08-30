@@ -17,25 +17,27 @@ addToast(getApiErrorMessage(err, "<动作>失败，请稍后重试"), "error");
 - `addToast` 来自 `@/lib/toast`，签名 `addToast(message, "error" | "success" | "info")`。
 
 **已落地的参照范式（照抄）：**
+
 - Hook 改造样板：`apps/web/hooks/use-comment-submit.ts`
 - 输入校验样板：`apps/web/components/comments/inputs/pill-comment-input.tsx`（`maxLength` + 接近上限字数计数器）
 
 **呈现规则：**
+
 - 业务/网络错误 → **全局 toast**（不再用内联 `setError` 红字）。
 - 例外：登录/注册等**表单页**保留就地内联提示（仍要用 `getApiErrorMessage` 取真实 message）。
 - 可前端预防的约束（长度/必填）→ 输入组件 `maxLength` + 计数器，**提交前拦截**。
 
 **后端字段长度上限（镜像到前端 `maxLength`）：**
 
-| 内容 | 上限 |
-|---|---|
-| 评论 / 回复 / 留言 content | 2000 |
-| 碎语 content | 800 |
-| 昵称 nickname | 150 |
-| 身份标签 mark | 200 |
-| 简介 description | 1000 |
-| 个人站点 site | 500 |
-| 用户名 username | 3–155 |
+| 内容                       | 上限  |
+| -------------------------- | ----- |
+| 评论 / 回复 / 留言 content | 2000  |
+| 碎语 content               | 800   |
+| 昵称 nickname              | 150   |
+| 身份标签 mark              | 200   |
+| 简介 description           | 1000  |
+| 个人站点 site              | 500   |
+| 用户名 username            | 3–155 |
 
 ## 1. 每个任务的「完成定义」（DoD）
 

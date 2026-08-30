@@ -12,34 +12,35 @@
 
 ## 文件清单
 
-| 操作 | 路径 | 说明 |
-|---|---|---|
-| Create | `apps/web/components/navbar/navbar-route-config.ts` | 路由场景配置与纯函数匹配 |
-| Create | `apps/web/components/navbar/navbar-route-config.test.ts` | 路由匹配单测 |
-| Create | `apps/web/components/navbar/use-navbar-context.ts` | pathname → navbarContext |
-| Create | `apps/web/components/navbar/navbar-mobile-header.tsx` | 三种移动端头部变体 |
-| Create | `apps/web/components/navbar/navbar-mobile-header.test.tsx` | 移动端头部单测 |
-| Create | `apps/web/store/use-active-article.ts` | 当前文章全局状态 |
-| Create | `apps/web/store/use-active-article.test.ts` | store 单测 |
-| Create | `apps/web/components/article-detail/article-navbar-sync.tsx` | 文章页 mount/unmount 同步 store |
-| Create | `apps/web/components/article-detail/article-navbar-sync.test.tsx` | 同步组件单测 |
-| Create | `apps/web/hooks/use-article-engagement.ts` | 点赞行为复用 hook |
-| Create | `apps/web/hooks/use-article-engagement.test.tsx` | 文章交互 hook 单测 |
-| Modify | `apps/web/components/article-detail/article-float-actions.tsx` | 改为复用共享文章状态 |
-| Modify | `apps/web/components/article-detail/article-float-actions.test.tsx` | 更新点赞状态来源测试 |
-| Modify | `apps/web/components/article-detail/article-comments.tsx` | 增加评论区稳定锚点 |
-| Modify | `apps/web/components/article-detail/article-comments.test.tsx` | 覆盖锚点存在性 |
-| Modify | `apps/web/components/article-detail/index.ts` | 导出新组件 |
-| Modify | `apps/web/app/articles/[id]/page.tsx` | 接入 `ArticleNavbarSync` |
-| Modify | `apps/web/components/navbar/site-navbar.tsx` | 使用 context/header，阈值改 24px |
-| Modify | `apps/web/components/navbar/site-navbar.test.tsx` | 更新阈值与三种头部行为 |
-| Modify | `apps/web/components/navbar/index.ts` | 导出新组件/工具（如需要） |
+| 操作   | 路径                                                                | 说明                             |
+| ------ | ------------------------------------------------------------------- | -------------------------------- |
+| Create | `apps/web/components/navbar/navbar-route-config.ts`                 | 路由场景配置与纯函数匹配         |
+| Create | `apps/web/components/navbar/navbar-route-config.test.ts`            | 路由匹配单测                     |
+| Create | `apps/web/components/navbar/use-navbar-context.ts`                  | pathname → navbarContext         |
+| Create | `apps/web/components/navbar/navbar-mobile-header.tsx`               | 三种移动端头部变体               |
+| Create | `apps/web/components/navbar/navbar-mobile-header.test.tsx`          | 移动端头部单测                   |
+| Create | `apps/web/store/use-active-article.ts`                              | 当前文章全局状态                 |
+| Create | `apps/web/store/use-active-article.test.ts`                         | store 单测                       |
+| Create | `apps/web/components/article-detail/article-navbar-sync.tsx`        | 文章页 mount/unmount 同步 store  |
+| Create | `apps/web/components/article-detail/article-navbar-sync.test.tsx`   | 同步组件单测                     |
+| Create | `apps/web/hooks/use-article-engagement.ts`                          | 点赞行为复用 hook                |
+| Create | `apps/web/hooks/use-article-engagement.test.tsx`                    | 文章交互 hook 单测               |
+| Modify | `apps/web/components/article-detail/article-float-actions.tsx`      | 改为复用共享文章状态             |
+| Modify | `apps/web/components/article-detail/article-float-actions.test.tsx` | 更新点赞状态来源测试             |
+| Modify | `apps/web/components/article-detail/article-comments.tsx`           | 增加评论区稳定锚点               |
+| Modify | `apps/web/components/article-detail/article-comments.test.tsx`      | 覆盖锚点存在性                   |
+| Modify | `apps/web/components/article-detail/index.ts`                       | 导出新组件                       |
+| Modify | `apps/web/app/articles/[id]/page.tsx`                               | 接入 `ArticleNavbarSync`         |
+| Modify | `apps/web/components/navbar/site-navbar.tsx`                        | 使用 context/header，阈值改 24px |
+| Modify | `apps/web/components/navbar/site-navbar.test.tsx`                   | 更新阈值与三种头部行为           |
+| Modify | `apps/web/components/navbar/index.ts`                               | 导出新组件/工具（如需要）        |
 
 ---
 
 ## Task 1: 建立导航场景配置与解析层
 
 **Files:**
+
 - Create: `apps/web/components/navbar/navbar-route-config.ts`
 - Create: `apps/web/components/navbar/navbar-route-config.test.ts`
 - Create: `apps/web/components/navbar/use-navbar-context.ts`
@@ -194,6 +195,7 @@ git commit -m "feat(web): 新增导航路由场景配置与解析层"
 ## Task 2: 建立文章详情页共享状态与同步桥
 
 **Files:**
+
 - Create: `apps/web/store/use-active-article.ts`
 - Create: `apps/web/store/use-active-article.test.ts`
 - Create: `apps/web/components/article-detail/article-navbar-sync.tsx`
@@ -344,14 +346,7 @@ describe("ArticleNavbarSync", () => {
   });
 
   it("mount 时把文章信息同步到 store", () => {
-    render(
-      <ArticleNavbarSync
-        articleId={3}
-        likeCount={17}
-        commentCount={21}
-        isLiked
-      />,
-    );
+    render(<ArticleNavbarSync articleId={3} likeCount={17} commentCount={21} isLiked />);
 
     expect(useActiveArticle.getState()).toMatchObject({
       articleId: 3,
@@ -363,12 +358,7 @@ describe("ArticleNavbarSync", () => {
 
   it("unmount 时清空 store，避免切页残留", () => {
     const { unmount } = render(
-      <ArticleNavbarSync
-        articleId={3}
-        likeCount={17}
-        commentCount={21}
-        isLiked
-      />,
+      <ArticleNavbarSync articleId={3} likeCount={17} commentCount={21} isLiked />,
     );
 
     unmount();
@@ -468,6 +458,7 @@ git commit -m "feat(web): 同步当前文章状态到全局导航"
 ## Task 3: 抽出共享文章交互 hook，并把评论区加上稳定锚点
 
 **Files:**
+
 - Create: `apps/web/hooks/use-article-engagement.ts`
 - Create: `apps/web/hooks/use-article-engagement.test.tsx`
 - Modify: `apps/web/components/article-detail/article-float-actions.tsx`
@@ -718,7 +709,7 @@ it("点击点赞时调用共享 toggleLike", async () => {
 在 `apps/web/components/article-detail/article-comments.tsx` 的 `<section>` 上增加：
 
 ```tsx
-id="article-comments"
+id = "article-comments";
 ```
 
 并在 `article-comments.test.tsx` 增加：
@@ -757,6 +748,7 @@ git commit -m "feat(web): 共享文章点赞状态并为评论区增加稳定锚
 ## Task 4: 实现三种移动端头部变体
 
 **Files:**
+
 - Create: `apps/web/components/navbar/navbar-mobile-header.tsx`
 - Create: `apps/web/components/navbar/navbar-mobile-header.test.tsx`
 - Modify: `apps/web/components/navbar/index.ts`
@@ -1067,6 +1059,7 @@ git commit -m "feat(web): 新增三种移动端导航头部变体"
 ## Task 5: 接线 SiteNavbar，切换到新头部并把桌面阈值改为 24px
 
 **Files:**
+
 - Modify: `apps/web/components/navbar/site-navbar.tsx`
 - Modify: `apps/web/components/navbar/site-navbar.test.tsx`
 

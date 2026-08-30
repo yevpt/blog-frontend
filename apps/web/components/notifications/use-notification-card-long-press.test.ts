@@ -4,8 +4,7 @@ import { useNotificationCardLongPress } from "./use-notification-card-long-press
 
 function touchPointerDown(
   handler:
-    | ReturnType<typeof useNotificationCardLongPress>["longPressProps"]["onPointerDown"]
-    | undefined,
+    ReturnType<typeof useNotificationCardLongPress>["longPressProps"]["onPointerDown"] | undefined,
   target: HTMLElement = document.createElement("div"),
 ) {
   handler?.({

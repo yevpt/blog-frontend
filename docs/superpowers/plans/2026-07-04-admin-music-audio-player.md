@@ -37,6 +37,7 @@
 ### Task 1: 增加共享 Slider 组件
 
 **Files:**
+
 - Create: `packages/ui/src/slider/types.ts`
 - Create: `packages/ui/src/slider/slider.tsx`
 - Create: `packages/ui/src/slider/index.ts`
@@ -44,6 +45,7 @@
 - Modify: `packages/ui/src/index.ts`
 
 **Interfaces:**
+
 - Consumes: `react-aria-components` 的 `Slider<number>`、`SliderTrack`、`SliderThumb`。
 - Produces: `Slider(props: SliderProps)`；`SliderProps` 继承 `AriaSliderProps<number>`，增加必填 `label: string` 与可选 `showOutput?: boolean`。
 
@@ -58,17 +60,12 @@ import { Slider } from "./slider";
 describe("Slider", () => {
   it("渲染可访问名称和当前值", () => {
     render(<Slider label="播放进度" value={25} minValue={0} maxValue={100} />);
-    expect(screen.getByRole("slider", { name: "播放进度" })).toHaveAttribute(
-      "aria-valuenow",
-      "25",
-    );
+    expect(screen.getByRole("slider", { name: "播放进度" })).toHaveAttribute("aria-valuenow", "25");
   });
 
   it("支持键盘调整受控值", async () => {
     const onChange = vi.fn();
-    render(
-      <Slider label="播放进度" value={25} minValue={0} maxValue={100} onChange={onChange} />,
-    );
+    render(<Slider label="播放进度" value={25} minValue={0} maxValue={100} onChange={onChange} />);
     await userEvent.setup().click(screen.getByRole("slider", { name: "播放进度" }));
     await userEvent.setup().keyboard("{ArrowRight}");
     expect(onChange).toHaveBeenCalledWith(26);
@@ -113,7 +110,11 @@ export function Slider({ label, showOutput = false, className, ...props }: Slide
       {...props}
       aria-label={label}
       className={(state) =>
-        cn("grid min-w-0 gap-1", state.isDisabled && "opacity-50", typeof className === "function" ? className(state) : className)
+        cn(
+          "grid min-w-0 gap-1",
+          state.isDisabled && "opacity-50",
+          typeof className === "function" ? className(state) : className,
+        )
       }
     >
       {showOutput ? <SliderOutput className="text-xs text-muted-foreground" /> : null}
@@ -123,7 +124,10 @@ export function Slider({ label, showOutput = false, className, ...props }: Slide
           return (
             <>
               <span className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-muted" />
-              <span className="absolute left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-primary" style={{ width: `${percentage}%` }} />
+              <span
+                className="absolute left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-primary"
+                style={{ width: `${percentage}%` }}
+              />
               <SliderThumb className="top-1/2 size-3 rounded-full border-2 border-primary bg-background outline-none ring-ring data-[focus-visible]:ring-2" />
             </>
           );
@@ -161,10 +165,12 @@ git commit -m "feat(ui): 新增可访问滑块组件"
 ### Task 2: 解析安全的音频文件名
 
 **Files:**
+
 - Modify: `apps/admin/src/modules/music/model.ts`
 - Modify: `apps/admin/src/modules/music/model.test.ts`
 
 **Interfaces:**
+
 - Consumes: 音频 URL、相对对象 key 或空字符串。
 - Produces: `getAudioFileName(value: string): string`，永不返回域名、查询参数或空文本。
 
@@ -225,11 +231,13 @@ git commit -m "feat(admin-music): 增加音频文件名解析"
 ### Task 3: 建立可复用的紧凑/完整播放器
 
 **Files:**
+
 - Create: `apps/admin/src/modules/music/components/MusicAudioPlayer.tsx`
 - Create: `apps/admin/src/modules/music/components/MusicAudioPlayer.test.tsx`
 - Modify: `apps/admin/src/modules/music/components/MusicPreviewButton.tsx`
 
 **Interfaces:**
+
 - Consumes: `title`、可选 `url`、`variant`、`fileName`、`mime`、`size`、`fallbackDuration`。
 - Produces: `MusicAudioPlayer`；`variant="compact"` 保持列表“试听”按钮，`variant="full"` 输出文件摘要和完整控制。
 
@@ -367,7 +375,8 @@ export function MusicAudioPlayer({
     const audio = audioRef.current;
     if (!audio) return undefined;
     const syncTime = () => setCurrentTime(audio.currentTime);
-    const syncDuration = () => setDuration(Number.isFinite(audio.duration) ? audio.duration : fallbackDuration);
+    const syncDuration = () =>
+      setDuration(Number.isFinite(audio.duration) ? audio.duration : fallbackDuration);
     const stop = () => setIsPlaying(false);
     audio.addEventListener("timeupdate", syncTime);
     audio.addEventListener("loadedmetadata", syncDuration);
@@ -433,7 +442,12 @@ export function MusicAudioPlayer({
   );
 
   if (variant === "compact") {
-    return <>{audio}{playButton}</>;
+    return (
+      <>
+        {audio}
+        {playButton}
+      </>
+    );
   }
 
   const metadata = [mime || null, size > 0 ? formatFileSize(size) : null]
@@ -508,10 +522,12 @@ git commit -m "feat(admin-music): 新增完整音频播放器"
 ### Task 4: 接入音乐编辑表单
 
 **Files:**
+
 - Modify: `apps/admin/src/modules/music/components/MusicSongFormDialog.tsx`
 - Modify: `apps/admin/src/modules/music/MusicPage.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 2 的 `getAudioFileName` 与 Task 3 的 `MusicAudioPlayer`。
 - Produces: 编辑表单不再渲染 `audioKey` 文本；有音频时渲染完整播放器和“替换音频”。
 
@@ -544,19 +560,21 @@ import { getAudioFileName } from "../model";
 import { MusicAudioPlayer } from "./MusicAudioPlayer";
 
 // 在音频文件卡片中：
-{values.audioKey ? (
-  <MusicAudioPlayer
-    variant="full"
-    title={values.name || "当前音频"}
-    url={values.audioKey}
-    fileName={getAudioFileName(values.audioKey)}
-    mime={values.audioMime || undefined}
-    size={Number(values.audioSize)}
-    fallbackDuration={Number(values.duration)}
-  />
-) : (
-  <p className="text-sm text-muted-foreground">还没有选择音频</p>
-)}
+{
+  values.audioKey ? (
+    <MusicAudioPlayer
+      variant="full"
+      title={values.name || "当前音频"}
+      url={values.audioKey}
+      fileName={getAudioFileName(values.audioKey)}
+      mime={values.audioMime || undefined}
+      size={Number(values.audioSize)}
+      fallbackDuration={Number(values.duration)}
+    />
+  ) : (
+    <p className="text-sm text-muted-foreground">还没有选择音频</p>
+  );
+}
 
 <Button
   type="button"
@@ -568,7 +586,7 @@ import { MusicAudioPlayer } from "./MusicAudioPlayer";
 >
   <SvgIcon name="arrow-up" size={14} />
   {values.audioKey ? "替换音频" : "选择音频"}
-</Button>
+</Button>;
 ```
 
 删除“当前音频”标题和直接输出 `{values.audioKey}` 的段落；保留隐藏 file input、上传摘要、格式限制与错误提示。

@@ -26,49 +26,51 @@
 
 ### blog-backend
 
-| 文件 | 职责 |
-|------|------|
-| `migrations/20260626_user_last_active_at.sql` | 增量 DDL + 历史回填 |
-| `internal/model/user.go` | `LastActiveAt` 字段 |
-| `internal/repository/user/user.go` | `TouchLoginPresence`、`UpdateLastActiveAt`、排序改 `last_active_at` |
-| `internal/service/analytics/presence.go` | `Presence` 接口与实现 |
-| `internal/service/analytics/presence_test.go` | presence 单测 |
-| `internal/service/analytics/collect.go` | 注入 presence，Handle 内 Touch |
-| `internal/service/analytics/collect_test.go` | 补 authenticated presence 用例 |
-| `internal/worker/analytics/rollup.go` | Cleanup 裁剪 `user:online` |
-| `internal/service/auth/auth.go` | 登录改调 `TouchLoginPresence` + `TouchUserOnline` |
-| `internal/service/oauth/oauth.go` | 同上 |
-| `internal/dto/user.go` | DTO 增 `last_active_at`、`is_online` |
-| `internal/service/user/detail.go` | assemble/buildPublicProfile 透传字段 |
-| `internal/service/user/user.go` | 列表 enrichment、删 `RecordLogin` |
-| `internal/service/user/presence_enrich.go` | **新建** batch `is_online` 填充 |
-| `internal/router/router.go` | 接线 Presence、删 login-time 路由 |
-| `internal/handler/user/user.go` | 删 `RecordLogin` handler |
+| 文件                                          | 职责                                                                |
+| --------------------------------------------- | ------------------------------------------------------------------- |
+| `migrations/20260626_user_last_active_at.sql` | 增量 DDL + 历史回填                                                 |
+| `internal/model/user.go`                      | `LastActiveAt` 字段                                                 |
+| `internal/repository/user/user.go`            | `TouchLoginPresence`、`UpdateLastActiveAt`、排序改 `last_active_at` |
+| `internal/service/analytics/presence.go`      | `Presence` 接口与实现                                               |
+| `internal/service/analytics/presence_test.go` | presence 单测                                                       |
+| `internal/service/analytics/collect.go`       | 注入 presence，Handle 内 Touch                                      |
+| `internal/service/analytics/collect_test.go`  | 补 authenticated presence 用例                                      |
+| `internal/worker/analytics/rollup.go`         | Cleanup 裁剪 `user:online`                                          |
+| `internal/service/auth/auth.go`               | 登录改调 `TouchLoginPresence` + `TouchUserOnline`                   |
+| `internal/service/oauth/oauth.go`             | 同上                                                                |
+| `internal/dto/user.go`                        | DTO 增 `last_active_at`、`is_online`                                |
+| `internal/service/user/detail.go`             | assemble/buildPublicProfile 透传字段                                |
+| `internal/service/user/user.go`               | 列表 enrichment、删 `RecordLogin`                                   |
+| `internal/service/user/presence_enrich.go`    | **新建** batch `is_online` 填充                                     |
+| `internal/router/router.go`                   | 接线 Presence、删 login-time 路由                                   |
+| `internal/handler/user/user.go`               | 删 `RecordLogin` handler                                            |
 
 ### blog-frontend
 
-| 文件 | 职责 |
-|------|------|
-| `packages/api/src/types/user.ts` | 类型增字段 |
-| `apps/web/lib/user-presence.ts` | `resolvePresenceDisplay` 纯函数 |
-| `apps/web/lib/user-presence.test.ts` | 展示逻辑单测 |
-| `apps/web/components/common/base-user-card.tsx` | 改用 presence |
-| `apps/web/components/common/base-user-card.test.tsx` | 更新断言 |
-| `apps/web/app/users/[id]/_components/user-banner.tsx` | 同上 |
-| `apps/web/app/users/[id]/_components/user-info-header.tsx` | 同上 |
-| `apps/web/app/users/[id]/_components/user-banner.test.tsx` | 更新 |
-| `apps/web/app/page.tsx` | 去掉 `isOnline: false` 硬编码 |
+| 文件                                                       | 职责                            |
+| ---------------------------------------------------------- | ------------------------------- |
+| `packages/api/src/types/user.ts`                           | 类型增字段                      |
+| `apps/web/lib/user-presence.ts`                            | `resolvePresenceDisplay` 纯函数 |
+| `apps/web/lib/user-presence.test.ts`                       | 展示逻辑单测                    |
+| `apps/web/components/common/base-user-card.tsx`            | 改用 presence                   |
+| `apps/web/components/common/base-user-card.test.tsx`       | 更新断言                        |
+| `apps/web/app/users/[id]/_components/user-banner.tsx`      | 同上                            |
+| `apps/web/app/users/[id]/_components/user-info-header.tsx` | 同上                            |
+| `apps/web/app/users/[id]/_components/user-banner.test.tsx` | 更新                            |
+| `apps/web/app/page.tsx`                                    | 去掉 `isOnline: false` 硬编码   |
 
 ---
 
 ### Task 1: DB 迁移 + Model
 
 **Files:**
+
 - Create: `blog-backend/migrations/20260626_user_last_active_at.sql`
 - Modify: `blog-backend/internal/model/user.go`
 - Modify: `blog-backend/README.md`（部署小节补一句：上线跑此 migration）
 
 **Interfaces:**
+
 - Produces: `model.User.LastActiveAt *time.Time`
 
 - [ ] **Step 1: 写 migration SQL**
@@ -113,11 +115,13 @@ git commit -m "feat(user): 新增 last_active_at 字段与增量迁移脚本"
 ### Task 2: Repository 登录双写 + 排序
 
 **Files:**
+
 - Modify: `blog-backend/internal/repository/user/user.go`
 - Modify: `blog-backend/internal/repository/user/user_test.go`
 - Regenerate: `blog-backend/internal/repository/user/mock/mock_user_repository.go`（若接口变更）
 
 **Interfaces:**
+
 - Produces:
   - `TouchLoginPresence(userID uint) error` — 单 SQL `last_login_at=NOW(), last_active_at=NOW()`
   - `UpdateLastActiveAt(userID uint) error`
@@ -174,10 +178,12 @@ go test ./internal/repository/user/... -v -run 'TouchLoginPresence|ListRecent'
 ### Task 3: PresenceService
 
 **Files:**
+
 - Create: `blog-backend/internal/service/analytics/presence.go`
 - Create: `blog-backend/internal/service/analytics/presence_test.go`
 
 **Interfaces:**
+
 - Produces:
 
 ```go
@@ -220,6 +226,7 @@ go test ./internal/service/analytics/... -run UserPresence -v
 ### Task 4: Collect 接入 + Rollup 裁剪
 
 **Files:**
+
 - Modify: `blog-backend/internal/service/analytics/collect.go`
 - Modify: `blog-backend/internal/service/analytics/collect_test.go`
 - Modify: `blog-backend/internal/worker/analytics/rollup.go`
@@ -227,6 +234,7 @@ go test ./internal/service/analytics/... -run UserPresence -v
 - Modify: `blog-backend/internal/router/router.go`
 
 **Interfaces:**
+
 - Consumes: `UserPresence` from Task 3
 - Modifies: `NewCollectService(..., presence UserPresence, ...)`
 
@@ -274,6 +282,7 @@ go test ./internal/service/analytics/... ./internal/worker/analytics/... -v
 ### Task 5: 登录双写 + 废弃 login-time
 
 **Files:**
+
 - Modify: `blog-backend/internal/service/auth/auth.go`
 - Modify: `blog-backend/internal/service/auth/auth_test.go`
 - Modify: `blog-backend/internal/service/oauth/oauth.go`
@@ -284,6 +293,7 @@ go test ./internal/service/analytics/... ./internal/worker/analytics/... -v
 - Modify: `blog-backend/internal/handler/user/user_test.go`
 
 **Interfaces:**
+
 - Consumes: `UserPresence`, `TouchLoginPresence`
 
 - [ ] **Step 1: auth/oauth 构造注入 `UserPresence`**
@@ -320,6 +330,7 @@ go test ./internal/service/auth/... ./internal/service/oauth/... ./internal/hand
 ### Task 6: DTO + 用户 API enrichment
 
 **Files:**
+
 - Modify: `blog-backend/internal/dto/user.go`
 - Create: `blog-backend/internal/service/user/presence_enrich.go`
 - Modify: `blog-backend/internal/service/user/user.go`
@@ -327,6 +338,7 @@ go test ./internal/service/auth/... ./internal/service/oauth/... ./internal/hand
 - Modify: `blog-backend/internal/service/user/user_test.go`（或新建 enrich 测试）
 
 **Interfaces:**
+
 - Consumes: `analytics.UserPresence`
 - Produces: DTO 字段 `last_active_at`, `is_online`
 
@@ -372,11 +384,13 @@ go test ./internal/service/user/... -v
 ### Task 7: 前端类型 + user-presence 工具
 
 **Files:**
+
 - Modify: `packages/api/src/types/user.ts`
 - Create: `apps/web/lib/user-presence.ts`
 - Create: `apps/web/lib/user-presence.test.ts`
 
 **Interfaces:**
+
 - Produces:
 
 ```typescript
@@ -394,12 +408,12 @@ export function resolvePresenceDisplay(input: {
 
 - [ ] **Step 1: 写测试**
 
-| is_online | last_active_at | last_login_at | 期望 |
-|-----------|----------------|---------------|------|
-| true | any | any | online |
-| false | 5min ago | — | offline 「5 分钟前活跃过」 |
-| false | null | 1d ago | offline 降级 login |
-| false | null | null | never |
+| is_online | last_active_at | last_login_at | 期望                       |
+| --------- | -------------- | ------------- | -------------------------- |
+| true      | any            | any           | online                     |
+| false     | 5min ago       | —             | offline 「5 分钟前活跃过」 |
+| false     | null           | 1d ago        | offline 降级 login         |
+| false     | null           | null          | never                      |
 
 - [ ] **Step 2: 实现 + API 类型**
 
@@ -418,6 +432,7 @@ pnpm -r check-types
 ### Task 8: UI 组件切换
 
 **Files:**
+
 - Modify: `apps/web/components/common/base-user-card.tsx`
 - Modify: `apps/web/components/common/base-user-card.test.tsx`
 - Modify: `apps/web/app/users/[id]/_components/user-banner.tsx`
@@ -494,17 +509,17 @@ cd blog-frontend && pnpm --filter web test -- --run
 
 ## Spec Coverage Checklist
 
-| Spec § | Task |
-|--------|------|
-| last_active_at 字段 + 迁移回填 | Task 1 |
-| user:online Redis | Task 3, 4 |
-| collect 写入 | Task 4 |
-| 登录双写 + Redis 即时在线 | Task 2, 5 |
-| 废弃 login-time | Task 5 |
-| API is_online + last_active_at | Task 6 |
-| 排序 last_active_at | Task 2 |
-| 前端展示规则 §3 | Task 7, 8 |
-| 90s 窗口 | Task 3（读 config） |
+| Spec §                         | Task                |
+| ------------------------------ | ------------------- |
+| last_active_at 字段 + 迁移回填 | Task 1              |
+| user:online Redis              | Task 3, 4           |
+| collect 写入                   | Task 4              |
+| 登录双写 + Redis 即时在线      | Task 2, 5           |
+| 废弃 login-time                | Task 5              |
+| API is_online + last_active_at | Task 6              |
+| 排序 last_active_at            | Task 2              |
+| 前端展示规则 §3                | Task 7, 8           |
+| 90s 窗口                       | Task 3（读 config） |
 
 ## Execution Handoff
 

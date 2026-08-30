@@ -37,6 +37,7 @@
 ### 涉及的三个 store
 
 **`useCommentModal`**（已存在，需要修改）新增：
+
 - `isVisible: boolean` —— 当前是否渲染显示；`GlobalCommentModal` 的渲染条件从"有 target 就渲染"改为"有 target 且 `isVisible`"。
 - `hide()` —— 只把 `isVisible` 置 `false`，保留 `targetType`/`targetId`/`onCommentAdded`。
 - `show()` —— 只把 `isVisible` 置 `true`。
@@ -44,6 +45,7 @@
 - 不需要在 store 里记 `openedPathname`——"这次导航要不要恢复"完全由导航守卫的全局槽位决定，`useCommentModal` 本身不需要知道 pathname。
 
 **`useInlineEditorStore`**（新增）：管理留言板 / 评论区所有"正在回复""正在编辑"输入框的展开态和草稿内容，用一个字符串 key 统一管理（key 由调用方按"作用域 + 目标 ID + 回复或编辑"拼出，比如某条留言的回复框、某条评论的编辑框、某条子回复的回复框，具体格式在实施计划里定）：
+
 ```ts
 interface InlineEditorEntry {
   isOpen: boolean;
@@ -53,21 +55,24 @@ interface InlineEditorStore {
   editors: Record<string, InlineEditorEntry>;
   open: (key: string, initialContent?: string) => void;
   setContent: (key: string, content: string) => void;
-  close: (key: string) => void;         // 用户主动取消：删掉这个 key
+  close: (key: string) => void; // 用户主动取消：删掉这个 key
   submitSuccess: (key: string) => void; // 提交成功：删掉这个 key
-  discardAll: () => void;               // 导航守卫触发：清空全部 key
+  discardAll: () => void; // 导航守卫触发：清空全部 key
 }
 ```
+
 覆盖范围：留言板顶层留言（`guestbook-item.tsx`）、文章/碎语评论顶层评论（`comment-item.tsx`）、回复线程里的每条回复（`comment-replies.tsx` 的 `ReplyItem`）——这三处目前都各自维护 `isReplying`/`isEditing` 两个布尔值 + `InlineReplyEditor` 内部自己的草稿 `useState`，全部改接这个 store。
 
 `InlineReplyEditor` 组件需要从"不受控（只在挂载时读一次 `initialValue`）"改成"受控"（`value`/`onChange` 由调用方从 store 读写），这样草稿才能在组件卸载后依然留在 store 里，重新挂载时原样读回来。
 
 除了导航守卫触发的整体清空，还有两条独立的精确清理路径（跟"该 key 关联的内容已经不需要了"对应，不依赖导航）：
+
 - 用户主动点"取消"→ `close(key)`
 - 提交成功 → `submitSuccess(key)`
 - 评论/回复/留言被删除成功后，顺手清掉它对应的 reply-key 和 edit-key（内容都没了，草稿条目没有留着的意义）
 
 **`useFriendLinksPausedStore`**（新增）：结构最简单，只有一个全局布尔值（页面上只有一个"暂别友邻"区块，不需要按 key 区分）：
+
 ```ts
 interface FriendLinksPausedStore {
   open: boolean;
@@ -85,17 +90,20 @@ interface FriendLinksPausedStore {
 ## 数据流示例
 
 **场景一：弹窗前进关闭、后退恢复**
+
 1. 首页打开某篇文章的评论弹窗（`isVisible: true`）
 2. 点弹窗内用户头像 → 前进导航到 `/users/456` → 守卫发现槽位是空的 → 槽位记为"首页"，弹窗 `hide()`（`isVisible: false`，`targetType`/`targetId` 保留）
 3. 点浏览器后退 → `popstate` 触发 → 当前路径变回首页，跟槽位记的一致 → 弹窗 `show()`，槽位清空
 
 **场景二：深度跳转作废**
+
 1. 首页展开某条评论的回复弹窗
 2. 前进到用户详情页 → 槽位记为"首页"，弹窗隐藏
 3. 又前进到碎语页 → 守卫发现槽位非空 → 判定深度跳转 → 弹窗 `close()`（彻底清空），槽位换成记"用户详情页"
 4. 从碎语页后退，回到用户详情页 → 槽位匹配，但此时弹窗已经在第 3 步被 `close()` 清空，没有内容可恢复；这一步的"恢复"动作本身不报错，只是没有实际效果
 
 **场景三：留言板回复框保留草稿**
+
 1. 留言板某条留言点"回复"，输入了一半内容
 2. 前进到用户详情页 → 该留言组件卸载，但 store 里 `editors["guestbook-item:123:reply"]` 还留着 `{isOpen: true, content: "写了一半的内容"}`
 3. 后退回到留言板 → 组件重新挂载，从 store 读到 `isOpen: true` → 回复框自动展开，`content` 原样填充，可以接着写

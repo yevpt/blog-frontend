@@ -21,11 +21,13 @@
 ## Task 1: `can-hover` 自定义变体 + 轮播删除按钮
 
 **Files:**
+
 - Modify: `packages/styles/src/base.css:34-44`(在现有 `@custom-variant dark {...}` 块后新增)
 - Modify: `packages/editor/src/nodes/image-gallery-node-view.tsx:12-13,239-257`
 - Test: `packages/editor/src/__tests__/image-gallery-node-view.test.tsx`
 
 **Interfaces:**
+
 - Consumes:`ImageGalleryStorage.requestImageInsert`(已存在,来自 `packages/editor/src/extensions/image-gallery.ts`)、Tiptap 内置命令 `editor.commands.deleteRange(range: { from: number; to: number })`。
 - Produces:Tailwind 自定义 variant `can-hover:`(供 Task 2 复用);轮播内新增 `aria-label="删除图片"` 的按钮。
 
@@ -47,20 +49,20 @@
 在 `packages/editor/src/__tests__/image-gallery-node-view.test.tsx` 文件末尾、`describe` 块的最后一个 `it` 之后(第 283 行 `});` 之前)新增:
 
 ```tsx
-  it("点击删除按钮移除轮播当前这张图片,只剩一张时自动解组为单图", async () => {
-    render(<RichEditor value={TWO_IMAGES} onChange={vi.fn()} enableImageGallery />);
-    await waitFor(() => {
-      expect(screen.getByLabelText("下一张")).toBeTruthy();
-    });
-    expect(screen.getByText("1/2")).toBeTruthy();
-
-    await userEvent.click(screen.getByLabelText("删除图片"));
-
-    await waitFor(() => {
-      expect(screen.queryByLabelText("下一张")).toBeNull();
-    });
-    expect(screen.getByAltText("二")).toBeTruthy();
+it("点击删除按钮移除轮播当前这张图片,只剩一张时自动解组为单图", async () => {
+  render(<RichEditor value={TWO_IMAGES} onChange={vi.fn()} enableImageGallery />);
+  await waitFor(() => {
+    expect(screen.getByLabelText("下一张")).toBeTruthy();
   });
+  expect(screen.getByText("1/2")).toBeTruthy();
+
+  await userEvent.click(screen.getByLabelText("删除图片"));
+
+  await waitFor(() => {
+    expect(screen.queryByLabelText("下一张")).toBeNull();
+  });
+  expect(screen.getByAltText("二")).toBeTruthy();
+});
 ```
 
 - [ ] **Step 3: 运行测试确认失败**
@@ -87,52 +89,52 @@ const NAV_BUTTON_CLASSES =
 在 `handleAddImage` 函数(第 157-166 行)之后新增 `handleDeleteImage`:
 
 ```tsx
-  // 删除轮播里当前正在查看的这一张;node 是 gallery 节点,child 的绝对
-  // pos = gallery 起点(getPos())+ 1(跳过 gallery 自身的开始标记)+ forEach 给出的相对 offset
-  const handleDeleteImage = () => {
-    const pos = getPos();
-    if (pos === undefined) return;
-    let childFrom: number | null = null;
-    let childSize = 0;
-    node.forEach((child, offset, childIndex) => {
-      if (childIndex !== index) return;
-      childFrom = pos + 1 + offset;
-      childSize = child.nodeSize;
-    });
-    if (childFrom === null) return;
-    editor.commands.deleteRange({ from: childFrom, to: childFrom + childSize });
-  };
+// 删除轮播里当前正在查看的这一张;node 是 gallery 节点,child 的绝对
+// pos = gallery 起点(getPos())+ 1(跳过 gallery 自身的开始标记)+ forEach 给出的相对 offset
+const handleDeleteImage = () => {
+  const pos = getPos();
+  if (pos === undefined) return;
+  let childFrom: number | null = null;
+  let childSize = 0;
+  node.forEach((child, offset, childIndex) => {
+    if (childIndex !== index) return;
+    childFrom = pos + 1 + offset;
+    childSize = child.nodeSize;
+  });
+  if (childFrom === null) return;
+  editor.commands.deleteRange({ from: childFrom, to: childFrom + childSize });
+};
 ```
 
 把第 239-241 行的计数徽标:
 
 ```tsx
-          <span className="absolute right-3 top-3 z-10 rounded-full bg-black/45 px-2 py-0.5 text-xs leading-tight text-white">
-            {index + 1}/{count}
-          </span>
+<span className="absolute right-3 top-3 z-10 rounded-full bg-black/45 px-2 py-0.5 text-xs leading-tight text-white">
+  {index + 1}/{count}
+</span>
 ```
 
 改为删除按钮 + 计数徽标并排的分组容器:
 
 ```tsx
-          <div className="absolute right-3 top-3 z-10 flex items-center gap-1.5">
-            <Button
-              type="button"
-              variant="ghost"
-              aria-label="删除图片"
-              className={cn(
-                "h-auto rounded-full border-0 bg-black/45 p-1.5 text-white",
-                // ghost 变体自带 hover/active:text-accent-foreground（深色），会把白字盖成不可见，需显式覆盖
-                "opacity-100 can-hover:opacity-0 transition-opacity hover:bg-black/60 hover:text-white active:text-white can-hover:group-hover:opacity-100 focus-visible:opacity-100",
-              )}
-              onPress={handleDeleteImage}
-            >
-              <SvgIcon name="trash" size={14} />
-            </Button>
-            <span className="rounded-full bg-black/45 px-2 py-0.5 text-xs leading-tight text-white">
-              {index + 1}/{count}
-            </span>
-          </div>
+<div className="absolute right-3 top-3 z-10 flex items-center gap-1.5">
+  <Button
+    type="button"
+    variant="ghost"
+    aria-label="删除图片"
+    className={cn(
+      "h-auto rounded-full border-0 bg-black/45 p-1.5 text-white",
+      // ghost 变体自带 hover/active:text-accent-foreground（深色），会把白字盖成不可见，需显式覆盖
+      "opacity-100 can-hover:opacity-0 transition-opacity hover:bg-black/60 hover:text-white active:text-white can-hover:group-hover:opacity-100 focus-visible:opacity-100",
+    )}
+    onPress={handleDeleteImage}
+  >
+    <SvgIcon name="trash" size={14} />
+  </Button>
+  <span className="rounded-full bg-black/45 px-2 py-0.5 text-xs leading-tight text-white">
+    {index + 1}/{count}
+  </span>
+</div>
 ```
 
 再把"添加图片"按钮(第 247-251 行)的可见性类:
@@ -177,10 +179,12 @@ git commit -m "feat(editor): 轮播新增删除图片按钮,覆盖层按钮移�
 ## Task 2: 顶层单图删除按钮
 
 **Files:**
+
 - Modify: `packages/editor/src/nodes/image-node-view.tsx:143-163,274-292`
 - Test: `packages/editor/src/__tests__/image-gallery-node-view.test.tsx`(该文件已经用 `RichEditor` 覆盖了顶层单图场景,继续在此追加,不新建文件)
 
 **Interfaces:**
+
 - Consumes:Task 1 产出的 Tailwind `can-hover:` 变体;Tiptap 内置命令 `editor.commands.deleteRange`。
 - Produces:顶层单图新增 `aria-label="删除图片"` 按钮,且不依赖 `showAddToGallery` / gallery 扩展是否启用。
 
@@ -189,28 +193,28 @@ git commit -m "feat(editor): 轮播新增删除图片按钮,覆盖层按钮移�
 在 `packages/editor/src/__tests__/image-gallery-node-view.test.tsx` 追加两个用例(接着 Task 1 新增的那个用例之后):
 
 ```tsx
-  it("顶层单图新增删除按钮,点击后该图片节点从文档移除", async () => {
-    render(
-      <RichEditor value={ONE_IMAGE} onChange={vi.fn()} enableImageGallery onInsertImage={vi.fn()} />,
-    );
-    await waitFor(() => {
-      expect(screen.getByLabelText("删除图片")).toBeTruthy();
-    });
-
-    await userEvent.click(screen.getByLabelText("删除图片"));
-
-    await waitFor(() => {
-      expect(screen.queryByAltText("一")).toBeNull();
-    });
+it("顶层单图新增删除按钮,点击后该图片节点从文档移除", async () => {
+  render(
+    <RichEditor value={ONE_IMAGE} onChange={vi.fn()} enableImageGallery onInsertImage={vi.fn()} />,
+  );
+  await waitFor(() => {
+    expect(screen.getByLabelText("删除图片")).toBeTruthy();
   });
 
-  it("未启用 enableImageGallery 时顶层单图仍显示删除按钮", async () => {
-    render(<RichEditor value={ONE_IMAGE} onChange={vi.fn()} />);
-    await waitFor(() => {
-      expect(screen.getByLabelText("删除图片")).toBeTruthy();
-    });
-    expect(screen.queryByLabelText("添加图片")).toBeNull();
+  await userEvent.click(screen.getByLabelText("删除图片"));
+
+  await waitFor(() => {
+    expect(screen.queryByAltText("一")).toBeNull();
   });
+});
+
+it("未启用 enableImageGallery 时顶层单图仍显示删除按钮", async () => {
+  render(<RichEditor value={ONE_IMAGE} onChange={vi.fn()} />);
+  await waitFor(() => {
+    expect(screen.getByLabelText("删除图片")).toBeTruthy();
+  });
+  expect(screen.queryByLabelText("添加图片")).toBeNull();
+});
 ```
 
 - [ ] **Step 2: 运行测试确认失败**
@@ -223,80 +227,87 @@ Expected: FAIL,两条新用例都报 `Unable to find an element by: [aria-label=
 在 `packages/editor/src/nodes/image-node-view.tsx` 第 151 行(`const showAddToGallery = ...`)之后、`handleAddToGallery` 定义(152-163 行)之后新增:
 
 ```tsx
-  // 删除按钮独立于 showAddToGallery:即便 gallery 扩展未启用,顶层图片也能删
-  const showDeleteImage = isTopLevelImage && hasRemoteSrc && !isPending;
+// 删除按钮独立于 showAddToGallery:即便 gallery 扩展未启用,顶层图片也能删
+const showDeleteImage = isTopLevelImage && hasRemoteSrc && !isPending;
 
-  const handleDeleteImage = () => {
-    if (!editor || typeof getPos !== "function") return;
-    const pos = getPos();
-    if (pos === undefined) return;
-    editor.commands.deleteRange({ from: pos, to: pos + node.nodeSize });
-  };
+const handleDeleteImage = () => {
+  if (!editor || typeof getPos !== "function") return;
+  const pos = getPos();
+  if (pos === undefined) return;
+  editor.commands.deleteRange({ from: pos, to: pos + node.nodeSize });
+};
 ```
 
 把第 274-292 行的:
 
 ```tsx
-      {showAddToGallery ? (
-        // 内层容器在图片就绪后是 display:contents，定位上下文取 figure 本身
-        <div contentEditable={false} className="absolute bottom-3 right-3 z-10">
-          <Button
-            type="button"
-            variant="ghost"
-            aria-label="添加图片"
-            className={cn(
-              "h-auto rounded-full border-0 bg-black/45 px-2.5 py-1 text-xs text-white",
-              // ghost 变体自带 hover/active:text-accent-foreground（深色），会把白字盖成不可见，需显式覆盖
-              "opacity-0 transition-opacity hover:bg-black/60 hover:text-white active:text-white group-hover:opacity-100 focus-visible:opacity-100",
-            )}
-            onPress={handleAddToGallery}
-          >
-            <SvgIcon name="plus" size={14} />
-            添加图片
-          </Button>
-        </div>
-      ) : null}
+{
+  showAddToGallery ? (
+    // 内层容器在图片就绪后是 display:contents，定位上下文取 figure 本身
+    <div contentEditable={false} className="absolute bottom-3 right-3 z-10">
+      <Button
+        type="button"
+        variant="ghost"
+        aria-label="添加图片"
+        className={cn(
+          "h-auto rounded-full border-0 bg-black/45 px-2.5 py-1 text-xs text-white",
+          // ghost 变体自带 hover/active:text-accent-foreground（深色），会把白字盖成不可见，需显式覆盖
+          "opacity-0 transition-opacity hover:bg-black/60 hover:text-white active:text-white group-hover:opacity-100 focus-visible:opacity-100",
+        )}
+        onPress={handleAddToGallery}
+      >
+        <SvgIcon name="plus" size={14} />
+        添加图片
+      </Button>
+    </div>
+  ) : null;
+}
 ```
 
 改为:
 
 ```tsx
-      {showDeleteImage || showAddToGallery ? (
-        // 内层容器在图片就绪后是 display:contents，定位上下文取 figure 本身
-        <div contentEditable={false} className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5">
-          {showDeleteImage ? (
-            <Button
-              type="button"
-              variant="ghost"
-              aria-label="删除图片"
-              className={cn(
-                "h-auto rounded-full border-0 bg-black/45 p-1.5 text-white",
-                // ghost 变体自带 hover/active:text-accent-foreground（深色），会把白字盖成不可见，需显式覆盖
-                "opacity-100 can-hover:opacity-0 transition-opacity hover:bg-black/60 hover:text-white active:text-white can-hover:group-hover:opacity-100 focus-visible:opacity-100",
-              )}
-              onPress={handleDeleteImage}
-            >
-              <SvgIcon name="trash" size={14} />
-            </Button>
-          ) : null}
-          {showAddToGallery ? (
-            <Button
-              type="button"
-              variant="ghost"
-              aria-label="添加图片"
-              className={cn(
-                "h-auto rounded-full border-0 bg-black/45 px-2.5 py-1 text-xs text-white",
-                // ghost 变体自带 hover/active:text-accent-foreground（深色），会把白字盖成不可见，需显式覆盖
-                "opacity-100 can-hover:opacity-0 transition-opacity hover:bg-black/60 hover:text-white active:text-white can-hover:group-hover:opacity-100 focus-visible:opacity-100",
-              )}
-              onPress={handleAddToGallery}
-            >
-              <SvgIcon name="plus" size={14} />
-              添加图片
-            </Button>
-          ) : null}
-        </div>
+{
+  showDeleteImage || showAddToGallery ? (
+    // 内层容器在图片就绪后是 display:contents，定位上下文取 figure 本身
+    <div
+      contentEditable={false}
+      className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5"
+    >
+      {showDeleteImage ? (
+        <Button
+          type="button"
+          variant="ghost"
+          aria-label="删除图片"
+          className={cn(
+            "h-auto rounded-full border-0 bg-black/45 p-1.5 text-white",
+            // ghost 变体自带 hover/active:text-accent-foreground（深色），会把白字盖成不可见，需显式覆盖
+            "opacity-100 can-hover:opacity-0 transition-opacity hover:bg-black/60 hover:text-white active:text-white can-hover:group-hover:opacity-100 focus-visible:opacity-100",
+          )}
+          onPress={handleDeleteImage}
+        >
+          <SvgIcon name="trash" size={14} />
+        </Button>
       ) : null}
+      {showAddToGallery ? (
+        <Button
+          type="button"
+          variant="ghost"
+          aria-label="添加图片"
+          className={cn(
+            "h-auto rounded-full border-0 bg-black/45 px-2.5 py-1 text-xs text-white",
+            // ghost 变体自带 hover/active:text-accent-foreground（深色），会把白字盖成不可见，需显式覆盖
+            "opacity-100 can-hover:opacity-0 transition-opacity hover:bg-black/60 hover:text-white active:text-white can-hover:group-hover:opacity-100 focus-visible:opacity-100",
+          )}
+          onPress={handleAddToGallery}
+        >
+          <SvgIcon name="plus" size={14} />
+          添加图片
+        </Button>
+      ) : null}
+    </div>
+  ) : null;
+}
 ```
 
 - [ ] **Step 4: 运行测试确认通过**
@@ -323,6 +334,7 @@ git commit -m "feat(editor): 顶层单图新增删除按钮,独立于添加轮�
 **Files:** 无新增/修改,仅运行既有校验命令。
 
 **Interfaces:**
+
 - Consumes:Task 1、Task 2 的全部改动。
 - Produces:确认改动未破坏 `packages/editor` 现有测试、类型、lint,以及 `apps/web` / `apps/admin` 的类型检查(它们通过 `@repo/editor`/`@repo/styles` 间接消费这些文件)。
 

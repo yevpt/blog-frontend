@@ -12,9 +12,9 @@
 
 ## 文件一览
 
-| 操作 | 路径 |
-|------|------|
-| Modify | `apps/web/components/navbar/navbar-mobile-menu.tsx` |
+| 操作   | 路径                                                     |
+| ------ | -------------------------------------------------------- |
+| Modify | `apps/web/components/navbar/navbar-mobile-menu.tsx`      |
 | Modify | `apps/web/components/navbar/navbar-mobile-menu.test.tsx` |
 
 ---
@@ -22,6 +22,7 @@
 ## Task 1：更新测试文件（先写失败测试）
 
 **Files:**
+
 - Modify: `apps/web/components/navbar/navbar-mobile-menu.test.tsx`
 
 - [ ] **步骤 1：删除将失效的两个测试**
@@ -38,44 +39,44 @@ it("已登录：退出按钮 class 包含 bg-destructive", ...)      // 退出�
 将以下内容追加到 `describe("NavbarMobileMenu", () => {` 块内最后一个 `it` 之后：
 
 ```tsx
-  it("已登录：退出按钮在用户卡片区，aria-label 为「退出登录」", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
-    render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
-    const logoutBtn = screen.getByRole("button", { name: "退出登录" });
-    expect(logoutBtn).toBeInTheDocument();
-    // 退出按钮不在底部三列网格中，不含 bg-destructive
-    expect(logoutBtn.className).not.toMatch(/bg-destructive/);
-  });
+it("已登录：退出按钮在用户卡片区，aria-label 为「退出登录」", () => {
+  vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+  render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
+  const logoutBtn = screen.getByRole("button", { name: "退出登录" });
+  expect(logoutBtn).toBeInTheDocument();
+  // 退出按钮不在底部三列网格中，不含 bg-destructive
+  expect(logoutBtn.className).not.toMatch(/bg-destructive/);
+});
 
-  it("已登录：unreadCount 未传时不渲染徽标", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
-    render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
-    expect(screen.queryByText(/^\d+$|^99\+$/)).not.toBeInTheDocument();
-  });
+it("已登录：unreadCount 未传时不渲染徽标", () => {
+  vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+  render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
+  expect(screen.queryByText(/^\d+$|^99\+$/)).not.toBeInTheDocument();
+});
 
-  it("已登录：unreadCount=5 时消息行渲染 '5'", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
-    render(<NavbarMobileMenu isOpen onClose={mockOnClose} unreadCount={5} />);
-    expect(screen.getByText("5")).toBeInTheDocument();
-  });
+it("已登录：unreadCount=5 时消息行渲染 '5'", () => {
+  vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+  render(<NavbarMobileMenu isOpen onClose={mockOnClose} unreadCount={5} />);
+  expect(screen.getByText("5")).toBeInTheDocument();
+});
 
-  it("已登录：unreadCount=100 时消息行渲染 '99+'", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
-    render(<NavbarMobileMenu isOpen onClose={mockOnClose} unreadCount={100} />);
-    expect(screen.getByText("99+")).toBeInTheDocument();
-  });
+it("已登录：unreadCount=100 时消息行渲染 '99+'", () => {
+  vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+  render(<NavbarMobileMenu isOpen onClose={mockOnClose} unreadCount={100} />);
+  expect(screen.getByText("99+")).toBeInTheDocument();
+});
 
-  it("已登录：主题行含 amber 图标（icon-sun 或 icon-moon）", () => {
-    vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
-    render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
-    // 浅色模式下显示 moon 图标
-    expect(screen.getByTestId("icon-moon")).toBeInTheDocument();
-  });
+it("已登录：主题行含 amber 图标（icon-sun 或 icon-moon）", () => {
+  vi.mocked(useSession).mockReturnValue({ userId: 1, profile: null });
+  render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
+  // 浅色模式下显示 moon 图标
+  expect(screen.getByTestId("icon-moon")).toBeInTheDocument();
+});
 
-  it("未登录：主题行含 amber 图标（icon-moon）", () => {
-    render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
-    expect(screen.getByTestId("icon-moon")).toBeInTheDocument();
-  });
+it("未登录：主题行含 amber 图标（icon-moon）", () => {
+  render(<NavbarMobileMenu isOpen onClose={mockOnClose} />);
+  expect(screen.getByTestId("icon-moon")).toBeInTheDocument();
+});
 ```
 
 - [ ] **步骤 3：运行测试，确认新增测试失败、已有测试通过**
@@ -92,6 +93,7 @@ pnpm --filter @apps/web test -- --reporter=verbose navbar-mobile-menu
 ## Task 2：实现组件变更
 
 **Files:**
+
 - Modify: `apps/web/components/navbar/navbar-mobile-menu.tsx`
 
 - [ ] **步骤 1：用以下完整内容替换文件**
@@ -138,8 +140,7 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
   const navLinkClass =
     "flex min-h-10 items-center justify-between rounded-[14px] px-3 text-[14px] font-semibold text-foreground transition-colors hover:bg-foreground/[0.05] dark:hover:bg-white/10";
 
-  const cardClass =
-    "rounded-2xl bg-gradient-to-br from-primary/[0.08] to-amber-500/[0.10]";
+  const cardClass = "rounded-2xl bg-gradient-to-br from-primary/[0.08] to-amber-500/[0.10]";
 
   const listRowClass =
     "flex w-full cursor-pointer items-center gap-2.5 rounded-[10px] px-2.5 py-[9px] transition-colors hover:bg-foreground/[0.04]";
@@ -189,7 +190,6 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
       <div className="min-h-0 overflow-hidden">
         <div className="px-3 pb-3">
           <div className="border-t border-border/60 pt-3">
-
             {/* ── 用户卡片区 ── */}
             {userId != null ? (
               <div className={cn("flex min-w-0 items-center gap-2 px-3 py-[11px]", cardClass)}>
@@ -281,7 +281,6 @@ export function NavbarMobileMenu({ isOpen, onClose, unreadCount }: NavbarMobileM
               )}
               {themeRow}
             </div>
-
           </div>
         </div>
       </div>
@@ -311,6 +310,7 @@ pnpm --filter @apps/web test -- --reporter=verbose navbar-mobile-menu
 ```
 
 预期（共 11 个测试，全部 PASS）：
+
 ```
 ✓ 未登录：显示登录按钮，不显示头像
 ✓ 未登录：底部主题切换行渲染，显示「浅色模式」文字
@@ -360,16 +360,16 @@ EOF
 
 ## 自检：规格覆盖
 
-| 规格条目 | 对应 Task |
-|---------|----------|
-| 用户卡片重构为 div + Link + button | Task 2 |
-| 卡片背景 from-primary/[0.08] to-amber-500/[0.10] | Task 2 |
-| 退出按钮交互（hover/active/dark） | Task 2 |
-| 底部替换为列表行 + border-t | Task 2 |
-| 消息行 + 徽标（99+截断） | Task 2 |
-| 无 chevron-right | Task 2（代码中无该元素） |
-| 主题行统一为图标色块样式 | Task 2 |
-| 未登录态主题行同步更新 | Task 2 |
-| unreadCount prop | Task 1 + Task 2 |
-| 测试：徽标显示逻辑 | Task 1 |
-| 测试：退出按钮位置 | Task 1 |
+| 规格条目                                         | 对应 Task                |
+| ------------------------------------------------ | ------------------------ |
+| 用户卡片重构为 div + Link + button               | Task 2                   |
+| 卡片背景 from-primary/[0.08] to-amber-500/[0.10] | Task 2                   |
+| 退出按钮交互（hover/active/dark）                | Task 2                   |
+| 底部替换为列表行 + border-t                      | Task 2                   |
+| 消息行 + 徽标（99+截断）                         | Task 2                   |
+| 无 chevron-right                                 | Task 2（代码中无该元素） |
+| 主题行统一为图标色块样式                         | Task 2                   |
+| 未登录态主题行同步更新                           | Task 2                   |
+| unreadCount prop                                 | Task 1 + Task 2          |
+| 测试：徽标显示逻辑                               | Task 1                   |
+| 测试：退出按钮位置                               | Task 1                   |

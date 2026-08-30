@@ -16,16 +16,16 @@ commit message 由 `commit-msg` 钩子（`scripts/validate-commit-msg.cjs`）强
 
 `type` 必填，必须小写，只能使用以下值：
 
-* `feat`：新功能
-* `fix`：修 bug
-* `refactor`：重构
-* `perf`：性能优化
-* `test`：测试
-* `docs`：文档
-* `style`：纯格式调整，不改变逻辑
-* `build`：构建相关
-* `chore`：脚手架、依赖、杂项维护
-* `ci`：CI/CD 相关
+- `feat`：新功能
+- `fix`：修 bug
+- `refactor`：重构
+- `perf`：性能优化
+- `test`：测试
+- `docs`：文档
+- `style`：纯格式调整，不改变逻辑
+- `build`：构建相关
+- `chore`：脚手架、依赖、杂项维护
+- `ci`：CI/CD 相关
 
 ---
 
@@ -35,10 +35,10 @@ commit message 由 `commit-msg` 钩子（`scripts/validate-commit-msg.cjs`）强
 
 要求：
 
-* 使用英文小写技术词
-* 可以包含数字和连字符
-* 不要使用中文
-* 不要使用大写字母
+- 使用英文小写技术词
+- 可以包含数字和连字符
+- 不要使用中文
+- 不要使用大写字母
 
 示例：
 
@@ -58,11 +58,11 @@ ci
 
 要求：
 
-* 冒号后必须留一个空格
-* 必须使用中文
-* 必须以动词开头
-* 长度不超过 50 字
-* 结尾不要加句号
+- 冒号后必须留一个空格
+- 必须使用中文
+- 必须以动词开头
+- 长度不超过 50 字
+- 结尾不要加句号
 
 推荐动词：
 
@@ -98,9 +98,9 @@ BREAKING CHANGE: <描述>
 
 要求：
 
-* `BREAKING CHANGE` 必须全大写
-* 后面必须使用英文冒号
-* 冒号后留一个空格
+- `BREAKING CHANGE` 必须全大写
+- 后面必须使用英文冒号
+- 冒号后留一个空格
 
 ---
 

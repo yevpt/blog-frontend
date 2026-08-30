@@ -12,17 +12,18 @@
 
 ## 文件结构
 
-| 文件 | 操作 | 职责 |
-|------|------|------|
-| `apps/web/components/featured/featured-carousel.tsx` | 修改 | 移动端脱离 max-width 容器；桌面端保留原容器约束 |
-| `apps/web/components/featured/featured-carousel-slide.tsx` | 修改 | 移动端改为 overlay 布局；桌面端 flex 两栏不变 |
-| `apps/web/components/featured/featured-carousel.test.tsx` | 修改 | 补充移动端全屏断言，更新 overlay 结构断言 |
+| 文件                                                       | 操作 | 职责                                            |
+| ---------------------------------------------------------- | ---- | ----------------------------------------------- |
+| `apps/web/components/featured/featured-carousel.tsx`       | 修改 | 移动端脱离 max-width 容器；桌面端保留原容器约束 |
+| `apps/web/components/featured/featured-carousel-slide.tsx` | 修改 | 移动端改为 overlay 布局；桌面端 flex 两栏不变   |
+| `apps/web/components/featured/featured-carousel.test.tsx`  | 修改 | 补充移动端全屏断言，更新 overlay 结构断言       |
 
 ---
 
 ## Task 1：更新移动端轮播容器（脱离 max-width，设为全屏高度）
 
 **Files:**
+
 - Modify: `apps/web/components/featured/featured-carousel.tsx`
 - Test: `apps/web/components/featured/featured-carousel.test.tsx`
 
@@ -50,15 +51,19 @@ pnpm --filter web test -- --reporter=verbose featured-carousel
 - [ ] **Step 3: 实现 `FeaturedCarousel` 容器拆分 + `FeaturedCarouselMobile` 高度修改**
 
 将 `featured-carousel.tsx` 中 `FeaturedCarouselMobile` 函数的 `Carousel.Root` 的 `className` 由：
+
 ```tsx
-className="h-[500px] overflow-hidden rounded-2xl"
+className = "h-[500px] overflow-hidden rounded-2xl";
 ```
+
 改为：
+
 ```tsx
-className="h-[100svh] overflow-hidden"
+className = "h-[100svh] overflow-hidden";
 ```
 
 将 `FeaturedCarousel` 导出函数的 return 由：
+
 ```tsx
 return (
   <div className="mx-auto max-w-[1120px] px-3 pt-16 md:px-5 md:pt-20">
@@ -73,7 +78,9 @@ return (
   </div>
 );
 ```
+
 改为：
+
 ```tsx
 return (
   <>
@@ -110,6 +117,7 @@ git commit -m "feat(web): 移动端轮播容器全屏化（100svh，脱离 max-w
 ## Task 2：更新 Slide 布局——移动端 overlay，桌面端 flex 两栏不变
 
 **Files:**
+
 - Modify: `apps/web/components/featured/featured-carousel-slide.tsx`
 - Test: `apps/web/components/featured/featured-carousel.test.tsx`
 
@@ -244,9 +252,7 @@ return (
 
         {/* 移动端指示点：CTA 下方居中 */}
         {mobileIndicators && (
-          <div className="flex justify-center md:hidden">
-            {mobileIndicators}
-          </div>
+          <div className="flex justify-center md:hidden">{mobileIndicators}</div>
         )}
       </div>
     </div>
@@ -278,14 +284,14 @@ git commit -m "feat(web): 移动端轮播 slide 改为全屏 overlay 布局
 
 ## 自检：spec 覆盖率
 
-| Spec 要求 | 对应 Task |
-|-----------|-----------|
-| 移动端宽度 = 视口宽度 | Task 1（脱离 max-width 容器） |
-| 移动端高度 = 视口高度（100svh） | Task 1（Carousel.Root className） |
-| 无圆角 | Task 1（移除 rounded-2xl） |
-| 图片铺满全屏 | Task 2（absolute inset-0） |
-| 底部渐变叠加 | Task 2（渐变 div） |
-| 文字叠加于图片底部 | Task 2（absolute bottom-0 overlay） |
-| 指示点 CTA 下方居中 | Task 2（mobileIndicators flex justify-center） |
-| 桌面端不变 | Task 1（hidden md:block 容器） + Task 2（md: prefix 保留桌面样式） |
-| 测试更新 | Task 1 Step 1 + Task 2 Step 1 |
+| Spec 要求                       | 对应 Task                                                          |
+| ------------------------------- | ------------------------------------------------------------------ |
+| 移动端宽度 = 视口宽度           | Task 1（脱离 max-width 容器）                                      |
+| 移动端高度 = 视口高度（100svh） | Task 1（Carousel.Root className）                                  |
+| 无圆角                          | Task 1（移除 rounded-2xl）                                         |
+| 图片铺满全屏                    | Task 2（absolute inset-0）                                         |
+| 底部渐变叠加                    | Task 2（渐变 div）                                                 |
+| 文字叠加于图片底部              | Task 2（absolute bottom-0 overlay）                                |
+| 指示点 CTA 下方居中             | Task 2（mobileIndicators flex justify-center）                     |
+| 桌面端不变                      | Task 1（hidden md:block 容器） + Task 2（md: prefix 保留桌面样式） |
+| 测试更新                        | Task 1 Step 1 + Task 2 Step 1                                      |

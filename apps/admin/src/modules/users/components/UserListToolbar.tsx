@@ -4,9 +4,7 @@ import type { AdminUserListFilters } from "../model";
 
 interface UserListToolbarProps {
   filters: AdminUserListFilters;
-  onFiltersChange: (
-    updater: (previous: AdminUserListFilters) => AdminUserListFilters,
-  ) => void;
+  onFiltersChange: (updater: (previous: AdminUserListFilters) => AdminUserListFilters) => void;
   canClear?: boolean;
   onClear?: () => void;
 }
@@ -22,9 +20,7 @@ export function UserListToolbar({
       searchLabel="搜索用户"
       searchPlaceholder="搜索用户名、昵称或邮箱…"
       searchValue={filters.keyword}
-      onSearchChange={(value) =>
-        onFiltersChange((previous) => ({ ...previous, keyword: value }))
-      }
+      onSearchChange={(value) => onFiltersChange((previous) => ({ ...previous, keyword: value }))}
       canClear={canClear}
       onClear={onClear}
       filters={

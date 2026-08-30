@@ -21,40 +21,42 @@
 
 **新建：**
 
-| 文件 | 职责 |
-|---|---|
-| `apps/web/hooks/use-moment-detail.ts` | 单条碎语的点赞/编辑保存/置顶/删除交互（`use-moment-list.ts` 同名逻辑的单条目版本） |
-| `apps/web/hooks/use-moment-detail.test.ts` | 上面 hook 的单测 |
-| `apps/web/components/moments/pack-moment-images-form-data.ts` | 从 `use-moment-list.ts` 抽出的"图片数组→FormData"纯函数，供列表编辑和详情编辑共用 |
-| `apps/web/components/moments/pack-moment-images-form-data.test.ts` | 上面函数的单测 |
-| `apps/web/components/moments/moment-comments.tsx` | 详情页内联评论区（照抄 `article-comments.tsx`，换成 `targetType="moment"`） |
-| `apps/web/components/moments/moment-comments.test.tsx` | 上面组件的单测 |
-| `apps/web/components/moments/moment-detail.tsx` | 详情页主体：`useMomentDetail` + `MomentCard` + 打开全局编辑弹窗的胶水逻辑 |
-| `apps/web/components/moments/moment-detail.test.tsx` | 上面组件的单测 |
-| `apps/web/app/moments/[id]/page.tsx` | 详情页路由：`generateMetadata` + Server Component 取数 + 404 |
-| `apps/web/app/moments/[id]/page.test.tsx` | 上面路由的单测 |
+| 文件                                                               | 职责                                                                               |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| `apps/web/hooks/use-moment-detail.ts`                              | 单条碎语的点赞/编辑保存/置顶/删除交互（`use-moment-list.ts` 同名逻辑的单条目版本） |
+| `apps/web/hooks/use-moment-detail.test.ts`                         | 上面 hook 的单测                                                                   |
+| `apps/web/components/moments/pack-moment-images-form-data.ts`      | 从 `use-moment-list.ts` 抽出的"图片数组→FormData"纯函数，供列表编辑和详情编辑共用  |
+| `apps/web/components/moments/pack-moment-images-form-data.test.ts` | 上面函数的单测                                                                     |
+| `apps/web/components/moments/moment-comments.tsx`                  | 详情页内联评论区（照抄 `article-comments.tsx`，换成 `targetType="moment"`）        |
+| `apps/web/components/moments/moment-comments.test.tsx`             | 上面组件的单测                                                                     |
+| `apps/web/components/moments/moment-detail.tsx`                    | 详情页主体：`useMomentDetail` + `MomentCard` + 打开全局编辑弹窗的胶水逻辑          |
+| `apps/web/components/moments/moment-detail.test.tsx`               | 上面组件的单测                                                                     |
+| `apps/web/app/moments/[id]/page.tsx`                               | 详情页路由：`generateMetadata` + Server Component 取数 + 404                       |
+| `apps/web/app/moments/[id]/page.test.tsx`                          | 上面路由的单测                                                                     |
 
 **修改：**
 
-| 文件 | 改动 |
-|---|---|
-| `packages/api/src/client.ts` | `moments` 下新增 `getDetail` |
-| `packages/api/src/client.test.ts` | 新增 `moments.getDetail` 用例 |
-| `apps/web/hooks/use-moment-list.ts` | `updateMoment` 里内联的图片打包循环改为调用 `packMomentImagesFormData` |
-| `apps/web/components/notifications/notification-target.ts` | `root_type === "moment"` 返回具体详情页地址 |
-| `apps/web/components/notifications/notification-target.test.ts` | 更新对应断言 |
-| `apps/web/app/users/[id]/_components/profile-likes-tab/liked-content-format.ts` | `getLikedContentRootHref` 里两处 `moment` 分支返回具体详情页地址 |
-| `apps/web/app/users/[id]/_components/profile-likes-tab/liked-content-format.test.ts` | 新增碎语相关断言 |
+| 文件                                                                                 | 改动                                                                   |
+| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| `packages/api/src/client.ts`                                                         | `moments` 下新增 `getDetail`                                           |
+| `packages/api/src/client.test.ts`                                                    | 新增 `moments.getDetail` 用例                                          |
+| `apps/web/hooks/use-moment-list.ts`                                                  | `updateMoment` 里内联的图片打包循环改为调用 `packMomentImagesFormData` |
+| `apps/web/components/notifications/notification-target.ts`                           | `root_type === "moment"` 返回具体详情页地址                            |
+| `apps/web/components/notifications/notification-target.test.ts`                      | 更新对应断言                                                           |
+| `apps/web/app/users/[id]/_components/profile-likes-tab/liked-content-format.ts`      | `getLikedContentRootHref` 里两处 `moment` 分支返回具体详情页地址       |
+| `apps/web/app/users/[id]/_components/profile-likes-tab/liked-content-format.test.ts` | 新增碎语相关断言                                                       |
 
 ---
 
 ## Task 1: API 客户端新增 `moments.getDetail`
 
 **Files:**
+
 - Modify: `packages/api/src/client.ts:688-690`
 - Test: `packages/api/src/client.test.ts`
 
 **Interfaces:**
+
 - Produces: `client.moments.getDetail(id: number): Promise<MomentItemResp>`，供 Task 6 的 Server Component 调用。
 
 - [ ] **Step 1: 写失败的测试**
@@ -62,35 +64,33 @@
 在 `packages/api/src/client.test.ts` 第 1687 行（`moments.view 调用正确的端点` 测试块结束的 `});` 之后、`articles.getAdminDetail` 测试之前）插入：
 
 ```ts
-  it("moments.getDetail 调用正确的端点", async () => {
-    const detail: MomentItemResp = {
-      id: 1,
-      user_id: 1,
-      content: "今天的风很温柔",
-      status: 1,
-      comment_status: 1,
-      read_count: 20,
-      is_top: false,
-      like_count: 3,
-      comment_count: 2,
-      is_liked: false,
-      images: [],
-      created_at: "2026-06-01T00:00:00Z",
-      updated_at: "2026-06-01T00:00:00Z",
-    };
-    vi.mocked(global.fetch).mockResolvedValue(
-      mockResponse({ code: 0, message: "ok", data: detail }),
-    );
-    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+it("moments.getDetail 调用正确的端点", async () => {
+  const detail: MomentItemResp = {
+    id: 1,
+    user_id: 1,
+    content: "今天的风很温柔",
+    status: 1,
+    comment_status: 1,
+    read_count: 20,
+    is_top: false,
+    like_count: 3,
+    comment_count: 2,
+    is_liked: false,
+    images: [],
+    created_at: "2026-06-01T00:00:00Z",
+    updated_at: "2026-06-01T00:00:00Z",
+  };
+  vi.mocked(global.fetch).mockResolvedValue(mockResponse({ code: 0, message: "ok", data: detail }));
+  const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
 
-    const result = await client.moments.getDetail(1);
+  const result = await client.moments.getDetail(1);
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      "http://api/moments/1",
-      expect.objectContaining({ method: "GET" }),
-    );
-    expect(result.content).toBe("今天的风很温柔");
-  });
+  expect(global.fetch).toHaveBeenCalledWith(
+    "http://api/moments/1",
+    expect.objectContaining({ method: "GET" }),
+  );
+  expect(result.content).toBe("今天的风很温柔");
+});
 ```
 
 文件顶部第 4 行的类型导入改为：
@@ -152,11 +152,13 @@ git commit -m "feat(api): 新增碎语详情查询接口"
 ## Task 2: 抽出图片打包公共函数
 
 **Files:**
+
 - Create: `apps/web/components/moments/pack-moment-images-form-data.ts`
 - Create: `apps/web/components/moments/pack-moment-images-form-data.test.ts`
 - Modify: `apps/web/hooks/use-moment-list.ts`
 
 **Interfaces:**
+
 - Consumes: `MomentImageItem`（`apps/web/components/moments/types.ts` 已有）
 - Produces: `packMomentImagesFormData(form: FormData, images: MomentImageItem[]): void`，供 Task 3 的 `useMomentDetail.updateMoment` 使用。
 
@@ -249,21 +251,21 @@ import { packMomentImagesFormData } from "@/components/moments/pack-moment-image
 将第 401-409 行：
 
 ```ts
-        images.forEach((image) => {
-          if (image.file) {
-            form.append("images", image.file, image.file.name);
-            form.append("image_order", `file:${form.getAll("images").length - 1}`);
-          } else if (image.remoteUrl) {
-            form.append("image_urls", image.remoteUrl);
-            form.append("image_order", `url:${form.getAll("image_urls").length - 1}`);
-          }
-        });
+images.forEach((image) => {
+  if (image.file) {
+    form.append("images", image.file, image.file.name);
+    form.append("image_order", `file:${form.getAll("images").length - 1}`);
+  } else if (image.remoteUrl) {
+    form.append("image_urls", image.remoteUrl);
+    form.append("image_order", `url:${form.getAll("image_urls").length - 1}`);
+  }
+});
 ```
 
 改为：
 
 ```ts
-        packMomentImagesFormData(form, images);
+packMomentImagesFormData(form, images);
 ```
 
 - [ ] **Step 6: 运行 `use-moment-list` 现有测试确认未破坏行为**
@@ -283,12 +285,15 @@ git commit -m "refactor(moments): 抽出图片打包 FormData 公共函数"
 ## Task 3: `useMomentDetail` hook
 
 **Files:**
+
 - Create: `apps/web/hooks/use-moment-detail.ts`
 - Test: `apps/web/hooks/use-moment-detail.test.ts`
 
 **Interfaces:**
+
 - Consumes: `packMomentImagesFormData`（Task 2）、`momentEditFingerprint`（`apps/web/components/moments/moment-submit-fingerprint.ts` 已有）、`logMomentUploadImages`（`apps/web/components/moments/log-moment-upload-images.ts` 已有）
 - Produces:
+
   ```ts
   function useMomentDetail(initialMoment: MomentItemResp): {
     moment: MomentItemResp;
@@ -298,8 +303,9 @@ git commit -m "refactor(moments): 抽出图片打包 FormData 公共函数"
     updateMoment: (content: string, images: MomentImageItem[]) => Promise<MomentItemResp>;
     toggleTop: (target: MomentItemResp) => Promise<void>;
     deleteMoment: (target: MomentItemResp) => Promise<void>;
-  }
+  };
   ```
+
   供 Task 5 的 `MomentDetail` 组件使用。
 
 - [ ] **Step 1: 写失败的测试**
@@ -424,7 +430,10 @@ describe("useMomentDetail", () => {
       await result.current.toggleLike(makeMoment());
     });
 
-    expect(fetch).toHaveBeenCalledWith("/api/moments/1/like", expect.objectContaining({ method: "POST" }));
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/moments/1/like",
+      expect.objectContaining({ method: "POST" }),
+    );
     expect(result.current.moment.is_liked).toBe(true);
     expect(result.current.moment.like_count).toBe(3);
   });
@@ -486,7 +495,10 @@ describe("useMomentDetail", () => {
       await result.current.toggleTop(makeMoment());
     });
 
-    expect(fetch).toHaveBeenCalledWith("/api/moments/1/top", expect.objectContaining({ method: "POST" }));
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/moments/1/top",
+      expect.objectContaining({ method: "POST" }),
+    );
     expect(result.current.moment.is_top).toBe(true);
 
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ id: 1, is_top: false }));
@@ -494,7 +506,10 @@ describe("useMomentDetail", () => {
       await result.current.toggleTop(makeMoment({ is_top: true }));
     });
 
-    expect(fetch).toHaveBeenCalledWith("/api/moments/1/top", expect.objectContaining({ method: "DELETE" }));
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/moments/1/top",
+      expect.objectContaining({ method: "DELETE" }),
+    );
     expect(result.current.moment.is_top).toBe(false);
   });
 
@@ -517,7 +532,10 @@ describe("useMomentDetail", () => {
       await result.current.deleteMoment(makeMoment());
     });
 
-    expect(fetch).toHaveBeenCalledWith("/api/moments/1", expect.objectContaining({ method: "DELETE" }));
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/moments/1",
+      expect.objectContaining({ method: "DELETE" }),
+    );
     expect(mockAddToast).toHaveBeenCalledWith("碎语已删除", "success");
     expect(mockRouterPush).toHaveBeenCalledWith("/moments");
   });
@@ -750,10 +768,12 @@ git commit -m "feat(moments): 新增碎语详情页交互 hook"
 ## Task 4: `MomentComments` 内联评论区
 
 **Files:**
+
 - Create: `apps/web/components/moments/moment-comments.tsx`
 - Test: `apps/web/components/moments/moment-comments.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `InlineComments`（`@/components/comments`，已支持 `targetType="moment"`）
 - Produces: `<MomentComments momentId={number} commentCount={number} />`，供 Task 6 的 page.tsx 使用。
 
@@ -886,10 +906,12 @@ git commit -m "feat(moments): 新增碎语详情页内联评论区"
 ## Task 5: `MomentDetail` 主体组件
 
 **Files:**
+
 - Create: `apps/web/components/moments/moment-detail.tsx`
 - Test: `apps/web/components/moments/moment-detail.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `useMomentDetail`（Task 3）、`MomentCard`（`./moment-card`，已有，props 见其定义）、`useMomentModal`（`@/store/use-moment-modal`，已有 `open(moment, submitEdit)` 动作）
 - Produces: `<MomentDetail initialMoment={MomentItemResp} />`，供 Task 6 的 page.tsx 使用。
 
@@ -1096,10 +1118,12 @@ git commit -m "feat(moments): 新增碎语详情页主体组件"
 ## Task 6: `/moments/[id]` 页面路由
 
 **Files:**
+
 - Create: `apps/web/app/moments/[id]/page.tsx`
 - Test: `apps/web/app/moments/[id]/page.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `createServerApiClient().moments.getDetail`（Task 1）、`MomentDetail`（Task 5）、`MomentComments`（Task 4）、`getCanonicalUrl`（`@/lib/seo`，已有）、`PageContainer`（`@/components/common/page-container`，已有，`size="narrow"` = 680px）
 
 - [ ] **Step 1: 写失败的测试**
@@ -1344,6 +1368,7 @@ git commit -m "feat(moments): 新增碎语详情页路由"
 ## Task 7: 修正通知中心的碎语跳转
 
 **Files:**
+
 - Modify: `apps/web/components/notifications/notification-target.ts:10-12`
 - Modify: `apps/web/components/notifications/notification-target.test.ts:29-31`
 
@@ -1352,17 +1377,17 @@ git commit -m "feat(moments): 新增碎语详情页路由"
 将 `apps/web/components/notifications/notification-target.test.ts` 第 29-31 行：
 
 ```ts
-  it("moment 通知跳转碎语页而不是圈子页", () => {
-    expect(getNotificationHref(item({ root_type: "moment", root_id: 9 }))).toBe("/moments");
-  });
+it("moment 通知跳转碎语页而不是圈子页", () => {
+  expect(getNotificationHref(item({ root_type: "moment", root_id: 9 }))).toBe("/moments");
+});
 ```
 
 改为：
 
 ```ts
-  it("moment 通知跳转到具体碎语详情页", () => {
-    expect(getNotificationHref(item({ root_type: "moment", root_id: 9 }))).toBe("/moments/9");
-  });
+it("moment 通知跳转到具体碎语详情页", () => {
+  expect(getNotificationHref(item({ root_type: "moment", root_id: 9 }))).toBe("/moments/9");
+});
 ```
 
 - [ ] **Step 2: 运行测试确认失败**
@@ -1375,17 +1400,17 @@ Expected: FAIL，实际返回 `/moments`，期望 `/moments/9`
 将 `apps/web/components/notifications/notification-target.ts` 第 10-12 行：
 
 ```ts
-  if (item.root_type === "moment") {
-    return "/moments";
-  }
+if (item.root_type === "moment") {
+  return "/moments";
+}
 ```
 
 改为：
 
 ```ts
-  if (item.root_type === "moment") {
-    return `/moments/${item.root_id}`;
-  }
+if (item.root_type === "moment") {
+  return `/moments/${item.root_id}`;
+}
 ```
 
 - [ ] **Step 4: 运行测试确认通过**
@@ -1405,6 +1430,7 @@ git commit -m "fix(notifications): 碎语通知跳转到具体详情页"
 ## Task 8: 修正「赞过」列表的碎语跳转
 
 **Files:**
+
 - Modify: `apps/web/app/users/[id]/_components/profile-likes-tab/liked-content-format.ts:53-58,75-77`
 - Modify: `apps/web/app/users/[id]/_components/profile-likes-tab/liked-content-format.test.ts`
 
@@ -1413,37 +1439,37 @@ git commit -m "fix(notifications): 碎语通知跳转到具体详情页"
 在 `apps/web/app/users/[id]/_components/profile-likes-tab/liked-content-format.test.ts` 的 `describe("liked-content-format", ...)` 块内、"评论跳转携带评论锚点" 测试之后插入：
 
 ```ts
-  it("碎语点赞跳转到碎语详情页", () => {
-    expect(
-      getLikedContentRootHref(
-        makeItem({ kind: "moment", filter: "moment", content: { id: 77, excerpt: "碎语摘要" } }),
-      ),
-    ).toBe("/moments/77");
-  });
+it("碎语点赞跳转到碎语详情页", () => {
+  expect(
+    getLikedContentRootHref(
+      makeItem({ kind: "moment", filter: "moment", content: { id: 77, excerpt: "碎语摘要" } }),
+    ),
+  ).toBe("/moments/77");
+});
 
-  it("碎语已删除时跳转地址为空", () => {
-    expect(
-      getLikedContentRootHref(
-        makeItem({
-          kind: "moment",
-          filter: "moment",
-          content: { id: 77, excerpt: "", deleted: true },
-        }),
-      ),
-    ).toBeNull();
-  });
-
-  it("根内容是碎语的评论点赞携带评论锚点跳转到碎语详情页", () => {
-    const href = getLikedContentRootHref(
+it("碎语已删除时跳转地址为空", () => {
+  expect(
+    getLikedContentRootHref(
       makeItem({
-        kind: "comment",
-        filter: "comment",
-        content: { id: 5, excerpt: "评论正文" },
-        root: { kind: "moment", id: 30, excerpt: "碎语摘要" },
+        kind: "moment",
+        filter: "moment",
+        content: { id: 77, excerpt: "", deleted: true },
       }),
-    );
-    expect(href).toBe("/moments/30#comment-5");
-  });
+    ),
+  ).toBeNull();
+});
+
+it("根内容是碎语的评论点赞携带评论锚点跳转到碎语详情页", () => {
+  const href = getLikedContentRootHref(
+    makeItem({
+      kind: "comment",
+      filter: "comment",
+      content: { id: 5, excerpt: "评论正文" },
+      root: { kind: "moment", id: 30, excerpt: "碎语摘要" },
+    }),
+  );
+  expect(href).toBe("/moments/30#comment-5");
+});
 ```
 
 - [ ] **Step 2: 运行测试确认失败**
@@ -1456,39 +1482,39 @@ Expected: FAIL，前两条实际返回 `/moments`，第三条实际返回 `/mome
 将 `apps/web/app/users/[id]/_components/profile-likes-tab/liked-content-format.ts` 第 53-58 行：
 
 ```ts
-  if (item.kind === "moment") {
-    if (item.content.deleted) {
-      return null;
-    }
-    return "/moments";
+if (item.kind === "moment") {
+  if (item.content.deleted) {
+    return null;
   }
+  return "/moments";
+}
 ```
 
 改为：
 
 ```ts
-  if (item.kind === "moment") {
-    if (item.content.deleted) {
-      return null;
-    }
-    return `/moments/${item.content.id}`;
+if (item.kind === "moment") {
+  if (item.content.deleted) {
+    return null;
   }
+  return `/moments/${item.content.id}`;
+}
 ```
 
 将同文件第 75-77 行：
 
 ```ts
-  if (root.kind === "moment") {
-    return "/moments";
-  }
+if (root.kind === "moment") {
+  return "/moments";
+}
 ```
 
 改为：
 
 ```ts
-  if (root.kind === "moment") {
-    return `/moments/${root.id}${buildCommentAnchor(item.content.id)}`;
-  }
+if (root.kind === "moment") {
+  return `/moments/${root.id}${buildCommentAnchor(item.content.id)}`;
+}
 ```
 
 - [ ] **Step 4: 运行测试确认通过**

@@ -22,10 +22,12 @@
 ### Task 1: 重构 `NotificationSelectionBar` 组件
 
 **Files:**
+
 - Modify: `apps/web/components/notifications/notification-selection-bar.tsx`
 - Test: `apps/web/components/notifications/notification-selection-bar.test.tsx`
 
 **Interfaces:**
+
 - Produces：新的 `NotificationSelectionBarProps`：
 
 ```ts
@@ -271,10 +273,12 @@ git commit -m "feat(notifications): 悬浮选择栏支持全选/反选并改为 
 ### Task 2: `notifications-page.tsx` 接入全选/反选与悬浮 Dock 避让
 
 **Files:**
+
 - Modify: `apps/web/components/notifications/notifications-page.tsx`
 - Test: `apps/web/components/notifications/notifications-page.test.tsx`
 
 **Interfaces:**
+
 - Consumes：Task 1 产出的 `NotificationSelectionBarProps`（`allSelected`、`onToggleSelectAll`、`onInvertSelect`）。
 - Consumes：`FloatDockPageAnchor` 已有的 `enabled?: boolean` prop（`apps/web/components/float-dock/float-dock-page-anchor.tsx:10`）。
 
@@ -338,35 +342,35 @@ vi.mock("@/components/float-dock", () => ({
 然后在 `describe("NotificationsPage", ...)` 块末尾（最后一个 `it` 之后、闭合 `});` 之前）新增三个用例：
 
 ```tsx
-  it("进入批量选择后悬浮 Dock 被禁用", () => {
-    hook.items = [listItem()];
-    render(<NotificationsPage />);
-    expect(screen.getByTestId("float-dock-anchor").dataset.enabled).toBe("true");
-    fireEvent.click(screen.getByRole("button", { name: "批量选择" }));
-    expect(screen.getByTestId("float-dock-anchor").dataset.enabled).toBe("false");
-  });
+it("进入批量选择后悬浮 Dock 被禁用", () => {
+  hook.items = [listItem()];
+  render(<NotificationsPage />);
+  expect(screen.getByTestId("float-dock-anchor").dataset.enabled).toBe("true");
+  fireEvent.click(screen.getByRole("button", { name: "批量选择" }));
+  expect(screen.getByTestId("float-dock-anchor").dataset.enabled).toBe("false");
+});
 
-  it("点击全选选中所有已加载消息，再次点击清空", () => {
-    hook.items = [listItem({ id: 1 }), listItem({ id: 2 })];
-    render(<NotificationsPage />);
-    fireEvent.click(screen.getByRole("button", { name: "批量选择" }));
-    expect(screen.getByTestId("bar-count").textContent).toBe("0");
-    fireEvent.click(screen.getByText("切换全选"));
-    expect(screen.getByTestId("bar-count").textContent).toBe("2");
-    expect(screen.getByTestId("bar-all-selected").textContent).toBe("true");
-    fireEvent.click(screen.getByText("切换全选"));
-    expect(screen.getByTestId("bar-count").textContent).toBe("0");
-  });
+it("点击全选选中所有已加载消息，再次点击清空", () => {
+  hook.items = [listItem({ id: 1 }), listItem({ id: 2 })];
+  render(<NotificationsPage />);
+  fireEvent.click(screen.getByRole("button", { name: "批量选择" }));
+  expect(screen.getByTestId("bar-count").textContent).toBe("0");
+  fireEvent.click(screen.getByText("切换全选"));
+  expect(screen.getByTestId("bar-count").textContent).toBe("2");
+  expect(screen.getByTestId("bar-all-selected").textContent).toBe("true");
+  fireEvent.click(screen.getByText("切换全选"));
+  expect(screen.getByTestId("bar-count").textContent).toBe("0");
+});
 
-  it("反选翻转当前选中集合", () => {
-    hook.items = [listItem({ id: 1 }), listItem({ id: 2 }), listItem({ id: 3 })];
-    render(<NotificationsPage />);
-    fireEvent.click(screen.getByRole("button", { name: "批量选择" }));
-    fireEvent.click(screen.getByText("切换全选"));
-    expect(screen.getByTestId("bar-count").textContent).toBe("3");
-    fireEvent.click(screen.getByText("反选"));
-    expect(screen.getByTestId("bar-count").textContent).toBe("0");
-  });
+it("反选翻转当前选中集合", () => {
+  hook.items = [listItem({ id: 1 }), listItem({ id: 2 }), listItem({ id: 3 })];
+  render(<NotificationsPage />);
+  fireEvent.click(screen.getByRole("button", { name: "批量选择" }));
+  fireEvent.click(screen.getByText("切换全选"));
+  expect(screen.getByTestId("bar-count").textContent).toBe("3");
+  fireEvent.click(screen.getByText("反选"));
+  expect(screen.getByTestId("bar-count").textContent).toBe("0");
+});
 ```
 
 - [ ] **Step 2: 运行测试确认失败**
@@ -379,33 +383,33 @@ Expected: FAIL —页面还没有 `float-dock-anchor` 测试桩的 `data-enabled
 在 `apps/web/components/notifications/notifications-page.tsx` 中，`toggleSelect`/`exitSelect` 函数之后新增：
 
 ```tsx
-  const allSelected = n.items.length > 0 && selected.size === n.items.length;
+const allSelected = n.items.length > 0 && selected.size === n.items.length;
 
-  function toggleSelectAll() {
-    setSelected(allSelected ? new Set() : new Set(n.items.map((item) => item.id)));
-  }
+function toggleSelectAll() {
+  setSelected(allSelected ? new Set() : new Set(n.items.map((item) => item.id)));
+}
 
-  function invertSelect() {
-    setSelected((cur) => {
-      const next = new Set<number>();
-      for (const item of n.items) {
-        if (!cur.has(item.id)) next.add(item.id);
-      }
-      return next;
-    });
-  }
+function invertSelect() {
+  setSelected((cur) => {
+    const next = new Set<number>();
+    for (const item of n.items) {
+      if (!cur.has(item.id)) next.add(item.id);
+    }
+    return next;
+  });
+}
 ```
 
 把
 
 ```tsx
-      <FloatDockPageAnchor layout={NOTIFICATIONS_FLOAT_DOCK_LAYOUT} />
+<FloatDockPageAnchor layout={NOTIFICATIONS_FLOAT_DOCK_LAYOUT} />
 ```
 
 改为
 
 ```tsx
-      <FloatDockPageAnchor layout={NOTIFICATIONS_FLOAT_DOCK_LAYOUT} enabled={!selecting} />
+<FloatDockPageAnchor layout={NOTIFICATIONS_FLOAT_DOCK_LAYOUT} enabled={!selecting} />
 ```
 
 把 `<main>` 的 `className` 从
@@ -428,28 +432,28 @@ Expected: FAIL —页面还没有 `float-dock-anchor` 测试桩的 `data-enabled
 把
 
 ```tsx
-        {selecting && (
-          <NotificationSelectionBar
-            count={selected.size}
-            onMarkRead={batchRead}
-            onCancel={exitSelect}
-          />
-        )}
+{
+  selecting && (
+    <NotificationSelectionBar count={selected.size} onMarkRead={batchRead} onCancel={exitSelect} />
+  );
+}
 ```
 
 改为
 
 ```tsx
-        {selecting && (
-          <NotificationSelectionBar
-            count={selected.size}
-            allSelected={allSelected}
-            onToggleSelectAll={toggleSelectAll}
-            onInvertSelect={invertSelect}
-            onMarkRead={batchRead}
-            onCancel={exitSelect}
-          />
-        )}
+{
+  selecting && (
+    <NotificationSelectionBar
+      count={selected.size}
+      allSelected={allSelected}
+      onToggleSelectAll={toggleSelectAll}
+      onInvertSelect={invertSelect}
+      onMarkRead={batchRead}
+      onCancel={exitSelect}
+    />
+  );
+}
 ```
 
 （`cn` 已经在文件顶部从 `@repo/ui` 引入，无需新增 import。）

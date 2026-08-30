@@ -35,12 +35,18 @@
         min-height: 100vh;
         background:
           linear-gradient(135deg, rgb(37 99 235 / 7%), transparent 34%),
-          linear-gradient(215deg, rgb(22 163 74 / 8%), transparent 30%),
-          var(--background);
+          linear-gradient(215deg, rgb(22 163 74 / 8%), transparent 30%), var(--background);
         color: var(--foreground);
         font-family:
-          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-          "PingFang SC", "Microsoft YaHei", sans-serif;
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
       }
 
       button,
@@ -737,8 +743,7 @@
                 aria-label="文章标题"
               />
               <textarea class="description" id="articleDescription" aria-label="文章描述">
-从后台写作流出发，重新整理文章的封面、分类、标签与正文编辑，让内容发布更像一个稳定的工作台。</textarea
-              >
+从后台写作流出发，重新整理文章的封面、分类、标签与正文编辑，让内容发布更像一个稳定的工作台。</textarea>
             </section>
 
             <section class="panel editor-shell" aria-label="文章正文">
@@ -753,16 +758,23 @@
                 <span class="separator" aria-hidden="true"></span>
                 <span class="pill">Markdown 兼容</span>
               </div>
-              <article class="editor" id="editor" contenteditable="true" aria-label="文章内容编辑器">
+              <article
+                class="editor"
+                id="editor"
+                contenteditable="true"
+                aria-label="文章内容编辑器"
+              >
                 <h2>为什么文章页需要单独定制编辑器</h2>
                 <p>
                   评论和碎语更强调快速输入，文章编辑则需要更稳定的空间感。正文区域应该更高、更安静，并且让工具栏服务于长文本写作。
                 </p>
                 <blockquote>
-                  这个 demo 里的编辑器只是视觉原型；正式实现会复用公用 inline 类型编辑器，并通过 className 和插入行为做文章页定制。
+                  这个 demo 里的编辑器只是视觉原型；正式实现会复用公用 inline 类型编辑器，并通过
+                  className 和插入行为做文章页定制。
                 </blockquote>
                 <p>
-                  右侧的封面、分类、标签和背景音乐保持 sticky，让作者不需要离开正文上下文就能完成发布配置。
+                  右侧的封面、分类、标签和背景音乐保持
+                  sticky，让作者不需要离开正文上下文就能完成发布配置。
                 </p>
               </article>
               <div class="editor-footer">
@@ -834,8 +846,12 @@
                       aria-label="搜索标签"
                       placeholder="搜索标签"
                     />
-                    <div class="tag-options" id="tagOptions" role="listbox" aria-label="标签候选">
-                    </div>
+                    <div
+                      class="tag-options"
+                      id="tagOptions"
+                      role="listbox"
+                      aria-label="标签候选"
+                    ></div>
                   </div>
                 </div>
               </div>

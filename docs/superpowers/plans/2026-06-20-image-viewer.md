@@ -24,6 +24,7 @@
 ## Task 1: 新增工具栏图标（zoom-in / zoom-out / rotate-cw / download）
 
 **Files:**
+
 - Create: `packages/icons/svg/zoom-in.svg`
 - Create: `packages/icons/svg/zoom-out.svg`
 - Create: `packages/icons/svg/rotate-cw.svg`
@@ -33,6 +34,7 @@
 - [ ] **Step 1: 写 4 个 svg 文件**（沿用现有 stroke/currentColor 风格）
 
 `packages/icons/svg/zoom-in.svg`:
+
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="11" cy="11" r="8"/>
@@ -43,6 +45,7 @@
 ```
 
 `packages/icons/svg/zoom-out.svg`:
+
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="11" cy="11" r="8"/>
@@ -52,6 +55,7 @@
 ```
 
 `packages/icons/svg/rotate-cw.svg`:
+
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
@@ -60,6 +64,7 @@
 ```
 
 `packages/icons/svg/download.svg`:
+
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -95,11 +100,13 @@ git commit -m "feat(icons): 新增 zoom-in/zoom-out/rotate-cw/download 图标"
 ## Task 2: `@repo/ui` ImageViewer 类型定义
 
 **Files:**
+
 - Create: `packages/ui/src/image-viewer/types.ts`
 
 - [ ] **Step 1: 写类型文件**
 
 `packages/ui/src/image-viewer/types.ts`:
+
 ```ts
 /** 单张可预览图片。结构保持最小，预留 caption/downloadUrl/srcSet 等未来字段。 */
 export interface ImageItem {
@@ -144,12 +151,14 @@ git commit -m "feat(image-viewer): 定义 ImageItem/ViewerTransform/Props 类型
 ## Task 3: 手势变换状态机 `useViewerTransform`（核心）
 
 **Files:**
+
 - Create: `packages/ui/src/image-viewer/internal/use-viewer-transform.ts`
 - Test: `packages/ui/src/image-viewer/internal/use-viewer-transform.test.ts`
 
 - [ ] **Step 1: 写失败测试**
 
 `packages/ui/src/image-viewer/internal/use-viewer-transform.test.ts`:
+
 ```ts
 import { describe, it, expect } from "vitest";
 import { renderHook, act } from "@testing-library/react";
@@ -239,6 +248,7 @@ Expected: FAIL（`use-viewer-transform` 模块不存在）。
 - [ ] **Step 3: 实现 hook**
 
 `packages/ui/src/image-viewer/internal/use-viewer-transform.ts`:
+
 ```ts
 import { useCallback, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent } from "react";
@@ -378,11 +388,13 @@ git commit -m "feat(image-viewer): 实现手势缩放/平移/旋转状态机"
 ## Task 4: 工具栏 `ImageViewerToolbar`
 
 **Files:**
+
 - Create: `packages/ui/src/image-viewer/internal/toolbar.tsx`
 
 - [ ] **Step 1: 写工具栏组件**（无独立测试，行为由 Task 5 的组件测试覆盖）
 
 `packages/ui/src/image-viewer/internal/toolbar.tsx`:
+
 ```tsx
 "use client";
 
@@ -455,6 +467,7 @@ git commit -m "feat(image-viewer): 新增底部操作工具栏"
 ## Task 5: 主组件 `ImageViewer` + barrel + 导出
 
 **Files:**
+
 - Create: `packages/ui/src/image-viewer/image-viewer.tsx`
 - Create: `packages/ui/src/image-viewer/index.ts`
 - Test: `packages/ui/src/image-viewer/image-viewer.test.tsx`
@@ -463,6 +476,7 @@ git commit -m "feat(image-viewer): 新增底部操作工具栏"
 - [ ] **Step 1: 写失败测试**
 
 `packages/ui/src/image-viewer/image-viewer.test.tsx`:
+
 ```tsx
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
@@ -498,7 +512,13 @@ describe("ImageViewer", () => {
     const onIndexChange = vi.fn();
     const user = userEvent.setup();
     render(
-      <ImageViewer images={imgs} index={0} isOpen onClose={() => {}} onIndexChange={onIndexChange} />,
+      <ImageViewer
+        images={imgs}
+        index={0}
+        isOpen
+        onClose={() => {}}
+        onIndexChange={onIndexChange}
+      />,
     );
     await user.click(screen.getByLabelText("下一张"));
     expect(onIndexChange).toHaveBeenCalledWith(1);
@@ -526,6 +546,7 @@ Expected: FAIL（`image-viewer` 组件不存在）。
 - [ ] **Step 3: 写主组件**
 
 `packages/ui/src/image-viewer/image-viewer.tsx`:
+
 ```tsx
 "use client";
 
@@ -609,10 +630,20 @@ export function ImageViewer({ images, index, isOpen, onClose, onIndexChange }: I
 
       {hasGallery && (
         <>
-          <button type="button" aria-label="上一张" className={`${NAV_BTN} left-4`} onClick={goPrev}>
+          <button
+            type="button"
+            aria-label="上一张"
+            className={`${NAV_BTN} left-4`}
+            onClick={goPrev}
+          >
             <SvgIcon name="chevron-left" size={24} />
           </button>
-          <button type="button" aria-label="下一张" className={`${NAV_BTN} right-4`} onClick={goNext}>
+          <button
+            type="button"
+            aria-label="下一张"
+            className={`${NAV_BTN} right-4`}
+            onClick={goNext}
+          >
             <SvgIcon name="chevron-right" size={24} />
           </button>
         </>
@@ -634,6 +665,7 @@ export function ImageViewer({ images, index, isOpen, onClose, onIndexChange }: I
 - [ ] **Step 4: 写 barrel**
 
 `packages/ui/src/image-viewer/index.ts`:
+
 ```ts
 export { ImageViewer } from "./image-viewer";
 export type { ImageItem, ImageViewerProps, ViewerTransform } from "./types";
@@ -642,6 +674,7 @@ export type { ImageItem, ImageViewerProps, ViewerTransform } from "./types";
 - [ ] **Step 5: 追加到包入口**
 
 在 `packages/ui/src/index.ts` 末尾追加：
+
 ```ts
 export {
   ImageViewer,
@@ -655,6 +688,7 @@ export {
 
 Run: `pnpm --filter @repo/ui test -- image-viewer`
 Expected: PASS。
+
 > 若 happy-dom 缺少 `setPointerCapture`，hook 已用可选链 `?.` 保护，不影响测试。
 
 - [ ] **Step 7: 类型检查**
@@ -674,12 +708,14 @@ git commit -m "feat(image-viewer): 实现受控预览主组件并对外导出"
 ## Task 6: `apps/web` Zustand store `useImageViewer`
 
 **Files:**
+
 - Create: `apps/web/store/use-image-viewer.ts`
 - Test: `apps/web/store/use-image-viewer.test.ts`
 
 - [ ] **Step 1: 写失败测试**
 
 `apps/web/store/use-image-viewer.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeEach } from "vitest";
 import { useImageViewer } from "./use-image-viewer";
@@ -734,6 +770,7 @@ Expected: FAIL（store 不存在）。
 - [ ] **Step 3: 实现 store**
 
 `apps/web/store/use-image-viewer.ts`:
+
 ```ts
 import { create } from "zustand";
 import type { ImageItem } from "@repo/ui";
@@ -780,12 +817,14 @@ git commit -m "feat(web): 新增图片预览全局 store"
 ## Task 7: `ImageViewerHost` 并挂载到全局
 
 **Files:**
+
 - Create: `apps/web/components/common/image-viewer-host.tsx`
 - Modify: `apps/web/app/providers/global-modals.tsx`
 
 - [ ] **Step 1: 写 host 组件**
 
 `apps/web/components/common/image-viewer-host.tsx`:
+
 ```tsx
 "use client";
 
@@ -814,6 +853,7 @@ export function ImageViewerHost() {
 - [ ] **Step 2: 挂载到 GlobalModals**
 
 修改 `apps/web/app/providers/global-modals.tsx`，导入并在 fragment 内加 `<ImageViewerHost />`：
+
 ```tsx
 "use client";
 
@@ -853,12 +893,14 @@ git commit -m "feat(web): 全局挂载图片预览 host"
 ## Task 8: `MarkdownContent` 图片点击委托 + `onImagePreview`
 
 **Files:**
+
 - Modify: `packages/markdown/src/markdown-content.tsx`
 - Test: `packages/markdown/src/markdown-content.test.tsx`（追加用例）
 
 - [ ] **Step 1: 追加失败测试**
 
 在 `packages/markdown/src/markdown-content.test.tsx` 末尾追加：
+
 ```tsx
 import { fireEvent } from "@testing-library/react";
 
@@ -885,6 +927,7 @@ describe("MarkdownContent 图片预览", () => {
   });
 });
 ```
+
 > 若该测试文件顶部尚未引入 `vi` / `screen` / `render`，沿用文件已有 import 即可（已存在）。
 
 - [ ] **Step 2: 运行测试确认失败**
@@ -897,6 +940,7 @@ Expected: FAIL（`onImagePreview` 未实现）。
 在 `packages/markdown/src/markdown-content.tsx` 中：
 
 (a) 扩展 props 接口，新增字段：
+
 ```tsx
 export interface MarkdownContentProps {
   /** 已由 markdownToHtml 渲染好的 HTML 字符串 */
@@ -909,11 +953,13 @@ export interface MarkdownContentProps {
 ```
 
 (b) 函数签名解构加入 `onImagePreview`：
+
 ```tsx
 export function MarkdownContent({ html, variant = "article", className, onImagePreview }: MarkdownContentProps) {
 ```
 
 (c) 在 `handleClick` 内、复制按钮逻辑**之前**插入图片分支：
+
 ```tsx
     const handleClick = (event: MouseEvent) => {
       // 图片预览：点击正文 <img> 收集同容器全部图片
@@ -934,21 +980,19 @@ export function MarkdownContent({ html, variant = "article", className, onImageP
 ```
 
 (d) effect 依赖数组由 `[]` 改为 `[onImagePreview]`：
+
 ```tsx
   }, [onImagePreview]);
 ```
 
 (e) 容器 className 在有回调时加图片光标提示：
+
 ```tsx
-    <div
-      ref={containerRef}
-      className={clsx(
-        VARIANT_CLASSES[variant],
-        onImagePreview && "[&_img]:cursor-zoom-in",
-        className,
-      )}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+<div
+  ref={containerRef}
+  className={clsx(VARIANT_CLASSES[variant], onImagePreview && "[&_img]:cursor-zoom-in", className)}
+  dangerouslySetInnerHTML={{ __html: html }}
+/>
 ```
 
 - [ ] **Step 4: 运行测试确认通过**
@@ -973,6 +1017,7 @@ git commit -m "feat(markdown): MarkdownContent 支持图片点击预览回调"
 ## Task 9: `PreviewableMarkdown` 包装组件并替换调用点
 
 **Files:**
+
 - Create: `apps/web/components/common/previewable-markdown.tsx`
 - Test: `apps/web/components/common/previewable-markdown.test.tsx`
 - Modify: `apps/web/components/article-detail/article-content.tsx`
@@ -983,6 +1028,7 @@ git commit -m "feat(markdown): MarkdownContent 支持图片点击预览回调"
 - [ ] **Step 1: 写失败测试**
 
 `apps/web/components/common/previewable-markdown.test.tsx`:
+
 ```tsx
 import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
@@ -1013,6 +1059,7 @@ Expected: FAIL（组件不存在）。
 - [ ] **Step 3: 写包装组件**
 
 `apps/web/components/common/previewable-markdown.tsx`:
+
 ```tsx
 "use client";
 
@@ -1064,12 +1111,14 @@ git commit -m "feat(web): 正文/评论/留言板 markdown 图片接入预览"
 ## Task 10: 文章封面点击预览
 
 **Files:**
+
 - Modify: `apps/web/components/article-detail/article-hero.tsx`
 - Test: `apps/web/components/article-detail/article-hero.test.tsx`（追加用例）
 
 - [ ] **Step 1: 追加失败测试**
 
 在 `apps/web/components/article-detail/article-hero.test.tsx` 末尾追加：
+
 ```tsx
 import { fireEvent } from "@testing-library/react";
 import { useImageViewer } from "@/store/use-image-viewer";
@@ -1089,6 +1138,7 @@ describe("ArticleHero 封面预览", () => {
   });
 });
 ```
+
 > `base` 为该测试文件已存在的基础 article fixture（见文件顶部）。如需要，沿用其已有 import（`render`、`screen`、`describe`、`it`、`expect`）。
 
 - [ ] **Step 2: 运行测试确认失败**
@@ -1101,32 +1151,38 @@ Expected: FAIL（无 "查看封面大图" 按钮）。
 在 `apps/web/components/article-detail/article-hero.tsx`：
 
 (a) 顶部加 import 与 store hook：
+
 ```tsx
 import { useImageViewer } from "@/store/use-image-viewer";
 ```
+
 在组件体内（其他 hooks 旁）：
+
 ```tsx
-  const openViewer = useImageViewer((s) => s.open);
+const openViewer = useImageViewer((s) => s.open);
 ```
 
 (b) 把封面 `<div>` 容器换成可点击 `<button>`：
+
 ```tsx
-      {article.cover_img_url && (
-        <button
-          type="button"
-          aria-label="查看封面大图"
-          onClick={() => openViewer([{ src: article.cover_img_url!, alt: article.title }], 0)}
-          className="group relative mb-8 block aspect-video w-full cursor-zoom-in overflow-hidden rounded-2xl"
-        >
-          <LoadingImage
-            src={article.cover_img_url}
-            alt={article.title}
-            fill
-            className="object-cover object-center"
-            priority
-          />
-        </button>
-      )}
+{
+  article.cover_img_url && (
+    <button
+      type="button"
+      aria-label="查看封面大图"
+      onClick={() => openViewer([{ src: article.cover_img_url!, alt: article.title }], 0)}
+      className="group relative mb-8 block aspect-video w-full cursor-zoom-in overflow-hidden rounded-2xl"
+    >
+      <LoadingImage
+        src={article.cover_img_url}
+        alt={article.title}
+        fill
+        className="object-cover object-center"
+        priority
+      />
+    </button>
+  );
+}
 ```
 
 - [ ] **Step 4: 运行测试确认通过**
@@ -1155,20 +1211,23 @@ git commit -m "feat(web): 文章封面支持点击全屏预览"
 - [ ] **Step 1: 全仓库类型 + lint + 测试**
 
 Run:
+
 ```bash
 pnpm -r --if-present check-types && pnpm -r --if-present lint && pnpm -r --if-present test
 ```
+
 Expected: 全部 PASS（pre-commit 也会跑 check-types/lint）。
 
 - [ ] **Step 2: 浏览器验证（preview 工具）**
 
 启动 web dev server，打开一篇含正文图片且有封面的文章：
+
 - 点击封面 → 全屏预览打开，可滚轮缩放、拖拽、旋转、ESC/关闭按钮关闭。
 - 点击正文图片 → 预览打开。
 - 缩小到底限 1×、放大到上限 5×。
 - 移动端尺寸（preview_resize）下双击放大、捏合（如工具支持）；至少验证布局占满屏。
 - 评论区图片点击可预览。
-截图留证（preview_screenshot）。
+  截图留证（preview_screenshot）。
 
 - [ ] **Step 3: 最终提交（若验证中有微调）**
 
@@ -1176,6 +1235,7 @@ Expected: 全部 PASS（pre-commit 也会跑 check-types/lint）。
 git add -A
 git commit -m "test(image-viewer): 收尾校验与样式微调"
 ```
+
 > 若 Step 1/2 全绿且无改动，跳过本步。
 
 ---

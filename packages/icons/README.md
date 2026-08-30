@@ -91,7 +91,7 @@ import { SvgIcon } from "@repo/icons";
 
 ## 内置图标
 
-| 名称 | 名称 | 名称 | 名称 |
-|---|---|---|---|
-| `home` | `user` | `search` | `plus` |
+| 名称   | 名称    | 名称           | 名称            |
+| ------ | ------- | -------------- | --------------- |
+| `home` | `user`  | `search`       | `plus`          |
 | `menu` | `close` | `chevron-left` | `chevron-right` |

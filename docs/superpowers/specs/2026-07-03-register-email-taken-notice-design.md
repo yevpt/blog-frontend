@@ -2,6 +2,7 @@
 
 日期：2026-07-03
 范围：
+
 - 后端 `../blog-backend`：`internal/service/auth/auth.go`、`internal/handler/auth/auth.go`、`pkg/response/response.go`
 - 前端本仓库：`apps/web/hooks/use-captcha-token.tsx`、`apps/web/hooks/use-register-form.tsx`、`apps/web/components/auth/register-view.tsx`
 
@@ -155,21 +156,25 @@ onError: (message, errorCode) => {
 在现有 `apiError` 提示（第 245-249 行）下方，`emailTaken` 为真时追加一个「去登录」按钮，直接调用组件已有的 `onSwitchToLogin` prop（顶部「登录」按钮已在用同一个 prop，无需新增 prop 或跳转逻辑）：
 
 ```tsx
-{apiError && (
-  <p role="alert" className="mt-3 text-[12px] leading-relaxed text-destructive/80">
-    {apiError}
-  </p>
-)}
-{emailTaken && (
-  <Button
-    type="button"
-    variant="text"
-    onPress={onSwitchToLogin}
-    className="mt-1.5 h-auto px-0 text-[12px] text-primary hover:underline"
-  >
-    去登录
-  </Button>
-)}
+{
+  apiError && (
+    <p role="alert" className="mt-3 text-[12px] leading-relaxed text-destructive/80">
+      {apiError}
+    </p>
+  );
+}
+{
+  emailTaken && (
+    <Button
+      type="button"
+      variant="text"
+      onPress={onSwitchToLogin}
+      className="mt-1.5 h-auto px-0 text-[12px] text-primary hover:underline"
+    >
+      去登录
+    </Button>
+  );
+}
 ```
 
 具体 className 以实现时对照现有按钮风格微调为准，不追求逐字匹配。

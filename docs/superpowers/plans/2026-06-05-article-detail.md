@@ -12,41 +12,42 @@
 
 ## 文件清单
 
-| 路径 | 操作 | 说明 |
-|------|------|------|
-| `packages/styles/src/base.css` | 修改 | 添加 `@plugin "@tailwindcss/typography"` |
-| `packages/api/src/types/article.ts` | 修改 | 追加 `ArticleDetailResp` |
-| `packages/api/src/index.ts` | 修改 | 导出 `ArticleDetailResp` |
-| `packages/api/src/client.ts` | 修改 | 追加 `articles.getDetail` / `articles.view` |
-| `packages/api/src/client.test.ts` | 修改 | 补充上述方法的测试 |
-| `apps/web/lib/markdown.ts` | 新建 | `markdownToHtml` + `extractTocFromHtml` |
-| `apps/web/hooks/use-scroll-progress.ts` | 新建 | 返回 0~1 阅读进度 |
-| `apps/web/hooks/use-scroll-progress.test.ts` | 新建 | |
-| `apps/web/hooks/use-active-heading.ts` | 新建 | IntersectionObserver 追踪当前章节 |
-| `apps/web/hooks/use-active-heading.test.ts` | 新建 | |
-| `apps/web/app/api/articles/[id]/view/route.ts` | 新建 | `POST /api/articles/[id]/view` |
-| `apps/web/app/api/articles/[id]/view/route.test.ts` | 新建 | |
-| `apps/web/components/article-detail/article-hero.tsx` | 新建 | 全宽 Hero 封面区 |
-| `apps/web/components/article-detail/article-hero.test.tsx` | 新建 | |
-| `apps/web/components/article-detail/article-content.tsx` | 新建 | Markdown HTML 渲染 + 进度条 |
-| `apps/web/components/article-detail/article-content.test.tsx` | 新建 | |
-| `apps/web/components/article-detail/article-toc.tsx` | 新建 | 目录（`variant` prop 区分 mobile/desktop） |
-| `apps/web/components/article-detail/article-toc.test.tsx` | 新建 | |
-| `apps/web/components/article-detail/music-player.tsx` | 新建 | 迷你音乐播放器 |
-| `apps/web/components/article-detail/music-player.test.tsx` | 新建 | |
-| `apps/web/components/article-detail/article-float-actions.tsx` | 新建 | 右下角浮动操作 + 阅读上报 |
-| `apps/web/components/article-detail/article-float-actions.test.tsx` | 新建 | |
-| `apps/web/components/article-detail/article-comments.tsx` | 新建 | CommentSection inline wrapper |
-| `apps/web/components/article-detail/article-comments.test.tsx` | 新建 | |
-| `apps/web/components/article-detail/index.ts` | 新建 | barrel export |
-| `apps/web/app/articles/[id]/page.tsx` | 新建 | SSR 页面入口 |
-| `apps/web/app/articles/[id]/page.test.tsx` | 新建 | |
+| 路径                                                                | 操作 | 说明                                        |
+| ------------------------------------------------------------------- | ---- | ------------------------------------------- |
+| `packages/styles/src/base.css`                                      | 修改 | 添加 `@plugin "@tailwindcss/typography"`    |
+| `packages/api/src/types/article.ts`                                 | 修改 | 追加 `ArticleDetailResp`                    |
+| `packages/api/src/index.ts`                                         | 修改 | 导出 `ArticleDetailResp`                    |
+| `packages/api/src/client.ts`                                        | 修改 | 追加 `articles.getDetail` / `articles.view` |
+| `packages/api/src/client.test.ts`                                   | 修改 | 补充上述方法的测试                          |
+| `apps/web/lib/markdown.ts`                                          | 新建 | `markdownToHtml` + `extractTocFromHtml`     |
+| `apps/web/hooks/use-scroll-progress.ts`                             | 新建 | 返回 0~1 阅读进度                           |
+| `apps/web/hooks/use-scroll-progress.test.ts`                        | 新建 |                                             |
+| `apps/web/hooks/use-active-heading.ts`                              | 新建 | IntersectionObserver 追踪当前章节           |
+| `apps/web/hooks/use-active-heading.test.ts`                         | 新建 |                                             |
+| `apps/web/app/api/articles/[id]/view/route.ts`                      | 新建 | `POST /api/articles/[id]/view`              |
+| `apps/web/app/api/articles/[id]/view/route.test.ts`                 | 新建 |                                             |
+| `apps/web/components/article-detail/article-hero.tsx`               | 新建 | 全宽 Hero 封面区                            |
+| `apps/web/components/article-detail/article-hero.test.tsx`          | 新建 |                                             |
+| `apps/web/components/article-detail/article-content.tsx`            | 新建 | Markdown HTML 渲染 + 进度条                 |
+| `apps/web/components/article-detail/article-content.test.tsx`       | 新建 |                                             |
+| `apps/web/components/article-detail/article-toc.tsx`                | 新建 | 目录（`variant` prop 区分 mobile/desktop）  |
+| `apps/web/components/article-detail/article-toc.test.tsx`           | 新建 |                                             |
+| `apps/web/components/article-detail/music-player.tsx`               | 新建 | 迷你音乐播放器                              |
+| `apps/web/components/article-detail/music-player.test.tsx`          | 新建 |                                             |
+| `apps/web/components/article-detail/article-float-actions.tsx`      | 新建 | 右下角浮动操作 + 阅读上报                   |
+| `apps/web/components/article-detail/article-float-actions.test.tsx` | 新建 |                                             |
+| `apps/web/components/article-detail/article-comments.tsx`           | 新建 | CommentSection inline wrapper               |
+| `apps/web/components/article-detail/article-comments.test.tsx`      | 新建 |                                             |
+| `apps/web/components/article-detail/index.ts`                       | 新建 | barrel export                               |
+| `apps/web/app/articles/[id]/page.tsx`                               | 新建 | SSR 页面入口                                |
+| `apps/web/app/articles/[id]/page.test.tsx`                          | 新建 |                                             |
 
 ---
 
 ## Task 1: 安装依赖 + 启用 Tailwind Typography
 
 **Files:**
+
 - Modify: `packages/styles/src/base.css`
 
 - [ ] **Step 1: 安装 remark/rehype 和 typography**
@@ -87,6 +88,7 @@ git commit -m "chore(web): 安装 remark/rehype/typography 依赖"
 ## Task 2: packages/api — ArticleDetailResp 类型
 
 **Files:**
+
 - Modify: `packages/api/src/types/article.ts`
 - Modify: `packages/api/src/index.ts`
 
@@ -121,6 +123,7 @@ export interface ArticleDetailResp {
 - [ ] **Step 2: 在 `packages/api/src/index.ts` 添加导出**
 
 找到现有的 article 类型导出块：
+
 ```typescript
 export type {
   ArticleRelationResp,
@@ -132,6 +135,7 @@ export type {
 ```
 
 替换为：
+
 ```typescript
 export type {
   ArticleRelationResp,
@@ -163,6 +167,7 @@ git commit -m "feat(api): 新增 ArticleDetailResp 类型"
 ## Task 3: packages/api — client 方法扩展（getDetail / view）
 
 **Files:**
+
 - Modify: `packages/api/src/client.ts`
 - Modify: `packages/api/src/client.test.ts`
 
@@ -171,41 +176,44 @@ git commit -m "feat(api): 新增 ArticleDetailResp 类型"
 在 `packages/api/src/client.test.ts` 最后一个 `it(...)` 之后，`describe` 闭合括号之前追加：
 
 ```typescript
-  it("articles.getDetail 调用正确的端点", async () => {
-    const detail = {
-      id: 1, title: "Test", content: "# Hello",
-      user_id: 1, status: 1, comment_status: 1,
-      read_count: 0, like_count: 0, comment_count: 0,
-      is_recommended: false,
-      created_at: "2026-01-01", updated_at: "2026-01-01",
-    };
-    vi.mocked(global.fetch).mockResolvedValue(
-      mockResponse({ code: 0, message: "ok", data: detail }),
-    );
-    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+it("articles.getDetail 调用正确的端点", async () => {
+  const detail = {
+    id: 1,
+    title: "Test",
+    content: "# Hello",
+    user_id: 1,
+    status: 1,
+    comment_status: 1,
+    read_count: 0,
+    like_count: 0,
+    comment_count: 0,
+    is_recommended: false,
+    created_at: "2026-01-01",
+    updated_at: "2026-01-01",
+  };
+  vi.mocked(global.fetch).mockResolvedValue(mockResponse({ code: 0, message: "ok", data: detail }));
+  const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
 
-    const result = await client.articles.getDetail(1);
+  const result = await client.articles.getDetail(1);
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      "http://api/articles/1",
-      expect.objectContaining({ method: "GET" }),
-    );
-    expect(result.title).toBe("Test");
-  });
+  expect(global.fetch).toHaveBeenCalledWith(
+    "http://api/articles/1",
+    expect.objectContaining({ method: "GET" }),
+  );
+  expect(result.title).toBe("Test");
+});
 
-  it("articles.view 调用正确的端点", async () => {
-    vi.mocked(global.fetch).mockResolvedValue(
-      mockResponse({ code: 0, message: "ok", data: null }),
-    );
-    const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
+it("articles.view 调用正确的端点", async () => {
+  vi.mocked(global.fetch).mockResolvedValue(mockResponse({ code: 0, message: "ok", data: null }));
+  const client = createApiClient({ baseUrl: "http://api", getAccessToken: () => null });
 
-    await client.articles.view(42);
+  await client.articles.view(42);
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      "http://api/articles/42/view",
-      expect.objectContaining({ method: "POST" }),
-    );
-  });
+  expect(global.fetch).toHaveBeenCalledWith(
+    "http://api/articles/42/view",
+    expect.objectContaining({ method: "POST" }),
+  );
+});
 ```
 
 - [ ] **Step 2: 运行测试，确认失败**
@@ -219,11 +227,18 @@ Expected: FAIL — `client.articles.getDetail is not a function`
 - [ ] **Step 3: 修改 `packages/api/src/client.ts`**
 
 ① 顶部 import 改为：
+
 ```typescript
-import type { ArticleDetailResp, ArticleLikeResp, ArticleListReq, ArticlePageResp } from "./types/article";
+import type {
+  ArticleDetailResp,
+  ArticleLikeResp,
+  ArticleListReq,
+  ArticlePageResp,
+} from "./types/article";
 ```
 
 ② 在 `articles` 对象中，`toggleLike` 方法之后追加：
+
 ```typescript
       /** 获取文章详情（公开接口，携带可选登录态以返回 is_liked） */
       getDetail: (id: number) =>
@@ -253,6 +268,7 @@ git commit -m "feat(api): 新增 articles.getDetail / articles.view 方法"
 ## Task 4: apps/web — Markdown 工具函数
 
 **Files:**
+
 - Create: `apps/web/lib/markdown.ts`
 
 - [ ] **Step 1: 创建 `apps/web/lib/markdown.ts`**
@@ -324,6 +340,7 @@ git commit -m "feat(web): 新增 Markdown→HTML 转换工具和 TOC 提取函�
 ## Task 5: Hook — useScrollProgress
 
 **Files:**
+
 - Create: `apps/web/hooks/use-scroll-progress.ts`
 - Create: `apps/web/hooks/use-scroll-progress.test.ts`
 
@@ -338,10 +355,12 @@ import { useScrollProgress } from "./use-scroll-progress";
 describe("useScrollProgress", () => {
   beforeEach(() => {
     Object.defineProperty(document.documentElement, "scrollHeight", {
-      configurable: true, value: 1000,
+      configurable: true,
+      value: 1000,
     });
     Object.defineProperty(document.documentElement, "clientHeight", {
-      configurable: true, value: 200,
+      configurable: true,
+      value: 200,
     });
     Object.defineProperty(window, "scrollY", { configurable: true, writable: true, value: 0 });
   });
@@ -396,7 +415,10 @@ export function useScrollProgress(): number {
     const update = () => {
       const scrollable =
         document.documentElement.scrollHeight - document.documentElement.clientHeight;
-      if (scrollable <= 0) { setProgress(0); return; }
+      if (scrollable <= 0) {
+        setProgress(0);
+        return;
+      }
       setProgress(Math.min(1, Math.max(0, window.scrollY / scrollable)));
     };
     window.addEventListener("scroll", update, { passive: true });
@@ -428,6 +450,7 @@ git commit -m "feat(web): 新增 useScrollProgress hook"
 ## Task 6: Hook — useActiveHeading
 
 **Files:**
+
 - Create: `apps/web/hooks/use-active-heading.ts`
 - Create: `apps/web/hooks/use-active-heading.test.ts`
 
@@ -480,7 +503,10 @@ export function useActiveHeading(ids: string[]): string | null {
   const [activeId, setActiveId] = useState<string | null>(ids[0] ?? null);
 
   useEffect(() => {
-    if (ids.length === 0) { setActiveId(null); return; }
+    if (ids.length === 0) {
+      setActiveId(null);
+      return;
+    }
     setActiveId(ids[0]);
 
     const observer = new IntersectionObserver(
@@ -526,6 +552,7 @@ git commit -m "feat(web): 新增 useActiveHeading hook（TOC 实时追踪）"
 ## Task 7: Route Handler — POST /api/articles/[id]/view
 
 **Files:**
+
 - Create: `apps/web/app/api/articles/[id]/view/route.ts`
 - Create: `apps/web/app/api/articles/[id]/view/route.test.ts`
 
@@ -590,10 +617,7 @@ Create `apps/web/app/api/articles/[id]/view/route.ts`:
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerApiClient } from "@/lib/server-api";
 
-export async function POST(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const articleId = Number(id);
   if (!Number.isInteger(articleId) || articleId <= 0) {
@@ -629,6 +653,7 @@ git commit -m "feat(web): 新增 POST /api/articles/[id]/view 阅读上报接口
 ## Task 8: 组件 — ArticleHero
 
 **Files:**
+
 - Create: `apps/web/components/article-detail/article-hero.tsx`
 - Create: `apps/web/components/article-detail/article-hero.test.tsx`
 
@@ -705,7 +730,9 @@ function estimateReadingMinutes(content: string): number {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("zh-CN", {
-    year: "numeric", month: "2-digit", day: "2-digit",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
   });
 }
 
@@ -779,6 +806,7 @@ git commit -m "feat(web): 新增 ArticleHero 组件"
 ## Task 9: 组件 — ArticleContent
 
 **Files:**
+
 - Create: `apps/web/components/article-detail/article-content.tsx`
 - Create: `apps/web/components/article-detail/article-content.test.tsx`
 
@@ -863,6 +891,7 @@ git commit -m "feat(web): 新增 ArticleContent 组件（Markdown 渲染 + 进�
 ## Task 10: 组件 — ArticleToc
 
 **Files:**
+
 - Create: `apps/web/components/article-detail/article-toc.tsx`
 - Create: `apps/web/components/article-detail/article-toc.test.tsx`
 
@@ -960,9 +989,7 @@ export function ArticleToc({ items, variant }: ArticleTocProps) {
           <button
             onClick={() => handleClick(item.id)}
             className={`w-full rounded px-2 py-1 text-left transition-colors hover:text-primary ${
-              activeId === item.id
-                ? "font-semibold text-primary"
-                : "text-muted-foreground"
+              activeId === item.id ? "font-semibold text-primary" : "text-muted-foreground"
             }`}
           >
             {item.text}
@@ -1021,6 +1048,7 @@ git commit -m "feat(web): 新增 ArticleToc 组件（mobile 折叠 / desktop sti
 ## Task 11: 组件 — MusicPlayer
 
 **Files:**
+
 - Create: `apps/web/components/article-detail/music-player.tsx`
 - Create: `apps/web/components/article-detail/music-player.test.tsx`
 
@@ -1096,14 +1124,23 @@ export function MusicPlayer({ url, name }: MusicPlayerProps) {
   const [progress, setProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => () => { audioRef.current?.pause(); }, []);
+  useEffect(
+    () => () => {
+      audioRef.current?.pause();
+    },
+    [],
+  );
 
   if (!url) return null;
 
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
-    if (playing) { audio.pause(); } else { void audio.play(); }
+    if (playing) {
+      audio.pause();
+    } else {
+      void audio.play();
+    }
     setPlaying(!playing);
   };
 
@@ -1125,9 +1162,15 @@ export function MusicPlayer({ url, name }: MusicPlayerProps) {
     <div className="relative">
       {open && (
         <div className="absolute bottom-[calc(100%+8px)] right-0 w-56 rounded-xl border border-border bg-card p-3 shadow-lg">
-          <p className="mb-2 truncate text-xs font-semibold text-foreground">{name ?? "背景音乐"}</p>
+          <p className="mb-2 truncate text-xs font-semibold text-foreground">
+            {name ?? "背景音乐"}
+          </p>
           <input
-            type="range" min={0} max={1} step={0.01} value={progress}
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={progress}
             onChange={handleSeek}
             className="mb-2 w-full accent-primary"
           />
@@ -1139,7 +1182,9 @@ export function MusicPlayer({ url, name }: MusicPlayerProps) {
           </button>
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
           <audio
-            ref={audioRef} src={url} loop
+            ref={audioRef}
+            src={url}
+            loop
             onTimeUpdate={handleTimeUpdate}
             onEnded={() => setPlaying(false)}
           />
@@ -1179,6 +1224,7 @@ git commit -m "feat(web): 新增 MusicPlayer 组件"
 ## Task 12: 组件 — ArticleFloatActions（含阅读上报）
 
 **Files:**
+
 - Create: `apps/web/components/article-detail/article-float-actions.tsx`
 - Create: `apps/web/components/article-detail/article-float-actions.test.tsx`
 
@@ -1288,12 +1334,18 @@ export function ArticleFloatActions({
   }, []);
 
   const handleLike = useCallback(async () => {
-    if (!userId) { openLoginModal(); return; }
+    if (!userId) {
+      openLoginModal();
+      return;
+    }
     if (isLiking) return;
     setIsLiking(true);
     try {
       const res = await fetch(`/api/articles/${articleId}/like`, { method: "POST" });
-      if (res.status === 401) { openLoginModal(); return; }
+      if (res.status === 401) {
+        openLoginModal();
+        return;
+      }
       if (!res.ok) throw new Error("failed");
       const data: ArticleLikeResp = await res.json();
       setIsLiked(data.is_liked);
@@ -1321,7 +1373,9 @@ export function ArticleFloatActions({
             : "border border-border bg-card text-muted-foreground hover:bg-muted"
         }`}
       >
-        <span aria-hidden className="text-base">{isLiked ? "♥" : "♡"}</span>
+        <span aria-hidden className="text-base">
+          {isLiked ? "♥" : "♡"}
+        </span>
       </button>
 
       <button
@@ -1331,7 +1385,9 @@ export function ArticleFloatActions({
           showScrollTop ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
-        <span aria-hidden className="text-sm font-bold">↑</span>
+        <span aria-hidden className="text-sm font-bold">
+          ↑
+        </span>
       </button>
     </div>
   );
@@ -1358,6 +1414,7 @@ git commit -m "feat(web): 新增 ArticleFloatActions 组件（点赞/音乐/回�
 ## Task 13: 组件 — ArticleComments + Barrel Export
 
 **Files:**
+
 - Create: `apps/web/components/article-detail/article-comments.tsx`
 - Create: `apps/web/components/article-detail/article-comments.test.tsx`
 - Create: `apps/web/components/article-detail/index.ts`
@@ -1465,6 +1522,7 @@ git commit -m "feat(web): 新增 ArticleComments wrapper 和 barrel export"
 ## Task 14: 页面 — app/articles/[id]/page.tsx
 
 **Files:**
+
 - Create: `apps/web/app/articles/[id]/page.tsx`
 - Create: `apps/web/app/articles/[id]/page.test.tsx`
 

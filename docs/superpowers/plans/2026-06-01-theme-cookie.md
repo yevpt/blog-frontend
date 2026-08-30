@@ -12,20 +12,21 @@
 
 ## File Map
 
-| 状态 | 文件 | 说明 |
-|------|------|------|
-| M | `packages/styles/src/base.css` | @custom-variant dark + @variant dark，删除 .dark 块 |
-| M | `apps/web/lib/theme-init.ts` | 更新 THEME_CRITICAL_CSS，删除 THEME_INIT_SCRIPT |
-| M | `apps/web/lib/theme-init.test.ts` | 删除 THEME_INIT_SCRIPT 测试，补充 CSS 媒体查询断言 |
-| M | `apps/web/app/layout.tsx` | 读 Cookie → html class，`<style>` 替换 `<script>` |
-| M | `apps/web/app/providers/theme-provider.tsx` | Cookie 读写，applyTheme 管理 dark/light/无 class |
-| M | `apps/web/app/providers/theme-provider.test.tsx` | localStorage → Cookie，补充 system class 行为测试 |
+| 状态 | 文件                                             | 说明                                                |
+| ---- | ------------------------------------------------ | --------------------------------------------------- |
+| M    | `packages/styles/src/base.css`                   | @custom-variant dark + @variant dark，删除 .dark 块 |
+| M    | `apps/web/lib/theme-init.ts`                     | 更新 THEME_CRITICAL_CSS，删除 THEME_INIT_SCRIPT     |
+| M    | `apps/web/lib/theme-init.test.ts`                | 删除 THEME_INIT_SCRIPT 测试，补充 CSS 媒体查询断言  |
+| M    | `apps/web/app/layout.tsx`                        | 读 Cookie → html class，`<style>` 替换 `<script>`   |
+| M    | `apps/web/app/providers/theme-provider.tsx`      | Cookie 读写，applyTheme 管理 dark/light/无 class    |
+| M    | `apps/web/app/providers/theme-provider.test.tsx` | localStorage → Cookie，补充 system class 行为测试   |
 
 ---
 
 ## Task 1: base.css — @custom-variant dark + @variant dark
 
 **Files:**
+
 - Modify: `packages/styles/src/base.css`
 
 - [ ] **Step 1: 替换整个 base.css**
@@ -158,6 +159,7 @@ git commit -m "refactor(styles): @custom-variant dark 合并媒体查询，深�
 ## Task 2: theme-init.ts + 测试 — 更新关键 CSS，删除脚本
 
 **Files:**
+
 - Modify: `apps/web/lib/theme-init.ts`
 - Modify: `apps/web/lib/theme-init.test.ts`
 
@@ -268,6 +270,7 @@ git commit -m "refactor(web): THEME_CRITICAL_CSS 加入系统深色媒体查询�
 ## Task 3: layout.tsx — Cookie 读取 + style 标签
 
 **Files:**
+
 - Modify: `apps/web/app/layout.tsx`
 
 - [ ] **Step 1: 更新 layout.tsx**
@@ -304,8 +307,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   //   其他/无   → 无 class        CSS 媒体查询跟随系统偏好
   const cookieStore = await cookies();
   const themePref = cookieStore.get("theme")?.value;
-  const themeClass =
-    themePref === "dark" ? "dark" : themePref === "light" ? "light" : undefined;
+  const themeClass = themePref === "dark" ? "dark" : themePref === "light" ? "light" : undefined;
 
   return (
     <html lang="zh-CN" className={themeClass} suppressHydrationWarning>
@@ -354,6 +356,7 @@ git commit -m "refactor(web): layout 读 Cookie 设主题 class，style 标签�
 ## Task 4: theme-provider.tsx + 测试 — Cookie 读写 + 新 class 管理
 
 **Files:**
+
 - Modify: `apps/web/app/providers/theme-provider.tsx`
 - Modify: `apps/web/app/providers/theme-provider.test.tsx`
 

@@ -15,12 +15,14 @@
 Use this backend path only as contract reference: `/Volumes/External/SynologyDrive/Codes/Blog/blog-backend/internal`.
 
 Relevant backend files:
+
 - `/Volumes/External/SynologyDrive/Codes/Blog/blog-backend/internal/dto/notification.go`
 - `/Volumes/External/SynologyDrive/Codes/Blog/blog-backend/internal/service/notification/notification.go`
 - `/Volumes/External/SynologyDrive/Codes/Blog/blog-backend/internal/service/notification/inbox.go`
 - `/Volumes/External/SynologyDrive/Codes/Blog/blog-backend/internal/service/comment/notify.go`
 
 Backend `NotificationItemResp` already exposes:
+
 - `actor_user?: { id, nickname?, avatar_url?, site?, mark? }`
 - `root_title?: string`
 - `root_excerpt?: string`
@@ -28,6 +30,7 @@ Backend `NotificationItemResp` already exposes:
 - `type`, `source_type`, `source_id`, `root_type`, `root_id`, `created_at`, `is_read`
 
 Backend event types:
+
 - `comment_created`
 - `comment_liked`
 - `reply_created`
@@ -42,6 +45,7 @@ Backend event types:
 ## Visual Decision
 
 Implement the approved A2 layout:
+
 - Left column: actor avatar at top, selection checkbox below avatar.
 - Main column first row: actor nickname.
 - Main column second row: action text + relative time, e.g. `赞了你的文章 9 小时前`.
@@ -54,6 +58,7 @@ Implement the approved A2 layout:
 ## File Structure
 
 Modify:
+
 - `packages/api/src/types/notification.ts`: add missing backend fields.
 - `packages/api/src/client.test.ts`: assert notification list keeps `actor_user` and `root_excerpt`.
 - `apps/web/components/notifications/notification-type.ts`: replace/extend display helpers for action text and quote context.
@@ -62,6 +67,7 @@ Modify:
 - `apps/web/components/notifications/notification-card.test.tsx`: update rendering/interaction tests.
 
 Create only if `notification-type.ts` becomes too large:
+
 - `apps/web/components/notifications/notification-display.ts`
 - `apps/web/components/notifications/notification-display.test.ts`
 
@@ -70,12 +76,14 @@ Do not add a new shared UI component unless at least two non-notification module
 ## Display Rules
 
 Actor:
+
 - Display name: `item.actor_user?.nickname?.trim() || "系统通知"`.
 - Avatar source: `item.actor_user?.avatar_url`.
 - Avatar component: reuse `UserAvatar` from `apps/web/components/common/user-avatar.tsx`.
 - Avatar size: use `lg`.
 
 Action text:
+
 - `article_liked` -> `赞了你的文章`
 - `moment_liked` -> `赞了你的碎语`
 - `comment_liked` -> `赞了你的评论`
@@ -92,16 +100,18 @@ Action text:
 - `legacy_notice` or unknown -> use `item.title || "你有一条新消息"`; do not duplicate actor name.
 
 Quote content:
+
 - For `article_liked`: quote title is `root_title`; quote text is `root_excerpt || content_excerpt`.
 - For `moment_liked`: quote title is `root_title || "碎语"`; quote text is `content_excerpt || root_title`.
 - For comments/replies/guestbook messages: body text is `content_excerpt`; quote title is:
   - article root: `root_title ? "《" + root_title + "》" : "文章"`
   - moment root: `root_title || "碎语"`
   - guestbook root: `"留言板"`
-  Quote text can be omitted when there is no non-duplicated backend field.
+    Quote text can be omitted when there is no non-duplicated backend field.
 - Never render empty quote rows.
 
 Inline actions:
+
 - Show `点赞` and `回复` only when `type` is comment/reply/guestbook related.
 - `点赞` behavior:
   - `source_type=comment`, `root_type=article`: `POST /api/articles/comments/{source_id}/like`
@@ -115,6 +125,7 @@ Inline actions:
 ## Task 1: Update API Types
 
 **Files:**
+
 - Modify: `packages/api/src/types/notification.ts`
 - Modify: `packages/api/src/client.test.ts`
 
@@ -165,6 +176,7 @@ Expected: PASS.
 ## Task 2: Build Pure Display Helpers
 
 **Files:**
+
 - Modify: `apps/web/components/notifications/notification-type.ts`
 - Modify: `apps/web/components/notifications/notification-type.test.ts`
 
@@ -213,6 +225,7 @@ Expected: PASS.
 ## Task 3: Redesign NotificationCard Markup
 
 **Files:**
+
 - Modify: `apps/web/components/notifications/notification-card.tsx`
 - Modify: `apps/web/components/notifications/notification-card.test.tsx`
 
@@ -248,46 +261,68 @@ import { UserAvatar } from "@/components/common/user-avatar";
 - [ ] Step 4: Render body text only when non-empty:
 
 ```tsx
-{bodyText && (
-  <span className="mt-2 line-clamp-2 block text-[13px] leading-relaxed text-foreground/80">
-    {bodyText}
-  </span>
-)}
+{
+  bodyText && (
+    <span className="mt-2 line-clamp-2 block text-[13px] leading-relaxed text-foreground/80">
+      {bodyText}
+    </span>
+  );
+}
 ```
 
 - [ ] Step 5: Render lightweight quote only when helper returns non-null:
 
 ```tsx
-{quote && (
-  <span className="mt-2 grid grid-cols-[0.875rem_minmax(0,1fr)] gap-2 text-[12.5px] leading-relaxed text-muted-foreground">
-    <span className="my-0.5 w-0.5 rounded-full bg-border justify-self-center" aria-hidden />
-    <span className="min-w-0">
-      {quote.title && <span className="mb-0.5 block truncate font-medium text-foreground/60">{quote.title}</span>}
-      <span className="line-clamp-2">{quote.text}</span>
+{
+  quote && (
+    <span className="mt-2 grid grid-cols-[0.875rem_minmax(0,1fr)] gap-2 text-[12.5px] leading-relaxed text-muted-foreground">
+      <span className="my-0.5 w-0.5 rounded-full bg-border justify-self-center" aria-hidden />
+      <span className="min-w-0">
+        {quote.title && (
+          <span className="mb-0.5 block truncate font-medium text-foreground/60">
+            {quote.title}
+          </span>
+        )}
+        <span className="line-clamp-2">{quote.text}</span>
+      </span>
     </span>
-  </span>
-)}
+  );
+}
 ```
 
 - [ ] Step 6: Render inline bottom actions when helper allows them:
 
 ```tsx
-{(inlineActions.canLike || inlineActions.canReply) && (
-  <span className="mt-2 flex items-center gap-1.5">
-    {inlineActions.canLike && (
-      <Button type="button" variant={null} size={null} onPress={handleInlineLike} className="inline-flex h-6 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground hover:bg-foreground/[0.04]">
-        <SvgIcon name="heart-line" size={13} />
-        点赞
-      </Button>
-    )}
-    {inlineActions.canReply && (
-      <Button type="button" variant={null} size={null} onPress={handleInlineReply} className="inline-flex h-6 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground hover:bg-foreground/[0.04]">
-        <SvgIcon name="message-circle-line" size={13} />
-        回复
-      </Button>
-    )}
-  </span>
-)}
+{
+  (inlineActions.canLike || inlineActions.canReply) && (
+    <span className="mt-2 flex items-center gap-1.5">
+      {inlineActions.canLike && (
+        <Button
+          type="button"
+          variant={null}
+          size={null}
+          onPress={handleInlineLike}
+          className="inline-flex h-6 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground hover:bg-foreground/[0.04]"
+        >
+          <SvgIcon name="heart-line" size={13} />
+          点赞
+        </Button>
+      )}
+      {inlineActions.canReply && (
+        <Button
+          type="button"
+          variant={null}
+          size={null}
+          onPress={handleInlineReply}
+          className="inline-flex h-6 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground hover:bg-foreground/[0.04]"
+        >
+          <SvgIcon name="message-circle-line" size={13} />
+          回复
+        </Button>
+      )}
+    </span>
+  );
+}
 ```
 
 - [ ] Step 7: Prevent inline action clicks from opening the card body. Use handlers that stop propagation. If using React Aria `Button`, pass click-safe logic through `onPress` and ensure tests verify `onOpen` is not called.
@@ -313,6 +348,7 @@ Expected: PASS.
 ## Task 4: Wire Minimal Inline Action Behavior
 
 **Files:**
+
 - Modify: `apps/web/components/notifications/notification-card.tsx`
 - Modify: `apps/web/components/notifications/notifications-page.tsx`
 - Modify: `apps/web/components/notifications/notification-card.test.tsx`
@@ -332,8 +368,10 @@ onInlineReply?: (item: NotificationItemResp) => void;
 
 ```ts
 function getNotificationLikeUrl(item: NotificationItemResp): string | null {
-  if (item.source_type === "comment" && item.root_type === "article") return `/api/articles/comments/${item.source_id}/like`;
-  if (item.source_type === "comment" && item.root_type === "moment") return `/api/moments/comments/${item.source_id}/like`;
+  if (item.source_type === "comment" && item.root_type === "article")
+    return `/api/articles/comments/${item.source_id}/like`;
+  if (item.source_type === "comment" && item.root_type === "moment")
+    return `/api/moments/comments/${item.source_id}/like`;
   if (item.source_type === "guestbook") return `/api/guestbook/${item.source_id}/like`;
   return null;
 }
@@ -354,6 +392,7 @@ Expected: PASS.
 ## Task 5: Final Verification
 
 **Files:**
+
 - No new files unless Task 2 split helpers.
 
 - [ ] Step 1: Run targeted notification tests:

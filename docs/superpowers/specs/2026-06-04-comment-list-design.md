@@ -25,29 +25,29 @@
 
 ### 新增
 
-| 文件 | 职责 |
-|------|------|
-| `packages/api/src/types/comment.ts` | 对应后端 DTO 的 TypeScript 类型 |
-| `apps/web/app/api/comments/route.ts` | GET（列表）+ POST（新建评论）代理 |
-| `apps/web/app/api/comments/[id]/replies/route.ts` | POST（新建回复）代理 |
-| `apps/web/hooks/use-comment-list.ts` | 列表取数、分页、本地追加 |
-| `apps/web/hooks/use-comment-submit.ts` | 发布评论、发布回复 |
-| `apps/web/store/use-login-modal.ts` | 全局登录弹窗 Zustand store |
-| `apps/web/components/comments/comment-section.tsx` | 核心可复用评论区组件 |
-| `apps/web/components/auth/login-modal.tsx` | 全局登录弹窗（当前占位） |
-| `apps/web/app/providers/global-modals.tsx` | 把 LoginModal 挂载到客户端树 |
+| 文件                                               | 职责                              |
+| -------------------------------------------------- | --------------------------------- |
+| `packages/api/src/types/comment.ts`                | 对应后端 DTO 的 TypeScript 类型   |
+| `apps/web/app/api/comments/route.ts`               | GET（列表）+ POST（新建评论）代理 |
+| `apps/web/app/api/comments/[id]/replies/route.ts`  | POST（新建回复）代理              |
+| `apps/web/hooks/use-comment-list.ts`               | 列表取数、分页、本地追加          |
+| `apps/web/hooks/use-comment-submit.ts`             | 发布评论、发布回复                |
+| `apps/web/store/use-login-modal.ts`                | 全局登录弹窗 Zustand store        |
+| `apps/web/components/comments/comment-section.tsx` | 核心可复用评论区组件              |
+| `apps/web/components/auth/login-modal.tsx`         | 全局登录弹窗（当前占位）          |
+| `apps/web/app/providers/global-modals.tsx`         | 把 LoginModal 挂载到客户端树      |
 
 ### 修改
 
-| 文件 | 改动 |
-|------|------|
-| `packages/api/src/client.ts` | 新增 `comments` 方法组（listPublic / create / reply） |
-| `packages/api/src/index.ts` | 导出新增的 comment 类型 |
-| `apps/web/components/comments/comment-modal.tsx` | 改为 thin wrapper，移除 mock，接收 `targetId` |
-| `apps/web/components/comments/comment-input.tsx` | 增加登录门控与回复上下文 |
-| `apps/web/components/comments/comment-item.tsx` | 增加 `onReply` 回调 prop |
-| `apps/web/components/articles/article-section.tsx` | `ActiveComment` 加 `articleId`，传给 `CommentModal` |
-| `apps/web/app/layout.tsx` | 渲染 `GlobalModals` |
+| 文件                                               | 改动                                                  |
+| -------------------------------------------------- | ----------------------------------------------------- |
+| `packages/api/src/client.ts`                       | 新增 `comments` 方法组（listPublic / create / reply） |
+| `packages/api/src/index.ts`                        | 导出新增的 comment 类型                               |
+| `apps/web/components/comments/comment-modal.tsx`   | 改为 thin wrapper，移除 mock，接收 `targetId`         |
+| `apps/web/components/comments/comment-input.tsx`   | 增加登录门控与回复上下文                              |
+| `apps/web/components/comments/comment-item.tsx`    | 增加 `onReply` 回调 prop                              |
+| `apps/web/components/articles/article-section.tsx` | `ActiveComment` 加 `articleId`，传给 `CommentModal`   |
+| `apps/web/app/layout.tsx`                          | 渲染 `GlobalModals`                                   |
 
 ---
 
@@ -55,65 +55,65 @@
 
 ```ts
 export interface CommentUserResp {
-  id: number
-  username: string
-  nickname?: string
-  avatar_url?: string
-  site?: string
-  mark?: string
+  id: number;
+  username: string;
+  nickname?: string;
+  avatar_url?: string;
+  site?: string;
+  mark?: string;
 }
 
 export interface CommentReplyResp {
-  id: number
-  target_type: string
-  comment_id: number
-  from_user_id: number
-  to_user_id: number
-  parent_reply_id: number
-  content: string
-  from_user?: CommentUserResp
-  to_user?: CommentUserResp
-  created_at: string
-  updated_at: string
+  id: number;
+  target_type: string;
+  comment_id: number;
+  from_user_id: number;
+  to_user_id: number;
+  parent_reply_id: number;
+  content: string;
+  from_user?: CommentUserResp;
+  to_user?: CommentUserResp;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CommentItemResp {
-  id: number
-  target_type: string
-  target_id: number
-  user_id: number
-  content: string
-  user?: CommentUserResp
-  replies: CommentReplyResp[]
-  created_at: string
-  updated_at: string
+  id: number;
+  target_type: string;
+  target_id: number;
+  user_id: number;
+  content: string;
+  user?: CommentUserResp;
+  replies: CommentReplyResp[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CommentPageResp {
-  total: number
-  pages: number
-  page: number
-  page_size: number
-  list: CommentItemResp[]
+  total: number;
+  pages: number;
+  page: number;
+  page_size: number;
+  list: CommentItemResp[];
 }
 
 export interface CommentListReq {
-  target_type: string
-  target_id: number
-  page?: number
-  page_size?: number
+  target_type: string;
+  target_id: number;
+  page?: number;
+  page_size?: number;
 }
 
 export interface CommentCreateReq {
-  target_type: string
-  target_id: number
-  content: string
+  target_type: string;
+  target_id: number;
+  content: string;
 }
 
 export interface CommentReplyCreateReq {
-  target_type: string
-  parent_reply_id?: number
-  content: string
+  target_type: string;
+  parent_reply_id?: number;
+  content: string;
 }
 ```
 
@@ -122,12 +122,15 @@ export interface CommentReplyCreateReq {
 ## 4. API 代理路由
 
 ### `GET /api/comments`
+
 转发 `target_type`, `target_id`, `page`, `page_size` 查询参数至后端 `GET /comments`。无需 token（公开接口）。
 
 ### `POST /api/comments`
+
 转发请求 body 至后端 `POST /comments`，同时将 `access_token` cookie 拼入 `Authorization: Bearer` 请求头。后端返回 `CommentItemResp`。
 
 ### `POST /api/comments/[id]/replies`
+
 转发请求 body 至后端 `POST /comments/{id}/replies`，同上处理 token。后端返回 `CommentReplyResp`。
 
 ---
@@ -138,12 +141,12 @@ export interface CommentReplyCreateReq {
 
 ```ts
 interface UseCommentListReturn {
-  comments: CommentItemResp[]
-  isLoading: boolean
-  hasMore: boolean
-  loadMore: () => void
-  addComment: (comment: CommentItemResp) => void
-  addReply: (commentId: number, reply: CommentReplyResp) => void
+  comments: CommentItemResp[];
+  isLoading: boolean;
+  hasMore: boolean;
+  loadMore: () => void;
+  addComment: (comment: CommentItemResp) => void;
+  addReply: (commentId: number, reply: CommentReplyResp) => void;
 }
 ```
 
@@ -156,8 +159,8 @@ interface UseCommentListReturn {
 
 ```ts
 interface UseCommentSubmitCallbacks {
-  onCommentCreated: (comment: CommentItemResp) => void
-  onReplyCreated: (commentId: number, reply: CommentReplyResp) => void
+  onCommentCreated: (comment: CommentItemResp) => void;
+  onReplyCreated: (commentId: number, reply: CommentReplyResp) => void;
 }
 ```
 
@@ -173,12 +176,13 @@ interface UseCommentSubmitCallbacks {
 
 ```ts
 interface CommentSectionProps {
-  targetType: 'article' | 'moment' | 'guestbook'
-  targetId: number
+  targetType: "article" | "moment" | "guestbook";
+  targetId: number;
 }
 ```
 
 `CommentSection` 内部：
+
 - 用 `useCommentList` 管理列表
 - 用 `useCommentSubmit` 管理提交，成功后调用 `addComment` / `addReply`
 - 维护 `replyTarget: { commentId, parentReplyId?, toUser } | null` 状态，传给 `CommentInput`
@@ -197,6 +201,7 @@ interface CommentSectionProps {
 ### `CommentInput`（更新）
 
 新增 props：
+
 - `replyTarget?: { commentId: number; parentReplyId?: number; toUsername: string } | null`
 - `onCancelReply?: () => void`
 - `onSubmitSuccess: (result: CommentItemResp | CommentReplyResp) => void`
@@ -216,9 +221,9 @@ interface CommentSectionProps {
 
 ```ts
 interface LoginModalStore {
-  isOpen: boolean
-  open: () => void
-  close: () => void
+  isOpen: boolean;
+  open: () => void;
+  close: () => void;
 }
 ```
 
@@ -236,10 +241,10 @@ interface LoginModalStore {
 
 ## 9. 测试要求
 
-| 文件 | 测试内容 |
-|------|---------|
-| `use-comment-list.test.ts` | 初始加载、loadMore append、addComment、addReply、hasMore 判断 |
-| `use-comment-submit.test.ts` | 成功提交触发回调、isSubmitting 防重、API 失败不调用回调 |
-| `comment-section.test.tsx` | 渲染评论列表、查看更多按钮显隐、回复流程触发 |
-| `comment-input.test.tsx` | 已登录正常渲染、未登录显示登录提示、回复模式显示 @用户名 |
-| `comment-modal.test.tsx` | open/close 渲染、传递正确 targetId |
+| 文件                         | 测试内容                                                      |
+| ---------------------------- | ------------------------------------------------------------- |
+| `use-comment-list.test.ts`   | 初始加载、loadMore append、addComment、addReply、hasMore 判断 |
+| `use-comment-submit.test.ts` | 成功提交触发回调、isSubmitting 防重、API 失败不调用回调       |
+| `comment-section.test.tsx`   | 渲染评论列表、查看更多按钮显隐、回复流程触发                  |
+| `comment-input.test.tsx`     | 已登录正常渲染、未登录显示登录提示、回复模式显示 @用户名      |
+| `comment-modal.test.tsx`     | open/close 渲染、传递正确 targetId                            |
